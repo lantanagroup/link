@@ -17,7 +17,7 @@ public class FlintlockController {
 	IParser xmlParser = ctx.newXmlParser();
 	IParser jsonParser = ctx.newJsonParser();
 	
-	@RequestMapping("flintlock/fhir")
+	@RequestMapping("fhir")
 	public String transaction (@RequestBody String resourceStr) throws JsonProcessingException {
 		IBaseResource resource; 
 		boolean isJson = false;
@@ -32,11 +32,8 @@ public class FlintlockController {
 		return parsedResource;
 	}
 	
-
-	
-	@RequestMapping("/flintlock/test")
-	public String test (@RequestBody String resourceStr) throws JsonProcessingException {
+	@RequestMapping("test")
+	public String test() {
 		return "Hello";
 	}
-	
 }
