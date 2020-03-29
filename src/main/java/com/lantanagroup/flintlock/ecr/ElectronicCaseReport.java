@@ -125,56 +125,12 @@ public class ElectronicCaseReport {
 		return section;
 	}
 
-	public void setMedicationsAdministeredEntries(List<MedicationStatement> medicationStatements) {
-		for (MedicationStatement medicationStatement : medicationStatements) {
-			String ref = this.addResource(medicationStatement);
-			this.medicationsAdministered.addEntry(new Reference(ref));
-		}
-	}
-
-	public void setResultsEntries(List<DiagnosticReport> diagnosticReports) {
-		for (DiagnosticReport diagnosticReport : diagnosticReports) {
-			String ref = this.addResource(diagnosticReport);
-			this.results.addEntry(new Reference(ref));
-		}
-	}
-
-	public void setPlanOfTreatmentServiceRequestEntries(List<ServiceRequest> serviceRequests) {
-		for (ServiceRequest serviceRequest : serviceRequests) {
-			String ref = this.addResource(serviceRequest);
-			this.planOfTreatment.addEntry(new Reference(ref));
-		}
-	}
-
-	public void setPlanOfTreatmentMedicationRequestEntries(List<MedicationRequest> medicationRequests) {
-		for (MedicationRequest medicationRequest : medicationRequests) {
-			String ref = this.addResource(medicationRequest);
-			this.planOfTreatment.addEntry(new Reference(ref));
-		}
-	}
-
-	public void setImmunizationsEntries(List<Immunization> immunizations) {
-		for (Immunization immunization : immunizations) {
-			String ref = this.addResource(immunization);
-			this.immunizations.addEntry(new Reference(ref));
-		}
-	}
-
-	public void setVitalSignsEntries(List<Observation> observations) {
-		for (Observation observation : observations) {
-			String ref = this.addResource(observation);
-			this.vitalSigns.addEntry(new Reference(ref));
-		}
-	}
-
 	public void setSocialHistoryEntries(List<Observation> observations) {
 		for (Observation observation : observations) {
 			String ref = this.addResource(observation);
 			this.socialHistory.addEntry(new Reference(ref));
 		}
 	}
-	
-	// TODO: Add methods for populating entries for remaining sections.
 
 	public Bundle compile() {
 		Bundle doc = new Bundle();
