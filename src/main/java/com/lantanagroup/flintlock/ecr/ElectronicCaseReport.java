@@ -76,6 +76,7 @@ public class ElectronicCaseReport {
 		}
 
 		this.findProblems();
+		this.findResults();
 	}
 
 	private void findProblems() {
@@ -89,6 +90,21 @@ public class ElectronicCaseReport {
 		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
 			String ref = this.addResource((DomainResource) entry.getResource());
 			this.problems.addEntry(new Reference(ref));
+		}
+	}
+
+	private void findResults() {
+		if (this.client == null) return;
+
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(Observation.class)
+				.and(Observation.SUBJECT.hasId(this.subjectId))
+				.and(Observation.CATEGORY.exactly().code("laboratory"))
+				.execute();
+
+		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+			String ref = this.addResource((DomainResource) entry.getResource());
+			this.results.addEntry(new Reference(ref));
 		}
 	}
 
