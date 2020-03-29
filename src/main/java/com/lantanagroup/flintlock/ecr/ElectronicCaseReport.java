@@ -1,5 +1,6 @@
 package com.lantanagroup.flintlock.ecr;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Composition.SectionComponent;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ public class ElectronicCaseReport {
 	private static final Logger logger = LoggerFactory.getLogger(ElectronicCaseReport.class);
 	public static final String LOINC_CODE_SYSTEM = "http://loinc.org";
 	Composition ecr = new Composition();
+	Patient subject;
 	SectionComponent reasonForVisit;
 	SectionComponent historyOfPresentIllness;
 	SectionComponent problems;
@@ -25,8 +27,12 @@ public class ElectronicCaseReport {
 	SectionComponent vitalSigns;
 	SectionComponent socialHistory;
 	List<DomainResource> resources = new ArrayList();
+	IGenericClient client;
 	
-	public ElectronicCaseReport(Patient subject, Encounter encounter, Practitioner author) {
+	public ElectronicCaseReport(IGenericClient client, Patient subject, Encounter encounter, Practitioner author) {
+		this.client = client;
+		this.subject = subject;
+
 		CodeableConcept type = new CodeableConcept();
 		Coding typeCoding = type.addCoding();
 		typeCoding.setCode("55751-2");
@@ -68,6 +74,10 @@ public class ElectronicCaseReport {
 			String authorRef = this.addResource(author);
 			this.ecr.addAuthor(new Reference(authorRef));
 		}
+	}
+
+	private void findProblems() {
+
 	}
 
 	private String addResource(DomainResource resource) {
