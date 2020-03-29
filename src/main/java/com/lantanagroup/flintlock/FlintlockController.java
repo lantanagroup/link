@@ -7,11 +7,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
@@ -34,7 +37,7 @@ public class FlintlockController {
 	public String conformanceServerBase = "https://flintlock-fhir.lantanagroup.com/fhir";
 	public String targetServerBase = "http://hapi.fhir.org/baseR4";
 	FhirContext ctx = FhirContext.forR4();
-	IParser xmlParser = ctx.newXmlParser();
+	IParser xmlParser = ctx.newXmlParser().setPrettyPrint(true);
 	IParser jsonParser = ctx.newJsonParser();
 	ValueSetQueryClient vsClient;
 	IGenericClient targetClient;
@@ -60,21 +63,44 @@ public class FlintlockController {
 		return parsedResource;
 	}
 	
-	@GetMapping(value = "report", produces = "application/xml")
+	@GetMapping(value = "patients", produces = "application/fhir+xml")
+	public String patients() {
+		ValueSet symptomsVs = vsClient.getValueSet(symptomsValueSetUrl);
+		logger.info("Retrieved value set", symptomsVs.getUrl());
+		List<Condition> resultList = vsClient.conditionCodeQuery(symptomsVs);
+		Map<String,Patient> patientRefs = getUniquePatientReferences(resultList);
+		Bundle b = new Bundle();
+		b.setType(BundleType.COLLECTION);
+		for (String key : patientRefs.keySet()) {
+			Patient p = patientRefs.get(key);
+			BundleEntryComponent entry = b.addEntry();
+			entry.setFullUrl(targetServerBase + "/" + key);
+			entry.setResource(p);
+		}
+		String parsedResource = xmlParser.encodeResourceToString(b);
+		logger.info(parsedResource);
+		return parsedResource;
+	}
+	
+	@GetMapping(value = "report", produces = "application/fhir+xml")
 	public String report() {
 		ValueSet symptomsVs = vsClient.getValueSet(symptomsValueSetUrl);
 		logger.info("Retrieved value set", symptomsVs.getUrl());
 		List<Condition> resultList = vsClient.conditionCodeQuery(symptomsVs);
 		Map<String,Patient> patientRefs = getUniquePatientReferences(resultList);
-		StringWriter str = new StringWriter();
-		PrintWriter out = new PrintWriter(str);
-		out.println("<Patients>");
-		for (String p : patientRefs.keySet()) {
-			out.println(p);
+		Bundle b = new Bundle();
+		b.setType(BundleType.COLLECTION);
+		for (String key : patientRefs.keySet()) {
+			Patient p = patientRefs.get(key);
+			ElectronicCaseReport ecr = new ElectronicCaseReport(this.targetClient, p, null, null);
+			Bundle ecrDoc = ecr.compile();
+			BundleEntryComponent entry = b.addEntry();
+			entry.setFullUrl(targetServerBase + "/Bundle/" + UUID.randomUUID());
+			entry.setResource(ecrDoc);
 		}
-		out.println("</Patients>");
-		out.close();
-		return str.toString();
+		String parsedResource = xmlParser.encodeResourceToString(b);
+		logger.info(parsedResource);
+		return parsedResource;
 	}
 
 	@GetMapping(value = "test/{patientId}", produces = "application/xml")
@@ -93,7 +119,7 @@ public class FlintlockController {
 		HashMap<String,Patient> patients = new HashMap<String,Patient>();
 		for (Condition c : conditions) {
 			String key = c.getSubject().getReference();
-			Patient p = (Patient)c.getSubject().getResource();
+			Patient p = targetClient.read().resource(Patient.class).withUrl(key).execute();
 			patients.put(key, p);
 		}
 		return patients;
