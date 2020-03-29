@@ -16,7 +16,6 @@ public class ElectronicCaseReport {
 	private static final Logger logger = LoggerFactory.getLogger(ElectronicCaseReport.class);
 	public static final String LOINC_CODE_SYSTEM = "http://loinc.org";
 	Composition ecr = new Composition();
-	Patient subject;
 	SectionComponent reasonForVisit;
 	SectionComponent historyOfPresentIllness;
 	SectionComponent problems;
@@ -28,10 +27,11 @@ public class ElectronicCaseReport {
 	SectionComponent socialHistory;
 	List<DomainResource> resources = new ArrayList();
 	IGenericClient client;
+	String subjectId;
 	
 	public ElectronicCaseReport(IGenericClient client, Patient subject, Encounter encounter, Practitioner author) {
 		this.client = client;
-		this.subject = subject;
+		this.subjectId = subject.getIdElement().getIdPart();
 
 		CodeableConcept type = new CodeableConcept();
 		Coding typeCoding = type.addCoding();
@@ -74,33 +74,39 @@ public class ElectronicCaseReport {
 			String authorRef = this.addResource(author);
 			this.ecr.addAuthor(new Reference(authorRef));
 		}
+
+		this.findProblems();
 	}
 
 	private void findProblems() {
+		if (this.client == null) return;
 
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(Condition.class)
+				.and(Condition.SUBJECT.hasId(this.subjectId))
+				.execute();
+
+		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+			String ref = this.addResource((DomainResource) entry.getResource());
+			this.problems.addEntry(new Reference(ref));
+		}
 	}
 
 	private String addResource(DomainResource resource) {
 		resource.setId(UUID.randomUUID().toString());
 		this.resources.add(resource);
-		return "urn:uuid:" + resource.getId();
+		return "urn:uuid:" + resource.getIdElement().getIdPart();
 	}
 	
 	private SectionComponent addSection(String title, String code) {
 		SectionComponent section = ecr.addSection();
+		section.setTitle(title);
 		CodeableConcept cc = new CodeableConcept();
 		Coding c = cc.addCoding();
 		c.setCode(code);
 		c.setSystem(LOINC_CODE_SYSTEM);
-		this.ecr.addSection(section);
+		section.setCode(cc);
 		return section;
-	}
-
-	public void setProblemSectionEntries(List<Condition> conditions) {
-		for (Condition condition : conditions) {
-			String ref = this.addResource(condition);
-			this.problems.addEntry(new Reference(ref));
-		}
 	}
 
 	public void setMedicationsAdministeredEntries(List<MedicationStatement> medicationStatements) {
@@ -173,6 +179,7 @@ public class ElectronicCaseReport {
 
 	private static Bundle.BundleEntryComponent createBundleEntry(DomainResource resource) {
 		Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
+		entry.setFullUrl("urn:uuid:" + resource.getIdElement().getIdPart());
 		entry.setResource(resource);
 		return entry;
 	}

@@ -112,7 +112,8 @@ public class FlintlockController {
 				.execute();
 		ElectronicCaseReport ecr = new ElectronicCaseReport(this.targetClient, subject, null, null);
 		Bundle ecrDoc = ecr.compile();
-		return this.ctx.newXmlParser().encodeResourceToString(ecrDoc);
+		IParser xmlParser = this.ctx.newXmlParser();
+		return xmlParser.encodeResourceToString(ecrDoc);
 	}
 	
 	private Map<String,Patient> getUniquePatientReferences(List<Condition> conditions){
