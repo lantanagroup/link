@@ -4,41 +4,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.hl7.fhir.dstu3.model.*;
-import org.hl7.fhir.dstu3.model.Composition.SectionComponent;
+import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Composition.SectionComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-import ca.uhn.fhir.context.FhirContext;
 
 public class ElectronicCaseReport {
 	
 	private static final Logger logger = LoggerFactory.getLogger(ElectronicCaseReport.class);
 	public static final String LOINC_CODE_SYSTEM = "http://loinc.org";
 	Composition ecr = new Composition();
-	SectionComponent historyOfPresentIllness;
 	SectionComponent reasonForVisit;
-	SectionComponent socialHistory;
+	SectionComponent historyOfPresentIllness;
 	SectionComponent problems;
 	SectionComponent medicationsAdministered;
 	SectionComponent results;
-	SectionComponent labOrder;
+	SectionComponent planOfTreatment;
 	SectionComponent immunizations;
+	SectionComponent vitalSigns;
+	SectionComponent socialHistory;
 	List<DomainResource> resources = new ArrayList();
 	
 	public ElectronicCaseReport(Patient subject) {
 		this.ecr.setId(UUID.randomUUID().toString());
 		this.ecr.setSubject(new Reference(this.addResource(subject)));
 
-		historyOfPresentIllness = addSection("History of Present illness Narrative", "10164-2");
 		reasonForVisit = addSection("Reason for visit Narrative", "29299-5");
-		socialHistory = addSection("Social history Narrative", "29762-2");
+		historyOfPresentIllness = addSection("History of Present illness Narrative", "10164-2");
 		problems = addSection("Problems Section", "11450-4");
 		medicationsAdministered = addSection("Medications administered Narrative", "29549-3");
 		results = addSection("Relevant diagnostic tests/laboratory data Narrative", "30954-2");
-		labOrder = addSection("Lab Order Narrative", "NNNNN-N");
+		planOfTreatment = addSection("Plan of Treatment Section", "18876-5");
 		immunizations = addSection("History of Immunization Narrative", "11369-6");
+		vitalSigns = addSection("Vital Signs Section", "8716-3");
+		socialHistory = addSection("Social history Narrative", "29762-2");
 	}
 
 	private String addResource(DomainResource resource) {
@@ -57,13 +56,6 @@ public class ElectronicCaseReport {
 		return section;
 	}
 
-	public void setSocialHistoryEntries(List<Observation> observations) {
-		for (Observation observation : observations) {
-			String ref = this.addResource(observation);
-			this.socialHistory.addEntry(new Reference(ref));
-		}
-	}
-	
 	public void setProblemSectionEntries(List<Condition> conditions) {
 		for (Condition condition : conditions) {
 			String ref = this.addResource(condition);
@@ -85,10 +77,17 @@ public class ElectronicCaseReport {
 		}
 	}
 
-	public void setLabOrderEntries(List<ProcedureRequest> procedureRequests) {
-		for (ProcedureRequest procedureRequest : procedureRequests) {
-			String ref = this.addResource(procedureRequest);
-			this.labOrder.addEntry(new Reference(ref));
+	public void setPlanOfTreatmentServiceRequestEntries(List<ServiceRequest> serviceRequests) {
+		for (ServiceRequest serviceRequest : serviceRequests) {
+			String ref = this.addResource(serviceRequest);
+			this.planOfTreatment.addEntry(new Reference(ref));
+		}
+	}
+
+	public void setPlanOfTreatmentMedicationRequestEntries(List<MedicationRequest> medicationRequests) {
+		for (MedicationRequest medicationRequest : medicationRequests) {
+			String ref = this.addResource(medicationRequest);
+			this.planOfTreatment.addEntry(new Reference(ref));
 		}
 	}
 
@@ -96,6 +95,20 @@ public class ElectronicCaseReport {
 		for (Immunization immunization : immunizations) {
 			String ref = this.addResource(immunization);
 			this.immunizations.addEntry(new Reference(ref));
+		}
+	}
+
+	public void setVitalSignsEntries(List<Observation> observations) {
+		for (Observation observation : observations) {
+			String ref = this.addResource(observation);
+			this.vitalSigns.addEntry(new Reference(ref));
+		}
+	}
+
+	public void setSocialHistoryEntries(List<Observation> observations) {
+		for (Observation observation : observations) {
+			String ref = this.addResource(observation);
+			this.socialHistory.addEntry(new Reference(ref));
 		}
 	}
 	

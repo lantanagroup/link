@@ -1,6 +1,6 @@
 package com.lantanagroup.flintlock.ecr;
 
-import org.hl7.fhir.dstu3.model.*;
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
