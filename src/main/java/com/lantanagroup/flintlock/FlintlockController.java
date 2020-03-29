@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,10 +55,10 @@ public class FlintlockController {
 	public String report() {
 		ValueSet symptomsVs = vsClient.getValueSet(symptomsValueSetUrl);
 		logger.info("Retrieved value set", symptomsVs.getUrl());
-		List<Bundle> resultList = vsClient.chunkedQuery(symptomsVs);
+		List<Condition> resultList = vsClient.conditionCodeQuery(symptomsVs);
 		StringBuffer buffy = new StringBuffer();
-		for (Bundle b : resultList) {
-			buffy.append(xmlParser.encodeResourceToString(b));
+		for (Condition c : resultList) {
+			buffy.append(xmlParser.encodeResourceToString(c));
 		}
 		return buffy.toString();
 	}
