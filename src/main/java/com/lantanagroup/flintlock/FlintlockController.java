@@ -57,9 +57,12 @@ public class FlintlockController {
 		logger.info("Retrieved value set", symptomsVs.getUrl());
 		List<Condition> resultList = vsClient.conditionCodeQuery(symptomsVs);
 		StringBuffer buffy = new StringBuffer();
+		buffy.append("<Conditions>");
 		for (Condition c : resultList) {
 			buffy.append(xmlParser.encodeResourceToString(c));
 		}
+
+		buffy.append("</Conditions>");
 		return buffy.toString();
 	}
 }

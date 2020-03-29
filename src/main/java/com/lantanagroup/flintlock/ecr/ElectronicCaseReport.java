@@ -51,11 +51,14 @@ public class ElectronicCaseReport {
 		if (encounter == null) {
 			encounter = new Encounter();
 			encounter.setStatus(Encounter.EncounterStatus.UNKNOWN);
-			Coding encounterClass = new Coding();
-			encounterClass.setCode("PHC2237");
-			encounterClass.setSystem("urn:oid:2.16.840.1.114222.4.5.274");
-			encounterClass.setDisplay("External Encounter");
-			encounter.setClass_(encounterClass);
+			CodeableConcept cc = new CodeableConcept();
+			Coding encounterType = cc.addCoding();
+			encounterType.setCode("PHC2237");
+			encounterType.setSystem("urn:oid:2.16.840.1.114222.4.5.274");
+			encounterType.setDisplay("External Encounter");
+			List<CodeableConcept> ccList = new ArrayList<CodeableConcept>();
+			ccList.add(cc);
+			encounter.setType(ccList);
 		}
 
 		String encounterRef = this.addResource(encounter);
