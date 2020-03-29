@@ -2,16 +2,16 @@ package com.lantanagroup.flintlock;
 
 import java.util.List;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.flintlock.client.ValueSetQueryClient;
@@ -29,11 +29,12 @@ public class FlintlockController {
 	IParser xmlParser = ctx.newXmlParser();
 	IParser jsonParser = ctx.newJsonParser();
 	ValueSetQueryClient vsClient;
+	IGenericClient targetClient;
 	String symptomsValueSetUrl = "http://flintlock-fhir.lantanagroup.com/fhir/ValueSet/symptoms";
-	
-	
+
 	public FlintlockController() {
-		vsClient = new ValueSetQueryClient(conformanceServerBase, targetServerBase);
+		this.vsClient = new ValueSetQueryClient(conformanceServerBase, targetServerBase);
+		this.targetClient = this.ctx.newRestfulGenericClient(targetServerBase);
 	}
 	
 	@RequestMapping("fhir")
@@ -64,5 +65,17 @@ public class FlintlockController {
 
 		buffy.append("</Conditions>");
 		return buffy.toString();
+	}
+
+	@GetMapping(value = "test/{patientId}", produces = "application/xml")
+	public String test(@PathVariable("patientId") String patientId) {
+		Patient subject = (Patient) this.targetClient
+				.read()
+				.resource(Patient.class)
+				.withId(patientId)
+				.execute();
+		ElectronicCaseReport ecr = new ElectronicCaseReport(subject, null, null);
+		Bundle ecrDoc = ecr.compile();
+		return this.ctx.newXmlParser().encodeResourceToString(ecrDoc);
 	}
 }
