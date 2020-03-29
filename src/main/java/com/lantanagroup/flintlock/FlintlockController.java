@@ -1,12 +1,20 @@
 package com.lantanagroup.flintlock;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.slf4j.Logger;
@@ -57,14 +65,16 @@ public class FlintlockController {
 		ValueSet symptomsVs = vsClient.getValueSet(symptomsValueSetUrl);
 		logger.info("Retrieved value set", symptomsVs.getUrl());
 		List<Condition> resultList = vsClient.conditionCodeQuery(symptomsVs);
-		StringBuffer buffy = new StringBuffer();
-		buffy.append("<Conditions>");
-		for (Condition c : resultList) {
-			buffy.append(xmlParser.encodeResourceToString(c));
+		Map<String,Patient> patientRefs = getUniquePatientReferences(resultList);
+		StringWriter str = new StringWriter();
+		PrintWriter out = new PrintWriter(str);
+		out.println("<Patients>");
+		for (String p : patientRefs.keySet()) {
+			out.println(p);
 		}
-
-		buffy.append("</Conditions>");
-		return buffy.toString();
+		out.println("</Patients>");
+		out.close();
+		return str.toString();
 	}
 
 	@GetMapping(value = "test/{patientId}", produces = "application/xml")
@@ -78,5 +88,15 @@ public class FlintlockController {
 		Bundle ecrDoc = ecr.compile();
 		IParser xmlParser = this.ctx.newXmlParser();
 		return xmlParser.encodeResourceToString(ecrDoc);
+	}
+	
+	private Map<String,Patient> getUniquePatientReferences(List<Condition> conditions){
+		HashMap<String,Patient> patients = new HashMap<String,Patient>();
+		for (Condition c : conditions) {
+			String key = c.getSubject().getReference();
+			Patient p = (Patient)c.getSubject().getResource();
+			patients.put(key, p);
+		}
+		return patients;
 	}
 }
