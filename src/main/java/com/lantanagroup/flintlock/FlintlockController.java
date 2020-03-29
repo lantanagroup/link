@@ -89,7 +89,7 @@ public class FlintlockController {
 			ElectronicCaseReport ecr = new ElectronicCaseReport(this.targetClient, p, null, null);
 			Bundle ecrDoc = ecr.compile();
 			BundleEntryComponent entry = b.addEntry();
-			entry.setFullUrl(targetServerBase + "/Bundle/" + UUID.randomUUID());
+			entry.setFullUrl("urn:uuid:" + UUID.randomUUID());
 			entry.setResource(ecrDoc);
 		}
 		String parsedResource = xmlParser.encodeResourceToString(b);
