@@ -1,13 +1,14 @@
 package com.lantanagroup.flintlock.ecr;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Composition.SectionComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 public class ElectronicCaseReport {
 	
@@ -25,8 +26,16 @@ public class ElectronicCaseReport {
 	SectionComponent socialHistory;
 	List<DomainResource> resources = new ArrayList();
 	
-	public ElectronicCaseReport(Patient subject) {
+	public ElectronicCaseReport(Patient subject, Encounter encounter, Practitioner author) {
+		CodeableConcept type = new CodeableConcept();
+		Coding typeCoding = type.addCoding();
+		typeCoding.setCode("55751-2");
+
 		this.ecr.setId(UUID.randomUUID().toString());
+		this.ecr.setIdentifier(new Identifier());
+		this.ecr.getIdentifier().setValue(UUID.randomUUID().toString());
+		this.ecr.setDate(new Date());
+		this.ecr.setType(type);
 		this.ecr.setSubject(new Reference(this.addResource(subject)));
 
 		reasonForVisit = addSection("Reason for visit Narrative", "29299-5");
@@ -38,6 +47,24 @@ public class ElectronicCaseReport {
 		immunizations = addSection("History of Immunization Narrative", "11369-6");
 		vitalSigns = addSection("Vital Signs Section", "8716-3");
 		socialHistory = addSection("Social history Narrative", "29762-2");
+
+		if (encounter == null) {
+			encounter = new Encounter();
+			encounter.setStatus(Encounter.EncounterStatus.UNKNOWN);
+			Coding encounterClass = new Coding();
+			encounterClass.setCode("PHC2237");
+			encounterClass.setSystem("urn:oid:2.16.840.1.114222.4.5.274");
+			encounterClass.setDisplay("External Encounter");
+			encounter.setClass_(encounterClass);
+		}
+
+		String encounterRef = this.addResource(encounter);
+		this.ecr.setEncounter(new Reference(encounterRef));
+
+		if (author != null) {
+			String authorRef = this.addResource(author);
+			this.ecr.addAuthor(new Reference(authorRef));
+		}
 	}
 
 	private String addResource(DomainResource resource) {

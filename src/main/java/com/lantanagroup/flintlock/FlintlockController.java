@@ -50,7 +50,7 @@ public class FlintlockController {
 		return parsedResource;
 	}
 	
-	@GetMapping("report")
+	@GetMapping(value = "report", produces = "application/xml")
 	public String report() {
 		ValueSet symptomsVs = vsClient.getValueSet(symptomsValueSetUrl);
 		logger.info("Retrieved value set", symptomsVs.getUrl());
