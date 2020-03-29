@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.hl7.fhir.r4.model.ValueSet.ValueSetComposeComponent;
 import org.hl7.fhir.r4.model.ValueSet.ValueSetExpansionComponent;
@@ -56,7 +58,16 @@ public class ValueSetQueryClient {
 	
 	public List<Condition> conditionCodeQuery(ValueSet vs) {
 		List<Condition> conditions = new ArrayList<Condition>();
-		// TODO issue query and return results. 
+		List<Bundle> bundles = chunkedQuery(vs);
+		for (Bundle bundle : bundles) {
+			List<BundleEntryComponent> entryList = bundle.getEntry();
+			for (BundleEntryComponent entry : entryList) {
+				Resource r = entry.getResource();
+				if (r.fhirType().equals("Condition")) {
+					conditions.add((Condition) r);
+				}
+			}
+		}
 		return conditions;
 	}
 	
