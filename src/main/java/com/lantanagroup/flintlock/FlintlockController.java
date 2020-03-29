@@ -1,10 +1,13 @@
 package com.lantanagroup.flintlock;
 
+import java.util.HashSet;
 import java.util.List;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,5 +67,9 @@ public class FlintlockController {
 
 		buffy.append("</Conditions>");
 		return buffy.toString();
+	}
+	
+	private HashSet<Patient> getUniquePatients(List<Condition> c){
+		return null;
 	}
 }
