@@ -23,11 +23,11 @@ import ca.uhn.fhir.parser.IParser;
 public class FlintlockController {
 	
 	private static final Logger logger = LoggerFactory.getLogger(FlintlockController.class);
+	public String conformanceServerBase = "https://flintlock-fhir.lantanagroup.com/fhir";
+	public String targetServerBase = "http://hapi.fhir.org/baseR4";
 	FhirContext ctx = FhirContext.forR4();
 	IParser xmlParser = ctx.newXmlParser();
 	IParser jsonParser = ctx.newJsonParser();
-	String conformanceServerBase = "https://flintlock-fhir.lantanagroup.com/fhir";
-	String targetServerBase = "http://hapi.fhir.org/baseR4";
 	ValueSetQueryClient vsClient;
 	String symptomsValueSetUrl = "http://flintlock-fhir.lantanagroup.com/fhir/ValueSet/symptoms";
 	
