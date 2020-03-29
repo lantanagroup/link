@@ -26,7 +26,7 @@ public class FlintlockController {
 	IParser xmlParser = ctx.newXmlParser();
 	IParser jsonParser = ctx.newJsonParser();
 	String conformanceServerBase = "https://flintlock-fhir.lantanagroup.com/fhir";
-	String targetServerBase = "hapi.fhir.org/baseR4";
+	String targetServerBase = "http://hapi.fhir.org/baseR4";
 	ValueSetQueryClient vsClient;
 	String symptomsValueSetUrl = "http://flintlock-fhir.lantanagroup.com/fhir/ValueSet/symptoms";
 	

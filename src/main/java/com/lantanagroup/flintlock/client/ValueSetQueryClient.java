@@ -26,11 +26,13 @@ public class ValueSetQueryClient {
 	IParser jsonParser = ctx.newJsonParser();
 	IGenericClient targetClient;
 	IGenericClient vsClient;
-	int vsChunkSize = 10;
+	int vsChunkSize = 2;
 	
 	public ValueSetQueryClient(String conformanceServerBase, String targetServerBase) {
+		
 		vsClient = ctx.newRestfulGenericClient(conformanceServerBase);
 		targetClient = ctx.newRestfulGenericClient(targetServerBase);
+	
 		logger.info("Created clients for {}, {}", conformanceServerBase, targetServerBase);
 	}
 	
@@ -40,8 +42,11 @@ public class ValueSetQueryClient {
 		return vs;
 	}
 	
-	public Bundle genericQuery (String searchUrl) {
-		logger.info("Issuing query: {}", searchUrl);
+	public Bundle genericQuery (IGenericClient client, String searchUrl) {
+		String base = client.getServerBase();
+		String fullyResolvedSearchUrl;
+		fullyResolvedSearchUrl = "http://" + base + "/" + searchUrl;
+		logger.info("Issuing query: {}", fullyResolvedSearchUrl);
 		Bundle response = targetClient.search()
 			      .byUrl(searchUrl)
 			      .returnBundle(Bundle.class)
@@ -65,7 +70,7 @@ public class ValueSetQueryClient {
 		for (List<ValueSet.ValueSetExpansionContainsComponent> chunk: chunks) {
 			String searchCodes = chunkToString(chunk);
 			String queryString = "Condition?code=" + searchCodes;
-			Bundle result = genericQuery(queryString);
+			Bundle result = genericQuery(targetClient,queryString);
 			resultList.add(result);
 		}
 		return resultList;
