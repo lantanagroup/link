@@ -8,6 +8,7 @@ import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.ValueSet;
+import org.hl7.fhir.r4.model.ValueSet.ValueSetComposeComponent;
 import org.hl7.fhir.r4.model.ValueSet.ValueSetExpansionComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ public class ValueSetQueryClient {
 	}
 	
 	public Bundle genericQuery (String searchUrl) {
+		logger.info("Issuing query: {}", searchUrl);
 		Bundle response = targetClient.search()
 			      .byUrl(searchUrl)
 			      .returnBundle(Bundle.class)
@@ -47,11 +49,61 @@ public class ValueSetQueryClient {
 		return response;
 	}
 	
-	public Bundle conditionCodeQuery(ValueSet vs) {
-		Bundle response = null;
+	public List<Condition> conditionCodeQuery(ValueSet vs) {
+		List<Condition> conditions = new ArrayList<Condition>();
+		// TODO issue query and return results. 
+		return conditions;
+	}
+	
+	public List<Bundle> chunkedQuery(ValueSet vs) {
+		if (vs.hasExpansion() == false) {
+			logger.info("Expanding value set {}", vs.getUrl());
+			expand(vs);
+		}
+		List<Bundle> resultList = new ArrayList<Bundle>();
 		List<List<ValueSet.ValueSetExpansionContainsComponent>> chunks = chunkValueSet(vs);
+		for (List<ValueSet.ValueSetExpansionContainsComponent> chunk: chunks) {
+			String searchCodes = chunkToString(chunk);
+			String queryString = "Condition?code=" + searchCodes;
+			Bundle result = genericQuery(queryString);
+			resultList.add(result);
+		}
+		return resultList;
+	}
+	
+	private void expand(ValueSet vs) {
+		// TODO Auto-generated method stub
+		ValueSet.ValueSetExpansionComponent expansion = new ValueSet.ValueSetExpansionComponent();
+		ValueSetComposeComponent compose = vs.getCompose();
+		List<ValueSet.ConceptSetComponent> include = compose.getInclude();
+		for (ValueSet.ConceptSetComponent csc : include) {
+			String system = csc.getSystem();
+			List<ValueSet.ConceptReferenceComponent> concepts = csc.getConcept();
+			for (ValueSet.ConceptReferenceComponent concept : concepts) {
+				String code = concept.getCode();
+				ValueSet.ValueSetExpansionContainsComponent vsecc = expansion.addContains();
+				vsecc.setSystem(system);
+				vsecc.setCode(code);
+			}
+		}
+		vs.setExpansion(expansion);
 		
-		return response;
+	}
+
+	private String chunkToString(List<ValueSet.ValueSetExpansionContainsComponent> chunk) {
+		StringBuffer searchCodes = new StringBuffer();
+		boolean first = true;
+		for (ValueSet.ValueSetExpansionContainsComponent comp : chunk) {
+			String system = comp.getSystem();
+			String code = comp.getCode();
+			if (first) {
+				first = false;
+			} else {
+				searchCodes.append(",");
+			}
+			searchCodes.append(system + "|" + code);
+		}
+		return searchCodes.toString();
 	}
 
 	private List<List<ValueSet.ValueSetExpansionContainsComponent>> chunkValueSet(ValueSet vs) {
