@@ -2,11 +2,8 @@ package com.lantanagroup.flintlock.ecr;
 
 import java.util.List;
 
-import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.Composition;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Composition.SectionComponent;
-import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,8 +16,6 @@ public class ElectronicCaseReport {
 	private static final Logger logger = LoggerFactory.getLogger(ElectronicCaseReport.class);
 	public static final String LOINC_CODE_SYSTEM = "http://loinc.org";
 	FhirContext ctx = FhirContext.forR4();
-	IParser xmlParser = ctx.newXmlParser();
-	IParser jsonParser = ctx.newJsonParser();
 	Composition ecr = new Composition();
 	SectionComponent problemSection;
 	
@@ -35,6 +30,7 @@ public class ElectronicCaseReport {
 		Coding c = cc.addCoding();
 		c.setCode(loincCode);
 		c.setSystem(LOINC_CODE_SYSTEM);
+		this.ecr.addSection(section);
 		return section;
 	}
 	
@@ -46,6 +42,24 @@ public class ElectronicCaseReport {
 		// TODO: add all Condition resources to the problemSection
 	}
 	
-	// TODO: Add methods for populating entries for remaining sections. 
+	// TODO: Add methods for populating entries for remaining sections.
 
+
+	public Bundle compile() {
+		Bundle doc = new Bundle();
+		doc.setType(Bundle.BundleType.DOCUMENT);
+
+		// Composition first
+		doc.addEntry(createBundleEntry(this.ecr));
+
+		doc.setTotal(doc.getEntry().size());
+
+		return doc;
+	}
+
+	private static Bundle.BundleEntryComponent createBundleEntry(DomainResource resource) {
+		Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
+		entry.setResource(resource);
+		return entry;
+	}
 }

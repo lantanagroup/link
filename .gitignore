@@ -1,2 +1,4 @@
 target/
 .sts4-cache/
+flintlock.iml
+.idea/
