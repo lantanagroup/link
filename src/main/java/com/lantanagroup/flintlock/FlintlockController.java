@@ -84,7 +84,7 @@ public class FlintlockController {
 				.resource(Patient.class)
 				.withId(patientId)
 				.execute();
-		ElectronicCaseReport ecr = new ElectronicCaseReport(subject, null, null);
+		ElectronicCaseReport ecr = new ElectronicCaseReport(this.targetClient, subject, null, null);
 		Bundle ecrDoc = ecr.compile();
 		return this.ctx.newXmlParser().encodeResourceToString(ecrDoc);
 	}

@@ -46,7 +46,7 @@ public class ElectronicCaseReportTests {
     @Test
     public void testNewElectronicCaseReport() {
         Patient testPatient = createTestPatient("432-13-1234", "Bruce", "Wayne");
-        ElectronicCaseReport ecr = new ElectronicCaseReport(testPatient, null, null);
+        ElectronicCaseReport ecr = new ElectronicCaseReport(null, testPatient, null, null);
 
         List<Observation> socialHistoryObservations = new ArrayList();
         socialHistoryObservations.add(createTestObservation("1234", "4321"));
@@ -75,7 +75,7 @@ public class ElectronicCaseReportTests {
     public void testNewElectronicCaseReportWithAuthor() {
         Patient testPatient = createTestPatient("432-13-1234", "Bruce", "Wayne");
         Practitioner testPractitioner = createTestPractitioner("some-prn-number", "Peter", "Clarke");
-        ElectronicCaseReport ecr = new ElectronicCaseReport(testPatient, null, testPractitioner);
+        ElectronicCaseReport ecr = new ElectronicCaseReport(null, testPatient, null, testPractitioner);
 
         List<Observation> socialHistoryObservations = new ArrayList();
         socialHistoryObservations.add(createTestObservation("1234", "4321"));
