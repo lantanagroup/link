@@ -123,30 +123,27 @@ public class ValueSetQueryClient {
 	}
 
 	private List<List<ValueSet.ValueSetExpansionContainsComponent>> chunkValueSet(ValueSet vs) {
-		List<List<ValueSet.ValueSetExpansionContainsComponent>> codeChunks = new ArrayList<List<ValueSet.ValueSetExpansionContainsComponent>>();
+		List<List<ValueSet.ValueSetExpansionContainsComponent>> codeChunkList = new ArrayList<List<ValueSet.ValueSetExpansionContainsComponent>>();
 		ValueSetExpansionComponent expansion = vs.getExpansion();
 		List<ValueSet.ValueSetExpansionContainsComponent> containsList = expansion.getContains();
-		List<ValueSet.ValueSetExpansionContainsComponent> codeChunk = null;
+		List<ValueSet.ValueSetExpansionContainsComponent> codeChunk = new ArrayList<ValueSet.ValueSetExpansionContainsComponent>();
 		boolean remainingChunks = false;
 		for (int i = 0 ; i < containsList.size() ; i++) {
 			// break into chunks 
-			if (i%vsChunkSize == 0) {
+			if (i%vsChunkSize == 0 && i != 0) {
 				remainingChunks = false;
-				if (codeChunk != null) {
-					codeChunks.add(codeChunk);
-				} else {
-					codeChunk = new ArrayList<ValueSet.ValueSetExpansionContainsComponent>();
-				}
+				codeChunkList.add(codeChunk);
+				codeChunk = new ArrayList<ValueSet.ValueSetExpansionContainsComponent>();
 			} else {
 				remainingChunks = true;
 			}
-			ValueSet.ValueSetExpansionContainsComponent comp = containsList.get(i);
-			codeChunk.add(comp);
+			ValueSet.ValueSetExpansionContainsComponent code = containsList.get(i);
+			codeChunk.add(code);
 		}
 		if (remainingChunks = true) {
-			codeChunks.add(codeChunk);
+			codeChunkList.add(codeChunk);
 		}
-		return codeChunks;
+		return codeChunkList;
 	}
 	
 
