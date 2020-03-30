@@ -77,6 +77,8 @@ public class ElectronicCaseReport {
 
 		this.findProblems();
 		this.findResults();
+		this.findMedications();
+		this.findImmunizations();
 	}
 
 	private void findProblems() {
@@ -87,10 +89,7 @@ public class ElectronicCaseReport {
 				.and(Condition.SUBJECT.hasId(this.subjectId))
 				.execute();
 
-		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-			String ref = this.addResource((DomainResource) entry.getResource());
-			this.problems.addEntry(new Reference(ref));
-		}
+		this.addEntriesToSection(bundle, this.problems);
 	}
 
 	private void findResults() {
@@ -102,9 +101,35 @@ public class ElectronicCaseReport {
 				.and(Observation.CATEGORY.exactly().code("laboratory"))
 				.execute();
 
+		this.addEntriesToSection(bundle, this.results);
+	}
+
+	private void findMedications() {
+		if (this.client == null) return;
+
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(MedicationAdministration.class)
+				.and(MedicationAdministration.SUBJECT.hasId(this.subjectId))
+				.execute();
+
+		this.addEntriesToSection(bundle, this.medicationsAdministered);
+	}
+
+	private void findImmunizations() {
+		if (this.client == null) return;
+
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(Immunization.class)
+				.and(Immunization.PATIENT.hasId(this.subjectId))
+				.execute();
+
+		this.addEntriesToSection(bundle, this.immunizations);
+	}
+
+	private void addEntriesToSection(Bundle bundle, SectionComponent section) {
 		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
 			String ref = this.addResource((DomainResource) entry.getResource());
-			this.results.addEntry(new Reference(ref));
+			section.addEntry(new Reference(ref));
 		}
 	}
 
