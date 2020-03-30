@@ -77,6 +77,8 @@ public class ElectronicCaseReport {
 
 		this.findProblems();
 		this.findResults();
+		this.findVitalSigns();
+		this.findMedicationsAdministered();
 	}
 
 	private void findProblems() {
@@ -108,7 +110,37 @@ public class ElectronicCaseReport {
 		}
 	}
 
+	private void findVitalSigns() {
+		if (this.client == null) return;
+
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(Observation.class)
+				.and(Observation.SUBJECT.hasId(this.subjectId))
+				.and(Observation.CATEGORY.exactly().code("vital-signs"))
+				.execute();
+
+		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+			String ref = this.addResource((DomainResource) entry.getResource());
+			this.vitalSigns.addEntry(new Reference(ref));
+		}
+	}
+
+	private void findMedicationsAdministered() {
+		if (this.client == null) return;
+
+		Bundle bundle = (Bundle) this.client.search()
+				.forResource(MedicationAdministration.class)
+				.and(Observation.SUBJECT.hasId(this.subjectId))
+				.execute();
+
+		for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+			String ref = this.addResource((DomainResource) entry.getResource());
+			this.medicationsAdministered.addEntry(new Reference(ref));
+		}
+	}
+
 	private String addResource(DomainResource resource) {
+		// TODO: Find a way to preserve the original resource id and server url, maybe as an extension
 		resource.setId(UUID.randomUUID().toString());
 		this.resources.add(resource);
 		return "urn:uuid:" + resource.getIdElement().getIdPart();
