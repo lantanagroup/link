@@ -18,6 +18,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
+import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ValueSet;
@@ -46,7 +47,7 @@ public class FlintlockController {
 	String symptomsValueSetUrl = "http://flintlock-fhir.lantanagroup.com/fhir/ValueSet/symptoms";
 	String dxtcSnomedValueSetUrl = "https://flintlock-fhir.lantanagroup.com/fhir/ValueSet/dxtc-snomed";
 	String dxtcCoronavirusValueSetUrl = "https://flintlock-fhir.lantanagroup.com/fhir/ValueSet/dxtc-coronavirus";
-
+	
 	public FlintlockController() {
 		this.vsClient = new ValueSetQueryClient(conformanceServerBase, clinicalDataServerBase);
 		this.clinicalDataClient = this.ctx.newRestfulGenericClient(clinicalDataServerBase);
@@ -67,21 +68,6 @@ public class FlintlockController {
 		return result;
 	}
 	
-	
-	@RequestMapping("fhir")
-	public String transaction (@RequestBody String resourceStr) throws JsonProcessingException {
-		IBaseResource resource; 
-		boolean isJson = false;
-		if (resourceStr.startsWith("{")) {
-			resource = jsonParser.parseResource(resourceStr);
-			isJson = true;
-		} else {
-			resource = xmlParser.parseResource(resourceStr);
-		}
-		String parsedResource = xmlParser.encodeResourceToString(resource);
-		logger.info(parsedResource);
-		return parsedResource;
-	}
 	
 	@GetMapping(value = "patients", produces = "application/fhir+xml")
 	public String patients() {
@@ -109,15 +95,20 @@ public class FlintlockController {
 		List<Condition> resultList = vsClient.conditionCodeQuery(vs);
 		Map<String,Patient> patientRefs = getUniquePatientReferences(resultList);
 		Bundle b = new Bundle();
+	//	b.setType(BundleType.TRANSACTION);
 		b.setType(BundleType.COLLECTION);
 		for (String key : patientRefs.keySet()) {
 			logger.info("Building report for {}",key);
 			Patient p = patientRefs.get(key);
 			ElectronicCaseReport ecr = new ElectronicCaseReport(this.clinicalDataClient, p, null, null);
 			Bundle ecrDoc = ecr.compile();
+			logger.info("Created report {}",ecrDoc.getId() );
 			BundleEntryComponent entry = b.addEntry();
-			entry.setFullUrl("urn:uuid:" + UUID.randomUUID());
+			entry.setFullUrl(ecrDoc.getId());
 			entry.setResource(ecrDoc);
+			if (b.getType().equals(BundleType.TRANSACTION)) {
+				entry.getRequest().setMethod(HTTPVerb.PUT).setUrl("Bundle/");
+			}
 		}
 		// TODO Maven dependency for HAPI FHIR Validation not working, figure out why
 		/*

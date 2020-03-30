@@ -33,6 +33,7 @@ public class ElectronicCaseReportTests {
         return obs;
     }
 
+    // TODO Create a test PractitionerRole instead
     private static Practitioner createTestPractitioner(String prn, String first, String last) {
         Practitioner practitioner = new Practitioner();
         Identifier identifier = practitioner.addIdentifier();
@@ -75,7 +76,7 @@ public class ElectronicCaseReportTests {
     public void testNewElectronicCaseReportWithAuthor() {
         Patient testPatient = createTestPatient("432-13-1234", "Bruce", "Wayne");
         Practitioner testPractitioner = createTestPractitioner("some-prn-number", "Peter", "Clarke");
-        ElectronicCaseReport ecr = new ElectronicCaseReport(null, testPatient, null, testPractitioner);
+        ElectronicCaseReport ecr = new ElectronicCaseReport(null, testPatient, null, null);
 
         List<Observation> socialHistoryObservations = new ArrayList();
         socialHistoryObservations.add(createTestObservation("1234", "4321"));
