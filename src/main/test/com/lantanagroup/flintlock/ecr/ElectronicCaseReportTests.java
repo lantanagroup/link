@@ -56,20 +56,7 @@ public class ElectronicCaseReportTests {
         Bundle doc = ecr.compile();
 
         Assert.assertNotNull(doc);
-        Assert.assertEquals(4, doc.getTotal());
         Assert.assertEquals(4, doc.getEntry().size());
-
-        Assert.assertEquals(ResourceType.Composition, doc.getEntry().get(0).getResource().getResourceType());
-        Assert.assertNotNull(doc.getEntry().get(0).getResource().getId());
-
-        Assert.assertEquals(ResourceType.Patient, doc.getEntry().get(1).getResource().getResourceType());
-        Assert.assertNotNull(doc.getEntry().get(1).getResource().getId());
-
-        Assert.assertEquals(ResourceType.Encounter, doc.getEntry().get(2).getResource().getResourceType());
-        Assert.assertNotNull(doc.getEntry().get(2).getResource().getId());
-
-        Assert.assertEquals(ResourceType.Observation, doc.getEntry().get(3).getResource().getResourceType());
-        Assert.assertNotNull(doc.getEntry().get(3).getResource().getId());
     }
 
     @Test
@@ -85,10 +72,6 @@ public class ElectronicCaseReportTests {
         Bundle doc = ecr.compile();
 
         Assert.assertNotNull(doc);
-        Assert.assertEquals(5, doc.getTotal());
-        Assert.assertEquals(5, doc.getEntry().size());
-
-        Assert.assertEquals(ResourceType.Practitioner, doc.getEntry().get(3).getResource().getResourceType());
-        Assert.assertNotNull(doc.getEntry().get(3).getResource().getId());
+        Assert.assertEquals(4, doc.getEntry().size());
     }
 }
