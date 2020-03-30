@@ -63,13 +63,14 @@
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/ca.uhn.hapi.fhir/hapi-fhir-validation-resources-r4 -->
- 		<!--  
+ 		<!--
 		<dependency>
 		    <groupId>ca.uhn.hapi.fhir</groupId>
 		    <artifactId>hapi-fhir-validation-resources-r4</artifactId>
 		    <version>4.2.0</version>
 		</dependency>
 		-->
+
 		<dependency>
 			<groupId>net.sf.saxon</groupId>
 			<artifactId>Saxon-HE</artifactId>
