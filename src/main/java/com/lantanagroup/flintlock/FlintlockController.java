@@ -33,7 +33,7 @@ public class FlintlockController {
     public String clinicalDataServerBase = "http://hapi.fhir.org/baseR4";
     FhirContext ctx = FhirContext.forR4();
     IParser xmlParser = ctx.newXmlParser().setPrettyPrint(true);
-    IParser jsonParser = ctx.newJsonParser();
+    IParser jsonParser = ctx.newJsonParser().setPrettyPrint(true);
     ValueSetQueryClient vsClient;
     IGenericClient clinicalDataClient;
     String symptomsValueSetUrl = "http://flintlock-fhir.lantanagroup.com/fhir/ValueSet/symptoms";
@@ -79,15 +79,36 @@ public class FlintlockController {
         logger.info(parsedResource);
         return parsedResource;
     }
+    
+
+    @GetMapping(value = "case-report-bundle.json", produces = "application/fhir+json")
+    public String reportJson() {
+        Bundle b = getReportBundle();
+        String parsedResource = jsonParser.encodeResourceToString(b);
+        return parsedResource;
+    }
+
+    @GetMapping(value = "case-report-bundle.xml", produces = "application/fhir+xml")
+    public String reportXml() {
+        Bundle b = getReportBundle();
+        String parsedResource = xmlParser.encodeResourceToString(b);
+        return parsedResource;
+    }
 
     @GetMapping(value = "report", produces = "application/fhir+xml")
     public String report() {
-        ValueSet vs = vsClient.getValueSet(dxtcCoronavirusValueSetUrl);
+        Bundle b = getReportBundle();
+        String parsedResource = xmlParser.encodeResourceToString(b);
+        return parsedResource;
+    }
+
+	private Bundle getReportBundle() {
+		ValueSet vs = vsClient.getValueSet(dxtcCoronavirusValueSetUrl);
         logger.info("Retrieved value set", vs.getUrl());
         List<Condition> resultList = vsClient.conditionCodeQuery(vs);
         Map<String, Patient> patientRefs = getUniquePatientReferences(resultList);
         Bundle b = new Bundle();
-        //	b.setType(BundleType.TRANSACTION);
+        // b.setType(BundleType.TRANSACTION);
         b.setType(BundleType.COLLECTION);
         for (String key : patientRefs.keySet()) {
             logger.info("Building report for {}", key);
@@ -114,9 +135,8 @@ public class FlintlockController {
 		 */
 
         logger.info("Finished creating reports");
-        String parsedResource = xmlParser.encodeResourceToString(b);
-        return parsedResource;
-    }
+		return b;
+	}
 
     @GetMapping(value = "test/{patientId}", produces = "application/xml")
     public String test(@PathVariable("patientId") String patientId) {
