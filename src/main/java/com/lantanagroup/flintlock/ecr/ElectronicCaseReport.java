@@ -48,7 +48,7 @@ public class ElectronicCaseReport {
         this.ecr.setStatus(CompositionStatus.PRELIMINARY);
         this.ecr.setType(type);
         this.ecr.setSubject(new Reference(this.addResource(subject)));
-        this.ecr.setTitle("Initial Public Health Case Report" + subject.getId());
+        this.ecr.setTitle("Initial Public Health Case Report " + subject.getNameFirstRep().getNameAsSingleString());
 
         reasonForVisit = addSection("Reason for visit Narrative", "29299-5");
         historyOfPresentIllness = addSection("History of Present illness Narrative", "10164-2");
