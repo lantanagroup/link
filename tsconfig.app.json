@@ -9,7 +9,7 @@
     "src/main/angular/polyfills.ts"
   ],
   "include": [
-    "src/main/angular/**/*.ts"
+    "src/main/angular/**/*.d.ts"
   ],
   "exclude": [
     "src/main/angular/test.ts",
