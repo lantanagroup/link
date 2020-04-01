@@ -2,3 +2,4 @@ target/
 .sts4-cache/
 flintlock.iml
 .idea/
+/node_modules/
