@@ -19,9 +19,7 @@ import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.Bundle.HTTPVerb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -99,6 +97,16 @@ public class FlintlockController {
     return parsedResource;
   }
 
+  @PostMapping(value = "convert", produces = "application/fhir+xml")
+  public String reportXml(@RequestBody String content) {
+    try {
+      Bundle bundle = (Bundle) this.jsonParser.parseResource(content);
+      return this.xmlParser.encodeResourceToString(bundle);
+    } catch (Exception ex) {
+      return content;
+    }
+  }
+
   @GetMapping(value = "report", produces = "application/fhir+xml")
   public String report() {
     Bundle b = getReportBundle();
@@ -135,12 +143,12 @@ public class FlintlockController {
     }
   }
 
-  @GetMapping("heatmap")
-  private List<SimplePosition> getHeatMapData() throws InterruptedException, ApiException, IOException {
-    Bundle bundle = this.getReportBundle();
+  @PostMapping("heatmap")
+  private List<SimplePosition> getHeatMapData(@RequestBody String jsonBundle) throws InterruptedException, ApiException, IOException {
+    Bundle bundle = (Bundle) this.jsonParser.parseResource(jsonBundle);
     List<SimplePosition> positions = new ArrayList();
     GeoApiContext geoContext = new GeoApiContext.Builder()
-      .apiKey("XXX")
+      .apiKey("AIzaSyBGpa9PZC7OuHEoCYuGwJvv-XJIJx21TGA")
       .build();
     HashMap<String, SimplePosition> cached = this.getCachedGeoCoordinates();
 

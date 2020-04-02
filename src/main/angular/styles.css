@@ -3,3 +3,8 @@
 html {
   margin-top: 10px;
 }
+
+agm-map {
+  width: 500px;
+  height: 500px;
+}

@@ -5,14 +5,21 @@
 
     <div class="alert alert-danger" *ngIf="message">{{message}}</div>
 
+    <p *ngIf="loading"><ngb-progressbar type="info" [value]="loadingCount" [striped]="true">Loading...</ngb-progressbar></p>
+
+    <button type="button" class="btn btn-primary" (click)="loadData()">Re-load Report</button>
     <div ngbDropdown class="d-inline-block">
-      <button class="btn btn-primary" id="downloadReportMenu" ngbDropdownToggle [disabled]="loading">Generate Report</button>
+      <button class="btn btn-primary" id="downloadReportMenu" ngbDropdownToggle [disabled]="loading">Download Report</button>
       <div ngbDropdownMenu aria-labelledby="downloadReportMenu">
-        <button ngbDropdownItem (click)="generate('json')">JSON</button>
-        <button ngbDropdownItem (click)="generate('xml')">XML</button>
+        <button ngbDropdownItem (click)="download('json')">JSON</button>
+        <button ngbDropdownItem (click)="download('xml')">XML</button>
       </div>
-      <div class="help-block" *ngIf="loading">Generating...</div>
+    </div>
+
+    <div *ngIf="!loading && data">
+      <p>Total Electronic Case Reports: {{data.entry?.length}}</p>
+
+      <agm-map *ngIf="coordinates && coordinates.length > 0" [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude" (mapReady)="onMapLoad($event)"></agm-map>
     </div>
   </div>
-
 </div>
