@@ -3,23 +3,62 @@
   <div class="jumbotron">
     <h1>Project Flintlock</h1>
 
-    <div class="alert alert-danger" *ngIf="message">{{message}}</div>
+    <div class="alert alert-danger" *ngIf="error">{{error}}</div>
+    <div class="alert alert-info" *ngIf="message">{{message}}</div>
 
     <p *ngIf="loading"><ngb-progressbar type="info" [value]="loadingCount" [striped]="true">Loading...</ngb-progressbar></p>
 
-    <button type="button" class="btn btn-primary" (click)="loadData()">Re-load Report</button>
+    <button type="button" class="btn btn-primary" [disabled]="loading" (click)="loadData()">Reload Report</button>
     <div ngbDropdown class="d-inline-block">
-      <button class="btn btn-primary" id="downloadReportMenu" ngbDropdownToggle [disabled]="loading">Download Report</button>
-      <div ngbDropdownMenu aria-labelledby="downloadReportMenu">
+      <button class="btn btn-primary" id="downloadAllReportsMenu" ngbDropdownToggle [disabled]="loading">Download All Reports</button>
+      <div ngbDropdownMenu aria-labelledby="downloadAllReportsMenu">
         <button ngbDropdownItem (click)="download('json')">JSON</button>
         <button ngbDropdownItem (click)="download('xml')">XML</button>
       </div>
     </div>
 
-    <div *ngIf="!loading && data">
-      <p>Total Electronic Case Reports: {{data.entry?.length}}</p>
+    <p *ngIf="!loading">
+      Total Public Health Reports: {{data.entry?.length}}
+    </p>
 
-      <agm-map *ngIf="coordinates && coordinates.length > 0" [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude" (mapReady)="onMapLoad($event)"></agm-map>
-    </div>
+    <ngb-tabset *ngIf="!loading">
+      <ngb-tab title="Reports" *ngIf="reportTableInfo?.length > 0">
+        <ng-template ngbTabContent>
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th>Patient Name</th>
+              <th>Condition(s)</th>
+              <th>&nbsp;</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let rti of reportTableInfo">
+              <td>{{rti.name}}</td>
+              <td>
+                <ul>
+                  <li *ngFor="let c of rti.conditions">{{c}}</li>
+                </ul>
+              </td>
+              <td>
+                <div ngbDropdown class="d-inline-block">
+                  <button class="btn btn-primary" id="downloadReportMenu" ngbDropdownToggle [disabled]="loading">Download</button>
+                  <div ngbDropdownMenu aria-labelledby="downloadReportMenu">
+                    <button ngbDropdownItem (click)="download('json', rti.doc)">JSON</button>
+                    <button ngbDropdownItem (click)="download('xml', rti.doc)">XML</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </ngb-tab>
+      <ngb-tab title="Heat Map" *ngIf="coordinates?.length > 0">
+        <ng-template ngbTabContent>
+          <agm-map [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude" (mapReady)="onMapLoad($event)"></agm-map>
+        </ng-template>
+      </ngb-tab>
+    </ngb-tabset>
   </div>
 </div>

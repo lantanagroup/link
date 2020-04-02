@@ -2,6 +2,8 @@ import {Component, OnInit} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import saveAs from 'save-as';
 import {google} from 'google-maps';
+import {ReportTableInfo} from "./report-table-info";
+import {IBundle} from "./fhir";
 
 @Component({
   selector: 'app-root',
@@ -10,6 +12,7 @@ import {google} from 'google-maps';
 })
 export class AppComponent implements OnInit {
   loading = false;
+  error: string;
   message: string;
   loadingCount = 0;
   data: {
@@ -26,9 +29,18 @@ export class AppComponent implements OnInit {
     longitude: number;
     strength: number;
   }[];
+  reportTableInfo: ReportTableInfo[];
 
   constructor(private http: HttpClient) {
-
+    if (localStorage.getItem('lastData')) {
+      try {
+        this.data = JSON.parse(localStorage.getItem('lastData'));
+        this.http.post('heatmap', JSON.stringify(this.data), {responseType: 'json'}).toPromise()
+          .then(coordinates => this.coordinates = <any> coordinates);
+        this.reportTableInfo = (this.data.entry || []).map(e => new ReportTableInfo(<IBundle>e.resource));
+        this.message = 'Displaying cached data. Press "Reload Report" to refresh data.';
+      } catch (ex) {}
+    }
   }
 
   onMapLoad(mapInstance: google.maps.Map) {
@@ -46,10 +58,10 @@ export class AppComponent implements OnInit {
     });
   }
 
-  async download(format: 'json'|'xml') {
+  async download(format: 'json'|'xml', report?: IBundle) {
     if (!this.data) return;
 
-    let content = JSON.stringify(this.data, null, '\t');
+    let content = JSON.stringify(report ? report : this.data, null, '\t');
 
     if (format === 'xml') {
       content = await this.http.post('/convert', content, { responseType: "text" }).toPromise();
@@ -63,6 +75,7 @@ export class AppComponent implements OnInit {
 
   async loadData() {
     this.loading = true;
+    this.message = '';
 
     let timeout: any;
     const timeoutEvent = () => {
@@ -77,9 +90,11 @@ export class AppComponent implements OnInit {
       timeoutEvent();
       this.data = <any> await this.http.get('case-report-bundle.json', {responseType: "json"}).toPromise();
       this.coordinates = <any> await this.http.post('heatmap', JSON.stringify(this.data), {responseType: 'json'}).toPromise();
-      console.log(this.coordinates);
+      this.reportTableInfo = (this.data.entry || []).map(e => new ReportTableInfo(<IBundle> e.resource));
+
+      localStorage.setItem('lastData', JSON.stringify(this.data));
     } catch (ex) {
-      this.message = ex.message;
+      this.error = ex.message;
     } finally {
       this.loading = false;
       clearTimeout(timeout);
@@ -87,6 +102,8 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
-    this.loadData();
+    if (!this.data) {
+      this.loadData();
+    }
   }
 }
