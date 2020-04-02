@@ -62,6 +62,10 @@ public class FlintlockController {
     return result;
   }
 
+  @GetMapping("google-api-key")
+  public String getGoogleApiKey() {
+    return Config.getInstance().googleApiKey;
+  }
 
   @GetMapping(value = "patients", produces = "application/fhir+xml")
   public String patients() {
@@ -148,7 +152,7 @@ public class FlintlockController {
     Bundle bundle = (Bundle) this.jsonParser.parseResource(jsonBundle);
     List<SimplePosition> positions = new ArrayList();
     GeoApiContext geoContext = new GeoApiContext.Builder()
-      .apiKey("AIzaSyBGpa9PZC7OuHEoCYuGwJvv-XJIJx21TGA")
+      .apiKey(Config.getInstance().googleApiKey)
       .build();
     HashMap<String, SimplePosition> cached = this.getCachedGeoCoordinates();
 

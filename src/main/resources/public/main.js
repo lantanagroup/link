@@ -399,7 +399,7 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
             _ng_bootstrap_ng_bootstrap__WEBPACK_IMPORTED_MODULE_4__["NgbModule"],
             _angular_common_http__WEBPACK_IMPORTED_MODULE_5__["HttpClientModule"],
             _agm_core__WEBPACK_IMPORTED_MODULE_6__["AgmCoreModule"].forRoot({
-                apiKey: 'AIzaSyBGpa9PZC7OuHEoCYuGwJvv-XJIJx21TGA',
+                apiKey: '%google.api.key%',
                 libraries: ['visualization']
             })
         ]] });
@@ -419,7 +419,7 @@ AppModule.ɵinj = _angular_core__WEBPACK_IMPORTED_MODULE_1__["ɵɵdefineInjector
                     _ng_bootstrap_ng_bootstrap__WEBPACK_IMPORTED_MODULE_4__["NgbModule"],
                     _angular_common_http__WEBPACK_IMPORTED_MODULE_5__["HttpClientModule"],
                     _agm_core__WEBPACK_IMPORTED_MODULE_6__["AgmCoreModule"].forRoot({
-                        apiKey: 'AIzaSyBGpa9PZC7OuHEoCYuGwJvv-XJIJx21TGA',
+                        apiKey: '%google.api.key%',
                         libraries: ['visualization']
                     })
                 ],
