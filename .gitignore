@@ -3,3 +3,4 @@ target/
 flintlock.iml
 .idea/
 /node_modules/
+/coordinates.txt
