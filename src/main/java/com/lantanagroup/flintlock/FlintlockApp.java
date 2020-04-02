@@ -8,10 +8,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.PropertySources;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 @SpringBootApplication
+@PropertySources({@PropertySource(value={"classpath:application.properties"}), @PropertySource(value={"file:/flintlock.properties"}, ignoreResourceNotFound = false)})
 public class FlintlockApp extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
