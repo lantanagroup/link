@@ -56,7 +56,11 @@
       </ngb-tab>
       <ngb-tab title="Heat Map" *ngIf="coordinates?.length > 0">
         <ng-template ngbTabContent>
-          <agm-map [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude" (mapReady)="onMapLoad($event)"></agm-map>
+          <agm-map [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude">
+            <agm-marker-cluster imagePath="https://raw.githubusercontent.com/googlemaps/v3-utility-library/master/markerclustererplus/images/m">
+              <agm-marker *ngFor="let c of coordinates" [longitude]="c.longitude" [latitude]="c.latitude"></agm-marker>
+            </agm-marker-cluster>
+          </agm-map>
         </ng-template>
       </ngb-tab>
     </ngb-tabset>

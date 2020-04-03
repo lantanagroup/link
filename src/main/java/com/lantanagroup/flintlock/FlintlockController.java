@@ -180,20 +180,7 @@ public class FlintlockController {
 
         if (cached.containsKey(address)) {
           SimplePosition cachedPosition = cached.get(address);
-          SimplePosition found = null;
-
-          for (SimplePosition next : positions) {
-            if (next.getLatitude() == cachedPosition.getLatitude() && next.getLongitude() == cachedPosition.getLongitude()) {
-              found = next;
-            }
-          }
-
-          if (found == null) {
-            cachedPosition.setStrength(1);
-            positions.add(cachedPosition);
-          } else {
-            found.setStrength(found.getStrength() + 1);
-          }
+          positions.add(cachedPosition);
           continue;
         }
 
