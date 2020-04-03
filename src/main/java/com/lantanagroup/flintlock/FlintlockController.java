@@ -11,6 +11,7 @@ import com.google.maps.errors.ApiException;
 import com.google.maps.model.GeocodingResult;
 import com.lantanagroup.flintlock.client.ValueSetQueryClient;
 import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
+import com.lantanagroup.flintlock.model.ClientReportResponse;
 import com.lantanagroup.flintlock.model.SimplePosition;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -147,9 +148,17 @@ public class FlintlockController {
     }
   }
 
-  @PostMapping("heatmap")
-  private List<SimplePosition> getHeatMapData(@RequestBody String jsonBundle) throws InterruptedException, ApiException, IOException {
-    Bundle bundle = (Bundle) this.jsonParser.parseResource(jsonBundle);
+  @GetMapping("client-report")
+  public ClientReportResponse getClientReport() {
+    ClientReportResponse response = new ClientReportResponse();
+    Bundle bundle = this.getReportBundle();
+    response.setBundle(this.jsonParser.encodeResourceToString(bundle));
+    List<SimplePosition> positions = this.getHeatMapData(bundle);
+    response.setPositions(positions);
+    return response;
+  }
+
+  private List<SimplePosition> getHeatMapData(Bundle bundle) {
     List<SimplePosition> positions = new ArrayList();
     GeoApiContext geoContext = new GeoApiContext.Builder()
       .apiKey(Config.getInstance().googleApiKey)

@@ -5,6 +5,14 @@ import {google} from 'google-maps';
 import {ReportTableInfo} from "./report-table-info";
 import {IBundle} from "./fhir";
 
+interface ClientReportResponse {
+  bundle: string;
+  positions: {
+    latitude: number;
+    longitude: number;
+  }[];
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -27,35 +35,10 @@ export class AppComponent implements OnInit {
   coordinates: {
     latitude: number;
     longitude: number;
-    strength: number;
   }[];
   reportTableInfo: ReportTableInfo[];
 
   constructor(private http: HttpClient) {
-    if (localStorage.getItem('lastData')) {
-      try {
-        this.data = JSON.parse(localStorage.getItem('lastData'));
-        this.http.post('heatmap', JSON.stringify(this.data), {responseType: 'json'}).toPromise()
-          .then(coordinates => this.coordinates = <any> coordinates);
-        this.reportTableInfo = (this.data.entry || []).map(e => new ReportTableInfo(<IBundle>e.resource));
-        this.message = 'Displaying cached data. Press "Reload Report" to refresh data.';
-      } catch (ex) {}
-    }
-  }
-
-  onMapLoad(mapInstance: google.maps.Map) {
-    const data = [];
-
-    this.coordinates.forEach(c => {
-      for (let i = 0; i < c.strength; i++) {
-        data.push(new google.maps.LatLng(c.latitude, c.longitude));
-      }
-    });
-    new google.maps.visualization.HeatmapLayer({
-      map: <any> mapInstance,
-      data: data,
-
-    });
   }
 
   async download(format: 'json'|'xml', report?: IBundle) {
@@ -76,6 +59,7 @@ export class AppComponent implements OnInit {
   async loadData() {
     this.loading = true;
     this.message = '';
+    this.error = '';
 
     let timeout: any;
     const timeoutEvent = () => {
@@ -88,11 +72,10 @@ export class AppComponent implements OnInit {
 
     try {
       timeoutEvent();
-      this.data = <any> await this.http.get('case-report-bundle.json', {responseType: "json"}).toPromise();
-      this.coordinates = <any> await this.http.post('heatmap', JSON.stringify(this.data), {responseType: 'json'}).toPromise();
+      const response = <ClientReportResponse> await this.http.get('client-report', {responseType: "json"}).toPromise();
+      this.data = JSON.parse(response.bundle);
+      this.coordinates = response.positions;
       this.reportTableInfo = (this.data.entry || []).map(e => new ReportTableInfo(<IBundle> e.resource));
-
-      localStorage.setItem('lastData', JSON.stringify(this.data));
     } catch (ex) {
       this.error = ex.message;
     } finally {
