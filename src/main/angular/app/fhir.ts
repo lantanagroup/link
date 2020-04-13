@@ -60,3 +60,47 @@ export interface IComposition extends IResource {
     entry?: IResourceReference[];
   }[];
 }
+
+export interface IExtension {
+  id?: string;
+  extension?: IExtension[];
+  url: string;
+  // value[x]
+}
+
+export interface IDomainResource extends IResource {
+  resourceType: string;
+  contained?: IDomainResource[];
+  extension?: IExtension[];
+  modifierExtension?: IExtension[];
+}
+
+export interface IQuestionnaireResponseAnswerComponent {
+  item?: IQuestionnaireResponseItemComponent[];
+  valueUri?: string;
+  valueString?: string;
+  valueDate?: string;
+  valueInteger?: number;
+}
+
+export interface IQuestionnaireResponseItemComponent {
+  linkId: string;
+  definition?: string;
+  text?: string;
+  answer?: IQuestionnaireResponseAnswerComponent[];
+  item?: IQuestionnaireResponseItemComponent[];
+}
+
+export interface IQuestionnaireResponse extends IDomainResource {
+  identifier?: IIdentifier;
+  basedOn?: IResourceReference[];
+  partOf?: IResourceReference[];
+  questionnaire?: string;
+  status: string;
+  subject?: IResourceReference;
+  context?: IResourceReference;
+  authored?: Date;
+  author?: IResourceReference;
+  source?: IResourceReference;
+  item?: IQuestionnaireResponseItemComponent[];
+}

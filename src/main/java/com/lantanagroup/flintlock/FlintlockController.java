@@ -12,6 +12,7 @@ import com.google.maps.model.GeocodingResult;
 import com.lantanagroup.flintlock.client.ValueSetQueryClient;
 import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
 import com.lantanagroup.flintlock.model.ClientReportResponse;
+import com.lantanagroup.flintlock.model.QuestionnaireResponseSimple;
 import com.lantanagroup.flintlock.model.SimplePosition;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -260,6 +261,46 @@ public class FlintlockController {
     Bundle ecrDoc = ecr.compile();
     IParser xmlParser = this.ctx.newXmlParser();
     return xmlParser.encodeResourceToString(ecrDoc);
+  }
+
+  @GetMapping("questionnaire-response")
+  public QuestionnaireResponseSimple getQuestionnaireResponse() {
+    QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
+
+    try {
+      Bundle hospitalizedBundle = this.clinicalDataClient.search()
+        .byUrl("Patient?_summary=true&_active=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004")
+        .returnBundle(Bundle.class)
+        .execute();
+      response.setHospitalized(hospitalizedBundle.getTotal());
+    } catch (Exception ex) {
+      System.err.println("Could not retrieve hospitalized count: " + ex.getMessage());
+      ex.printStackTrace();
+    }
+
+    try {
+      Bundle hospAndVentilatedBundle = this.clinicalDataClient.search()
+        .byUrl("Patient?_active=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004&_has:Device:type:patient=706172005,426160001,272189001,449071006,706173000,465703003,700657002,250870006,444932008,409025002,385857005")
+        .returnBundle(Bundle.class)
+        .execute();
+      response.setHospitalizedAndVentilated(hospAndVentilatedBundle.getTotal());
+    } catch (Exception ex) {
+      System.err.println("Could not retrieve hospitalized & ventilated count: " + ex.getMessage());
+      ex.printStackTrace();
+    }
+
+    try {
+      Bundle deathsBundle = this.clinicalDataClient.search()
+        .byUrl("Patient?_deceased=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004")
+        .returnBundle(Bundle.class)
+        .execute();
+      response.setDeaths(deathsBundle.getTotal());
+    } catch (Exception ex) {
+      System.err.println("Could not retrieve deaths count: " + ex.getMessage());
+      ex.printStackTrace();
+    }
+
+    return response;
   }
 
   private Map<String, Patient> getUniquePatientReferences(List<Condition> conditions) {

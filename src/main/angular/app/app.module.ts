@@ -8,23 +8,25 @@ import {HttpClientModule} from "@angular/common/http";
 import {AgmCoreModule} from "@agm/core";
 import {AgmOverlay, AgmOverlays} from "agm-overlays";
 import {AgmJsMarkerClustererModule} from "@agm/js-marker-clusterer";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
   declarations: [
     AppComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    NgbModule,
-    HttpClientModule,
-    AgmOverlays,
-    AgmCoreModule.forRoot({
-      apiKey: '%google.api.key%',
-      libraries: ['visualization']
-    }),
-    AgmJsMarkerClustererModule
-  ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        NgbModule,
+        HttpClientModule,
+        AgmOverlays,
+        AgmCoreModule.forRoot({
+            apiKey: '%google.api.key%',
+            libraries: ['visualization']
+        }),
+        AgmJsMarkerClustererModule,
+        FormsModule
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })

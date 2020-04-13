@@ -5,64 +5,104 @@
 
     <div class="alert alert-danger" *ngIf="error">{{error}}</div>
     <div class="alert alert-info" *ngIf="message">{{message}}</div>
+    <div class="alert alert-info" *ngIf="loading">Getting information from FHIR server...</div>
 
-    <p *ngIf="loading"><ngb-progressbar type="info" [value]="loadingCount" [striped]="true">Loading...</ngb-progressbar></p>
-
-    <button type="button" class="btn btn-primary" [disabled]="loading" (click)="loadData()">Reload Report</button>
-    <div ngbDropdown class="d-inline-block">
-      <button class="btn btn-primary" id="downloadAllReportsMenu" ngbDropdownToggle [disabled]="loading">Download All Reports</button>
-      <div ngbDropdownMenu aria-labelledby="downloadAllReportsMenu">
-        <button ngbDropdownItem (click)="download('json')">JSON</button>
-        <button ngbDropdownItem (click)="download('xml')">XML</button>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>Facility ID</label>
+          <input type="text" class="form-control" [(ngModel)]="response.facilityId" [class.is-invalid]="!response.facilityId" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>Summary Census ID</label>
+          <input type="text" class="form-control" [(ngModel)]="response.summaryCensusId" [class.is-invalid]="!response.summaryCensusId" />
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" />
+          <span class="help-block">For which patient impact and hospital capacity counts are reported.</span>
+        </div>
       </div>
     </div>
 
-    <p *ngIf="!loading">
-      Total Public Health Reports: {{data.entry?.length}}
-    </p>
+    <div class="card">
+      <div class="card-header">
+        <span>Section 1</span>
+        <p class="card-subtitle">Patient Impact Data Elements</p>
+      </div>
+      <table class="table table-striped">
+        <tbody>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.hospitalized" [class.is-invalid]="!response.hasOwnProperty('hospitalized')" /></td>
+          <td><strong>HOSPITALIZED:</strong> Patients currently hospitalized in an inpatient bed who have suspected or confirmed COVID-19</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.hospitalizedAndVentilated" [class.is-invalid]="!response.hasOwnProperty('hospitalizedAndVentilated')" /></td>
+          <td><strong>HOSPITALIZED and VENTILATED:</strong> Patients currently hospitalized in an inpatient bed who have suspected or confirmed COVID-19 and are on a mechanical ventilator</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.hospitalOnset" [class.is-invalid]="!response.hasOwnProperty('hospitalOnset')" /></td>
+          <td><strong>HOSPITAL ONSET:</strong> Patients currently hospitalized in an inpatient bed with onset of suspected or confirmed COVID-19 fourteen or more days after hospital admission due to a condition other than COVID-19</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.edOverflow" [class.is-invalid]="!response.hasOwnProperty('edOverflow')" /></td>
+          <td><strong>ED/OVERFLOW:</strong> Patients with suspected or confirmed COVID-19 who currently are in the Emergency Department (ED) or any overflow location awaiting an inpatient bed</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.edOverflowAndVentilated" [class.is-invalid]="!response.hasOwnProperty('edOverflowAndVentilated')" /></td>
+          <td><strong>ED/OVERFLOW and VENTILATED:</strong> Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.deaths" [class.is-invalid]="!response.hasOwnProperty('deaths')" /></td>
+          <td><strong>DEATHS:</strong> Patients with suspected or confirmed COVID-19 who died in the hospital, ED, or any overflow location on the date for which you are reporting</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <ngb-tabset *ngIf="!loading">
-      <ngb-tab title="Reports" *ngIf="reportTableInfo?.length > 0">
-        <ng-template ngbTabContent>
-          <table class="table table-striped">
-            <thead>
-            <tr>
-              <th>Patient Name</th>
-              <th>Condition(s)</th>
-              <th>&nbsp;</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let rti of reportTableInfo">
-              <td>{{rti.name}}</td>
-              <td>
-                <ul>
-                  <li *ngFor="let c of rti.conditions">{{c}}</li>
-                </ul>
-              </td>
-              <td>
-                <div ngbDropdown class="d-inline-block">
-                  <button class="btn btn-primary" id="downloadReportMenu" ngbDropdownToggle [disabled]="loading">Download</button>
-                  <div ngbDropdownMenu aria-labelledby="downloadReportMenu">
-                    <button ngbDropdownItem (click)="download('json', rti.doc)">JSON</button>
-                    <button ngbDropdownItem (click)="download('xml', rti.doc)">XML</button>
-                  </div>
-                </div>
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </ng-template>
-      </ngb-tab>
-      <ngb-tab title="Heat Map" *ngIf="coordinates?.length > 0">
-        <ng-template ngbTabContent>
-          <agm-map [latitude]="coordinates[0].latitude" [longitude]="coordinates[0].longitude">
-            <agm-marker-cluster imagePath="https://raw.githubusercontent.com/googlemaps/v3-utility-library/master/markerclustererplus/images/m">
-              <agm-marker *ngFor="let c of coordinates" [longitude]="c.longitude" [latitude]="c.latitude"></agm-marker>
-            </agm-marker-cluster>
-          </agm-map>
-        </ng-template>
-      </ngb-tab>
-    </ngb-tabset>
+    <div class="card">
+      <div class="card-header">
+        <span>Section 2</span>
+        <p class="card-subtitle">Hospital Bed/ Intensive Care Unit (ICU)/ Ventilator Capacity Data Elements</p>
+      </div>
+      <table class="table table-striped">
+        <tbody>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.allHospitalBeds" [class.is-invalid]="!response.hasOwnProperty('allHospitalBeds')" /></td>
+          <td><strong>ALL HOSPITAL BEDS:</strong> Total number of all staffed inpatient and outpatient beds in your hospital,including all overflow and surge/expansion beds used for inpatients and for outpatients (includes all ICU beds)</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.hospitalInpatientBeds" [class.is-invalid]="!response.hasOwnProperty('hospitalInpatientBeds')" /></td>
+          <td><strong>*HOSPITAL INPATIENT BEDS:</strong> Total number of staffed inpatient beds in your hospital including all overflow and surge/ expansion beds used for inpatients (includes all ICU beds)</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.hospitalInpatientBedOccupancy" [class.is-invalid]="!response.hasOwnProperty('hospitalInpatientBedOccupancy')" /></td>
+          <td><strong>HOSPITAL INPATIENT BED OCCUPANCY:</strong> Total number of staffed inpatient beds that are occupied</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.icuBeds" [class.is-invalid]="!response.hasOwnProperty('icuBeds')" /></td>
+          <td><strong>ICU BEDS:</strong> Total number of staffed inpatient ICU beds</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.icuBedOccupancy" [class.is-invalid]="!response.hasOwnProperty('response.icuBedOccupancy')" /></td>
+          <td><strong>ICU BED OCCUPANCY:</strong> Total number of staffed inpatient ICU beds that are occupied</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.mechanicalVentilators" [class.is-invalid]="!response.hasOwnProperty('mechanicalVentilators')" /></td>
+          <td><strong>MECHANICAL VENTILATORS:</strong> Total number of ventilators available</td>
+        </tr>
+        <tr>
+          <td><input type="number" class="form-control" [(ngModel)]="response.mechanicalVentilatorsInUse" [class.is-invalid]="!response.hasOwnProperty('mechanicalVentilatorsInUse')" /></td>
+          <td><strong>MECHANICAL VENTILATORS IN USE:</strong> Total number of ventilators in use</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <button type="button" class="btn btn-primary" (click)="submit()">Submit</button>
   </div>
 </div>
