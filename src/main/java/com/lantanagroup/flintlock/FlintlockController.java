@@ -12,6 +12,7 @@ import com.google.maps.model.GeocodingResult;
 import com.lantanagroup.flintlock.client.ValueSetQueryClient;
 import com.lantanagroup.flintlock.ecr.ElectronicCaseReport;
 import com.lantanagroup.flintlock.model.ClientReportResponse;
+import com.lantanagroup.flintlock.model.LocationResponse;
 import com.lantanagroup.flintlock.model.QuestionnaireResponseSimple;
 import com.lantanagroup.flintlock.model.SimplePosition;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -263,13 +265,45 @@ public class FlintlockController {
     return xmlParser.encodeResourceToString(ecrDoc);
   }
 
+  @GetMapping("location")
+  public List<LocationResponse> getLocations(@RequestParam(required = false) String search) throws UnsupportedEncodingException {
+    String url = "Location?_summary=true&_count=10";
+
+    if (search != null && !search.isEmpty()) {
+      url += "&_content=" + URLEncoder.encode(search, "utf-8");
+    }
+
+    List<LocationResponse> response = new ArrayList();
+    Bundle locationsBundle = this.clinicalDataClient.search()
+      .byUrl(url)
+      .returnBundle(Bundle.class)
+      .execute();
+
+    for (BundleEntryComponent entry : locationsBundle.getEntry()) {
+      LocationResponse newLocResponse = new LocationResponse();
+      Location loc = (Location) entry.getResource();
+      String name = loc.getName();
+
+      if (name == null || name.isEmpty()) name = "Unspecified Name";
+
+      newLocResponse.setId(loc.getIdElement().getIdPart());
+      newLocResponse.setDisplay(name);
+      response.add(newLocResponse);
+    }
+
+    return response;
+  }
+
   @GetMapping("questionnaire-response")
-  public QuestionnaireResponseSimple getQuestionnaireResponse() {
+  public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
+    String covidCodes = "441590008,651000146102,715882005,186747009,713084008,840539006,840544004";
+    String deviceTypeCodes = "706172005,426160001,272189001,449071006,706173000,465703003,700657002,250870006,444932008,409025002,385857005";
 
     try {
+      String url = String.format("Patient?_summary=true&_active=true&_has:Condition:patient:code=%s", covidCodes);
       Bundle hospitalizedBundle = this.clinicalDataClient.search()
-        .byUrl("Patient?_summary=true&_active=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004")
+        .byUrl(url)
         .returnBundle(Bundle.class)
         .execute();
       response.setHospitalized(hospitalizedBundle.getTotal());
@@ -279,8 +313,11 @@ public class FlintlockController {
     }
 
     try {
+      String url = String.format("Patient?_active=true&_has:Condition:patient:code=%s&_has:Device:type:patient=%s",
+        covidCodes,
+        deviceTypeCodes);
       Bundle hospAndVentilatedBundle = this.clinicalDataClient.search()
-        .byUrl("Patient?_active=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004&_has:Device:type:patient=706172005,426160001,272189001,449071006,706173000,465703003,700657002,250870006,444932008,409025002,385857005")
+        .byUrl(url)
         .returnBundle(Bundle.class)
         .execute();
       response.setHospitalizedAndVentilated(hospAndVentilatedBundle.getTotal());
@@ -290,14 +327,31 @@ public class FlintlockController {
     }
 
     try {
+      String url = String.format("Patient?_deceased=true&_has:Condition:patient:code=%s", covidCodes);
       Bundle deathsBundle = this.clinicalDataClient.search()
-        .byUrl("Patient?_deceased=true&_has:Condition:patient:code=441590008,651000146102,715882005,186747009,713084008,840539006,840544004")
+        .byUrl(url)
         .returnBundle(Bundle.class)
         .execute();
       response.setDeaths(deathsBundle.getTotal());
     } catch (Exception ex) {
       System.err.println("Could not retrieve deaths count: " + ex.getMessage());
       ex.printStackTrace();
+    }
+
+    if (overflowLocations != null && !overflowLocations.isEmpty()) {
+      try {
+        String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s",
+          covidCodes,
+          overflowLocations);
+        Bundle edOverflowBundle = this.clinicalDataClient.search()
+          .byUrl(url)
+          .returnBundle(Bundle.class)
+          .execute();
+        response.setEdOverflow(edOverflowBundle.getTotal());
+      } catch (Exception ex) {
+        System.err.println("Could not retrieve ED/overflow count: " + ex.getMessage());
+        ex.printStackTrace();
+      }
     }
 
     return response;

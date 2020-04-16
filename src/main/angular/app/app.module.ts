@@ -9,10 +9,13 @@ import {AgmCoreModule} from "@agm/core";
 import {AgmOverlay, AgmOverlays} from "agm-overlays";
 import {AgmJsMarkerClustererModule} from "@agm/js-marker-clusterer";
 import {FormsModule} from "@angular/forms";
+import { SelectLocationsComponent } from './select-locations/select-locations.component';
+import {CookieService} from "ngx-cookie-service";
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    SelectLocationsComponent
   ],
     imports: [
         BrowserModule,
@@ -27,7 +30,9 @@ import {FormsModule} from "@angular/forms";
         AgmJsMarkerClustererModule,
         FormsModule
     ],
-  providers: [],
+  providers: [
+    CookieService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

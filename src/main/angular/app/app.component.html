@@ -7,6 +7,17 @@
     <div class="alert alert-info" *ngIf="message">{{message}}</div>
     <div class="alert alert-info" *ngIf="loading">Getting information from FHIR server...</div>
 
+    <div class="card">
+      <div class="card-header">Options</div>
+      <div class="card-body">
+        <!-- Overflow Locations -->
+        <p><strong>Overflow Locations</strong></p>
+        <p *ngIf="overflowLocations.length > 0">{{overflowLocationsDisplay}}</p>
+        <p *ngIf="overflowLocations.length === 0"><em>No locations have been specified. Queries for overflow will not be executed.</em></p>
+        <a href="javascript:void(0)" (click)="selectOverflowLocations()">[edit]</a>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-4">
         <div class="form-group">

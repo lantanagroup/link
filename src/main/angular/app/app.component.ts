@@ -3,6 +3,10 @@ import {HttpClient} from "@angular/common/http";
 import {QuestionnaireResponseSimple} from "./model/questionnaire-response-simple";
 import {IQuestionnaireResponse, IQuestionnaireResponseItemComponent} from "./fhir";
 import saveAs from 'save-as';
+import {LocationResponse} from "./model/location-response";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {SelectLocationsComponent} from "./select-locations/select-locations.component";
+import {CookieService} from "ngx-cookie-service";
 
 @Component({
   selector: 'app-root',
@@ -14,8 +18,23 @@ export class AppComponent implements OnInit {
   error: string;
   message: string;
   response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
+  overflowLocations: LocationResponse[] = [];
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private modal: NgbModal, private cookieService: CookieService) {
+    if (this.cookieService.get('overflowLocations')) {
+      try {
+        this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
+      } catch (ex) {}
+    }
+  }
+
+  get overflowLocationsDisplay() {
+    const displays = this.overflowLocations.map(l => {
+      const r = l.display || l.id;
+      return r ? r.replace(/,/g, '') : 'Unknown';
+    });
+
+    return displays.join(', ');
   }
 
   submit() {
@@ -131,10 +150,25 @@ export class AppComponent implements OnInit {
     saveAs(blob, 'questionnaireResponse.txt');
   }
 
-  async ngOnInit() {
+  async selectOverflowLocations() {
+    const modalRef = this.modal.open(SelectLocationsComponent, { size: 'lg' });
+    this.overflowLocations = (await modalRef.result) || [];
+    this.cookieService.set('overflowLocations', JSON.stringify(this.overflowLocations));
+    this.reload();
+  }
+
+  async reload() {
     try {
       this.loading = true;
-      this.response = await this.http.get<QuestionnaireResponseSimple>('/questionnaire-response').toPromise();
+
+      let url = '/questionnaire-response?';
+
+      if (this.overflowLocations.length > 0) {
+        const ids = this.overflowLocations.map(ol => ol.id);
+        url += '&overflowLocations=' + encodeURIComponent(ids.join(',')) + '&';
+      }
+
+      this.response = await this.http.get<QuestionnaireResponseSimple>(url).toPromise();
       const keys = Object.keys(this.response);
       for (const key of keys) {
         if (this.response[key] === null) {
@@ -146,5 +180,9 @@ export class AppComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  async ngOnInit() {
+    await this.reload();
   }
 }
