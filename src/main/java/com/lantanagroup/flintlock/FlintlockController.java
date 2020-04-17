@@ -26,10 +26,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
 @RestController
 public class FlintlockController {
@@ -300,6 +300,7 @@ public class FlintlockController {
     String covidCodes = "441590008,651000146102,715882005,186747009,713084008,840539006,840544004";
     String deviceTypeCodes = "706172005,426160001,272189001,449071006,706173000,465703003,700657002,250870006,444932008,409025002,385857005";
 
+    // Hospitalized
     try {
       String url = String.format("Patient?_summary=true&_active=true&_has:Condition:patient:code=%s", covidCodes);
       Bundle hospitalizedBundle = this.clinicalDataClient.search()
@@ -312,8 +313,9 @@ public class FlintlockController {
       ex.printStackTrace();
     }
 
+    // Hospitalized and Ventilated
     try {
-      String url = String.format("Patient?_active=true&_has:Condition:patient:code=%s&_has:Device:type:patient=%s",
+      String url = String.format("Patient?_active=true&_has:Condition:patient:code=%s&_has:Device:patient:type=%s",
         covidCodes,
         deviceTypeCodes);
       Bundle hospAndVentilatedBundle = this.clinicalDataClient.search()
@@ -326,19 +328,27 @@ public class FlintlockController {
       ex.printStackTrace();
     }
 
+    /*
+    // Hospital Onset
     try {
-      String url = String.format("Patient?_deceased=true&_has:Condition:patient:code=%s", covidCodes);
-      Bundle deathsBundle = this.clinicalDataClient.search()
+      LocalDateTime startDate = LocalDateTime.now().minusDays(14);
+      LocalDateTime endDate = LocalDateTime.now().minusDays(13);
+      String start = Helper.getFhirDate(startDate);
+      String end = Helper.getFhirDate(endDate);
+      String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:date=gt%s&_has:Condition:patient:onset-date=%s", covidCodes, start, end);
+      Bundle hospitalOnsetBundle = this.clinicalDataClient.search()
         .byUrl(url)
         .returnBundle(Bundle.class)
         .execute();
-      response.setDeaths(deathsBundle.getTotal());
+      response.setHospitalOnset(hospitalOnsetBundle.getTotal());
     } catch (Exception ex) {
-      System.err.println("Could not retrieve deaths count: " + ex.getMessage());
+      System.err.println("Could not retrieve hospitalized onset count: " + ex.getMessage());
       ex.printStackTrace();
     }
+     */
 
     if (overflowLocations != null && !overflowLocations.isEmpty()) {
+      // ED/Overflow
       try {
         String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s",
           covidCodes,
@@ -352,6 +362,35 @@ public class FlintlockController {
         System.err.println("Could not retrieve ED/overflow count: " + ex.getMessage());
         ex.printStackTrace();
       }
+
+      // ED/Overflow and Ventilated
+      try {
+        String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s&_has:Device:patient:type=%s",
+          covidCodes,
+          overflowLocations,
+          deviceTypeCodes);
+        Bundle edOverflowAndVentilated = this.clinicalDataClient.search()
+          .byUrl(url)
+          .returnBundle(Bundle.class)
+          .execute();
+        response.setEdOverflowAndVentilated(edOverflowAndVentilated.getTotal());
+      } catch (Exception ex) {
+        System.err.println("Could not retrieve ED/overflow count: " + ex.getMessage());
+        ex.printStackTrace();
+      }
+    }
+
+    // Deaths
+    try {
+      String url = String.format("Patient?_deceased=true&_has:Condition:patient:code=%s", covidCodes);
+      Bundle deathsBundle = this.clinicalDataClient.search()
+        .byUrl(url)
+        .returnBundle(Bundle.class)
+        .execute();
+      response.setDeaths(deathsBundle.getTotal());
+    } catch (Exception ex) {
+      System.err.println("Could not retrieve deaths count: " + ex.getMessage());
+      ex.printStackTrace();
     }
 
     return response;
