@@ -1,3 +1,4 @@
+import {getFhirNow} from "../helper";
 
 export class QuestionnaireResponseSimple {
   facilityId: string;
@@ -18,4 +19,8 @@ export class QuestionnaireResponseSimple {
   icuBedOccupancy: number;
   mechanicalVentilators: number;
   mechanicalVentilatorsInUse: number;
+
+  constructor() {
+    this.date = getFhirNow();
+  }
 }

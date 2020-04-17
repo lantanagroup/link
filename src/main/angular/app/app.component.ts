@@ -7,6 +7,9 @@ import {LocationResponse} from "./model/location-response";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {SelectLocationsComponent} from "./select-locations/select-locations.component";
 import {CookieService} from "ngx-cookie-service";
+import {Subject} from "rxjs";
+import {debounceTime} from "rxjs/operators";
+import {getFhirNow} from "./helper";
 
 @Component({
   selector: 'app-root',
@@ -19,6 +22,7 @@ export class AppComponent implements OnInit {
   message: string;
   response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
   overflowLocations: LocationResponse[] = [];
+  reportDateEvent = new Subject();
 
   constructor(private http: HttpClient, private modal: NgbModal, private cookieService: CookieService) {
     if (this.cookieService.get('overflowLocations')) {
@@ -26,6 +30,12 @@ export class AppComponent implements OnInit {
         this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
       } catch (ex) {}
     }
+
+    this.reportDateEvent
+      .pipe(debounceTime(500))
+      .subscribe(async () => {
+        await this.reload();
+      });
   }
 
   get overflowLocationsDisplay() {
@@ -154,7 +164,7 @@ export class AppComponent implements OnInit {
     const modalRef = this.modal.open(SelectLocationsComponent, { size: 'lg' });
     this.overflowLocations = (await modalRef.result) || [];
     this.cookieService.set('overflowLocations', JSON.stringify(this.overflowLocations));
-    this.reload();
+    await this.reload();
   }
 
   async reload() {
@@ -165,7 +175,13 @@ export class AppComponent implements OnInit {
 
       if (this.overflowLocations.length > 0) {
         const ids = this.overflowLocations.map(ol => ol.id);
-        url += '&overflowLocations=' + encodeURIComponent(ids.join(',')) + '&';
+        url += 'overflowLocations=' + encodeURIComponent(ids.join(',')) + '&';
+      }
+
+      if (this.response.date) {
+        url += 'reportDate=' + encodeURIComponent(this.response.date) + '&';
+      } else {
+        url += 'reportDate=' + encodeURIComponent(getFhirNow()) + '&';
       }
 
       this.response = await this.http.get<QuestionnaireResponseSimple>(url).toPromise();

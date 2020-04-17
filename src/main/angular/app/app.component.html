@@ -34,7 +34,7 @@
       <div class="col-md-4">
         <div class="form-group">
           <label>Date</label>
-          <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" />
+          <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" (change)="reportDateEvent.next()" />
           <span class="help-block">For which patient impact and hospital capacity counts are reported.</span>
         </div>
       </div>

@@ -295,8 +295,9 @@ public class FlintlockController {
   }
 
   @GetMapping("questionnaire-response")
-  public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations) {
+  public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations, @RequestParam() String reportDate) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
+    response.setDate(reportDate);
     String covidCodes = "441590008,651000146102,715882005,186747009,713084008,840539006,840544004";
     String deviceTypeCodes = "706172005,426160001,272189001,449071006,706173000,465703003,700657002,250870006,444932008,409025002,385857005";
 
@@ -315,7 +316,7 @@ public class FlintlockController {
 
     // Hospitalized and Ventilated
     try {
-      String url = String.format("Patient?_active=true&_has:Condition:patient:code=%s&_has:Device:patient:type=%s",
+      String url = String.format("Patient?_summary=true&_active=true&_has:Condition:patient:code=%s&_has:Device:patient:type=%s",
         covidCodes,
         deviceTypeCodes);
       Bundle hospAndVentilatedBundle = this.clinicalDataClient.search()
@@ -350,7 +351,7 @@ public class FlintlockController {
     if (overflowLocations != null && !overflowLocations.isEmpty()) {
       // ED/Overflow
       try {
-        String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s",
+        String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s",
           covidCodes,
           overflowLocations);
         Bundle edOverflowBundle = this.clinicalDataClient.search()
@@ -365,7 +366,7 @@ public class FlintlockController {
 
       // ED/Overflow and Ventilated
       try {
-        String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s&_has:Device:patient:type=%s",
+        String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s&_has:Device:patient:type=%s",
           covidCodes,
           overflowLocations,
           deviceTypeCodes);
@@ -382,7 +383,9 @@ public class FlintlockController {
 
     // Deaths
     try {
-      String url = String.format("Patient?_deceased=true&_has:Condition:patient:code=%s", covidCodes);
+      String url = String.format("Patient?_summary=true&death-date=%s&_has:Condition:patient:code=%s",
+        reportDate,
+        covidCodes);
       Bundle deathsBundle = this.clinicalDataClient.search()
         .byUrl(url)
         .returnBundle(Bundle.class)
