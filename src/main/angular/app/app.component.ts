@@ -164,7 +164,6 @@ export class AppComponent implements OnInit {
     const modalRef = this.modal.open(SelectLocationsComponent, { size: 'lg' });
     this.overflowLocations = (await modalRef.result) || [];
     this.cookieService.set('overflowLocations', JSON.stringify(this.overflowLocations));
-    await this.reload();
   }
 
   async reload() {
@@ -199,6 +198,6 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
-    await this.reload();
+
   }
 }
