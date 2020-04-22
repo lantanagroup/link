@@ -1,0 +1,5 @@
+.git
+.cache
+.idea
+**/node_modules
+**/target

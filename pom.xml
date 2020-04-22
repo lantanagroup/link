@@ -1,104 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<packaging>war</packaging>
-	<groupId>com.lantanagroup.flintlock</groupId>
-	<artifactId>flintlock</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
-	<name>flintlock</name>
-	<description>Lantana Flintlock Project</description>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.8.RELEASE</version>
-		<relativePath/>
-	</parent>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.1.8.RELEASE</version>
+        <relativePath/>
+    </parent>
 
-	<properties>
-		<java.version>1.8</java.version>
-	</properties>
+    <groupId>com.lantanagroup.flintlock</groupId>
+    <artifactId>flintlock</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>ca.uhn.hapi.fhir</groupId>
-			<artifactId>hapi-fhir-base</artifactId>
-			<version>4.2.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>ca.uhn.hapi.fhir</groupId>
-			<artifactId>hapi-fhir-client</artifactId>
-			<version>4.2.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>ca.uhn.hapi.fhir</groupId>
-			<artifactId>hapi-fhir-structures-r4</artifactId>
-			<version>4.2.0</version>
-		</dependency>
-
-    <dependency>
-      <groupId>com.google.maps</groupId>
-      <artifactId>google-maps-services</artifactId>
-      <version>0.11.0</version>
-    </dependency>
-
-		<!-- https://mvnrepository.com/artifact/ca.uhn.hapi.fhir/hapi-fhir-validation-resources-r4 -->
- 		<!--
-		<dependency>
-		    <groupId>ca.uhn.hapi.fhir</groupId>
-		    <artifactId>hapi-fhir-validation-resources-r4</artifactId>
-		    <version>4.2.0</version>
-		</dependency>
-		-->
-
-		<dependency>
-			<groupId>net.sf.saxon</groupId>
-			<artifactId>Saxon-HE</artifactId>
-			<version>9.9.1-5</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-	</dependencies>
-
-	<build>
-		<finalName>flintlock</finalName>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</build>
-
+    <modules>
+        <module>core</module>
+        <module>web</module>
+    </modules>
 </project>

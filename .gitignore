@@ -1,6 +1,3 @@
-target/
-.sts4-cache/
-flintlock.iml
-.idea/
-/node_modules/
-/coordinates.txt
+web/node_modules/
+web/target/
+core/target/
