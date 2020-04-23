@@ -3,3 +3,4 @@
 .idea
 **/node_modules
 **/target
+/web/src/main/resources/application-local.properties

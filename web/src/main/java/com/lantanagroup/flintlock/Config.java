@@ -18,6 +18,18 @@ public class Config implements IConfig {
         config = instance;
     }
 
+    @Value("${auth.issuer}")
+    private String authIssuer;
+
+    @Value("${auth.jwksUrl}")
+    private String authJwksUrl;
+
+    @Value("${auth.clientId}")
+    private String authClientId;
+
+    @Value("${auth.scope}")
+    private String authScope;
+
     @Value("${fhirServer.base}")
     private String fhirServerBase;
 
@@ -107,5 +119,21 @@ public class Config implements IConfig {
 
     public String getQueryDeaths() {
         return queryDeaths;
+    }
+
+    public String getAuthScope() {
+        return authScope;
+    }
+
+    public String getAuthClientId() {
+        return authClientId;
+    }
+
+    public String getAuthJwksUrl() {
+        return authJwksUrl;
+    }
+
+    public String getAuthIssuer() {
+        return authIssuer;
     }
 }

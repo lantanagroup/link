@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
 
 @SpringBootApplication
-@PropertySources({@PropertySource(value={"classpath:application.properties"}), @PropertySource(value={"file:/flintlock.properties"}, ignoreResourceNotFound = true)})
+@PropertySources({@PropertySource(value={"classpath:application.properties"})})
 public class FlintlockApp extends SpringBootServletInitializer implements InitializingBean {
     @Autowired
     private ApplicationContext context;

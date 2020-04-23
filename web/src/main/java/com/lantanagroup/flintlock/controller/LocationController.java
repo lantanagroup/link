@@ -1,7 +1,9 @@
-package com.lantanagroup.flintlock;
+package com.lantanagroup.flintlock.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.flintlock.Config;
+import com.lantanagroup.flintlock.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.flintlock.model.LocationResponse;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Location;
@@ -24,7 +26,7 @@ public class LocationController {
         this.fhirClient.registerInterceptor(new HapiFhirAuthenticationInterceptor());
     }
 
-    @GetMapping("location")
+    @GetMapping("api/location")
     public List<LocationResponse> getLocations(@RequestParam(required = false) String search) throws UnsupportedEncodingException {
         String url = "Location?_summary=true&_count=10";
 

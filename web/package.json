@@ -11,8 +11,6 @@
   },
   "private": true,
   "dependencies": {
-    "@agm/core": "^1.1.0",
-    "@agm/js-marker-clusterer": "^1.1.0",
     "@angular/animations": "~9.1.0",
     "@angular/common": "~9.1.0",
     "@angular/compiler": "~9.1.0",
@@ -23,7 +21,8 @@
     "@angular/platform-browser-dynamic": "~9.1.0",
     "@angular/router": "~9.1.0",
     "@ng-bootstrap/ng-bootstrap": "^6.0.2",
-    "agm-overlays": "^2.0.0",
+    "angular-oauth2-oidc": "^9.2.0",
+    "angular-oauth2-oidc-jwks": "^9.0.0",
     "bootstrap": "^4.4.1",
     "js-marker-clusterer": "^1.0.0",
     "ngx-cookie-service": "^3.0.4",

@@ -1,8 +1,10 @@
-package com.lantanagroup.flintlock;
+package com.lantanagroup.flintlock.hapi;
 
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
+import com.lantanagroup.flintlock.Config;
+import com.lantanagroup.flintlock.Helper;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;

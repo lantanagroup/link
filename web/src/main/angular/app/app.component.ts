@@ -1,15 +1,17 @@
 import {Component, OnInit} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {QuestionnaireResponseSimple} from "./model/questionnaire-response-simple";
-import {IQuestionnaireResponse, IQuestionnaireResponseItemComponent} from "./fhir";
+import {HttpClient} from '@angular/common/http';
+import {QuestionnaireResponseSimple} from './model/questionnaire-response-simple';
+import {IQuestionnaireResponse, IQuestionnaireResponseItemComponent} from './fhir';
 import saveAs from 'save-as';
-import {LocationResponse} from "./model/location-response";
-import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
-import {SelectLocationsComponent} from "./select-locations/select-locations.component";
-import {CookieService} from "ngx-cookie-service";
-import {Subject} from "rxjs";
-import {debounceTime} from "rxjs/operators";
-import {getFhirNow} from "./helper";
+import {LocationResponse} from './model/location-response';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {SelectLocationsComponent} from './select-locations/select-locations.component';
+import {CookieService} from 'ngx-cookie-service';
+import {Subject} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
+import {getFhirNow} from './helper';
+import {OAuthService} from 'angular-oauth2-oidc';
+import {ToastService} from './toast.service';
 
 @Component({
   selector: 'app-root',
@@ -18,13 +20,17 @@ import {getFhirNow} from "./helper";
 })
 export class AppComponent implements OnInit {
   loading = false;
-  error: string;
-  message: string;
   response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
   overflowLocations: LocationResponse[] = [];
   reportDateEvent = new Subject();
+  user: any;
 
-  constructor(private http: HttpClient, private modal: NgbModal, private cookieService: CookieService) {
+  constructor(
+      private http: HttpClient,
+      private modal: NgbModal,
+      private cookieService: CookieService,
+      private oauthService: OAuthService,
+      public toastService: ToastService) {
     if (this.cookieService.get('overflowLocations')) {
       try {
         this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
@@ -170,7 +176,7 @@ export class AppComponent implements OnInit {
     try {
       this.loading = true;
 
-      let url = '/questionnaire-response?';
+      let url = '/api/query?';
 
       if (this.overflowLocations.length > 0) {
         const ids = this.overflowLocations.map(ol => ol.id);
@@ -190,14 +196,48 @@ export class AppComponent implements OnInit {
           delete this.response[key];
         }
       }
+
+      this.toastService.showInfo('Successfully ran queries!');
     } catch (ex) {
-      console.error('Error retrieving initial responses: ' + ex.message);
+      this.toastService.showException('Error running queries', ex);
     } finally {
       this.loading = false;
     }
   }
 
-  async ngOnInit() {
+  login() {
+    this.oauthService.initImplicitFlow();
+  }
 
+  logout() {
+    this.oauthService.logOut();
+  }
+
+  async ngOnInit() {
+    this.oauthService.configure({
+      issuer: '%auth.issuer%',
+      redirectUri: window.location.origin + '/',
+      clientId: '%auth.clientId%',
+      responseType: 'code',
+      scope: '%auth.scope%',
+      showDebugInformation: false,
+      requestAccessToken: true
+    });
+    this.oauthService.setStorage(localStorage);
+    await this.oauthService.loadDiscoveryDocument();
+
+    const loggedIn: boolean = await this.oauthService.tryLogin();
+
+    try {
+      if (loggedIn) {
+        this.user = await this.oauthService.loadUserProfile() as any;
+      }
+    } catch (ex) {
+
+    }
+
+    if (!this.user) {
+      this.oauthService.initImplicitFlow();
+    }
   }
 }

@@ -4,6 +4,7 @@ import {HttpClient} from "@angular/common/http";
 import {LocationResponse} from "../model/location-response";
 import {Subject} from "rxjs";
 import {debounceTime} from "rxjs/operators";
+import {ToastService} from '../toast.service';
 
 @Component({
   selector: 'app-select-locations',
@@ -16,7 +17,10 @@ export class SelectLocationsComponent implements OnInit {
   searchText: string;
   searchTextChanged = new Subject<void>();
 
-  constructor(public activeModal: NgbActiveModal, private http: HttpClient) {
+  constructor(
+      public activeModal: NgbActiveModal,
+      private http: HttpClient,
+      private toastService: ToastService) {
     this.searchTextChanged
       .pipe(debounceTime(500))
       .subscribe(async () => {
@@ -30,13 +34,17 @@ export class SelectLocationsComponent implements OnInit {
   }
 
   async reload() {
-    let url = '/location?';
+    let url = '/api/location?';
 
     if (this.searchText) {
       url += 'search=' + encodeURIComponent(this.searchText) + '&';
     }
 
-    this.locations = await this.http.get<LocationResponse[]>(url).toPromise();
+    try {
+      this.locations = await this.http.get<LocationResponse[]>(url).toPromise();
+    } catch (ex) {
+      this.toastService.showException('Error retrieving locations', ex);
+    }
   }
 
   async ngOnInit() {

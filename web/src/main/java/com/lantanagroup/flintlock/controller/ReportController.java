@@ -1,7 +1,9 @@
-package com.lantanagroup.flintlock;
+package com.lantanagroup.flintlock.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.flintlock.Config;
+import com.lantanagroup.flintlock.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.flintlock.model.QuestionnaireResponseSimple;
 import com.lantanagroup.flintlock.query.IQueryCountExecutor;
 import org.slf4j.Logger;
@@ -47,7 +49,7 @@ public class ReportController {
     return null;
   }
 
-  @GetMapping("questionnaire-response")
+  @GetMapping("/api/query")
   public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations, @RequestParam() String reportDate) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
     response.setDate(reportDate);

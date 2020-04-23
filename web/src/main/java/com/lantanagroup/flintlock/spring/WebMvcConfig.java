@@ -1,4 +1,4 @@
-package com.lantanagroup.flintlock;
+package com.lantanagroup.flintlock.spring;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -8,8 +8,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/main.js")
-      .addResourceLocations("classpath:/public/main.js")
+    registry
+      .addResourceHandler("/*.js")
+      .addResourceLocations("classpath:/public/")
       .resourceChain(false)
       .addTransformer(new MainPageTransformer());
   }
