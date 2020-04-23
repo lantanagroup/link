@@ -214,14 +214,19 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
+    const issuer = '%auth.issuer%';
+    const clientId = '%auth.clientId%';
+    const scope = '%auth.scope%';
+
     this.oauthService.configure({
-      issuer: '%auth.issuer%',
+      issuer,
       redirectUri: window.location.origin + '/',
-      clientId: '%auth.clientId%',
+      clientId,
       responseType: 'code',
-      scope: '%auth.scope%',
+      scope,
       showDebugInformation: false,
-      requestAccessToken: true
+      requestAccessToken: true,
+      requireHttps: false
     });
     this.oauthService.setStorage(localStorage);
     await this.oauthService.loadDiscoveryDocument();
