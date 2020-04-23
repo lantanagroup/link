@@ -4,3 +4,4 @@
 **/node_modules
 **/target
 /web/src/main/resources/application-local.properties
+/web/src/main/java/com/lantanagroup/flintlock/auth/SpringSecurityInitializer.java
