@@ -3,7 +3,7 @@
   <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
 
   <div class="jumbotron">
-    <h1>Project Flintlock</h1>
+    <h1>Nandina</h1>
 
     <p *ngIf="user">Welcome {{user.name}}! [<a href="javascript:void(0)" (click)="logout()">Logout</a>]</p>
     <p *ngIf="!user">
@@ -30,7 +30,7 @@
             <div class="col-md-4">
               <p><strong>Report Date</strong></p>
               <p class="help-block">For which patient impact and hospital capacity counts are reported.</p>
-              <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" (change)="reportDateEvent.next()" />
+              <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" />
             </div>
           </div>
         </div>
@@ -129,7 +129,8 @@
         </table>
       </div>
 
-      <button type="button" class="btn btn-primary" (click)="submit()">Submit</button>
+      <button type="button" class="btn btn-primary" (click)="download()">Download</button>
+
     </div>
   </div>
 </div>

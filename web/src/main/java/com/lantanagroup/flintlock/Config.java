@@ -18,6 +18,9 @@ public class Config implements IConfig {
         config = instance;
     }
 
+    @Value("${export.format}")
+    private String exportFormat;
+
     @Value("${auth.issuer}")
     private String authIssuer;
 
@@ -135,5 +138,9 @@ public class Config implements IConfig {
 
     public String getAuthIssuer() {
         return authIssuer;
+    }
+
+    public String getExportFormat() {
+        return exportFormat;
     }
 }

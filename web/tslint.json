@@ -42,6 +42,7 @@
     ],
     "no-trailing-whitespace": false,
     "no-consecutive-blank-lines": false,
+    "curly": false,
     "no-console": [
       true,
       "debug",

@@ -54,6 +54,8 @@ docker run flintlock:latest
 
 | Property | Description |
 | -------- | ----------- |
+| export.format | "xml" or "json" or "csv" |
+| | |
 | fhirServer.base | The base URL of the FHIR server |
 | fhirServer.username | If basic authentication is required for the FHIR server, the username to authenticate with the FHIR server. |
 | fhirServer.password | If basic authentication is required for the FHIR server, the password to authenticate with the FHIR server. |
