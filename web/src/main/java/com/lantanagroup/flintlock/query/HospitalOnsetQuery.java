@@ -1,6 +1,7 @@
 package com.lantanagroup.flintlock.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.flintlock.Config;
 import com.lantanagroup.flintlock.Helper;
 import com.lantanagroup.flintlock.IConfig;
 import org.hl7.fhir.r4.model.Bundle;
@@ -20,19 +21,19 @@ public class HospitalOnsetQuery implements IQueryCountExecutor {
         }
 
         /*
+        String encounterDateStart = Helper.getFhirDate(LocalDateTime.now().minusDays(14));
+
         try {
-            LocalDateTime startDate = LocalDateTime.now().minusDays(14);
-            LocalDateTime endDate = LocalDateTime.now().minusDays(13);
-            String start = Helper.getFhirDate(startDate);
-            String end = Helper.getFhirDate(endDate);
-            String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:date=gt%s&_has:Condition:patient:onset-date=%s", covidCodes, start, end);
+            String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP&_has:Encounter:patient:status=in-progress&_has:Encounter:patient:date=le%s",
+                    Config.getInstance().getTerminologyCovidCodes(),
+                    encounterDateStart);
             Bundle hospitalOnsetBundle = fhirClient.search()
                     .byUrl(url)
                     .returnBundle(Bundle.class)
                     .execute();
             return hospitalOnsetBundle.getTotal();
         } catch (Exception ex) {
-            this.logger.error("Could not retrieve hospitalized onset count: " + ex.getMessage(), ex);
+            this.logger.error("Could not retrieve ED/overflow count: " + ex.getMessage(), ex);
         }
          */
 
