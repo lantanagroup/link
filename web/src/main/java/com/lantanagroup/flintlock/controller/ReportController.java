@@ -121,57 +121,113 @@ public class ReportController {
               new DateType(simple.getDate())));
     }
 
-    QuestionnaireResponse.QuestionnaireResponseItemComponent patientImpactGroup = new QuestionnaireResponse.QuestionnaireResponseItemComponent();
-    patientImpactGroup.setLinkId("covid-19-patient-impact-group");
-    patientImpactGroup.setText("Patient Impact Section");
+    QuestionnaireResponse.QuestionnaireResponseItemComponent section1 = new QuestionnaireResponse.QuestionnaireResponseItemComponent();
+    section1.setLinkId("covid-19-patient-impact-group");
+    section1.setText("Patient Impact Section");
 
     if (simple.getHospitalized() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
+      section1.addItem(this.createItemAnswer(
               "numC19HospPats",
               "Patients currently hospitalized in an inpatient bed who have suspected or confirmed COVID-19",
               new IntegerType(simple.getHospitalized())));
     }
 
     if (simple.getHospitalizedAndVentilated() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
+      section1.addItem(this.createItemAnswer(
               "numC19MechVentPats",
               "Patients currently hospitalized in an inpatient bed who have suspected or confirmed COVID-19 and are on a mechanical ventilator",
               new IntegerType(simple.getHospitalizedAndVentilated())));
     }
 
     if (simple.getHospitalOnset() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
-              "covid-19-numC19HOPats",
+      section1.addItem(this.createItemAnswer(
+              "numC19HOPats",
               "Patients currently hospitalized in an inpatient bed with onset of suspected or confirmed COVID-19 fourteen or more days after hospital admission due to a condition other than COVID-19",
               new IntegerType(simple.getHospitalOnset())));
     }
 
     if (simple.getEdOverflow() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
+      section1.addItem(this.createItemAnswer(
               "numC19OverflowPats",
               "Patients with suspected or confirmed COVID-19 who are currently in the Emergency Department (ED) or any overflow location awaiting an inpatient bed",
               new IntegerType(simple.getEdOverflow())));
     }
 
     if (simple.getEdOverflowAndVentilated() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
+      section1.addItem(this.createItemAnswer(
               "numC19OFMechVentPats",
               "Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator",
               new IntegerType(simple.getEdOverflowAndVentilated())));
     }
 
     if (simple.getDeaths() != null) {
-      patientImpactGroup.addItem(this.createItemAnswer(
+      section1.addItem(this.createItemAnswer(
               "numC19Died",
               "Patients with suspected or confirmed COVID-19 who died in the hospital, ED or any overflow location on the date for which you are reporting",
               new IntegerType(simple.getDeaths())));
     }
 
-    if (patientImpactGroup.getItem().size() > 0) {
-      resp.addItem(patientImpactGroup);
+    if (section1.getItem().size() > 0) {
+      resp.addItem(section1);
     }
 
-    // TODO: Add section 2
+    // Section 2
+    QuestionnaireResponse.QuestionnaireResponseItemComponent section2 = new QuestionnaireResponse.QuestionnaireResponseItemComponent();
+    section2.setLinkId("hospital-bed-icu-ventilator-capacity-group");
+    section2.setText("Hospital Bed/ICU/Ventilator Capacity Section");
+
+    if (simple.getAllHospitalBeds() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numTotBeds",
+              "Total number of all inpatient and outpatient beds in your hospital, including all staffed, licensed, and overflow surge or expansion beds used for inpatients or for outpatients (includes ICU beds)",
+              new IntegerType(simple.getAllHospitalBeds())));
+    }
+
+    if (simple.getHospitalInpatientBeds() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numBeds",
+              "Total number of staffed inpatient beds in your hospital, including all staffed, licensed, and overflow and surge or expansion beds used for inpatients (includes ICU beds)",
+              new IntegerType(simple.getHospitalInpatientBeds())));
+    }
+
+    if (simple.getHospitalInpatientBedOccupancy() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numBedsOcc",
+              "Total number of staffed inpatient beds that are currently occupied",
+              new IntegerType(simple.getHospitalInpatientBedOccupancy())));
+    }
+
+    if (simple.getIcuBeds() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numICUBeds",
+              "Total number of staffed inpatient intensive care unit (ICU) beds",
+              new IntegerType(simple.getIcuBeds())));
+    }
+
+    if (simple.getIcuBedOccupancy() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numICUBedsOcc",
+              "Total number of staffed inpatient ICU beds that are occupied",
+              new IntegerType(simple.getIcuBedOccupancy())));
+    }
+
+    if (simple.getMechanicalVentilators() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numVent",
+              "Total number of ventilators available",
+              new IntegerType(simple.getMechanicalVentilators())));
+    }
+
+    if (simple.getMechanicalVentilatorsInUse() != null) {
+      section2.addItem(this.createItemAnswer(
+              "numVentUse",
+              "Total number of ventilators in use",
+              new IntegerType(simple.getMechanicalVentilatorsInUse())));
+    }
+
+    if (section2.getItem().size() > 0) {
+      resp.addItem(section2);
+    }
 
     return resp;
   }
