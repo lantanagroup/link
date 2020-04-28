@@ -62,6 +62,14 @@ public class ReportController {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
     response.setDate(reportDate);
 
+    if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {
+      response.setFacilityId(Config.getInstance().getFieldDefaultFacilityId());
+    }
+
+    if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultSummaryCensusId())) {
+      response.setSummaryCensusId(Config.getInstance().getFieldDefaultSummaryCensusId());
+    }
+
     Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), reportDate, overflowLocations);
     response.setHospitalized(hospitalizedTotal);
 

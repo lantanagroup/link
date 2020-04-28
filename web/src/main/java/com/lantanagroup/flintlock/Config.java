@@ -69,6 +69,12 @@ public class Config implements IConfig {
     @Value("${query.deaths}")
     private String queryDeaths;
 
+    @Value("${field.default.facilityId}")
+    private String fieldDefaultFacilityId;
+
+    @Value("${field.default.summaryCensusId}")
+    private String fieldDefaultSummaryCensusId;
+
     public String getQueryHospitalizedAndVentilated() {
         return queryHospitalizedAndVentilated;
     }
@@ -142,5 +148,13 @@ public class Config implements IConfig {
 
     public String getExportFormat() {
         return exportFormat;
+    }
+
+    public String getFieldDefaultFacilityId() {
+        return fieldDefaultFacilityId;
+    }
+
+    public String getFieldDefaultSummaryCensusId() {
+        return fieldDefaultSummaryCensusId;
     }
 }
