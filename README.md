@@ -1,4 +1,4 @@
-# flintlock
+# nandina
 
 ## Building/compiling
 
@@ -15,10 +15,10 @@ mvn install
 To build the docker image, run the following from the root:
 
 ```
-docker build . --tag flintlock:latest
+docker build . --tag nandina:latest
 ```
 
-This will produce a flintlock.war file in the web/target folder.
+This will produce a nandina.war file in the web/target folder.
 
 ### Angular Web App (the UI)
 
@@ -45,7 +45,7 @@ ng build --prod
 To run the docker image:
 
 ```
-docker run flintlock:latest
+docker run nandina:latest
 ```
 
 ## Configuration

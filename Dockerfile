@@ -11,6 +11,6 @@ RUN mvn install
 
 FROM tomcat:9-jre11
 RUN rm -r /usr/local/tomcat/webapps/ROOT
-COPY --from=build /tmp/web/target/flintlock.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=build /tmp/web/target/nandina.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
 CMD ["catalina.sh", "run"]

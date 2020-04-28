@@ -6,10 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="core" />
-        <module name="flintlock-core" />
-        <module name="flintlock-web" />
         <module name="web" />
+        <module name="flintlock-web" />
+        <module name="flintlock-core" />
+        <module name="nandina-core" />
+        <module name="core" />
+        <module name="nandina-web" />
       </profile>
     </annotationProcessing>
   </component>
@@ -17,6 +19,8 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="flintlock-core" options="-parameters" />
       <module name="flintlock-web" options="-parameters" />
+      <module name="nandina-core" options="-parameters" />
+      <module name="nandina-web" options="-parameters" />
     </option>
   </component>
 </project>
