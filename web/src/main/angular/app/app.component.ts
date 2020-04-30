@@ -26,7 +26,7 @@ export class AppComponent implements OnInit {
       private http: HttpClient,
       private modal: NgbModal,
       private cookieService: CookieService,
-      private oauthService: OAuthService,
+      public oauthService: OAuthService,
       public toastService: ToastService) {
     if (this.cookieService.get('overflowLocations')) {
       try {
@@ -42,6 +42,20 @@ export class AppComponent implements OnInit {
     });
 
     return displays.join(', ');
+  }
+
+  copyAccessTokenToClipboard() {
+    const selBox = document.createElement('textarea');
+    selBox.style.position = 'fixed';
+    selBox.style.left = '0';
+    selBox.style.top = '0';
+    selBox.style.opacity = '0';
+    selBox.value = this.oauthService.getAccessToken();
+    document.body.appendChild(selBox);
+    selBox.focus();
+    selBox.select();
+    document.execCommand('copy');
+    document.body.removeChild(selBox);
   }
 
   private getFileName(contentDisposition: string) {

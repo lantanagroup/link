@@ -5,7 +5,7 @@
   <div class="jumbotron">
     <h1>Nandina</h1>
 
-    <p *ngIf="user">Welcome {{user.name}}! [<a href="javascript:void(0)" (click)="logout()">Logout</a>]</p>
+    <p *ngIf="user">Welcome <span [ngbPopover]="accessTokenPopover" placement="bottom">{{user.name}}</span>! [<a href="javascript:void(0)" (click)="logout()">Logout</a>]</p>
     <p *ngIf="!user">
       <button type="button" class="btn btn-primary" (click)="login()">Login</button>
     </p>
@@ -134,3 +134,13 @@
     </div>
   </div>
 </div>
+
+<ng-template #accessTokenPopover>
+  <div *ngIf="oauthService.getAccessToken()">
+    <p title="{{oauthService.getAccessToken()}}">{{oauthService.getAccessToken().substring(0, 50)}}...</p>
+    <p>[<a href="javascript:void(0)" (click)="copyAccessTokenToClipboard()">copy</a>]</p>
+  </div>
+  <div *ngIf="!oauthService.getAccessToken()">
+    You do not have an access token!
+  </div>
+</ng-template>

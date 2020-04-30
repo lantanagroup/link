@@ -12,3 +12,17 @@ agm-map {
 ngb-toast {
   min-width: 150px;
 }
+
+h1 {
+  font-family: "Century Gothic", "Segoe UI", "Helvetica Neue", Arial;
+  font-size: 3.5rem !important;
+  font-weight: bold !important;
+}
+
+.jumbotron {
+  padding-top: 16px !important;
+}
+
+.popover {
+  max-width:500px;
+}
