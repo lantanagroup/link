@@ -8,11 +8,15 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class EDOverflowAndVentilatedQuery implements IQueryCountExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(EDOverflowAndVentilatedQuery.class);
+public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
+	
+    public EDOverflowAndVentilatedQuery(IConfig config, IGenericClient fhirClient) {
+		super(config, fhirClient);
+		// TODO Auto-generated constructor stub
+	}
 
     @Override
-    public Integer execute(IConfig config, IGenericClient fhirClient, String reportDate, String overflowLocations) {
+    public Integer execute(String reportDate, String overflowLocations) {
         if (overflowLocations != null && !overflowLocations.isEmpty()) {
             if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
                 this.logger.error("Covid codes have not been specified in configuration. Cannot execute query.");
@@ -41,4 +45,5 @@ public class EDOverflowAndVentilatedQuery implements IQueryCountExecutor {
 
         return null;
     }
+    
 }

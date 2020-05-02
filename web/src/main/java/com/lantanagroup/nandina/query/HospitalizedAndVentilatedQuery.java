@@ -8,11 +8,15 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HospitalizedAndVentilatedQuery implements IQueryCountExecutor {
-  private static final Logger logger = LoggerFactory.getLogger(HospitalizedAndVentilatedQuery.class);
+public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
 
-  @Override
-  public Integer execute(IConfig config, IGenericClient fhirClient, String reportDate, String overflowLocations) {
+  public HospitalizedAndVentilatedQuery(IConfig config, IGenericClient fhirClient) {
+		super(config, fhirClient);
+		// TODO Auto-generated constructor stub
+	}
+
+@Override
+  public Integer execute(String reportDate, String overflowLocations) {
     if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
       this.logger.error("Covid codes have not been specified in configuration. Cannot execute query.");
       return null;
@@ -38,4 +42,6 @@ public class HospitalizedAndVentilatedQuery implements IQueryCountExecutor {
 
     return null;
   }
+
+
 }

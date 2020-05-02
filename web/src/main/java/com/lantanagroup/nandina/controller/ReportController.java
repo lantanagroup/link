@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.Helper;
+import com.lantanagroup.nandina.IConfig;
 import com.lantanagroup.nandina.TransformHelper;
 import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
@@ -44,14 +45,15 @@ public class ReportController {
    */
   private Integer executeQueryCount(String className, String reportDate, String overflowLocations) {
     try {
-      Class queryClass = Class.forName(className);
-      Constructor queryConstructor = queryClass.getConstructor();
-      IQueryCountExecutor executor = (IQueryCountExecutor) queryConstructor.newInstance();
-      return executor.execute(Config.getInstance(), this.fhirClient, reportDate, overflowLocations);
+      logger.info("Loading query class: " + className);
+      Class<?> queryClass = Class.forName(className);
+      Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
+      IQueryCountExecutor executor = (IQueryCountExecutor) queryConstructor.newInstance(Config.getInstance(), fhirClient);
+      return executor.execute(reportDate, overflowLocations);
     } catch (ClassNotFoundException ex) {
-      this.logger.error("Could not find class for query named " + className, ex);
+      logger.error("Could not find class for query named " + className, ex);
     } catch (Exception ex) {
-      this.logger.error("Could not execute query class for query " + className, ex);
+      logger.error("Could not execute query class for query " + className, ex);
     }
 
     return null;
@@ -61,6 +63,7 @@ public class ReportController {
   public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations, @RequestParam() String reportDate) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
     response.setDate(reportDate);
+    logger.info("Generating report for " + reportDate);
 
     if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {
       response.setFacilityId(Config.getInstance().getFieldDefaultFacilityId());

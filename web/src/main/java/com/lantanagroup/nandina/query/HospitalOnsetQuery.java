@@ -6,11 +6,15 @@ import com.lantanagroup.nandina.IConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HospitalOnsetQuery implements IQueryCountExecutor {
-    private static final Logger logger = LoggerFactory.getLogger(HospitalOnsetQuery.class);
+public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExecutor {
+	
+    public HospitalOnsetQuery(IConfig config, IGenericClient fhirClient) {
+		super(config, fhirClient);
+		// TODO Auto-generated constructor stub
+	}
 
     @Override
-    public Integer execute(IConfig config, IGenericClient fhirClient, String reportDate, String overflowLocations) {
+    public Integer execute(String reportDate, String overflowLocations) {
         if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
             this.logger.error("Covid codes have not been specified in configuration. Cannot execute query.");
             return null;

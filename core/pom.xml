@@ -13,9 +13,18 @@
     <packaging>jar</packaging>
 
     <dependencies>
+
+
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-structures-r4</artifactId>
             <version>4.2.0</version>
         </dependency>
     </dependencies>
