@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -7,6 +8,9 @@ import java.time.ZoneId;
 import java.util.Date;
 
 public class Helper {
+	
+  private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	
   public static boolean isNullOrEmpty(String value) {
     return value == null || value.isEmpty();
   }
@@ -22,7 +26,10 @@ public class Helper {
   }
 
   public static String getFhirDate(Date date) {
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     return simpleDateFormat.format(date);
+  }
+  
+  public static Date parseFhirDate(String dateStr) throws ParseException {
+	  return simpleDateFormat.parse(dateStr);
   }
 }

@@ -9,6 +9,8 @@ import com.lantanagroup.nandina.TransformHelper;
 import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
+import com.lantanagroup.nandina.query.QueryFactory;
+
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -45,10 +47,13 @@ public class ReportController {
    */
   private Integer executeQueryCount(String className, String reportDate, String overflowLocations) {
     try {
+    	/*
       logger.info("Loading query class: " + className);
       Class<?> queryClass = Class.forName(className);
       Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
       IQueryCountExecutor executor = (IQueryCountExecutor) queryConstructor.newInstance(Config.getInstance(), fhirClient);
+      */
+      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, Config.getInstance(), fhirClient);
       return executor.execute(reportDate, overflowLocations);
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for query named " + className, ex);
