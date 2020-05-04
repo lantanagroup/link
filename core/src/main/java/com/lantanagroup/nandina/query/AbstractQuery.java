@@ -17,6 +17,7 @@ public abstract class AbstractQuery {
 	protected IGenericClient fhirClient;
 	
 	public AbstractQuery(IConfig config, IGenericClient fhirClient) {
+		logger.info("Instantiating class: " + this.getClass());
 		this.config = config;
 		this.fhirClient = fhirClient;
         if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
