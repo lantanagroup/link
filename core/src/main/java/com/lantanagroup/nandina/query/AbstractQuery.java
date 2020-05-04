@@ -25,7 +25,8 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	
 	protected IConfig config;
 	protected IGenericClient fhirClient;
-	protected Map<String,Resource> cachedData = null;
+	// TODO: Change to allow caching by date
+	protected Map<String, Map<String,Resource>> cachedData = new HashMap<String, Map<String,Resource>>();
 	
 	public AbstractQuery(IConfig config, IGenericClient fhirClient) {
 		logger.info("Instantiating class: " + this.getClass());
@@ -91,12 +92,16 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	protected abstract Map<String,Resource> queryForData(String reportDate, String overflowLocations);
     
     protected Map<String,Resource> getData(String reportDate, String overflowLocations) {
-    	if (this.cachedData != null) {
-    		return cachedData;
+    	String cacheKey = reportDate + "/" + overflowLocations;
+    	if (this.cachedData != null && cachedData.containsKey(cacheKey)) {
+        	logger.info(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
+    		return cachedData.get(cacheKey);
     	} 
     	Map<String,Resource> resMap = queryForData(reportDate, overflowLocations);
     	if(resMap != null) {
         	logger.info(this.getClass().getName() + " getData() result count: " + resMap.size());
+        	cachedData.put(cacheKey,resMap);
+        //	cachedData = resMap;
     	}
     	return resMap;
     }
