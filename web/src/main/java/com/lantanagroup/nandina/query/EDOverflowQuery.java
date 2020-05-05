@@ -5,6 +5,7 @@ import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hl7.fhir.r4.model.Bundle;
@@ -28,16 +29,25 @@ public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecuto
 
     @Override
     protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
-    	String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s",
+		try {
+	    	String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s:date=ge%s,le%s",
+	                Config.getInstance().getTerminologyCovidCodes(),
+	                overflowLocations,reportDate,reportDate);
+			Map<String, Resource> patientMap = this.search(url);
+			// Encounter.date search parameter not working with current release of HAPI, so
+			// weeding out encounters outside the reportDate manually
+			HashMap<String, Resource> finalPatientMap = filterPatientsByEncounterDate(reportDate, patientMap);
+			return finalPatientMap;
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw new RuntimeException(e);
+		}
+    	/*
+    	String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s:date=ge%s,le%s",
                 Config.getInstance().getTerminologyCovidCodes(),
-                overflowLocations);
+                overflowLocations,reportDate,reportDate);
     	return this.search(url);
+    	*/
     }
-
-	@Override
-	public Map<String, Resource> getPatientConditions(Patient p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

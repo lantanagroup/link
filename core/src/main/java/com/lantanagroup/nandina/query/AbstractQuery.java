@@ -6,12 +6,16 @@ import com.lantanagroup.nandina.IConfig;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
@@ -130,5 +134,82 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		return encMap;
 	}
 	
+
+	protected HashMap<String, Resource> filterPatientsByEncounterDate(String reportDate, Map<String, Resource> patientMap)
+			throws ParseException {
+		Set<String> keySet = patientMap.keySet();
+		Date rDate = Helper.parseFhirDate(reportDate);
+		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
+		for (String patientId : keySet) {
+			Map<String, Resource> encMap = this.getPatientEncounters((Patient)patientMap.get(patientId));
+			Set<String> encKeySet = encMap.keySet();
+			for (String encId : encKeySet) {
+				Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
+				Date start = encounter.getPeriod().getStart();
+				if (start.before(rDate)) {
+					logger.info("Encounter start before reportDate");
+					Date end = encounter.getPeriod().getEnd();
+					if (end.after(rDate)) {
+						logger.info("Encounter end after reportDate");
+						finalPatientMap.put(patientId, patientMap.get(patientId));
+						break;
+					} else {
+
+						logger.info("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
+					}
+				} else {
+					logger.info("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
+				}
+			}
+		}
+		return finalPatientMap;
+	}
+
+	// TODO: Also search for patients with an intubation procedure during the encounter
+	protected HashMap<String, Resource> ventilatedPatients(Map<String, Resource> hqData) {
+		Set<String> patIds = hqData.keySet();
+		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
+		for (String patId : patIds) {
+			String devQuery = String.format("Device?type=%s&patient=Patient/%s", config.getTerminologyDeviceTypeCodes(), patId);
+			Map<String, Resource> devMap = this.search(devQuery);
+			if (devMap != null && devMap.size() > 0) {
+				finalPatientMap.put(patId, hqData.get(patId));
+			}
+			
+		}
+		return finalPatientMap;
+	}
+	
+
+
+	protected HashMap<String, Resource> deadPatients(Map<String, Resource> queryData, String reportDateStr) throws ParseException {
+		Set<String> patIds = queryData.keySet();
+		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
+		Calendar reportDate = Calendar.getInstance();
+		reportDate.setTime(Helper.parseFhirDate(reportDateStr));
+		for (String patId : patIds) {
+			Patient p = (Patient)queryData.get(patId);
+			if (p.hasDeceasedDateTimeType()) {
+				Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
+				boolean sameDay = sameDay(deadDate, reportDate);
+				if (sameDay) {
+					finalPatientMap.put(patId, p);
+				}
+			}
+		}
+		return finalPatientMap;
+	}
+
+
+
+	protected boolean sameDay(Calendar deadDate, Calendar reportDate) {
+		boolean sameDay = false;
+		if (
+				deadDate.get(Calendar.YEAR) == reportDate.get(Calendar.YEAR)
+				&& 
+				deadDate.get(Calendar.DAY_OF_YEAR) == reportDate.get(Calendar.DAY_OF_YEAR)
+			) sameDay = true;
+		return sameDay;
+	}
 
 }

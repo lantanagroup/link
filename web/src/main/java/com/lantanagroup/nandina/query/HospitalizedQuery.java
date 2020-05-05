@@ -6,6 +6,7 @@ import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,36 +35,12 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 	protected Map<String, Resource> queryForData(String reportDate, String overflowLocations) {
 		try {
 			String url = String.format(
-					"Patient?_summary=true&_active=true&_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,EMER,ACUTE,NONAC,OBSENC",
+					"Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,EMER,ACUTE,NONAC,OBSENC",
 					config.getTerminologyCovidCodes());
 			Map<String, Resource> patientMap = this.search(url);
 			// Encounter.date search parameter not working with current release of HAPI, so
 			// weeding out encounters outside the reportDate manually
-			Set<String> keySet = patientMap.keySet();
-			Date rDate = Helper.parseFhirDate(reportDate);
-			HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
-			for (String patientId : keySet) {
-				Map<String, Resource> encMap = this.getPatientEncounters((Patient)patientMap.get(patientId));
-				Set<String> encKeySet = encMap.keySet();
-				for (String encId : encKeySet) {
-					Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
-					Date start = encounter.getPeriod().getStart();
-					if (start.before(rDate)) {
-						logger.info("Encounter start before reportDate");
-						Date end = encounter.getPeriod().getEnd();
-						if (end.after(rDate)) {
-							logger.info("Encounter end after reportDate");
-							finalPatientMap.put(patientId, patientMap.get(patientId));
-							break;
-						} else {
-
-							logger.info("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
-						}
-					} else {
-						logger.info("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
-					}
-				}
-			}
+			HashMap<String, Resource> finalPatientMap = filterPatientsByEncounterDate(reportDate, patientMap);
 			return finalPatientMap;
 
 		} catch (Exception e) {
@@ -72,10 +49,5 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 		}
 	}
 
-	@Override
-	public Map<String, Resource> getPatientConditions(Patient p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

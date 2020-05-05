@@ -5,6 +5,7 @@ import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hl7.fhir.r4.model.Bundle;
@@ -28,17 +29,16 @@ public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQuer
 
     @Override
     protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
-        String url = String.format("Patient?_summary=true&_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s&_has:Device:patient:type=%s",
-                Config.getInstance().getTerminologyCovidCodes(),
-                overflowLocations,
-                Config.getInstance().getTerminologyDeviceTypeCodes());
-    	return this.search(url);
+		try {
+			EDOverflowQuery query = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
+			Map<String,Resource> queryData = query.getData(reportDate, overflowLocations);
+			HashMap<String, Resource> finalPatientMap = ventilatedPatients(queryData);
+			return finalPatientMap;
+		} catch (Exception e) {
+			logger.error(e.getMessage(),e);
+			throw new RuntimeException(e);
+			
+		}
     }
-
-	@Override
-	public Map<String, Resource> getPatientConditions(Patient p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
     
 }

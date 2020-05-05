@@ -29,16 +29,26 @@ public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
 
     @Override
     protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
-    	String url = String.format("Patient?_summary=true&death-date=%s&_has:Condition:patient:code=%s",
+
+		
+		try {
+			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
+			EDOverflowQuery eq = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
+			Map<String,Resource> queryData = hq.getData(reportDate, overflowLocations);
+			queryData.putAll(eq.getData(reportDate, overflowLocations));
+			HashMap<String, Resource> finalPatientMap = deadPatients(queryData, reportDate);
+			return finalPatientMap;
+		} catch (Exception e) {
+			logger.error(e.getMessage(),e);
+			throw new RuntimeException(e);
+			
+		}
+		
+    	/*
+    	String url = String.format("Patient?&death-date=%s&_has:Condition:patient:code=%s",
                 reportDate,
                 Config.getInstance().getTerminologyCovidCodes());
     	return this.search(url);
+    	*/
     }
-
-	@Override
-	public Map<String, Resource> getPatientConditions(Patient p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

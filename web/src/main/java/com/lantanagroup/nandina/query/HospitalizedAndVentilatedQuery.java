@@ -32,27 +32,10 @@ public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQu
 	@Override
 	protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
 		try {
-			String hClass = config.getQueryHospitalized();
-			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(hClass);
+			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
 			Map<String,Resource> hqData = hq.getData(reportDate, overflowLocations);
-			Set<String> patIds = hqData.keySet();
-			HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
-			for (String patId : patIds) {
-				String devQuery = String.format("Device?type=%s&patient=Patient/%s", Config.getInstance().getTerminologyDeviceTypeCodes(), patId);
-				Map<String, Resource> devMap = this.search(devQuery);
-				if (devMap != null && devMap.size() > 0) {
-					finalPatientMap.put(patId, hqData.get(patId));
-				}
-				
-			}
+			HashMap<String, Resource> finalPatientMap = ventilatedPatients(hqData);
 			return finalPatientMap;
-			// Old query below
-			/*
-		    String url = String.format("Patient?_summary=true&_active=true&_has:Condition:patient:code=%s&_has:Device:patient:type=%s",
-		      Config.getInstance().getTerminologyCovidCodes(),
-		      Config.getInstance().getTerminologyDeviceTypeCodes());
-			return this.search(url);
-			*/
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
 			throw new RuntimeException(e);
@@ -60,10 +43,6 @@ public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQu
 	}
 
 
-	@Override
-	public Map<String, Resource> getPatientConditions(Patient p) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 
 }

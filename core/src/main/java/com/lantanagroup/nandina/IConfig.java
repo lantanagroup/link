@@ -10,4 +10,5 @@ public interface IConfig {
     public String getTerminologyDeviceTypeCodes();
 
     public String getQueryHospitalized();
+    public String getQueryEDOverflow();
 }
