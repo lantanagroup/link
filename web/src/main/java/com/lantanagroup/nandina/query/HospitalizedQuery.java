@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,7 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 			Date rDate = Helper.parseFhirDate(reportDate);
 			HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 			for (String patientId : keySet) {
-				String encQuery = "Encounter?class=IMP,EMER,ACUTE,NONAC,OBSENC&subject=Patient/" + patientId;
-				Map<String, Resource> encMap = this.search(encQuery);
+				Map<String, Resource> encMap = this.getPatientEncounters((Patient)patientMap.get(patientId));
 				Set<String> encKeySet = encMap.keySet();
 				for (String encId : encKeySet) {
 					Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
@@ -70,6 +70,12 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 			logger.error(e.getMessage(), e);
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public Map<String, Resource> getPatientConditions(Patient p) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -35,4 +35,10 @@ public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
     	return this.search(url);
     }
 
+	@Override
+	public Map<String, Resource> getPatientConditions(Patient p) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

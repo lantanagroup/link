@@ -2,6 +2,8 @@ package com.lantanagroup.nandina.query;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
+import java.util.HashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,15 +14,45 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class QueryFactory {
 	
-
+	protected static HashMap<String, AbstractQuery> existingInstances = new HashMap<String,AbstractQuery>();
 	protected static final Logger logger = LoggerFactory.getLogger(QueryFactory.class);
+	protected static final int CACHE_MINUTES = 10; // TODO: move this to the config file at some point
 	
 	public static AbstractQuery newInstance(String className, IConfig config, IGenericClient fhirClient) throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		logger.info("Loading query class: " + className);
-	      Class<?> queryClass = Class.forName(className);
-	      Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
-	      AbstractQuery query = (AbstractQuery) queryConstructor.newInstance(config, fhirClient);
-	      return query;
+		AbstractQuery query = null;
+		if (existingInstances.containsKey(className)) {
+			query = getCachedQuery(className, config, fhirClient);
+		} else {
+			query = createNewQueryInstance(className, config, fhirClient);
+		}
+		return query;
+	}
+
+	private static AbstractQuery getCachedQuery(String className, IConfig config, IGenericClient fhirClient) throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+		AbstractQuery query;
+		query = existingInstances.get(className);
+		Calendar expired = Calendar.getInstance();
+		expired.setTime(query.dateCreated.getTime());
+		expired.roll(Calendar.MINUTE, 10);
+		Calendar now = Calendar.getInstance();
+		if (now.after(expired)) {
+			query = createNewQueryInstance(className, config, fhirClient);
+		} else {
+			logger.info("Returning cached query object: " + className);
+		}
+		return query;
+	}
+
+	private static AbstractQuery createNewQueryInstance(String className, IConfig config, IGenericClient fhirClient)
+			throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException,
+			InvocationTargetException {
+		AbstractQuery query;
+		logger.info("Creating new query object: " + className);
+		Class<?> queryClass = Class.forName(className);
+		Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
+		query = (AbstractQuery) queryConstructor.newInstance(config, fhirClient);
+		existingInstances.put(className, query);
+		return query;
 	}
 
 }

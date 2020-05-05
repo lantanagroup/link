@@ -6,12 +6,14 @@ import com.lantanagroup.nandina.IConfig;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	protected static final Logger logger = LoggerFactory.getLogger(AbstractQuery.class);
 	protected static HashMap<String,AbstractQuery> cachedQueries = new HashMap<String,AbstractQuery>();
 	
+	public final Calendar dateCreated = Calendar.getInstance();
 	protected IConfig config;
 	protected IGenericClient fhirClient;
 	// TODO: Change to allow caching by date
@@ -113,6 +116,19 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
     		return QueryFactory.newInstance(queryClass, config, fhirClient);
     	}
     }
+
+	protected Map<String, Resource> getPatientConditions(Patient p) {
+		String condQuery = String.format("Condition?code=%s&patient=Patient/%s", config.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
+		Map<String, Resource> condMap = this.search(condQuery);
+		return condMap;
+	}
+	
+	protected Map<String,Resource> getPatientEncounters(Patient p){
+		// TODO: put encounter codes in config
+		String encQuery = "Encounter?class=IMP,EMER,ACUTE,NONAC,OBSENC&subject=Patient/" + p.getIdElement().getIdPart();
+		Map<String, Resource> encMap = this.search(encQuery);
+		return encMap;
+	}
 	
 
 }

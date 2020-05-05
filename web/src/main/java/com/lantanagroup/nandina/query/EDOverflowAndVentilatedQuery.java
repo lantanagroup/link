@@ -8,6 +8,7 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.Map;
 
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,5 +34,11 @@ public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQuer
                 Config.getInstance().getTerminologyDeviceTypeCodes());
     	return this.search(url);
     }
+
+	@Override
+	public Map<String, Resource> getPatientConditions(Patient p) {
+		// TODO Auto-generated method stub
+		return null;
+	}
     
 }
