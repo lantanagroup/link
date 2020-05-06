@@ -3,6 +3,8 @@ package com.lantanagroup.nandina;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class Config implements IConfig {
     private static Config config;
@@ -75,6 +77,9 @@ public class Config implements IConfig {
     @Value("${field.default.summaryCensusId}")
     private String fieldDefaultSummaryCensusId;
 
+    @Value("${remember.fields}")
+    private String rememberFields;
+
     public String getQueryHospitalizedAndVentilated() {
         return queryHospitalizedAndVentilated;
     }
@@ -120,6 +125,10 @@ public class Config implements IConfig {
 
     public String getQueryEDOverflow() {
         return queryEDOverflow;
+    }
+
+    public String getRememberFields() {
+        return rememberFields;
     }
 
     public String getQueryEDOverflowAndVentilated() {
