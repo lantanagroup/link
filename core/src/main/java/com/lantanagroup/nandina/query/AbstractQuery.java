@@ -182,8 +182,6 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		}
 		return finalPatientMap;
 	}
-	
-
 
 	protected HashMap<String, Resource> deadPatients(Map<String, Resource> queryData, String reportDateStr) throws ParseException {
 		Set<String> patIds = queryData.keySet();
@@ -192,6 +190,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		reportDate.setTime(Helper.parseFhirDate(reportDateStr));
 		for (String patId : patIds) {
 			Patient p = (Patient)queryData.get(patId);
+			logger.info("Checking if " + patId + " died");
 			if (p.hasDeceasedDateTimeType()) {
 				Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
 				boolean sameDay = sameDay(deadDate, reportDate);

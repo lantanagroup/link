@@ -16,7 +16,7 @@ public class QueryFactory {
 	
 	protected static HashMap<String, AbstractQuery> existingInstances = new HashMap<String,AbstractQuery>();
 	protected static final Logger logger = LoggerFactory.getLogger(QueryFactory.class);
-	protected static final int CACHE_MINUTES = 10; // TODO: move this to the config file at some point
+	protected static final int CACHE_MINUTES = 1; // TODO: move this to the config file at some point
 	
 	public static AbstractQuery newInstance(String className, IConfig config, IGenericClient fhirClient) throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		AbstractQuery query = null;
@@ -33,7 +33,7 @@ public class QueryFactory {
 		query = existingInstances.get(className);
 		Calendar expired = Calendar.getInstance();
 		expired.setTime(query.dateCreated.getTime());
-		expired.roll(Calendar.MINUTE, 10);
+		expired.roll(Calendar.MINUTE, CACHE_MINUTES);
 		Calendar now = Calendar.getInstance();
 		if (now.after(expired)) {
 			query = createNewQueryInstance(className, config, fhirClient);
