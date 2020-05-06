@@ -1,7 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {HttpClient, HttpResponse} from '@angular/common/http';
 import {QuestionnaireResponseSimple} from './model/questionnaire-response-simple';
-import {IQuestionnaireResponse, IQuestionnaireResponseItemComponent} from './fhir';
 import saveAs from 'save-as';
 import {LocationResponse} from './model/location-response';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -10,6 +9,7 @@ import {CookieService} from 'ngx-cookie-service';
 import {getFhirNow} from './helper';
 import {OAuthService} from 'angular-oauth2-oidc';
 import {ToastService} from './toast.service';
+
 
 @Component({
   selector: 'app-root',
@@ -20,6 +20,7 @@ export class AppComponent implements OnInit {
   loading = false;
   response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
   overflowLocations: LocationResponse[] = [];
+  rememberFields = '%remember.fields%';
   user: any;
 
   constructor(
@@ -69,6 +70,14 @@ export class AppComponent implements OnInit {
   async download() {
     let convertResponse: HttpResponse<string>;
 
+    // loop through the remembered fields from application.properties file and save the input values in cookies
+    const rememberFieldsArray = this.rememberFields.split(',');
+    rememberFieldsArray.forEach(field => {
+      if (this.response[field]) {
+        this.cookieService.set(field, this.response[field]);
+      }
+    });
+
     try {
       convertResponse = await this.http.post('/api/convert', this.response, { observe: 'response', responseType: 'text' }).toPromise();
     } catch (ex) {
@@ -112,6 +121,12 @@ export class AppComponent implements OnInit {
           delete this.response[key];
         }
       }
+
+      // loop through each of the remembered fields and set the value based on the value that is in the cookie
+      const rememberFieldsArray = this.rememberFields.split(',');
+      rememberFieldsArray.forEach(field => {
+        this.response[field] = this.cookieService.get(field);
+      });
 
       this.toastService.showInfo('Successfully ran queries!');
     } catch (ex) {
