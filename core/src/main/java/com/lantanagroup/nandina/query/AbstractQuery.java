@@ -200,8 +200,6 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		return finalPatientMap;
 	}
 
-
-
 	protected boolean sameDay(Calendar deadDate, Calendar reportDate) {
 		boolean sameDay = false;
 		if (

@@ -35,7 +35,7 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 	protected Map<String, Resource> queryForData(String reportDate, String overflowLocations) {
 		try {
 			String url = String.format(
-					"Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,EMER,ACUTE,NONAC,OBSENC",
+					"Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,ACUTE,NONAC,OBSENC",
 					config.getTerminologyCovidCodes());
 			Map<String, Resource> patientMap = this.search(url);
 			// Encounter.date search parameter not working with current release of HAPI, so
