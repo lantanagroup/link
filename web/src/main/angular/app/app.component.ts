@@ -21,8 +21,6 @@ export class AppComponent implements OnInit {
   response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
   overflowLocations: LocationResponse[] = [];
   rememberFields = '%remember.fields%';
-  // add the variable for remember.fields using %%  rememberFields = '%remember.fields%';
-
   user: any;
 
   constructor(
