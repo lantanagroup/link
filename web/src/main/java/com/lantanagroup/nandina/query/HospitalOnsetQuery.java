@@ -111,7 +111,6 @@ public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExec
 	private boolean onsetDuringEncounter(Calendar onsetDate, Date encStartDate, Date encEndDate) {
 		boolean hospitalOnset = false;
 		if (encStartDate != null) {
-
 			Calendar encStartPlus14 = Calendar.getInstance();
 			encStartPlus14.setTime(encStartDate);
 			encStartPlus14.roll(Calendar.DAY_OF_YEAR, 14);
@@ -130,6 +129,4 @@ public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExec
 		}
 		return hospitalOnset;
 	}
-
-    
 }
