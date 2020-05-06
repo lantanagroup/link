@@ -28,6 +28,7 @@ public class MainPageTransformer implements ResourceTransformer {
     html = html.replace("%auth.issuer%", Config.getInstance().getAuthIssuer());
     html = html.replace("%auth.clientId%", Config.getInstance().getAuthClientId());
     html = html.replace("%auth.scope%", Config.getInstance().getAuthScope());
+    html = html.replace("%remember.fields%", Config.getInstance().getRememberFields());
 
     return new TransformedResource(resource, html.getBytes());
   }
