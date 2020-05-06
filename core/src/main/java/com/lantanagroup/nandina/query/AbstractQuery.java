@@ -149,7 +149,10 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 				if (start.before(rDate)) {
 					logger.info("Encounter start before reportDate");
 					Date end = encounter.getPeriod().getEnd();
-					if (end.after(rDate)) {
+					if (end == null) {
+						logger.info("Encounter is ongoing");
+						finalPatientMap.put(patientId, patientMap.get(patientId));
+					} else if (end.after(rDate)) {
 						logger.info("Encounter end after reportDate");
 						finalPatientMap.put(patientId, patientMap.get(patientId));
 						break;

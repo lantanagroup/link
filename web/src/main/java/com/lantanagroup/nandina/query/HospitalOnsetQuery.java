@@ -16,6 +16,7 @@ import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,30 +86,47 @@ public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExec
 
 	private boolean onsetDuringEncounter(Condition cond, Encounter enc) {
 		boolean hospitalOnset = false;
-		Calendar encStart = enc.getPeriod().getStartElement().toCalendar();
-		Calendar encEnd = enc.getPeriod().getEndElement().toCalendar();
-		if (cond.hasOnsetDateTimeType()) {
-			Calendar onsetDate = cond.getOnsetDateTimeType().toCalendar();
-			hospitalOnset = onsetDuringEncounter(onsetDate, encStart, encEnd);
-		} else if (cond.hasOnsetPeriod()) {
-			Calendar onsetPeriodStart = cond.getOnsetPeriod().getStartElement().toCalendar();
-			hospitalOnset = onsetDuringEncounter(onsetPeriodStart, encStart, encEnd);
-			if (hospitalOnset == false) {
-				Calendar onsetPeriodEnd = cond.getOnsetPeriod().getEndElement().toCalendar();
-				hospitalOnset = onsetDuringEncounter(onsetPeriodEnd, encStart, encEnd);
+		Period period = enc.getPeriod();
+		if (period != null) {
+
+			Date encStart = enc.getPeriod().getStart();
+			Date encEnd = enc.getPeriod().getEnd();
+			
+			if (cond.hasOnsetDateTimeType()) {
+				Calendar onsetDate = cond.getOnsetDateTimeType().toCalendar();
+				hospitalOnset = onsetDuringEncounter(onsetDate, encStart, encEnd);
+			} else if (cond.hasOnsetPeriod()) {
+				Calendar onsetPeriodStart = cond.getOnsetPeriod().getStartElement().toCalendar();
+				hospitalOnset = onsetDuringEncounter(onsetPeriodStart, encStart, encEnd);
+				if (hospitalOnset == false) {
+					Calendar onsetPeriodEnd = cond.getOnsetPeriod().getEndElement().toCalendar();
+					hospitalOnset = onsetDuringEncounter(onsetPeriodEnd, encStart, encEnd);
+				}
 			}
 		}
 		// TODO: at some point maybe try to deal with Condition.onsetRange if the UCUM unit is something time related, but would needs to see some real world sample data that shows this is necessary.
 		return hospitalOnset;
 	}
 
-	private boolean onsetDuringEncounter(Calendar onsetDate, Calendar encStart, Calendar encEnd) {
+	private boolean onsetDuringEncounter(Calendar onsetDate, Date encStartDate, Date encEndDate) {
 		boolean hospitalOnset = false;
-		Calendar encStartPlus14 = Calendar.getInstance();
-		encStartPlus14.setTime(encStart.getTime());
-		encStartPlus14.roll(Calendar.DAY_OF_YEAR, 14);
-		if (onsetDate.after(encStartPlus14) && onsetDate.before(encEnd)) {
-			hospitalOnset = true;
+		if (encStartDate != null) {
+
+			Calendar encStartPlus14 = Calendar.getInstance();
+			encStartPlus14.setTime(encStartDate);
+			encStartPlus14.roll(Calendar.DAY_OF_YEAR, 14);
+			if (onsetDate.after(encStartPlus14)) {
+				hospitalOnset = true;
+				if (encEndDate != null) {
+					Calendar encEnd = Calendar.getInstance();
+					encEnd.setTime(encEndDate);
+					if (onsetDate.after(encEnd)) {
+						// onset after discharge
+						hospitalOnset = false;
+					}
+					
+				}
+			}
 		}
 		return hospitalOnset;
 	}
