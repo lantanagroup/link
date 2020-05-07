@@ -2,22 +2,12 @@ package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
-import com.lantanagroup.nandina.Config;
-import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
-import java.text.ParseException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecutor {
 	public HospitalizedQuery(IConfig config, IGenericClient fhirClient) {

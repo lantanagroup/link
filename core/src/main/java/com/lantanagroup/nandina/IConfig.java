@@ -6,8 +6,11 @@ public interface IConfig {
     public String getFhirServerPassword();
     public String getFhirServerBearerToken();
 
+    public String getTerminologyCovidCodesValueSet();
+    public String getTerminologyVentilatorCodesValueSet();
+
+    public String getTerminologyVentilatorCodes();
     public String getTerminologyCovidCodes();
-    public String getTerminologyDeviceTypeCodes();
 
     public String getQueryHospitalized();
     public String getQueryEDOverflow();

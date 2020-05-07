@@ -43,7 +43,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
             this.logger.error(NO_COVID_CODES_ERROR);
             throw new RuntimeException(NO_COVID_CODES_ERROR);
         }
-        if (Helper.isNullOrEmpty(config.getTerminologyDeviceTypeCodes())) {
+        if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
             this.logger.error(NO_DEVICE_CODES_ERROR);
             throw new RuntimeException(NO_DEVICE_CODES_ERROR);
         }
@@ -173,7 +173,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		Set<String> patIds = hqData.keySet();
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
-			String devQuery = String.format("Device?type=%s&patient=Patient/%s", config.getTerminologyDeviceTypeCodes(), patId);
+			String devQuery = String.format("Device?type=%s&patient=Patient/%s", config.getTerminologyVentilatorCodes(), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));

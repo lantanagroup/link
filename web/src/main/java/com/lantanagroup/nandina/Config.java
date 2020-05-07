@@ -1,13 +1,21 @@
 package com.lantanagroup.nandina;
 
+import ca.uhn.fhir.context.FhirContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
-import java.util.Map;
+import java.io.File;
 
 @Component
 public class Config implements IConfig {
+    protected static final Logger logger = LoggerFactory.getLogger(Config.class);
+
     private static Config config;
+    private String terminologyCovidCodes;
+    private String terminologyVentilatorCodes;
 
     public static Config getInstance() {
         if (config == null) {
@@ -47,11 +55,11 @@ public class Config implements IConfig {
     @Value("${fhirServer.bearerToken}")
     private String fhirServerBearerToken;
 
-    @Value("${terminology.covidCodes}")
-    private String terminologyCovidCodes;
+    @Value("${terminology.covidCodesValueSet}")
+    private String terminologyCovidCodesValueSet;
 
-    @Value("${terminology.deviceTypeCodes}")
-    private String terminologyDeviceTypeCodes;
+    @Value("${terminology.ventilatorCodesValueSet}")
+    private String terminologyVentilatorCodesValueSet;
 
     @Value("${query.hospitalized}")
     private String queryHospitalized;
@@ -81,89 +89,135 @@ public class Config implements IConfig {
     private String rememberFields;
 
     public String getQueryHospitalizedAndVentilated() {
-        return queryHospitalizedAndVentilated;
+        return this.queryHospitalizedAndVentilated;
     }
 
     @Override
     public String getQueryHospitalized() {
-        return queryHospitalized;
+        return this.queryHospitalized;
     }
 
     @Override
-    public String getTerminologyDeviceTypeCodes() {
-        return terminologyDeviceTypeCodes;
+    public String getTerminologyVentilatorCodesValueSet() {
+        return this.terminologyVentilatorCodesValueSet;
+    }
+
+    @Override
+    public String getTerminologyVentilatorCodes() {
+        if (Helper.isNullOrEmpty(this.terminologyVentilatorCodes)) {
+            this.logger.info("Extracting mechanical ventilator concepts from ValueSet");
+
+            try {
+                if (this.getTerminologyVentilatorCodesValueSet().startsWith("https://") || this.getTerminologyVentilatorCodesValueSet().startsWith("http://")) {
+                    // TODO: pull the value set from the web
+                    throw new Exception("Nandina does not yet support http/https value sets.");
+                } else {
+                    File mechanicalVentilatorsFile = ResourceUtils.getFile(config.getTerminologyVentilatorCodesValueSet());
+                    this.terminologyVentilatorCodes = TerminologyHelper.extractCodes(FhirContext.forR4(), mechanicalVentilatorsFile);
+                }
+            } catch (Exception ex) {
+                this.logger.error("Could not load/extract codes for concept of mechanical ventilators", ex);
+            }
+
+            this.logger.info(String.format("Found %s mechanical ventilator concepts in ValueSet", this.terminologyVentilatorCodes.split(",").length));
+        }
+
+        return this.terminologyVentilatorCodes;
     }
 
     @Override
     public String getTerminologyCovidCodes() {
-        return terminologyCovidCodes;
+        if (Helper.isNullOrEmpty(this.terminologyCovidCodes)) {
+            this.logger.info("Extracting COVID-19 concepts from ValueSet");
+
+            try {
+                if (this.getTerminologyCovidCodesValueSet().startsWith("https://") || this.getTerminologyCovidCodesValueSet().startsWith("http://")) {
+                    // TODO: pull the value set from the web
+                    throw new Exception("Nandina does not yet support http/https value sets.");
+                } else {
+                    File covidCodesFile = ResourceUtils.getFile(config.getTerminologyCovidCodesValueSet());
+                    this.terminologyCovidCodes = TerminologyHelper.extractCodes(FhirContext.forR4(), covidCodesFile);
+                }
+            } catch (Exception ex) {
+                this.logger.error("Could not load/extract codes for concept of COVID-19", ex);
+            }
+
+            this.logger.info(String.format("Found %s COVID-19 concepts in ValueSet", this.terminologyCovidCodes.split(",").length));
+        }
+
+        return this.terminologyCovidCodes;
+    }
+
+    @Override
+    public String getTerminologyCovidCodesValueSet() {
+        return this.terminologyCovidCodesValueSet;
     }
 
     @Override
     public String getFhirServerBearerToken() {
-        return fhirServerBearerToken;
+        return this.fhirServerBearerToken;
     }
 
     @Override
     public String getFhirServerPassword() {
-        return fhirServerPassword;
+        return this.fhirServerPassword;
     }
 
     @Override
     public String getFhirServerUserName() {
-        return fhirServerUserName;
+        return this.fhirServerUserName;
     }
 
     @Override
     public String getFhirServerBase() {
-        return fhirServerBase;
+        return this.fhirServerBase;
     }
 
     public String getQueryHospitalOnset() {
-        return queryHospitalOnset;
+        return this.queryHospitalOnset;
     }
 
     public String getQueryEDOverflow() {
-        return queryEDOverflow;
+        return this.queryEDOverflow;
     }
 
     public String getRememberFields() {
-        return rememberFields;
+        return this.rememberFields;
     }
 
     public String getQueryEDOverflowAndVentilated() {
-        return queryEDOverflowAndVentilated;
+        return this.queryEDOverflowAndVentilated;
     }
 
     public String getQueryDeaths() {
-        return queryDeaths;
+        return this.queryDeaths;
     }
 
     public String getAuthScope() {
-        return authScope;
+        return this.authScope;
     }
 
     public String getAuthClientId() {
-        return authClientId;
+        return this.authClientId;
     }
 
     public String getAuthJwksUrl() {
-        return authJwksUrl;
+        return this.authJwksUrl;
     }
 
     public String getAuthIssuer() {
-        return authIssuer;
+        return this.authIssuer;
     }
 
     public String getExportFormat() {
-        return exportFormat;
+        return this.exportFormat;
     }
 
     public String getFieldDefaultFacilityId() {
-        return fieldDefaultFacilityId;
+        return this.fieldDefaultFacilityId;
     }
 
     public String getFieldDefaultSummaryCensusId() {
-        return fieldDefaultSummaryCensusId;
+        return this.fieldDefaultSummaryCensusId;
     }
 }

@@ -2,17 +2,12 @@ package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Config;
-import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecutor {
 
