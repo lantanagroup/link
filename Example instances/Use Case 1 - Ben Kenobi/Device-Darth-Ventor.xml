@@ -1,0 +1,22 @@
+<Device xmlns="http://hl7.org/fhir">
+	<id value="Darth-Ventor-device"/> 
+	<identifier> 
+		<system value="http:/goodhealthhospital/identifier/devices"/> 
+		<value value="12345"/> 
+	</identifier>
+	<status value="active"/> 
+	<deviceName>
+		<name value="Darth Ventor"/>
+		<type value="model-name"/>
+	</deviceName>
+	<type>
+		<coding>
+			<system value="http://snomed.info/sct"/>
+			<code value="706172005"/>
+			<display value="Ventilator (physical object)"/>
+		</coding>
+	</type>
+	<patient>
+		<reference value="Patient/Covid-Kenobi"/>
+	</patient>
+</Device>

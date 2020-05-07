@@ -1,0 +1,44 @@
+<Condition xmlns="http://hl7.org/fhir">
+    <id value="Kenobi-covid-condition"/>
+    <meta>
+        <versionId value="3"/>
+        <lastUpdated value="2020-05-06T18:50:03.117+00:00"/>
+        <source value="#To0Zs2QJ80ZERcbf"/>
+        <profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition"/>
+    </meta>
+    <clinicalStatus>
+        <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/condition-clinical"/>
+            <code value="active"/>
+        </coding>
+    </clinicalStatus>
+    <verificationStatus>
+        <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/condition-ver-status"/>
+            <code value="confirmed"/>
+        </coding>
+    </verificationStatus>
+    <category>
+        <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/condition-category"/>
+            <code value="encounter-diagnosis"/>
+            <display value="Encounter Diagnosis"/>
+        </coding>
+    </category>
+    <code>
+        <coding>
+            <system value="http://snomed.info/sct"/>
+            <code value="840544004"/>
+            <display value="Suspected COVID-19"/>
+        </coding>
+        <text value="Suspected COVID-19"/>
+    </code>
+    <subject>
+        <reference value="Patient/Covid-Kenobi"/>
+    </subject>
+    <encounter>
+        <reference value="Encounter/Kenobi-admission"/>
+    </encounter>
+    <onsetDateTime value="2020-05-04T10:30:35-06:00"/>
+    <recordedDate value="2020-05-04T10:30:35-06:00"/>
+</Condition>

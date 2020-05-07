@@ -1,0 +1,35 @@
+<Encounter xmlns="http://hl7.org/fhir">
+	<id value="Jabba-encounter"/>
+	<meta>
+		<versionId value="3"/>
+		<lastUpdated value="2020-05-05T11:56:57.250-04:00"/>
+		<profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"/>
+	</meta>
+	<status value="finished"/>
+	<class>
+		<system value="http://terminology.hl7.org/CodeSystem/v3-ActCode"/>
+		<code value="IMP"/>
+		<display value="Inpatient Encounter"/>
+	</class>
+	<type>
+		<coding>
+			<system value="http://www.ama-assn.org/go/cpt"/>
+			<code value="99221"/>
+		</coding>
+		<text value="Inpatient Hospital Care"/>
+	</type>
+	<priority>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/v3-ActPriority"/>
+			<code value="R"/>
+			<display value="routine"/>
+		</coding>
+	</priority>
+	<subject>
+		<reference value="Patient/Covid-Jabba"/>
+	</subject>
+	<period>
+		<start value="2020-05-05T15:00:14-05:00"/>
+		<end value="2020-05-06T15:00:14-05:00"/>
+	</period>
+</Encounter>

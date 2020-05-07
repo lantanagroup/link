@@ -1,0 +1,27 @@
+<Procedure xmlns="http://hl7.org/fhir">
+  <id value="Intubation-Jabba"/>
+  <meta>
+    <profile
+             value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"/>
+  </meta>
+  <identifier>
+    <system value="urn:ietf:rfc:3986"/>
+    <value value="urn:uuid:b2a737f2-2fdb-49c1-b097-dac173d07aff"/>
+  </identifier>
+  <status value="completed"/>
+  <code>
+    <coding>
+      <system value="http://snomed.info/sct"/>
+      <code value="112798008"/>
+    </coding>
+    <text
+          value="Endotracheal intubation, emergency"/>
+  </code>
+  <subject>
+    <reference value="Patient/Covid-Jabba"/>
+  </subject>
+  <performedPeriod>
+    <start value="2020-05-06T12:55:26-07:00"/>
+    <end value="2020-05-06T13:25:26-07:00"/>
+  </performedPeriod>
+</Procedure>

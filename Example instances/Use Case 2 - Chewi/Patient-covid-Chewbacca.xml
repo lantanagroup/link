@@ -1,0 +1,44 @@
+<Patient xmlns="http://hl7.org/fhir">
+	<id value="Covid-Chewbacca"/>
+	<meta>
+		<profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"/>
+	</meta>
+	<status value="generated"/>
+	<identifier>
+		<use value="usual"/>
+		<type>
+			<coding>
+				<system value="http://terminology.hl7.org/CodeSystem/v2-0203"/>
+				<code value="MR"/>
+				<display value="Medical Record Number"/>
+			</coding>
+			<text value="Medical Record Number"/>
+		</type>
+		<system value="http://hospital.goodhealth.org"/>
+		<value value="01011990"/>
+	</identifier>
+	<active value="true"/>
+	<name>
+		<family value="Chewbacca"/>
+		<given value="Chewi"/>
+	</name>
+	<telecom>
+		<system value="phone"/>
+		<value value="303-303-3030"/>
+		<use value="home"/>
+	</telecom>
+	<telecom>
+		<system value="email"/>
+		<value value="Obi.1@TheForce.com"/>
+	</telecom>
+	<gender value="male"/>
+	<birthDate value="1990-06-09"/>
+	<deceasedDateTime value="2020-05-04T13:25:26-07:00"/>
+	<address>
+		<line value="123 Test Dr."/>
+		<city value="Denver"/>
+		<state value="CO"/>
+		<postalCode value="80204"/>
+		<country value="US"/>
+	</address>
+</Patient>

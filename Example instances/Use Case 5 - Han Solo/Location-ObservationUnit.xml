@@ -1,0 +1,29 @@
+<Location xmlns="http://hl7.org/fhir">
+    <id value="Observation-Unit-2"/>
+    <meta>
+        <versionId value="1"/>
+        <lastUpdated value="2020-05-06T18:25:25.941+00:00"/>
+        <source value="#7YywSi9DXLTD5B7A"/>
+        <profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-location"/>
+    </meta>
+    <status value="active"/>
+    <name value="Observation-Unit Location #2"/>
+    <type>
+        <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/v3-RoleCode"/>
+            <code value="HU"/>
+            <display value="Hospital Unit"/>
+        </coding>
+    </type>
+    <telecom>
+        <system value="phone"/>
+        <value value="333-876-3700"/>
+    </telecom>
+    <address>
+        <line value="1010 SANTA MONICA BLVD"/>
+        <city value="WEST HOLLYWOOD"/>
+        <state value="CA"/>
+        <postalCode value="90046-6458"/>
+        <country value="US"/>
+    </address>
+</Location>

@@ -1,0 +1,33 @@
+<Encounter xmlns="http://hl7.org/fhir">
+	<id value="Kenobi-admission"/>
+	<meta>
+		<lastUpdated value="2020-05-06T11:56:57.250-04:00"/>
+		<profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"/>
+	</meta>
+	<status value="in-progress"/>
+	<class>
+		<system value="http://terminology.hl7.org/CodeSystem/v3-ActCode"/>
+		<code value="IMP"/>
+		<display value="inpatient encounter"/>
+	</class>
+	<type>
+		<coding>
+			<system value="http://www.ama-assn.org/go/cpt"/>
+			<code value="99221"/>
+		</coding>
+		<text value="Hospital Inpatient Services"/>
+	</type>
+	<priority>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/v3-ActPriority"/>
+			<code value="R"/>
+			<display value="routine"/>
+		</coding>
+	</priority>
+	<subject>
+		<reference value="Patient/Covid-Kenobi"/>
+	</subject>
+	<period>
+		<start value="2020-04-15T15:00:14-05:00"/>
+	</period>
+</Encounter>
