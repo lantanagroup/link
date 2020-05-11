@@ -122,7 +122,8 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
     }
 
 	protected Map<String, Resource> getPatientConditions(Patient p) {
-		String condQuery = String.format("Condition?code=%s&patient=Patient/%s", config.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
+		// TODO: Move verification-status codes to a value set and load thru config
+		String condQuery = String.format("Condition?verification-status=unconfirmed,provisional,differential,confirmed&code=%s&patient=Patient/%s", config.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
 		Map<String, Resource> condMap = this.search(condQuery);
 		return condMap;
 	}
