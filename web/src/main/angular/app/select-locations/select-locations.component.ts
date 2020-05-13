@@ -53,7 +53,6 @@ export class SelectLocationsComponent implements OnInit {
 
     try {
       this.locations = await this.http.get<LocationResponse[]>(url).toPromise();
-      console.log(this.locations);
     } catch (ex) {
       this.toastService.showException('Error retrieving locations', ex);
     }
