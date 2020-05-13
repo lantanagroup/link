@@ -12,29 +12,31 @@ import org.hl7.fhir.r4.model.Resource;
 
 public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
 	
-    public DeathsQuery(IConfig config, IGenericClient fhirClient) {
-		super(config, fhirClient);
+    public DeathsQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(config, fhirClient, criteria);
 	}
 
     @Override
-    public Integer execute(String reportDate, String overflowLocations) {
-    	Map<String,Resource> resMap = this.getData(reportDate, overflowLocations);
+    public Integer execute() {
+		if (!this.criteria.containsKey("reportDate")) return null;
+
+    	Map<String,Resource> resMap = this.getData();
         return this.getCount(resMap);
     }
 
     @Override
-    protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
+    protected Map<String,Resource> queryForData(){
 		try {
+			String reportDate = this.criteria.get("reportDate");
 			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
 			EDOverflowQuery eq = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
-			Map<String,Resource> queryData = hq.getData(reportDate, overflowLocations);
-			queryData.putAll(eq.getData(reportDate, overflowLocations));
+			Map<String,Resource> queryData = hq.getData();
+			queryData.putAll(eq.getData());
 			HashMap<String, Resource> finalPatientMap = deadPatients(queryData, reportDate);
 			return finalPatientMap;
 		} catch (Exception e) {
 			logger.error(e.getMessage(),e);
 			throw new RuntimeException(e);
-			
 		}
 		
     	/*

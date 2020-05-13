@@ -12,22 +12,22 @@ import org.hl7.fhir.r4.model.Resource;
 
 public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
 	
-    public EDOverflowAndVentilatedQuery(IConfig config, IGenericClient fhirClient) {
-		super(config, fhirClient);
+    public EDOverflowAndVentilatedQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(config, fhirClient, criteria);
 		// TODO Auto-generated constructor stub
 	}
 
     @Override
-    public Integer execute(String reportDate, String overflowLocations) {
-    	Map<String,Resource> resMap = this.getData(reportDate, overflowLocations);
+    public Integer execute() {
+    	Map<String,Resource> resMap = this.getData();
         return this.getCount(resMap);
     }
 
     @Override
-    protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
+    protected Map<String,Resource> queryForData(){
 		try {
 			EDOverflowQuery query = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
-			Map<String,Resource> queryData = query.getData(reportDate, overflowLocations);
+			Map<String,Resource> queryData = query.getData();
 			HashMap<String, Resource> finalPatientMap = ventilatedPatients(queryData);
 			return finalPatientMap;
 		} catch (Exception e) {

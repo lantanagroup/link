@@ -13,23 +13,31 @@ import org.hl7.fhir.r4.model.Resource;
 
 public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecutor {
 
-    public EDOverflowQuery(IConfig config, IGenericClient fhirClient) {
-		super(config, fhirClient);
+    public EDOverflowQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(config, fhirClient, criteria);
 		// TODO Auto-generated constructor stub
 	}
     
     @Override
-    public Integer execute(String reportDate, String overflowLocations) {
-    	Map<String,Resource> resMap = this.getData(reportDate, overflowLocations);
+    public Integer execute() {
+		if (!this.criteria.containsKey("reportDate") && !this.criteria.containsKey("overflowLocations")) {
+			return null;
+		}
+
+    	Map<String,Resource> resMap = this.getData();
         return this.getCount(resMap);
     }
 
     @Override
-    protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
+    protected Map<String,Resource> queryForData(){
 		try {
+			String reportDate = this.criteria.get("reportDate");
+			String overflowLocations = this.criteria.get("overflowLocations");
 	    	String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s:date=ge%s,le%s",
 	                Config.getInstance().getTerminologyCovidCodes(),
-	                overflowLocations,reportDate,reportDate);
+	                overflowLocations,
+					reportDate,
+					reportDate);
 			Map<String, Resource> patientMap = this.search(url);
 			// Encounter.date search parameter not working with current release of HAPI, so
 			// weeding out encounters outside the reportDate manually

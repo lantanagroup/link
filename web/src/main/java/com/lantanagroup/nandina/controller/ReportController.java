@@ -4,7 +4,6 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.Helper;
-import com.lantanagroup.nandina.IConfig;
 import com.lantanagroup.nandina.TransformHelper;
 import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
@@ -17,13 +16,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class ReportController {
@@ -45,7 +46,7 @@ public class ReportController {
    * @param overflowLocations
    * @return
    */
-  private Integer executeQueryCount(String className, String reportDate, String overflowLocations) {
+  private Integer executeQueryCount(String className, Map<String, String> criteria) {
     try {
     	/*
       logger.info("Loading query class: " + className);
@@ -53,8 +54,8 @@ public class ReportController {
       Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
       IQueryCountExecutor executor = (IQueryCountExecutor) queryConstructor.newInstance(Config.getInstance(), fhirClient);
       */
-      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, Config.getInstance(), fhirClient);
-      return executor.execute(reportDate, overflowLocations);
+      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, Config.getInstance(), fhirClient, criteria);
+      return executor.execute();
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for query named " + className, ex);
     } catch (Exception ex) {
@@ -64,11 +65,27 @@ public class ReportController {
     return null;
   }
 
+  private Map<String, String> getCriteria(HttpServletRequest request) {
+    java.util.Enumeration<String> parameterNames = request.getParameterNames();
+    Map<String, String> criteria = new HashMap<>();
+
+    while (parameterNames.hasMoreElements()) {
+      String paramName = parameterNames.nextElement();
+      String[] paramValues = request.getParameterValues(paramName);
+      criteria.put(paramName, String.join(",", paramValues));
+    }
+
+    return criteria;
+  }
+
   @GetMapping("/api/query")
-  public QuestionnaireResponseSimple getQuestionnaireResponse(@RequestParam(required = false) String overflowLocations, @RequestParam() String reportDate) {
+  public QuestionnaireResponseSimple getQuestionnaireResponse(HttpServletRequest request) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
-    response.setDate(reportDate);
-    logger.info("Generating report for " + reportDate);
+
+    Map<String, String> criteria = this.getCriteria(request);
+
+    //response.setDate(reportDate);
+    logger.trace("Generating report, including criteria: " + criteria.toString());
 
     if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {
       response.setFacilityId(Config.getInstance().getFieldDefaultFacilityId());
@@ -78,22 +95,22 @@ public class ReportController {
       response.setSummaryCensusId(Config.getInstance().getFieldDefaultSummaryCensusId());
     }
 
-    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), reportDate, overflowLocations);
+    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria);
     response.setHospitalized(hospitalizedTotal);
 
-    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), reportDate, overflowLocations);
+    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria);
     response.setHospitalizedAndVentilated(hospitalizedAndVentilatedTotal);
 
-    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), reportDate, overflowLocations);
+    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria);
     response.setHospitalOnset(hospitalOnsetTotal);
 
-    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), reportDate, overflowLocations);
+    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria);
     response.setEdOverflow(edOverflowTotal);
 
-    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), reportDate, overflowLocations);
+    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria);
     response.setEdOverflowAndVentilated(edOverflowAndVentilatedTotal);
 
-    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), reportDate, overflowLocations);
+    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria);
     response.setDeaths(deathsTotal);
 
     return response;

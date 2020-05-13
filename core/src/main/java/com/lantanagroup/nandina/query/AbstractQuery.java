@@ -27,26 +27,36 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
     private static final String NO_DEVICE_CODES_ERROR = "Device-type codes have not been specified in configuration.";
 	private static final String NO_COVID_CODES_ERROR = "Covid codes have not been specified in configuration.";
 	protected static final Logger logger = LoggerFactory.getLogger(AbstractQuery.class);
-	protected static HashMap<String,AbstractQuery> cachedQueries = new HashMap<String,AbstractQuery>();
+	protected static HashMap<String, AbstractQuery> cachedQueries = new HashMap<String,AbstractQuery>();
 	
 	public final Calendar dateCreated = Calendar.getInstance();
 	protected IConfig config;
 	protected IGenericClient fhirClient;
+	protected HashMap<String, String> criteria;
+
 	// TODO: Change to allow caching by date
-	protected Map<String, Map<String,Resource>> cachedData = new HashMap<String, Map<String,Resource>>();
+	// First string is a cache key, representing the criteria for the report, including report date and locations
+	// Second string represents the ID of the Resource
+	// Resource represents the actual resource data for the ID
+	protected Map<String, Map<String,Resource>> cachedData = new HashMap<String, Map<String, Resource>>();
 	
-	public AbstractQuery(IConfig config, IGenericClient fhirClient) {
-		logger.info("Instantiating class: " + this.getClass());
+	public AbstractQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		logger.trace("Instantiating class: " + this.getClass());
+
 		this.config = config;
 		this.fhirClient = fhirClient;
+		this.criteria = criteria;
+
         if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
             this.logger.error(NO_COVID_CODES_ERROR);
             throw new RuntimeException(NO_COVID_CODES_ERROR);
         }
+
         if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
             this.logger.error(NO_DEVICE_CODES_ERROR);
             throw new RuntimeException(NO_DEVICE_CODES_ERROR);
         }
+
         cachedQueries.put(this.getClass().getName(), this);
 	}
 	
@@ -70,7 +80,8 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
                     .returnBundle(Bundle.class)
                     .execute();
 
-        	logger.info(this.getClass().getName() + " executing query: " + url);
+        	logger.trace(this.getClass().getName() + " executing query: " + url);
+
             return deathsBundle;
         } catch (Exception ex) {
             this.logger.error("Could not retrieve data for "  + this.getClass().getName() +  ": " + ex.getMessage(), ex);
@@ -96,19 +107,19 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		return resMap;
 	}
 	
-	protected abstract Map<String,Resource> queryForData(String reportDate, String overflowLocations);
+	protected abstract Map<String,Resource> queryForData();
     
-    public Map<String,Resource> getData(String reportDate, String overflowLocations) {
-    	String cacheKey = reportDate + "/" + overflowLocations;
+    public Map<String,Resource> getData() {
+    	String cacheKey = this.criteria.toString();
+
     	if (this.cachedData != null && cachedData.containsKey(cacheKey)) {
-        	logger.info(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
+        	logger.trace(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
     		return cachedData.get(cacheKey);
-    	} 
-    	Map<String,Resource> resMap = queryForData(reportDate, overflowLocations);
-    	if(resMap != null) {
-        	logger.info(this.getClass().getName() + " getData() result count: " + resMap.size());
+    	}
+    	Map<String,Resource> resMap = queryForData();
+    	if (resMap != null) {
+        	logger.trace(this.getClass().getName() + " getData() result count: " + resMap.size());
         	cachedData.put(cacheKey,resMap);
-        //	cachedData = resMap;
     	}
     	return resMap;
     }
@@ -117,7 +128,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
     	if (cachedQueries.containsKey(queryClass)) {
     		return cachedQueries.get(queryClass);
     	} else {
-    		return QueryFactory.newInstance(queryClass, config, fhirClient);
+    		return QueryFactory.newInstance(queryClass, this.config, this.fhirClient, this.criteria);
     	}
     }
 
@@ -134,7 +145,6 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		Map<String, Resource> encMap = this.search(encQuery);
 		return encMap;
 	}
-	
 
 	protected HashMap<String, Resource> filterPatientsByEncounterDate(String reportDate, Map<String, Resource> patientMap)
 			throws ParseException {
@@ -148,21 +158,21 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 				Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
 				Date start = encounter.getPeriod().getStart();
 				if (start.before(rDate)) {
-					logger.info("Encounter start before reportDate");
+					logger.trace("Encounter start before reportDate");
 					Date end = encounter.getPeriod().getEnd();
 					if (end == null) {
-						logger.info("Encounter is ongoing");
+						logger.trace("Encounter is ongoing");
 						finalPatientMap.put(patientId, patientMap.get(patientId));
 					} else if (end.after(rDate)) {
-						logger.info("Encounter end after reportDate");
+						logger.trace("Encounter end after reportDate");
 						finalPatientMap.put(patientId, patientMap.get(patientId));
 						break;
 					} else {
 
-						logger.info("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
+						logger.trace("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
 					}
 				} else {
-					logger.info("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
+					logger.trace("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
 				}
 			}
 		}
@@ -191,7 +201,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		reportDate.setTime(Helper.parseFhirDate(reportDateStr));
 		for (String patId : patIds) {
 			Patient p = (Patient)queryData.get(patId);
-			logger.info("Checking if " + patId + " died");
+			logger.trace("Checking if " + patId + " died");
 			if (p.hasDeceasedDateTimeType()) {
 				Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
 				boolean sameDay = sameDay(deadDate, reportDate);
