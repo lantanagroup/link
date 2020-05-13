@@ -106,7 +106,6 @@ public class Config implements IConfig {
     public String getTerminologyVentilatorCodes() {
         if (Helper.isNullOrEmpty(this.terminologyVentilatorCodes)) {
             this.logger.info("Extracting mechanical ventilator concepts from ValueSet");
-
             try {
                 if (this.getTerminologyVentilatorCodesValueSet().startsWith("https://") || this.getTerminologyVentilatorCodesValueSet().startsWith("http://")) {
                     // TODO: pull the value set from the web
@@ -121,7 +120,6 @@ public class Config implements IConfig {
 
             this.logger.info(String.format("Found %s mechanical ventilator concepts in ValueSet", this.terminologyVentilatorCodes.split(",").length));
         }
-
         return this.terminologyVentilatorCodes;
     }
 
@@ -129,7 +127,6 @@ public class Config implements IConfig {
     public String getTerminologyCovidCodes() {
         if (Helper.isNullOrEmpty(this.terminologyCovidCodes)) {
             this.logger.info("Extracting COVID-19 concepts from ValueSet");
-
             try {
                 if (this.getTerminologyCovidCodesValueSet().startsWith("https://") || this.getTerminologyCovidCodesValueSet().startsWith("http://")) {
                     // TODO: pull the value set from the web
@@ -144,7 +141,6 @@ public class Config implements IConfig {
 
             this.logger.info(String.format("Found %s COVID-19 concepts in ValueSet", this.terminologyCovidCodes.split(",").length));
         }
-
         return this.terminologyCovidCodes;
     }
 
