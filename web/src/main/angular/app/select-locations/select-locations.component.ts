@@ -28,9 +28,20 @@ export class SelectLocationsComponent implements OnInit {
       });
   }
 
+  selectAll(value) {
+    if (value.target.checked) {
+      this.locations.forEach(location => {
+        this.selected.push(location);
+      });
+    } else {
+      this.selected = [];
+    }
+  }
+
   updateSearchText(value: string) {
     this.searchText = value;
     this.searchTextChanged.next();
+    this.selected = [];
   }
 
   async reload() {
@@ -42,6 +53,7 @@ export class SelectLocationsComponent implements OnInit {
 
     try {
       this.locations = await this.http.get<LocationResponse[]>(url).toPromise();
+      console.log(this.locations);
     } catch (ex) {
       this.toastService.showException('Error retrieving locations', ex);
     }
