@@ -1,19 +1,14 @@
-package com.lantanagroup.nandina.query;
+package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.Config;
-import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Patient;
+import com.lantanagroup.nandina.query.AbstractQuery;
+import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
 	
@@ -29,8 +24,6 @@ public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
 
     @Override
     protected Map<String,Resource> queryForData(String reportDate, String overflowLocations){
-
-		
 		try {
 			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
 			EDOverflowQuery eq = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());

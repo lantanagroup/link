@@ -98,7 +98,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	
 	protected abstract Map<String,Resource> queryForData(String reportDate, String overflowLocations);
     
-    protected Map<String,Resource> getData(String reportDate, String overflowLocations) {
+    public Map<String,Resource> getData(String reportDate, String overflowLocations) {
     	String cacheKey = reportDate + "/" + overflowLocations;
     	if (this.cachedData != null && cachedData.containsKey(cacheKey)) {
         	logger.info(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
