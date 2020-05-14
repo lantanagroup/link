@@ -28,9 +28,20 @@ export class SelectLocationsComponent implements OnInit {
       });
   }
 
+  selectAll(value) {
+    if (value.target.checked) {
+      this.locations.forEach(location => {
+        this.selected.push(location);
+      });
+    } else {
+      this.selected = [];
+    }
+  }
+
   updateSearchText(value: string) {
     this.searchText = value;
     this.searchTextChanged.next();
+    this.selected = [];
   }
 
   async reload() {

@@ -9,7 +9,9 @@
   <table class="table table-striped">
     <thead>
     <tr>
-      <th>&nbsp;</th>
+      <th>
+        <input type="checkbox" (change)="selectAll($event)"/>
+      </th>
       <th>Name</th>
       <th>ID</th>
     </tr>
