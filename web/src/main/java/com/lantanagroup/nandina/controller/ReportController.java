@@ -28,7 +28,6 @@ import java.util.Map;
 
 @RestController
 public class ReportController {
-
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   FhirContext ctx = FhirContext.forR4();
   IGenericClient fhirClient;
@@ -84,7 +83,9 @@ public class ReportController {
 
     Map<String, String> criteria = this.getCriteria(request);
 
-    //response.setDate(reportDate);
+    String reportDate = criteria.get("reportDate");
+    response.setDate(reportDate);
+
     logger.trace("Generating report, including criteria: " + criteria.toString());
 
     if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {

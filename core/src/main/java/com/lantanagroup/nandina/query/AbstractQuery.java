@@ -75,14 +75,14 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	private Bundle rawSearch(String query) {
         try {
             String url = String.format(query);
-            Bundle deathsBundle = fhirClient.search()
+            Bundle bundle = fhirClient.search()
                     .byUrl(url)
                     .returnBundle(Bundle.class)
                     .execute();
 
         	logger.trace(this.getClass().getName() + " executing query: " + url);
 
-            return deathsBundle;
+            return bundle;
         } catch (Exception ex) {
             this.logger.error("Could not retrieve data for "  + this.getClass().getName() +  ": " + ex.getMessage(), ex);
         }
