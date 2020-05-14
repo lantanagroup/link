@@ -7,6 +7,8 @@ import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.LocationResponse;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Location;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @RestController
 public class LocationController {
+    private static final Logger logger = LoggerFactory.getLogger(LocationController.class);
     FhirContext ctx = FhirContext.forR4();
     IGenericClient fhirClient;
 
@@ -31,14 +34,18 @@ public class LocationController {
         String url = "Location?_summary=true&_count=10";
 
         if (search != null && !search.isEmpty()) {
-            url += "&name:contains=" + URLEncoder.encode(search, "utf-8");
+            url += "&name:contains=" + URLEncoder.encode(search, "utf-8").replace("+", "%20");
         }
+
+        logger.trace(String.format("Searching for locations with URL %s", url));
 
         List<LocationResponse> response = new ArrayList();
         Bundle locationsBundle = this.fhirClient.search()
                 .byUrl(url)
                 .returnBundle(Bundle.class)
                 .execute();
+
+        logger.trace(String.format("Done searching locations. Found %s locations.", locationsBundle.getTotal()));
 
         for (Bundle.BundleEntryComponent entry : locationsBundle.getEntry()) {
             LocationResponse newLocResponse = new LocationResponse();
