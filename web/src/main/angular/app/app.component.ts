@@ -125,7 +125,9 @@ export class AppComponent implements OnInit {
       // loop through each of the remembered fields and set the value based on the value that is in the cookie
       const rememberFieldsArray = this.rememberFields.split(',');
       rememberFieldsArray.forEach(field => {
-        this.response[field] = this.cookieService.get(field);
+        if (!this.response[field]) {
+          this.response[field] = this.cookieService.get(field);
+        }
       });
 
       this.toastService.showInfo('Successfully ran queries!');
