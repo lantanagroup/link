@@ -1,7 +1,6 @@
 package com.lantanagroup.nandina;
 
 import ca.uhn.fhir.context.FhirContext;
-import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,6 +78,27 @@ public class Config implements IConfig {
 
     @Value("${query.deaths}")
     private String queryDeaths;
+
+    @Value("${query.hospitalBeds}")
+    private String queryHospitalBeds;
+
+    @Value("${query.hospitalInpatientBeds}")
+    private String queryHospitalInpatientBeds;
+
+    @Value("${query.hospitalInpatientBedOcc}")
+    private String queryHospitalInpatientBedOcc;
+
+    @Value("${query.hospitalIcuBeds}")
+    private String queryHospitalIcuBeds;
+
+    @Value("${query.hospitalIcuBedOcc}")
+    private String queryHospitalIcuBedOcc;
+
+    @Value("${query.mechanicalVentilators}")
+    private String queryMechanicalVentilators;
+
+    @Value("${query.mechanicalVentilatorsUsed}")
+    private String queryMechanicalVentilatorsUsed;
 
     @Value("${field.default.facilityId}")
     private String fieldDefaultFacilityId;
@@ -216,5 +236,61 @@ public class Config implements IConfig {
 
     public String getFieldDefaultSummaryCensusId() {
         return this.fieldDefaultSummaryCensusId;
+    }
+
+    public String getQueryHospitalBeds() {
+        return queryHospitalBeds;
+    }
+
+    public void setQueryHospitalBeds(String queryHospitalBeds) {
+        this.queryHospitalBeds = queryHospitalBeds;
+    }
+
+    public String getQueryHospitalIcuBeds() {
+        return queryHospitalIcuBeds;
+    }
+
+    public void setQueryHospitalIcuBeds(String queryHospitalIcuBeds) {
+        this.queryHospitalIcuBeds = queryHospitalIcuBeds;
+    }
+
+    public String getQueryHospitalIcuBedOcc() {
+        return queryHospitalIcuBedOcc;
+    }
+
+    public void setQueryHospitalIcuBedOcc(String queryHospitalIcuBedOcc) {
+        this.queryHospitalIcuBedOcc = queryHospitalIcuBedOcc;
+    }
+
+    public String getQueryHospitalInpatientBeds() {
+        return queryHospitalInpatientBeds;
+    }
+
+    public void setQueryHospitalInpatientBeds(String queryHospitalInpatientBeds) {
+        this.queryHospitalInpatientBeds = queryHospitalInpatientBeds;
+    }
+
+    public String getQueryHospitalInpatientBedOcc() {
+        return queryHospitalInpatientBedOcc;
+    }
+
+    public void setQueryHospitalInpatientBedOcc(String queryHospitalInpatientBedOcc) {
+        this.queryHospitalInpatientBedOcc = queryHospitalInpatientBedOcc;
+    }
+
+    public String getQueryMechanicalVentilators() {
+        return queryMechanicalVentilators;
+    }
+
+    public void setQueryMechanicalVentilators(String queryMechanicalVentilators) {
+        this.queryMechanicalVentilators = queryMechanicalVentilators;
+    }
+
+    public String getQueryMechanicalVentilatorsUsed() {
+        return queryMechanicalVentilatorsUsed;
+    }
+
+    public void setQueryMechanicalVentilatorsUsed(String queryMechanicalVentilatorsUsed) {
+        this.queryMechanicalVentilatorsUsed = queryMechanicalVentilatorsUsed;
     }
 }

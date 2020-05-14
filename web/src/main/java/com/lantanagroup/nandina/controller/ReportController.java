@@ -46,13 +46,9 @@ public class ReportController {
    * @return
    */
   private Integer executeQueryCount(String className, Map<String, String> criteria) {
+    if (className == null || className.isEmpty()) return null;
+
     try {
-    	/*
-      logger.info("Loading query class: " + className);
-      Class<?> queryClass = Class.forName(className);
-      Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class);
-      IQueryCountExecutor executor = (IQueryCountExecutor) queryConstructor.newInstance(Config.getInstance(), fhirClient);
-      */
       IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, Config.getInstance(), fhirClient, criteria);
       return executor.execute();
     } catch (ClassNotFoundException ex) {
@@ -113,6 +109,27 @@ public class ReportController {
 
     Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria);
     response.setDeaths(deathsTotal);
+
+    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria);
+    response.setAllHospitalBeds(hospitalBedsTotal);
+
+    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria);
+    response.setHospitalInpatientBeds(hospitalInpatientBedsTotal);
+
+    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria);
+    response.setHospitalInpatientBedOccupancy(hospitalInpatientBedOccTotal);
+
+    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria);
+    response.setIcuBeds(hospitalIcuBedsTotal);
+    
+    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria);
+    response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
+
+    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria);
+    response.setMechanicalVentilators(mechanicalVentilatorsTotal);
+
+    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria);
+    response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
 
     return response;
   }
