@@ -31,7 +31,7 @@ public class QueryFactory {
 
 	private static AbstractQuery getCachedQuery(String className, IConfig config, IGenericClient fhirClient, Map<String, String> criteria) throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		AbstractQuery query;
-		query = existingInstances.get(className);
+		query = existingInstances.get(className + criteria.toString());
 		Calendar expired = Calendar.getInstance();
 		expired.setTime(query.dateCreated.getTime());
 		expired.roll(Calendar.MINUTE, CACHE_MINUTES);
@@ -52,7 +52,7 @@ public class QueryFactory {
 		Class<?> queryClass = Class.forName(className);
 		Constructor<?> queryConstructor = queryClass.getConstructor(IConfig.class, IGenericClient.class, HashMap.class);
 		query = (AbstractQuery) queryConstructor.newInstance(config, fhirClient, criteria);
-		existingInstances.put(className, query);
+		existingInstances.put(className+criteria.toString(), query);
 		return query;
 	}
 
