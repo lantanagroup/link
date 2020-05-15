@@ -23,6 +23,10 @@ public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQu
         return this.getCount(resMap);
     }
 
+    /**
+     * Takes the result of HospitalizedQuery.queryForData, then further filters Patients where:
+     * - The Patient is references in Device.patient and where Device.type is in the mechanical-ventilators value set
+     */
     @Override
     protected Map<String, Resource> queryForData() {
         try {

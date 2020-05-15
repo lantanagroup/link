@@ -28,6 +28,14 @@ public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecuto
         return this.getCount(resMap);
     }
 
+
+	/**
+	 * Queries for Patient resources where
+	 * - the Patient is in referenced in Condition.patient and Condition.code is a code from the Covid19 value set
+	 * - the Patient is referenced in Encounter.patient and Encounter.location matches overflowLocations
+	 * The result is then further filtered to just those where the Encounter.date is equal to the reportDate 
+	 * (Encounter.date search parameter is not working properly, so this is done procedurally)
+	 */
     @Override
     protected Map<String,Resource> queryForData(){
 		try {

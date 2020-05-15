@@ -22,7 +22,10 @@ public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQuer
     	Map<String,Resource> resMap = this.getData();
         return this.getCount(resMap);
     }
-
+    /**
+     * Takes the result of EDOverflowQuery.queryForData(), then further filters Patients where:
+     * - The Patient is references in Device.patient and where Device.type is in the mechanical-ventilators value set
+     */
     @Override
     protected Map<String,Resource> queryForData(){
 		try {
