@@ -75,6 +75,8 @@ export class AppComponent implements OnInit {
     rememberFieldsArray.forEach(field => {
       if (this.response[field]) {
         this.cookieService.set(field, this.response[field]);
+      } else if (this.cookieService.get(field)) {
+        this.cookieService.delete(field);
       }
     });
 
