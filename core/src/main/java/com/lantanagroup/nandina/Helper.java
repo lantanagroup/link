@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina;
 
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -31,5 +32,13 @@ public class Helper {
   
   public static Date parseFhirDate(String dateStr) throws ParseException {
 	  return simpleDateFormat.parse(dateStr);
+  }
+
+  public static String URLEncode(String url) {
+    try {
+      return URLEncoder.encode(url, "UTF-8").replace("+", "%20");
+    } catch (Exception ex) {
+      return url;
+    }
   }
 }
