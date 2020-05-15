@@ -2,4 +2,4 @@ web/node_modules/
 web/target/
 core/target/
 .idea/
-/web/src/main/resources/application-local.properties
+/web/src/main/resources/application-*.properties

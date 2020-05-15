@@ -37,7 +37,7 @@ public class LocationController {
             url += "&name:contains=" + URLEncoder.encode(search, "utf-8").replace("+", "%20");
         }
 
-        logger.trace(String.format("Searching for locations with URL %s", url));
+        logger.debug(String.format("Searching for locations with URL %s", url));
 
         List<LocationResponse> response = new ArrayList();
         Bundle locationsBundle = this.fhirClient.search()
@@ -45,7 +45,7 @@ public class LocationController {
                 .returnBundle(Bundle.class)
                 .execute();
 
-        logger.trace(String.format("Done searching locations. Found %s locations.", locationsBundle.getTotal()));
+        logger.debug(String.format("Done searching locations. Found %s locations.", locationsBundle.getTotal()));
 
         for (Bundle.BundleEntryComponent entry : locationsBundle.getEntry()) {
             LocationResponse newLocResponse = new LocationResponse();

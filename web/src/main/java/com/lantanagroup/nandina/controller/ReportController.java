@@ -82,7 +82,7 @@ public class ReportController {
     String reportDate = criteria.get("reportDate");
     response.setDate(reportDate);
 
-    logger.trace("Generating report, including criteria: " + criteria.toString());
+    logger.debug("Generating report, including criteria: " + criteria.toString());
 
     if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {
       response.setFacilityId(Config.getInstance().getFieldDefaultFacilityId());

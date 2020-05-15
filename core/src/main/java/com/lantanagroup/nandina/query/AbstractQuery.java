@@ -41,7 +41,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 	protected Map<String, Map<String,Resource>> cachedData = new HashMap<String, Map<String, Resource>>();
 	
 	public AbstractQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		logger.trace("Instantiating class: " + this.getClass());
+		logger.debug("Instantiating class: " + this.getClass());
 
 		this.config = config;
 		this.fhirClient = fhirClient;
@@ -80,7 +80,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
                     .returnBundle(Bundle.class)
                     .execute();
 
-        	logger.trace(this.getClass().getName() + " executing query: " + url);
+        	logger.debug(this.getClass().getName() + " executing query: " + url);
 
             return bundle;
         } catch (Exception ex) {
@@ -113,12 +113,12 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
     	String cacheKey = this.criteria.toString();
 
     	if (this.cachedData != null && cachedData.containsKey(cacheKey)) {
-        	logger.trace(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
+        	logger.debug(this.getClass().getName() + " returning cached data for date/overflow-locations: " + cacheKey);
     		return cachedData.get(cacheKey);
     	}
     	Map<String,Resource> resMap = queryForData();
     	if (resMap != null) {
-        	logger.trace(this.getClass().getName() + " getData() result count: " + resMap.size());
+        	logger.debug(this.getClass().getName() + " getData() result count: " + resMap.size());
         	cachedData.put(cacheKey,resMap);
     	}
     	return resMap;
@@ -158,21 +158,21 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 				Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
 				Date start = encounter.getPeriod().getStart();
 				if (start.before(rDate)) {
-					logger.trace("Encounter start before reportDate");
+					logger.debug("Encounter start before reportDate");
 					Date end = encounter.getPeriod().getEnd();
 					if (end == null) {
-						logger.trace("Encounter is ongoing");
+						logger.debug("Encounter is ongoing");
 						finalPatientMap.put(patientId, patientMap.get(patientId));
 					} else if (end.after(rDate)) {
-						logger.trace("Encounter end after reportDate");
+						logger.debug("Encounter end after reportDate");
 						finalPatientMap.put(patientId, patientMap.get(patientId));
 						break;
 					} else {
 
-						logger.trace("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
+						logger.debug("Encounter " + encounter.getId() + " ended after report date. Encounter end=" + Helper.getFhirDate(end));
 					}
 				} else {
-					logger.trace("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
+					logger.debug("Encounter " + encounter.getId() + " started after report date. Encounter start=" + Helper.getFhirDate(start));
 				}
 			}
 		}
@@ -201,7 +201,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		reportDate.setTime(Helper.parseFhirDate(reportDateStr));
 		for (String patId : patIds) {
 			Patient p = (Patient)queryData.get(patId);
-			logger.trace("Checking if " + patId + " died");
+			logger.debug("Checking if " + patId + " died");
 			if (p.hasDeceasedDateTimeType()) {
 				Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
 				boolean sameDay = sameDay(deadDate, reportDate);

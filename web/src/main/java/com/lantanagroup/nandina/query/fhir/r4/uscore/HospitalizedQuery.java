@@ -37,6 +37,9 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 			// Encounter.date search parameter not working with current release of HAPI, so
 			// weeding out encounters outside the reportDate manually
 			HashMap<String, Resource> finalPatientMap = filterPatientsByEncounterDate(reportDate, patientMap);
+
+			logger.debug(String.format("Patients matching encounter date: %s", finalPatientMap.values().size()));
+
 			return finalPatientMap;
 
 		} catch (Exception e) {
