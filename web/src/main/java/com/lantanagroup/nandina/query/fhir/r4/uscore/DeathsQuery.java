@@ -23,7 +23,10 @@ public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
     	Map<String,Resource> resMap = this.getData();
         return this.getCount(resMap);
     }
-
+    /**
+     * Takes the result of HospitalizedQuery.queryForData(), then further filters Patients where:
+     * - Patient.deceasedDateTime matches the reportDate parameter
+     */
     @Override
     protected Map<String,Resource> queryForData(){
 		try {
