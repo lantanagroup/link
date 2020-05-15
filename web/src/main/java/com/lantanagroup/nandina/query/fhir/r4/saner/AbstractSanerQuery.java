@@ -1,11 +1,13 @@
 package com.lantanagroup.nandina.query.fhir.r4.saner;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
 import com.lantanagroup.nandina.query.AbstractQuery;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +15,7 @@ public abstract class AbstractSanerQuery extends AbstractQuery {
 
     public static final String MEASURE_GROUP_SYSTEM = "http://hl7.org/fhir/us/saner/CodeSystem/MeasureGroupSystem";
     public static final String MEASURE_POPULATION_SYSTEM = "http://hl7.org/fhir/us/saner/CodeSystem/MeasurePopulationSystem";
+    public static final String MEASURE_URL = "http://hl7.org/fhir/us/saner/Measure/CDCPatientImpactAndHospitalCapacity";
 
     public AbstractSanerQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
         super(config, fhirClient, criteria);
@@ -30,7 +33,9 @@ public abstract class AbstractSanerQuery extends AbstractQuery {
             String reportDate = this.criteria.get("reportDate");
             String overflowLocations = this.criteria.get("overflowLocations");
 
-            String url = String.format("MeasureReport?date=%s&", reportDate);
+            String url = String.format("MeasureReport?measure=%s&date=%s&",
+                    Helper.URLEncode(MEASURE_URL),
+                    Helper.URLEncode(reportDate));
 
             if (overflowLocations != null && !overflowLocations.isEmpty()) {
                 url += String.format("subject=%s&", overflowLocations);
@@ -51,17 +56,19 @@ public abstract class AbstractSanerQuery extends AbstractQuery {
     protected Integer countForPopulation(Map<String, Resource> data, String groupCode, String populationCode) {
         Integer total = null;
 
-        for (Resource resource : data.values()) {
-            MeasureReport mr = (MeasureReport) resource;
+        if (data != null) {
+            for (Resource resource : data.values()) {
+                MeasureReport mr = (MeasureReport) resource;
 
-            for (MeasureReport.MeasureReportGroupComponent group : mr.getGroup()) {
-                if (!isGroupMatch(group, groupCode)) continue;
+                for (MeasureReport.MeasureReportGroupComponent group : mr.getGroup()) {
+                    if (!isGroupMatch(group, groupCode)) continue;
 
-                for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-                    if (!isPopulationMatch(population, populationCode)) continue;
+                    for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+                        if (!isPopulationMatch(population, populationCode)) continue;
 
-                    if (population.getCountElement() != null && population.getCountElement().getValue() != null) {
-                        total = (total != null ? total : 0) + population.getCount();
+                        if (population.getCountElement() != null && population.getCountElement().getValue() != null) {
+                            total = (total != null ? total : 0) + population.getCount();
+                        }
                     }
                 }
             }
