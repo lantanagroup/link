@@ -5,7 +5,14 @@
   </button>
 </div>
 <div class="modal-body">
-  <input type="text" class="form-control" [ngModel]="searchText" (ngModelChange)="updateSearchText($event)" placeholder="Search by name" />
+  <div class="row">
+    <div class="col-md-6">
+      <input type="text" class="form-control" [ngModel]="searchText" (ngModelChange)="updateSearchText($event)" placeholder="Search by name" />
+    </div>
+    <div class="col-md-6">
+      <input type="text" class="form-control" [ngModel]="identifierText" (ngModelChange)="updateIdentifierText($event)" placeholder="Search by identifier" />
+    </div>
+  </div>
   <table class="table table-striped">
     <thead>
     <tr>
@@ -13,7 +20,7 @@
         <input type="checkbox" (change)="selectAll($event)"/>
       </th>
       <th>Name</th>
-      <th>ID</th>
+      <th>Identifier</th>
     </tr>
     </thead>
     <tbody>
@@ -21,8 +28,8 @@
       <td>
         <input type="checkbox" [ngModel]="isSelected(location.id)" (ngModelChange)="selectionChanged(location.id, $event)" />
       </td>
-      <td>{{location.display}}</td>
-      <td>{{location.id}}</td>
+      <td><span title="{{location.id}}">{{location.display}}</span></td>
+      <td>{{location.identifier || 'No identifier specified'}}</td>
     </tr>
     </tbody>
   </table>

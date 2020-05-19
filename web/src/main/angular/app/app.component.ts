@@ -94,7 +94,9 @@ export class AppComponent implements OnInit {
   }
 
   async selectOverflowLocations() {
+    const selected = this.overflowLocations ? JSON.parse(JSON.stringify(this.overflowLocations)) : [];
     const modalRef = this.modal.open(SelectLocationsComponent, { size: 'lg' });
+    modalRef.componentInstance.selected = selected;
     this.overflowLocations = (await modalRef.result) || [];
     this.cookieService.set('overflowLocations', JSON.stringify(this.overflowLocations));
   }
