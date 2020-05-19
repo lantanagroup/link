@@ -15,7 +15,7 @@ public class Config implements IConfig {
 
     private static Config config;
     private String terminologyCovidCodes;
-    private String terminologyVentilatorCodes;
+    private String terminologyIntubationProcedureCodes;
 
     public static Config getInstance() {
         if (config == null) {
@@ -60,6 +60,9 @@ public class Config implements IConfig {
 
     @Value("${terminology.ventilatorCodesValueSet}")
     private String terminologyVentilatorCodesValueSet;
+    
+    @Value("${terminology.intubationProcedureCodesValueSet}")
+	private String terminologyIntubationProcedureCodesValueSet;
 
     @Value("${query.hospitalized}")
     private String queryHospitalized;
@@ -109,6 +112,7 @@ public class Config implements IConfig {
     @Value("${remember.fields}")
     private String rememberFields;
 
+
     public String getQueryHospitalizedAndVentilated() {
         return this.queryHospitalizedAndVentilated;
     }
@@ -125,7 +129,9 @@ public class Config implements IConfig {
 
     @Override
     public String getTerminologyVentilatorCodes() {
-        if (Helper.isNullOrEmpty(this.terminologyVentilatorCodes)) {
+        if (Helper.isNullOrEmpty(this.terminologyIntubationProcedureCodes)) {
+        	terminologyIntubationProcedureCodes = loadValueSet(this.getTerminologyVentilatorCodesValueSet());
+        	/*
             this.logger.info("Extracting mechanical ventilator concepts from ValueSet");
             try {
                 if (this.getTerminologyVentilatorCodesValueSet().startsWith("https://") || this.getTerminologyVentilatorCodesValueSet().startsWith("http://")) {
@@ -140,13 +146,37 @@ public class Config implements IConfig {
             }
 
             this.logger.info(String.format("Found %s mechanical ventilator concepts in ValueSet", this.terminologyVentilatorCodes.split(",").length));
+            */
         }
-        return this.terminologyVentilatorCodes;
+        return this.terminologyIntubationProcedureCodes;
+    }
+    
+    public String loadValueSet(String valueSetUri) {
+    	String valueSetCodes = null;
+        logger.info("Extracting concepts from ValueSet " + valueSetUri);
+        try {
+            if (valueSetUri.startsWith("https://") || valueSetUri.startsWith("http://")) {
+                // TODO: pull the value set from the web 
+            	// or look up cannonical http/https value set URIs from a FHIR server. 
+            	// Just because ValueSet.uri starts with http does not mean it is actually accessible at that URL
+                throw new Exception("Nandina does not yet support http/https value sets.");
+            } else {
+                File valueSetFile = ResourceUtils.getFile(valueSetUri);
+                valueSetCodes = TerminologyHelper.extractCodes(FhirContext.forR4(), valueSetFile);
+            }
+        } catch (Exception ex) {
+            logger.error("Could not load/extract codes for " + valueSetUri, ex);
+        }
+
+        logger.info(String.format("Found %s concepts in ValueSet %s", valueSetCodes.split(",").length, valueSetUri));
+        return valueSetCodes;
     }
 
     @Override
     public String getTerminologyCovidCodes() {
         if (Helper.isNullOrEmpty(this.terminologyCovidCodes)) {
+        	terminologyCovidCodes = loadValueSet(this.getTerminologyCovidCodesValueSet());
+        	/*
             this.logger.info("Extracting COVID-19 concepts from ValueSet");
             try {
                 if (this.getTerminologyCovidCodesValueSet().startsWith("https://") || this.getTerminologyCovidCodesValueSet().startsWith("http://")) {
@@ -161,6 +191,7 @@ public class Config implements IConfig {
             }
 
             this.logger.info(String.format("Found %s COVID-19 concepts in ValueSet", this.terminologyCovidCodes.split(",").length));
+            */
         }
         return this.terminologyCovidCodes;
     }
@@ -169,6 +200,21 @@ public class Config implements IConfig {
     public String getTerminologyCovidCodesValueSet() {
         return this.terminologyCovidCodesValueSet;
     }
+    
+
+
+	@Override
+	public String getTerminologyIntubationProcedureCodes() {
+        if (Helper.isNullOrEmpty(terminologyIntubationProcedureCodes)) {
+        	terminologyIntubationProcedureCodes = loadValueSet(this.getTerminologyIntubationProcedureCodesValueSet());
+        }
+        return this.terminologyIntubationProcedureCodes;
+	}
+
+	@Override
+	public String getTerminologyIntubationProcedureCodesValueSet() {
+        return this.terminologyIntubationProcedureCodesValueSet;
+	}
 
     @Override
     public String getFhirServerBearerToken() {
