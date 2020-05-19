@@ -3,6 +3,7 @@ package com.lantanagroup.nandina.controller;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Config;
+import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.LocationResponse;
 import org.hl7.fhir.r4.model.Bundle;
@@ -30,11 +31,15 @@ public class LocationController {
     }
 
     @GetMapping("api/location")
-    public List<LocationResponse> getLocations(@RequestParam(required = false) String search) throws UnsupportedEncodingException {
+    public List<LocationResponse> getLocations(@RequestParam(required = false) String search, @RequestParam(required = false) String identifier) throws UnsupportedEncodingException {
         String url = "Location?_summary=true&_count=10";
 
         if (search != null && !search.isEmpty()) {
-            url += "&name:contains=" + URLEncoder.encode(search, "utf-8").replace("+", "%20");
+            url += "&name:contains=" + Helper.URLEncode(search);
+        }
+
+        if (identifier != null && !identifier.isEmpty()) {
+            url += "&identifier=" + Helper.URLEncode(identifier);
         }
 
         logger.debug(String.format("Searching for locations with URL %s", url));
@@ -56,6 +61,21 @@ public class LocationController {
 
             newLocResponse.setId(loc.getIdElement().getIdPart());
             newLocResponse.setDisplay(name);
+
+            if (loc.getIdentifier().size() > 0) {
+                String resIdentifier = null;
+
+                if (loc.getIdentifier().get(0).hasSystem() && loc.getIdentifier().get(0).hasValue()) {
+                    resIdentifier = String.format("%s (%s)",
+                            loc.getIdentifier().get(0).getSystem(),
+                            loc.getIdentifier().get(0).getValue());
+                } else if (loc.getIdentifier().get(0).hasValue()) {
+                    resIdentifier = loc.getIdentifier().get(0).getValue();
+                }
+
+                newLocResponse.setIdentifier(resIdentifier);
+            }
+
             response.add(newLocResponse);
         }
 

@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 import {NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {HttpClient} from "@angular/common/http";
 import {LocationResponse} from "../model/location-response";
@@ -13,15 +13,16 @@ import {ToastService} from '../toast.service';
 })
 export class SelectLocationsComponent implements OnInit {
   locations: LocationResponse[] = [];
-  selected: LocationResponse[] = [];
+  @Input() selected: LocationResponse[] = [];
   searchText: string;
-  searchTextChanged = new Subject<void>();
+  identifierText: string;
+  criteriaChanged = new Subject<void>();
 
   constructor(
       public activeModal: NgbActiveModal,
       private http: HttpClient,
       private toastService: ToastService) {
-    this.searchTextChanged
+    this.criteriaChanged
       .pipe(debounceTime(500))
       .subscribe(async () => {
         await this.reload();
@@ -40,15 +41,23 @@ export class SelectLocationsComponent implements OnInit {
 
   updateSearchText(value: string) {
     this.searchText = value;
-    this.searchTextChanged.next();
-    this.selected = [];
+    this.criteriaChanged.next();
+  }
+
+  updateIdentifierText(value: string) {
+    this.identifierText = value;
+    this.criteriaChanged.next();
   }
 
   async reload() {
     let url = '/api/location?';
 
     if (this.searchText) {
-      url += 'search=' + encodeURIComponent(this.searchText) + '&';
+      url += `search=${encodeURIComponent(this.searchText)}&`;
+    }
+
+    if (this.identifierText) {
+      url += `identifier=${encodeURIComponent(this.identifierText)}&`;
     }
 
     try {
