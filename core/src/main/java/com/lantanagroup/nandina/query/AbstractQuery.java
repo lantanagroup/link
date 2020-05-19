@@ -180,6 +180,11 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 
 	// TODO: Also search for patients with an intubation procedure during the encounter
 	protected HashMap<String, Resource> ventilatedPatients(Map<String, Resource> hqData) {
+		HashMap<String, Resource> finalPatientMap = patientsOnVentilatorDevices(hqData);
+		return finalPatientMap;
+	}
+
+	private HashMap<String, Resource> patientsOnVentilatorDevices(Map<String, Resource> hqData) {
 		Set<String> patIds = hqData.keySet();
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {

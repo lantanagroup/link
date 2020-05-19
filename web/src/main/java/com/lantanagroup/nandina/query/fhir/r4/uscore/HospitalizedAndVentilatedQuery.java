@@ -24,7 +24,7 @@ public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQu
     }
 
     /**
-     * Takes the result of HospitalizedQuery.queryForData, then further filters Patients where:
+     * Takes the result of HospitalizedQuery.queryForData(), then further filters Patients where:
      * - The Patient is references in Device.patient and where Device.type is in the mechanical-ventilators value set
      */
     @Override
