@@ -8,9 +8,11 @@ public interface IConfig {
 
     public String getTerminologyCovidCodesValueSet();
     public String getTerminologyVentilatorCodesValueSet();
+	public String getTerminologyIntubationProcedureCodesValueSet();
 
     public String getTerminologyVentilatorCodes();
     public String getTerminologyCovidCodes();
+	public String getTerminologyIntubationProcedureCodes();
 
     public String getQueryHospitalized();
     public String getQueryEDOverflow();

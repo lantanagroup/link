@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValueSet xmlns="http://hl7.org/fhir">
+    <id value="intubation-procedures"/>
+    <meta>
+        <versionId value="1"/>
+        <lastUpdated value="2020-05-19T19:16:09.077Z"/>
+    </meta>
+    <url value="https://nandina.lantanagroup.com/fhir/ValueSet/intubation-procedures"/>
+    <version value="20200507"/>
+    <name value="Intubation Procedures"/>
+    <status value="active"/>
+    <date value="2020-05-07"/>    
+    <compose>
+    <include>
+      <system value="http://snomed.info/sct"/>
+      <filter>
+        <property value="concept"/>
+        <op value="is-a"/>
+        <value value="52765003"/>
+      </filter>
+    </include>
+    </compose>
+    <expansion>
+        <extension url="http://hl7.org/fhir/StructureDefinition/valueset-unclosed">
+            <valueBoolean value="true"/>
+        </extension>
+        <identifier value="urn:uuid:b148f95b-d52f-4654-ab34-c1dd5348f412"/>
+        <timestamp value="2020-05-19T19:25:52.433Z"/>
+        <parameter>
+            <name value="expansion-source"/>
+            <valueString value="ValueSet/intubation-procedures"/>
+        </parameter>
+        <parameter>
+            <name value="version"/>
+            <valueString value="http://snomed.info/sct|http://snomed.info/sct/11000201108/version/20170306"/>
+        </parameter>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="447996002"/>
+            <display value="Intubation of respiratory tract"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="2267008"/>
+            <display value="Changing tracheostomy tube"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="16883004"/>
+            <display value="Endotracheal intubation, emergency procedure"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="30963003"/>
+            <display value="Transglottic catheterization of trachea"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="66861000"/>
+            <display value="Intubation of larynx"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="112798008"/>
+            <display value="Insertion of endotracheal tube"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="182682004"/>
+            <display value="Emergency laryngeal intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="182709001"/>
+            <display value="Laryngeal intubation inhalat."/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="225719006"/>
+            <display value="Changing endotracheal tube"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232674004"/>
+            <display value="Orotracheal intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232675003"/>
+            <display value="Oral intubation awake"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232677006"/>
+            <display value="Endotracheal intubation using rigid bronchoscope"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232678001"/>
+            <display value="Orotracheal fiberoptic intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232679009"/>
+            <display value="Nasotracheal intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232680007"/>
+            <display value="Nasal intubation awake"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232681006"/>
+            <display value="Blind nasal intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232682004"/>
+            <display value="Nasotracheal fiberoptic intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232683009"/>
+            <display value="Cricothyroidotomy tube insertion"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232684003"/>
+            <display value="Minitrach insertion"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232685002"/>
+            <display value="Insertion of tracheostomy tube"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232686001"/>
+            <display value="Insertion of tracheal T-tube"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="232687005"/>
+            <display value="Endobronchial intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="304341005"/>
+            <display value="Awake intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="397892004"/>
+            <display value="Retrograde intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="398024006"/>
+            <display value="Unintended endobronchial intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="418613003"/>
+            <display value="Tracheal intubation through a laryngeal mask airway"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="427331009"/>
+            <display value="Digital assisted intubation"/>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"/>
+            <code value="429161001"/>
+            <display value="Insertion of endotracheal tube using laryngoscope"/>
+        </contains>
+    </expansion>
+</ValueSet>

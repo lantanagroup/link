@@ -1,21 +1,22 @@
 <Encounter xmlns="http://hl7.org/fhir">
-	<id value="Kenobi-admission"/>
+	<id value="Rey-encounter"/>
 	<meta>
-		<lastUpdated value="2020-05-06T11:56:57.250-04:00"/>
+		<versionId value="1"/>
+		<lastUpdated value="2020-05-03T11:56:57.250-04:00"/>
 		<profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"/>
 	</meta>
-	<status value="in-progress"/>
+	<status value="finished"/>
 	<class>
 		<system value="http://terminology.hl7.org/CodeSystem/v3-ActCode"/>
 		<code value="IMP"/>
-		<display value="inpatient encounter"/>
+		<display value="Inpatient"/>
 	</class>
 	<type>
 		<coding>
 			<system value="http://www.ama-assn.org/go/cpt"/>
-			<code value="99221"/>
+			<code value="99281"/>
 		</coding>
-		<text value="Hospital Inpatient Services"/>
+		<text value="Emergency Department Services"/>
 	</type>
 	<priority>
 		<coding>
@@ -25,16 +26,15 @@
 		</coding>
 	</priority>
 	<subject>
-		<reference value="Patient/Covid-Kenobi"/>
+		<reference value="Patient/Covid-Rey"/>
 	</subject>
 	<period>
-		<start value="2020-04-15T15:00:14-05:00"/>
+		<start value="2020-05-10T15:00:14-05:00"/>
 	</period>
 	<location>
-		<reference value="Location/Covid-Floor"/>
+		<reference value="Location/ED-Overflow-1"/>
 		<period>
-			<start value="2020-05-05T11:00:14-05:00"/>
-			<end value="2020-05-06T17:00:14-05:00"/>
+			<start value="2020-05-10T16:00:14-05:00"/>
 		</period>
 	</location>
 </Encounter>

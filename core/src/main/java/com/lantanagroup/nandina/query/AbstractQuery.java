@@ -180,7 +180,11 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 
 	// TODO: Also search for patients with an intubation procedure during the encounter
 	protected HashMap<String, Resource> ventilatedPatients(Map<String, Resource> hqData) {
-		HashMap<String, Resource> finalPatientMap = patientsOnVentilatorDevices(hqData);
+		HashMap<String, Resource> finalPatientMap = new HashMap<String,Resource>();
+		HashMap<String, Resource> ventilatorPatientMap = patientsOnVentilatorDevices(hqData);
+		HashMap<String, Resource> intubationPatientMap = patientsWithIntubationProcedures(hqData);
+		finalPatientMap.putAll(ventilatorPatientMap);
+		finalPatientMap.putAll(intubationPatientMap);
 		return finalPatientMap;
 	}
 
@@ -189,6 +193,20 @@ public abstract class AbstractQuery implements IQueryCountExecutor{
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
 			String devQuery = String.format("Device?type=%s&patient=Patient/%s", config.getTerminologyVentilatorCodes(), patId);
+			Map<String, Resource> devMap = this.search(devQuery);
+			if (devMap != null && devMap.size() > 0) {
+				finalPatientMap.put(patId, hqData.get(patId));
+			}
+			
+		}
+		return finalPatientMap;
+	}
+
+	private HashMap<String, Resource> patientsWithIntubationProcedures(Map<String, Resource> hqData) {
+		Set<String> patIds = hqData.keySet();
+		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
+		for (String patId : patIds) {
+			String devQuery = String.format("Procedure?code=%s&patient=Patient/%s", config.getTerminologyIntubationProcedureCodes(), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));
