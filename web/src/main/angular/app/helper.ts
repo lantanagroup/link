@@ -6,6 +6,29 @@ export function padDateNumber(value: number) {
   return value.toString();
 }
 
+/**
+ * this method is used to format the date according to the fhir standard YYYY-MM-DD. This is called when the page
+ * first loads as well as when a date is selected from the datepicker.
+ * @param date
+ */
+export function formatDate(date) {
+  // created string constants because of lint complaining
+  const year = 'year';
+  const month = 'month';
+  const day = 'day';
+
+  // check if the date is the default fhir date when screen loads. if not then format it
+  if (typeof date === 'string') {
+    return date;
+  } else if (date) {
+    const yyyy = date[year];
+    const mm = padDateNumber(date[month]);
+    const dd = padDateNumber(date[day]);
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return null;
+}
+
 export function getFhirNow() {
   const now = new Date();
   const year = now.getFullYear().toString();
