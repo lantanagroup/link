@@ -1,0 +1,54 @@
+<Encounter xmlns="http://hl7.org/fhir">
+	<id value="Boba-encounter"/>
+	<meta>
+		<versionId value="1"/>
+		<lastUpdated value="2020-05-03T11:56:57.250-04:00"/>
+		<profile value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"/>
+	</meta>
+	<status value="finished"/>
+	<class>
+		<system value="http://terminology.hl7.org/CodeSystem/v3-ActCode"/>
+		<code value="EMER"/>
+		<display value="Emergency"/>
+	</class>
+	<type>
+		<coding>
+			<system value="http://www.ama-assn.org/go/cpt"/>
+			<code value="99281"/>
+		</coding>
+		<text value="Emergency Department Services"/>
+	</type>
+	<priority>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/v3-ActPriority"/>
+			<code value="R"/>
+			<display value="routine"/>
+		</coding>
+	</priority>
+	<subject>
+		<reference value="Patient/Covid-Han"/>
+	</subject>
+	<period>
+		<start value="2020-05-02T15:00:14-05:00"/>
+	</period>
+	<location>
+		<reference value="Location/ED-Overflow-1"/>
+		<period>
+			<start value="2020-05-02T16:00:14-05:00"/>
+			<end value="2020-05-02T17:00:14-05:00"/>
+		</period>
+	</location>
+	<location>
+		<reference value="Location/Observation-Unit-2"/>
+		<period>
+			<start value="2020-05-02T11:00:14-05:00"/>
+			<end value="2020-05-03T17:00:14-05:00"/>
+		</period>
+	</location>
+		<location>
+		<reference value="Location/Covid-Floor"/>
+		<period>
+			<start value="2020-05-05T11:00:14-05:00"/>
+		</period>
+	</location>
+</Encounter>

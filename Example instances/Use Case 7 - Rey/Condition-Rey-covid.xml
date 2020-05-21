@@ -1,5 +1,5 @@
 <Condition xmlns="http://hl7.org/fhir">
-	<id value="Chewi-covid-condition"/>
+	<id value="Rey-covid-condition"/>
 	<meta>
 		<versionId value="3"/>
 		<lastUpdated value="2020-05-06T18:50:03.117+00:00"/>
@@ -34,11 +34,11 @@
 		<text value="Suspected COVID-19"/>
 	</code>
 	<subject>
-		<reference value="Patient/Covid-Chewbacca"/>
+		<reference value="Patient/Covid-Rey"/>
 	</subject>
 	<encounter>
-		<reference value="Encounter/Yoda-admission"/>
+		<reference value="Encounter/Rey-encounter"/>
 	</encounter>
-	<onsetDateTime value="2020-05-03T10:30:35-06:00"/>
-	<recordedDate value="2020-05-12T10:30:35-06:00"/>
+	<onsetDateTime value="2020-05-10T10:30:35-06:00"/>
+	<recordedDate value="2020-05-16T10:30:35-06:00"/>
 </Condition>
