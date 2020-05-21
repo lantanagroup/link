@@ -30,7 +30,13 @@
             <div class="col-md-4">
               <p><strong>Report Date</strong></p>
               <p class="help-block">For which patient impact and hospital capacity counts are reported.</p>
-              <input type="date" class="form-control" [(ngModel)]="response.date" [class.is-invalid]="!response.date" />
+              <div class="input-group">
+                <input class="form-control" placeholder="{{today | date: 'yyyy-MM-dd'}}"
+                       name="dp" [(ngModel)]="response.date" ngbDatepicker #d="ngbDatepicker">
+                <div class="input-group-append">
+                  <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

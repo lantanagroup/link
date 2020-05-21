@@ -6,7 +6,7 @@ import {LocationResponse} from './model/location-response';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {SelectLocationsComponent} from './select-locations/select-locations.component';
 import {CookieService} from 'ngx-cookie-service';
-import {getFhirNow} from './helper';
+import {getFhirNow, formatDate, padDateNumber} from './helper';
 import {OAuthService} from 'angular-oauth2-oidc';
 import {ToastService} from './toast.service';
 
@@ -22,6 +22,7 @@ export class AppComponent implements OnInit {
   overflowLocations: LocationResponse[] = [];
   rememberFields = '%remember.fields%';
   user: any;
+  today = getFhirNow();
 
   constructor(
       private http: HttpClient,
@@ -32,7 +33,8 @@ export class AppComponent implements OnInit {
     if (this.cookieService.get('overflowLocations')) {
       try {
         this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
-      } catch (ex) {}
+      } catch (ex) {
+      }
     }
   }
 
@@ -81,6 +83,7 @@ export class AppComponent implements OnInit {
     });
 
     try {
+      this.response.date = formatDate(this.response.date);
       convertResponse = await this.http.post('/api/convert', this.response, { observe: 'response', responseType: 'text' }).toPromise();
     } catch (ex) {
       this.toastService.showException('Error converting report', ex);
@@ -113,7 +116,7 @@ export class AppComponent implements OnInit {
       }
 
       if (this.response.date) {
-        url += 'reportDate=' + encodeURIComponent(this.response.date) + '&';
+        url += 'reportDate=' + encodeURIComponent(formatDate(this.response.date)) + '&';
       } else {
         url += 'reportDate=' + encodeURIComponent(getFhirNow()) + '&';
       }
@@ -151,6 +154,8 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
+    // initialize the response date to today by default.
+    this.response.date = getFhirNow();
     const issuer = '%auth.issuer%';
     const clientId = '%auth.clientId%';
     const scope = '%auth.scope%';
