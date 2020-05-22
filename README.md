@@ -94,3 +94,19 @@ mvn versions:set -DnewVersion=2.50.1-SNAPSHOT
 mvn versions:revert
 mvn versions:commit
 ```
+
+# Development
+
+## Committing changes to Angular
+
+Be sure to run `ng build --prod` prior to committing your TS changes. This optimizes the compiled TS for production environments. The CI build does not re-compile the TS, it is up to the developer to make sure that the compiled TS is committed the way it should be used in the deployed environments.
+
+## Compiled TS cached by IntelliJ
+
+If you run `ng build --watch` in a separate process from IntelliJ or webstorm, you typically have to re-compile the Java application after NG has recompiled the typescript, otherwise the compiled JS files don't get put in the target/classes/public directory. This is because the default output location for `ng build` is in the `src/main/resources/public` directory, *not* the `target/classes/public` directory.
+
+To get around this issue during development, you can modify your run configuration in IntelliJ and Eclipse to pass the following `VM Option` when debugging/running the server application:
+
+`-Dspring.resources.static-locations=file:/E:/Code/nandina/web/src/main/resources/public/`
+
+This will tell Spring Boot to look for the static files in the same directory that `ng build` outputs them to, and you will no longer have to recompile the java application after you've made changes to the TypeScript that NG re-compiled.
