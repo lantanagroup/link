@@ -47,6 +47,10 @@ export class AppComponent implements OnInit {
     return displays.join(', ');
   }
 
+  onDateSelected() {
+    this.today = formatDate(this.response.date);
+  }
+
   copyAccessTokenToClipboard() {
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
