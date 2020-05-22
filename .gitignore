@@ -2,4 +2,6 @@ web/node_modules/
 web/target/
 core/target/
 .idea/
+*.iml
 /web/src/main/resources/application-*.properties
+.DS_Store
