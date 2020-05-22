@@ -102,7 +102,7 @@ mvn versions:commit
 The Angular CLI needs to be installed so that you can run `ng` commands from the command-line:
 
 ```
-npm install -G @angular/cli
+npm install -g @angular/cli
 ```
 
 After the Angular CLI is installed, you need to run `npm ci` to install the Node.JS dependencies, and then `ng build --watch` to compile the angular application's TypeScript files into JS files, that are output to the `src/main/resources/output` directory. These commands need to be run in the `web` directory/project, where the Angular files are stored (`angular.json`, `package.json`, etc.)
