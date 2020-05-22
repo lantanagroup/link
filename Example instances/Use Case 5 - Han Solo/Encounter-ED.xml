@@ -42,7 +42,7 @@
 		<reference value="Location/Observation-Unit-2"/>
 		<period>
 			<start value="2020-05-02T11:00:14-05:00"/>
-			<end value="2020-05-03T17:00:14-05:00"/>
+			<end value="2020-05-05T17:00:14-05:00"/>
 		</period>
 	</location>
 		<location>
