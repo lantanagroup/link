@@ -1,12 +1,19 @@
-FROM ubuntu AS build
+FROM node AS build
 
 WORKDIR /tmp
-RUN apt-get update && apt-get install openjdk-11-jdk -y && apt-get install maven -y
+
+RUN apt-get update && apt-get install default-jdk -y && apt-get install maven -y
+RUN npm install -g @angular/cli
 
 WORKDIR /tmp
 
 # Copy code and compile
 COPY . .
+
+WORKDIR /tmp/web
+RUN npm ci
+RUN ng build --prod
+WORKDIR /tmp
 RUN mvn install
 
 FROM tomcat:9-jre11
