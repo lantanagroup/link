@@ -1,6 +1,9 @@
 package com.lantanagroup.nandina.auth;
 
 import javax.servlet.http.HttpServletRequest;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessingFilter {
@@ -17,6 +20,13 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
 
     @Override
     protected Object getPreAuthenticatedCredentials(HttpServletRequest request) {
-        return "N/A";
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            DecodedJWT jwt = JWT.decode(authHeader.substring(7));
+            return jwt;
+        }
+
+        return null;
     }
 }

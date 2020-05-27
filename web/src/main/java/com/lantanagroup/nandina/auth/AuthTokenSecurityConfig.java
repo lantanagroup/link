@@ -4,8 +4,10 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.nandina.Config;
+import org.json.JSONObject;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,34 +33,7 @@ public class AuthTokenSecurityConfig extends WebSecurityConfigurerAdapter {
     {
         PreAuthTokenHeaderFilter filter = new PreAuthTokenHeaderFilter("Authorization");
 
-        filter.setAuthenticationManager(new AuthenticationManager() {
-            @Override
-            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-                String authHeader = (String) authentication.getPrincipal();
-
-                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                    throw new BadCredentialsException("This REST operation requires a Bearer Authorization header.");
-                }
-
-                // Validate that the token is issued by our configured authentication provider
-                String token = authHeader.substring("Bearer ".length());
-                DecodedJWT jwt = JWT.decode(token);
-                JwkProvider provider = new CustomUrlJwkProvider(Config.getInstance().getAuthJwksUrl());
-
-                try {
-                    Jwk jwk = provider.get(jwt.getKeyId());
-                    Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
-                    algorithm.verify(jwt);
-
-                    authentication.setAuthenticated(true);
-                } catch (Exception e) {
-                    authentication.setAuthenticated(false);
-                    e.printStackTrace();
-                }
-
-                return authentication;
-            }
-        });
+        filter.setAuthenticationManager(new NandinaAuthManager());
 
         httpSecurity.
                 antMatcher("/api/**")
