@@ -4,6 +4,7 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.impl.NullClaim;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.nandina.Config;
@@ -51,7 +52,7 @@ public class NandinaAuthManager implements AuthenticationManager {
     private String getJwksUrl(DecodedJWT jwt) {
         Claim issuerClaim = jwt.getClaim("iss");
 
-        if (issuerClaim != null) {
+        if (issuerClaim != null && !issuerClaim.isNull()) {
             String issuer = issuerClaim.asString();
 
             if (this.issuerJwksUrls.containsKey(issuer)) {
@@ -68,9 +69,10 @@ public class NandinaAuthManager implements AuthenticationManager {
 
     private DecodedJWT getValidationJWT(String token) {
         DecodedJWT jwt = JWT.decode(token);
+        Claim idTokenClaim = jwt.getClaim("id_token");
 
-        if (jwt.getClaim("id_token") != null) {         // this is smart-on-fhir
-            String idToken = jwt.getClaim("id_token").asString();
+        if (idTokenClaim != null && !idTokenClaim.isNull()) {         // this is smart-on-fhir
+            String idToken = idTokenClaim.asString();
             return JWT.decode(idToken);
         }
 

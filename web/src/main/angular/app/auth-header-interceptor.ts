@@ -20,6 +20,9 @@ export class AddHeaderInterceptor implements HttpInterceptor {
             if (this.authService.token) {
                 headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
             }
+            if (this.authService.fhirBase) {
+                headers = headers.set('fhirBase', this.authService.fhirBase);
+            }
         }
 
         return next.handle(req.clone({ headers: headers }));

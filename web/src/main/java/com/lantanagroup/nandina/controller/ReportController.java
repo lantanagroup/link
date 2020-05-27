@@ -14,6 +14,7 @@ import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,15 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-public class ReportController {
+public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
-  FhirContext ctx = FhirContext.forR4();
-  IGenericClient fhirClient;
-
-  public ReportController() {
-    this.fhirClient = this.ctx.newRestfulGenericClient(Config.getInstance().getFhirServerBase());
-    this.fhirClient.registerInterceptor(new HapiFhirAuthenticationInterceptor());
-  }
 
   /**
    * Uses reflection to determine what class should be used to execute the requested query/className, and
@@ -45,7 +39,7 @@ public class ReportController {
    * @param overflowLocations
    * @return
    */
-  private Integer executeQueryCount(String className, Map<String, String> criteria) {
+  private Integer executeQueryCount(String className, Map<String, String> criteria, IGenericClient fhirClient) {
     if (className == null || className.isEmpty()) return null;
 
     try {
@@ -74,8 +68,9 @@ public class ReportController {
   }
 
   @GetMapping("/api/query")
-  public QuestionnaireResponseSimple getQuestionnaireResponse(HttpServletRequest request) {
+  public QuestionnaireResponseSimple getQuestionnaireResponse(Authentication authentication, HttpServletRequest request) {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
+    IGenericClient fhirClient = this.getFhirClient(authentication, request);
 
     Map<String, String> criteria = this.getCriteria(request);
 
@@ -92,43 +87,43 @@ public class ReportController {
       response.setSummaryCensusId(Config.getInstance().getFieldDefaultSummaryCensusId());
     }
 
-    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria);
+    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria, fhirClient);
     response.setHospitalized(hospitalizedTotal);
 
-    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria);
+    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria, fhirClient);
     response.setHospitalizedAndVentilated(hospitalizedAndVentilatedTotal);
 
-    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria);
+    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria, fhirClient);
     response.setHospitalOnset(hospitalOnsetTotal);
 
-    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria);
+    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria, fhirClient);
     response.setEdOverflow(edOverflowTotal);
 
-    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria);
+    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria, fhirClient);
     response.setEdOverflowAndVentilated(edOverflowAndVentilatedTotal);
 
-    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria);
+    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria, fhirClient);
     response.setDeaths(deathsTotal);
 
-    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria);
+    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria, fhirClient);
     response.setAllHospitalBeds(hospitalBedsTotal);
 
-    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria);
+    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria, fhirClient);
     response.setHospitalInpatientBeds(hospitalInpatientBedsTotal);
 
-    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria);
+    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria, fhirClient);
     response.setHospitalInpatientBedOccupancy(hospitalInpatientBedOccTotal);
 
-    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria);
+    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria, fhirClient);
     response.setIcuBeds(hospitalIcuBedsTotal);
     
-    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria);
+    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria, fhirClient);
     response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
 
-    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria);
+    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria, fhirClient);
     response.setMechanicalVentilators(mechanicalVentilatorsTotal);
 
-    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria);
+    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria, fhirClient);
     response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
 
     return response;

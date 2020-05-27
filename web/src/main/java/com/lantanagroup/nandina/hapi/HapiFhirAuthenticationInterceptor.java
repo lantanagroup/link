@@ -12,8 +12,10 @@ import java.io.IOException;
 public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
   private String authHeader;
 
-  public HapiFhirAuthenticationInterceptor() {
-    if (!Helper.isNullOrEmpty(Config.getInstance().getFhirServerBearerToken())) {
+  public HapiFhirAuthenticationInterceptor(String token) {
+    if (token != null) {
+      this.authHeader = token.startsWith("Bearer ") ? token : "Bearer " + token;
+    } else if (!Helper.isNullOrEmpty(Config.getInstance().getFhirServerBearerToken())) {
       this.authHeader = "Bearer " + Config.getInstance().getFhirServerBearerToken();
     } else if (!Helper.isNullOrEmpty(Config.getInstance().getFhirServerUserName()) && !Helper.isNullOrEmpty(Config.getInstance().getFhirServerPassword())) {
       String credentials = Config.getInstance().getFhirServerUserName() + ":" + Config.getInstance().getFhirServerPassword();

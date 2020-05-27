@@ -16,6 +16,7 @@ export class AuthService {
   private initialized = false;
   public token: string;
   public user: any;
+  public fhirBase: string;
 
   constructor(public oauthService: OAuthService, private http: HttpClient, private router: Router) {
   }
@@ -43,6 +44,7 @@ export class AuthService {
   initSmart(options: AuthInitOptions) {
     if (this.initialized) return;
 
+    this.fhirBase = options.issuer;
     this.oauthService.configure({
       scope: 'openid profile fhirUser user/*.*',
       redirectUri: location.origin + '/smart-login',
