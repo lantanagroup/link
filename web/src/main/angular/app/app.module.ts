@@ -12,12 +12,19 @@ import {OAuthModule} from 'angular-oauth2-oidc';
 import {AddHeaderInterceptor} from './auth-header-interceptor';
 import {ToastService} from './toast.service';
 import {ToastsContainerComponent} from './toasts-container/toasts-container.component';
+import { SmartLoginComponent } from './smart-login/smart-login.component';
+import { HomeComponent } from './home/home.component';
+import { QuestionnaireComponent } from './questionnaire/questionnaire.component';
+import {AuthService} from './auth.service';
 
 @NgModule({
     declarations: [
         AppComponent,
         SelectLocationsComponent,
-        ToastsContainerComponent
+        ToastsContainerComponent,
+        SmartLoginComponent,
+        HomeComponent,
+        QuestionnaireComponent
     ],
     imports: [
         BrowserModule,
@@ -29,6 +36,7 @@ import {ToastsContainerComponent} from './toasts-container/toasts-container.comp
     ],
     providers: [
         ToastService,
+        AuthService,
         CookieService,
         {
             provide: HTTP_INTERCEPTORS,

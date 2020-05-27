@@ -1,0 +1,19 @@
+
+<p *ngIf="authService.user">Welcome <span [ngbPopover]="accessTokenPopover" placement="bottom">{{authService.user.name}}</span>! [<a href="javascript:void(0)" (click)="authService.logout()">Logout</a>]</p>
+<p *ngIf="!authService.user">
+    <button type="button" class="btn btn-primary" (click)="authService.loginLocal()">Login</button>
+</p>
+
+<div *ngIf="authService.user">
+    <app-questionnaire></app-questionnaire>
+</div>
+
+<ng-template #accessTokenPopover>
+    <div *ngIf="authService.oauthService.getAccessToken()">
+        <p title="{{authService.oauthService.getAccessToken()}}">{{authService.oauthService.getAccessToken().substring(0, 50)}}...</p>
+        <p>[<a href="javascript:void(0)" (click)="copyAccessTokenToClipboard()">copy</a>]</p>
+    </div>
+    <div *ngIf="!authService.oauthService.getAccessToken()">
+        You do not have an access token!
+    </div>
+</ng-template>

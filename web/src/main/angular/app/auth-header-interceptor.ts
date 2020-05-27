@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {OAuthService} from 'angular-oauth2-oidc';
+import {AuthService} from './auth.service';
 
 /**
  * This class is an HTTP interceptor that is responsible for adding an
@@ -9,15 +10,15 @@ import {OAuthService} from 'angular-oauth2-oidc';
  */
 @Injectable()
 export class AddHeaderInterceptor implements HttpInterceptor {
-    constructor(private oauthService: OAuthService) {
+    constructor(private authService: AuthService) {
     }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         let headers = req.headers;
 
         if (req.url.startsWith('/')) {
-            if (this.oauthService.getIdToken()) {
-                headers = headers.set('Authorization', 'Bearer ' + this.oauthService.getIdToken());
+            if (this.authService.token) {
+                headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
             }
         }
 
