@@ -26,7 +26,7 @@ public class LocationController extends BaseController {
             Authentication authentication,
             HttpServletRequest request,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String identifier) throws UnsupportedEncodingException {
+            @RequestParam(required = false) String identifier) throws Exception {
 
         String url = "Location?_summary=true&_count=10";
 

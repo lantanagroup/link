@@ -11,8 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 public class BaseController {
     protected FhirContext ctx = FhirContext.forR4();
 
-    protected IGenericClient getFhirClient(Authentication authentication, HttpServletRequest request) {
+    protected IGenericClient getFhirClient(Authentication authentication, HttpServletRequest request) throws Exception {
         String fhirBase = Config.getInstance().getFhirServerBase();
+        if (Config.getInstance().getRequireHttps() && !fhirBase.contains("https")) {
+            throw new Exception("https is required for FhirClient");
+        }
         String token = null;
 
         if (request.getHeader("fhirBase") != null) {

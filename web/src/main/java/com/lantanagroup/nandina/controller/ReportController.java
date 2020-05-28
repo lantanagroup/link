@@ -68,10 +68,9 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/api/query")
-  public QuestionnaireResponseSimple getQuestionnaireResponse(Authentication authentication, HttpServletRequest request) {
+  public QuestionnaireResponseSimple getQuestionnaireResponse(Authentication authentication, HttpServletRequest request) throws Exception {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
     IGenericClient fhirClient = this.getFhirClient(authentication, request);
-
     Map<String, String> criteria = this.getCriteria(request);
 
     String reportDate = criteria.get("reportDate");
@@ -116,7 +115,7 @@ public class ReportController extends BaseController {
 
     Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria, fhirClient);
     response.setIcuBeds(hospitalIcuBedsTotal);
-    
+
     Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria, fhirClient);
     response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
 
@@ -125,7 +124,6 @@ public class ReportController extends BaseController {
 
     Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria, fhirClient);
     response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
-
     return response;
   }
 

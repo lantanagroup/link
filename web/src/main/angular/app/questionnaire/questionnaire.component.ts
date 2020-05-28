@@ -111,7 +111,14 @@ export class QuestionnaireComponent implements OnInit {
         url += 'reportDate=' + encodeURIComponent(getFhirNow()) + '&';
       }
 
-      this.response = await this.http.get<QuestionnaireResponseSimple>(url).toPromise();
+
+      try {
+        this.response = await this.http.get<QuestionnaireResponseSimple>(url).toPromise();
+      } catch (ex) {
+        this.toastService.showException('Error converting report', ex);
+        return;
+      }
+
       const keys = Object.keys(this.response);
       for (const key of keys) {
         if (this.response[key] === null) {
