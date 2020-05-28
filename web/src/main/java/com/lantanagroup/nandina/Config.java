@@ -113,6 +113,8 @@ public class Config implements IConfig {
     @Value("${remember.fields}")
     private String rememberFields;
 
+    @Value("${requireHttps}")
+    private boolean requireHttps;
 
     public String getQueryHospitalizedAndVentilated() {
         return this.queryHospitalizedAndVentilated;
@@ -339,5 +341,13 @@ public class Config implements IConfig {
 
     public void setQueryMechanicalVentilatorsUsed(String queryMechanicalVentilatorsUsed) {
         this.queryMechanicalVentilatorsUsed = queryMechanicalVentilatorsUsed;
+    }
+
+    public boolean getRequireHttps() {
+        return requireHttps;
+    }
+
+    public void setRequireHttps(boolean requireHttps) {
+        this.requireHttps = requireHttps;
     }
 }
