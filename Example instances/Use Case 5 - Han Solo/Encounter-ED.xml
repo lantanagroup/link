@@ -32,23 +32,11 @@
 		<start value="2020-05-02T15:00:14-05:00"/>
 	</period>
 	<location>
-		<reference value="Location/ED-Overflow-1"/>
+		<location>
+			<reference value="Location/ED-Overflow-1"/>
+		</location>
 		<period>
 			<start value="2020-05-02T16:00:14-05:00"/>
-			<end value="2020-05-02T17:00:14-05:00"/>
-		</period>
-	</location>
-	<location>
-		<reference value="Location/Observation-Unit-2"/>
-		<period>
-			<start value="2020-05-02T11:00:14-05:00"/>
-			<end value="2020-05-05T17:00:14-05:00"/>
-		</period>
-	</location>
-		<location>
-		<reference value="Location/Covid-Floor"/>
-		<period>
-			<start value="2020-05-05T11:00:14-05:00"/>
 			<end value="2020-05-06T17:00:14-05:00"/>
 		</period>
 	</location>

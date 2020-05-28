@@ -31,7 +31,9 @@
 		<start value="2020-04-15T15:00:14-05:00"/>
 	</period>
 	<location>
-		<reference value="Location/Covid-Floor"/>
+		<location>
+			<reference value="Location/Covid-Floor"/>
+		</location>
 		<period>
 			<start value="2020-05-05T11:00:14-05:00"/>
 			<end value="2020-05-06T17:00:14-05:00"/>

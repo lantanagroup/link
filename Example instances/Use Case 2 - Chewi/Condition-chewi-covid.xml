@@ -15,7 +15,7 @@
 	<verificationStatus>
 		<coding>
 			<system value="http://terminology.hl7.org/CodeSystem/condition-ver-status"/>
-			<code value="entered-in-error"/>
+			<code value="confirmed"/>
 		</coding>
 	</verificationStatus>
 	<category>
@@ -37,7 +37,7 @@
 		<reference value="Patient/Covid-Chewbacca"/>
 	</subject>
 	<encounter>
-		<reference value="Encounter/Yoda-admission"/>
+		<reference value="Encounter/Chewi-admission"/>
 	</encounter>
 	<onsetDateTime value="2020-05-03T10:30:35-06:00"/>
 	<recordedDate value="2020-05-12T10:30:35-06:00"/>

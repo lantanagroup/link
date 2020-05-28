@@ -1,5 +1,5 @@
 <Procedure xmlns="http://hl7.org/fhir">
-  <id value="Intubation-Han"/>
+  <id value="Emergency-Intubation-Chewi"/>
   <meta>
     <profile
              value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"/>
@@ -11,14 +11,15 @@
   <status value="completed"/>
   <code>
     <coding>
-      <system value="http://snomed.info/sct"/>
-      <code value="112798008"/>
+     <system value="http://snomed.info/sct"/>
+            <code value="112798008"/>
+            <display value="Insertion of endotracheal tube"/>
     </coding>
     <text
           value="Endotracheal intubation, emergency"/>
   </code>
   <subject>
-    <reference value="Patient/Covid-Han"/>
+    <reference value="Patient/Covid-Chewbacca"/>
   </subject>
   <performedPeriod>
     <start value="2020-05-04T12:55:26-07:00"/>
