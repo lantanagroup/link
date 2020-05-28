@@ -10,12 +10,44 @@ export interface AuthInitOptions {
   launch: string;
 }
 
+interface IProfile {
+  name: string;
+  email?: string;
+}
+
+interface IPractitioner {
+  id: string;
+  identifier?: {
+    use?: string;
+    system: string;
+    value: string;
+  }[];
+  address?: {
+    line: string[];
+    city: string;
+    postalCode: string;
+    state: string;
+    country: string;
+  }[];
+  gender?: string;
+  telecom?: {
+    use?: string;
+    system: string;
+    value: string;
+  }[];
+  name?: {
+    family: string;
+    given: string[];
+    prefix?: string[];
+  }[];
+}
+
 @Injectable()
 export class AuthService {
   private readonly OAUTH_URIS_EXT_URL = 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
   private initialized = false;
   public token: string;
-  public user: any;
+  public user: IProfile;
   public fhirBase: string;
 
   constructor(public oauthService: OAuthService, private http: HttpClient, private router: Router) {
@@ -114,6 +146,38 @@ export class AuthService {
     }
   }
 
+  private convertFhirUserToProfile(fhirUser: IPractitioner): IProfile {
+    const profile = <IProfile> {};
+
+    if (fhirUser.name && fhirUser.name.length > 0) {
+      const name = fhirUser.name[0];
+
+      if (name.family && name.given && name.given.length > 0) {
+        profile.name = name.given.join(', ') + ' ' + name.family;
+      } else if (name.family) {
+        profile.name = name.family;
+      } else if (name.given && name.given.length > 0) {
+        profile.name = name.given.join(', ');
+      } else {
+        profile.name = 'Unknown';
+      }
+    }
+
+    if (fhirUser.telecom) {
+      const email = fhirUser.telecom.find(t => t.system === 'email');
+
+      if (email && email.value) {
+        if (email.value.startsWith('mailto:')) {
+          profile.email = email.value.substring(7);
+        } else {
+          profile.email = email.value;
+        }
+      }
+    }
+
+    return profile;
+  }
+
   async loginSmart(state: string) {
     const stateInfo = this.getStateInfo(state);
 
@@ -127,9 +191,22 @@ export class AuthService {
       this.token = this.oauthService.getAccessToken();
 
       this.user = {
-        name: 'Smart-on-FHIR User',
-        email: 'test@test.com'
+        name: 'Smart-on-FHIR User'
       };
+
+      const idClaims: any = this.oauthService.getIdentityClaims();
+      const fhirUserReference: string = idClaims ? idClaims.fhirUser || idClaims.profile : null;
+
+      if (fhirUserReference) {
+        const fhirUserUrl = stateInfo.issuer + (stateInfo.issuer.endsWith('/') ? '' : '/') + (fhirUserReference.startsWith('/') ? fhirUserReference.substring(1) : fhirUserReference);
+
+        try {
+          const fhirUser = await this.http.get<IPractitioner>(fhirUserUrl, { headers: { 'Authorization': `Bearer ${this.token}`} }).toPromise();
+          this.user = this.convertFhirUserToProfile(fhirUser);
+        } catch (ex) {
+          console.error(`Failed to retrieve user info from ${fhirUserUrl}`);
+        }
+      }
 
       await this.router.navigate(['home']);
     }
