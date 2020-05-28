@@ -17,6 +17,6 @@
 		</coding>
 	</type>
 	<patient>
-		<reference value="Patient/Covid-Kenobi"/>
+		<reference value="Patient/Covid-Han"/>
 	</patient>
 </Device>

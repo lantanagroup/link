@@ -21,7 +21,7 @@
     <reference value="Patient/Covid-Yoda"/>
   </subject>
   <performedPeriod>
-    <start value="2020-05-05T12:55:26-07:00"/>
-    <end value="2020-05-05T13:25:26-07:00"/>
+    <start value="2020-05-03T12:55:26-07:00"/>
+    <end value="2020-05-03T13:25:26-07:00"/>
   </performedPeriod>
 </Procedure>

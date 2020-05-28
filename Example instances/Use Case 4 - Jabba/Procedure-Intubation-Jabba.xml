@@ -21,7 +21,7 @@
     <reference value="Patient/Covid-Jabba"/>
   </subject>
   <performedPeriod>
-    <start value="2020-05-06T12:55:26-07:00"/>
-    <end value="2020-05-06T13:25:26-07:00"/>
+    <start value="2020-05-04T12:55:26-07:00"/>
+    <end value="2020-05-05T13:25:26-07:00"/>
   </performedPeriod>
 </Procedure>
