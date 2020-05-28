@@ -15,6 +15,7 @@ public class Config implements IConfig {
 
     private static Config config;
     private String terminologyCovidCodes;
+	private String terminologyVentilatorCodes;
     private String terminologyIntubationProcedureCodes;
 
     public static Config getInstance() {
@@ -129,8 +130,8 @@ public class Config implements IConfig {
 
     @Override
     public String getTerminologyVentilatorCodes() {
-        if (Helper.isNullOrEmpty(this.terminologyIntubationProcedureCodes)) {
-        	terminologyIntubationProcedureCodes = loadValueSet(this.getTerminologyVentilatorCodesValueSet());
+        if (Helper.isNullOrEmpty(terminologyVentilatorCodes)) {
+        	terminologyVentilatorCodes = loadValueSet(this.getTerminologyVentilatorCodesValueSet());
         	/*
             this.logger.info("Extracting mechanical ventilator concepts from ValueSet");
             try {
@@ -148,7 +149,7 @@ public class Config implements IConfig {
             this.logger.info(String.format("Found %s mechanical ventilator concepts in ValueSet", this.terminologyVentilatorCodes.split(",").length));
             */
         }
-        return this.terminologyIntubationProcedureCodes;
+        return terminologyVentilatorCodes;
     }
     
     public String loadValueSet(String valueSetUri) {
