@@ -16,6 +16,7 @@ import { SmartLoginComponent } from './smart-login/smart-login.component';
 import { HomeComponent } from './home/home.component';
 import { QuestionnaireComponent } from './questionnaire/questionnaire.component';
 import {AuthService} from './auth.service';
+import { SmartHomeComponent } from './smart-home/smart-home.component';
 
 @NgModule({
     declarations: [
@@ -24,7 +25,8 @@ import {AuthService} from './auth.service';
         ToastsContainerComponent,
         SmartLoginComponent,
         HomeComponent,
-        QuestionnaireComponent
+        QuestionnaireComponent,
+        SmartHomeComponent
     ],
     imports: [
         BrowserModule,

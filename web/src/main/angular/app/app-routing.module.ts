@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import {SmartLoginComponent} from './smart-login/smart-login.component';
 import {HomeComponent} from './home/home.component';
+import {SmartHomeComponent} from './smart-home/smart-home.component';
 
 const routes: Routes = [{
   path: 'smart-login',
@@ -9,6 +10,9 @@ const routes: Routes = [{
 }, {
   path: 'home',
   component: HomeComponent
+}, {
+  path: 'smart-home',
+  component: SmartHomeComponent
 }, {
   path: '',
   redirectTo: 'home',

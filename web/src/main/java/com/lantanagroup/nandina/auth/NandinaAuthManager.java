@@ -8,6 +8,7 @@ import com.auth0.jwt.impl.NullClaim;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.nandina.Config;
+import com.lantanagroup.nandina.model.CernerClaimData;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
+import java.util.Map;
 
 public class NandinaAuthManager implements AuthenticationManager {
     private static final Logger logger = LoggerFactory.getLogger(NandinaAuthManager.class);
@@ -45,12 +47,30 @@ public class NandinaAuthManager implements AuthenticationManager {
             JSONObject openIdConfigObj = new JSONObject(content.toString());
             return openIdConfigObj.getString("jwks_uri");
         } catch (Exception ex) {
-            return Config.getInstance().getAuthJwksUrl();
+            return null;
         }
+    }
+
+    private CernerClaimData getCernerClaimData(DecodedJWT jwt) {
+        Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
+
+        if (cernerClaim != null) {
+            Map<String, Object> data = cernerClaim.asMap();
+            CernerClaimData ccd = new CernerClaimData();
+
+            if (data.containsKey("tenant")) {
+                ccd.setTenant((String) data.get("tenant"));
+            }
+
+            return ccd;
+        }
+
+        return null;
     }
 
     private String getJwksUrl(DecodedJWT jwt) {
         Claim issuerClaim = jwt.getClaim("iss");
+        Claim tenantClaim = jwt.getClaim("tenant");
 
         if (issuerClaim != null && !issuerClaim.isNull()) {
             String issuer = issuerClaim.asString();
@@ -61,7 +81,20 @@ public class NandinaAuthManager implements AuthenticationManager {
 
             String openIdConfigUrl = issuer + (issuer.endsWith("/") ? "" : "/") + ".well-known/openid-configuration";
             String url = this.getJwksUrl(openIdConfigUrl);
-            this.issuerJwksUrls.put(issuer, url);
+
+            if (url == null && issuer.equals("https://authorization.sandboxcerner.com/")) {
+                CernerClaimData ccd = this.getCernerClaimData(jwt);
+
+                if (ccd != null && ccd.getTenant() != null && !ccd.getTenant().isEmpty()) {
+                    String cernerConfigUrl = String.format("https://authorization.sandboxcerner.com/tenants/%s/oidc/idsps/%s/.well-known/openid-configuration", ccd.getTenant(), ccd.getTenant());
+                    url = this.getJwksUrl(cernerConfigUrl);
+                }
+            }
+
+            if (url != null) {
+                this.issuerJwksUrls.put(issuer, url);
+                return url;
+            }
         }
 
         return Config.getInstance().getAuthJwksUrl();
@@ -93,6 +126,7 @@ public class NandinaAuthManager implements AuthenticationManager {
         String jwksUrl = this.getJwksUrl(jwt);
         JwkProvider provider = new CustomUrlJwkProvider(jwksUrl);
 
+        // TODO: Need to handle ES256/EC algorithm from token and jwk. Until then, this fails to validate.
         try {
             Jwk jwk = provider.get(jwt.getKeyId());
             Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);

@@ -78,7 +78,8 @@ export class AuthService {
 
     this.fhirBase = options.issuer;
     this.oauthService.configure({
-      scope: 'openid profile fhirUser user/*.*',
+      clientId: '17c445e6-c585-4421-a80f-d5ba22fcfc13',
+      scope: 'launch openid profile fhirUser user/*.*',
       redirectUri: location.origin + '/smart-login',
       issuer: options.issuer,
       loginUrl: options.loginUrl,
@@ -208,7 +209,7 @@ export class AuthService {
         }
       }
 
-      await this.router.navigate(['home']);
+      await this.router.navigate(['smart-home']);
     }
   }
 
