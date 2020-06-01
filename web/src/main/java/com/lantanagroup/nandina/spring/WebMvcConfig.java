@@ -10,6 +10,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
@@ -18,9 +20,17 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    List<String> resourceLocations = new ArrayList();
+
+    if (this.env.getProperty("spring.resources.static-locations") != null) {
+      resourceLocations.add(this.env.getProperty("spring.resources.static-locations"));
+    }
+
+    resourceLocations.add("classpath:/public/");
+
     registry
       .addResourceHandler("/**/*")
-      .addResourceLocations(this.env.getProperty("spring.resources.static-locations"), "classpath:/public/")
+      .addResourceLocations(resourceLocations.toArray(new String[] {}))
       .resourceChain(false)
       .addResolver(new PathResourceResolver() {
         @Override
