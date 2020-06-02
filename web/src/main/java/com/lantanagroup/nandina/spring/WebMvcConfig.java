@@ -18,8 +18,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
   @Autowired
   private Environment env;
 
-  @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+  private String[] getResourceLocations() {
     List<String> resourceLocations = new ArrayList();
 
     if (this.env.getProperty("spring.resources.static-locations") != null) {
@@ -28,9 +27,14 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
     resourceLocations.add("classpath:/public/");
 
+    return resourceLocations.toArray(new String[] { });
+  }
+
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
     registry
       .addResourceHandler("/**/*")
-      .addResourceLocations(resourceLocations.toArray(new String[] {}))
+      .addResourceLocations(this.getResourceLocations())
       .resourceChain(false)
       .addResolver(new PathResourceResolver() {
         @Override

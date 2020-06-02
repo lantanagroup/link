@@ -4,11 +4,11 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.impl.NullClaim;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.model.CernerClaimData;
+import com.nimbusds.jose.jwk.ECKey;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +21,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,10 +128,35 @@ public class NandinaAuthManager implements AuthenticationManager {
         String jwksUrl = this.getJwksUrl(jwt);
         JwkProvider provider = new CustomUrlJwkProvider(jwksUrl);
 
-        // TODO: Need to handle ES256/EC algorithm from token and jwk. Until then, this fails to validate.
         try {
             Jwk jwk = provider.get(jwt.getKeyId());
-            Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
+            Algorithm algorithm = null;
+            PublicKey publicKey = null;
+
+            if (jwk.getType() == null || jwk.getType().isEmpty()) {
+                throw new Exception("JWK algorithm cannot be null");
+            }
+
+            switch (jwk.getType()) {
+                case "RSA":
+                case "rsa":
+                    publicKey = jwk.getPublicKey();
+                    algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
+                    break;
+                case "EC":
+                case "ec":
+                    JSONObject jwkJsonObj = new JSONObject();
+                    jwkJsonObj.put("x", jwk.getAdditionalAttributes().get("x"));
+                    jwkJsonObj.put("y", jwk.getAdditionalAttributes().get("y"));
+                    jwkJsonObj.put("crv", jwk.getAdditionalAttributes().get("crv"));
+                    jwkJsonObj.put("kty", jwk.getType());
+                    publicKey = ECKey.parse(jwkJsonObj.toString()).toECPublicKey();
+                    algorithm = Algorithm.ECDSA256((ECPublicKey) publicKey, null);
+                    break;
+                default:
+                    throw new Exception("Unsupported JWK algorithm " + jwk.getAlgorithm());
+            }
+
             algorithm.verify(jwt);
 
             authentication.setAuthenticated(true);
