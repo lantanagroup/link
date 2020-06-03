@@ -16,6 +16,7 @@ export class SelectLocationsComponent implements OnInit {
   @Input() selected: LocationResponse[] = [];
   searchText: string;
   identifierText: string;
+  isSelectAll: boolean;
   criteriaChanged = new Subject<void>();
 
   constructor(
@@ -30,9 +31,14 @@ export class SelectLocationsComponent implements OnInit {
   }
 
   selectAll(value) {
+    this.isSelectAll = value.target.checked;
+
     if (value.target.checked) {
+      this.selected = [];
       this.locations.forEach(location => {
-        this.selected.push(location);
+        if (!this.selected.includes(location)) {
+          this.selected.push(location);
+        }
       });
     } else {
       this.selected = [];
@@ -73,6 +79,11 @@ export class SelectLocationsComponent implements OnInit {
 
   isSelected(id: string) {
     return !!this.selected.find(s => s.id === id);
+  }
+
+  unselectAll() {
+    this.selected = [];
+    this.isSelectAll = false;
   }
 
   selectionChanged(id: string, isSelected: boolean) {
