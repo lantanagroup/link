@@ -76,10 +76,11 @@ export class AuthService {
   initSmart(options: AuthInitOptions) {
     if (this.initialized) return;
 
+    // TODO: Need to separate this out into issuer-specific configurations so that not all smart-on-fhir applications have to use the same scopes
     this.fhirBase = options.issuer;
     this.oauthService.configure({
       clientId: '17c445e6-c585-4421-a80f-d5ba22fcfc13',
-      scope: 'launch openid profile fhirUser user/*.*',
+      scope: 'launch openid profile fhirUser user/*.* user/Account.read user/AllergyIntolerance.read user/Appointment.read user/Binary.read user/Condition.read user/Coverage.read user/Device.read user/DocumentReference.read user/Encounter.read user/Immunization.read user/MedicationRequest.read user/Observation.read user/Organization.read user/Patient.read user/Practitioner.read user/Procedure.read user/RelatedPerson.read',
       redirectUri: location.origin + '/smart-login',
       issuer: options.issuer,
       loginUrl: options.loginUrl,
