@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.query;
+package com.lantanagroup.nandina.query.fhir.r4;
 
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.lantanagroup.nandina.query.IQueryCountExecutor;
+import com.lantanagroup.nandina.query.QueryFactory;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -22,7 +24,7 @@ import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractQuery implements IQueryCountExecutor{
+public abstract class AbstractQuery implements IQueryCountExecutor {
 
     private static final String NO_DEVICE_CODES_ERROR = "Device-type codes have not been specified in configuration.";
 	private static final String NO_COVID_CODES_ERROR = "Covid codes have not been specified in configuration.";

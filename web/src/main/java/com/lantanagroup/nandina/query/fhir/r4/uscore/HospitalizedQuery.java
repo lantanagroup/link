@@ -7,7 +7,7 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.lantanagroup.nandina.query.AbstractQuery;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
 
