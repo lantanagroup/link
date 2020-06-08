@@ -3,11 +3,10 @@ package com.lantanagroup.nandina.query.fhir.r4.saner;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.IConfig;
-import com.lantanagroup.nandina.query.AbstractQuery;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 

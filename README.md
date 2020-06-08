@@ -97,6 +97,27 @@ mvn versions:commit
 
 # Development
 
+
+## Testing against Cerner
+
+1. Go to https://code.cerner.com/developer/smart-on-fhir/ and register for an account
+2. Install [ngrok](https://dashboard.ngrok.com/get-started/setup)
+3. Run Nandina using Eclipse/IntelliJ on port 8080 (i.e. http://localhost:8080)
+4. Start ngrok via `ngrok http 8080`
+5. [Register](https://code.cerner.com/developer/smart-on-fhir/register) a new app in the Cerner sandbox (call it "Nandina Local <your_name>")
+   * Smart Launch URI: \<ngrok-uri>/smart-login (ex: https://c9aea6456266.ngrok.io/smart-login)
+   * Redirect URI: (same as above)
+   * App Type: Provider
+   * FHIR Spec: R4
+   * Authorized: Yes
+   * Select "read" for all user scopes
+6. Click "Begin Testing" on the "Nandina Local \<your_name>" app registered in Cerner sandbox
+7. Select "No" for "Does your application require a patient?" and click "Next"
+8. Click "Launch"
+9. When prompted to login to Cerner, use "portal" for username and password as indicated in the Cerner sandbox
+
+If you want to test queries against their FHIR server using a separate tool like Postman, set a breakpoint in the `HapiFhirAuthenticationInterceptor.interceptRequest()` method, and you can inspect what the url of the FHIR server is and the `Authorization` header's value should be. You can copy/paste those values into Postman to test. 
+
 ## Building Angular/UI app
 
 The Angular CLI needs to be installed so that you can run `ng` commands from the command-line:

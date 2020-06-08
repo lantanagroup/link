@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.lantanagroup.nandina.query.AbstractQuery;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Encounter;
