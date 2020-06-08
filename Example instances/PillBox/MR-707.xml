@@ -1,0 +1,42 @@
+ <MedicationRequest>
+	<id value="MR-707"/>
+	<meta>
+		<profile
+                   value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"/>
+	</meta>
+	<status value="active"/>
+	<intent value="plan"/>
+	<medicationCodeableConcept>
+		<coding>
+			<system value="http://www.nlm.nih.gov/research/umls/rxnorm"/>
+			<code value="1810997"/>
+			<display value="24 HR canagliflozin 150 MG / metformin hydrochloride 1000 MG Extended Release Oral Tablet"/>
+		</coding>
+		<text value="Metformin"/>
+	</medicationCodeableConcept>
+	<subject>
+		<reference value="Patient/PT-707"/>
+		<display value="Amy Shaw"/>
+	</subject>
+	<authoredOn value="2018-01-05"/>
+	<requester>
+		<reference value="Practitioner/1180299"/>
+		<display value="abc xyz, MD"/>
+	</requester>
+	<dosageInstruction>
+		<route>
+			<coding>
+				<system value="http://snomed.info/sct"/>
+				<code value="26643006"/>
+				<display value="Oral use"/>
+			</coding>
+			<text value="Oral use"/>
+		</route>
+		<doseAndRate>
+			<doseQuantity>
+				<value value="150"/>
+				<unit value="MG"/>
+			</doseQuantity>
+		</doseAndRate>
+	</dosageInstruction>
+</MedicationRequest>

@@ -1,0 +1,33 @@
+<Observation xmlns="http://hl7.org/fhir">
+	<id value="QT-prolong"/>
+	<status value="final"/>
+	<category>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/observation-category"/>
+			<code value="exam"/>
+			<display value="Exam"/>
+		</coding>
+		<text value="Exam"/>
+	</category>
+	<code>
+		<coding>
+			<system value="http://loinc.org"/>
+			<code value="34534-8"/>
+			<display value="EKG 12 channel panel"/>
+		</coding>
+		<text value="EKG 12 channel panel"/>
+	</code>
+	<subject>
+		<reference value="Patient/PT-707"/>
+		<display value="Amy Shaw"/>
+	</subject>
+	<effectiveDateTime value="2020-03-04"/>
+	<valueCodeableConcept>
+		<coding>
+			<system value="http://snomed.info/sct"/>
+			<code value="111975006"/>
+			<display value="Prolonged QT interval (finding)"/>
+		</coding>
+		<text value="Prolonged QT interval (finding)"/>
+	</valueCodeableConcept>
+</Observation>
