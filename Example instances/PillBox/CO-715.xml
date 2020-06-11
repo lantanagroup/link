@@ -1,0 +1,44 @@
+<Condition xmlns="http://hl7.org/fhir">
+  <id value="CO-715"/>
+  <meta>
+    <profile
+             value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition"/>
+  </meta>
+  <clinicalStatus>
+    <coding>
+      <system value="http://terminology.hl7.org/CodeSystem/condition-clinical"/>
+      <code value="active"/>
+      <display value="Active"/>
+    </coding>
+    <text value="Active"/>
+  </clinicalStatus>
+  <verificationStatus>
+    <coding>
+      <system value="http://terminology.hl7.org/CodeSystem/condition-ver-status"/>
+      <code value="Confirmed"/>
+      <display value="Confirmed"/>
+    </coding>
+    <text value="Confirmed"/>
+  </verificationStatus>
+  <category>
+    <coding>
+      <system value="http://terminology.hl7.org/CodeSystem/condition-category"/>
+      <code value="encounter-diagnosis"/>
+      <display value="encounter-diagnosis"/>
+    </coding>
+    <text value="encounter-diagnosis"/>
+  </category>
+  <code>
+    <coding>
+      <system value="http://snomed.info/sct"/>
+      <code value="840539006"/>
+      <display value=" Disease caused by severe acute respiratory syndrome coronavirus 2 (disorder)"/>
+    </coding>
+    <text value=" Disease caused by severe acute respiratory syndrome coronavirus 2 (disorder)"/>
+  </code>
+  <subject>
+    <reference value="Patient/PT-707"/>
+    <display value="Amy V. Shaw"/>
+  </subject>
+  <onsetDateTime value="2020-03-02"/>
+</Condition>

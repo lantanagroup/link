@@ -1,0 +1,47 @@
+ <MedicationRequest>
+	<id value="MR-730"/>
+	<meta>
+		<profile
+                   value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"/>
+	</meta>
+	<status value="active"/>
+	<intent value="order"/>
+	<medicationCodeableConcept>
+		<coding>
+			<system value="http://www.nlm.nih.gov/research/umls/rxnorm"/>
+			<code value="1657982"/>
+			<display value="20 ML tocilizumab 20 MG/ML Injection [Actemra]"/>
+		</coding>
+		<text value="20 ML tocilizumab 20 MG/ML Injection [Actemra]"/>
+	</medicationCodeableConcept>
+	<subject>
+		<reference value="Patient/PT-707"/>
+		<display value="Amy Shaw"/>
+	</subject>
+	<authoredOn value="2020-03-05"/>
+	<requester>
+		<reference value="Practitioner/1180299"/>
+		<display value="abc xyz, MD"/>
+	</requester>
+	<dosageInstruction>
+		<timing>
+			<coding>
+				<system value="http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation"/>
+				<code value="BID"/>
+				<display value="BID"/>
+			</coding>
+		</timing>
+		<coding>
+			<system value="http://snomed.info/sct"/>
+			<code value="26643006"/>
+			<display value="Oral use"/>
+		</coding>
+		<text value="Oral use"/>
+		<doseAndRate>
+			<doseQuantity>
+				<value value="400"/>
+				<unit value="MG"/>
+			</doseQuantity>
+		</doseAndRate>
+	</dosageInstruction>
+</MedicationRequest>

@@ -1,0 +1,44 @@
+<Condition xmlns="http://hl7.org/fhir">
+	<id value="CO-708"/>
+	<meta>
+		<profile
+             value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition"/>
+	</meta>
+	<clinicalStatus>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/condition-clinical"/>
+			<code value="active"/>
+			<display value="Active"/>
+		</coding>
+		<text value="Active"/>
+	</clinicalStatus>
+	<verificationStatus>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/condition-ver-status"/>
+			<code value="unconfirmed"/>
+			<display value="Unconfirmed"/>
+		</coding>
+		<text value="Unconfirmed"/>
+	</verificationStatus>
+	<category>
+		<coding>
+			<system value="http://terminology.hl7.org/CodeSystem/condition-category"/>
+			<code value="health-concern"/>
+			<display value="Health concern"/>
+		</coding>
+		<text value="Health concern"/>
+	</category>
+	<code>
+		<coding>
+			<system value="http://snomed.info/sct"/>
+			<code value="386661006"/>
+			<display value="Fever (finding)"/>
+		</coding>
+		<text value="Fever (finding)"/>
+	</code>
+	<subject>
+		<reference value="Patient/PT-707"/>
+		<display value="Amy V. Shaw"/>
+	</subject>
+	<onsetDateTime value="2020-02-29"/>
+</Condition>

@@ -1,0 +1,33 @@
+<Encounter xmlns="http://hl7.org/fhir">
+	<id value="EN-707"/>
+	<meta>
+		<lastUpdated value="2017-05-26T11:56:57.250-04:00"/>
+		<profile
+             value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"/>
+	</meta>
+	<status value="finished"/>
+	<class>
+		<system value="http://terminology.hl7.org/CodeSystem/v3-ActCode"/>
+		<code value="IMP"/>
+		<display value="inpatient encounter"/>
+	</class>
+	<type>
+		<coding>
+			<system value="http://snomed.info/sct"/>
+			<code value="185347001"/>
+		</coding>
+		<text value="Encounter for problem (procedure)"/>
+	</type>
+	<subject>
+		<reference value="Patient/PT-707"/>
+	</subject>
+	<period>
+		<start value="2020-03-02T17:00:14-05:00"/>
+		<end value="2020-03-14T18:00:14-05:00"/>
+	</period>
+	<hospitalization>
+		<dischargeDisposition>
+			<text value="home"/>
+		</dischargeDisposition>
+	</hospitalization>
+</Encounter>

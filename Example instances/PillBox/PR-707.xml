@@ -1,0 +1,21 @@
+<Procedure xmlns="http://hl7.org/fhir">
+  <id value="PR-707"/>
+  <meta>
+    <profile
+             value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"/>
+  </meta>
+  <status value="completed"/>
+  <code>
+    <coding>
+      <system value="http://snomed.info/sct"/>
+      <code value="112798008"/>
+      <display value="Insertion of endotracheal tube (procedure)"/>
+    </coding>
+    <text value="Insertion of endotracheal tube (procedure)"/>
+  </code>
+  <subject>
+    <reference value="Patient/PT-707"/>
+    <display value="Amy Shaw"/>
+  </subject>
+  <performedDateTime value="2002-03-02"/>
+</Procedure>

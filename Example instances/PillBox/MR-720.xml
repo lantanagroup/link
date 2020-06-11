@@ -1,0 +1,50 @@
+ <MedicationRequest>
+	<id value="MR-720"/>
+	<meta>
+		<profile
+                   value="http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"/>
+	</meta>
+	<status value="active"/>
+	<intent value="order"/>
+	<medicationCodeableConcept>
+		<coding>
+			<system value="http://www.nlm.nih.gov/research/umls/rxnorm"/>
+			<code value="259128"/>
+			<display value="potassium 80 MG"/>
+		</coding>
+		<text value="potassium 80 MG"/>
+	</medicationCodeableConcept>
+	<subject>
+		<reference value="Patient/PT-707"/>
+		<display value="Amy Shaw"/>
+	</subject>
+	<authoredOn value="2020-03-02"/>
+	<requester>
+		<reference value="Practitioner/1180299"/>
+		<display value="abc xyz, MD"/>
+	</requester>
+	<dosageInstruction>
+		<timing>
+			<coding>
+				<system value="http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation"/>
+				<code value="QD"/>
+				<display value="QD"/>
+			</coding>
+		</timing>
+		<route>
+			<coding>
+				<system value="http://snomed.info/sct"/>
+				<code value="47625008"/>
+				<display value="Intravenous route (qualifier value)"/>
+			</coding>
+			<text value="Intravenous route (qualifier value)"/>
+		</route>
+		<doseAndRate>
+			<doseQuantity>
+				<value value="80"/>
+				<unit value="MG"/>
+			</doseQuantity>
+		</doseAndRate>
+
+	</dosageInstruction>
+</MedicationRequest>
