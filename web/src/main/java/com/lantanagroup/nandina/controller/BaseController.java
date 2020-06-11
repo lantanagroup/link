@@ -13,9 +13,6 @@ public class BaseController {
 
     protected IGenericClient getFhirClient(Authentication authentication, HttpServletRequest request) throws Exception {
         String fhirBase = Config.getInstance().getFhirServerBase();
-        if (Config.getInstance().getRequireHttps() && !fhirBase.contains("https")) {
-            throw new Exception("https is required for FhirClient");
-        }
         String token = null;
 
         if (request.getHeader("fhirBase") != null) {
@@ -24,6 +21,10 @@ public class BaseController {
             // If fhirBase is passed in header, this request is coming from Smart-on-FHIR launch context and we should
             // pass the token of the user forward to the FHIR server, rather than use what's in the config.
             token = (String) authentication.getPrincipal();
+        }
+
+        if (Config.getInstance().getRequireHttps() && !fhirBase.contains("https")) {
+            throw new Exception(String.format("https is required for FhirClient and was given %s", fhirBase));
         }
 
         IGenericClient fhirClient = this.ctx.newRestfulGenericClient(fhirBase);
