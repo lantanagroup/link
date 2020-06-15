@@ -1,27 +1,13 @@
 package com.lantanagroup.nandina.controller;
 
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.model.LocationResponse;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.AuditEvent;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Location;
-import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -31,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -59,14 +43,14 @@ public class LocationController extends BaseController {
 
         logger.debug(String.format("Searching for locations with URL %s", url));
 
-        IGenericClient fhirClient = this.getFhirClient(authentication, request);
+        IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
         List<LocationResponse> response = new ArrayList();
-        Bundle locationsBundle = fhirClient.search()
+        Bundle locationsBundle = fhirStoreClient.search()
                 .byUrl(url)
                 .returnBundle(Bundle.class)
                 .execute();
 
-        FhirHelper.recordAuditEvent(fhirClient, authentication, url, "LocationController/getLocations()",
+        FhirHelper.recordAuditEvent(fhirStoreClient, authentication, url, "LocationController/getLocations()",
                 "Location", "Search Locations", "Successful Location Search");
 
         logger.debug(String.format("Done searching locations. Found %s locations.", locationsBundle.getTotal()));
