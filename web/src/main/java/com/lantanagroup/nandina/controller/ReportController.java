@@ -1,29 +1,32 @@
 package com.lantanagroup.nandina.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.TransformHelper;
-import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.QueryFactory;
-
 import org.apache.commons.io.IOUtils;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.DateType;
+import org.hl7.fhir.r4.model.IntegerType;
+import org.hl7.fhir.r4.model.QuestionnaireResponse;
+import org.hl7.fhir.r4.model.Type;
+import org.hl7.fhir.r4.model.UriType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,7 +76,7 @@ public class ReportController extends BaseController {
   @GetMapping("/api/query")
   public QuestionnaireResponseSimple getQuestionnaireResponse(Authentication authentication, HttpServletRequest request) throws Exception {
     QuestionnaireResponseSimple response = new QuestionnaireResponseSimple();
-    IGenericClient fhirClient = this.getFhirClient(authentication, request);
+    IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request);
 
     String reportDate = criteria.get("reportDate");
@@ -89,43 +92,43 @@ public class ReportController extends BaseController {
       response.setSummaryCensusId(Config.getInstance().getFieldDefaultSummaryCensusId());
     }
 
-    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria, fhirClient, authentication);
+    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria, fhirQueryClient, authentication);
     response.setHospitalized(hospitalizedTotal);
 
-    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria, fhirClient, authentication);
+    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria, fhirQueryClient, authentication);
     response.setHospitalizedAndVentilated(hospitalizedAndVentilatedTotal);
 
-    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria, fhirClient, authentication);
+    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria, fhirQueryClient, authentication);
     response.setHospitalOnset(hospitalOnsetTotal);
 
-    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria, fhirClient, authentication);
+    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria, fhirQueryClient, authentication);
     response.setEdOverflow(edOverflowTotal);
 
-    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria, fhirClient, authentication);
+    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria, fhirQueryClient, authentication);
     response.setEdOverflowAndVentilated(edOverflowAndVentilatedTotal);
 
-    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria, fhirClient, authentication);
+    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria, fhirQueryClient, authentication);
     response.setDeaths(deathsTotal);
 
-    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria, fhirClient, authentication);
+    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria, fhirQueryClient, authentication);
     response.setAllHospitalBeds(hospitalBedsTotal);
 
-    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria, fhirClient, authentication);
+    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria, fhirQueryClient, authentication);
     response.setHospitalInpatientBeds(hospitalInpatientBedsTotal);
 
-    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria, fhirClient, authentication);
+    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria, fhirQueryClient, authentication);
     response.setHospitalInpatientBedOccupancy(hospitalInpatientBedOccTotal);
 
-    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria, fhirClient, authentication);
+    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria, fhirQueryClient, authentication);
     response.setIcuBeds(hospitalIcuBedsTotal);
 
-    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria, fhirClient, authentication);
+    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria, fhirQueryClient, authentication);
     response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
 
-    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria, fhirClient, authentication);
+    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria, fhirQueryClient, authentication);
     response.setMechanicalVentilators(mechanicalVentilatorsTotal);
 
-    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria, fhirClient, authentication);
+    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria, fhirQueryClient, authentication);
     response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
     return response;
   }
@@ -289,7 +292,7 @@ public class ReportController extends BaseController {
   public void convertSimpleReport(@RequestBody() QuestionnaireResponseSimple body, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     QuestionnaireResponse questionnaireResponse = this.createQuestionnaireResponse(body);
     String responseBody = null;
-    IGenericClient fhirClient = this.getFhirClient(authentication, request);
+    IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
 
     if (Config.getInstance().getExportFormat().equals("json")) {
       responseBody = this.ctx.newJsonParser().encodeResourceToString(questionnaireResponse);
@@ -305,7 +308,7 @@ public class ReportController extends BaseController {
       response.setHeader("Content-Disposition", "attachment; filename=\"report.csv\"");
     }
 
-    FhirHelper.recordAuditEvent(fhirClient, authentication, "report."+Config.getInstance().getExportFormat(), "ReportController/convertSimpleReport()",
+    FhirHelper.recordAuditEvent(fhirQueryClient, authentication, "report."+Config.getInstance().getExportFormat(), "ReportController/convertSimpleReport()",
             "Export to File: " + Config.getInstance().getExportFormat() + " format", "Export To File", "Successfully Exported File");
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
