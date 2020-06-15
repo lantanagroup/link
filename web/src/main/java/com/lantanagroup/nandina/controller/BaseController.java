@@ -12,7 +12,7 @@ public class BaseController {
     protected FhirContext ctx = FhirContext.forR4();
 
     protected IGenericClient getFhirClient(Authentication authentication, HttpServletRequest request) throws Exception {
-        String fhirBase = Config.getInstance().getFhirServerBase();
+        String fhirBase = Config.getInstance().getFhirServerQueryBase();
         String token = null;
 
         if (request.getHeader("fhirBase") != null) {

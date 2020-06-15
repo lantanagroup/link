@@ -44,8 +44,11 @@ public class Config implements IConfig {
     @Value("${auth.scope}")
     private String authScope;
 
-    @Value("${fhirServer.base}")
-    private String fhirServerBase;
+    @Value("${fhirServer.query.base}")
+    private String fhirServerQueryBase;
+
+    @Value("${fhirServer.store.base}")
+    private String fhirServerStoreBase;
 
     @Value("${fhirServer.username}")
     private String fhirServerUserName;
@@ -235,8 +238,12 @@ public class Config implements IConfig {
     }
 
     @Override
-    public String getFhirServerBase() {
-        return this.fhirServerBase;
+    public String getFhirServerQueryBase() {
+        return this.fhirServerQueryBase;
+    }
+
+    public String getFhirServerStoreBase() {
+        return fhirServerStoreBase;
     }
 
     public String getQueryHospitalOnset() {
