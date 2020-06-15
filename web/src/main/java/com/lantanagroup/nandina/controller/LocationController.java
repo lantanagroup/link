@@ -43,9 +43,11 @@ public class LocationController extends BaseController {
 
         logger.debug(String.format("Searching for locations with URL %s", url));
 
+        IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
         IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+
         List<LocationResponse> response = new ArrayList();
-        Bundle locationsBundle = fhirStoreClient.search()
+        Bundle locationsBundle = fhirQueryClient.search()
                 .byUrl(url)
                 .returnBundle(Bundle.class)
                 .execute();

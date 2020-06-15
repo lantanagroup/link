@@ -84,11 +84,11 @@ public class NandinaAuthManager implements AuthenticationManager {
             String openIdConfigUrl = issuer + (issuer.endsWith("/") ? "" : "/") + ".well-known/openid-configuration";
             String url = this.getJwksUrl(openIdConfigUrl);
 
-            if (url == null && issuer.equals("https://authorization.sandboxcerner.com/")) {
+            if (url == null && (issuer.equals("https://authorization.sandboxcerner.com/") || issuer.equals("https://authorization.cerner.com/"))) {
                 CernerClaimData ccd = this.getCernerClaimData(jwt);
 
                 if (ccd != null && ccd.getTenant() != null && !ccd.getTenant().isEmpty()) {
-                    String cernerConfigUrl = String.format("https://authorization.sandboxcerner.com/tenants/%s/oidc/idsps/%s/.well-known/openid-configuration", ccd.getTenant(), ccd.getTenant());
+                    String cernerConfigUrl = String.format("%stenants/%s/oidc/idsps/%s/.well-known/openid-configuration", issuer, ccd.getTenant(), ccd.getTenant());
                     url = this.getJwksUrl(cernerConfigUrl);
                 }
             }
