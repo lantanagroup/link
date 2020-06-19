@@ -1,21 +1,22 @@
 package com.lantanagroup.nandina;
 
-import ca.uhn.fhir.context.FhirContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
-import org.springframework.util.ResourceUtils;
-
-import javax.naming.ConfigurationException;
-import java.io.File;
 
 @SpringBootApplication
-@PropertySources({@PropertySource(value={"classpath:application.properties"})})
+@Configuration
+@PropertySources({
+        @PropertySource(value={"classpath:application.properties"}),
+        @PropertySource(value = { "classpath:config.json" } )
+})
 public class NandinaApp extends SpringBootServletInitializer implements InitializingBean {
     @Autowired
     private ApplicationContext context;
