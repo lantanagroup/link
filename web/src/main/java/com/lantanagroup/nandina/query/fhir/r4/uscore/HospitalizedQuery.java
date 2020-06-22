@@ -39,7 +39,7 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 			String reportDate = this.criteria.get("reportDate");
 			String url = String.format(
 					"Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,ACUTE,NONAC,OBSENC",
-					jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET));
+					jsonProperties.getTerminologyCovidCodes());
 
 			Map<String, Resource> patientMap = this.search(url);
 			// Encounter.date search parameter not working with current release of HAPI, so

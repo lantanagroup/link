@@ -1,12 +1,16 @@
 package com.lantanagroup.nandina;
 
+import ca.uhn.fhir.context.FhirContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
+import java.io.File;
 import java.util.Map;
-
 
 @Component
 @PropertySource(
@@ -15,6 +19,11 @@ import java.util.Map;
 @EnableConfigurationProperties
 @ConfigurationProperties
 public class JsonProperties {
+    private static Logger logger = LoggerFactory.getLogger(JsonProperties.class.getName());
+    private static String terminologyCovidCodes;
+    private static String terminologyVentilatorCodes;
+    private static String terminologyIntubationProcedureCodes;
+
     public static final String DEFAULT = "default";
     public static final String FACILITY_ID = "facilityId";
     public static final String SUMMARY_CENSUS_ID = "summaryCensusId";
@@ -178,5 +187,47 @@ public class JsonProperties {
 
     public void setRequireHttps(boolean requireHttps) {
         this.requireHttps = requireHttps;
+    }
+
+    public String loadValueSet(String valueSetUri) {
+        String valueSetCodes = null;
+        logger.info("Extracting concepts from ValueSet " + valueSetUri);
+        try {
+            if (valueSetUri.startsWith("https://") || valueSetUri.startsWith("http://")) {
+                // TODO: pull the value set from the web
+                // or look up cannonical http/https value set URIs from a FHIR server.
+                // Just because ValueSet.uri starts with http does not mean it is actually accessible at that URL
+                throw new Exception("Nandina does not yet support http/https value sets.");
+            } else {
+                File valueSetFile = ResourceUtils.getFile(valueSetUri);
+                valueSetCodes = TerminologyHelper.extractCodes(FhirContext.forR4(), valueSetFile);
+            }
+        } catch (Exception ex) {
+            logger.error("Could not load/extract codes for " + valueSetUri, ex);
+        }
+
+        logger.info(String.format("Found %s concepts in ValueSet %s", valueSetCodes.split(",").length, valueSetUri));
+        return valueSetCodes;
+    }
+
+    public String getTerminologyCovidCodes() {
+        if (Helper.isNullOrEmpty(this.terminologyCovidCodes)) {
+            this.terminologyCovidCodes = loadValueSet(this.getTerminology().get(COVID_CODES_VALUE_SET));
+        }
+        return this.terminologyCovidCodes;
+    }
+
+    public String getTerminologyVentilatorCodes() {
+        if (Helper.isNullOrEmpty(this.terminologyVentilatorCodes)) {
+            this.terminologyVentilatorCodes = loadValueSet(this.getTerminology().get(VENTILATOR_CODES_VALUESET));
+        }
+        return terminologyVentilatorCodes;
+    }
+
+    public String getTerminologyIntubationProcedureCodes() {
+        if (Helper.isNullOrEmpty(this.terminologyIntubationProcedureCodes)) {
+            this.terminologyIntubationProcedureCodes = loadValueSet(this.getTerminology().get(INTUBATION_PROCEDURE_CODES_VALUESET));
+        }
+        return this.terminologyIntubationProcedureCodes;
     }
 }
