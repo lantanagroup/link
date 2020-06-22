@@ -6,12 +6,13 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.nandina.Config;
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.model.CernerClaimData;
 import com.nimbusds.jose.jwk.ECKey;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -30,6 +31,8 @@ import java.util.Map;
 public class NandinaAuthManager implements AuthenticationManager {
     private static final Logger logger = LoggerFactory.getLogger(NandinaAuthManager.class);
     private HashMap<String, String> issuerJwksUrls = new HashMap<>();
+    @Autowired
+    private JsonProperties jsonProperties;
 
     private String getJwksUrl(String openIdConfigUrl) {
         try {
@@ -99,7 +102,7 @@ public class NandinaAuthManager implements AuthenticationManager {
             }
         }
 
-        return Config.getInstance().getAuthJwksUrl();
+        return jsonProperties.getAuthJwksUrl();
     }
 
     private DecodedJWT getValidationJWT(String token) {

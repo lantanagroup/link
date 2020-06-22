@@ -1,20 +1,22 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.IConfig;
+import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.query.IQueryCountExecutor;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
+import org.hl7.fhir.r4.model.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
-import com.lantanagroup.nandina.query.IQueryCountExecutor;
-import org.hl7.fhir.r4.model.Resource;
-
 public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecutor {
+	private JsonProperties jsonProperties;
 
-    public EDOverflowQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(config, fhirClient, criteria);
+    public EDOverflowQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(jsonProperties, fhirClient, criteria);
+		this.jsonProperties = jsonProperties;
 		// TODO Auto-generated constructor stub
 	}
     
@@ -42,7 +44,7 @@ public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecuto
 			String reportDate = this.criteria.get("reportDate");
 			String overflowLocations = this.criteria.get("overflowLocations");
 	    	String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s:date=ge%s,le%s",
-	                Config.getInstance().getTerminologyCovidCodes(),
+	                this.jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET),
 	                overflowLocations,
 					reportDate,
 					reportDate);

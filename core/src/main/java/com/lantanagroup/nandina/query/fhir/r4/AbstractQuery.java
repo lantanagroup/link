@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.QueryFactory;
 import org.hl7.fhir.r4.model.Bundle;
@@ -32,7 +33,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 	protected static HashMap<String, AbstractQuery> cachedQueries = new HashMap<String,AbstractQuery>();
 	
 	public final Calendar dateCreated = Calendar.getInstance();
-	protected IConfig config;
+	protected JsonProperties jsonProperties;
 	protected IGenericClient fhirClient;
 	protected HashMap<String, String> criteria;
 
@@ -42,19 +43,19 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 	// Resource represents the actual resource data for the ID
 	protected Map<String, Map<String,Resource>> cachedData = new HashMap<String, Map<String, Resource>>();
 	
-	public AbstractQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
+	public AbstractQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
 		logger.debug("Instantiating class: " + this.getClass());
 
-		this.config = config;
+		this.jsonProperties = jsonProperties;
 		this.fhirClient = fhirClient;
 		this.criteria = criteria;
 
-        if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
+        if (Helper.isNullOrEmpty(jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET))) {
             this.logger.error(NO_COVID_CODES_ERROR);
             throw new RuntimeException(NO_COVID_CODES_ERROR);
         }
 
-        if (Helper.isNullOrEmpty(config.getTerminologyCovidCodes())) {
+        if (Helper.isNullOrEmpty(jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET))) {
             this.logger.error(NO_DEVICE_CODES_ERROR);
             throw new RuntimeException(NO_DEVICE_CODES_ERROR);
         }
@@ -129,13 +130,13 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
     	if (cachedQueries.containsKey(queryClass)) {
     		return cachedQueries.get(queryClass);
     	} else {
-    		return QueryFactory.newInstance(queryClass, this.config, this.fhirClient, this.criteria);
+    		return QueryFactory.newInstance(queryClass, this.jsonProperties, this.fhirClient, this.criteria);
     	}
     }
 
 	protected Map<String, Resource> getPatientConditions(Patient p) {
 		// TODO: Move verification-status codes to a value set and load thru config
-		String condQuery = String.format("Condition?verification-status=unconfirmed,provisional,differential,confirmed&code=%s&patient=Patient/%s", config.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
+		String condQuery = String.format("Condition?verification-status=unconfirmed,provisional,differential,confirmed&code=%s&patient=Patient/%s", jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET), p.getIdElement().getIdPart());
 		Map<String, Resource> condMap = this.search(condQuery);
 		return condMap;
 	}
@@ -194,7 +195,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 		Set<String> patIds = hqData.keySet();
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
-			String devQuery = String.format("Device?type=%s&patient=Patient/%s", config.getTerminologyVentilatorCodes(), patId);
+			String devQuery = String.format("Device?type=%s&patient=Patient/%s", jsonProperties.getTerminology().get(JsonProperties.VENTILATOR_CODES_VALUESET), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));
@@ -208,7 +209,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 		Set<String> patIds = hqData.keySet();
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
-			String devQuery = String.format("Procedure?code=%s&patient=Patient/%s", config.getTerminologyIntubationProcedureCodes(), patId);
+			String devQuery = String.format("Procedure?code=%s&patient=Patient/%s", jsonProperties.getTerminology().get(JsonProperties.INTUBATION_PROCEDURE_CODES_VALUESET), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));

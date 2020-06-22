@@ -3,7 +3,6 @@ package com.lantanagroup.nandina;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
@@ -14,8 +13,7 @@ import org.springframework.context.annotation.PropertySources;
 @SpringBootApplication
 @Configuration
 @PropertySources({
-        @PropertySource(value={"classpath:application.properties"}),
-        @PropertySource(value = { "classpath:config.json" } )
+        @PropertySource(value = { "classpath:config-local.json" } )
 })
 public class NandinaApp extends SpringBootServletInitializer implements InitializingBean {
     @Autowired

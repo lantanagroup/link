@@ -6,14 +6,15 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
 
 public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
 	
-    public DeathsQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(config, fhirClient, criteria);
+    public DeathsQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(jsonProperties, fhirClient, criteria);
 	}
 
     @Override
@@ -31,8 +32,8 @@ public class DeathsQuery extends AbstractQuery implements IQueryCountExecutor {
     protected Map<String,Resource> queryForData(){
 		try {
 			String reportDate = this.criteria.get("reportDate");
-			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
-			EDOverflowQuery eq = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
+			HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED));
+			EDOverflowQuery eq = (EDOverflowQuery) this.getCachedQuery(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW));
 			Map<String,Resource> queryData = hq.getData();
 			queryData.putAll(eq.getData());
 			HashMap<String, Resource> finalPatientMap = deadPatients(queryData, reportDate);

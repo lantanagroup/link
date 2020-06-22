@@ -7,13 +7,14 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
 
 public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecutor {
-	public HospitalizedQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(config, fhirClient, criteria);
+	public HospitalizedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(jsonProperties, fhirClient, criteria);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -38,7 +39,7 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
 			String reportDate = this.criteria.get("reportDate");
 			String url = String.format(
 					"Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,ACUTE,NONAC,OBSENC",
-					config.getTerminologyCovidCodes());
+					jsonProperties.getTerminology().get(JsonProperties.COVID_CODES_VALUE_SET));
 
 			Map<String, Resource> patientMap = this.search(url);
 			// Encounter.date search parameter not working with current release of HAPI, so

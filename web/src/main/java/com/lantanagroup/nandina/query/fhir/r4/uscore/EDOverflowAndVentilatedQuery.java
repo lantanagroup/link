@@ -6,14 +6,15 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
 
 public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
 	
-    public EDOverflowAndVentilatedQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(config, fhirClient, criteria);
+    public EDOverflowAndVentilatedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+		super(jsonProperties, fhirClient, criteria);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -29,7 +30,7 @@ public class EDOverflowAndVentilatedQuery extends AbstractQuery implements IQuer
     @Override
     protected Map<String,Resource> queryForData(){
 		try {
-			EDOverflowQuery query = (EDOverflowQuery) this.getCachedQuery(config.getQueryEDOverflow());
+			EDOverflowQuery query = (EDOverflowQuery) this.getCachedQuery(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW));
 			Map<String,Resource> queryData = query.getData();
 			HashMap<String, Resource> finalPatientMap = ventilatedPatients(queryData);
 			return finalPatientMap;

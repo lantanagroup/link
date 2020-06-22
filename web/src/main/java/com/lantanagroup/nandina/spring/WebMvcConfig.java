@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.spring;
 
+import com.lantanagroup.nandina.JsonProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -17,6 +18,9 @@ import java.util.List;
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
   @Autowired
   private Environment env;
+
+  @Autowired
+  private JsonProperties jsonProperties;
 
   private String[] getResourceLocations() {
     List<String> resourceLocations = new ArrayList();
@@ -43,6 +47,6 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
           return requestedResource.exists() && requestedResource.isReadable() ? requestedResource : new ClassPathResource("/public/index.html");
         }
       })
-      .addTransformer(new MainPageTransformer());
+      .addTransformer(new MainPageTransformer(jsonProperties));
   }
 }

@@ -6,14 +6,15 @@ import com.lantanagroup.nandina.IConfig;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import org.hl7.fhir.r4.model.Resource;
 
 public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
 
-    public HospitalizedAndVentilatedQuery(IConfig config, IGenericClient fhirClient, HashMap<String, String> criteria) {
-        super(config, fhirClient, criteria);
+    public HospitalizedAndVentilatedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+        super(jsonProperties, fhirClient, criteria);
         // TODO Auto-generated constructor stub
     }
 
@@ -31,7 +32,7 @@ public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQu
     @Override
     protected Map<String, Resource> queryForData() {
         try {
-            HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(config.getQueryHospitalized());
+            HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED));
             Map<String, Resource> hqData = hq.getData();
             HashMap<String, Resource> finalPatientMap = ventilatedPatients(hqData);
             return finalPatientMap;
