@@ -73,13 +73,15 @@ export class AuthService {
     this.initialized = true;
   }
 
-  initSmart(options: AuthInitOptions) {
+  async initSmart(options: AuthInitOptions) {
     if (this.initialized) return;
+
+    const clientId: string = await this.http.get(`/config/smart?issuer=${encodeURIComponent(options.issuer)}`, { responseType: 'text' }).toPromise();
 
     // TODO: Need to separate this out into issuer-specific configurations so that not all smart-on-fhir applications have to use the same scopes
     this.fhirBase = options.issuer;
     this.oauthService.configure({
-      clientId: '17c445e6-c585-4421-a80f-d5ba22fcfc13',
+      clientId: clientId,
       scope: 'launch openid profile fhirUser user/*.* user/Account.read user/AllergyIntolerance.read user/Appointment.read user/Binary.read user/Condition.read user/Coverage.read user/Device.read user/DocumentReference.read user/Encounter.read user/Immunization.read user/MedicationRequest.read user/Observation.read user/Organization.read user/Patient.read user/Practitioner.read user/Procedure.read user/RelatedPerson.read',
       redirectUri: location.origin + '/smart-login',
       issuer: options.issuer,
@@ -106,7 +108,7 @@ export class AuthService {
       const tokenUrlExt = oauthUrisExt ? (oauthUrisExt.extension || []).find(e => e.url === 'token') : null;
 
       if (authUrlExt && authUrlExt.valueUri && tokenUrlExt && tokenUrlExt.valueUri) {
-        this.initSmart({
+        await this.initSmart({
           issuer: issuer,
           loginUrl: authUrlExt.valueUri,
           tokenEndpoint: tokenUrlExt.valueUri,
@@ -183,7 +185,7 @@ export class AuthService {
   async loginSmart(state: string) {
     const stateInfo = this.getStateInfo(state);
 
-    this.initSmart(stateInfo);
+    await this.initSmart(stateInfo);
 
     const loggedIn = await this.oauthService.tryLogin();
 
