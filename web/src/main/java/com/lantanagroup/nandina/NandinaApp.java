@@ -26,7 +26,5 @@ public class NandinaApp extends SpringBootServletInitializer implements Initiali
     @Override
     public void afterPropertiesSet() throws Exception {
         // Initialize the config using the Spring application context so that @Value annotations resolve/work
-        Config config = this.context.getBean(Config.class);
-        Config.setInstance(config);
     }
 }

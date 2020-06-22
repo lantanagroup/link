@@ -1,7 +1,6 @@
 package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.JsonProperties;
