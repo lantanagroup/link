@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Component
 @PropertySource(
-        value = "classpath:config-local.json",
+        value = "classpath:config.json",
         factory = JsonPropertySourceFactory.class)
 @EnableConfigurationProperties
 @ConfigurationProperties

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.PropertySources;
 @SpringBootApplication
 @Configuration
 @PropertySources({
-        @PropertySource(value = { "classpath:config-local.json" } )
+        @PropertySource(value = { "classpath:config.json" } )
 })
 public class NandinaApp extends SpringBootServletInitializer implements InitializingBean {
     @Autowired
