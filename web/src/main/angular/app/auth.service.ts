@@ -78,6 +78,8 @@ export class AuthService {
 
     const clientId: string = await this.http.get(`/config/smart?issuer=${encodeURIComponent(options.issuer)}`, { responseType: 'text' }).toPromise();
 
+    if (!clientId) throw new Error(`Server is not configured for smart-launch issuer ${options.issuer}`);
+
     // TODO: Need to separate this out into issuer-specific configurations so that not all smart-on-fhir applications have to use the same scopes
     this.fhirBase = options.issuer;
     this.oauthService.configure({
