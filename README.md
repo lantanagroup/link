@@ -78,10 +78,9 @@ docker run nandina:latest
 
 ### Customizing
 
-All configurable properties are located in `application.properties`. To override the configurable properties without touching the original `application.properties` file:
+All configurable properties are located in `config.json`. To override the configurable properties without touching the original `config.json` file:
 
-1. Copy the `application.properties` file and rename to application-local.properties. Set an environment variable for `SPRING_CONFIG_NAME=application-local`.
-2. Use the `SPRING_CONFIG_LOCATION=file:///some/directory` environment variable, where the directory contains `application.properties` or the `SPRING_CONFIG_NAME`.
+1. Copy the `config.json` file and rename to `config-local.json`. Since @Autowired Environments will not be loaded you will need to set a VM option such as `-Dconfig=config-local.json` or whatever you named your local config file. This VM option is read in the `JsonPropertySourceFactory.java` file.
 
 See [this article](https://www.baeldung.com/spring-properties-file-outside-jar) for more information on how to specify a customized `application.properties` file for the Spring web application.
 
