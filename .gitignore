@@ -6,3 +6,4 @@ core/target/
 /web/src/main/resources/application-*.properties
 .DS_Store
 web/src/main/resources/public/
+web/src/main/resources/config-local.json

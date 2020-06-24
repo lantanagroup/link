@@ -1,9 +1,9 @@
 package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.Config;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.Helper;
+import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.TransformHelper;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
@@ -16,6 +16,7 @@ import org.hl7.fhir.r4.model.Type;
 import org.hl7.fhir.r4.model.UriType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +36,9 @@ import java.util.Map;
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
 
+  @Autowired
+  private JsonProperties jsonProperties;
+
   /**
    * Uses reflection to determine what class should be used to execute the requested query/className, and
    * executes the specified query, returning the result.
@@ -47,7 +51,7 @@ public class ReportController extends BaseController {
     if (className == null || className.isEmpty()) return null;
 
     try {
-      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, Config.getInstance(), fhirClient, criteria);
+      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, jsonProperties, fhirClient, criteria);
       FhirHelper.recordAuditEvent(fhirClient, authentication, className, "ReportController/executeQueryCount()",
               "Generate Report: " + criteria, "Generate Report", "Successful Report Generated");
       return executor.execute();
@@ -84,51 +88,51 @@ public class ReportController extends BaseController {
 
     logger.debug("Generating report, including criteria: " + criteria.toString());
 
-    if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultFacilityId())) {
-      response.setFacilityId(Config.getInstance().getFieldDefaultFacilityId());
+    if (!Helper.isNullOrEmpty(jsonProperties.getField().get(JsonProperties.DEFAULT).get(JsonProperties.FACILITY_ID))) {
+      response.setFacilityId(jsonProperties.getField().get(JsonProperties.DEFAULT).get(JsonProperties.FACILITY_ID));
     }
 
-    if (!Helper.isNullOrEmpty(Config.getInstance().getFieldDefaultSummaryCensusId())) {
-      response.setSummaryCensusId(Config.getInstance().getFieldDefaultSummaryCensusId());
+    if (!Helper.isNullOrEmpty(jsonProperties.getField().get(JsonProperties.DEFAULT).get(JsonProperties.SUMMARY_CENSUS_ID))) {
+      response.setSummaryCensusId(jsonProperties.getField().get(JsonProperties.DEFAULT).get(JsonProperties.SUMMARY_CENSUS_ID));
     }
 
-    Integer hospitalizedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalized(), criteria, fhirQueryClient, authentication);
+    Integer hospitalizedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED), criteria, fhirQueryClient, authentication);
     response.setHospitalized(hospitalizedTotal);
 
-    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalizedAndVentilated(), criteria, fhirQueryClient, authentication);
+    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED_AND_VENTILATED), criteria, fhirQueryClient, authentication);
     response.setHospitalizedAndVentilated(hospitalizedAndVentilatedTotal);
 
-    Integer hospitalOnsetTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalOnset(), criteria, fhirQueryClient, authentication);
+    Integer hospitalOnsetTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ONSET), criteria, fhirQueryClient, authentication);
     response.setHospitalOnset(hospitalOnsetTotal);
 
-    Integer edOverflowTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflow(), criteria, fhirQueryClient, authentication);
+    Integer edOverflowTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW), criteria, fhirQueryClient, authentication);
     response.setEdOverflow(edOverflowTotal);
 
-    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(Config.getInstance().getQueryEDOverflowAndVentilated(), criteria, fhirQueryClient, authentication);
+    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW_AND_VENTILATED), criteria, fhirQueryClient, authentication);
     response.setEdOverflowAndVentilated(edOverflowAndVentilatedTotal);
 
-    Integer deathsTotal = this.executeQueryCount(Config.getInstance().getQueryDeaths(), criteria, fhirQueryClient, authentication);
+    Integer deathsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.DEATHS), criteria, fhirQueryClient, authentication);
     response.setDeaths(deathsTotal);
 
-    Integer hospitalBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalBeds(), criteria, fhirQueryClient, authentication);
+    Integer hospitalBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_BEDS), criteria, fhirQueryClient, authentication);
     response.setAllHospitalBeds(hospitalBedsTotal);
 
-    Integer hospitalInpatientBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBeds(), criteria, fhirQueryClient, authentication);
+    Integer hospitalInpatientBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BEDS), criteria, fhirQueryClient, authentication);
     response.setHospitalInpatientBeds(hospitalInpatientBedsTotal);
 
-    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalInpatientBedOcc(), criteria, fhirQueryClient, authentication);
+    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BED_OCC), criteria, fhirQueryClient, authentication);
     response.setHospitalInpatientBedOccupancy(hospitalInpatientBedOccTotal);
 
-    Integer hospitalIcuBedsTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBeds(), criteria, fhirQueryClient, authentication);
+    Integer hospitalIcuBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BEDS), criteria, fhirQueryClient, authentication);
     response.setIcuBeds(hospitalIcuBedsTotal);
 
-    Integer hospitalIcuBedOccTotal = this.executeQueryCount(Config.getInstance().getQueryHospitalIcuBedOcc(), criteria, fhirQueryClient, authentication);
+    Integer hospitalIcuBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BED_OCC), criteria, fhirQueryClient, authentication);
     response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
 
-    Integer mechanicalVentilatorsTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilators(), criteria, fhirQueryClient, authentication);
+    Integer mechanicalVentilatorsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS), criteria, fhirQueryClient, authentication);
     response.setMechanicalVentilators(mechanicalVentilatorsTotal);
 
-    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(Config.getInstance().getQueryMechanicalVentilatorsUsed(), criteria, fhirQueryClient, authentication);
+    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS_USED), criteria, fhirQueryClient, authentication);
     response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
     return response;
   }
@@ -294,11 +298,11 @@ public class ReportController extends BaseController {
     String responseBody = null;
     IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
 
-    if (Config.getInstance().getExportFormat().equals("json")) {
+    if (jsonProperties.getExportFormat().equals("json")) {
       responseBody = this.ctx.newJsonParser().encodeResourceToString(questionnaireResponse);
       response.setContentType("application/json");
       response.setHeader("Content-Disposition", "attachment; filename=\"report.json\"");
-    } else if (Config.getInstance().getExportFormat().equals("xml")) {
+    } else if (jsonProperties.getExportFormat().equals("xml")) {
       responseBody = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
       response.setContentType("application/xml");
       response.setHeader("Content-Disposition", "attachment; filename=\"report.xml\"");
@@ -308,8 +312,8 @@ public class ReportController extends BaseController {
       response.setHeader("Content-Disposition", "attachment; filename=\"report.csv\"");
     }
 
-    FhirHelper.recordAuditEvent(fhirQueryClient, authentication, "report."+Config.getInstance().getExportFormat(), "ReportController/convertSimpleReport()",
-            "Export to File: " + Config.getInstance().getExportFormat() + " format", "Export To File", "Successfully Exported File");
+    FhirHelper.recordAuditEvent(fhirQueryClient, authentication, "report." + jsonProperties.getExportFormat(), "ReportController/convertSimpleReport()",
+            "Export to File: " + jsonProperties.getExportFormat() + " format", "Export To File", "Successfully Exported File");
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
     IOUtils.copy(is, response.getOutputStream());
