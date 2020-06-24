@@ -36,6 +36,10 @@ public class AuthTokenSecurityConfig extends WebSecurityConfigurerAdapter {
         filter.setAuthenticationManager(new NandinaAuthManager());
 
         httpSecurity.
+                antMatcher("/config/smart")
+                .anonymous();
+        
+        httpSecurity.
                 antMatcher("/api/**")
                 .csrf()
                 .disable()

@@ -11,20 +11,28 @@ import {AuthInitOptions, AuthService} from '../auth.service';
 })
 export class SmartLoginComponent implements OnInit {
   public message: string;
+  public isError = false;
 
   constructor(private route: ActivatedRoute, private router: Router, private http: HttpClient, private authService: AuthService) {
   }
 
   async ngOnInit() {
     this.route.queryParams.subscribe(async (params) => {
-      if (params.error) {
-        this.message = params.error;
-      } else if (params.state) {
-        await this.authService.loginSmart(params.state);
-      } else if (params.launch && params.iss) {
-        await this.authService.launchSmart(params.launch, params.iss);
-      } else {
-        this.message = 'Not sure how to proceed...';
+      try {
+        if (params.error) {
+          this.message = params.error;
+          this.isError = true;
+        } else if (params.state) {
+          await this.authService.loginSmart(params.state);
+        } else if (params.launch && params.iss) {
+          await this.authService.launchSmart(params.launch, params.iss);
+        } else {
+          this.message = 'Not sure how to proceed...';
+          this.isError = true;
+        }
+      } catch (ex) {
+        this.message = `Error launching Smart-on-FHIR login sequence: ${ex.message}`;
+        this.isError = true;
       }
     });
   }
