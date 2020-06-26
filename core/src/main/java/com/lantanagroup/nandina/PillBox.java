@@ -46,7 +46,7 @@ public class PillBox {
 			}
 			Scoop scoop = new Scoop(fhirServerBase, encList);
 			PillboxCsvReport pcr = new PillboxCsvReport(fhirServerBase, scoop);
-			byte[] zipBytes = pcr.getZippedCSVs();
+			byte[] zipBytes = pcr.getReportData();
 			Files.write(out.toPath(), zipBytes);
 			System.out.println("Output file saved to " + out.getAbsolutePath());
 		} catch (Exception e) {

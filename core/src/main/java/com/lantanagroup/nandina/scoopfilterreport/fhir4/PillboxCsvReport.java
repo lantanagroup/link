@@ -105,25 +105,6 @@ public class PillboxCsvReport extends Report {
 		return sw.toString();
 	}
 	
-	public byte[] getZippedCSVs() throws IOException {
-		ByteArrayOutputStream bs = new ByteArrayOutputStream();
-		ZipOutputStream zos = new ZipOutputStream(bs);
-		zos.putNextEntry(new ZipEntry("unique.csv"));
-		zos.write(this.getUniqueCsv().getBytes());
-		zos.closeEntry();
-		zos.putNextEntry(new ZipEntry("meds.csv"));
-		zos.write(this.getMedsCsv().getBytes());
-		zos.closeEntry();
-		zos.putNextEntry(new ZipEntry("dx.csv"));
-		zos.write(this.getDxCsv().getBytes());
-		zos.closeEntry();
-		zos.putNextEntry(new ZipEntry("lab.csv"));
-		zos.write(this.getLabCsv().getBytes());
-		zos.closeEntry();
-		zos.close();
-		return bs.toByteArray();
-	}
-	
 	public Bundle getBundle() {
 		Bundle b = new Bundle();
 		b.setType(BundleType.COLLECTION);
@@ -455,5 +436,23 @@ public class PillboxCsvReport extends Report {
 		return sw.toString();
 	}
 	
-
+	public byte[] getReportData() throws IOException {
+		ByteArrayOutputStream bs = new ByteArrayOutputStream();
+		ZipOutputStream zos = new ZipOutputStream(bs);
+		zos.putNextEntry(new ZipEntry("unique.csv"));
+		zos.write(this.getUniqueCsv().getBytes());
+		zos.closeEntry();
+		zos.putNextEntry(new ZipEntry("meds.csv"));
+		zos.write(this.getMedsCsv().getBytes());
+		zos.closeEntry();
+		zos.putNextEntry(new ZipEntry("dx.csv"));
+		zos.write(this.getDxCsv().getBytes());
+		zos.closeEntry();
+		zos.putNextEntry(new ZipEntry("lab.csv"));
+		zos.write(this.getLabCsv().getBytes());
+		zos.closeEntry();
+		zos.close();
+		return bs.toByteArray();
+	}
+	
 }

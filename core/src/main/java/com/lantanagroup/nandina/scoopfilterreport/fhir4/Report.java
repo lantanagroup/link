@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,9 +8,8 @@ import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Report {
+public abstract class Report {
 	
-
 	protected static final Logger logger = LoggerFactory.getLogger(Report.class);
 	protected List<PatientData> patientData;
 	
@@ -30,5 +30,7 @@ public class Report {
 			} 
 		}
 	}
+	
+	public abstract byte[] getReportData() throws IOException;
 
 }
