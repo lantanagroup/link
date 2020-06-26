@@ -23,6 +23,7 @@ public abstract class Report {
 				for (Filter filter: filters) {
 					if (filter.runFilter(pd)) {
 						patientData.add(pd);
+						break;
 					}
 				}
 			} catch (Exception e) {
