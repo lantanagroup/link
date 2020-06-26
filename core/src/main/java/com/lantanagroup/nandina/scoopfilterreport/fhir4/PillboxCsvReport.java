@@ -287,7 +287,7 @@ public class PillboxCsvReport extends Report {
 		String value = null;
 		List<Base> result = fpe.evaluate(med, "dosageInstruction.timing.repeat.bounds.ofType(Period).start");
 		if (result.size() > 0) {
-			logger.info("Found med start");
+		//	logger.info("Found med start");
 			DateTimeType date = (DateTimeType)result.get(0);
 			value = date.asStringValue();
 		} else if (
@@ -319,7 +319,7 @@ public class PillboxCsvReport extends Report {
 		if (dose != null && dose.size() > 0) {
 			Dosage.DosageDoseAndRateComponent doseAndRate = (Dosage.DosageDoseAndRateComponent)dose.get(0);
 			value = quantityToString(doseAndRate.getDoseQuantity());
-			logger.info("Found doseAndRate");
+		//	logger.info("Found doseAndRate");
 		}
 		return value;
 	}

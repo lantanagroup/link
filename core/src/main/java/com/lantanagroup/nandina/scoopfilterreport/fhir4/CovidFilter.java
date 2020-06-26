@@ -39,8 +39,8 @@ public class CovidFilter extends Filter {
 			CodeableConcept cc = c.getCode();
 			b = codeInSet(cc,codeSet);
 			if (b) {
-				logger.info("Patient has covid: " + pd.patient.getId());
-				logger.info(" - " + cc.getCodingFirstRep().getCode());
+			//	logger.info("Patient has covid: " + pd.patient.getId());
+			//	logger.info(" - " + cc.getCodingFirstRep().getCode());
 				break;
 			}
 		}
@@ -54,8 +54,8 @@ public class CovidFilter extends Filter {
 			CodeableConcept cc = c.getValueCodeableConcept();
 			b = codeInSet(cc,codeSet);
 			if (b) {
-				logger.info("Patient has covid: " + pd.patient.getId());
-				logger.info(" - " + cc.getCodingFirstRep().getCode());
+			//	logger.info("Patient has covid: " + pd.patient.getId());
+			//	logger.info(" - " + cc.getCodingFirstRep().getCode());
 				break;
 			}
 		}
@@ -69,8 +69,8 @@ public class CovidFilter extends Filter {
 			CodeableConcept cc = c.getCode();
 			b = codeInSet(cc,codeSet);
 			if (b) {
-				logger.info("Patient has covid: " + pd.patient.getId());
-				logger.info(" - " + cc.getCodingFirstRep().getCode());
+			//	logger.info("Patient has covid: " + pd.patient.getId());
+			//	logger.info(" - " + cc.getCodingFirstRep().getCode());
 				pd.primaryDx = cc;
 				break;
 			}
