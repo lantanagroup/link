@@ -60,7 +60,7 @@ public class PillBox {
 			EncounterDateFilter edf = new EncounterDateFilter("2020-05-04");
 			filters.add(edf);
 			HospitalizedReport hr = new HospitalizedReport(fhirServerBase, scoop, filters);
-			System.out.println("Patients hospitalized with Covid on " + edf.getDateAsString() + " :" + hr.getReportCount());
+			System.out.println("Patients hospitalized with Covid on " + edf.getDateAsString() + ": " + hr.getReportCount());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
