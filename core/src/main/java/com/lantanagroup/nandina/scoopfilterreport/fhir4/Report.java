@@ -21,6 +21,7 @@ public abstract class Report {
 	IParser xmlParser = ctx.newXmlParser();
 	
 	public Report (String fhirBaseUrl, Scoop scoop, List<Filter> filters) {
+		if (filters == null) filters = new ArrayList<Filter>();
 		patientData = new ArrayList<PatientData>();
 		for (String key : scoop.getPatientMap().keySet()) {
 			PatientData pd;
