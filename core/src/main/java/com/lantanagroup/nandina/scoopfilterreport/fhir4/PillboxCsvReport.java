@@ -49,13 +49,12 @@ public class PillboxCsvReport extends Report {
 	protected String facilityId;
 	protected String censusId;
 
-	public PillboxCsvReport(String fhirBaseUrl, Scoop scoop)  {
-		super(fhirBaseUrl, scoop, getFilters());
+	public PillboxCsvReport(String fhirBaseUrl, Scoop scoop, List<Filter> filters)  {
+		super(fhirBaseUrl, scoop, addFilters(filters));
 	}
 	
-	private static List<Filter> getFilters(){
+	protected static List<Filter> addFilters(List<Filter> filters){
 		Filter filter = new CovidFilter();
-		List<Filter> filters = new ArrayList<Filter>();
 		filters.add(filter);
 		return filters;
 	}

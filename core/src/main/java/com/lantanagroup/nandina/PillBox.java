@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -11,6 +13,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.hl7.fhir.r4.model.ListResource;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.EncounterDateFilter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.HospitalizedReport;
 import com.lantanagroup.nandina.scoopfilterreport.fhir4.PillboxCsvReport;
 import com.lantanagroup.nandina.scoopfilterreport.fhir4.Scoop;
 
@@ -45,10 +50,17 @@ public class PillBox {
 				encList = (ListResource)xmlParser.parseResource(encListStr);
 			}
 			Scoop scoop = new Scoop(fhirServerBase, encList);
-			PillboxCsvReport pcr = new PillboxCsvReport(fhirServerBase, scoop);
+			List<Filter> filters = new ArrayList<Filter>();
+			PillboxCsvReport pcr = new PillboxCsvReport(fhirServerBase, scoop, filters);
 			byte[] zipBytes = pcr.getReportData();
 			Files.write(out.toPath(), zipBytes);
 			System.out.println("Output file saved to " + out.getAbsolutePath());
+			
+			// The following 4 lines are an example of getting Nandina style counts
+			EncounterDateFilter edf = new EncounterDateFilter("2020-05-04");
+			filters.add(edf);
+			HospitalizedReport hr = new HospitalizedReport(fhirServerBase, scoop, filters);
+			System.out.println("Patients hospitalized with Covid on " + edf.getDateAsString() + " :" + hr.getReportCount());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
