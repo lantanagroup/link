@@ -33,5 +33,9 @@ public abstract class Report {
 	}
 	
 	public abstract byte[] getReportData() throws IOException;
+	
+	public int getReportCount() {
+		return patientData.size();
+	}
 
 }
