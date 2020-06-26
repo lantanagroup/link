@@ -11,8 +11,8 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.hl7.fhir.r4.model.ListResource;
 
-import com.lantanagroup.nandina.fhir4.scoopfilterreport.PillboxCsvReport;
-import com.lantanagroup.nandina.fhir4.scoopfilterreport.Scoop;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PillboxCsvReport;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.Scoop;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;

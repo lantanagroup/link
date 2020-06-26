@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.fhir4.scoopfilterreport;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

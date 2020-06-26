@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.fhir4.scoopfilterreport;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,9 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import ca.uhn.fhir.context.FhirContext;
 
-public class PillboxCsvReport {
+public class PillboxCsvReport extends Report {
 
-	protected static final Logger logger = LoggerFactory.getLogger(PillboxCsvReport.class);
 	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	protected static FhirContext ctx = FhirContext.forR4();
 	protected IValidationSupport validationSupport = (IValidationSupport) ctx.getValidationSupport();
@@ -49,30 +48,23 @@ public class PillboxCsvReport {
 	
 	protected String facilityId;
 	protected String censusId;
-	protected List<PatientData> covidPatientDataList;
 
-	public PillboxCsvReport(String fhirBaseUrl, Scoop scoop) {
-		Filter filter = new Filter();
-		covidPatientDataList = new ArrayList<PatientData>();
-		for (String key : scoop.getPatientMap().keySet()) {
-			PatientData pd;
-			try {
-				Patient p = scoop.getPatientMap().get(key);
-				pd = new PatientData(scoop, p);
-				if (filter.isCovidPatient(pd)) {
-					covidPatientDataList.add(pd);
-				}
-			} catch (Exception e) {
-				logger.info("Error loading data for " + key, e);
-			} 
-		}
+	public PillboxCsvReport(String fhirBaseUrl, Scoop scoop)  {
+		super(fhirBaseUrl, scoop, getFilters());
+	}
+	
+	private static List<Filter> getFilters(){
+		Filter filter = new CovidFilter();
+		List<Filter> filters = new ArrayList<Filter>();
+		filters.add(filter);
+		return filters;
 	}
 	
 	public String getUniqueCsv() {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		pw.println("DateCollected,Facility_ID,Census_ID,Patient_ID,Admit_Date,Discharge_Date,Patient_age,Patient_sex,Patient_race,Patient_ethnicity,Chief_complaint,Primary_dx,Patient_location,Disposition");
-		for (PatientData pd : covidPatientDataList) {
+		for (PatientData pd : patientData) {
 			pw.print(this.getUniqueCsvRow(pd,facilityId, censusId));
 		}
 		pw.close();
@@ -84,7 +76,7 @@ public class PillboxCsvReport {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		pw.println("Patient_ID,Medication_Name,Medication_Code,Medication_Dose,Medication_Route,Medication_Start,Medication_Stop");
-		for (PatientData pd : covidPatientDataList) {
+		for (PatientData pd : patientData) {
 			pw.print(this.getMedCsvRows(pd));
 		}
 		pw.close();
@@ -95,7 +87,7 @@ public class PillboxCsvReport {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		pw.println("Patient_ID,Other_dx");
-		for (PatientData pd : covidPatientDataList) {
+		for (PatientData pd : patientData) {
 			pw.print(this.getCsvDxRows(pd));
 		}
 		pw.close();
@@ -106,7 +98,7 @@ public class PillboxCsvReport {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		pw.println("Patient_ID,SARSCOV_Lab_Order,SARSCOV_Lab_DateTime,SARSCOV_Lab_Result");
-		for (PatientData pd : covidPatientDataList) {
+		for (PatientData pd : patientData) {
 			pw.print(this.getCsvLabRows(pd));
 		}
 		pw.close();
@@ -135,7 +127,7 @@ public class PillboxCsvReport {
 	public Bundle getBundle() {
 		Bundle b = new Bundle();
 		b.setType(BundleType.COLLECTION);
-		for (PatientData pd : covidPatientDataList) {
+		for (PatientData pd : patientData) {
 			b.addEntry().setResource(pd.getBundle());
 		}
 		return b;
