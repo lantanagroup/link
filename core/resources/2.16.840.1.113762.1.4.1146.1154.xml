@@ -1,0 +1,60 @@
+<ValueSet xmlns="http://hl7.org/fhir">
+	<id value="2.16.840.1.113762.1.4.1146.1154"></id>
+	<meta>
+		<profile value="http://hl7.org/fhir/us/ecr/StructureDefinition/ersd-valueset"></profile>
+	</meta>
+	<extension url="http://hl7.org/fhir/StructureDefinition/valueset-author">
+		<valueContactDetail>
+			<name value="CSTE Author"></name>
+		</valueContactDetail>
+	</extension>
+	<extension url="http://hl7.org/fhir/StructureDefinition/valueset-steward">
+		<valueContactDetail>
+			<name value="CSTE Steward"></name>
+		</valueContactDetail>
+	</extension>
+	<url value="http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1154"></url>
+	<identifier>
+		<system value="urn:ietf:rfc:3986"></system>
+		<value value="urn:oid:2.16.840.1.113762.1.4.1146.1154"></value>
+	</identifier>
+	<name value="COVID_19TestPanelsforSARS_CoV_2Antibody"></name>
+	<title value="COVID_19 (Test Panels for SARS_CoV_2 Antibody)"></title>
+	<status value="draft"></status>
+	<description value="COVID_19 (Test Panels for SARS_CoV_2 Antibody)"></description>
+	<useContext>
+		<code>
+			<system value="http://terminology.hl7.org/CodeSystem/usage-context-type"></system>
+			<code value="focus"></code>
+		</code>
+		<valueCodeableConcept>
+			<text value="Disease caused by severe acute respiratory syndrome coronavirus 2 (disorder)"></text>
+		</valueCodeableConcept>
+	</useContext>
+	<compose>
+		<include>
+			<system value="http://loinc.org"></system>
+			<concept>
+				<code value="94504-8"></code>
+				<display value="SARS coronavirus 2 IgG and IgM panel - Serum or Plasma by Immunoassay"></display>
+			</concept>
+			<concept>
+				<code value="94503-0"></code>
+				<display value="SARS coronavirus 2 IgG and IgM panel - Serum or Plasma Qualitative by Immunoassay"></display>
+			</concept>
+		</include>
+	</compose>
+	<expansion>
+		<timestamp value="2020-06-09T13:51:58-04:00"></timestamp>
+		<contains>
+			<system value="http://loinc.org"></system>
+			<code value="94504-8"></code>
+			<display value="SARS coronavirus 2 IgG and IgM panel - Serum or Plasma by Immunoassay"></display>
+		</contains>
+		<contains>
+			<system value="http://loinc.org"></system>
+			<code value="94503-0"></code>
+			<display value="SARS coronavirus 2 IgG and IgM panel - Serum or Plasma Qualitative by Immunoassay"></display>
+		</contains>
+	</expansion>
+</ValueSet>

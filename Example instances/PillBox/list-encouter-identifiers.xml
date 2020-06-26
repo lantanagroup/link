@@ -1,0 +1,23 @@
+<List xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://hl7.org/fhir ../../../OneDrive%20-%20Lantana%20Consulting%20Group/git/FHIRTransforms/schemas/FHIR/R4/fhir-all.xsd"
+ xmlns="http://hl7.org/fhir">
+    <status value="current"/>
+    <mode value="working"/>
+    <entry>
+        <item>
+            <identifier>
+                <system value="urn:ietf:rfc:3986"/>
+                <value value="urn:uuid:16b3a682-3b5e-41a2-80fd-d33bd58a8b77"/>
+            </identifier>
+		</item>
+    </entry>
+    <entry>
+        <item>
+        	<identifier>
+                <system value="urn:ietf:rfc:3986"/>
+                <value value="urn:uuid:a3ac13b5-da09-4931-92bd-36f82d31b855"/>
+            </identifier>
+		</item>
+    </entry>
+    
+</List>
