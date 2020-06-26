@@ -23,6 +23,7 @@ public abstract class Filter {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Filter.class);
 	protected Terminology terminology = new Terminology();
+	
 	public abstract boolean runFilter(PatientData pd);
 	
 	protected boolean codeInSet(CodeableConcept cc, Set<String> covidCodesSet) {
