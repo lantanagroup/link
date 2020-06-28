@@ -64,7 +64,6 @@ public class Scoop {
 	private ListResource getEncounterListForDate(IGenericClient fhirServer, Date reportDate) {
 		ListResource encounterList = null;
 		Bundle bundle = this.rawSearch(fhirServer, "List?code=http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay&date=" + sdf.format(reportDate));
-		System.out.println("Bundle.total=" + bundle.getTotal());
 		if (bundle.getTotal() > 1) {
 			logger.debug("Multiple Nandina encounter lists found on same date. Only using first returned");
 		}
@@ -160,7 +159,7 @@ public class Scoop {
 	
 	public Bundle rawSearch(IGenericClient fhirServer, String query) {
         try {
-        	System.out.println("Executing query: " + query);
+        	logger.debug("Executing query: " + query);
         	if (fhirServer == null) logger.debug("Client is null");
             Bundle bundle = targetFhirServer.search()
                     .byUrl(query)

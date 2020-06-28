@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,12 +14,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.hl7.fhir.r4.model.ListResource;
-
-import com.lantanagroup.nandina.scoopfilterreport.fhir4.EncounterDateFilter;
-import com.lantanagroup.nandina.scoopfilterreport.fhir4.Filter;
-import com.lantanagroup.nandina.scoopfilterreport.fhir4.HospitalizedReport;
-import com.lantanagroup.nandina.scoopfilterreport.fhir4.PillboxCsvReport;
-import com.lantanagroup.nandina.scoopfilterreport.fhir4.Scoop;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -57,19 +51,14 @@ public class PillBox {
 			// same FHIR server for nandina and target for now
 			IGenericClient targetFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
 			IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
-		//	Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
-			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
+			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
+		//	Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
 			List<Filter> filters = new ArrayList<Filter>();
 			PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters);
 			byte[] zipBytes = pcr.getReportData();
 			Files.write(out.toPath(), zipBytes);
 			System.out.println("Output file saved to " + out.getAbsolutePath());
 			
-			// The following 4 lines are an example of getting Nandina style counts
-			EncounterDateFilter edf = new EncounterDateFilter("2020-05-04");
-			filters.add(edf);
-			HospitalizedReport hr = new HospitalizedReport(scoop, filters);
-			System.out.println("Patients hospitalized with Covid on " + edf.getDateAsString() + ": " + hr.getReportCount());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
