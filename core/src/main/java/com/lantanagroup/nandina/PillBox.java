@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.nio.file.Files;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -27,6 +29,8 @@ public class PillBox {
 	
 
 	public static void main(String[] args) {
+
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		Options options = new Options();
 		options.addOption("fhir", true, "Base URL of the FHIR server that is the target of data extraction");
 		options.addOption("in", true, "A FHIR R4 List resource containing references to Encounter resources (by identifier)");
@@ -53,7 +57,8 @@ public class PillBox {
 			// same FHIR server for nandina and target for now
 			IGenericClient targetFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
 			IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
-			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
+		//	Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
+			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
 			List<Filter> filters = new ArrayList<Filter>();
 			PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters);
 			byte[] zipBytes = pcr.getReportData();

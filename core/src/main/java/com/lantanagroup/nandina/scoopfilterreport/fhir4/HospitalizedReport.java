@@ -15,7 +15,7 @@ public class HospitalizedReport extends Report {
 	private static List<Filter> addFilters(List<Filter> filters){
 		Filter covidFilter = new CovidFilter();
 		filters.add(covidFilter);
-		Filter hospitalizedFilter = new HospitalizedEncounterClassFilter();
+		Filter hospitalizedFilter = new HospitalizedEncounterFilter();
 		filters.add(hospitalizedFilter);
 		return filters;
 	}

@@ -7,7 +7,7 @@ import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Period;
 
-public class HospitalizedEncounterClassFilter extends Filter {
+public class HospitalizedEncounterFilter extends Filter {
 
 	@Override
 	public boolean runFilter(PatientData pd) {

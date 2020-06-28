@@ -2,7 +2,8 @@ package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.sql.Date;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
+import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
+import org.hl7.fhir.r4.model.Base;
 import org.hl7.fhir.r4.model.BaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Encounter;
@@ -19,6 +23,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.ListResource.ListEntryComponent;
+import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,26 +42,43 @@ public class Scoop {
 	protected Map<String,Patient> patientMap = new HashMap<String,Patient>(); 
 	protected Map<Patient,Encounter> patientEncounterMap = new HashMap<Patient,Encounter>();
 	protected List<PatientData> patientData;
+	protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");	
+	protected IValidationSupport validationSupport;
+	protected FHIRPathEngine fpe;
 	
 
 
 	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
-		init(targetFhirServer, nandinaFhirServer, encList);
+		this.targetFhirServer = targetFhirServer;
+		this.nandinaFhirServer = nandinaFhirServer;
+		init(encList);
 	}
 	
 	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer,  Date reportDate) {
-		ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
-		init(targetFhirServer, nandinaFhirServer, encList);
-	}
-	
-	private ListResource getEncounterListForDate(IGenericClient nandinaFhirServer2, Date reportDate) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void init(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
 		this.targetFhirServer = targetFhirServer;
 		this.nandinaFhirServer = nandinaFhirServer;
+		ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
+		init(encList);
+	}
+	
+	private ListResource getEncounterListForDate(IGenericClient fhirServer, Date reportDate) {
+		ListResource encounterList = null;
+		Bundle bundle = this.rawSearch(fhirServer, "List?code=http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay&date=" + sdf.format(reportDate));
+		System.out.println("Bundle.total=" + bundle.getTotal());
+		if (bundle.getTotal() > 1) {
+			logger.debug("Multiple Nandina encounter lists found on same date. Only using first returned");
+		}
+		validationSupport = (IValidationSupport) fhirServer.getFhirContext().getValidationSupport();
+		fpe = new FHIRPathEngine(new HapiWorkerContext(fhirServer.getFhirContext(), validationSupport));
+		if (bundle.hasEntry() && bundle.getEntryFirstRep().hasResource()) {
+			encounterList = (ListResource)bundle.getEntryFirstRep().getResource();
+		}
+		
+		return encounterList;
+	}
+
+	private void init(ListResource encList) {
+
 		xmlParser = targetFhirServer.getFhirContext().newXmlParser();
 		loadEncounterMap(encList);
 		loadPatientMaps();
@@ -133,9 +155,13 @@ public class Scoop {
 	}
 	
 	public Bundle rawSearch(String query) {
+        return rawSearch(targetFhirServer, query);
+	}
+	
+	public Bundle rawSearch(IGenericClient fhirServer, String query) {
         try {
-        	logger.debug("Executing query: " + query);
-        	if (targetFhirServer == null) logger.debug("Client is null");
+        	System.out.println("Executing query: " + query);
+        	if (fhirServer == null) logger.debug("Client is null");
             Bundle bundle = targetFhirServer.search()
                     .byUrl(query)
                     .returnBundle(Bundle.class)
@@ -148,6 +174,8 @@ public class Scoop {
         }
         return null;
 	}
+	
+	
 
 	private List<Identifier> getIdentifiers(Reference item) {
 		List<Identifier> identifiers;
