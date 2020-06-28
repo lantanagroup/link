@@ -7,7 +7,7 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Observation;
 
-public class CovidFilter extends Filter {
+public final class CovidFilter extends Filter {
 	
 
 	public boolean runFilter(PatientData pd) {

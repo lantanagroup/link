@@ -9,7 +9,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Period;
 
-public class EncounterDateFilter extends Filter {
+public final class EncounterDateFilter extends Filter {
 	
 	private Date date;
 	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

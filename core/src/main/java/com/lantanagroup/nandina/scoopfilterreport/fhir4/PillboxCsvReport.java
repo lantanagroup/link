@@ -147,16 +147,16 @@ public class PillboxCsvReport extends Report {
 
 	public String getAdmitDate(PatientData pd) {
 		String dateStr = null;
-		if (pd.encounter.hasPeriod()) {
-			dateStr = sdf.format(pd.encounter.getPeriod().getStart());
+		if (pd.primaryEncounter.hasPeriod()) {
+			dateStr = sdf.format(pd.primaryEncounter.getPeriod().getStart());
 		}
 		return dateStr;
 	}
 
 	public String getDischargeDate(PatientData pd) {
 		String dateStr = null;
-		if (pd.encounter.hasPeriod()) {
-			dateStr = sdf.format(pd.encounter.getPeriod().getEnd());
+		if (pd.primaryEncounter.hasPeriod()) {
+			dateStr = sdf.format(pd.primaryEncounter.getPeriod().getEnd());
 		}
 		return dateStr;
 	}
@@ -207,8 +207,8 @@ public class PillboxCsvReport extends Report {
 	
 	private String getPatientDisposition(PatientData pd) {
 		String value = null;
-		if (pd.encounter != null && pd.encounter.getHospitalization() != null) {
-			EncounterHospitalizationComponent hosp = pd.encounter.getHospitalization();
+		if (pd.primaryEncounter != null && pd.primaryEncounter.getHospitalization() != null) {
+			EncounterHospitalizationComponent hosp = pd.primaryEncounter.getHospitalization();
 			if (hosp.getDischargeDisposition() != null) {
 				CodeableConcept cc = hosp.getDischargeDisposition();
 				value = cc.getCodingFirstRep().getSystem() + "|" + cc.getCodingFirstRep().getCode();
@@ -219,8 +219,8 @@ public class PillboxCsvReport extends Report {
 
 	private String getPatientLocation(PatientData pd) {
 		String value = null;
-		if (pd.encounter != null && pd.encounter.getLocationFirstRep() != null) {
-			Location loc = pd.encounter.getLocationFirstRep().getLocationTarget();
+		if (pd.primaryEncounter != null && pd.primaryEncounter.getLocationFirstRep() != null) {
+			Location loc = pd.primaryEncounter.getLocationFirstRep().getLocationTarget();
 			value = loc.getName();
 		}
 		return value;
@@ -236,8 +236,8 @@ public class PillboxCsvReport extends Report {
 
 	private String getPatientChiefComplaint(PatientData pd) {
 		String value = null;
-		if (pd.encounter != null && pd.encounter.getReasonCodeFirstRep() != null) {
-			value = pd.encounter.getReasonCodeFirstRep().getCodingFirstRep().getSystem() + "|" + pd.encounter.getReasonCodeFirstRep().getCodingFirstRep().getCode();
+		if (pd.primaryEncounter != null && pd.primaryEncounter.getReasonCodeFirstRep() != null) {
+			value = pd.primaryEncounter.getReasonCodeFirstRep().getCodingFirstRep().getSystem() + "|" + pd.primaryEncounter.getReasonCodeFirstRep().getCodingFirstRep().getCode();
 		}
 		return value;
 	}

@@ -1,6 +1,6 @@
 package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
-public class EdOverflowEncounterFilter extends HospitalizedEncounterFilter {
+public final class EdOverflowEncounterFilter extends HospitalizedEncounterFilter {
 	
 	/**
 	 * Since Cerner does not support the Location resource, the best we can do now is the opposite of the HostpitalizedEncounterFilter. 

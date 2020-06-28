@@ -5,7 +5,7 @@ import java.util.Date;
 
 import org.hl7.fhir.r4.model.Patient;
 
-public class DeathFilter extends Filter {
+public final class DeathFilter extends Filter {
 	
 	Date reportDate;
 	

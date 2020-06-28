@@ -1,66 +1,40 @@
 package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.Period;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
-import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
-import org.hl7.fhir.r4.model.Base;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.Condition;
-import org.hl7.fhir.r4.model.DateTimeType;
-import org.hl7.fhir.r4.model.Dosage;
 import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Extension;
-import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.Location;
-import org.hl7.fhir.r4.model.MedicationRequest;
-import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Quantity;
-import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
-import org.hl7.fhir.r4.model.Encounter.EncounterHospitalizationComponent;
-import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import ca.uhn.fhir.context.FhirContext;
 
 public class PatientData {
 
 	protected static FhirContext ctx = FhirContext.forR4();
 	protected static final Logger logger = LoggerFactory.getLogger(PatientData.class);
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-	Date dateCollected;
-	Patient patient;
-	Encounter encounter;
-	Bundle encounters;
-	Bundle conditions;
-	Bundle meds;
-	Bundle labResults;
-	Bundle allergies;
-	Bundle procedures;
-	CodeableConcept primaryDx = null;
+	protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	protected Date dateCollected;
+	protected Patient patient;
+	protected Encounter primaryEncounter;
+	protected Bundle encounters;
+	protected Bundle conditions;
+	protected Bundle meds;
+	protected Bundle labResults;
+	protected Bundle allergies;
+	protected Bundle procedures;
+	protected CodeableConcept primaryDx = null;
 	
 	public PatientData(Scoop scoop, Patient pat) {
 		patient = pat;
 		dateCollected = new Date();
 		Map<Patient,Encounter> patEncMap = scoop.getPatientEncounterMap();
-		encounter = patEncMap.get(patient);
+		primaryEncounter = patEncMap.get(patient);
 		encounters = scoop.rawSearch("Encounter?subject=" + pat.getId()); 
 		conditions = scoop.rawSearch("Condition?subject=" + pat.getId()); 
 		meds = scoop.rawSearch("MedicationRequest?subject=" + pat.getId()); 
@@ -80,6 +54,67 @@ public class PatientData {
 		b.addEntry().setResource(labResults);
 		b.addEntry().setResource(allergies);
 		return b;
+	}
+
+
+	public CodeableConcept getPrimaryDx() {
+		return primaryDx;
+	}
+
+
+	/**
+	 * The setPrimaryDx() method is the only setter here, 
+	 * since the primary diagnosis is not known until filters are run. 
+	 * If not for that, this class could be a read-only final class. 
+	 * @param primaryDx
+	 */
+	public void setPrimaryDx(CodeableConcept primaryDx) {
+		this.primaryDx = primaryDx;
+	}
+
+
+	public Date getDateCollected() {
+		return dateCollected;
+	}
+
+
+	public Patient getPatient() {
+		return patient;
+	}
+
+
+	public Encounter getPrimaryEncounter() {
+		return primaryEncounter;
+	}
+
+
+	public Bundle getEncounters() {
+		return encounters;
+	}
+
+
+	public Bundle getConditions() {
+		return conditions;
+	}
+
+
+	public Bundle getMeds() {
+		return meds;
+	}
+
+
+	public Bundle getLabResults() {
+		return labResults;
+	}
+
+
+	public Bundle getAllergies() {
+		return allergies;
+	}
+
+
+	public Bundle getProcedures() {
+		return procedures;
 	}
 	
 }
