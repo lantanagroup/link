@@ -53,6 +53,7 @@ public class PatientData {
 	Bundle meds;
 	Bundle labResults;
 	Bundle allergies;
+	Bundle procedures;
 	CodeableConcept primaryDx = null;
 	
 	public PatientData(Scoop scoop, Patient pat) {
@@ -65,6 +66,7 @@ public class PatientData {
 		meds = scoop.rawSearch("MedicationRequest?subject=" + pat.getId()); 
 		labResults = scoop.rawSearch("Observation?subject=" + pat.getId() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory"); 
 		allergies = scoop.rawSearch("AllergyIntolerance?patient=" + pat.getId()); 
+		procedures = scoop.rawSearch("Procedure?patient=" + pat.getId()); 
 	}
 
 	

@@ -20,23 +20,16 @@ public abstract class Report {
 	FhirContext ctx = FhirContext.forR4();
 	IParser xmlParser = ctx.newXmlParser();
 	
-	public Report (String fhirBaseUrl, Scoop scoop, List<Filter> filters) {
+	public Report (String fhirBaseUrl, List<PatientData> initialPatientData, List<Filter> filters) {
 		if (filters == null) filters = new ArrayList<Filter>();
-		patientData = new ArrayList<PatientData>();
-		for (String key : scoop.getPatientMap().keySet()) {
-			PatientData pd;
-			try {
-				Patient p = scoop.getPatientMap().get(key);
-				pd = new PatientData(scoop, p);
-				for (Filter filter: filters) {
-					if (filter.runFilter(pd)) {
-						patientData.add(pd);
-						break;
-					}
+		this.patientData = new ArrayList<PatientData>();
+		for (PatientData pd: initialPatientData) {
+			for (Filter filter: filters) {
+				if (filter.runFilter(pd)) {
+					patientData.add(pd);
+					break;
 				}
-			} catch (Exception e) {
-				logger.info("Error loading data for " + key, e);
-			} 
+			}
 		}
 	}
 	
@@ -45,12 +38,15 @@ public abstract class Report {
 	 * @throws IOException
 	 */
 	public byte[] getReportData() throws IOException {
-		Bundle b = getBundle();
+		Bundle b = getReportBundle();
 		String bundleStr = xmlParser.encodeResourceToString(b);
 		return bundleStr.getBytes();
 	}
 	
-	protected Bundle getBundle() {
+	/**
+	 * @return a FHIR Bundle resource containing the PatientData resources that are part of this report after every Filter has been run
+	 */
+	public Bundle getReportBundle() {
 		Bundle b = new Bundle();
 		b.setType(BundleType.COLLECTION);
 		for (PatientData pd : patientData) {

@@ -2,6 +2,7 @@ package com.lantanagroup.nandina.scoopfilterreport.fhir4;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,20 +30,52 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 public class Scoop {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Scoop.class);
-	protected FhirContext ctx = FhirContext.forR4();
-	protected IParser xmlParser = ctx.newXmlParser();
-	protected IGenericClient client;
+	protected IParser xmlParser;
+	protected IGenericClient targetFhirServer;
+	protected IGenericClient nandinaFhirServer;
 	protected HashMap<String,Encounter> encounterMap = new HashMap<String,Encounter>(); 
 	protected Map<String,Patient> patientMap = new HashMap<String,Patient>(); 
 	protected Map<Patient,Encounter> patientEncounterMap = new HashMap<Patient,Encounter>();
+	protected List<PatientData> patientData;
 	
+
 	
-	public Scoop (String fhirBaseUrl, ListResource encList) {
-		client = ctx.newRestfulGenericClient(fhirBaseUrl);
-		loadEncounterMap(encList);
-		loadPatientMaps();
+	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer,  Date reportDate) {
+		ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
+		init(targetFhirServer, nandinaFhirServer, encList);
+	}
+	
+	private ListResource getEncounterListForDate(IGenericClient nandinaFhirServer2, Date reportDate) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
+	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
+		init(targetFhirServer, nandinaFhirServer, encList);
+	}
+
+	private void init(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
+		this.targetFhirServer = targetFhirServer;
+		this.nandinaFhirServer = nandinaFhirServer;
+		xmlParser = targetFhirServer.getFhirContext().newXmlParser();
+		loadEncounterMap(encList);
+		loadPatientMaps();
+		loadPatientData();
+	}
+
+	public void loadPatientData() {
+		patientData = new ArrayList<PatientData>();
+		for (String key : this.getPatientMap().keySet()) {
+			PatientData pd;
+			try {
+				Patient p = this.getPatientMap().get(key);
+				pd = new PatientData(this, p);
+				patientData.add(pd);
+			} catch (Exception e) {
+				logger.info("Error loading data for " + key, e);
+			} 
+		}
+	}
 
 	public void loadEncounterMap(ListResource encList) {
 		List<ListEntryComponent> entries = encList.getEntry();
@@ -65,7 +98,7 @@ public class Scoop {
 			Encounter enc = this.encounterMap.get(key);
 			String subjectRef = enc.getSubject().getReference();
 			if (subjectRef.startsWith("Patient/")) {
-				Patient p = client.read().resource(Patient.class).withId(subjectRef).execute();
+				Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
 				this.patientMap.put(p.getId(), p);
 				this.patientEncounterMap.put(p, enc);
 			} else {
@@ -95,10 +128,6 @@ public class Scoop {
 		return patientEncounterMap;
 	}
 	
-	public Scoop(String fhirServerBase) {
-		client = ctx.newRestfulGenericClient(fhirServerBase);
-	}
-	
 	public Bundle getEncounter(Identifier encId) {
 		return rawSearch("Encounter?identifier=" + encId.getSystem() + "|" + encId.getValue()); 
 	}
@@ -106,8 +135,8 @@ public class Scoop {
 	public Bundle rawSearch(String query) {
         try {
         	logger.debug("Executing query: " + query);
-        	if (client == null) logger.debug("Client is null");
-            Bundle bundle = client.search()
+        	if (targetFhirServer == null) logger.debug("Client is null");
+            Bundle bundle = targetFhirServer.search()
                     .byUrl(query)
                     .returnBundle(Bundle.class)
                     .execute();
@@ -138,6 +167,10 @@ public class Scoop {
 			identifiers.add(item.getIdentifier());
 		}
 		return identifiers;
+	}
+
+	public List<PatientData> getPatientData() {
+		return patientData;
 	}
 
 	
