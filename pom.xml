@@ -19,5 +19,6 @@
     <modules>
         <module>core</module>
         <module>api</module>
+        <module>cli</module>
     </modules>
 </project>

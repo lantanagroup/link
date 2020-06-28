@@ -15,87 +15,87 @@
     <publisher value="Lantana Consulting Group"/>
     <compose>
         <include>
-            <system value="http://snomed.info/sct" />
+            <system value="http://snomed.info/sct"/>
             <concept>
-                <code value="706172005" />
+                <code value="706172005"/>
             </concept>
             <concept>
-                <code value="426160001" />
+                <code value="426160001"/>
             </concept>
             <concept>
-                <code value="272189001" />
+                <code value="272189001"/>
             </concept>
             <concept>
-                <code value="449071006" />
+                <code value="449071006"/>
             </concept>
             <concept>
-                <code value="706173000" />
+                <code value="706173000"/>
             </concept>
             <concept>
-                <code value="465703003" />
+                <code value="465703003"/>
             </concept>
             <concept>
-                <code value="700657002" />
+                <code value="700657002"/>
             </concept>
             <concept>
-                <code value="250870006" />
+                <code value="250870006"/>
             </concept>
             <concept>
-                <code value="444932008" />
+                <code value="444932008"/>
             </concept>
             <concept>
-                <code value="409025002" />
+                <code value="409025002"/>
             </concept>
             <concept>
-                <code value="385857005" />
+                <code value="385857005"/>
             </concept>
         </include>
     </compose>
     <expansion>
         <timestamp value="2020-05-07T09:14:29-04:00"></timestamp>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="706172005" />
+            <system value="http://snomed.info/sct"/>
+            <code value="706172005"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="426160001" />
+            <system value="http://snomed.info/sct"/>
+            <code value="426160001"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="272189001" />
+            <system value="http://snomed.info/sct"/>
+            <code value="272189001"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="449071006" />
+            <system value="http://snomed.info/sct"/>
+            <code value="449071006"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="706173000" />
+            <system value="http://snomed.info/sct"/>
+            <code value="706173000"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="465703003" />
+            <system value="http://snomed.info/sct"/>
+            <code value="465703003"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="700657002" />
+            <system value="http://snomed.info/sct"/>
+            <code value="700657002"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="250870006" />
+            <system value="http://snomed.info/sct"/>
+            <code value="250870006"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="444932008" />
+            <system value="http://snomed.info/sct"/>
+            <code value="444932008"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="409025002" />
+            <system value="http://snomed.info/sct"/>
+            <code value="409025002"/>
         </contains>
         <contains>
-            <system value="http://snomed.info/sct" />
-            <code value="385857005" />
+            <system value="http://snomed.info/sct"/>
+            <code value="385857005"/>
         </contains>
     </expansion>
 </ValueSet>

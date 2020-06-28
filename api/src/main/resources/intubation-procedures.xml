@@ -9,16 +9,16 @@
     <version value="20200507"/>
     <name value="Intubation Procedures"/>
     <status value="active"/>
-    <date value="2020-05-07"/>    
+    <date value="2020-05-07"/>
     <compose>
-    <include>
-      <system value="http://snomed.info/sct"/>
-      <filter>
-        <property value="concept"/>
-        <op value="is-a"/>
-        <value value="52765003"/>
-      </filter>
-    </include>
+        <include>
+            <system value="http://snomed.info/sct"/>
+            <filter>
+                <property value="concept"/>
+                <op value="is-a"/>
+                <value value="52765003"/>
+            </filter>
+        </include>
     </compose>
     <expansion>
         <extension url="http://hl7.org/fhir/StructureDefinition/valueset-unclosed">

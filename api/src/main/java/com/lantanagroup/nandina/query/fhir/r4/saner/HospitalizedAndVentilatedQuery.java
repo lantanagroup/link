@@ -11,13 +11,13 @@ import java.util.Map;
 public class HospitalizedAndVentilatedQuery extends AbstractSanerQuery implements IQueryCountExecutor {
 
   public HospitalizedAndVentilatedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-	  super(jsonProperties, fhirClient, criteria);
-		// TODO Auto-generated constructor stub
-	}
+    super(jsonProperties, fhirClient, criteria);
+    // TODO Auto-generated constructor stub
+  }
 
-	@Override
-	public Integer execute() {
-		Map<String,Resource> data = this.getData();
-	    return this.countForPopulation(data, "Encounters", "numC19MechVentPats");
-	}
+  @Override
+  public Integer execute() {
+    Map<String, Resource> data = this.getData();
+    return this.countForPopulation(data, "Encounters", "numC19MechVentPats");
+  }
 }

@@ -1,14 +1,13 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.query.IQueryCountExecutor;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
+import org.hl7.fhir.r4.model.Resource;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.lantanagroup.nandina.JsonProperties;
-import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
-import com.lantanagroup.nandina.query.IQueryCountExecutor;
-import org.hl7.fhir.r4.model.Resource;
 
 public class HospitalizedAndVentilatedQuery extends AbstractQuery implements IQueryCountExecutor {
 

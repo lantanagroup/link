@@ -9,11 +9,7 @@ import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.QueryFactory;
 import org.apache.commons.io.IOUtils;
-import org.hl7.fhir.r4.model.DateType;
-import org.hl7.fhir.r4.model.IntegerType;
-import org.hl7.fhir.r4.model.QuestionnaireResponse;
-import org.hl7.fhir.r4.model.Type;
-import org.hl7.fhir.r4.model.UriType;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +38,7 @@ public class ReportController extends BaseController {
   /**
    * Uses reflection to determine what class should be used to execute the requested query/className, and
    * executes the specified query, returning the result.
+   *
    * @param className
    * @param reportDate
    * @param overflowLocations

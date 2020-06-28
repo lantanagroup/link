@@ -29,145 +29,145 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NandinaAuthManager implements AuthenticationManager {
-    private static final Logger logger = LoggerFactory.getLogger(NandinaAuthManager.class);
-    private HashMap<String, String> issuerJwksUrls = new HashMap<>();
-    @Autowired
-    private JsonProperties jsonProperties;
+  private static final Logger logger = LoggerFactory.getLogger(NandinaAuthManager.class);
+  private HashMap<String, String> issuerJwksUrls = new HashMap<>();
+  @Autowired
+  private JsonProperties jsonProperties;
 
-    private String getJwksUrl(String openIdConfigUrl) {
-        try {
-            URL url = new URL(openIdConfigUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            int status = conn.getResponseCode();
+  private String getJwksUrl(String openIdConfigUrl) {
+    try {
+      URL url = new URL(openIdConfigUrl);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestMethod("GET");
+      int status = conn.getResponseCode();
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuffer content = new StringBuffer();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
+      BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+      String inputLine;
+      StringBuffer content = new StringBuffer();
+      while ((inputLine = in.readLine()) != null) {
+        content.append(inputLine);
+      }
+      in.close();
 
-            JSONObject openIdConfigObj = new JSONObject(content.toString());
-            return openIdConfigObj.getString("jwks_uri");
-        } catch (Exception ex) {
-            return null;
-        }
+      JSONObject openIdConfigObj = new JSONObject(content.toString());
+      return openIdConfigObj.getString("jwks_uri");
+    } catch (Exception ex) {
+      return null;
+    }
+  }
+
+  private CernerClaimData getCernerClaimData(DecodedJWT jwt) {
+    Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
+
+    if (cernerClaim != null) {
+      Map<String, Object> data = cernerClaim.asMap();
+      CernerClaimData ccd = new CernerClaimData();
+
+      if (data.containsKey("tenant")) {
+        ccd.setTenant((String) data.get("tenant"));
+      }
+
+      return ccd;
     }
 
-    private CernerClaimData getCernerClaimData(DecodedJWT jwt) {
-        Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
+    return null;
+  }
 
-        if (cernerClaim != null) {
-            Map<String, Object> data = cernerClaim.asMap();
-            CernerClaimData ccd = new CernerClaimData();
+  private String getJwksUrl(DecodedJWT jwt) {
+    Claim issuerClaim = jwt.getClaim("iss");
+    Claim tenantClaim = jwt.getClaim("tenant");
 
-            if (data.containsKey("tenant")) {
-                ccd.setTenant((String) data.get("tenant"));
-            }
+    if (issuerClaim != null && !issuerClaim.isNull()) {
+      String issuer = issuerClaim.asString();
 
-            return ccd;
+      if (this.issuerJwksUrls.containsKey(issuer)) {
+        return this.issuerJwksUrls.get(issuer);
+      }
+
+      String openIdConfigUrl = issuer + (issuer.endsWith("/") ? "" : "/") + ".well-known/openid-configuration";
+      String url = this.getJwksUrl(openIdConfigUrl);
+
+      if (url == null && (issuer.equals("https://authorization.sandboxcerner.com/") || issuer.equals("https://authorization.cerner.com/"))) {
+        CernerClaimData ccd = this.getCernerClaimData(jwt);
+
+        if (ccd != null && ccd.getTenant() != null && !ccd.getTenant().isEmpty()) {
+          String cernerConfigUrl = String.format("%stenants/%s/oidc/idsps/%s/.well-known/openid-configuration", issuer, ccd.getTenant(), ccd.getTenant());
+          url = this.getJwksUrl(cernerConfigUrl);
         }
+      }
 
-        return null;
+      if (url != null) {
+        this.issuerJwksUrls.put(issuer, url);
+        return url;
+      }
     }
 
-    private String getJwksUrl(DecodedJWT jwt) {
-        Claim issuerClaim = jwt.getClaim("iss");
-        Claim tenantClaim = jwt.getClaim("tenant");
+    return jsonProperties.getAuthJwksUrl();
+  }
 
-        if (issuerClaim != null && !issuerClaim.isNull()) {
-            String issuer = issuerClaim.asString();
+  private DecodedJWT getValidationJWT(String token) {
+    DecodedJWT jwt = JWT.decode(token);
+    Claim idTokenClaim = jwt.getClaim("id_token");
 
-            if (this.issuerJwksUrls.containsKey(issuer)) {
-                return this.issuerJwksUrls.get(issuer);
-            }
-
-            String openIdConfigUrl = issuer + (issuer.endsWith("/") ? "" : "/") + ".well-known/openid-configuration";
-            String url = this.getJwksUrl(openIdConfigUrl);
-
-            if (url == null && (issuer.equals("https://authorization.sandboxcerner.com/") || issuer.equals("https://authorization.cerner.com/"))) {
-                CernerClaimData ccd = this.getCernerClaimData(jwt);
-
-                if (ccd != null && ccd.getTenant() != null && !ccd.getTenant().isEmpty()) {
-                    String cernerConfigUrl = String.format("%stenants/%s/oidc/idsps/%s/.well-known/openid-configuration", issuer, ccd.getTenant(), ccd.getTenant());
-                    url = this.getJwksUrl(cernerConfigUrl);
-                }
-            }
-
-            if (url != null) {
-                this.issuerJwksUrls.put(issuer, url);
-                return url;
-            }
-        }
-
-        return jsonProperties.getAuthJwksUrl();
+    if (idTokenClaim != null && !idTokenClaim.isNull()) {         // this is smart-on-fhir
+      String idToken = idTokenClaim.asString();
+      return JWT.decode(idToken);
     }
 
-    private DecodedJWT getValidationJWT(String token) {
-        DecodedJWT jwt = JWT.decode(token);
-        Claim idTokenClaim = jwt.getClaim("id_token");
+    return jwt;
+  }
 
-        if (idTokenClaim != null && !idTokenClaim.isNull()) {         // this is smart-on-fhir
-            String idToken = idTokenClaim.asString();
-            return JWT.decode(idToken);
-        }
+  @Override
+  public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    String authHeader = (String) authentication.getPrincipal();
 
-        return jwt;
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      throw new BadCredentialsException("This REST operation requires a Bearer Authorization header.");
     }
 
-    @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String authHeader = (String) authentication.getPrincipal();
+    // Validate that the token is issued by our configured authentication provider
+    String token = authHeader.substring("Bearer ".length());
+    DecodedJWT jwt = this.getValidationJWT(token);
+    String jwksUrl = this.getJwksUrl(jwt);
+    JwkProvider provider = new CustomUrlJwkProvider(jwksUrl);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new BadCredentialsException("This REST operation requires a Bearer Authorization header.");
-        }
+    try {
+      Jwk jwk = provider.get(jwt.getKeyId());
+      Algorithm algorithm = null;
+      PublicKey publicKey = null;
 
-        // Validate that the token is issued by our configured authentication provider
-        String token = authHeader.substring("Bearer ".length());
-        DecodedJWT jwt = this.getValidationJWT(token);
-        String jwksUrl = this.getJwksUrl(jwt);
-        JwkProvider provider = new CustomUrlJwkProvider(jwksUrl);
+      if (jwk.getType() == null || jwk.getType().isEmpty()) {
+        throw new Exception("JWK algorithm cannot be null");
+      }
 
-        try {
-            Jwk jwk = provider.get(jwt.getKeyId());
-            Algorithm algorithm = null;
-            PublicKey publicKey = null;
+      switch (jwk.getType()) {
+        case "RSA":
+        case "rsa":
+          publicKey = jwk.getPublicKey();
+          algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
+          break;
+        case "EC":
+        case "ec":
+          JSONObject jwkJsonObj = new JSONObject();
+          jwkJsonObj.put("x", jwk.getAdditionalAttributes().get("x"));
+          jwkJsonObj.put("y", jwk.getAdditionalAttributes().get("y"));
+          jwkJsonObj.put("crv", jwk.getAdditionalAttributes().get("crv"));
+          jwkJsonObj.put("kty", jwk.getType());
+          publicKey = ECKey.parse(jwkJsonObj.toString()).toECPublicKey();
+          algorithm = Algorithm.ECDSA256((ECPublicKey) publicKey, null);
+          break;
+        default:
+          throw new Exception("Unsupported JWK algorithm " + jwk.getAlgorithm());
+      }
 
-            if (jwk.getType() == null || jwk.getType().isEmpty()) {
-                throw new Exception("JWK algorithm cannot be null");
-            }
+      algorithm.verify(jwt);
 
-            switch (jwk.getType()) {
-                case "RSA":
-                case "rsa":
-                    publicKey = jwk.getPublicKey();
-                    algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
-                    break;
-                case "EC":
-                case "ec":
-                    JSONObject jwkJsonObj = new JSONObject();
-                    jwkJsonObj.put("x", jwk.getAdditionalAttributes().get("x"));
-                    jwkJsonObj.put("y", jwk.getAdditionalAttributes().get("y"));
-                    jwkJsonObj.put("crv", jwk.getAdditionalAttributes().get("crv"));
-                    jwkJsonObj.put("kty", jwk.getType());
-                    publicKey = ECKey.parse(jwkJsonObj.toString()).toECPublicKey();
-                    algorithm = Algorithm.ECDSA256((ECPublicKey) publicKey, null);
-                    break;
-                default:
-                    throw new Exception("Unsupported JWK algorithm " + jwk.getAlgorithm());
-            }
-
-            algorithm.verify(jwt);
-
-            authentication.setAuthenticated(true);
-        } catch (Exception e) {
-            authentication.setAuthenticated(false);
-            e.printStackTrace();
-        }
-
-        return authentication;
+      authentication.setAuthenticated(true);
+    } catch (Exception e) {
+      authentication.setAuthenticated(false);
+      e.printStackTrace();
     }
+
+    return authentication;
+  }
 }

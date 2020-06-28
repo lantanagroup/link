@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HospitalInpatientBedsQuery extends AbstractSanerQuery implements IQueryCountExecutor {
-    public HospitalInpatientBedsQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-        super(jsonProperties, fhirClient, criteria);
-        // TODO Auto-generated constructor stub
-    }
+  public HospitalInpatientBedsQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+    super(jsonProperties, fhirClient, criteria);
+    // TODO Auto-generated constructor stub
+  }
 
-    @Override
-    public Integer execute() {
-        Map<String, Resource> data = this.getData();
-        return this.countForPopulation(data, "Beds", "numbeds");
-    }
+  @Override
+  public Integer execute() {
+    Map<String, Resource> data = this.getData();
+    return this.countForPopulation(data, "Beds", "numbeds");
+  }
 }

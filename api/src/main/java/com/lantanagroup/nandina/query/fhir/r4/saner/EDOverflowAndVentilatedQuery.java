@@ -9,15 +9,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EDOverflowAndVentilatedQuery extends AbstractSanerQuery implements IQueryCountExecutor {
-	
-    public EDOverflowAndVentilatedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(jsonProperties, fhirClient, criteria);
-		// TODO Auto-generated constructor stub
-	}
 
-    @Override
-    public Integer execute() {
-    	Map<String,Resource> data = this.getData();
-        return this.countForPopulation(data, "Encounters", "numC19OFMechVentPats");
-    }
+  public EDOverflowAndVentilatedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+    super(jsonProperties, fhirClient, criteria);
+    // TODO Auto-generated constructor stub
+  }
+
+  @Override
+  public Integer execute() {
+    Map<String, Resource> data = this.getData();
+    return this.countForPopulation(data, "Encounters", "numC19OFMechVentPats");
+  }
 }

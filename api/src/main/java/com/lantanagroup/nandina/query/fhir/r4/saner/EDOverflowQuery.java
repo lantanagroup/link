@@ -10,14 +10,14 @@ import java.util.Map;
 
 public class EDOverflowQuery extends AbstractSanerQuery implements IQueryCountExecutor {
 
-    public EDOverflowQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		super(jsonProperties, fhirClient, criteria);
-		// TODO Auto-generated constructor stub
-	}
-    
-    @Override
-    public Integer execute() {
-    	Map<String,Resource> data = this.getData();
-        return this.countForPopulation(data, "Encounters", "numC19OverflowPats");
-    }
+  public EDOverflowQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+    super(jsonProperties, fhirClient, criteria);
+    // TODO Auto-generated constructor stub
+  }
+
+  @Override
+  public Integer execute() {
+    Map<String, Resource> data = this.getData();
+    return this.countForPopulation(data, "Encounters", "numC19OverflowPats");
+  }
 }

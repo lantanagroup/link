@@ -1,21 +1,12 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import com.lantanagroup.nandina.JsonProperties;
-import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
-import org.hl7.fhir.r4.model.Condition;
-import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Period;
-import org.hl7.fhir.r4.model.Resource;
+import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
+import org.hl7.fhir.r4.model.*;
+
+import java.util.*;
 
 public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExecutor {
 

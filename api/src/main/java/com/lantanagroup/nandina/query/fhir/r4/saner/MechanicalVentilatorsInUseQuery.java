@@ -9,14 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MechanicalVentilatorsInUseQuery extends AbstractSanerQuery implements IQueryCountExecutor {
-    public MechanicalVentilatorsInUseQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-        super(jsonProperties, fhirClient, criteria);
-        // TODO Auto-generated constructor stub
-    }
+  public MechanicalVentilatorsInUseQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
+    super(jsonProperties, fhirClient, criteria);
+    // TODO Auto-generated constructor stub
+  }
 
-    @Override
-    public Integer execute() {
-        Map<String, Resource> data = this.getData();
-        return this.countForPopulation(data, "Ventilators", "numVentUse");
-    }
+  @Override
+  public Integer execute() {
+    Map<String, Resource> data = this.getData();
+    return this.countForPopulation(data, "Ventilators", "numVentUse");
+  }
 }

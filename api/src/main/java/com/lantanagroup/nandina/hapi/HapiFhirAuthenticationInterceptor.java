@@ -6,7 +6,6 @@ import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.JsonProperties;
 import org.apache.commons.codec.binary.Base64;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 
