@@ -49,8 +49,8 @@ public class PillboxCsvReport extends Report {
 	protected String facilityId;
 	protected String censusId;
 
-	public PillboxCsvReport(String fhirBaseUrl, List<PatientData> initialPatientData, List<Filter> filters)  {
-		super(fhirBaseUrl, initialPatientData, addFilters(filters));
+	public PillboxCsvReport(Scoop scoop, List<Filter> filters)  {
+		super(scoop, addFilters(filters));
 	}
 	
 	private static List<Filter> addFilters(List<Filter> filters){

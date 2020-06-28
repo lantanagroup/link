@@ -20,10 +20,10 @@ public abstract class Report {
 	FhirContext ctx = FhirContext.forR4();
 	IParser xmlParser = ctx.newXmlParser();
 	
-	public Report (String fhirBaseUrl, List<PatientData> initialPatientData, List<Filter> filters) {
+	public Report (Scoop scoop, List<Filter> filters) {
 		if (filters == null) filters = new ArrayList<Filter>();
 		this.patientData = new ArrayList<PatientData>();
-		for (PatientData pd: initialPatientData) {
+		for (PatientData pd: scoop.getPatientData()) {
 			for (Filter filter: filters) {
 				if (filter.runFilter(pd)) {
 					patientData.add(pd);

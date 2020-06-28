@@ -4,13 +4,10 @@ import java.util.List;
 
 public class HospitalizedAndVentilatedReport extends HospitalizedReport {
 
-	public HospitalizedAndVentilatedReport(String fhirBaseUrl, List<PatientData> initialPatientData,
-			List<Filter> filters) {
-		super(fhirBaseUrl, initialPatientData, addFilters(filters));
+	public HospitalizedAndVentilatedReport(Scoop scoop,List<Filter> filters) {
+		super(scoop, addFilters(filters));
 		// TODO Auto-generated constructor stub
 	}
-	
-
 	
 	
 	private static List<Filter> addFilters(List<Filter> filters){

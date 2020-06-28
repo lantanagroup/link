@@ -21,6 +21,7 @@ import com.lantanagroup.nandina.scoopfilterreport.fhir4.Scoop;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class PillBox {
 	
@@ -49,9 +50,12 @@ public class PillBox {
 			} else {
 				encList = (ListResource)xmlParser.parseResource(encListStr);
 			}
-			Scoop scoop = new Scoop(fhirServerBase, encList);
+			// same FHIR server for nandina and target for now
+			IGenericClient targetFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
+			IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
+			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
 			List<Filter> filters = new ArrayList<Filter>();
-			PillboxCsvReport pcr = new PillboxCsvReport(fhirServerBase, scoop, filters);
+			PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters);
 			byte[] zipBytes = pcr.getReportData();
 			Files.write(out.toPath(), zipBytes);
 			System.out.println("Output file saved to " + out.getAbsolutePath());
@@ -59,7 +63,7 @@ public class PillBox {
 			// The following 4 lines are an example of getting Nandina style counts
 			EncounterDateFilter edf = new EncounterDateFilter("2020-05-04");
 			filters.add(edf);
-			HospitalizedReport hr = new HospitalizedReport(fhirServerBase, scoop, filters);
+			HospitalizedReport hr = new HospitalizedReport(scoop, filters);
 			System.out.println("Patients hospitalized with Covid on " + edf.getDateAsString() + ": " + hr.getReportCount());
 		} catch (Exception e) {
 			e.printStackTrace();

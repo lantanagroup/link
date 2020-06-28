@@ -39,6 +39,10 @@ public class Scoop {
 	protected List<PatientData> patientData;
 	
 
+
+	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
+		init(targetFhirServer, nandinaFhirServer, encList);
+	}
 	
 	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer,  Date reportDate) {
 		ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
@@ -48,10 +52,6 @@ public class Scoop {
 	private ListResource getEncounterListForDate(IGenericClient nandinaFhirServer2, Date reportDate) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
-		init(targetFhirServer, nandinaFhirServer, encList);
 	}
 
 	private void init(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {

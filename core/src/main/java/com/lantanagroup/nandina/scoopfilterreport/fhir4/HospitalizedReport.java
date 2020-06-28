@@ -7,8 +7,8 @@ public class HospitalizedReport extends Report {
 	/*
 	 *  Create this passing in an EncounterDateFilter for the date on which you are interested. 
 	 */
-	public HospitalizedReport(String fhirBaseUrl, List<PatientData> initialPatientData, List<Filter> filters) {
-		super(fhirBaseUrl, initialPatientData, addFilters(filters));
+	public HospitalizedReport(Scoop scoop, List<Filter> filters) {
+		super(scoop, addFilters(filters));
 	}
 	
 	
