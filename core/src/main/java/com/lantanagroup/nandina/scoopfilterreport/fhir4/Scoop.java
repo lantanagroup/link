@@ -45,6 +45,7 @@ public class Scoop {
 	protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");	
 	protected IValidationSupport validationSupport;
 	protected FHIRPathEngine fpe;
+	protected Date reportDate = null;
 	
 
 
@@ -72,7 +73,7 @@ public class Scoop {
 		if (bundle.hasEntry() && bundle.getEntryFirstRep().hasResource()) {
 			encounterList = (ListResource)bundle.getEntryFirstRep().getResource();
 		}
-		
+		reportDate = encounterList.getDate();
 		return encounterList;
 	}
 
@@ -198,6 +199,10 @@ public class Scoop {
 
 	public List<PatientData> getPatientData() {
 		return patientData;
+	}
+
+	public Date getReportDate() {
+		return reportDate;
 	}
 
 	

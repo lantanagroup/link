@@ -22,6 +22,13 @@ public abstract class Report {
 	
 	public Report (Scoop scoop, List<Filter> filters) {
 		if (filters == null) filters = new ArrayList<Filter>();
+		if (scoop.getReportDate() != null) {
+			// TODO: Need to create date filters for Condition, Procedure, etc. 
+			// and add them here in addition to the EncounterDateFilter
+			// or maybe create an "EverythingDate" filter that checks all that stuff. 
+			EncounterDateFilter edf = new EncounterDateFilter(scoop.getReportDate());
+			filters.add(edf);
+		}
 		this.patientData = new ArrayList<PatientData>();
 		for (PatientData pd: scoop.getPatientData()) {
 			for (Filter filter: filters) {
