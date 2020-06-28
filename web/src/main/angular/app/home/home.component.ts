@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {OAuthService} from 'angular-oauth2-oidc';
-import {AuthService} from '../auth.service';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-home',

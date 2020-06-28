@@ -11,8 +11,6 @@ import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.lantanagroup.nandina.IConfig;
-
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class QueryFactory {

@@ -13,9 +13,7 @@ import java.io.File;
 import java.util.Map;
 
 @Component
-@PropertySource(
-        value = "classpath:config.json",
-        factory = JsonPropertySourceFactory.class)
+@PropertySource(value = "classpath:config.json", factory = JsonPropertySourceFactory.class)
 @EnableConfigurationProperties
 @ConfigurationProperties
 public class JsonProperties {
@@ -51,10 +49,7 @@ public class JsonProperties {
     private String fhirServerUserName;
     private String fhirServerPassword;
     private String fhirServerBearerToken;
-    private String authIssuer;
     private String authJwksUrl;
-    private String authClientId;
-    private String authScope;
     private Map<String, String> query;
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
@@ -117,36 +112,12 @@ public class JsonProperties {
         this.fhirServerBearerToken = fhirServerBearerToken;
     }
 
-    public String getAuthIssuer() {
-        return authIssuer;
-    }
-
-    public void setAuthIssuer(String authIssuer) {
-        this.authIssuer = authIssuer;
-    }
-
     public String getAuthJwksUrl() {
         return authJwksUrl;
     }
 
     public void setAuthJwksUrl(String authJwksUrl) {
         this.authJwksUrl = authJwksUrl;
-    }
-
-    public String getAuthClientId() {
-        return authClientId;
-    }
-
-    public void setAuthClientId(String authClientId) {
-        this.authClientId = authClientId;
-    }
-
-    public String getAuthScope() {
-        return authScope;
-    }
-
-    public void setAuthScope(String authScope) {
-        this.authScope = authScope;
     }
 
     public Map<String, String> getQuery() {

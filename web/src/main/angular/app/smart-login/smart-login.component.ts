@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 import {HttpClient} from '@angular/common/http';
-import {OAuthService} from 'angular-oauth2-oidc';
-import {AuthInitOptions, AuthService} from '../auth.service';
+import {AuthService} from '../services/auth.service';
 
 @Component({
   selector: 'app-smart-login',

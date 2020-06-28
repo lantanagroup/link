@@ -1,5 +1,5 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {APP_INITIALIZER, NgModule} from '@angular/core';
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
@@ -12,41 +12,57 @@ import {OAuthModule} from 'angular-oauth2-oidc';
 import {AddHeaderInterceptor} from './auth-header-interceptor';
 import {ToastService} from './toast.service';
 import {ToastsContainerComponent} from './toasts-container/toasts-container.component';
-import { SmartLoginComponent } from './smart-login/smart-login.component';
-import { HomeComponent } from './home/home.component';
-import { QuestionnaireComponent } from './questionnaire/questionnaire.component';
-import {AuthService} from './auth.service';
-import { SmartHomeComponent } from './smart-home/smart-home.component';
+import {SmartLoginComponent} from './smart-login/smart-login.component';
+import {HomeComponent} from './home/home.component';
+import {QuestionnaireComponent} from './questionnaire/questionnaire.component';
+import {AuthService} from './services/auth.service';
+import {SmartHomeComponent} from './smart-home/smart-home.component';
+import {ConfigService} from './services/config.service';
+import {LocationService} from './services/location.service';
+import {ReportService} from './services/report.service';
+
+export const configFactory = (configService: ConfigService) => {
+  return () => configService.loadConfig();
+};
 
 @NgModule({
-    declarations: [
-        AppComponent,
-        SelectLocationsComponent,
-        ToastsContainerComponent,
-        SmartLoginComponent,
-        HomeComponent,
-        QuestionnaireComponent,
-        SmartHomeComponent
-    ],
-    imports: [
-        BrowserModule,
-        AppRoutingModule,
-        NgbModule,
-        HttpClientModule,
-        FormsModule,
-        OAuthModule.forRoot()
-    ],
-    providers: [
-        ToastService,
-        AuthService,
-        CookieService,
-        {
-            provide: HTTP_INTERCEPTORS,
-            useClass: AddHeaderInterceptor,
-            multi: true
-        }
-    ],
-    bootstrap: [AppComponent]
+  declarations: [
+    AppComponent,
+    SelectLocationsComponent,
+    ToastsContainerComponent,
+    SmartLoginComponent,
+    HomeComponent,
+    QuestionnaireComponent,
+    SmartHomeComponent
+  ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    NgbModule,
+    HttpClientModule,
+    FormsModule,
+    OAuthModule.forRoot()
+  ],
+  providers: [
+    {
+      provide: APP_INITIALIZER,
+      useFactory: configFactory,
+      deps: [ConfigService],
+      multi: true
+    },
+    ConfigService,
+    ToastService,
+    AuthService,
+    LocationService,
+    ReportService,
+    CookieService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AddHeaderInterceptor,
+      multi: true
+    }
+  ],
+  bootstrap: [AppComponent]
 })
 export class AppModule {
 }

@@ -1,18 +1,10 @@
-FROM node AS build
-
-WORKDIR /tmp
-
-RUN apt-get update && apt-get install default-jdk -y && apt-get install maven -y
-RUN npm install -g @angular/cli
+FROM maven AS build
 
 WORKDIR /tmp
 
 # Copy code and compile
 COPY . .
 
-WORKDIR /tmp/web
-RUN npm ci
-RUN ng build --prod
 WORKDIR /tmp
 RUN mvn install
 

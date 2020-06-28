@@ -1,7 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4;
 
 import com.lantanagroup.nandina.Helper;
-import com.lantanagroup.nandina.IConfig;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 

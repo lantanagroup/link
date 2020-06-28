@@ -1,8 +1,3 @@
-.git
-.cache
-.idea
-**/node_modules
-**/target
-/web/src/main/resources/application-local.properties
-/web/src/main/java/com/lantanagroup/nandina/auth/SpringSecurityInitializer.java
-/web/src/main/resources/public/
+web/
+api/target/
+core/target/

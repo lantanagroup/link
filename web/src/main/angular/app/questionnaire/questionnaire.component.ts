@@ -2,14 +2,13 @@ import {Component, OnInit} from '@angular/core';
 import {QuestionnaireResponseSimple} from '../model/questionnaire-response-simple';
 import {LocationResponse} from '../model/location-response';
 import {formatDate, getFhirNow} from '../helper';
-import {HttpClient, HttpResponse} from '@angular/common/http';
+import {HttpResponse} from '@angular/common/http';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {CookieService} from 'ngx-cookie-service';
-import {OAuthService} from 'angular-oauth2-oidc';
 import {ToastService} from '../toast.service';
 import {SelectLocationsComponent} from '../select-locations/select-locations.component';
+import {ReportService} from '../services/report.service';
 import saveAs from 'save-as';
-import {AuthService} from '../auth.service';
 
 @Component({
   selector: 'app-questionnaire',
@@ -25,11 +24,10 @@ export class QuestionnaireComponent implements OnInit {
   today = getFhirNow();
 
   constructor(
-      private http: HttpClient,
       private modal: NgbModal,
       private cookieService: CookieService,
-      public authService: AuthService,
-      public toastService: ToastService) {
+      public toastService: ToastService,
+      public reportService: ReportService) {
     if (this.cookieService.get('overflowLocations')) {
       try {
         this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
@@ -74,7 +72,7 @@ export class QuestionnaireComponent implements OnInit {
 
     try {
       this.response.date = formatDate(this.response.date);
-      convertResponse = await this.http.post('/api/convert', this.response, { observe: 'response', responseType: 'text' }).toPromise();
+      convertResponse = await this.reportService.convert(this.response);
     } catch (ex) {
       this.toastService.showException('Error converting report', ex);
       return;
@@ -98,22 +96,8 @@ export class QuestionnaireComponent implements OnInit {
     try {
       this.loading = true;
 
-      let url = '/api/query?';
-
-      if (this.overflowLocations.length > 0) {
-        const ids = this.overflowLocations.map(ol => ol.id);
-        url += 'overflowLocations=' + encodeURIComponent(ids.join(',')) + '&';
-      }
-
-      if (this.response.date) {
-        url += 'reportDate=' + encodeURIComponent(formatDate(this.response.date)) + '&';
-      } else {
-        url += 'reportDate=' + encodeURIComponent(getFhirNow()) + '&';
-      }
-
-
       try {
-        this.response = await this.http.get<QuestionnaireResponseSimple>(url).toPromise();
+        this.response = await this.reportService.generate(this.overflowLocations, this.response.date);
       } catch (ex) {
         this.toastService.showException('Error converting report', ex);
         return;
@@ -140,14 +124,6 @@ export class QuestionnaireComponent implements OnInit {
     } finally {
       this.loading = false;
     }
-  }
-
-  async login() {
-    await this.authService.loginLocal();
-  }
-
-  logout() {
-    this.authService.logout();
   }
 
   async ngOnInit() {

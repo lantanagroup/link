@@ -1,8 +1,8 @@
 import {Injectable} from '@angular/core';
 import {HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import {OAuthService} from 'angular-oauth2-oidc';
-import {AuthService} from './auth.service';
+import {AuthService} from './services/auth.service';
+import {ConfigService} from './services/config.service';
 
 /**
  * This class is an HTTP interceptor that is responsible for adding an
@@ -10,13 +10,13 @@ import {AuthService} from './auth.service';
  */
 @Injectable()
 export class AddHeaderInterceptor implements HttpInterceptor {
-    constructor(private authService: AuthService) {
+    constructor(private authService: AuthService, private configService: ConfigService) {
     }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         let headers = req.headers;
 
-        if (req.url.startsWith('/')) {
+        if (this.configService.config && req.url.startsWith(this.configService.config.apiUrl)) {
             if (this.authService.token) {
                 headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
             }

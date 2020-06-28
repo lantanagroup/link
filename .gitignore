@@ -7,3 +7,7 @@ core/target/
 .DS_Store
 web/src/main/resources/public/
 web/src/main/resources/config-local.json
+web/src/main/angular/assets/local.json
+api/target/
+web/dist/
+api/src/main/resources/config-*.json
