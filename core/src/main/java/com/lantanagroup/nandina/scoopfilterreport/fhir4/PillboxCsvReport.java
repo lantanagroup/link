@@ -37,6 +37,11 @@ import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.CovidFilter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.report.Report;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
+
 import ca.uhn.fhir.context.FhirContext;
 
 public class PillboxCsvReport extends Report {
@@ -49,7 +54,7 @@ public class PillboxCsvReport extends Report {
 	protected String facilityId;
 	protected String censusId;
 
-	public PillboxCsvReport(Scoop scoop, List<Filter> filters)  {
+	public PillboxCsvReport(EncounterScoop scoop, List<Filter> filters)  {
 		super(scoop, addFilters(filters));
 	}
 	

@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,6 +15,9 @@ import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
 import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.Terminology;
 
 import ca.uhn.fhir.context.FhirContext;
 

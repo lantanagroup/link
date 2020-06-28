@@ -1,10 +1,12 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
 
 import java.util.Set;
 
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Procedure;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 public final class VentilatedFilter extends Filter {
 
@@ -19,7 +21,7 @@ public final class VentilatedFilter extends Filter {
 
 	private boolean hasVentilationProcedure(PatientData pd, Set<String> valueSetAsSetString) {
 		boolean b = false;
-		for (IBaseResource res : bundleToSet(pd.procedures)) {
+		for (IBaseResource res : bundleToSet(pd.getProcedures())) {
 			Procedure p = (Procedure)res;
 			CodeableConcept cc = p.getCode();
 			b = codeInSet(cc,valueSetAsSetString);

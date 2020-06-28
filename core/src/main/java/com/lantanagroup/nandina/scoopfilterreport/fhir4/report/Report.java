@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.report;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +10,11 @@ import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.EncounterDateFilter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 
@@ -20,7 +25,7 @@ public abstract class Report {
 	FhirContext ctx = FhirContext.forR4();
 	IParser xmlParser = ctx.newXmlParser();
 	
-	public Report (Scoop scoop, List<Filter> filters) {
+	public Report (EncounterScoop scoop, List<Filter> filters) {
 		if (filters == null) filters = new ArrayList<Filter>();
 		if (scoop.getReportDate() != null) {
 			// TODO: Need to create date filters for Condition, Procedure, etc. 

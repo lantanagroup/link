@@ -12,6 +12,9 @@ import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
+
 import ca.uhn.fhir.context.FhirContext;
 
 public class PatientData {
@@ -30,7 +33,7 @@ public class PatientData {
 	protected Bundle procedures;
 	protected CodeableConcept primaryDx = null;
 	
-	public PatientData(Scoop scoop, Patient pat) {
+	public PatientData(EncounterScoop scoop, Patient pat) {
 		patient = pat;
 		dateCollected = new Date();
 		Map<Patient,Encounter> patEncMap = scoop.getPatientEncounterMap();

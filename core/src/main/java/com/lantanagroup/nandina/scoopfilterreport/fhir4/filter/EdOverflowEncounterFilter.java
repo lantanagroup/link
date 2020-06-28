@@ -1,4 +1,6 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 public final class EdOverflowEncounterFilter extends HospitalizedEncounterFilter {
 	

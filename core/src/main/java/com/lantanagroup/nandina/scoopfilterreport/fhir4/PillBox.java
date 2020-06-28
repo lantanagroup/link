@@ -15,6 +15,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.hl7.fhir.r4.model.ListResource;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -51,7 +54,7 @@ public class PillBox {
 			// same FHIR server for nandina and target for now
 			IGenericClient targetFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
 			IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient(fhirServerBase);
-			Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , encList);
+			EncounterScoop scoop = new EncounterScoop(targetFhirServer,nandinaFhirServer , encList);
 		//	Scoop scoop = new Scoop(targetFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
 			List<Filter> filters = new ArrayList<Filter>();
 			PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters);

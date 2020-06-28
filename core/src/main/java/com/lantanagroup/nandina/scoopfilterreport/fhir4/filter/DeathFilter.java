@@ -1,9 +1,11 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
 
 import java.util.Calendar;
 import java.util.Date;
 
 import org.hl7.fhir.r4.model.Patient;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 public final class DeathFilter extends Filter {
 	
@@ -18,7 +20,7 @@ public final class DeathFilter extends Filter {
 	public boolean runFilter(PatientData pd) {
 		boolean dead = false;
 
-		Patient p = (Patient) pd.patient;
+		Patient p = (Patient) pd.getPatient();
 		logger.debug("Checking if " + p.getId() + " died");
 		if (p.hasDeceasedDateTimeType()) {
 			Calendar deadDateCal = p.getDeceasedDateTimeType().toCalendar();

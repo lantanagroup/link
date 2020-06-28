@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -8,6 +8,8 @@ import java.util.Set;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Period;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 public final class EncounterDateFilter extends Filter {
 	
@@ -38,7 +40,7 @@ public final class EncounterDateFilter extends Filter {
 
 	private boolean hasEncounterDuringDate(PatientData pd) {
 		boolean b = false;
-		for (IBaseResource res : bundleToSet(pd.encounters)) {
+		for (IBaseResource res : bundleToSet(pd.getEncounters())) {
 			Encounter enc = (Encounter)res;
 			Period p = enc.getPeriod();
 			Date start = p.getStart();

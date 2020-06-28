@@ -1,13 +1,18 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.report;
 
 import java.util.List;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.CovidFilter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.HospitalizedEncounterFilter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
 
 public class HospitalizedReport extends Report {
 
 	/*
 	 *  Create this passing in an EncounterDateFilter for the date on which you are interested. 
 	 */
-	public HospitalizedReport(Scoop scoop, List<Filter> filters) {
+	public HospitalizedReport(EncounterScoop scoop, List<Filter> filters) {
 		super(scoop, addFilters(filters));
 	}
 	

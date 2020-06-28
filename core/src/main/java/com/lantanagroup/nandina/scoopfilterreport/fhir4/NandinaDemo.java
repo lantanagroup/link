@@ -4,6 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.filter.Filter;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.report.HospitalizedReport;
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop.EncounterScoop;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
@@ -18,7 +22,7 @@ public class NandinaDemo {
 			IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient("http://hapi.fhir.org/baseR4");
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			// The Scoop will look on the nandinaFhirServer for a NandinaEncounterList where List.date is May 4, 2020, then start pulling Encounter data from the EHR with the encounter ids in the List
-			Scoop scoop = new Scoop(ehrFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
+			EncounterScoop scoop = new EncounterScoop(ehrFhirServer,nandinaFhirServer , sdf.parse("2020-05-04"));
 			// You can add additional filters to pass to the report. For example, try creating an EncounterDateFilter for a different day and watch the count change. 
 			List<Filter> filters = new ArrayList<Filter>();
 			HospitalizedReport hr = new HospitalizedReport(scoop, filters);

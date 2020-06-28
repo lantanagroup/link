@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.filter;
 
 import java.util.Set;
 
@@ -6,6 +6,8 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Observation;
+
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 public final class CovidFilter extends Filter {
 	
@@ -34,7 +36,7 @@ public final class CovidFilter extends Filter {
 
 	private boolean hasCovidLabTest(PatientData pd, Set<String> codeSet) {
 		boolean b = false;
-		for (IBaseResource res : bundleToSet(pd.labResults)) {
+		for (IBaseResource res : bundleToSet(pd.getLabResults())) {
 			Observation c = (Observation)res;
 			CodeableConcept cc = c.getCode();
 			b = codeInSet(cc,codeSet);
@@ -49,7 +51,7 @@ public final class CovidFilter extends Filter {
 
 	private boolean hasCovidLabResult(PatientData pd, Set<String> codeSet) {
 		boolean b = false;
-		for (IBaseResource res : bundleToSet(pd.labResults)) {
+		for (IBaseResource res : bundleToSet(pd.getLabResults())) {
 			Observation c = (Observation)res;
 			CodeableConcept cc = c.getValueCodeableConcept();
 			b = codeInSet(cc,codeSet);
@@ -64,14 +66,14 @@ public final class CovidFilter extends Filter {
 
 	private boolean hasCovidCondition(PatientData pd, Set<String> codeSet) {
 		boolean b = false;
-		for (IBaseResource res : bundleToSet(pd.conditions)) {
+		for (IBaseResource res : bundleToSet(pd.getConditions())) {
 			Condition c = (Condition)res;
 			CodeableConcept cc = c.getCode();
 			b = codeInSet(cc,codeSet);
 			if (b) {
 			//	logger.info("Patient has covid: " + pd.patient.getId());
 			//	logger.info(" - " + cc.getCodingFirstRep().getCode());
-				pd.primaryDx = cc;
+				pd.setPrimaryDx(cc);
 				break;
 			}
 		}

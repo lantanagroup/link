@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.scoopfilterreport.fhir4;
+package com.lantanagroup.nandina.scoopfilterreport.fhir4.scoop;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -27,35 +27,34 @@ import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.lantanagroup.nandina.scoopfilterreport.fhir4.PatientData;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
-public class Scoop {
+public class EncounterScoop extends Scoop {
 
-	protected static final Logger logger = LoggerFactory.getLogger(Scoop.class);
+	protected static final Logger logger = LoggerFactory.getLogger(EncounterScoop.class);
 	protected IParser xmlParser;
 	protected IGenericClient targetFhirServer;
 	protected IGenericClient nandinaFhirServer;
 	protected HashMap<String,Encounter> encounterMap = new HashMap<String,Encounter>(); 
 	protected Map<String,Patient> patientMap = new HashMap<String,Patient>(); 
 	protected Map<Patient,Encounter> patientEncounterMap = new HashMap<Patient,Encounter>();
-	protected List<PatientData> patientData;
 	protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");	
 	protected IValidationSupport validationSupport;
 	protected FHIRPathEngine fpe;
-	protected Date reportDate = null;
 	
 
 
-	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
+	public EncounterScoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, ListResource encList) {
 		this.targetFhirServer = targetFhirServer;
 		this.nandinaFhirServer = nandinaFhirServer;
 		init(encList);
 	}
 	
-	public Scoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer,  Date reportDate) {
+	public EncounterScoop (IGenericClient targetFhirServer, IGenericClient nandinaFhirServer,  Date reportDate) {
 		this.targetFhirServer = targetFhirServer;
 		this.nandinaFhirServer = nandinaFhirServer;
 		ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
@@ -196,14 +195,7 @@ public class Scoop {
 		}
 		return identifiers;
 	}
-
-	public List<PatientData> getPatientData() {
-		return patientData;
-	}
-
-	public Date getReportDate() {
-		return reportDate;
-	}
+	
 
 	
 
