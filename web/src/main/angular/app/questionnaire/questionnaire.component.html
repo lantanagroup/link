@@ -56,6 +56,22 @@
     <table class="table table-striped">
         <tbody>
         <tr>
+            <td><input type="text" class="form-control" /></td>
+            <td><strong>PREVIOUS DAY’S ADMISSIONS WITH CONFIRMED COVID-19:</strong> New patients admitted to an inpatient bed who had confirmed COVID-19 at the time of admission</td>
+        </tr>
+        <tr>
+            <td><input type="text" class="form-control" /></td>
+            <td><strong>PREVIOUS DAY’S ADMISSIONS WITH SUSPECTED COVID-19:</strong> New patients admitted to an inpatient bed who had suspected COVID-19 at the time of admission</td>
+        </tr>
+        <tr>
+            <td><input type="text" class="form-control" /></td>
+            <td><strong>PREVIOUS DAY’SNEW HOSPITAL ONSET:</strong> Current inpatients hospitalized for a condition other than COVID-19 with onset of suspected or confirmed COVID-19 on the previous dayand the previous day is fourteen or more dayssince admission</td>
+        </tr>
+        <tr>
+            <td><input type="text" class="form-control" /></td>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of Previous Day’s New Hospital Onset with Confirmed COVID-19 (subset)</td>
+        </tr>
+        <tr>
             <td><input type="number" class="form-control" [(ngModel)]="response.hospitalized" [class.is-invalid]="!response.hasOwnProperty('hospitalized')" /></td>
             <td><strong>HOSPITALIZED:</strong> Patients currently hospitalized in an inpatient bed who have suspected or confirmed COVID-19</td>
         </tr>
@@ -76,8 +92,12 @@
             <td><strong>ED/OVERFLOW and VENTILATED:</strong> Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="response.deaths" [class.is-invalid]="!response.hasOwnProperty('deaths')" /></td>
-            <td><strong>DEATHS:</strong> Patients with suspected or confirmed COVID-19 who died in the hospital, ED, or any overflow location on the date for which you are reporting</td>
+            <td><input type="number" class="form-control" /></td>
+            <td><strong>PREVIOUS DAY’S DEATHS:</strong> Patients with suspected or confirmed COVID-19 who died in the hospital, ED, or any overflow location on the previous calendar day</td>
+        </tr>
+        <tr>
+            <td><input type="number" class="form-control" /></td>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of Previous Day’s Deaths with Confirmed COVID-19 (subset)</td>
         </tr>
         </tbody>
     </table>
