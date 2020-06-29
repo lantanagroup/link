@@ -6,6 +6,7 @@ import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.TransformHelper;
 import com.lantanagroup.nandina.model.QuestionnaireResponseSimple;
+import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.QueryFactory;
 import org.apache.commons.io.IOUtils;
@@ -44,13 +45,21 @@ public class ReportController extends BaseController {
    * @param overflowLocations
    * @return
    */
-  private Integer executeQueryCount(String className, Map<String, String> criteria, IGenericClient fhirClient, Authentication authentication) {
+  private Integer executeQueryCount(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
     if (className == null || className.isEmpty()) return null;
 
     try {
-      IQueryCountExecutor executor = (IQueryCountExecutor) QueryFactory.newInstance(className, jsonProperties, fhirClient, criteria);
-      FhirHelper.recordAuditEvent(fhirClient, authentication, className, "ReportController/executeQueryCount()",
-              "Generate Report: " + criteria, "Generate Report", "Successful Report Generated");
+      IQueryCountExecutor executor = QueryFactory.newQueryCountInstance(className, jsonProperties, fhirClient, criteria, contextData);
+
+      FhirHelper.recordAuditEvent(
+              fhirClient,
+              authentication,
+              className,
+              "ReportController/executeQueryCount()",
+              "Generate Report: " + criteria,
+              "Generate Report",
+              "Successful Report Generated");
+
       return executor.execute();
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for query named " + className, ex);
@@ -59,6 +68,19 @@ public class ReportController extends BaseController {
     }
 
     return null;
+  }
+
+  private void executePrepareQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
+    if (className == null || className.isEmpty()) return;
+
+    try {
+      IPrepareQuery executor = QueryFactory.newPrepareQueryInstance(className, jsonProperties, fhirClient, criteria, contextData);
+      executor.execute();
+    } catch (ClassNotFoundException ex) {
+      logger.error("Could not find class for prepare-query named " + className, ex);
+    } catch (Exception ex) {
+      logger.error("Could not execute query class for prepare-query " + className, ex);
+    }
   }
 
   private Map<String, String> getCriteria(HttpServletRequest request) {
@@ -93,43 +115,50 @@ public class ReportController extends BaseController {
       response.setSummaryCensusId(jsonProperties.getField().get(JsonProperties.DEFAULT).get(JsonProperties.SUMMARY_CENSUS_ID));
     }
 
-    Integer hospitalizedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED), criteria, fhirQueryClient, authentication);
+    HashMap<String, Object> contextData = new HashMap<>();
+    contextData.put("response", response);
+
+    // Execute the prepare-query plugin if configured
+    this.executePrepareQuery(jsonProperties.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
+
+    // Execute each of the queries
+    Integer hospitalizedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED), criteria, contextData, fhirQueryClient, authentication);
     response.setHospitalized(hospitalizedTotal);
 
-    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED_AND_VENTILATED), criteria, fhirQueryClient, authentication);
+    Integer hospitalizedAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED_AND_VENTILATED), criteria, contextData, fhirQueryClient, authentication);
     response.setHospitalizedAndVentilated(hospitalizedAndVentilatedTotal);
 
-    Integer hospitalOnsetTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ONSET), criteria, fhirQueryClient, authentication);
+    Integer hospitalOnsetTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ONSET), criteria, contextData, fhirQueryClient, authentication);
     response.setHospitalOnset(hospitalOnsetTotal);
 
-    Integer edOverflowTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW), criteria, fhirQueryClient, authentication);
+    Integer edOverflowTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW), criteria, contextData, fhirQueryClient, authentication);
     response.setEdOverflow(edOverflowTotal);
 
-    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW_AND_VENTILATED), criteria, fhirQueryClient, authentication);
+    Integer edOverflowAndVentilatedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.ED_OVERFLOW_AND_VENTILATED), criteria, contextData, fhirQueryClient, authentication);
     response.setEdOverflowAndVentilated(edOverflowAndVentilatedTotal);
 
-    Integer deathsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.DEATHS), criteria, fhirQueryClient, authentication);
+    Integer deathsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.DEATHS), criteria, contextData, fhirQueryClient, authentication);
     response.setDeaths(deathsTotal);
 
-    Integer hospitalBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_BEDS), criteria, fhirQueryClient, authentication);
+    Integer hospitalBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_BEDS), criteria, contextData, fhirQueryClient, authentication);
     response.setAllHospitalBeds(hospitalBedsTotal);
 
-    Integer hospitalInpatientBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BEDS), criteria, fhirQueryClient, authentication);
+    Integer hospitalInpatientBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BEDS), criteria, contextData, fhirQueryClient, authentication);
     response.setHospitalInpatientBeds(hospitalInpatientBedsTotal);
 
-    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BED_OCC), criteria, fhirQueryClient, authentication);
+    Integer hospitalInpatientBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_INPATIENT_BED_OCC), criteria, contextData, fhirQueryClient, authentication);
     response.setHospitalInpatientBedOccupancy(hospitalInpatientBedOccTotal);
 
-    Integer hospitalIcuBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BEDS), criteria, fhirQueryClient, authentication);
+    Integer hospitalIcuBedsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BEDS), criteria, contextData, fhirQueryClient, authentication);
     response.setIcuBeds(hospitalIcuBedsTotal);
 
-    Integer hospitalIcuBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BED_OCC), criteria, fhirQueryClient, authentication);
+    Integer hospitalIcuBedOccTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.HOSPITAL_ICU_BED_OCC), criteria, contextData, fhirQueryClient, authentication);
     response.setIcuBedOccupancy(hospitalIcuBedOccTotal);
 
-    Integer mechanicalVentilatorsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS), criteria, fhirQueryClient, authentication);
+    Integer mechanicalVentilatorsTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS), criteria, contextData, fhirQueryClient, authentication);
     response.setMechanicalVentilators(mechanicalVentilatorsTotal);
 
-    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS_USED), criteria, fhirQueryClient, authentication);
+    Integer mechanicalVentilatorsUsedTotal = this.executeQueryCount(jsonProperties.getQuery().get(JsonProperties.MECHANICAL_VENTILATORS_USED), criteria, contextData, fhirQueryClient, authentication);
     response.setMechanicalVentilatorsInUse(mechanicalVentilatorsUsedTotal);
     return response;
   }

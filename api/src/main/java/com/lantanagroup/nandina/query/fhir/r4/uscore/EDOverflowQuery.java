@@ -1,7 +1,5 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.hl7.fhir.r4.model.Resource;
@@ -10,14 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecutor {
-  private JsonProperties jsonProperties;
-
-  public EDOverflowQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-    super(jsonProperties, fhirClient, criteria);
-    this.jsonProperties = jsonProperties;
-    // TODO Auto-generated constructor stub
-  }
-
   @Override
   public Integer execute() {
     if (!this.criteria.containsKey("reportDate") && !this.criteria.containsKey("overflowLocations")) {
@@ -42,7 +32,7 @@ public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecuto
       String reportDate = this.criteria.get("reportDate");
       String overflowLocations = this.criteria.get("overflowLocations");
       String url = String.format("Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:location=%s:date=ge%s,le%s",
-              this.jsonProperties.getTerminologyCovidCodes(),
+              this.getProperties().getTerminologyCovidCodes(),
               overflowLocations,
               reportDate,
               reportDate);
@@ -50,6 +40,9 @@ public class EDOverflowQuery extends AbstractQuery implements IQueryCountExecuto
       // Encounter.date search parameter not working with current release of HAPI, so
       // weeding out encounters outside the reportDate manually
       HashMap<String, Resource> finalPatientMap = filterPatientsByEncounterDate(reportDate, patientMap);
+
+      this.addContextData("edOverflow", this);
+
       return finalPatientMap;
     } catch (Exception e) {
       logger.error(e.getMessage(), e);

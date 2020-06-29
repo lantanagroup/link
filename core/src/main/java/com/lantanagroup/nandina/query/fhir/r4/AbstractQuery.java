@@ -7,7 +7,6 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ import java.util.Set;
 
 import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.IQueryCountExecutor;
-import com.lantanagroup.nandina.query.QueryFactory;
 
 import org.hl7.fhir.r4.model.BaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -40,41 +38,37 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ResourceUtils;
 
 public abstract class AbstractQuery implements IQueryCountExecutor {
-	private static final String NO_DEVICE_CODES_ERROR = "Device-type codes have not been specified in configuration.";
-	private static final String NO_COVID_CODES_ERROR = "Covid codes have not been specified in configuration.";
 	protected static final Logger logger = LoggerFactory.getLogger(AbstractQuery.class);
-	protected static HashMap<String, AbstractQuery> cachedQueries = new HashMap<String, AbstractQuery>();
 
-	public final Calendar dateCreated = Calendar.getInstance();
-	protected JsonProperties jsonProperties;
+	protected JsonProperties properties;
 	protected IGenericClient fhirClient;
-	protected HashMap<String, String> criteria;
+	protected Map<String, String> criteria;
+	protected Map<String, Object> contextData;
 
-	// TODO: Change to allow caching by date
+	public JsonProperties getProperties() { return this.properties; }
+	public void setProperties(JsonProperties properties) { this.properties = properties; }
+
+	public IGenericClient getFhirClient() { return this.fhirClient; }
+	public void setFhirClient(IGenericClient fhirClient) { this.fhirClient = fhirClient; }
+
+	public Map<String, String> getCriteria() { return this.criteria; }
+	public void setCriteria(Map<String, String> criteria) { this.criteria = criteria; }
+
+	public Map<String, Object> getContextData() { return this.contextData; }
+	public void setContextData(Map<String, Object> contextData) { this.contextData = contextData; }
+
+	public Object getContextData(String key) {
+		return this.getContextData().get(key);
+	}
+
+	public void addContextData(String key, Object data) {
+		this.getContextData().put(key, data);
+	}
+
 	// First string is a cache key, representing the criteria for the report,
 	// including report date and locations
 	// Second string represents the ID of the Resource
 	// Resource represents the actual resource data for the ID
-
-	public AbstractQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-		logger.debug("Instantiating class: " + this.getClass());
-
-		this.jsonProperties = jsonProperties;
-		this.fhirClient = fhirClient;
-		this.criteria = criteria;
-
-		if (Helper.isNullOrEmpty(jsonProperties.getTerminologyCovidCodes())) {
-			this.logger.error(NO_COVID_CODES_ERROR);
-			throw new RuntimeException(NO_COVID_CODES_ERROR);
-		}
-
-		if (Helper.isNullOrEmpty(jsonProperties.getTerminologyVentilatorCodes())) {
-			this.logger.error(NO_DEVICE_CODES_ERROR);
-			throw new RuntimeException(NO_DEVICE_CODES_ERROR);
-		}
-
-		cachedQueries.put(this.getClass().getName(), this);
-	}
 
 	protected Map<String, Resource> search(String query) {
 		Bundle b = rawSearch(query);
@@ -136,21 +130,11 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 		return resMap;
 	}
 
-	protected AbstractQuery getCachedQuery(String queryClass)
-			throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		if (cachedQueries.containsKey(queryClass)) {
-			return cachedQueries.get(queryClass);
-		} else {
-			return QueryFactory.newInstance(queryClass, this.jsonProperties, this.fhirClient, this.criteria);
-		}
-	}
-
 	protected Map<String, Resource> getPatientConditions(Patient p) {
 		// TODO: Move verification-status codes to a value set and load thru config
 		String condQuery = String.format(
 				"Condition?verification-status=unconfirmed,provisional,differential,confirmed&code=%s&patient=Patient/%s",
-				jsonProperties.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
+				properties.getTerminologyCovidCodes(), p.getIdElement().getIdPart());
 		Map<String, Resource> condMap = this.search(condQuery);
 		return condMap;
 	}
@@ -213,7 +197,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
 			String devQuery = String.format("Device?type=%s&patient=Patient/%s",
-					jsonProperties.getTerminologyVentilatorCodes(), patId);
+					properties.getTerminologyVentilatorCodes(), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));
@@ -228,7 +212,7 @@ public abstract class AbstractQuery implements IQueryCountExecutor {
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
 		for (String patId : patIds) {
 			String devQuery = String.format("Procedure?code=%s&patient=Patient/%s",
-					jsonProperties.getTerminologyIntubationProcedureCodes(), patId);
+					properties.getTerminologyIntubationProcedureCodes(), patId);
 			Map<String, Resource> devMap = this.search(devQuery);
 			if (devMap != null && devMap.size() > 0) {
 				finalPatientMap.put(patId, hqData.get(patId));

@@ -1,25 +1,20 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
-import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.hl7.fhir.r4.model.Resource;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecutor {
-  public HospitalizedQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-    super(jsonProperties, fhirClient, criteria);
-    // TODO Auto-generated constructor stub
-  }
-
+public class HospitalizedQuery extends AbstractQuery {
   @Override
   public Integer execute() {
     if (!this.criteria.containsKey("reportDate")) return null;
 
     Map<String, Resource> resMap = this.getData();
+
+    this.addContextData("hospitalized", this);
+
     return this.getCount(resMap);
   }
 
@@ -36,7 +31,7 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
       String reportDate = this.criteria.get("reportDate");
       String url = String.format(
               "Patient?_has:Condition:patient:code=%s&_has:Encounter:patient:class=IMP,ACUTE,NONAC,OBSENC",
-              jsonProperties.getTerminologyCovidCodes());
+              properties.getTerminologyCovidCodes());
 
       Map<String, Resource> patientMap = this.search(url);
       // Encounter.date search parameter not working with current release of HAPI, so
@@ -52,6 +47,4 @@ public class HospitalizedQuery extends AbstractQuery implements IQueryCountExecu
       throw new RuntimeException(e);
     }
   }
-
-
 }

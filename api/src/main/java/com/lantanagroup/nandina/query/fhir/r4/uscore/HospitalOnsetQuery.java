@@ -1,20 +1,12 @@
 package com.lantanagroup.nandina.query.fhir.r4.uscore;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.JsonProperties;
-import com.lantanagroup.nandina.query.IQueryCountExecutor;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.hl7.fhir.r4.model.*;
 
 import java.util.*;
 
-public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExecutor {
-
-  public HospitalOnsetQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-    super(jsonProperties, fhirClient, criteria);
-    // TODO Auto-generated constructor stub
-  }
-
+public class HospitalOnsetQuery extends AbstractQuery {
   @Override
   public Integer execute() {
     if (!this.criteria.containsKey("reportDate") && !this.criteria.containsKey("overflowLocations")) {
@@ -31,8 +23,7 @@ public class HospitalOnsetQuery extends AbstractQuery implements IQueryCountExec
       String reportDate = this.criteria.get("reportDate");
       String overflowLocations = this.criteria.get("overflowLocations");
 
-      String hClass = jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED);
-      HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(hClass);
+      HospitalizedQuery hq = (HospitalizedQuery) this.getContextData("hospitalized");
       Map<String, Resource> hqData = hq.getData();
       HashMap<String, Resource> finalPatientMap = getHospitalOnsetPatients(reportDate, overflowLocations, hqData);
       return finalPatientMap;

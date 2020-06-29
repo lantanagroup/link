@@ -1,13 +1,11 @@
 package com.lantanagroup.nandina.query.fhir.r4.saner;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.Helper;
 import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.query.fhir.r4.AbstractQuery;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractSanerQuery extends AbstractQuery {
@@ -15,11 +13,6 @@ public abstract class AbstractSanerQuery extends AbstractQuery {
   public static final String MEASURE_GROUP_SYSTEM = "http://hl7.org/fhir/us/saner/CodeSystem/MeasureGroupSystem";
   public static final String MEASURE_POPULATION_SYSTEM = "http://hl7.org/fhir/us/saner/CodeSystem/MeasurePopulationSystem";
   public static final String MEASURE_URL = "http://hl7.org/fhir/us/saner/Measure/CDCPatientImpactAndHospitalCapacity";
-
-  public AbstractSanerQuery(JsonProperties jsonProperties, IGenericClient fhirClient, HashMap<String, String> criteria) {
-    super(jsonProperties, fhirClient, criteria);
-    // TODO Auto-generated constructor stub
-  }
 
   private static boolean isPopulationMatch(MeasureReport.MeasureReportGroupPopulationComponent population, String populationCode) {
     if (population.getCode() != null && population.getCode().getCoding() != null && population.getCode().getCoding().size() > 0) {
@@ -66,7 +59,7 @@ public abstract class AbstractSanerQuery extends AbstractQuery {
       return this.search(url);
     } else {
       try {
-        HospitalizedQuery hq = (HospitalizedQuery) this.getCachedQuery(jsonProperties.getQuery().get(JsonProperties.HOSPITALIZED));
+        HospitalizedQuery hq = (HospitalizedQuery) this.getContextData("hospitalized");
         return hq.getData();
       } catch (Exception e) {
         logger.error(e.getMessage(), e);

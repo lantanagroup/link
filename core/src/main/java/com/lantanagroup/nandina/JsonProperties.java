@@ -50,6 +50,7 @@ public class JsonProperties {
     private String fhirServerPassword;
     private String fhirServerBearerToken;
     private String authJwksUrl;
+    private String prepareQuery;
     private Map<String, String> query;
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
@@ -200,5 +201,13 @@ public class JsonProperties {
             this.terminologyIntubationProcedureCodes = loadValueSet(this.getTerminology().get(INTUBATION_PROCEDURE_CODES_VALUESET));
         }
         return this.terminologyIntubationProcedureCodes;
+    }
+
+    public String getPrepareQuery() {
+        return prepareQuery;
+    }
+
+    public void setPrepareQuery(String prepareQuery) {
+        this.prepareQuery = prepareQuery;
     }
 }

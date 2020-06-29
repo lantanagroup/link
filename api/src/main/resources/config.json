@@ -7,6 +7,7 @@
   "fhirServerPassword": "",
   "fhirServerBearerToken": "",
   "authJwksUrl": "",
+  "prepareQuery": "",
   "query": {
     "hospitalized": "com.lantanagroup.nandina.query.fhir.r4.uscore.HospitalizedQuery",
     "hospitalizedAndVentilated": "com.lantanagroup.nandina.query.fhir.r4.uscore.HospitalizedAndVentilatedQuery",
