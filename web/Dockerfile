@@ -2,6 +2,7 @@
 FROM node:12.7-alpine AS build
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
+RUN apk add python alpine-sdk
 RUN npm ci
 RUN npm install -g @angular/cli
 COPY . .
