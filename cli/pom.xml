@@ -12,6 +12,10 @@
     <artifactId>nandina-cli</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <start-class>com.lantanagroup.nandina.PillBox</start-class>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.lantanagroup.nandina</groupId>
@@ -22,7 +26,7 @@
 
         <dependency>
             <groupId>com.lantanagroup.nandina</groupId>
-            <artifactId>nandina-api</artifactId>
+            <artifactId>nandina-query</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>

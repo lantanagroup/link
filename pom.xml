@@ -20,5 +20,6 @@
         <module>core</module>
         <module>api</module>
         <module>cli</module>
+        <module>query</module>
     </modules>
 </project>

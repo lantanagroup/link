@@ -11,3 +11,5 @@ web/src/main/angular/assets/local.json
 api/target/
 web/dist/
 api/src/main/resources/config-*.json
+query/target/
+cli/target/
