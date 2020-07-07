@@ -1,6 +1,8 @@
 package com.lantanagroup.nandina;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class JsonPropertySourceFactory implements PropertySourceFactory {
+    private static final Logger logger = LoggerFactory.getLogger(JsonPropertySourceFactory.class);
 
     @Override
     public PropertySource<?> createPropertySource(String name, EncodedResource resource) throws IOException {
@@ -20,9 +23,11 @@ public class JsonPropertySourceFactory implements PropertySourceFactory {
 
         Map readValue = null;
         if (resourceConfig != null) {
+            logger.info("Loading config from resource: " + resourceConfig);
             EncodedResource envResource = new EncodedResource(new ClassPathResource(resourceConfig));
             readValue = new ObjectMapper().readValue(envResource.getInputStream(), Map.class);
         } else if (null != fileConfig) {
+            logger.info("Loading config from file: " + fileConfig);
             EncodedResource envResource = new EncodedResource(new FileSystemResource(fileConfig));
             readValue = new ObjectMapper().readValue(envResource.getInputStream(), Map.class);
         } else {
