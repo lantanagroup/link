@@ -32,9 +32,7 @@ public class QueryFactory {
 		return prepareQuery;
 	}
 	
-	public static IQueryCountExecutor newQueryCountInstance(String className, JsonProperties jsonProperties, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		logger.trace("Creating new query object: " + className);
-
+	public static void initializeQueryCount(IQueryCountExecutor instance, JsonProperties jsonProperties, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws ClassNotFoundException, NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		if (Helper.isNullOrEmpty(jsonProperties.getTerminologyCovidCodes())) {
 			logger.error(NO_COVID_CODES_ERROR);
 			throw new RuntimeException(NO_COVID_CODES_ERROR);
@@ -45,16 +43,27 @@ public class QueryFactory {
 			throw new RuntimeException(NO_DEVICE_CODES_ERROR);
 		}
 
-		IQueryCountExecutor query;
-		Class<?> queryClass = Class.forName(className);
-		Constructor<?> queryConstructor = queryClass.getConstructor();
-		query = (BaseQuery) queryConstructor.newInstance();
+		instance.setProperties(jsonProperties);
+		instance.setFhirClient(fhirClient);
+		instance.setCriteria(criteria);
+		instance.setContextData(contextData);
+	}
 
-		query.setProperties(jsonProperties);
-		query.setFhirClient(fhirClient);
-		query.setCriteria(criteria);
-		query.setContextData(contextData);
+	public static Object executeQuery(String className, JsonProperties jsonProperties, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+		Class theClass = Class.forName(className);
 
-		return query;
+		if (theClass == null) return null;
+
+		Object instance = theClass.getConstructor().newInstance();
+
+		if (instance instanceof IQueryCountExecutor) {
+			IQueryCountExecutor queryCountExecutor = (IQueryCountExecutor) instance;
+			initializeQueryCount(queryCountExecutor, jsonProperties, fhirClient, criteria, contextData);
+			return queryCountExecutor.execute();
+		}
+
+		// Add additional "else if" interface checks for other types of questions
+
+		return null;
 	}
 }

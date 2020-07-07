@@ -1,5 +1,4 @@
 import {Component, OnInit} from '@angular/core';
-import {QuestionnaireResponseSimple} from '../model/questionnaire-response-simple';
 import {LocationResponse} from '../model/location-response';
 import {formatDate, getFhirNow} from '../helper';
 import {HttpResponse} from '@angular/common/http';
@@ -9,6 +8,7 @@ import {ToastService} from '../toast.service';
 import {SelectLocationsComponent} from '../select-locations/select-locations.component';
 import {ReportService} from '../services/report.service';
 import saveAs from 'save-as';
+import {QueryReport} from '../model/query-report';
 
 @Component({
   selector: 'app-questionnaire',
@@ -17,17 +17,30 @@ import saveAs from 'save-as';
 })
 export class QuestionnaireComponent implements OnInit {
   loading = false;
-  response: QuestionnaireResponseSimple = new QuestionnaireResponseSimple();
   overflowLocations: LocationResponse[] = [];
-  rememberFields = '%remember.fields%';
-  user: any;
   today = getFhirNow();
+  report: QueryReport = new QueryReport(
+      'facilityId',
+      'summaryCensusId',
+      'hospitalized',
+      'hospitalizedAndVentilated',
+      'hospitalOnset',
+      'edOverflow',
+      'edOverflowAndVentilated',
+      'allHospitalBeds',
+      'hospitalInpatientBeds',
+      'hospitalInpatientBedOccupancy',
+      'icuBeds',
+      'icuBedOccupancy',
+      'mechanicalVentilators',
+      'mechanicalVentilatorsInUse');
 
   constructor(
       private modal: NgbModal,
       private cookieService: CookieService,
       public toastService: ToastService,
       public reportService: ReportService) {
+
     if (this.cookieService.get('overflowLocations')) {
       try {
         this.overflowLocations = JSON.parse(this.cookieService.get('overflowLocations'));
@@ -46,7 +59,7 @@ export class QuestionnaireComponent implements OnInit {
   }
 
   onDateSelected() {
-    this.today = formatDate(this.response.date);
+    this.today = formatDate(this.report.date);
   }
 
   private getFileName(contentDisposition: string) {
@@ -59,20 +72,9 @@ export class QuestionnaireComponent implements OnInit {
 
   async download() {
     let convertResponse: HttpResponse<string>;
-
-    // loop through the remembered fields from application.properties file and save the input values in cookies
-    const rememberFieldsArray = this.rememberFields.split(',');
-    rememberFieldsArray.forEach(field => {
-      if (this.response[field]) {
-        this.cookieService.set(field, this.response[field]);
-      } else if (this.cookieService.get(field)) {
-        this.cookieService.delete(field);
-      }
-    });
-
     try {
-      this.response.date = formatDate(this.response.date);
-      convertResponse = await this.reportService.convert(this.response);
+      this.report.date = formatDate(this.report.date);
+      convertResponse = await this.reportService.convert(this.report);
     } catch (ex) {
       this.toastService.showException('Error converting report', ex);
       return;
@@ -96,27 +98,25 @@ export class QuestionnaireComponent implements OnInit {
     try {
       this.loading = true;
 
+      if (!this.report.date) {
+        this.report.date = getFhirNow();
+      } else {
+        this.report.date = formatDate(this.report.date);
+      }
+
       try {
-        this.response = await this.reportService.generate(this.overflowLocations, this.response.date);
+        this.report = await this.reportService.generate(this.report, this.overflowLocations);
       } catch (ex) {
         this.toastService.showException('Error converting report', ex);
         return;
       }
 
-      const keys = Object.keys(this.response);
+      const keys = Object.keys(this.report);
       for (const key of keys) {
-        if (this.response[key] === null) {
-          delete this.response[key];
+        if (this.report[key] === null) {
+          delete this.report[key];
         }
       }
-
-      // loop through each of the remembered fields and set the value based on the value that is in the cookie
-      const rememberFieldsArray = this.rememberFields.split(',');
-      rememberFieldsArray.forEach(field => {
-        if (!this.response[field]) {
-          this.response[field] = this.cookieService.get(field);
-        }
-      });
 
       this.toastService.showInfo('Successfully ran queries!');
     } catch (ex) {
@@ -128,6 +128,6 @@ export class QuestionnaireComponent implements OnInit {
 
   async ngOnInit() {
     // initialize the response date to today by default.
-    this.response.date = getFhirNow();
+    this.report.date = getFhirNow();
   }
 }

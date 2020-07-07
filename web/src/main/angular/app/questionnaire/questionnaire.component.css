@@ -1,0 +1,12 @@
+table tr td:first-child {
+    width: 150px;
+}
+
+.card {
+    margin-bottom: 25px;
+}
+
+.card-header > span {
+    font-weight: bold;
+    font-size: 20px;
+}
