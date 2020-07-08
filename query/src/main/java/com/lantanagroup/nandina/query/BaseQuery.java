@@ -145,8 +145,11 @@ public abstract class BaseQuery implements IQueryCountExecutor {
 		return encMap;
 	}
 
-	protected HashMap<String, Resource> filterPatientsByEncounterDate(String reportDate,
-			Map<String, Resource> patientMap) throws ParseException {
+	protected HashMap<String, Resource> filterPatientsByEncounterDate(String reportDate, Map<String, Resource> patientMap) throws ParseException {
+		if (patientMap == null) {
+			return new HashMap<>();
+		}
+
 		Set<String> keySet = patientMap.keySet();
 		Date rDate = Helper.parseFhirDate(reportDate);
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();

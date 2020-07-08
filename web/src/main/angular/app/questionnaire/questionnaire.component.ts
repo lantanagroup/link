@@ -22,11 +22,17 @@ export class QuestionnaireComponent implements OnInit {
   report: QueryReport = new QueryReport(
       'facilityId',
       'summaryCensusId',
+      'previousDayCovidAdmitted',
+      'previousDaySuspectedCovidAdmitted',
+      'previousDayHospitalOnset',
+      'previousDayHospitalOnsetCovid',
       'hospitalized',
       'hospitalizedAndVentilated',
       'hospitalOnset',
       'edOverflow',
       'edOverflowAndVentilated',
+      'previousDayDeaths',
+      'previousDayDeathsCovid',
       'allHospitalBeds',
       'hospitalInpatientBeds',
       'hospitalInpatientBedOccupancy',
@@ -105,7 +111,8 @@ export class QuestionnaireComponent implements OnInit {
       }
 
       try {
-        this.report = await this.reportService.generate(this.report, this.overflowLocations);
+        const updatedReport = await this.reportService.generate(this.report, this.overflowLocations);
+        Object.assign(this.report, updatedReport);
       } catch (ex) {
         this.toastService.showException('Error converting report', ex);
         return;

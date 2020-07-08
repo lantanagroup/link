@@ -10,3 +10,7 @@ table tr td:first-child {
     font-weight: bold;
     font-size: 20px;
 }
+
+.sub-question {
+    margin-left: 50px;
+}

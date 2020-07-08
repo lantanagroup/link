@@ -8,4 +8,8 @@ export class QueryReport {
   constructor(... questionIds: string[]) {
     this.questions = questionIds || [];
   }
+
+  hasAnswer(questionId) {
+    return this.answers.hasOwnProperty(questionId) && this.answers[questionId] !== null;
+  }
 }
