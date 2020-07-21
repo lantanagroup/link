@@ -27,6 +27,7 @@ public class JsonProperties {
     public static final String SUMMARY_CENSUS_ID = "summaryCensusId";
     public static final String HOSPITALIZED = "hospitalized";
     public static final String HOSPITALIZED_AND_VENTILATED = "hospitalizedAndVentilated";
+    public static final String PREVIOUS_HOSPITAL_ONSET = "previousHospitalOnset";
     public static final String HOSPITAL_ONSET = "hospitalOnset";
     public static final String ED_OVERFLOW = "edOverflow";
     public static final String ED_OVERFLOW_AND_VENTILATED = "edOverflowAndVentilated";

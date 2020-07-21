@@ -2,9 +2,9 @@ package com.lantanagroup.nandina;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.query.r4.cerner.filter.Filter;
-import com.lantanagroup.nandina.query.r4.cerner.report.HospitalizedReport;
-import com.lantanagroup.nandina.query.r4.cerner.scoop.EncounterScoop;
+import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
+import com.lantanagroup.nandina.query.fhir.r4.cerner.report.HospitalizedReport;
+import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

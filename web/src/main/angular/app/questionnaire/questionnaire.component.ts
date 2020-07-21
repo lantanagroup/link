@@ -24,6 +24,7 @@ export class QuestionnaireComponent implements OnInit {
       'summaryCensusId',
       'hospitalized',
       'hospitalizedAndVentilated',
+      'previousDayHospitalOnset',
       'hospitalOnset',
       'edOverflow',
       'edOverflowAndVentilated',

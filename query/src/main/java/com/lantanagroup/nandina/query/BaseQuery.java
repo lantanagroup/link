@@ -20,6 +20,7 @@ import java.util.Set;
 
 import com.lantanagroup.nandina.JsonProperties;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.r4.model.BaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Encounter;
@@ -145,8 +146,43 @@ public abstract class BaseQuery implements IQueryCountExecutor {
 		return encMap;
 	}
 
+	protected HashMap<String, Resource> filterPatientsByDate(String reportDate,
+			Map<String, Patient> patientMap) throws ParseException {
+		Set<String> keySet = patientMap.keySet();
+		Date rDate = Helper.parseFhirDate(reportDate);
+		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
+		for (String patientId : keySet) {
+			Map<String, Resource> encMap = this.getPatientEncounters((Patient) patientMap.get(patientId));
+			Set<String> encKeySet = encMap.keySet();
+			for (String encId : encKeySet) {
+				Encounter encounter = fhirClient.read().resource(Encounter.class).withId(encId).execute();
+				Date start = encounter.getPeriod().getStart();
+				if (start.before(rDate)) {
+					logger.debug("Encounter start before reportDate");
+					Date end = encounter.getPeriod().getEnd();
+					if (end == null) {
+						logger.debug("Encounter is ongoing");
+						finalPatientMap.put(patientId, patientMap.get(patientId));
+					} else if (end.after(rDate)) {
+						logger.debug("Encounter end after reportDate");
+						finalPatientMap.put(patientId, patientMap.get(patientId));
+						break;
+					} else {
+
+						logger.debug("Encounter " + encounter.getId() + " ended after report date. Encounter end="
+								+ Helper.getFhirDate(end));
+					}
+				} else {
+					logger.debug("Encounter " + encounter.getId() + " started after report date. Encounter start="
+							+ Helper.getFhirDate(start));
+				}
+			}
+		}
+		return finalPatientMap;
+	}
+
 	protected HashMap<String, Resource> filterPatientsByEncounterDate(String reportDate,
-			Map<String, Resource> patientMap) throws ParseException {
+																	  Map<String, Resource> patientMap) throws ParseException {
 		Set<String> keySet = patientMap.keySet();
 		Date rDate = Helper.parseFhirDate(reportDate);
 		HashMap<String, Resource> finalPatientMap = new HashMap<String, Resource>();
@@ -232,8 +268,7 @@ public abstract class BaseQuery implements IQueryCountExecutor {
 			logger.debug("Checking if " + patId + " died");
 			if (p.hasDeceasedDateTimeType()) {
 				Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
-				boolean sameDay = sameDay(deadDate, reportDate);
-				if (sameDay) {
+				if (DateUtils.isSameDay(deadDate.getTime(), reportDate.getTime())) {
 					finalPatientMap.put(patId, p);
 				}
 			}
