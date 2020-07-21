@@ -1,0 +1,154 @@
+<ValueSet xmlns="http://hl7.org/fhir">
+    <id value="2.16.840.1.113762.1.4.1146.1143"></id>
+    <meta>
+        <profile value="http://hl7.org/fhir/us/ecr/StructureDefinition/ersd-valueset"></profile>
+    </meta>
+    <extension url="http://hl7.org/fhir/StructureDefinition/valueset-author">
+        <valueContactDetail>
+            <name value="CSTE Author"></name>
+        </valueContactDetail>
+    </extension>
+    <extension url="http://hl7.org/fhir/StructureDefinition/valueset-steward">
+        <valueContactDetail>
+            <name value="CSTE Steward"></name>
+        </valueContactDetail>
+    </extension>
+    <url value="http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1143"></url>
+    <identifier>
+        <system value="urn:ietf:rfc:3986"></system>
+        <value value="urn:oid:2.16.840.1.113762.1.4.1146.1143"></value>
+    </identifier>
+    <name value="COVID_19OrganismorSubstanceinLabResults"></name>
+    <title value="COVID_19 (Organism or Substance in Lab Results)"></title>
+    <status value="active"></status>
+    <description value="COVID_19 (Organism or Substance in Lab Results)"></description>
+    <useContext>
+        <code>
+            <system value="http://terminology.hl7.org/CodeSystem/usage-context-type"></system>
+            <code value="focus"></code>
+        </code>
+        <valueCodeableConcept>
+            <coding>
+                <system value="http://snomed.info/sct"></system>
+                <code value="840539006"></code>
+            </coding>
+            <text value="Disease caused by severe acute respiratory syndrome coronavirus 2 (disorder)"></text>
+        </valueCodeableConcept>
+    </useContext>
+    <compose>
+        <include>
+            <system value="http://snomed.info/sct"></system>
+            <concept>
+                <code value="840536004"></code>
+                <display value="Antigen of severe acute respiratory syndrome coronavirus 2 (substance)"></display>
+            </concept>
+            <concept>
+                <code value="840533007"></code>
+                <display value="Severe acute respiratory syndrome coronavirus 2 (organism)"></display>
+            </concept>
+            <concept>
+                <code value="871562009"></code>
+                <display value="Detection of Severe acute respiratory syndrome coronavirus 2 (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871553007"></code>
+                <display value="Detection of Severe acute respiratory syndrome coronavirus 2 antigen (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871555000"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871556004"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in nasopharyngeal swab (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871557008"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in oropharyngeal swab (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871558003"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in sputum (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871559006"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in bronchoalveolar lavage fluid (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="871560001"></code>
+                <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 using polymerase chain reaction (observable entity)"></display>
+            </concept>
+            <concept>
+                <code value="1240411000000107"></code>
+                <display value="Ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 (substance)"></display>
+            </concept>
+            <concept>
+                <code value="1240581000000104"></code>
+                <display value="Severe acute respiratory syndrome coronavirus 2 detected (finding)"></display>
+            </concept>
+        </include>
+    </compose>
+    <expansion>
+        <timestamp value="2020-06-26T02:05:33-04:00"></timestamp>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="840536004"></code>
+            <display value="Antigen of severe acute respiratory syndrome coronavirus 2 (substance)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="840533007"></code>
+            <display value="Severe acute respiratory syndrome coronavirus 2 (organism)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871562009"></code>
+            <display value="Detection of Severe acute respiratory syndrome coronavirus 2 (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871553007"></code>
+            <display value="Detection of Severe acute respiratory syndrome coronavirus 2 antigen (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871555000"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871556004"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in nasopharyngeal swab (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871557008"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in oropharyngeal swab (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871558003"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in sputum (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871559006"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 in bronchoalveolar lavage fluid (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="871560001"></code>
+            <display value="Detection of ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 using polymerase chain reaction (observable entity)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="1240411000000107"></code>
+            <display value="Ribonucleic acid of Severe acute respiratory syndrome coronavirus 2 (substance)"></display>
+        </contains>
+        <contains>
+            <system value="http://snomed.info/sct"></system>
+            <code value="1240581000000104"></code>
+            <display value="Severe acute respiratory syndrome coronavirus 2 detected (finding)"></display>
+        </contains>
+    </expansion>
+</ValueSet>
