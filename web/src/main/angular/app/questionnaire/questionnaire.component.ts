@@ -34,7 +34,8 @@ export class QuestionnaireComponent implements OnInit {
       'icuBeds',
       'icuBedOccupancy',
       'mechanicalVentilators',
-      'mechanicalVentilatorsInUse');
+      'mechanicalVentilatorsInUse',
+      'deaths');
 
   constructor(
       private modal: NgbModal,

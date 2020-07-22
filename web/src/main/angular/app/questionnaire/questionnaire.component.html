@@ -92,7 +92,7 @@
             <td><strong>ED/OVERFLOW and VENTILATED:</strong> Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['deaths']" [class.is-invalid]="!report.answers.hasOwnProperty('deaths')" /></td>
             <td><strong>PREVIOUS DAY’S DEATHS:</strong> Patients with suspected or confirmed COVID-19 who died in the hospital, ED, or any overflow location on the previous calendar day</td>
         </tr>
         <tr>

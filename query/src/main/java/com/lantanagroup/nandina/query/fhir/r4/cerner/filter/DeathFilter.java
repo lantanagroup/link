@@ -1,6 +1,7 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.filter;
 
 import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
+import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.r4.model.Patient;
 
 import java.util.Calendar;
@@ -19,23 +20,14 @@ public final class DeathFilter extends Filter {
   public boolean runFilter(PatientData pd) {
     boolean dead = false;
 
-    Patient p = (Patient) pd.getPatient();
+    Patient p = pd.getPatient();
     logger.debug("Checking if " + p.getId() + " died");
     if (p.hasDeceasedDateTimeType()) {
-      Calendar deadDateCal = p.getDeceasedDateTimeType().toCalendar();
-      Calendar reportDateCal = Calendar.getInstance();
-      reportDateCal.setTime(reportDate);
-      dead = sameDay(deadDateCal, reportDateCal);
+      Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
+      if (DateUtils.isSameDay(deadDate.getTime(), reportDate)) {
+        dead = true;
+      }
     }
     return dead;
   }
-
-  protected boolean sameDay(Calendar deadDate, Calendar reportDate) {
-    boolean sameDay = false;
-    if (deadDate.get(Calendar.YEAR) == reportDate.get(Calendar.YEAR)
-            && deadDate.get(Calendar.DAY_OF_YEAR) == reportDate.get(Calendar.DAY_OF_YEAR))
-      sameDay = true;
-    return sameDay;
-  }
-
 }
