@@ -5,12 +5,13 @@ import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.HospitalizedEncounterFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HospitalizedReport extends Report {
 	
 	public HospitalizedReport(EncounterScoop scoop) {
-		super(scoop);
+		super(scoop, addFilters(new ArrayList<Filter>()));
 	}
 
 

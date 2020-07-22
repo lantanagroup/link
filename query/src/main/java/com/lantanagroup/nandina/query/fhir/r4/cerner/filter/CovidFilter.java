@@ -26,10 +26,10 @@ public final class CovidFilter extends Filter {
                     || hasCovidLabTest(pd, terminology.getValueSetAsSetString("2.16.840.1.113762.1.4.1146.1223"))
                     || hasCovidLabResult(pd, terminology.getValueSetAsSetString("2.16.840.1.113762.1.4.1146.1143"))
                     || hasCovidLabResult(pd, terminology.getValueSetAsSetString("2.16.840.1.113762.1.4.1146.1155"))
-    ) {
-      b = true;
+    ) {b = true;};
+    if (b == false) {
+    	logger.info(pd.getPatient().getId() + " is not a covid patient");
     }
-    ;
     return b;
   }
 

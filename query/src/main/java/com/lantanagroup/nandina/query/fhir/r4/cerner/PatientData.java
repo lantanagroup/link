@@ -36,12 +36,12 @@ public class PatientData {
     dateCollected = new Date();
     Map<Patient, Encounter> patEncMap = scoop.getPatientEncounterMap();
     primaryEncounter = patEncMap.get(patient);
-    encounters = scoop.rawSearch("Encounter?subject=" + pat.getId());
-    conditions = scoop.rawSearch("Condition?subject=" + pat.getId());
-    meds = scoop.rawSearch("MedicationRequest?subject=" + pat.getId());
-    labResults = scoop.rawSearch("Observation?subject=" + pat.getId() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
-    allergies = scoop.rawSearch("AllergyIntolerance?patient=" + pat.getId());
-    procedures = scoop.rawSearch("Procedure?patient=" + pat.getId());
+    encounters = scoop.rawSearch("Encounter?subject=Patient/" + pat.getIdElement().getIdPart());
+    conditions = scoop.rawSearch("Condition?subject=Patient/" + pat.getIdElement().getIdPart());
+    meds = scoop.rawSearch("MedicationRequest?subject=Patient/" + pat.getIdElement().getIdPart());
+    labResults = scoop.rawSearch("Observation?subject=Patient/" + pat.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
+    allergies = scoop.rawSearch("AllergyIntolerance?patient=Patient/" + pat.getIdElement().getIdPart());
+    procedures = scoop.rawSearch("Procedure?patient=Patient/" + pat.getIdElement().getIdPart());
   }
 
 
@@ -55,6 +55,10 @@ public class PatientData {
     b.addEntry().setResource(labResults);
     b.addEntry().setResource(allergies);
     return b;
+  }
+  
+  public String getBundleXml() {
+	  return ctx.newXmlParser().encodeResourceToString(getBundle());
   }
 
 

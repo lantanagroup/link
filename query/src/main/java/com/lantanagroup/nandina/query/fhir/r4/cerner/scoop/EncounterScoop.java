@@ -24,7 +24,6 @@ import java.util.Map;
 
 public class EncounterScoop extends Scoop {
 
-  protected static final Logger logger = LoggerFactory.getLogger(EncounterScoop.class);
   protected IParser xmlParser;
   protected IGenericClient targetFhirServer;
   protected IGenericClient nandinaFhirServer;
@@ -189,23 +188,6 @@ private void getEncountersFromSearchBundle(Bundle search) {
 
   public Bundle rawSearch(String query) {
     return rawSearch(targetFhirServer, query);
-  }
-
-  public Bundle rawSearch(IGenericClient fhirServer, String query) {
-    try {
-      logger.debug("Executing query: " + query);
-      if (fhirServer == null) logger.debug("Client is null");
-      Bundle bundle = targetFhirServer.search()
-              .byUrl(query)
-              .returnBundle(Bundle.class)
-              .execute();
-
-
-      return bundle;
-    } catch (Exception ex) {
-      this.logger.error("Could not retrieve data for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
-    }
-    return null;
   }
 
 

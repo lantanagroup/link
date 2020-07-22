@@ -31,8 +31,7 @@ public abstract class Report {
 	}
 
 	private void initReport(EncounterScoop scoop, List<Filter> filters) {
-		if (filters == null)
-			filters = new ArrayList<Filter>();
+		if (filters == null) filters = new ArrayList<Filter>();
 		if (scoop.getReportDate() != null) {
 			// TODO: Need to create date filters for Condition, Procedure, etc.
 			// and add them here in addition to the EncounterDateFilter
@@ -42,10 +41,18 @@ public abstract class Report {
 		}
 		this.patientData = new ArrayList<PatientData>();
 		for (PatientData pd : scoop.getPatientData()) {
-			for (Filter filter : filters) {
-				if (filter.runFilter(pd)) {
-					patientData.add(pd);
-					break;
+			logger.info("Checking patient " + pd.getPatient().getId());
+			if (filters.size() == 0) {
+				patientData.add(pd);
+			} else {
+				for (Filter filter : filters) {
+					if (filter.runFilter(pd)) {
+						patientData.add(pd);
+						break;
+					} else {
+						logger.info(pd.getPatient().getId() + " did not pass filter " + filter.getClass());
+						logger.info(pd.getBundleXml());
+					}
 				}
 			}
 		}
