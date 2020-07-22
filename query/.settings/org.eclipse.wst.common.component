@@ -7,5 +7,9 @@
         <wb-resource deploy-path="/" source-path="/target/generated-sources/annotations"/>
             
     </wb-module>
-    
+   
+    <wb-module deploy-name="nandina-query">
+        <wb-resource deploy-path="/" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/" source-path="/target/generated-sources/annotations"/>
+    </wb-module>
 </project-modules>
