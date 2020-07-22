@@ -28,6 +28,7 @@ export class QuestionnaireComponent implements OnInit {
       'previousDayHospitalOnsetCovid',
       'hospitalized',
       'hospitalizedAndVentilated',
+      'previousDayHospitalOnset',
       'hospitalOnset',
       'edOverflow',
       'edOverflowAndVentilated',
@@ -39,7 +40,8 @@ export class QuestionnaireComponent implements OnInit {
       'icuBeds',
       'icuBedOccupancy',
       'mechanicalVentilators',
-      'mechanicalVentilatorsInUse');
+      'mechanicalVentilatorsInUse',
+      'deaths');
 
   constructor(
       private modal: NgbModal,
