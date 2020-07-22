@@ -12,8 +12,15 @@ import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class EncounterScoop extends Scoop {
 
@@ -44,24 +51,35 @@ public class EncounterScoop extends Scoop {
   public EncounterScoop(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, Date reportDate) {
     this.targetFhirServer = targetFhirServer;
     this.nandinaFhirServer = nandinaFhirServer;
-    ListResource encList = getEncounterListForDate(nandinaFhirServer, reportDate);
+    ListResource encList = getEncounterListForDate(reportDate);
     init(encList);
   }
 
-  private ListResource getEncounterListForDate(IGenericClient fhirServer, Date reportDate) {
+  private ListResource getEncounterListForDate(Date reportDate) {
     ListResource encounterList = null;
-    Bundle bundle = this.rawSearch(fhirServer, "List?code=http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay&date=" + sdf.format(reportDate));
-    if (bundle.getTotal() > 1) {
+    String search = "List?code=" + encodeValue("http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay") + "&date=" + sdf.format(reportDate);
+    Bundle bundle = this.rawSearch(nandinaFhirServer, search);
+    if (bundle == null) {
+    	throw new RuntimeException("Search returned null: " + search);
+    } else if (bundle.getTotal() > 1) {
       logger.debug("Multiple Nandina encounter lists found on same date. Only using first returned");
     }
-    validationSupport = (IValidationSupport) fhirServer.getFhirContext().getValidationSupport();
-    fpe = new FHIRPathEngine(new HapiWorkerContext(fhirServer.getFhirContext(), validationSupport));
+    validationSupport = (IValidationSupport) nandinaFhirServer.getFhirContext().getValidationSupport();
+    fpe = new FHIRPathEngine(new HapiWorkerContext(nandinaFhirServer.getFhirContext(), validationSupport));
     if (bundle.hasEntry() && bundle.getEntryFirstRep().hasResource()) {
       encounterList = (ListResource) bundle.getEntryFirstRep().getResource();
     }
     reportDate = encounterList.getDate();
     return encounterList;
   }
+  
+  private String encodeValue(String value) {
+	    try {
+			return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
   private void init(List<String> encounterIdList) {
     loadEncounterMap(encounterIdList);
@@ -88,6 +106,7 @@ public class EncounterScoop extends Scoop {
         logger.info("Error loading data for " + key, e);
       }
     }
+   logger.info("Initial patient count: " + patientData.size());
   }
 
   public void loadEncounterMap(List<String> encounterIdList) {
@@ -97,21 +116,34 @@ public class EncounterScoop extends Scoop {
     }
   }
 
+
+
   public void loadEncounterMap(ListResource encList) {
     List<ListEntryComponent> entries = encList.getEntry();
     for (ListEntryComponent entry : entries) {
-
-      List<Identifier> encIds = getIdentifiers(entry.getItem());
-      for (Identifier encId : encIds) {
-        Bundle search = getEncounter(encId);
-        List<BundleEntryComponent> bEntries = search.getEntry();
-        for (BundleEntryComponent bEntry : bEntries) {
-          Encounter retrievedEnc = (Encounter) bEntry.getResource();
-          this.encounterMap.put(retrievedEnc.getId(), retrievedEnc);
-        }
+      if (entry.getItem().hasReference()) {
+          String encRef = entry.getItem().getReference();
+    	  Encounter retrievedEnc = targetFhirServer.read().resource(Encounter.class).withId(encRef).execute();
+    	  this.encounterMap.put(retrievedEnc.getId(), retrievedEnc);
+      } else if (entry.getItem().hasIdentifier()) {
+          List<Identifier> encIds = getIdentifiers(entry.getItem());
+          for (Identifier encId : encIds) {
+            Bundle search = getEncounter(encId);
+            getEncountersFromSearchBundle(search);
+          }
+      } else {
+    	  throw new RuntimeException("List.entry missing reference or identifier.");
       }
     }
   }
+
+private void getEncountersFromSearchBundle(Bundle search) {
+	List<BundleEntryComponent> bEntries = search.getEntry();
+	for (BundleEntryComponent bEntry : bEntries) {
+	  Encounter retrievedEnc = (Encounter) bEntry.getResource();
+	  this.encounterMap.put(retrievedEnc.getId(), retrievedEnc);
+	}
+}
 
   private void loadPatientMaps() {
     for (String key : this.encounterMap.keySet()) {
@@ -147,8 +179,8 @@ public class EncounterScoop extends Scoop {
     return patientEncounterMap;
   }
 
-  public Bundle getEncounter(String id) {
-    return rawSearch("Encounter/" + id);
+  public Bundle getEncounter(String encId) {
+    return rawSearch("Encounter?_id=" + encId);
   }
 
   public Bundle getEncounter(Identifier encId) {
