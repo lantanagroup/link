@@ -17,7 +17,6 @@ public class DeathReport extends Report {
         super(scoop, addFilters(filters, reportDate));
     }
 
-
     private static List<Filter> addFilters(List<Filter> filters, Date reportDate) {
         Filter deathFilter = new DeathFilter(reportDate);
         filters.add(deathFilter);
@@ -25,6 +24,4 @@ public class DeathReport extends Report {
         filters.add(hospitalizedFilter);
         return filters;
     }
-
-
 }

@@ -24,10 +24,12 @@ public class PrepareQuery extends BasePrepareQuery {
 
         //TODO add this on back that has bad data...need to handle this with proper error handling
         //        idList.add("CER97953896");
-        idList.add("CER97953897");
-        idList.add("CER97953899");
-        idList.add("CER97953898");
-        idList.add("CER97733442");
+//        idList.add("CER97953897");
+//        idList.add("CER97953899");
+//        idList.add("CER97953898");
+//        idList.add("CER97733442");
+//        idList.add("CER97953899h");
+
         EncounterScoop encounterScoop = new EncounterScoop(ehrFhirServer, nandinaFhirServer, idList);
 
         this.addContextData("scoopData", encounterScoop);
