@@ -40,6 +40,7 @@ public class FormQuery extends BaseFormQuery {
     this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENTILATED, edOverflowAndVentilatedReport.getReportCount());
 
     // Previous Day Deaths
+    // TODO: Needs to use report date (the date the user selected), instead of LocalDate.now()
     DeathReport deathReport = new DeathReport(encounterScoop, new ArrayList<>(), java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
     this.setAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, deathReport.getReportCount());
 
