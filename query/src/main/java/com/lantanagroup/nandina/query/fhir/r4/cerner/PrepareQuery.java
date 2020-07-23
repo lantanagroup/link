@@ -24,11 +24,18 @@ public class PrepareQuery extends BasePrepareQuery {
 
         //TODO add this on back that has bad data...need to handle this with proper error handling
         //        idList.add("CER97953896");
-//        idList.add("CER97953897");
-//        idList.add("CER97953899");
-//        idList.add("CER97953898");
-//        idList.add("CER97733442");
-//        idList.add("CER97953899h");
+        idList.add("CER97953897");
+        idList.add("CER97953899");
+        idList.add("CER97953898");
+        idList.add("CER97733442");
+        idList.add("CER97953899a");
+        idList.add("CER97953899b");
+        idList.add("CER97953899c");
+        idList.add("CER97953899d");
+        idList.add("CER97953899e");
+        idList.add("CER97953899f");
+        idList.add("CER97953899g");
+        idList.add("CER97953899h");
 
         EncounterScoop encounterScoop = new EncounterScoop(ehrFhirServer, nandinaFhirServer, idList);
 
