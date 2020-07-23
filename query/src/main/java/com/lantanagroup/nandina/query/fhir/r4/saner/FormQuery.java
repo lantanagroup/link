@@ -70,10 +70,10 @@ public class FormQuery extends BaseFormQuery {
     this.setAnswer(PIHCConstants.HOSPITAL_ICU_BED_OCC, this.countForPopulation(data, "Beds", "numICUBedsOcc"));
     this.setAnswer(PIHCConstants.ED_OVERFLOW, this.countForPopulation(data, "Encounters", "numC19OverflowPats"));
     this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENTILATED, this.countForPopulation(data, "Encounters", "numC19OFMechVentPats"));
-    this.setAnswer(PIHCConstants.DEATHS, this.countForPopulation(data, "Encounters", "numC19Died"));
+    this.setAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, this.countForPopulation(data, "Encounters", "numC19Died"));
     this.setAnswer(PIHCConstants.MECHANICAL_VENTILATORS, this.countForPopulation(data, "Ventilators", "numVent"));
     this.setAnswer(PIHCConstants.MECHANICAL_VENTILATORS_USED, this.countForPopulation(data, "Ventilators", "numVentUse"));
     this.setAnswer(PIHCConstants.HOSPITAL_ONSET, this.countForPopulation(data, "Encounters", "numC19HOPats"));
-    this.setAnswer(PIHCConstants.HOSPITAL_BEDS, this.countForPopulation(data, "Beds", "numTotBeds"));
+    this.setAnswer(PIHCConstants.ALL_HOSPITAL_BEDS, this.countForPopulation(data, "Beds", "numTotBeds"));
   }
 }

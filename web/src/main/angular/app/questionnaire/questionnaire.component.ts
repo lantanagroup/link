@@ -22,26 +22,24 @@ export class QuestionnaireComponent implements OnInit {
   report: QueryReport = new QueryReport(
       'facilityId',
       'summaryCensusId',
-      'previousDayCovidAdmitted',
-      'previousDaySuspectedCovidAdmitted',
+      'previousDayAdmitConfirmedCovid',
+      'previousDayAdmitSuspectedCovid',
       'previousDayHospitalOnset',
-      'previousDayHospitalOnsetCovid',
+      'previousDayHospitalOnsetConfirmedCovid',
       'hospitalized',
       'hospitalizedAndVentilated',
-      'previousDayHospitalOnset',
       'hospitalOnset',
       'edOverflow',
       'edOverflowAndVentilated',
       'previousDayDeaths',
-      'previousDayDeathsCovid',
+      'previousDayDeathsConfirmedCovid',
       'allHospitalBeds',
       'hospitalInpatientBeds',
       'hospitalInpatientBedOccupancy',
-      'icuBeds',
-      'icuBedOccupancy',
+      'hospitalIcuBeds',
+      'hospitalIcuBedOcc',
       'mechanicalVentilators',
-      'mechanicalVentilatorsInUse',
-      'deaths');
+      'mechanicalVentilatorsUsed');
 
   constructor(
       private modal: NgbModal,

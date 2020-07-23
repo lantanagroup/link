@@ -13,6 +13,14 @@ public class FormQuery extends BaseFormQuery {
   public void execute() {
     EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
 
+    // TODO: Prev Day Admitted with Confirmed COVID
+
+    // TODO: Prev Day Admitted with Suspected COVID
+
+    // TODO: Previous Day Hospital Onset
+
+    // TODO: Previous Day Hospital Onset with Confirmed COVID
+
     // Hospitalized
     HospitalizedReport hospitalizedReport = new HospitalizedReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.HOSPITALIZED, hospitalizedReport.getReportCount());
@@ -20,6 +28,8 @@ public class FormQuery extends BaseFormQuery {
     // Hospitalized and Ventilated
     HospitalizedAndVentilatedReport hospitalizedAndVentilatedReport = new HospitalizedAndVentilatedReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.HOSPITALIZED_AND_VENTILATED, hospitalizedAndVentilatedReport.getReportCount());
+
+    // TODO: Hospital Onset
 
     // ED/Overflow
     EdOverflowReport edOverflowReport = new EdOverflowReport(encounterScoop, new ArrayList<>());
@@ -29,12 +39,10 @@ public class FormQuery extends BaseFormQuery {
     EdOverflowAndVentilatedReport edOverflowAndVentilatedReport = new EdOverflowAndVentilatedReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENTILATED, edOverflowAndVentilatedReport.getReportCount());
 
-    // Deaths
+    // Previous Day Deaths
     DeathReport deathReport = new DeathReport(encounterScoop, new ArrayList<>(), java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
-    this.setAnswer(PIHCConstants.DEATHS, deathReport.getReportCount());
+    this.setAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, deathReport.getReportCount());
 
-    // TODO: Hospital Onset
-
-    // TODO: Previous Day Hospital Onset
+    // TODO: Previous Day Deaths with Confirmed COVID
   }
 }

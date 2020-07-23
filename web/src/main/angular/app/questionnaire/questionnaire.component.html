@@ -56,19 +56,19 @@
     <table class="table table-striped">
         <tbody>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayAdmitConfirmedCovid']" /></td>
             <td><strong>PREVIOUS DAY’S ADMISSIONS WITH CONFIRMED COVID-19:</strong> New patients admitted to an inpatient bed who had confirmed COVID-19 at the time of admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayAdmitSuspectedCovid']" /></td>
             <td><strong>PREVIOUS DAY’S ADMISSIONS WITH SUSPECTED COVID-19:</strong> New patients admitted to an inpatient bed who had suspected COVID-19 at the time of admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
-            <td><strong>PREVIOUS DAY’SNEW HOSPITAL ONSET:</strong> Current inpatients hospitalized for a condition other than COVID-19 with onset of suspected or confirmed COVID-19 on the previous dayand the previous day is fourteen or more dayssince admission</td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayHospitalOnset']" /></td>
+            <td><strong>PREVIOUS DAY’S NEW HOSPITAL ONSET:</strong> Current inpatients hospitalized for a condition other than COVID-19 with onset of suspected or confirmed COVID-19 on the previous dayand the previous day is fourteen or more dayssince admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayHospitalOnset']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDayHospitalOnset')" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayHospitalOnsetConfirmedCovid']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDayHospitalOnset')" /></td>
             <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of Previous Day’s New Hospital Onset with Confirmed COVID-19 (subset)</td>
         </tr>
         <tr>
@@ -92,11 +92,11 @@
             <td><strong>ED/OVERFLOW and VENTILATED:</strong> Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['deaths']" [class.is-invalid]="!report.answers.hasOwnProperty('deaths')" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayDeaths']" [class.is-invalid]="!report.answers.hasOwnProperty('deaths')" /></td>
             <td><strong>PREVIOUS DAY’S DEATHS:</strong> Patients with suspected or confirmed COVID-19 who died in the hospital, ED, or any overflow location on the previous calendar day</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayDeathsConfirmedCovid']" /></td>
             <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of Previous Day’s Deaths with Confirmed COVID-19 (subset)</td>
         </tr>
         </tbody>
@@ -123,11 +123,11 @@
             <td><strong>HOSPITAL INPATIENT BED OCCUPANCY:</strong> Total number of staffed inpatient beds that are occupied</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['icuBeds']" [class.is-invalid]="!report.answers.hasOwnProperty('icuBeds')" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['hospitalIcuBeds']" [class.is-invalid]="!report.answers.hasOwnProperty('icuBeds')" /></td>
             <td><strong>ICU BEDS:</strong> Total number of staffed inpatient ICU beds</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['icuBedOccupancy']" [class.is-invalid]="!report.answers.hasOwnProperty('icuBedOccupancy')" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['hospitalIcuBedOcc']" [class.is-invalid]="!report.answers.hasOwnProperty('icuBedOccupancy')" /></td>
             <td><strong>ICU BED OCCUPANCY:</strong> Total number of staffed inpatient ICU beds that are occupied</td>
         </tr>
         <tr>
@@ -135,7 +135,7 @@
             <td><strong>MECHANICAL VENTILATORS:</strong> Total number of ventilators available</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['mechanicalVentilatorsInUse']" [class.is-invalid]="!report.answers.hasOwnProperty('mechanicalVentilatorsInUse')" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['mechanicalVentilatorsUsed']" [class.is-invalid]="!report.answers.hasOwnProperty('mechanicalVentilatorsInUse')" /></td>
             <td><strong>MECHANICAL VENTILATORS IN USE:</strong> Total number of ventilators in use</td>
         </tr>
         </tbody>

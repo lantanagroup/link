@@ -73,13 +73,13 @@ public class PIHCQuestionnaireResponseGenerator {
     section1.addItem(this.createAnswer(PIHCConstants.HOSPITAL_ONSET, "numC19HOPats", "Patients currently hospitalized in an inpatient bed with onset of suspected or confirmed COVID-19 fourteen or more days after hospital admission due to a condition other than COVID-19", IntegerType.class));
     section1.addItem(this.createAnswer(PIHCConstants.ED_OVERFLOW, "numC19OverflowPats", "Patients with suspected or confirmed COVID-19 who are currently in the Emergency Department (ED) or any overflow location awaiting an inpatient bed", IntegerType.class));
     section1.addItem(this.createAnswer(PIHCConstants.ED_OVERFLOW_AND_VENTILATED, "numC19OFMechVentPats", "Patients with suspected or confirmed COVID-19 who currently are in the ED or any overflow location awaiting an inpatient bed and on a mechanical ventilator", IntegerType.class));
-    section1.addItem(this.createAnswer(PIHCConstants.DEATHS, "numC19Died", "Patients with suspected or confirmed COVID-19 who died in the hospital, ED or any overflow location on the date for which you are reporting", IntegerType.class));
+    section1.addItem(this.createAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, "numC19Died", "Patients with suspected or confirmed COVID-19 who died in the hospital, ED or any overflow location on the date for which you are reporting", IntegerType.class));
 
     QuestionnaireResponse.QuestionnaireResponseItemComponent section2 = resp.addItem();
     section2.setLinkId("hospital-bed-icu-ventilator-capacity-group");
     section2.setText("Hospital Bed/ICU/Ventilator Capacity Section");
 
-    section2.addItem(this.createAnswer(PIHCConstants.HOSPITAL_BEDS, "numTotBeds", "Total number of all inpatient and outpatient beds in your hospital, including all staffed, licensed, and overflow surge or expansion beds used for inpatients or for outpatients (includes ICU beds)", IntegerType.class));
+    section2.addItem(this.createAnswer(PIHCConstants.ALL_HOSPITAL_BEDS, "numTotBeds", "Total number of all inpatient and outpatient beds in your hospital, including all staffed, licensed, and overflow surge or expansion beds used for inpatients or for outpatients (includes ICU beds)", IntegerType.class));
     section2.addItem(this.createAnswer(PIHCConstants.HOSPITAL_INPATIENT_BEDS, "numBeds", "Total number of staffed inpatient beds in your hospital, including all staffed, licensed, and overflow and surge or expansion beds used for inpatients (includes ICU beds)", IntegerType.class));
     section2.addItem(this.createAnswer(PIHCConstants.HOSPITAL_INPATIENT_BED_OCC, "numBedsOcc", "Total number of staffed inpatient beds that are currently occupied", IntegerType.class));
     section2.addItem(this.createAnswer(PIHCConstants.HOSPITAL_ICU_BEDS, "numICUBeds", "Total number of staffed inpatient intensive care unit (ICU) beds", IntegerType.class));
