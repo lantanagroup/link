@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.model;
+package com.lantanagroup.nandina;
 
 import java.util.ArrayList;
 import java.util.HashMap;

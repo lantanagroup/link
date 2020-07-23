@@ -49,38 +49,31 @@
             </concept>
             <concept>
                 <code value="840544004"></code>
-                <display
-                        value="Suspected disease caused by severe acute respiratory coronavirus 2 (situation)"></display>
+                <display value="Suspected disease caused by severe acute respiratory coronavirus 2 (situation)"></display>
             </concept>
             <concept>
                 <code value="138389411000119105"></code>
-                <display
-                        value="Acute bronchitis caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Acute bronchitis caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="870590002"></code>
-                <display
-                        value="Acute hypoxemic respiratory failure due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Acute hypoxemic respiratory failure due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="870589006"></code>
-                <display
-                        value="Acute kidney injury due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Acute kidney injury due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="674814021000119106"></code>
-                <display
-                        value="Acute respiratory distress syndrome due to Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Acute respiratory distress syndrome due to Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="119731000146105"></code>
-                <display
-                        value="Cardiomyopathy due to disease caused by Severe acute respiratory syndrome coronavirus 2"></display>
+                <display value="Cardiomyopathy due to disease caused by Severe acute respiratory syndrome coronavirus 2"></display>
             </concept>
             <concept>
                 <code value="119741000146102"></code>
-                <display
-                        value="Conjunctivitis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Conjunctivitis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="119981000146107"></code>
@@ -88,8 +81,7 @@
             </concept>
             <concept>
                 <code value="1240561000000108"></code>
-                <display
-                        value="Encephalopathy due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+                <display value="Encephalopathy due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="119751000146104"></code>
@@ -97,48 +89,39 @@
             </concept>
             <concept>
                 <code value="1240541000000107"></code>
-                <display
-                        value="Infection of upper respiratory tract caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Infection of upper respiratory tract caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="880529761000119102"></code>
-                <display
-                        value="Lower respiratory infection caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Lower respiratory infection caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="866151004"></code>
-                <display
-                        value="Lymphocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Lymphocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="1240531000000103"></code>
-                <display
-                        value="Myocarditis due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+                <display value="Myocarditis due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="1240521000000100"></code>
-                <display
-                        value="Otitis media due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+                <display value="Otitis media due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="882784691000119100"></code>
-                <display
-                        value="Pneumonia caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Pneumonia caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="870591003"></code>
-                <display
-                        value="Rhabdomyolysis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Rhabdomyolysis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="870588003"></code>
-                <display
-                        value="Sepsis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Sepsis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
             <concept>
                 <code value="866152006"></code>
-                <display
-                        value="Thrombocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+                <display value="Thrombocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
             </concept>
         </include>
     </compose>
@@ -167,38 +150,32 @@
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="138389411000119105"></code>
-            <display
-                    value="Acute bronchitis caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Acute bronchitis caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="870590002"></code>
-            <display
-                    value="Acute hypoxemic respiratory failure due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Acute hypoxemic respiratory failure due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="870589006"></code>
-            <display
-                    value="Acute kidney injury due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Acute kidney injury due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="674814021000119106"></code>
-            <display
-                    value="Acute respiratory distress syndrome due to Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Acute respiratory distress syndrome due to Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="119731000146105"></code>
-            <display
-                    value="Cardiomyopathy due to disease caused by Severe acute respiratory syndrome coronavirus 2"></display>
+            <display value="Cardiomyopathy due to disease caused by Severe acute respiratory syndrome coronavirus 2"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="119741000146102"></code>
-            <display
-                    value="Conjunctivitis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Conjunctivitis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
@@ -208,8 +185,7 @@
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="1240561000000108"></code>
-            <display
-                    value="Encephalopathy due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+            <display value="Encephalopathy due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
@@ -219,32 +195,27 @@
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="1240541000000107"></code>
-            <display
-                    value="Infection of upper respiratory tract caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Infection of upper respiratory tract caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="880529761000119102"></code>
-            <display
-                    value="Lower respiratory infection caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Lower respiratory infection caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="866151004"></code>
-            <display
-                    value="Lymphocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Lymphocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="1240531000000103"></code>
-            <display
-                    value="Myocarditis due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+            <display value="Myocarditis due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="1240521000000100"></code>
-            <display
-                    value="Otitis media due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
+            <display value="Otitis media due to disease caused by Severe acute respiratory syndrome virus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
@@ -254,20 +225,17 @@
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="870591003"></code>
-            <display
-                    value="Rhabdomyolysis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Rhabdomyolysis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="870588003"></code>
-            <display
-                    value="Sepsis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Sepsis due to disease caused by Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
         <contains>
             <system value="http://snomed.info/sct"></system>
             <code value="866152006"></code>
-            <display
-                    value="Thrombocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
+            <display value="Thrombocytopenia associated with Severe acute respiratory syndrome coronavirus 2 (disorder)"></display>
         </contains>
     </expansion>
 </ValueSet>
