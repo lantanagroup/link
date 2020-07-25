@@ -25,19 +25,29 @@ public class FormQuery extends BaseFormQuery {
     HospitalizedReport hospitalizedReport = new HospitalizedReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.HOSPITALIZED, hospitalizedReport.getReportCount());
 
+    // TODO: Hospitalized with Confirmed COVID
+
     // Hospitalized and Ventilated
     HospitalizedAndVentilatedReport hospitalizedAndVentilatedReport = new HospitalizedAndVentilatedReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.HOSPITALIZED_AND_VENTILATED, hospitalizedAndVentilatedReport.getReportCount());
 
+    // TODO: Hospitalized and Ventilated with Confirmed COVID
+
     // TODO: Hospital Onset
+
+    // TODO: Hospital Onset with Confirmed COVID
 
     // ED/Overflow
     EdOverflowReport edOverflowReport = new EdOverflowReport(encounterScoop, new ArrayList<>());
     this.setAnswer(PIHCConstants.ED_OVERFLOW, edOverflowReport.getReportCount());
 
+    // ED/Overflow with Confirmed COVID
+
     // ED/Overflow and Ventilated
     EdOverflowAndVentilatedReport edOverflowAndVentilatedReport = new EdOverflowAndVentilatedReport(encounterScoop, new ArrayList<>());
-    this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENTILATED, edOverflowAndVentilatedReport.getReportCount());
+    this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENT, edOverflowAndVentilatedReport.getReportCount());
+
+    // TODO: ED/Overflow and Ventilated with Confirmed COVID
 
     // Previous Day Deaths
     // TODO: Needs to use report date (the date the user selected), instead of LocalDate.now()
