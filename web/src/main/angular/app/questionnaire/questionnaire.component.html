@@ -56,11 +56,11 @@
     <table class="table table-striped">
         <tbody>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayCovidAdmitted']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDayCovidAdmitted')" /></td>
             <td><strong>PREVIOUS DAY’S ADMISSIONS WITH CONFIRMED COVID-19:</strong> New patients admitted to an inpatient bed who had confirmed COVID-19 at the time of admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDaySuspectedCovidAdmitted']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDaySuspectedCovidAdmitted')" /></td>
             <td><strong>PREVIOUS DAY’S ADMISSIONS WITH SUSPECTED COVID-19:</strong> New patients admitted to an inpatient bed who had suspected COVID-19 at the time of admission</td>
         </tr>
         <tr>
