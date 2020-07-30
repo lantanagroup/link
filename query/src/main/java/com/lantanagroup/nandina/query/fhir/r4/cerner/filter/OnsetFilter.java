@@ -10,10 +10,18 @@ import java.util.Date;
 
 public class OnsetFilter extends Filter {
     Date reportDate;
+    LocalDate previousDay;
 
     public OnsetFilter(Date reportDate) {
         super();
         this.reportDate = reportDate;
+        this.previousDay = null;
+    }
+
+    public OnsetFilter(Date reportDate, LocalDate previousDay) {
+        super();
+        this.reportDate = reportDate;
+        this.previousDay = previousDay;
     }
 
     @Override
@@ -34,6 +42,9 @@ public class OnsetFilter extends Filter {
                 if (condition.hasOnsetDateTimeType()) {
                     LocalDate onsetDate = LocalDate.ofInstant(condition.getOnsetDateTimeType().getValue().toInstant(), ZoneId.systemDefault());
                     onset = onsetDuringEncounter(onsetDate, encounterStart, encounterEnd);
+                    if (null != this.previousDay && !this.previousDay.equals(onsetDate)) {
+                        onset = false;
+                    }
                 } else if (condition.hasOnsetPeriod()) {
                     LocalDate onsetPeriodStart = LocalDate.ofInstant(condition.getOnsetPeriod().getStartElement().getValue().toInstant(), ZoneId.systemDefault());
                     onset = onsetDuringEncounter(onsetPeriodStart, encounterStart, encounterEnd);
@@ -47,6 +58,14 @@ public class OnsetFilter extends Filter {
         return onset;
     }
 
+    /**
+     * checks to see if patient has onset during the encounter after 14 or more days. This also checks to see if onset
+     * happened after discharge in which case would not be a hospital onset.
+     * @param onsetDate
+     * @param encounterStartDate
+     * @param encounterEndDate
+     * @return
+     */
     private boolean onsetDuringEncounter(LocalDate onsetDate, LocalDate encounterStartDate, LocalDate encounterEndDate) {
         boolean hospitalOnset = false;
         if (encounterStartDate != null) {
