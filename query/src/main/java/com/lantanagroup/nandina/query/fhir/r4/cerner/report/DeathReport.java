@@ -2,7 +2,6 @@ package com.lantanagroup.nandina.query.fhir.r4.cerner.report;
 
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.DeathFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
-import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.HospitalizedEncounterFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
 
 import java.util.Date;
@@ -20,8 +19,6 @@ public class DeathReport extends Report {
     private static List<Filter> addFilters(List<Filter> filters, Date reportDate) {
         Filter deathFilter = new DeathFilter(reportDate);
         filters.add(deathFilter);
-        Filter hospitalizedFilter = new HospitalizedEncounterFilter();
-        filters.add(hospitalizedFilter);
         return filters;
     }
 }
