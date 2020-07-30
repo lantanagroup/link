@@ -64,11 +64,11 @@
             <td><strong>PREVIOUS DAY’S ADMISSIONS WITH SUSPECTED COVID-19:</strong> New patients admitted to an inpatient bed who had suspected COVID-19 at the time of admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" /></td>
-            <td><strong>PREVIOUS DAY’SNEW HOSPITAL ONSET:</strong> Current inpatients hospitalized for a condition other than COVID-19 with onset of suspected or confirmed COVID-19 on the previous dayand the previous day is fourteen or more dayssince admission</td>
+            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayHospitalOnset']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDayHospitalOnset')" /></td>
+            <td><strong>PREVIOUS DAY’S NEW HOSPITAL ONSET:</strong> Current inpatients hospitalized for a condition other than COVID-19 with onset of suspected or confirmed COVID-19 on the previous dayand the previous day is fourteen or more dayssince admission</td>
         </tr>
         <tr>
-            <td><input type="number" class="form-control" [(ngModel)]="report.answers['previousDayHospitalOnset']" [class.is-invalid]="!report.answers.hasOwnProperty('previousDayHospitalOnset')" /></td>
+            <td><input type="number" class="form-control"  /></td>
             <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number of Previous Day’s New Hospital Onset with Confirmed COVID-19 (subset)</td>
         </tr>
         <tr>
