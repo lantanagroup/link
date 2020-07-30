@@ -19,7 +19,7 @@ public class DeathsQuery extends BaseQuery {
 
         EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
         List<Filter> filters = new ArrayList<Filter>();
-        DeathReport deathReport = new DeathReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
+        DeathReport deathReport = new DeathReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.parse(this.criteria.get("reportDate")).minusDays(1)));
         this.addContextData("deaths", deathReport.getReportCount());
 
         return deathReport.getReportCount();
