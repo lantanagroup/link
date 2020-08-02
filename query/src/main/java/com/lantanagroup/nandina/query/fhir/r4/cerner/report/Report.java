@@ -87,4 +87,7 @@ public abstract class Report {
 		return patientData.size();
 	}
 
+	public List<PatientData> getPatientData() {
+		return patientData;
+	}
 }
