@@ -89,15 +89,19 @@ public class ReportController extends BaseController {
   @PostMapping("/api/query")
   public QueryReport getQuestionnaireResponse(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
     IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
 
     logger.debug("Generating report, including criteria: " + criteria.toString());
 
     HashMap<String, Object> contextData = new HashMap<>();
+
     contextData.put("report", report);
+    contextData.put("fhirQueryClient", fhirQueryClient);
+    contextData.put("fhirStoreClient", fhirStoreClient);
 
     FhirHelper.recordAuditEvent(
-            fhirQueryClient,
+            fhirStoreClient,
             authentication,
             ReportController.class.getName(),
             "executeQuery()",
