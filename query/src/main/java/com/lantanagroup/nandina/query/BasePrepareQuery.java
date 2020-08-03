@@ -2,10 +2,17 @@ package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.JsonProperties;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class BasePrepareQuery implements IPrepareQuery {
+    private static final Logger logger = LoggerFactory.getLogger(BasePrepareQuery.class);
     protected JsonProperties properties;
     protected IGenericClient fhirClient;
     protected Map<String, String> criteria;
@@ -49,5 +56,41 @@ public abstract class BasePrepareQuery implements IPrepareQuery {
 
     public void addContextData(String key, Object data) {
         this.getContextData().put(key, data);
+    }
+
+    protected Map<String, Resource> search(String query) {
+        Bundle b = rawSearch(query);
+        return bundleToMap(b);
+    }
+
+    public Bundle rawSearch(String query) {
+        try {
+            Bundle bundle = fhirClient.search().byUrl(query).returnBundle(Bundle.class).execute();
+
+            logger.debug(this.getClass().getName() + " executing query: " + query);
+
+            return bundle;
+        } catch (Exception ex) {
+            this.logger.error("Could not retrieve data for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
+        }
+        return null;
+    }
+
+    private Map<String, Resource> bundleToMap(Bundle b) {
+        if (b == null) {
+            return null;
+        }
+        HashMap<String, Resource> resMap = new HashMap<String, Resource>();
+        List<Bundle.BundleEntryComponent> entryList = b.getEntry();
+        for (Bundle.BundleEntryComponent entry : entryList) {
+            Resource res = entry.getResource();
+
+            resMap.put(res.getIdElement().getIdPart(), res);
+        }
+        if (b.getLink(Bundle.LINK_NEXT) != null) {
+            Bundle nextPage = fhirClient.loadPage().next(b).execute();
+            resMap.putAll(bundleToMap(nextPage));
+        }
+        return resMap;
     }
 }

@@ -22,23 +22,6 @@ public class JsonProperties {
     private static String terminologyVentilatorCodes;
     private static String terminologyIntubationProcedureCodes;
 
-    public static final String DEFAULT = "default";
-    public static final String FACILITY_ID = "facilityId";
-    public static final String SUMMARY_CENSUS_ID = "summaryCensusId";
-    public static final String HOSPITALIZED = "hospitalized";
-    public static final String HOSPITALIZED_AND_VENTILATED = "hospitalizedAndVentilated";
-    public static final String PREVIOUS_HOSPITAL_ONSET = "previousHospitalOnset";
-    public static final String HOSPITAL_ONSET = "hospitalOnset";
-    public static final String ED_OVERFLOW = "edOverflow";
-    public static final String ED_OVERFLOW_AND_VENTILATED = "edOverflowAndVentilated";
-    public static final String DEATHS = "deaths";
-    public static final String HOSPITAL_BEDS = "hospitalBeds";
-    public static final String HOSPITAL_INPATIENT_BEDS = "hospitalInpatientBeds";
-    public static final String HOSPITAL_INPATIENT_BED_OCC = "hospitalInpatientBedOcc";
-    public static final String HOSPITAL_ICU_BEDS = "hospitalIcuBeds";
-    public static final String HOSPITAL_ICU_BED_OCC = "hospitalIcuBedOcc";
-    public static final String MECHANICAL_VENTILATORS = "mechanicalVentilators";
-    public static final String MECHANICAL_VENTILATORS_USED = "mechanicalVentilatorsUsed";
     public static final String COVID_CODES_VALUE_SET = "covidCodesValueSet";
     public static final String VENTILATOR_CODES_VALUESET = "ventilatorCodesValueSet";
     public static final String INTUBATION_PROCEDURE_CODES_VALUESET = "intubationProcedureCodesValueSet";
@@ -52,10 +35,9 @@ public class JsonProperties {
     private String fhirServerBearerToken;
     private String authJwksUrl;
     private String prepareQuery;
-    private Map<String, String> query;
+    private String formQuery;
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
-    private String rememberFields;
     private boolean requireHttps;
 
     public String getExportFormat() {
@@ -122,14 +104,6 @@ public class JsonProperties {
         this.authJwksUrl = authJwksUrl;
     }
 
-    public Map<String, String> getQuery() {
-        return query;
-    }
-
-    public void setQuery(Map<String, String> query) {
-        this.query = query;
-    }
-
     public Map<String, String> getTerminology() {
         return terminology;
     }
@@ -146,20 +120,28 @@ public class JsonProperties {
         this.field = field;
     }
 
-    public String getRememberFields() {
-        return rememberFields;
-    }
-
-    public void setRememberFields(String rememberFields) {
-        this.rememberFields = rememberFields;
-    }
-
     public boolean isRequireHttps() {
         return requireHttps;
     }
 
     public void setRequireHttps(boolean requireHttps) {
         this.requireHttps = requireHttps;
+    }
+
+    public String getPrepareQuery() {
+        return prepareQuery;
+    }
+
+    public void setPrepareQuery(String prepareQuery) {
+        this.prepareQuery = prepareQuery;
+    }
+
+    public String getFormQuery() {
+        return formQuery;
+    }
+
+    public void setFormQuery(String formQuery) {
+        this.formQuery = formQuery;
     }
 
     public String loadValueSet(String valueSetUri) {
@@ -202,13 +184,5 @@ public class JsonProperties {
             this.terminologyIntubationProcedureCodes = loadValueSet(this.getTerminology().get(INTUBATION_PROCEDURE_CODES_VALUESET));
         }
         return this.terminologyIntubationProcedureCodes;
-    }
-
-    public String getPrepareQuery() {
-        return prepareQuery;
-    }
-
-    public void setPrepareQuery(String prepareQuery) {
-        this.prepareQuery = prepareQuery;
     }
 }

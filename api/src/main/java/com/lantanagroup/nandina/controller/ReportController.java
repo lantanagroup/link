@@ -2,7 +2,8 @@ package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.*;
-import com.lantanagroup.nandina.model.QueryReport;
+import com.lantanagroup.nandina.QueryReport;
+import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
 import org.apache.commons.io.IOUtils;
@@ -40,27 +41,19 @@ public class ReportController extends BaseController {
    * @param overflowLocations
    * @return
    */
-  private Object executeQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
-    if (className == null || className.isEmpty()) return null;
+  private void executeFormQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
+    if (className == null || className.isEmpty()) return;
 
     try {
-      FhirHelper.recordAuditEvent(
-              fhirClient,
-              authentication,
-              className,
-              "ReportController/executeQuery()",
-              "Generate Report: " + criteria,
-              "Generate Report",
-              "Successful Report Generated");
-
-      return QueryFactory.executeQuery(className, jsonProperties, fhirClient, criteria, contextData);
+      IFormQuery executor = QueryFactory.newFormQueryInstance(className, jsonProperties, fhirClient, criteria, contextData);
+      executor.execute();
     } catch (ClassNotFoundException ex) {
-      logger.error("Could not find class for query named " + className, ex);
+      logger.error("Could not find class for form query named " + className, ex);
     } catch (Exception ex) {
-      logger.error("Could not execute query class for query " + className, ex);
+      logger.error("Failed to execute form query class " + className, ex);
     }
 
-    return null;
+    return;
   }
 
   private void executePrepareQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
@@ -72,7 +65,7 @@ public class ReportController extends BaseController {
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for prepare-query named " + className, ex);
     } catch (Exception ex) {
-      logger.error("Could not execute query class for prepare-query " + className, ex);
+      logger.error("Failed to execute query class for prepare-query " + className, ex);
     }
   }
 
@@ -101,24 +94,22 @@ public class ReportController extends BaseController {
     logger.debug("Generating report, including criteria: " + criteria.toString());
 
     HashMap<String, Object> contextData = new HashMap<>();
-    contextData.put("response", report);
+    contextData.put("report", report);
 
-    // Execute the prepare-query plugin if configured
+    FhirHelper.recordAuditEvent(
+            fhirQueryClient,
+            authentication,
+            ReportController.class.getName(),
+            "executeQuery()",
+            "Generate Report: " + criteria,
+            "Generate Report",
+            "Successful Report Generated");
+
+    // Execute the prepare query plugin if configured
     this.executePrepareQuery(jsonProperties.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
 
-    // Loop through each question and try to find an answer
-    for (String questionId : report.getQuestions()) {
-      String className = jsonProperties.getQuery().get(questionId);
-
-      if (className != null && !className.isEmpty()) {
-        Object answer = this.executeQuery(className, criteria, contextData, fhirQueryClient, authentication);
-        report.setAnswer(questionId, answer);
-      }
-
-      if (report.getAnswers().get(questionId) == null) {
-        report.setAnswer(questionId, jsonProperties.getField().get(JsonProperties.DEFAULT).get(questionId));
-      }
-    }
+    // Execute the form query plugin
+    this.executeFormQuery(jsonProperties.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
 
     return report;
   }
