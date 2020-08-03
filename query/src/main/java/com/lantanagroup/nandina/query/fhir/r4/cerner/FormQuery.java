@@ -5,6 +5,7 @@ import com.lantanagroup.nandina.query.BaseFormQuery;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.report.*;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -12,12 +13,19 @@ public class FormQuery extends BaseFormQuery {
   @Override
   public void execute() {
     EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
+    if (null == this.criteria.get("reportDate"))
+      return;
 
-    // TODO: Prev Day Admitted with Confirmed COVID
+    Date reportDate = Date.valueOf(LocalDate.parse(this.criteria.get("reportDate")));
 
-    // TODO: Prev Day Admitted with Suspected COVID
+    PreviousDayAdmissionConfirmedCovidReport previousDayAdmissionConfirmedCovidReport = new PreviousDayAdmissionConfirmedCovidReport(encounterScoop, new ArrayList<>(), reportDate);
+    this.setAnswer(PIHCConstants.PREVIOUS_DAY_ADMIT_CONFIRMED_COVID, previousDayAdmissionConfirmedCovidReport.getReportCount());
 
-    // TODO: Previous Day Hospital Onset
+    PreviousDayAdmissionSuspectedCovidReport previousDayAdmissionSuspectedCovidReport = new PreviousDayAdmissionSuspectedCovidReport(encounterScoop, new ArrayList<>(), reportDate);
+    this.setAnswer(PIHCConstants.PREVIOUS_DAY_ADMIT_SUSPECTED_COVID, previousDayAdmissionSuspectedCovidReport.getReportCount());
+
+    OnsetReport previousDayOnset = new OnsetReport(encounterScoop, new ArrayList<>(), reportDate, LocalDate.now().minusDays(1));
+    this.setAnswer(PIHCConstants.PREVIOUS_HOSPITAL_ONSET, previousDayOnset.getReportCount());
 
     // TODO: Previous Day Hospital Onset with Confirmed COVID
 
@@ -33,7 +41,8 @@ public class FormQuery extends BaseFormQuery {
 
     // TODO: Hospitalized and Ventilated with Confirmed COVID
 
-    // TODO: Hospital Onset
+    OnsetReport onsetReport = new OnsetReport(encounterScoop, new ArrayList<>(), reportDate);
+    this.setAnswer(PIHCConstants.HOSPITAL_ONSET, onsetReport.getReportCount());
 
     // TODO: Hospital Onset with Confirmed COVID
 
@@ -50,8 +59,7 @@ public class FormQuery extends BaseFormQuery {
     // TODO: ED/Overflow and Ventilated with Confirmed COVID
 
     // Previous Day Deaths
-    // TODO: Needs to use report date (the date the user selected), instead of LocalDate.now()
-    DeathReport deathReport = new DeathReport(encounterScoop, new ArrayList<>(), java.sql.Date.valueOf(LocalDate.now().minusDays(1)));
+    DeathReport deathReport = new DeathReport(encounterScoop, new ArrayList<>(), reportDate);
     this.setAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, deathReport.getReportCount());
 
     // TODO: Previous Day Deaths with Confirmed COVID
