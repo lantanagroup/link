@@ -17,8 +17,8 @@ public class PrepareQuery extends BasePrepareQuery {
     @Override
     public void execute() {
         FhirContext ctx = FhirContext.forR4();
-        IGenericClient ehrFhirServer = ctx.newRestfulGenericClient("https://nandina-fhir.lantanagroup.com/fhir");
-        IGenericClient nandinaFhirServer = ctx.newRestfulGenericClient("https://nandina-fhir.lantanagroup.com/fhir");
+        IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
+        IGenericClient fhirStoreClient = (IGenericClient) this.getContextData("fhirStoreClient");
 
         List<String> idList = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class PrepareQuery extends BasePrepareQuery {
         idList.add("CER97953899g");
         idList.add("CER97953899h");
 
-        EncounterScoop encounterScoop = new EncounterScoop(ehrFhirServer, nandinaFhirServer, idList);
+        EncounterScoop encounterScoop = new EncounterScoop(fhirQueryClient, fhirStoreClient, idList);
 
         this.addContextData("scoopData", encounterScoop);
 
