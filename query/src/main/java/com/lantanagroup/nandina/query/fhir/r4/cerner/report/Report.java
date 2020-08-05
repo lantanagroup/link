@@ -39,20 +39,21 @@ public abstract class Report {
 			EncounterDateFilter edf = new EncounterDateFilter(scoop.getReportDate());
 			filters.add(edf);
 		}
-		this.patientData = new ArrayList<PatientData>();
+		this.patientData = new ArrayList<>();
 		for (PatientData pd : scoop.getPatientData()) {
 			logger.info("Checking patient " + pd.getPatient().getId());
 			if (filters.size() == 0) {
 				patientData.add(pd);
 			} else {
-				for (Filter filter : filters) {
-					if (filter.runFilter(pd)) {
-						patientData.add(pd);
-						break;
-					} else {
-						logger.info(pd.getPatient().getId() + " did not pass filter " + filter.getClass());
-						logger.info(pd.getBundleXml());
-					}
+				// this calls the runFilter() method on each of the filters and if they "allMatch" true then result is
+				// true. They all have to return true for the result to be true.
+				boolean result = filters.parallelStream()
+				.allMatch(f -> f.runFilter(pd) == true);
+				if (result) {
+					patientData.add(pd);
+				} else {
+					logger.info(pd.getPatient().getId() + " did not pass all filters ");
+					logger.info(pd.getBundleXml());
 				}
 			}
 		}
