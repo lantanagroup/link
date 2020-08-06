@@ -14,7 +14,6 @@ public class EdOverflowReport extends Report {
     // TODO Auto-generated constructor stub
   }
 
-
   private static List<Filter> addFilters(List<Filter> filters) {
     Filter covidFilter = new CovidFilter();
     filters.add(covidFilter);
@@ -22,5 +21,4 @@ public class EdOverflowReport extends Report {
     filters.add(edOverflowFilter);
     return filters;
   }
-
 }
