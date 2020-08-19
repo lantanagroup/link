@@ -9,6 +9,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.annotation.PropertySources;
+import org.springframework.web.filter.DelegatingFilterProxy;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 
 @SpringBootApplication
 @Configuration
@@ -26,5 +30,14 @@ public class NandinaApp extends SpringBootServletInitializer implements Initiali
   @Override
   public void afterPropertiesSet() throws Exception {
     // Initialize the config using the Spring application context so that @Value annotations resolve/work
+  }
+
+  @Override
+  public void onStartup(ServletContext servletContext) throws ServletException {
+    servletContext
+            .addFilter("securityFilter", new DelegatingFilterProxy("springSecurityFilterChain"))
+            .addMappingForUrlPatterns(null, false, "/*");
+
+    super.onStartup(servletContext);
   }
 }
