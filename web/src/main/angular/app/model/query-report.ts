@@ -9,7 +9,7 @@ export class QueryReport {
     this.questions = questionIds || [];
   }
 
-  hasAnswer(questionId) {
+  hasAnswer(questionId: string): boolean {
     return this.answers.hasOwnProperty(questionId) && this.answers[questionId] !== null;
   }
 }

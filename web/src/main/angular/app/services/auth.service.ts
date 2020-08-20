@@ -2,46 +2,11 @@ import {Injectable} from '@angular/core';
 import {OAuthService} from 'angular-oauth2-oidc';
 import {HttpClient} from '@angular/common/http';
 import {Router} from '@angular/router';
-import {ConfigService, IOAuthConfig} from './config.service';
-
-export interface AuthInitOptions {
-  issuer: string;
-  loginUrl: string;
-  tokenEndpoint: string;
-  launch: string;
-}
-
-interface IProfile {
-  name: string;
-  email?: string;
-}
-
-interface IPractitioner {
-  id: string;
-  identifier?: {
-    use?: string;
-    system: string;
-    value: string;
-  }[];
-  address?: {
-    line: string[];
-    city: string;
-    postalCode: string;
-    state: string;
-    country: string;
-  }[];
-  gender?: string;
-  telecom?: {
-    use?: string;
-    system: string;
-    value: string;
-  }[];
-  name?: {
-    family: string;
-    given: string[];
-    prefix?: string[];
-  }[];
-}
+import {ConfigService} from './config.service';
+import {IProfile} from '../model/profile';
+import {AuthInitOptions} from '../model/auth-init-options';
+import {IPractitioner} from '../model/practitioner';
+import {IOAuthConfig} from '../model/oauth-config';
 
 @Injectable()
 export class AuthService {

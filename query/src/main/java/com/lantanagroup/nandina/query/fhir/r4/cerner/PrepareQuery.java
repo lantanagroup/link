@@ -14,20 +14,16 @@ public class PrepareQuery extends BasePrepareQuery {
     @Autowired
     JsonProperties jsonProperties;
 
-    @Override
-    public void execute() {
-        FhirContext ctx = FhirContext.forR4();
-        IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
-        IGenericClient fhirStoreClient = (IGenericClient) this.getContextData("fhirStoreClient");
-
-        List<String> idList = new ArrayList<>();
+    private List<String> getEncounterIds() {
+        List<String> ids = new ArrayList<>();
 
         //TODO add this on back that has bad data...need to handle this with proper error handling
         //        idList.add("CER97953896");
-        idList.add("CER97953897");
-        idList.add("CER97953899");
-        idList.add("CER97953898");
-        idList.add("CER97733442");
+        ids.add("CER97953897");
+        ids.add("CER97953899");
+        ids.add("CER97953898");
+        ids.add("CER97733442");
+        /*
         idList.add("CER97953899a");
         idList.add("CER97953899b");
         idList.add("CER97953899c");
@@ -36,8 +32,19 @@ public class PrepareQuery extends BasePrepareQuery {
         idList.add("CER97953899f");
         idList.add("CER97953899g");
         idList.add("CER97953899h");
+         */
 
-        EncounterScoop encounterScoop = new EncounterScoop(fhirQueryClient, fhirStoreClient, idList);
+        return ids;
+    }
+
+    @Override
+    public void execute() {
+        FhirContext ctx = FhirContext.forR4();
+        IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
+        IGenericClient fhirStoreClient = (IGenericClient) this.getContextData("fhirStoreClient");
+        List<String> ids = this.getEncounterIds();
+
+        EncounterScoop encounterScoop = new EncounterScoop(fhirQueryClient, fhirStoreClient, ids);
 
         this.addContextData("scoopData", encounterScoop);
 

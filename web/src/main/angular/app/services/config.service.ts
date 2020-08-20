@@ -1,17 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-
-export interface IConfig {
-  apiUrl: string;
-  oauth?: IOAuthConfig;
-  smart?: IOAuthConfig[];
-}
-
-export interface IOAuthConfig {
-  issuer: string;
-  clientId: string;
-  scope: string;
-}
+import {IOAuthConfig} from '../model/oauth-config';
+import {IConfig} from '../model/config';
 
 @Injectable({
   providedIn: 'root'
