@@ -25,10 +25,10 @@ public class JsonProperties {
     public static final String COVID_CODES_VALUE_SET = "covidCodesValueSet";
     public static final String VENTILATOR_CODES_VALUESET = "ventilatorCodesValueSet";
     public static final String INTUBATION_PROCEDURE_CODES_VALUESET = "intubationProcedureCodesValueSet";
-    public static final String URL = "url";
-    public static final String USERNAME = "username";
-    public static final String PASSWORD = "password";
-    public static final String TO_ADDRESS = "toAddress";
+    public static final String DIRECT_URL = "url";
+    public static final String DIRECT_USERNAME = "username";
+    public static final String DIRECT_PASSWORD = "password";
+    public static final String DIRECT_TO_ADDRESS = "toAddress";
 
     private String exportFormat;
     private String fhirServerBase;
