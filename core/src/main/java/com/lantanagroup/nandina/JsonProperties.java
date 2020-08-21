@@ -25,6 +25,10 @@ public class JsonProperties {
     public static final String COVID_CODES_VALUE_SET = "covidCodesValueSet";
     public static final String VENTILATOR_CODES_VALUESET = "ventilatorCodesValueSet";
     public static final String INTUBATION_PROCEDURE_CODES_VALUESET = "intubationProcedureCodesValueSet";
+    public static final String URL = "url";
+    public static final String USERNAME = "username";
+    public static final String PASSWORD = "password";
+    public static final String TO_ADDRESS = "toAddress";
 
     private String exportFormat;
     private String fhirServerBase;
@@ -39,7 +43,7 @@ public class JsonProperties {
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
     private boolean requireHttps;
-    private DirectProperties direct;
+    private Map<String, String> direct;
 
     public String getExportFormat() {
         return exportFormat;
@@ -187,50 +191,11 @@ public class JsonProperties {
         return this.terminologyIntubationProcedureCodes;
     }
 
-    public DirectProperties getDirect() {
+    public Map<String, String> getDirect() {
         return direct;
     }
 
-    public void setDirect(DirectProperties direct) {
+    public void setDirect(Map<String, String> direct) {
         this.direct = direct;
-    }
-
-    public class DirectProperties {
-        private String url;
-        private String username;
-        private String password;
-        private String toAddress;
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getUrl() {
-            return url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
-
-        public String getToAddress() {
-            return toAddress;
-        }
-
-        public void setToAddress(String toAddress) {
-            this.toAddress = toAddress;
-        }
     }
 }

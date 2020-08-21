@@ -159,7 +159,7 @@ public class ReportController extends BaseController {
 
   @PostMapping("/api/directTest")
   public void sendTestMessage() throws MalformedURLException, UnirestException, ConfigurationException {
-    DirectSender sender = new DirectSender(this.jsonProperties.getDirect(), this.ctx);
+    DirectSender sender = new DirectSender(this.ctx);
     sender.sendCSV("test email", "test message", "a csv attachment");
   }
 }

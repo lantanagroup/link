@@ -9,6 +9,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.http.entity.ContentType;
 import org.hibernate.validator.internal.util.StringHelper;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.naming.ConfigurationException;
 import java.io.ByteArrayInputStream;
@@ -18,21 +19,22 @@ import java.net.URL;
 
 public class DirectSender {
   private FhirContext fhirContext;
-  private JsonProperties.DirectProperties directProperties;
 
-  public DirectSender(JsonProperties.DirectProperties directProperties, FhirContext fhirContext) throws ConfigurationException {
-    this.directProperties = directProperties;
+  @Autowired
+  private JsonProperties jsonProperties;
+
+  public DirectSender(FhirContext fhirContext) throws ConfigurationException {
     this.fhirContext = fhirContext;
 
-    if (this.directProperties == null) {
+    if (jsonProperties.getDirect() == null) {
       throw new ConfigurationException("Direct integration is not configured");
-    } else if (StringHelper.isNullOrEmptyString(this.directProperties.getUrl())) {
+    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.URL))) {
       throw new ConfigurationException("direct.url is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(this.directProperties.getUsername())) {
+    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.USERNAME))) {
       throw new ConfigurationException("direct.username is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(this.directProperties.getPassword())) {
+    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.PASSWORD))) {
       throw new ConfigurationException("direct.password is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(this.directProperties.getToAddress())) {
+    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.TO_ADDRESS))) {
       throw new ConfigurationException("direct.toAddress is required for Direct integration");
     }
   }
@@ -55,10 +57,10 @@ public class DirectSender {
   }
 
   public void send(String subject, String message, InputStream attachmentStream, String attachmentMimeType, String attachmentFileName) throws MalformedURLException, UnirestException {
-    URL attachmentUrl = new URL(new URL(this.directProperties.getUrl()), "/MailManagement/ws/v3/send/message/attachment");
+    URL attachmentUrl = new URL(new URL(jsonProperties.getDirect().get(JsonProperties.URL)), "/MailManagement/ws/v3/send/message/attachment");
     HttpResponse<JsonNode> attachmentResponse = Unirest.put(attachmentUrl.toString())
             .header("accept", "application/json")
-            .basicAuth(this.directProperties.getUsername(), this.directProperties.getPassword())
+            .basicAuth(jsonProperties.getDirect().get(JsonProperties.USERNAME), jsonProperties.getDirect().get(JsonProperties.PASSWORD))
             .field("attachment", attachmentStream, ContentType.create(attachmentMimeType), attachmentFileName)
             .asJson();
     JsonNode attachmentJson = attachmentResponse.getBody();
