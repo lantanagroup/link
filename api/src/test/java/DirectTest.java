@@ -1,12 +1,9 @@
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.direct.DirectSender;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.naming.ConfigurationException;
-import java.net.MalformedURLException;
 import java.util.HashMap;
 
 @Category(DirectSender.class)
