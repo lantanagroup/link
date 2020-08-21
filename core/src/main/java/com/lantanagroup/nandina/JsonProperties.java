@@ -39,6 +39,7 @@ public class JsonProperties {
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
     private boolean requireHttps;
+    private DirectProperties direct;
 
     public String getExportFormat() {
         return exportFormat;
@@ -184,5 +185,52 @@ public class JsonProperties {
             this.terminologyIntubationProcedureCodes = loadValueSet(this.getTerminology().get(INTUBATION_PROCEDURE_CODES_VALUESET));
         }
         return this.terminologyIntubationProcedureCodes;
+    }
+
+    public DirectProperties getDirect() {
+        return direct;
+    }
+
+    public void setDirect(DirectProperties direct) {
+        this.direct = direct;
+    }
+
+    public class DirectProperties {
+        private String url;
+        private String username;
+        private String password;
+        private String toAddress;
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getToAddress() {
+            return toAddress;
+        }
+
+        public void setToAddress(String toAddress) {
+            this.toAddress = toAddress;
+        }
     }
 }
