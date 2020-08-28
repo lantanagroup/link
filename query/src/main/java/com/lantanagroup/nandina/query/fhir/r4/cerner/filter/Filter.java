@@ -1,7 +1,8 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.filter;
 
+import com.lantanagroup.nandina.TerminologyHelper;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
-import com.lantanagroup.nandina.query.fhir.r4.cerner.Terminology;
+
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
@@ -17,7 +18,7 @@ public abstract class Filter {
 
 
   protected static final Logger logger = LoggerFactory.getLogger(Filter.class);
-  protected Terminology terminology = new Terminology();
+  protected TerminologyHelper terminology = new TerminologyHelper();
 
   public abstract boolean runFilter(PatientData pd);
 
