@@ -25,6 +25,10 @@ public class JsonProperties {
     public static final String COVID_CODES_VALUE_SET = "covidCodesValueSet";
     public static final String VENTILATOR_CODES_VALUESET = "ventilatorCodesValueSet";
     public static final String INTUBATION_PROCEDURE_CODES_VALUESET = "intubationProcedureCodesValueSet";
+    public static final String DIRECT_URL = "url";
+    public static final String DIRECT_USERNAME = "username";
+    public static final String DIRECT_PASSWORD = "password";
+    public static final String DIRECT_TO_ADDRESS = "toAddress";
 
     private String exportFormat;
     private String fhirServerBase;
@@ -39,6 +43,7 @@ public class JsonProperties {
     private Map<String, String> terminology;
     private Map<String, Map<String, String>> field;
     private boolean requireHttps;
+    private Map<String, String> direct;
 
     public String getExportFormat() {
         return exportFormat;
@@ -184,5 +189,13 @@ public class JsonProperties {
             this.terminologyIntubationProcedureCodes = loadValueSet(this.getTerminology().get(INTUBATION_PROCEDURE_CODES_VALUESET));
         }
         return this.terminologyIntubationProcedureCodes;
+    }
+
+    public Map<String, String> getDirect() {
+        return direct;
+    }
+
+    public void setDirect(Map<String, String> direct) {
+        this.direct = direct;
     }
 }

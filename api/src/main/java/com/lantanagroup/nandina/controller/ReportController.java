@@ -2,12 +2,11 @@ package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.*;
-import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
 import org.apache.commons.io.IOUtils;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
