@@ -1,12 +1,10 @@
 package com.lantanagroup.nandina.direct;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.google.gson.JsonObject;
 import com.lantanagroup.nandina.JsonProperties;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import org.apache.http.entity.ContentType;
 import org.hibernate.validator.internal.util.StringHelper;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
@@ -15,7 +13,6 @@ import org.json.JSONObject;
 import javax.naming.ConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class DirectSender {

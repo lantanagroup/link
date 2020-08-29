@@ -13,3 +13,6 @@ web/dist/
 api/src/main/resources/config-*.json
 query/target/
 cli/target/
+cli/target/classes/com/lantanagroup/nandina/PillboxDemo.class
+cli/target/classes/com/lantanagroup/nandina/PillBox.class
+*.class
