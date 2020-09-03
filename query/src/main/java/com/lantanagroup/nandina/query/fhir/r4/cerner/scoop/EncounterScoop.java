@@ -164,7 +164,6 @@ public class EncounterScoop extends Scoop {
 					Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
 					this.patientMap.put(p.getIdElement().getIdPart(), p);
 					this.patientEncounterMap.put(p, enc);
-
 				} catch (Exception e) {
 					logger.info("Unable to retrieve subject from Encounter. Ignoring. " + key);
 					badEncs.add(key);

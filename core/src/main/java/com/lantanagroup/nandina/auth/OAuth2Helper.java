@@ -26,10 +26,11 @@ public class OAuth2Helper {
     request.addHeader("Accept", "application/json");
     request.addHeader("Content-Type", "application/x-www-form-urlencoded");
     request.addHeader("Authorization", "Basic " + authorization);
+    request.addHeader("Cache-Control", "no-cache");
 
     StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=client_credentials\n");
-    sb.append("scope=" + scope + "\n");
+    sb.append("grant_type=client_credentials&");
+    sb.append("scope=" + scope);
     request.setEntity(new StringEntity(sb.toString()));
 
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {

@@ -29,14 +29,19 @@ public abstract class Scoop {
 	public Bundle rawSearch(IGenericClient fhirServer, String query) {
 		try {
 			logger.info("Executing query: " + query);
-			if (fhirServer == null)
-				logger.debug("Client is null");
-			Bundle bundle = fhirServer.search().byUrl(query).returnBundle(Bundle.class).execute();
 
-			return bundle;
+			if (fhirServer == null) {
+				logger.error("Client is null");
+			}
+
+			return fhirServer.search()
+							.byUrl(query)
+							.returnBundle(Bundle.class)
+							.execute();
 		} catch (Exception ex) {
-			this.logger.error("Could not retrieve data for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
+			this.logger.error("Could not retrieve data for " + this.getClass().getName() + " with query " + query + ": " + ex.getMessage(), ex);
 		}
+
 		return null;
 	}
 

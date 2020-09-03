@@ -33,9 +33,7 @@ public class JsonProperties {
     private String exportFormat;
     private String fhirServerQueryBase;
     private String fhirServerStoreBase;
-    private String fhirServerUserName;
-    private String fhirServerPassword;
-    private String fhirServerBearerToken;
+    private Map<String, String> fhirServerQueryAuth;
     private String authJwksUrl;
     private String prepareQuery;
     private String formQuery;
@@ -66,30 +64,6 @@ public class JsonProperties {
 
     public void setFhirServerStoreBase(String fhirServerStoreBase) {
         this.fhirServerStoreBase = fhirServerStoreBase;
-    }
-
-    public String getFhirServerUserName() {
-        return fhirServerUserName;
-    }
-
-    public void setFhirServerUserName(String fhirServerUserName) {
-        this.fhirServerUserName = fhirServerUserName;
-    }
-
-    public String getFhirServerPassword() {
-        return fhirServerPassword;
-    }
-
-    public void setFhirServerPassword(String fhirServerPassword) {
-        this.fhirServerPassword = fhirServerPassword;
-    }
-
-    public String getFhirServerBearerToken() {
-        return fhirServerBearerToken;
-    }
-
-    public void setFhirServerBearerToken(String fhirServerBearerToken) {
-        this.fhirServerBearerToken = fhirServerBearerToken;
     }
 
     public String getAuthJwksUrl() {
@@ -188,5 +162,13 @@ public class JsonProperties {
 
     public void setDirect(Map<String, String> direct) {
         this.direct = direct;
+    }
+
+    public Map<String, String> getFhirServerQueryAuth() {
+        return fhirServerQueryAuth;
+    }
+
+    public void setFhirServerQueryAuth(Map<String, String> fhirServerQueryAuth) {
+        this.fhirServerQueryAuth = fhirServerQueryAuth;
     }
 }

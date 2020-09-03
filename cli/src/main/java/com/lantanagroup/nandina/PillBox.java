@@ -58,13 +58,13 @@ public class PillBox {
 
   public static void main(String[] args) {
     Options options = new Options();
+    CommandLineParser parser = new DefaultParser();
+
+    // Add options for CLI
     options.addOption("config", true, "Location of the config file to use with Nandina");
     options.addOption("date", true, "The date of the report in YYYY-MM-DD format. If unpopulated will use today's date");
     options.addOption("list", true, "A FHIR R4 List resource containing references to Encounter resources (by identifier). Currently optional if the nandinaFhirServer parameter is populated, as the app will query that server for the List of Encounter identifiers");
     options.addOption("save", true, "The output file location. If unpopulated, will output to standard out");
-
-    CommandLineParser parser = new DefaultParser();
-    ListResource encList = null;
 
     try {
       CommandLine cmd = parser.parse(options, args);
