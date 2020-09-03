@@ -10,49 +10,43 @@ import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class TerminologyHelper {
   protected static final Logger logger = LoggerFactory.getLogger(TerminologyHelper.class);
   private FhirContext ctx = FhirContext.forR4();
   private IParser xmlParser = ctx.newXmlParser();
   private Map<String, Set<String>> codeSets = new HashMap<String, Set<String>>();
-  
-  
+
+
   public static String extractCodes(FhirContext fhirContext, File valueSetFile) throws Exception {
-      
-  	String valueSetFileContents = Files.readString(valueSetFile.toPath());
-      ValueSet valueSet;
-      List<String> codes = new ArrayList();
+    String valueSetFileContents = Files.readString(valueSetFile.toPath());
+    ValueSet valueSet;
+    List<String> codes = new ArrayList();
 
-      if (valueSetFile.getName().toLowerCase().endsWith(".xml")) {
-          valueSet = (ValueSet) fhirContext.newXmlParser().parseResource(valueSetFileContents);
-      } else if (valueSetFile.getName().toLowerCase().endsWith(".json")) {
-          valueSet = (ValueSet) fhirContext.newJsonParser().parseResource(valueSetFileContents);
-      } else {
-          throw new Exception("Value set file " + valueSetFile.getName() + " has an unexpected extension.");
+    if (valueSetFile.getName().toLowerCase().endsWith(".xml")) {
+      valueSet = (ValueSet) fhirContext.newXmlParser().parseResource(valueSetFileContents);
+    } else if (valueSetFile.getName().toLowerCase().endsWith(".json")) {
+      valueSet = (ValueSet) fhirContext.newJsonParser().parseResource(valueSetFileContents);
+    } else {
+      throw new Exception("Value set file " + valueSetFile.getName() + " has an unexpected extension.");
+    }
+
+    if (valueSet.getExpansion() != null) {
+      for (ValueSet.ValueSetExpansionContainsComponent contains : valueSet.getExpansion().getContains()) {
+        if (!Helper.isNullOrEmpty(contains.getCode())) {
+          codes.add(contains.getCode());
+        }
       }
+    }
 
-      if (valueSet.getExpansion() != null) {
-          for (ValueSet.ValueSetExpansionContainsComponent contains : valueSet.getExpansion().getContains()) {
-              if (!Helper.isNullOrEmpty(contains.getCode())) {
-                  codes.add(contains.getCode());
-              }
-          }
-      }
+    if (codes.size() == 0) {
+      throw new Exception("Value set " + valueSetFile.getName() + " does not have an expansion with codes");
+    }
 
-      if (codes.size() == 0) {
-          throw new Exception("Value set " + valueSetFile.getName() + " does not have an expansion with codes");
-      }
-
-      return String.join(",", codes);
+    return String.join(",", codes);
   }
-  
+
 
   private Set<String> valueSetToSet(ValueSet vs) {
     Set<String> set = new HashSet<String>();

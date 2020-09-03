@@ -19,18 +19,20 @@ public abstract class Report {
 
 	protected static final Logger logger = LoggerFactory.getLogger(Report.class);
 	protected List<PatientData> patientData;
-	FhirContext ctx = FhirContext.forR4();
-	IParser xmlParser = ctx.newXmlParser();
+	private FhirContext ctx;
 
 	public Report(EncounterScoop scoop) {
+		this.ctx = FhirContext.forR4();		// TODO: This should be passed from the caller, not re-initialized
 		initReport(scoop, null);
 	}
 
 	public Report(EncounterScoop scoop, List<Filter> filters) {
+		this.ctx = FhirContext.forR4();		// TODO: This should be passed from the caller, not re-initialized
 		initReport(scoop, filters);
 	}
 
 	private void initReport(EncounterScoop scoop, List<Filter> filters) {
+		if (scoop == null) return;
 		if (filters == null) filters = new ArrayList<Filter>();
 		if (scoop.getReportDate() != null) {
 			// TODO: Need to create date filters for Condition, Procedure, etc.
@@ -39,21 +41,25 @@ public abstract class Report {
 			EncounterDateFilter edf = new EncounterDateFilter(scoop.getReportDate());
 			filters.add(edf);
 		}
+
 		this.patientData = new ArrayList<>();
-		for (PatientData pd : scoop.getPatientData()) {
-			logger.info("Checking patient " + pd.getPatient().getId());
-			if (filters.size() == 0) {
-				patientData.add(pd);
-			} else {
-				// this calls the runFilter() method on each of the filters and if they "allMatch" true then result is
-				// true. They all have to return true for the result to be true.
-				boolean result = filters.parallelStream()
-				.allMatch(f -> f.runFilter(pd) == true);
-				if (result) {
+
+		if (scoop.getPatientData() != null) {
+			for (PatientData pd : scoop.getPatientData()) {
+				logger.info("Checking patient " + pd.getPatient().getId());
+				if (filters.size() == 0) {
 					patientData.add(pd);
 				} else {
-					logger.info(pd.getPatient().getId() + " did not pass all filters ");
-					logger.info(pd.getBundleXml());
+					// this calls the runFilter() method on each of the filters and if they "allMatch" true then result is
+					// true. They all have to return true for the result to be true.
+					boolean result = filters.parallelStream()
+									.allMatch(f -> f.runFilter(pd) == true);
+					if (result) {
+						patientData.add(pd);
+					} else {
+						logger.info(pd.getPatient().getId() + " did not pass all filters ");
+						logger.info(pd.getBundleXml());
+					}
 				}
 			}
 		}
@@ -67,7 +73,7 @@ public abstract class Report {
 	 */
 	public byte[] getReportData() throws IOException {
 		Bundle b = getReportBundle();
-		String bundleStr = xmlParser.encodeResourceToString(b);
+		String bundleStr = this.ctx.newXmlParser().encodeResourceToString(b);
 		return bundleStr.getBytes();
 	}
 

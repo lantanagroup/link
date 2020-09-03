@@ -2,12 +2,17 @@
   "exportFormat": "csv",
   "fhirServerQueryBase": "https://nandina-fhir.lantanagroup.com/fhir",
   "fhirServerStoreBase": "https://nandina-fhir.lantanagroup.com/fhir",
-  "fhirServerUserName": "",
-  "fhirServerPassword": "",
-  "fhirServerBearerToken": "",
   "authJwksUrl": "",
   "prepareQuery": "com.lantanagroup.nandina.query.fhir.r4.cerner.PrepareQuery",
   "formQuery": "com.lantanagroup.nandina.query.fhir.r4.cerner.FormQuery",
+  "fhirServerQueryAuth": {
+    "mode": "",
+    "username": "",
+    "password": "",
+    "tokenUrl": "",
+    "scopes": "",
+    "token": ""
+  },
   "terminology": {
     "covidCodesValueSet": "classpath:2.16.840.1.113762.1.4.1146.1124.xml",
     "ventilatorCodesValueSet": "classpath:mechanical-ventilators.xml",

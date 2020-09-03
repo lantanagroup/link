@@ -53,21 +53,28 @@ public class EncounterScoop extends Scoop {
 		this.targetFhirServer = targetFhirServer;
 		this.nandinaFhirServer = nandinaFhirServer;
 		ListResource encList = getEncounterListForDate(reportDate);
-		init(encList);
+
+		if (encList != null) {
+			init(encList);
+		}
 	}
 
 	private ListResource getEncounterListForDate(Date reportDate) {
 		ListResource encounterList = null;
 		String search = "List?code="
-				+ encodeValue(
-						"http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay")
+				+ encodeValue("http://lantanagroup.com/fhir/us/nandina/CodeSystem/NandinaListType|ActiveEncountersForDay")
 				+ "&date=" + sdf.format(reportDate);
 		Bundle bundle = this.rawSearch(nandinaFhirServer, search);
+
 		if (bundle == null) {
 			throw new RuntimeException("Search returned null: " + search);
 		} else if (bundle.getTotal() > 1) {
 			logger.debug("Multiple Nandina encounter lists found on same date. Only using first returned");
+		} else if (bundle.getTotal() <= 0) {
+			logger.error("No encounter lists were found for the report date specified.");
+			return null;
 		}
+
 		validationSupport = (IValidationSupport) nandinaFhirServer.getFhirContext().getValidationSupport();
 		fpe = new FHIRPathEngine(new HapiWorkerContext(nandinaFhirServer.getFhirContext(), validationSupport));
 		if (bundle.hasEntry() && bundle.getEntryFirstRep().hasResource()) {
@@ -157,7 +164,6 @@ public class EncounterScoop extends Scoop {
 					Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
 					this.patientMap.put(p.getIdElement().getIdPart(), p);
 					this.patientEncounterMap.put(p, enc);
-
 				} catch (Exception e) {
 					logger.info("Unable to retrieve subject from Encounter. Ignoring. " + key);
 					badEncs.add(key);

@@ -138,7 +138,7 @@ public class PillboxCsvReport extends Report {
 
   public String getDischargeDate(PatientData pd) {
     String dateStr = null;
-    if (pd.primaryEncounter.hasPeriod()) {
+    if (pd.primaryEncounter.hasPeriod() && pd.primaryEncounter.getPeriod().hasEnd()) {
       dateStr = sdf.format(pd.primaryEncounter.getPeriod().getEnd());
     }
     return dateStr;
@@ -167,11 +167,14 @@ public class PillboxCsvReport extends Report {
   public String getPatientRace(PatientData pd) {
     String value = null;
     Extension race = pd.patient.getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-race");
+
     if (race != null) {
       Extension omb = race.getExtensionByUrl("ombCategory");
-      Coding c = (Coding) omb.getValue();
-      value = c.getSystem() + "|" + c.getCode();
 
+      if (omb != null) {
+        Coding c = (Coding) omb.getValue();
+        value = c.getSystem() + "|" + c.getCode();
+      }
     }
     return value;
   }
