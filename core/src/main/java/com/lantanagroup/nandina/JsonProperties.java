@@ -31,7 +31,6 @@ public class JsonProperties {
     public static final String DIRECT_TO_ADDRESS = "toAddress";
 
     private String exportFormat;
-    private String fhirServerBase;
     private String fhirServerQueryBase;
     private String fhirServerStoreBase;
     private String fhirServerUserName;
@@ -51,14 +50,6 @@ public class JsonProperties {
 
     public void setExportFormat(String exportFormat) {
         this.exportFormat = exportFormat;
-    }
-
-    public String getFhirServerBase() {
-        return fhirServerBase;
-    }
-
-    public void setFhirServerBase(String fhirServerBase) {
-        this.fhirServerBase = fhirServerBase;
     }
 
     public String getFhirServerQueryBase() {
