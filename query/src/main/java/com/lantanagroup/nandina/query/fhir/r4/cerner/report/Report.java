@@ -47,18 +47,19 @@ public abstract class Report {
 		if (scoop.getPatientData() != null) {
 			for (PatientData pd : scoop.getPatientData()) {
 				logger.info("Checking patient " + pd.getPatient().getId());
+
 				if (filters.size() == 0) {
 					patientData.add(pd);
 				} else {
 					// this calls the runFilter() method on each of the filters and if they "allMatch" true then result is
 					// true. They all have to return true for the result to be true.
-					boolean result = filters.parallelStream()
-									.allMatch(f -> f.runFilter(pd) == true);
+					boolean result = filters.parallelStream().allMatch(f -> f.runFilter(pd) == true);
+
 					if (result) {
 						patientData.add(pd);
 					} else {
 						logger.info(pd.getPatient().getId() + " did not pass all filters ");
-						logger.info(pd.getBundleXml());
+						//logger.info(pd.getBundleXml());
 					}
 				}
 			}

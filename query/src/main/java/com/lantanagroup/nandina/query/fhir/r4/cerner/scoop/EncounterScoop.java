@@ -122,8 +122,12 @@ public class EncounterScoop extends Scoop {
 
 	public void loadEncounterMap(List<String> encounterIdList) {
 		for (String id : encounterIdList) {
-			Encounter encounter = targetFhirServer.read().resource(Encounter.class).withId(id).execute();
-			this.encounterMap.put(encounter.getId(), encounter);
+			try {
+				Encounter encounter = targetFhirServer.read().resource(Encounter.class).withId(id).execute();
+				this.encounterMap.put(encounter.getId(), encounter);
+			} catch (Exception ex) {
+				logger.error("Couldn't retrieve Encounter with ID " + id + " from the FHIR server");
+			}
 		}
 	}
 
