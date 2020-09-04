@@ -37,20 +37,33 @@ public class DirectSender {
   }
 
   public void sendCSV(String subject, String message, String csvData) throws Exception {
-    InputStream is = new ByteArrayInputStream(csvData.getBytes());
-    this.send(subject, message, is, "text/plain", "report.csv");
+    InputStream inputStream = new ByteArrayInputStream(csvData.getBytes());
+    this.send(subject, message, inputStream, "text/plain", "report.csv");
   }
 
   public void sendJSON(String subject, String message, QuestionnaireResponse questionnaireResponse) throws Exception {
     String json = this.fhirContext.newJsonParser().encodeResourceToString(questionnaireResponse);
-    InputStream is = new ByteArrayInputStream(json.getBytes());
-    this.send(subject, message, is, "application/json", "report.json");
+    InputStream inputStream = new ByteArrayInputStream(json.getBytes());
+    this.send(subject, message, inputStream, "application/json", "report.json");
   }
 
   public void sendXML(String subject, String message, QuestionnaireResponse questionnaireResponse) throws Exception {
     String xml = this.fhirContext.newXmlParser().encodeResourceToString(questionnaireResponse);
-    InputStream is = new ByteArrayInputStream(xml.getBytes());
-    this.send(subject, message, is, "application/xml", "report.xml");
+    InputStream inputStream = new ByteArrayInputStream(xml.getBytes());
+    this.send(subject, message, inputStream, "application/xml", "report.xml");
+  }
+
+  /**
+   * This method calls the send() and is responsible for attaching zip files by passing in the byte[] zipBytes. called
+   * from pillbox.java
+   * @param subject the subject of the email
+   * @param message the email message
+   * @param zipBytes the actual zip file contents
+   * @throws Exception
+   */
+  public void sendZip(String subject, String message, byte[] zipBytes) throws Exception {
+    InputStream inputStream = new ByteArrayInputStream(zipBytes);
+    this.send(subject, message, inputStream, "application/zip", "pillbox-report.zip");
   }
 
   public void send(String subject, String message, InputStream attachmentStream, String attachmentMimeType, String attachmentFileName) throws Exception {
