@@ -30,6 +30,7 @@
     <div class="card-footer">
         <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="loading">Generate Report</button>
         <p class="help-block" *ngIf="loading">Generating report...</p>
+        <button type="button" style="margin:5px;" class="btn btn-primary" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
     </div>
 </div>
 

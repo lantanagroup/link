@@ -1,7 +1,12 @@
 package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.*;
+import com.lantanagroup.nandina.FhirHelper;
+import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
+import com.lantanagroup.nandina.QueryReport;
+import com.lantanagroup.nandina.TransformHelper;
+import com.lantanagroup.nandina.direct.DirectSender;
 import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
@@ -83,6 +88,27 @@ public class ReportController extends BaseController {
     }
 
     return criteria;
+  }
+
+  /**
+   * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
+   * responses using the DirectSender class.
+   * @param report - this is the report data after generate report was clicked
+   * @return
+   * @throws Exception
+   */
+  @PostMapping("/api/send")
+  public QueryReport sendQuestionnaireResponse(@RequestBody() QueryReport report) throws Exception {
+    PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
+    QuestionnaireResponse questionnaireResponse = generator.generate();
+    DirectSender sender = new DirectSender(jsonProperties, ctx);
+
+    if (jsonProperties.getExportFormat().equals("json")) {
+      sender.sendJSON("QuestionnaireResponse JSON", "Please see the attached questionnaireResponse json file", questionnaireResponse);
+    } else if (jsonProperties.getExportFormat().equals("xml")) {
+      sender.sendXML("QuestionnaireResponse XML", "Please see the attached questionnaireResponse xml file", questionnaireResponse);
+    }
+    return report;
   }
 
   @PostMapping("/api/query")

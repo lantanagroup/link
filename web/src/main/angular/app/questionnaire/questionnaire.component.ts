@@ -17,6 +17,8 @@ import {QueryReport} from '../model/query-report';
 })
 export class QuestionnaireComponent implements OnInit {
   loading = false;
+  sending = false;
+  reportGenerated = false;
   overflowLocations: LocationResponse[] = [];
   today = getFhirNow();
   report: QueryReport = new QueryReport(
@@ -106,6 +108,22 @@ export class QuestionnaireComponent implements OnInit {
     this.cookieService.set('overflowLocations', JSON.stringify(this.overflowLocations));
   }
 
+  async send() {
+    try {
+      this.sending = true;
+      if (this.report) {
+        await this.reportService.send(this.report);
+      } else {
+        this.toastService.showInfo('Unable to send blank report');
+      }
+      this.toastService.showInfo('Successfully sent report!');
+    } catch (ex) {
+      this.toastService.showException('Error sending report', ex);
+    } finally {
+      this.sending = false;
+    }
+  }
+
   async reload() {
     try {
       this.loading = true;
@@ -132,6 +150,7 @@ export class QuestionnaireComponent implements OnInit {
       }
 
       this.toastService.showInfo('Successfully ran queries!');
+      this.reportGenerated = true;
     } catch (ex) {
       this.toastService.showException('Error running queries', ex);
     } finally {
