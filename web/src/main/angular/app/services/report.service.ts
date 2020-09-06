@@ -15,6 +15,14 @@ export class ReportService {
     return await this.http.post(url, report, { observe: 'response', responseType: 'text' }).toPromise();
   }
 
+  async send(report: QueryReport) {
+    let url = '/api/send';
+
+    url = this.configService.getApiUrl(url);
+
+    return await this.http.post<QueryReport>(url, report).toPromise();
+  }
+
   async generate(report: QueryReport, overflowLocations?: LocationResponse[]) {
     let url = '/api/query?';
 
