@@ -103,10 +103,12 @@ public class ReportController extends BaseController {
     QuestionnaireResponse questionnaireResponse = generator.generate();
     DirectSender sender = new DirectSender(jsonProperties, ctx);
 
-    if (jsonProperties.getExportFormat().equals("json")) {
+    if (jsonProperties.getExportFormat().equalsIgnoreCase("json")) {
       sender.sendJSON("QuestionnaireResponse JSON", "Please see the attached questionnaireResponse json file", questionnaireResponse);
-    } else if (jsonProperties.getExportFormat().equals("xml")) {
+    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("xml")) {
       sender.sendXML("QuestionnaireResponse XML", "Please see the attached questionnaireResponse xml file", questionnaireResponse);
+    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("csv")) {
+      sender.sendCSV("QuestionnaireResponse CSV", "Please see the attached questionnaireResponse csv file", this.convertToCSV(questionnaireResponse));
     }
     return report;
   }
