@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.report;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.OnsetFilter;
@@ -17,8 +18,8 @@ public class OnsetReport extends Report {
      * @param filters
      * @param reportDate
      */
-    public OnsetReport(EncounterScoop scoop, List<Filter> filters, Date reportDate) {
-        super(scoop, addFilters(filters, reportDate));
+    public OnsetReport(EncounterScoop scoop, List<Filter> filters, Date reportDate, FhirContext ctx) {
+        super(scoop, addFilters(filters, reportDate), ctx);
     }
 
     /**
@@ -28,8 +29,8 @@ public class OnsetReport extends Report {
      * @param reportDate
      * @param previousDay
      */
-    public OnsetReport(EncounterScoop scoop, List<Filter> filters, Date reportDate, LocalDate previousDay) {
-        super(scoop, addFilters(filters, reportDate, previousDay));
+    public OnsetReport(EncounterScoop scoop, List<Filter> filters, Date reportDate, LocalDate previousDay, FhirContext ctx) {
+        super(scoop, addFilters(filters, reportDate, previousDay), ctx);
     }
 
     /*

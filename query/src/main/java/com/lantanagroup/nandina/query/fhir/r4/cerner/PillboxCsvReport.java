@@ -34,8 +34,8 @@ public class PillboxCsvReport extends Report {
   protected String censusId;
   private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-  public PillboxCsvReport(EncounterScoop scoop, List<Filter> filters) {
-    super(scoop, addFilters(filters));
+  public PillboxCsvReport(EncounterScoop scoop, List<Filter> filters, FhirContext ctx) {
+    super(scoop, addFilters(filters), ctx);
   }
 
   private static List<Filter> addFilters(List<Filter> filters) {

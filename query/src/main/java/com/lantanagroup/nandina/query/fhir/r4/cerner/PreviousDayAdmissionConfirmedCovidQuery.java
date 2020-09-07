@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.BaseQuery;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.report.PreviousDayAdmissionConfirmedCovidReport;
@@ -17,10 +18,10 @@ public class PreviousDayAdmissionConfirmedCovidQuery extends BaseQuery {
         if (!this.criteria.containsKey("reportDate") && !this.criteria.containsKey("overflowLocations")) {
             return null;
         }
-
+        FhirContext ctx = (FhirContext) this.getContextData("fhirContext");
         EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
         List<Filter> filters = new ArrayList<Filter>();
-        PreviousDayAdmissionConfirmedCovidReport onsetReport = new PreviousDayAdmissionConfirmedCovidReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.parse(this.criteria.get("reportDate"))));
+        PreviousDayAdmissionConfirmedCovidReport onsetReport = new PreviousDayAdmissionConfirmedCovidReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.parse(this.criteria.get("reportDate"))), ctx);
         this.addContextData("previousDayCovidAdmitted", onsetReport.getReportCount());
 
         return onsetReport.getReportCount();

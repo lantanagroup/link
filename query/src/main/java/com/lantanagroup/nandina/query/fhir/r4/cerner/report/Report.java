@@ -21,13 +21,13 @@ public abstract class Report {
 	protected List<PatientData> patientData;
 	private FhirContext ctx;
 
-	public Report(EncounterScoop scoop) {
-		this.ctx = FhirContext.forR4();		// TODO: This should be passed from the caller, not re-initialized
+	public Report(EncounterScoop scoop, FhirContext ctx) {
+		this.ctx = ctx;
 		initReport(scoop, null);
 	}
 
-	public Report(EncounterScoop scoop, List<Filter> filters) {
-		this.ctx = FhirContext.forR4();		// TODO: This should be passed from the caller, not re-initialized
+	public Report(EncounterScoop scoop, List<Filter> filters, FhirContext ctx) {
+		this.ctx = ctx;
 		initReport(scoop, filters);
 	}
 

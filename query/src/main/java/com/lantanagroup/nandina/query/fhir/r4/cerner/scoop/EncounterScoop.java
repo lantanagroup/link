@@ -111,7 +111,7 @@ public class EncounterScoop extends Scoop {
 			PatientData pd;
 			try {
 				Patient p = this.getPatientMap().get(key);
-				pd = new PatientData(this, p);
+				pd = new PatientData(this, p, targetFhirServer.getFhirContext());
 				patientData.add(pd);
 			} catch (Exception e) {
 				logger.info("Error loading data for " + key, e);
