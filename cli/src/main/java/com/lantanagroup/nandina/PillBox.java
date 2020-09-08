@@ -110,7 +110,7 @@ public class PillBox {
             }
 
             List<Filter> filters = new ArrayList<Filter>();
-            PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters);
+            PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters, ctx);
 
             if (!StringUtils.isEmpty(saveLocation)) {
                 File outputFile = new File(saveLocation);

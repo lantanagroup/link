@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.report;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.PreviousDayAdmissionConfirmedCovidFilter;
@@ -10,8 +11,8 @@ import java.util.List;
 
 public class PreviousDayAdmissionConfirmedCovidReport extends Report {
 
-    public PreviousDayAdmissionConfirmedCovidReport(EncounterScoop scoop, List<Filter> filters, Date reportDate) {
-        super(scoop, addFilters(filters, reportDate));
+    public PreviousDayAdmissionConfirmedCovidReport(EncounterScoop scoop, List<Filter> filters, Date reportDate, FhirContext ctx) {
+        super(scoop, addFilters(filters, reportDate), ctx);
     }
 
     private static List<Filter> addFilters(List<Filter> filters, Date reportDate) {

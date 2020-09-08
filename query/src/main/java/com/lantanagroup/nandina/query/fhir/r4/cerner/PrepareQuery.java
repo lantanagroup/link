@@ -57,7 +57,6 @@ public class PrepareQuery extends BasePrepareQuery {
             return;
         }
 
-        //FhirContext ctx = FhirContext.forR4();
         IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
         IGenericClient fhirStoreClient = (IGenericClient) this.getContextData("fhirStoreClient");
         List<String> ids = this.getEncounterIds();
@@ -65,6 +64,7 @@ public class PrepareQuery extends BasePrepareQuery {
         EncounterScoop encounterScoop = new EncounterScoop(fhirQueryClient, fhirStoreClient, reportDate);
 
         this.addContextData("scoopData", encounterScoop);
+        this.addContextData("fhirContext", fhirQueryClient.getFhirContext());
 
         // TODO: Move core data used in HospitalizedQuery to here
 

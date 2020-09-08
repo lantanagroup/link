@@ -18,7 +18,7 @@ import java.util.Map;
 public class PatientData {
 
   protected static final Logger logger = LoggerFactory.getLogger(PatientData.class);
-  protected static FhirContext ctx = FhirContext.forR4();
+  protected static FhirContext ctx;
   protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
   protected Date dateCollected;
   protected Patient patient;
@@ -31,8 +31,9 @@ public class PatientData {
   protected Bundle procedures;
   protected CodeableConcept primaryDx = null;
 
-  public PatientData(EncounterScoop scoop, Patient pat) {
+  public PatientData(EncounterScoop scoop, Patient pat, FhirContext fhirContext) {
     patient = pat;
+    ctx = fhirContext;
     dateCollected = new Date();
     Map<Patient, Encounter> patEncMap = scoop.getPatientEncounterMap();
     primaryEncounter = patEncMap.get(patient);

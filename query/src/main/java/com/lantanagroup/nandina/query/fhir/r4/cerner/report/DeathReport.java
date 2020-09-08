@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.report;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.DeathFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
@@ -13,8 +14,8 @@ public class DeathReport extends Report {
     /*
      *  Create this passing in an EncounterDateFilter for the date on which you are interested.
      */
-    public DeathReport(EncounterScoop scoop, List<Filter> filters, Date reportDate) {
-        super(scoop, addFilters(filters, reportDate));
+    public DeathReport(EncounterScoop scoop, List<Filter> filters, Date reportDate, FhirContext ctx) {
+        super(scoop, addFilters(filters, reportDate), ctx);
     }
 
     private static List<Filter> addFilters(List<Filter> filters, Date reportDate) {

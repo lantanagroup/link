@@ -21,7 +21,7 @@ public class PillboxDemo {
       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
       // The Scoop will look on the nandinaFhirServer for a NandinaEncounterList where List.date is June 6, 2020, then start pulling Encounter data from the EHR with the encounter ids in the List
       EncounterScoop scoop = new EncounterScoop(ehrFhirServer, nandinaFhirServer, sdf.parse("2020-06-09"));
-      HospitalizedReport hr = new HospitalizedReport(scoop);
+      HospitalizedReport hr = new HospitalizedReport(scoop, ctx);
       System.out.println("Patients hospitalized with Covid on report date: " + hr.getReportCount());
     } catch (Exception e) {
       e.printStackTrace();

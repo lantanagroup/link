@@ -20,7 +20,7 @@ public class PreviousDayAdmissionSuspectedCovidQuery extends BaseQuery {
 
         EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
         List<Filter> filters = new ArrayList<Filter>();
-        PreviousDayAdmissionSuspectedCovidReport onsetReport = new PreviousDayAdmissionSuspectedCovidReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.parse(this.criteria.get("reportDate"))));
+        PreviousDayAdmissionSuspectedCovidReport onsetReport = new PreviousDayAdmissionSuspectedCovidReport(encounterScoop, filters, java.sql.Date.valueOf(LocalDate.parse(this.criteria.get("reportDate"))), this.fhirClient.getFhirContext());
         this.addContextData("previousDaySuspectedCovidAdmitted", onsetReport.getReportCount());
 
         return onsetReport.getReportCount();

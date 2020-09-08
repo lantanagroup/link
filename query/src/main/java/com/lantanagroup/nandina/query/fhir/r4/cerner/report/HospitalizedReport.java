@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.report;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.Filter;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.HospitalizedEncounterFilter;
@@ -10,13 +11,13 @@ import java.util.List;
 
 public class HospitalizedReport extends Report {
 	
-	public HospitalizedReport(EncounterScoop scoop) {
-		super(scoop, addFilters(new ArrayList<Filter>()));
+	public HospitalizedReport(EncounterScoop scoop, FhirContext ctx) {
+		super(scoop, addFilters(new ArrayList<Filter>()), ctx);
 	}
 
 
-	public HospitalizedReport(EncounterScoop scoop, List<Filter> filters) {
-		super(scoop, addFilters(filters));
+	public HospitalizedReport(EncounterScoop scoop, List<Filter> filters, FhirContext ctx) {
+		super(scoop, addFilters(filters), ctx);
 	}
 
 	private static List<Filter> addFilters(List<Filter> filters) {
