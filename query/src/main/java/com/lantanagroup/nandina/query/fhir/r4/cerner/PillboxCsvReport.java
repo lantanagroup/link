@@ -149,7 +149,7 @@ public class PillboxCsvReport extends Report {
     if (pd.patient.getBirthDate() != null) {
       Calendar bd = Calendar.getInstance();
       bd.setTime(pd.patient.getBirthDate());
-      LocalDate localBd = LocalDate.of(bd.get(Calendar.YEAR), bd.get(Calendar.MONTH), bd.get(Calendar.DAY_OF_MONTH));
+      LocalDate localBd = LocalDate.of(bd.get(Calendar.YEAR), bd.get(Calendar.MONTH) + 1, bd.get(Calendar.DAY_OF_MONTH) + 1);
       Period p = Period.between(localBd, LocalDate.now());
       patientAge = "" + p.getYears();
     }
@@ -182,12 +182,16 @@ public class PillboxCsvReport extends Report {
   public String getPatientEthnicity(PatientData pd) {
     String value = null;
     Extension ethnicity = pd.patient.getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity");
+
     if (ethnicity != null) {
       Extension omb = ethnicity.getExtensionByUrl("ombCategory");
-      Coding c = (Coding) omb.getValue();
-      value = c.getSystem() + "|" + c.getCode();
 
+      if (omb != null && omb.getValue() != null) {
+        Coding c = (Coding) omb.getValue();
+        value = c.getSystem() + "|" + c.getCode();
+      }
     }
+
     return value;
   }
 
