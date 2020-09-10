@@ -126,6 +126,7 @@ public class ReportController extends BaseController {
     contextData.put("report", report);
     contextData.put("fhirQueryClient", fhirQueryClient);
     contextData.put("fhirStoreClient", fhirStoreClient);
+    contextData.put("queryCriteria", this.jsonProperties.getQueryCriteria());
 
     FhirHelper.recordAuditEvent(
             fhirStoreClient,
@@ -141,6 +142,21 @@ public class ReportController extends BaseController {
 
     // Execute the form query plugin
     this.executeFormQuery(jsonProperties.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
+
+    if (this.jsonProperties.getField() != null) {
+      if (this.jsonProperties.getField().containsKey("default")) {
+        Map<String, String> defaultFields = this.jsonProperties.getField().get("default");
+
+        if (defaultFields != null) {
+          for (String fieldName : defaultFields.keySet()) {
+            // Only set the default field value if one hasn't already been set
+            if (report.getAnswer(fieldName) == null) {
+              report.setAnswer(fieldName, defaultFields.et(fieldName));
+            }
+          }
+        }
+      }
+    }
 
     return report;
   }
