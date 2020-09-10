@@ -2,18 +2,6 @@
     <div class="card-header">Report Generation Criteria</div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-8">
-                <!-- Overflow Locations -->
-                <p><strong>Overflow Locations</strong></p>
-                <p class="help-block">Please select <em>all</em> locations that are Emergency Department (ED) or any overflow location where confirmed or suspected covid patients are awaiting an inpatient bed.</p>
-                <div class="input-group">
-                    <input type="text" class="form-control disabled" readonly="readonly" [ngModel]="overflowLocationsDisplay" />
-                    <div class="input-group-append">
-                        <button type="button" class="btn btn-outline-primary" (click)="selectOverflowLocations()">Select ED/Overflow Locations</button>
-                    </div>
-                </div>
-                <p *ngIf="overflowLocations.length === 0"><em>No locations have been specified. Queries related to overflow will not be executed.</em></p>
-            </div>
             <div class="col-md-4">
                 <p><strong>Report Date</strong></p>
                 <p class="help-block">For which patient impact and hospital capacity counts are reported.</p>
@@ -25,9 +13,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <button type="button" class="btn btn-primary" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
-            </div>
+
         </div>
     </div>
     <div class="card-footer">
@@ -175,3 +161,4 @@
 </div>
 
 <button type="button" class="btn btn-primary" (click)="download()">Export to File</button>
+<button type="button" class="btn btn-primary" style="margin:5px;" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
