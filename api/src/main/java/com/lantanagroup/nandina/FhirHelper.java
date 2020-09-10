@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.AuditEvent;
+import org.hl7.fhir.r4.model.Coding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -17,21 +18,43 @@ import java.util.Date;
 import java.util.List;
 
 public class FhirHelper {
+  public enum AuditEventTypes {
+    Generate,
+    Export,
+    Send,
+    SearchLocations
+  }
+
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
 
-  public static void recordAuditEvent(IGenericClient fhirClient, Authentication authentication, String url,
-                                      String controllerMethod, String code, String display, String outcomeDescription) {
+  public static void recordAuditEvent(IGenericClient fhirClient, Authentication authentication, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
-    auditEvent.addSubtype().setSystem(url).setDisplay(controllerMethod);
-    auditEvent.addSubtype().setCode(code).setDisplay(display);
+
+    switch (type) {
+      case Export:
+        auditEvent.setType(new Coding(null, "export", null));
+        break;
+      case Generate:
+        auditEvent.setType(new Coding(null, "generate", null));
+        break;
+      case Send:
+        auditEvent.setType(new Coding(null, "send", null));
+        break;
+      case SearchLocations:
+        auditEvent.setType(new Coding(null, "search-locations", null));
+        break;
+    }
+
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
     auditEvent.setRecorded(new Date());
     auditEvent.setOutcome(AuditEvent.AuditEventOutcome._0);
     auditEvent.setOutcomeDesc(outcomeDescription);
     List<AuditEvent.AuditEventAgentComponent> agentList = new ArrayList<>();
     AuditEvent.AuditEventAgentComponent agent = new AuditEvent.AuditEventAgentComponent();
+    agent.setRequestor(false);
+
     DecodedJWT jwt = (DecodedJWT) authentication.getCredentials();
     String payload = jwt.getPayload();
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
@@ -46,13 +69,19 @@ public class FhirHelper {
     agentList.add(agent);
     auditEvent.setAgent(agentList);
 
-    MethodOutcome outcome = fhirClient.create()
-            .resource(auditEvent)
-            .prettyPrint()
-            .encodedJson()
-            .execute();
+    // TODO: Need to set "source" in AuditEvent. It is required by the AuditEvent resource. Some FHIR servers may reject this as-is.
 
-    IIdType id = outcome.getId();
-    logger.info("AuditEvent LOGGED: " + id.getValue());
+    try {
+      MethodOutcome outcome = fhirClient.create()
+              .resource(auditEvent)
+              .prettyPrint()
+              .encodedJson()
+              .execute();
+
+      IIdType id = outcome.getId();
+      logger.info("AuditEvent LOGGED: " + id.getValue());
+    } catch (Exception ex) {
+      logger.error("Failed to record AuditEvent", ex);
+    }
   }
 }

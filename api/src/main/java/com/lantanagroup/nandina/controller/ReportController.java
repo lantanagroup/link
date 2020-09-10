@@ -114,7 +114,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/api/query")
-  public QueryReport getQuestionnaireResponse(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
+  public QueryReport generateReport(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
     IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
@@ -128,14 +128,7 @@ public class ReportController extends BaseController {
     contextData.put("fhirStoreClient", fhirStoreClient);
     contextData.put("queryCriteria", this.jsonProperties.getQueryCriteria());
 
-    FhirHelper.recordAuditEvent(
-            fhirStoreClient,
-            authentication,
-            ReportController.class.getName(),
-            "executeQuery()",
-            "Generate Report: " + criteria,
-            "Generate Report",
-            "Successful Report Generated");
+    FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Generate, "Successful Report Generated");
 
     // Execute the prepare query plugin if configured
     this.executePrepareQuery(jsonProperties.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
@@ -169,6 +162,7 @@ public class ReportController extends BaseController {
 
   @PostMapping("/api/convert")
   public void convertSimpleReport(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
     QuestionnaireResponse questionnaireResponse = generator.generate();
     String responseBody = null;
@@ -188,8 +182,7 @@ public class ReportController extends BaseController {
       response.setHeader("Content-Disposition", "attachment; filename=\"report.csv\"");
     }
 
-    FhirHelper.recordAuditEvent(fhirQueryClient, authentication, "report." + jsonProperties.getExportFormat(), "ReportController/convertSimpleReport()",
-            "Export to File: " + jsonProperties.getExportFormat() + " format", "Export To File", "Successfully Exported File");
+    FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
     IOUtils.copy(is, response.getOutputStream());
