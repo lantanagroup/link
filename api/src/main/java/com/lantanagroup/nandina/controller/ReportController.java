@@ -126,6 +126,7 @@ public class ReportController extends BaseController {
     contextData.put("report", report);
     contextData.put("fhirQueryClient", fhirQueryClient);
     contextData.put("fhirStoreClient", fhirStoreClient);
+    contextData.put("queryCriteria", this.jsonProperties.getQueryCriteria());
 
     FhirHelper.recordAuditEvent(
             fhirStoreClient,

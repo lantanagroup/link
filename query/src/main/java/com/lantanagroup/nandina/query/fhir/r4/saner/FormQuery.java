@@ -5,14 +5,20 @@ import com.lantanagroup.nandina.query.BaseFormQuery;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class FormQuery extends BaseFormQuery {
   private static boolean isPopulationMatch(MeasureReport.MeasureReportGroupPopulationComponent population, String populationCode) {
+    List<String> systems = Arrays.asList(Constants.MEASURE_POPULATION_SYSTEMS);
     if (population.getCode() != null && population.getCode().getCoding() != null && population.getCode().getCoding().size() > 0) {
       if (population.getCode().getCoding().get(0).getSystem() != null && population.getCode().getCoding().get(0).getCode() != null) {
-        return population.getCode().getCoding().get(0).getSystem().equals(Constants.MEASURE_POPULATION_SYSTEM) &&
-                population.getCode().getCoding().get(0).getCode().equals(populationCode);
+        if (!systems.contains(population.getCode().getCoding().get(0).getSystem())) {
+          return false;
+        }
+
+        return population.getCode().getCoding().get(0).getCode().equalsIgnoreCase(populationCode);
       }
     }
 
@@ -30,7 +36,7 @@ public class FormQuery extends BaseFormQuery {
     return false;
   }
 
-  private Integer countForPopulation(Map<String, Resource> data, String groupCode, String populationCode) {
+  private Integer countForPopulation(Map<String, Resource> data, String populationCode) {
     Integer total = null;
 
     if (data != null) {
@@ -38,8 +44,6 @@ public class FormQuery extends BaseFormQuery {
         MeasureReport mr = (MeasureReport) resource;
 
         for (MeasureReport.MeasureReportGroupComponent group : mr.getGroup()) {
-          if (!isGroupMatch(group, groupCode)) continue;
-
           for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
             if (!isPopulationMatch(population, populationCode)) continue;
 
@@ -62,18 +66,18 @@ public class FormQuery extends BaseFormQuery {
 
     Map<String, Resource> data = (Map<String, Resource>) this.getContextData("measureReportData");
 
-    this.setAnswer(PIHCConstants.HOSPITALIZED, this.countForPopulation(data, "Encounters", "numC19HospPats"));
-    this.setAnswer(PIHCConstants.HOSPITALIZED_AND_VENTILATED, this.countForPopulation(data, "Encounters", "numC19MechVentPats"));
-    this.setAnswer(PIHCConstants.HOSPITAL_INPATIENT_BEDS, this.countForPopulation(data, "Beds", "numbeds"));
-    this.setAnswer(PIHCConstants.HOSPITAL_INPATIENT_BED_OCC, this.countForPopulation(data, "Beds", "numBedsOcc"));
-    this.setAnswer(PIHCConstants.HOSPITAL_ICU_BEDS, this.countForPopulation(data, "Beds", "numICUBeds"));
-    this.setAnswer(PIHCConstants.HOSPITAL_ICU_BED_OCC, this.countForPopulation(data, "Beds", "numICUBedsOcc"));
-    this.setAnswer(PIHCConstants.ED_OVERFLOW, this.countForPopulation(data, "Encounters", "numC19OverflowPats"));
-    this.setAnswer(PIHCConstants.ED_OVERFLOW_AND_VENT, this.countForPopulation(data, "Encounters", "numC19OFMechVentPats"));
-    this.setAnswer(PIHCConstants.PREVIOUS_DAY_DEATHS, this.countForPopulation(data, "Encounters", "numC19Died"));
-    this.setAnswer(PIHCConstants.MECHANICAL_VENTILATORS, this.countForPopulation(data, "Ventilators", "numVent"));
-    this.setAnswer(PIHCConstants.MECHANICAL_VENTILATORS_USED, this.countForPopulation(data, "Ventilators", "numVentUse"));
-    this.setAnswer(PIHCConstants.HOSPITAL_ONSET, this.countForPopulation(data, "Encounters", "numC19HOPats"));
-    this.setAnswer(PIHCConstants.ALL_HOSPITAL_BEDS, this.countForPopulation(data, "Beds", "numTotBeds"));
+    this.setAnswer("numC19HospPats", this.countForPopulation(data, "numC19HospPats"));
+    this.setAnswer("numC19MechVentPats", this.countForPopulation(data, "numC19MechVentPats"));
+    this.setAnswer("numC19HOPats", this.countForPopulation(data, "numC19HOPats"));
+    this.setAnswer("numC19OverflowPats", this.countForPopulation(data, "numC19OverflowPats"));
+    this.setAnswer("numC19OFMechVentPats", this.countForPopulation(data, "numC19OFMechVentPats"));
+    this.setAnswer("numC19Died", this.countForPopulation(data, "numC19Died"));
+    this.setAnswer("numTotBeds", this.countForPopulation(data, "numTotBeds"));
+    this.setAnswer("numBeds", this.countForPopulation(data, "numbeds"));
+    this.setAnswer("numBedsOcc", this.countForPopulation(data, "numBedsOcc"));
+    this.setAnswer("numICUBeds", this.countForPopulation(data, "numICUBeds"));
+    this.setAnswer("numICUBedsOcc", this.countForPopulation(data, "numICUBedsOcc"));
+    this.setAnswer("mechanicalVentilators", this.countForPopulation(data, "numVent"));
+    this.setAnswer("mechanicalVentilatorsUsed", this.countForPopulation(data, "numVentUse"));
   }
 }

@@ -11,6 +11,7 @@ public class PrepareQuery extends BasePrepareQuery {
   public void execute() {
     String reportDate = this.criteria.get("reportDate");
     String overflowLocations = this.criteria.get("overflowLocations");
+    Map<String, String> queryCriteria = (Map<String, String>) this.contextData.get("queryCriteria");
 
     String url = String.format("MeasureReport?measure=%s&date=%s&",
             Helper.URLEncode(Constants.MEASURE_URL),
@@ -18,6 +19,12 @@ public class PrepareQuery extends BasePrepareQuery {
 
     if (overflowLocations != null && !overflowLocations.isEmpty()) {
       url += String.format("subject=%s&", overflowLocations);
+    }
+
+    if (queryCriteria != null) {
+      for (String key : queryCriteria.keySet()) {
+        url += String.format("%s=%s&", key, queryCriteria.get(key));
+      }
     }
 
     Map<String, Resource> results = this.search(url);

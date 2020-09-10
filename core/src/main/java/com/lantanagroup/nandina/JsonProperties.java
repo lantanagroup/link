@@ -41,6 +41,7 @@ public class JsonProperties {
     private Map<String, Map<String, String>> field;
     private boolean requireHttps;
     private Map<String, String> direct;
+    private Map<String, String> queryCriteria;
 
     public String getExportFormat() {
         return exportFormat;
@@ -170,5 +171,13 @@ public class JsonProperties {
 
     public void setFhirServerQueryAuth(Map<String, String> fhirServerQueryAuth) {
         this.fhirServerQueryAuth = fhirServerQueryAuth;
+    }
+
+    public Map<String, String> getQueryCriteria() {
+        return queryCriteria;
+    }
+
+    public void setQueryCriteria(Map<String, String> queryCriteria) {
+        this.queryCriteria = queryCriteria;
     }
 }
