@@ -12,7 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 public class PatientData {
@@ -30,6 +33,8 @@ public class PatientData {
   protected Bundle allergies;
   protected Bundle procedures;
   protected CodeableConcept primaryDx = null;
+  private List<String> queryConstants =
+          Arrays.asList("Encounter?patient=Patient/", "Condition?patient=Patient/", "MedicationRequest?patient=Patient/", "Observation?patient=Patient/", "AllergyIntolerance?patient=Patient/", "Procedure?patient=Patient/");
 
   public PatientData(EncounterScoop scoop, Patient pat, FhirContext fhirContext) {
     patient = pat;
@@ -37,12 +42,30 @@ public class PatientData {
     dateCollected = new Date();
     Map<Patient, Encounter> patEncMap = scoop.getPatientEncounterMap();
     primaryEncounter = patEncMap.get(patient);
-    encounters = scoop.rawSearch("Encounter?patient=Patient/" + pat.getIdElement().getIdPart());
-    conditions = scoop.rawSearch("Condition?patient=Patient/" + pat.getIdElement().getIdPart());
-    meds = scoop.rawSearch("MedicationRequest?patient=Patient/" + pat.getIdElement().getIdPart());
-    labResults = scoop.rawSearch("Observation?patient=Patient/" + pat.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
-    allergies = scoop.rawSearch("AllergyIntolerance?patient=Patient/" + pat.getIdElement().getIdPart());
-    procedures = scoop.rawSearch("Procedure?patient=Patient/" + pat.getIdElement().getIdPart());
+    List<String> queryString = new ArrayList<>();
+    queryConstants.parallelStream().forEach(query -> {
+      if (query.contains("Observation")) {
+        queryString.add(query + pat.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
+      } else {
+        queryString.add(query + pat.getIdElement().getIdPart());
+      }
+    });
+
+    queryString.parallelStream().forEach(query -> {
+      if (query.contains("Encounter")) {
+        encounters = scoop.rawSearch(query);
+      } else if (query.contains("Condition")) {
+        conditions = scoop.rawSearch(query);
+      } else if (query.contains("MedicationRequest")) {
+        meds = scoop.rawSearch(query);
+      } else if (query.contains("Observation")) {
+        labResults = scoop.rawSearch(query);
+      } else if (query.contains("AllergyIntolerance")) {
+        allergies = scoop.rawSearch(query);
+      } else if (query.contains("Procedure")) {
+        procedures = scoop.rawSearch(query);
+      }
+    });
   }
 
 
