@@ -52,8 +52,7 @@ public class LocationController extends BaseController {
             .returnBundle(Bundle.class)
             .execute();
 
-    FhirHelper.recordAuditEvent(fhirStoreClient, authentication, url, "LocationController/getLocations()",
-            "Location", "Search Locations", "Successful Location Search");
+    FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.SearchLocations, "Successful Location Search");
 
     logger.debug(String.format("Done searching locations. Found %s locations.", locationsBundle.getTotal()));
 
