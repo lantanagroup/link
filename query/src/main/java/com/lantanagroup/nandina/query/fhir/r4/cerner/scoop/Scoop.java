@@ -1,15 +1,13 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner.scoop;
 
-import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
-
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-
-import java.util.Date;
-import java.util.List;
-
+import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.List;
 
 public abstract class Scoop {
 
@@ -44,5 +42,4 @@ public abstract class Scoop {
 
 		return null;
 	}
-
 }

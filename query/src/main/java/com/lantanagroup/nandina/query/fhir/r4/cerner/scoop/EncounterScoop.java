@@ -5,12 +5,16 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.BaseResource;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleEntryComponent;
+import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.ListResource.ListEntryComponent;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Reference;
 import org.hl7.fhir.r4.utils.FHIRPathEngine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -93,21 +97,30 @@ public class EncounterScoop extends Scoop {
 	}
 
 	private void init(List<String> encounterIdList) {
-		loadEncounterMap(encounterIdList);
-		loadPatientMaps();
-		loadPatientData();
+		try {
+			loadEncounterMap(encounterIdList);
+			loadPatientMaps();
+			loadPatientData();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void init(ListResource encList) {
 		xmlParser = targetFhirServer.getFhirContext().newXmlParser();
-		loadEncounterMap(encList);
-		loadPatientMaps();
-		loadPatientData();
+		try {
+			loadEncounterMap(encList);
+			loadPatientMaps();
+			loadPatientData();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
 	}
 
-	public void loadPatientData() {
-		patientData = new ArrayList<PatientData>();
-		for (String key : this.getPatientMap().keySet()) {
+	public void loadPatientData() throws InterruptedException {
+		patientData = new ArrayList<>();
+		this.getPatientMap().keySet().parallelStream().forEach(key -> {
 			PatientData pd;
 			try {
 				Patient p = this.getPatientMap().get(key);
@@ -116,7 +129,7 @@ public class EncounterScoop extends Scoop {
 			} catch (Exception e) {
 				logger.info("Error loading data for " + key, e);
 			}
-		}
+		});
 		logger.info("Initial patient count: " + patientData.size());
 	}
 
@@ -131,9 +144,10 @@ public class EncounterScoop extends Scoop {
 		}
 	}
 
-	public void loadEncounterMap(ListResource encList) {
+	public void loadEncounterMap(ListResource encList) throws InterruptedException {
 		List<ListEntryComponent> entries = encList.getEntry();
-		for (ListEntryComponent entry : entries) {
+
+		entries.parallelStream().forEach(entry -> {
 			if (entry.getItem().hasReference()) {
 				String encRef = entry.getItem().getReference();
 				Encounter retrievedEnc = targetFhirServer.read().resource(Encounter.class).withId(encRef).execute();
@@ -147,7 +161,7 @@ public class EncounterScoop extends Scoop {
 			} else {
 				throw new RuntimeException("List.entry missing reference or identifier.");
 			}
-		}
+		});
 	}
 
 	private void getEncountersFromSearchBundle(Bundle search) {
@@ -158,9 +172,10 @@ public class EncounterScoop extends Scoop {
 		}
 	}
 
-	private void loadPatientMaps() {
-		Set<String> badEncs = new HashSet<String>();
-		for (String key : this.encounterMap.keySet()) {
+	private void loadPatientMaps() throws InterruptedException {
+		Set<String> badEncs = new HashSet<>();
+
+		this.encounterMap.keySet().parallelStream().forEach(key -> {
 			Encounter enc = this.encounterMap.get(key);
 			String subjectRef = enc.getSubject().getReference();
 			if (subjectRef.startsWith("Patient/")) {
@@ -177,10 +192,10 @@ public class EncounterScoop extends Scoop {
 				// it later
 				throw new RuntimeException("Encounter.subject of type Group not yet supported");
 			}
-		}
-		for (String key : badEncs) {
+		});
+		badEncs.parallelStream().forEach(key -> {
 			encounterMap.remove(key);
-		}
+		});
 	}
 
 	/**
