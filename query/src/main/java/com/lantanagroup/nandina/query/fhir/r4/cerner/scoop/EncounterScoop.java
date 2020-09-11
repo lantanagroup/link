@@ -177,20 +177,23 @@ public class EncounterScoop extends Scoop {
 
 		this.encounterMap.keySet().parallelStream().forEach(key -> {
 			Encounter enc = this.encounterMap.get(key);
-			String subjectRef = enc.getSubject().getReference();
-			if (subjectRef.startsWith("Patient/")) {
-				try {
-					Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
-					this.patientMap.put(p.getIdElement().getIdPart(), p);
-					this.patientEncounterMap.put(p, enc);
-				} catch (Exception e) {
-					logger.info("Unable to retrieve subject from Encounter. Ignoring. " + key);
-					badEncs.add(key);
+
+			if (enc.getSubject() != null) {
+				String subjectRef = enc.getSubject().getReference();
+
+				if (subjectRef != null && subjectRef.startsWith("Patient/")) {
+					try {
+						Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
+						this.patientMap.put(p.getIdElement().getIdPart(), p);
+						this.patientEncounterMap.put(p, enc);
+					} catch (Exception e) {
+						logger.info("Unable to retrieve subject from Encounter. Ignoring. " + key);
+						badEncs.add(key);
+					}
+				} else {
+					// It must be a Group, but Group can contain non-Patient resources, so deal with it later
+					logger.error("Encounter.subject of type Group not yet supported");
 				}
-			} else {
-				// It must be a Group, but Group can contain non-Patient resources, so deal with
-				// it later
-				throw new RuntimeException("Encounter.subject of type Group not yet supported");
 			}
 		});
 		badEncs.parallelStream().forEach(key -> {

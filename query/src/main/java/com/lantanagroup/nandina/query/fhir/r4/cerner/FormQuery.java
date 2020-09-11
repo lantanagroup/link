@@ -5,17 +5,30 @@ import com.lantanagroup.nandina.PIHCConstants;
 import com.lantanagroup.nandina.query.BaseFormQuery;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.report.*;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class FormQuery extends BaseFormQuery {
+  private static final Logger logger = LoggerFactory.getLogger(FormQuery.class);
+
   @Override
   public void execute() {
     EncounterScoop encounterScoop = (EncounterScoop) this.getContextData("scoopData");
-    if (null == this.criteria.get("reportDate"))
+
+    if (this.criteria.get("reportDate") == null) {
+      logger.error("'reportDate' is required, but not specified.");
       return;
+    }
+
+    if (encounterScoop == null) {
+      logger.error("encounterScoop is null; maybe PrepareQuery hasn't been initialized yet?");
+      return;
+    }
+
     FhirContext ctx = (FhirContext) this.getContextData("fhirContext");
 
     Date reportDate = Date.valueOf(LocalDate.parse(this.criteria.get("reportDate")));
