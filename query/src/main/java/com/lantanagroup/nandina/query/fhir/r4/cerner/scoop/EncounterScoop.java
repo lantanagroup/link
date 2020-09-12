@@ -181,7 +181,7 @@ public class EncounterScoop extends Scoop {
 			if (enc.getSubject() != null) {
 				String subjectRef = enc.getSubject().getReference();
 
-				if (subjectRef != null && subjectRef.startsWith("Patient/")) {
+				if (subjectRef.startsWith("Patient/")) {
 					try {
 						Patient p = targetFhirServer.read().resource(Patient.class).withId(subjectRef).execute();
 						this.patientMap.put(p.getIdElement().getIdPart(), p);
