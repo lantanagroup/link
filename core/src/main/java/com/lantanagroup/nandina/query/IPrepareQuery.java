@@ -6,7 +6,7 @@ import com.lantanagroup.nandina.JsonProperties;
 import java.util.Map;
 
 public interface IPrepareQuery {
-  void execute();
+  void execute() throws Exception;
 
   Map<String, String> getCriteria();
   void setCriteria(Map<String, String> criteria);

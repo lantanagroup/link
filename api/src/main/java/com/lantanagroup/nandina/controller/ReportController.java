@@ -60,7 +60,7 @@ public class ReportController extends BaseController {
     return;
   }
 
-  private void executePrepareQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
+  private void executePrepareQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) throws Exception {
     if (className == null || className.isEmpty()) return;
 
     try {
@@ -68,8 +68,10 @@ public class ReportController extends BaseController {
       executor.execute();
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for prepare-query named " + className, ex);
+      throw new Exception("Could not find class for prepare-query named " + className);
     } catch (Exception ex) {
-      logger.error("Failed to execute query class for prepare-query " + className, ex);
+      logger.error(ex.getMessage(), ex);
+      throw new Exception(ex.getMessage());
     }
   }
 
