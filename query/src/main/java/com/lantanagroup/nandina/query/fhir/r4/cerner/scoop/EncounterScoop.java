@@ -208,7 +208,7 @@ public class EncounterScoop extends Scoop {
 			if (this.encounterMap.size() == badEncs.size()) {
 				throw new Exception("Unable to generate report. No encounter subject reference");
 			}
-			badEncs.parallelStream().forEach(key -> {
+			badEncs.stream().forEach(key -> {
 				encounterMap.remove(key);
 			});
 		} catch (Exception e) {
