@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.nandina.direct.Attachment;
 import com.lantanagroup.nandina.direct.DirectSender;
 import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.PillboxCsvReport;
@@ -69,6 +70,7 @@ public class PillBox {
         options.addOption("date", true, "The date of the report in YYYY-MM-DD format. If unpopulated will use today's date");
         options.addOption("list", true, "A FHIR R4 List resource containing references to Encounter resources (by identifier). Currently optional if the nandinaFhirServer parameter is populated, as the app will query that server for the List of Encounter identifiers");
         options.addOption("save", true, "The output file location. If unpopulated, will output to standard out");
+        options.addOption("send", false, "Whether or not the results should be sent via Direct specified in configuration");
 
         try {
             CommandLine cmd = parser.parse(options, args);
@@ -112,14 +114,19 @@ public class PillBox {
             List<Filter> filters = new ArrayList<Filter>();
             PillboxCsvReport pcr = new PillboxCsvReport(scoop, filters, ctx);
 
+            if (cmd.hasOption("send")) {
+                // this code attaches the zip file to the email
+                DirectSender sender = new DirectSender(config, ctx);
+                sender.send("Nandina Report", "See the attached CSV files",
+                        new Attachment(pcr.getUniqueCsv().getBytes(), "text/csv", "unique.csv"),
+                        new Attachment(pcr.getMedsCsv().getBytes(), "text/csv", "meds.csv"),
+                        new Attachment(pcr.getDxCsv().getBytes(), "text/csv", "dx.csv"),
+                        new Attachment(pcr.getLabCsv().getBytes(), "text/csv", "labs.csv"));
+            }
+
             if (!StringUtils.isEmpty(saveLocation)) {
                 File outputFile = new File(saveLocation);
                 byte[] zipBytes = pcr.getReportData();
-
-                // this code attaches the zip file to the email
-                DirectSender sender = new DirectSender(config, ctx);
-                sender.sendZip("test email", "test message", zipBytes);
-
                 Files.write(outputFile.toPath(), zipBytes);
                 System.out.println("Output file saved to " + outputFile.getAbsolutePath());
             }

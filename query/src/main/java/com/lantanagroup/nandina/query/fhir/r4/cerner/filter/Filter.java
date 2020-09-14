@@ -15,8 +15,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public abstract class Filter {
-
-
   protected static final Logger logger = LoggerFactory.getLogger(Filter.class);
   protected TerminologyHelper terminology = new TerminologyHelper();
 

@@ -14,6 +14,8 @@ import javax.naming.ConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DirectSender {
   private FhirContext fhirContext;
@@ -38,19 +40,22 @@ public class DirectSender {
 
   public void sendCSV(String subject, String message, String csvData) throws Exception {
     InputStream inputStream = new ByteArrayInputStream(csvData.getBytes());
-    this.send(subject, message, inputStream, "text/plain", "report.csv");
+    this.send(subject, message,
+            new Attachment(inputStream, "text/csv", "report.csv"));
   }
 
   public void sendJSON(String subject, String message, QuestionnaireResponse questionnaireResponse) throws Exception {
     String json = this.fhirContext.newJsonParser().encodeResourceToString(questionnaireResponse);
     InputStream inputStream = new ByteArrayInputStream(json.getBytes());
-    this.send(subject, message, inputStream, "application/json", "report.json");
+    this.send(subject, message,
+            new Attachment(inputStream, "application/json", "report.json"));
   }
 
   public void sendXML(String subject, String message, QuestionnaireResponse questionnaireResponse) throws Exception {
     String xml = this.fhirContext.newXmlParser().encodeResourceToString(questionnaireResponse);
     InputStream inputStream = new ByteArrayInputStream(xml.getBytes());
-    this.send(subject, message, inputStream, "application/xml", "report.xml");
+    this.send(subject, message,
+            new Attachment(inputStream, "application/xml", "report.xml"));
   }
 
   /**
@@ -63,37 +68,45 @@ public class DirectSender {
    */
   public void sendZip(String subject, String message, byte[] zipBytes) throws Exception {
     InputStream inputStream = new ByteArrayInputStream(zipBytes);
-    this.send(subject, message, inputStream, "application/zip", "pillbox-report.zip");
+    this.send(subject, message,
+            new Attachment(inputStream, "application/zip", "pillbox-report.zip"));
   }
 
-  public void send(String subject, String message, InputStream attachmentStream, String attachmentMimeType, String attachmentFileName) throws Exception {
-    URL attachmentUrl = new URL(new URL(jsonProperties.getDirect().get(JsonProperties.DIRECT_URL)), "/MailManagement/ws/v3/send/message/attachment");
-    HttpResponse<JsonNode> attachmentResponse = Unirest.put(attachmentUrl.toString())
-            .header("accept", "application/json")
-            .basicAuth(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME), jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))
-            .field("attachment", attachmentStream, ContentType.create(attachmentMimeType), attachmentFileName)
-            .asJson();
-    JSONObject attachmentJson = attachmentResponse.getBody().getObject();
-    String attachmentState = (String) attachmentJson.get("state");
-    String attachmentID = (String) attachmentJson.get("attachmentID");
-    String attachmentDesc = (String) attachmentJson.get("description");
+  public void send(String subject, String message, Attachment ... attachments) throws Exception {
+    List<String> attachmentIds = new ArrayList<>();
 
-    if (attachmentState == null || !attachmentState.equals("PASS")) {
-      throw new Exception(attachmentDesc);
+    for (Attachment attachment : attachments) {
+      URL attachmentUrl = new URL(new URL(jsonProperties.getDirect().get(JsonProperties.DIRECT_URL)), "/MailManagement/ws/v3/send/message/attachment");
+      HttpResponse<JsonNode> attachmentResponse = Unirest.put(attachmentUrl.toString())
+              .header("accept", "application/json")
+              .basicAuth(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME), jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))
+              .field("attachment", attachment.getInputStream(), ContentType.create(attachment.getMimeType()), attachment.getFileName())
+              .asJson();
+      JSONObject attachmentJson = attachmentResponse.getBody().getObject();
+      String attachmentState = (String) attachmentJson.get("state");
+      String attachmentId = (String) attachmentJson.get("attachmentID");
+      String attachmentDesc = (String) attachmentJson.get("description");
+
+      if (attachmentState == null || !attachmentState.equals("PASS")) {
+        throw new Exception(attachmentDesc);
+      }
+
+      attachmentIds.add(attachmentId);
     }
 
     URL messageUrl = new URL(new URL(this.jsonProperties.getDirect().get(JsonProperties.DIRECT_URL)), "/MailManagement/ws/v3/send/message");
+    String attachmentIdList = String.join(",", attachmentIds);
     HttpResponse<JsonNode> response = Unirest.put(messageUrl.toString())
             .header("accept", "application/json")
             .basicAuth(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME), jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))
             .field("to", jsonProperties.getDirect().get(JsonProperties.DIRECT_TO_ADDRESS))
             .field("subject", subject)
             .field("body", message)
-            .field("attachmentId", attachmentID)
+            .field("attachmentId", attachmentIdList)
             .asJson();
     JSONObject messageJson = response.getBody().getObject();
-    String messageState = (String) attachmentJson.get("state");
-    String messageDesc = (String) attachmentJson.get("description");
+    String messageState = (String) messageJson.get("state");
+    String messageDesc = (String) messageJson.get("description");
 
     if (messageState == null || !messageState.equals("PASS")) {
       throw new Exception(messageDesc);
