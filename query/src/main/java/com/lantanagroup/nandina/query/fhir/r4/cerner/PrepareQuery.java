@@ -45,7 +45,7 @@ public class PrepareQuery extends BasePrepareQuery {
     }
 
     @Override
-    public void execute() {
+    public void execute() throws Exception {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String reportDateValue = this.getCriteria().get("reportDate");
         Date reportDate;
