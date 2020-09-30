@@ -56,9 +56,9 @@ public class PillBox {
         }
     }
 
-    public static JsonProperties getConfig(String configLocation) throws IOException {
+    public static NandinaConfig getConfig(String configLocation) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(new File(configLocation), JsonProperties.class);
+        return objectMapper.readValue(new File(configLocation), NandinaConfig.class);
     }
 
     public static void main(String[] args) {
@@ -86,7 +86,7 @@ public class PillBox {
             String saveLocation = cmd.getOptionValue("save");
             FhirContext ctx = FhirContext.forR4();
             Date reportDate = getReportDate(date);
-            JsonProperties config = getConfig(configLocation);
+            NandinaConfig config = getConfig(configLocation);
 
             IGenericClient targetFhirServer = null;
             IGenericClient nandinaFhirServer = null;

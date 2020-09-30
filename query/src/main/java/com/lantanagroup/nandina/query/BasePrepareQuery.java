@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -13,16 +13,16 @@ import java.util.Map;
 
 public abstract class BasePrepareQuery implements IPrepareQuery {
     private static final Logger logger = LoggerFactory.getLogger(BasePrepareQuery.class);
-    protected JsonProperties properties;
+    protected NandinaConfig properties;
     protected IGenericClient fhirClient;
     protected Map<String, String> criteria;
     protected Map<String, Object> contextData;
 
-    public JsonProperties getProperties() {
+    public NandinaConfig getProperties() {
         return this.properties;
     }
 
-    public void setProperties(JsonProperties properties) {
+    public void setProperties(NandinaConfig properties) {
         this.properties = properties;
     }
 

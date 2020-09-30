@@ -16,8 +16,8 @@ import java.util.Map;
 @PropertySource(value = "classpath:config.json", factory = JsonPropertySourceFactory.class)
 @EnableConfigurationProperties
 @ConfigurationProperties
-public class JsonProperties {
-    private static Logger logger = LoggerFactory.getLogger(JsonProperties.class.getName());
+public class NandinaConfig {
+    private static Logger logger = LoggerFactory.getLogger(NandinaConfig.class.getName());
     private static String terminologyCovidCodes;
     private static String terminologyVentilatorCodes;
     private static String terminologyIntubationProcedureCodes;
