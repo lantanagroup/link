@@ -20,12 +20,10 @@
     "ventilatorCodesValueSet": "classpath:mechanical-ventilators.xml",
     "intubationProcedureCodesValueSet": "classpath:intubation-procedures.xml"
   },
-  "field": {
-    "default": {
-      "facilityId": "4010332",
-      "summaryCensusId": "am50325"
-    }
-  },
+  "defaultField": [{
+    "facilityId": "4010332",
+    "summaryCensusId": "am50325"
+  }],
   "rememberFields": "",
   "requireHttps": false
 }

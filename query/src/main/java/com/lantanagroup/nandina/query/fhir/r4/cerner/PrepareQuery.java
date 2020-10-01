@@ -1,11 +1,9 @@
 package com.lantanagroup.nandina.query.fhir.r4.cerner;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.query.BasePrepareQuery;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +17,7 @@ public class PrepareQuery extends BasePrepareQuery {
     private static final Logger logger = LoggerFactory.getLogger(PrepareQuery.class);
 
     @Autowired
-    JsonProperties jsonProperties;
+    NandinaConfig nandinaConfig;
 
     private List<String> getEncounterIds() {
         List<String> ids = new ArrayList<>();

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.hl7.fhir.r4.model.BaseResource;
@@ -40,13 +40,13 @@ import org.springframework.util.ResourceUtils;
 public abstract class BaseQuery implements IQueryCountExecutor {
 	protected static final Logger logger = LoggerFactory.getLogger(BaseQuery.class);
 
-	protected JsonProperties properties;
+	protected NandinaConfig properties;
 	protected IGenericClient fhirClient;
 	protected Map<String, String> criteria;
 	protected Map<String, Object> contextData;
 
-	public JsonProperties getProperties() { return this.properties; }
-	public void setProperties(JsonProperties properties) { this.properties = properties; }
+	public NandinaConfig getProperties() { return this.properties; }
+	public void setProperties(NandinaConfig properties) { this.properties = properties; }
 
 	public IGenericClient getFhirClient() { return this.fhirClient; }
 	public void setFhirClient(IGenericClient fhirClient) { this.fhirClient = fhirClient; }

@@ -1,8 +1,11 @@
 package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.nandina.DefaultField;
 import com.lantanagroup.nandina.FhirHelper;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.TransformHelper;
@@ -27,14 +30,16 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+  private ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
-  private JsonProperties jsonProperties;
+  private NandinaConfig nandinaConfig;
 
   /**
    * Uses reflection to determine what class should be used to execute the requested query/className, and
@@ -49,7 +54,7 @@ public class ReportController extends BaseController {
     if (className == null || className.isEmpty()) return;
 
     try {
-      IFormQuery executor = QueryFactory.newFormQueryInstance(className, jsonProperties, fhirClient, criteria, contextData);
+      IFormQuery executor = QueryFactory.newFormQueryInstance(className, nandinaConfig, fhirClient, criteria, contextData);
       executor.execute();
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for form query named " + className, ex);
@@ -64,7 +69,7 @@ public class ReportController extends BaseController {
     if (className == null || className.isEmpty()) return;
 
     try {
-      IPrepareQuery executor = QueryFactory.newPrepareQueryInstance(className, jsonProperties, fhirClient, criteria, contextData);
+      IPrepareQuery executor = QueryFactory.newPrepareQueryInstance(className, nandinaConfig, fhirClient, criteria, contextData);
       executor.execute();
     } catch (ClassNotFoundException ex) {
       logger.error("Could not find class for prepare-query named " + className, ex);
@@ -103,13 +108,13 @@ public class ReportController extends BaseController {
   public QueryReport sendQuestionnaireResponse(@RequestBody() QueryReport report) throws Exception {
     PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
     QuestionnaireResponse questionnaireResponse = generator.generate();
-    DirectSender sender = new DirectSender(jsonProperties, ctx);
+    DirectSender sender = new DirectSender(nandinaConfig, ctx);
 
-    if (jsonProperties.getExportFormat().equalsIgnoreCase("json")) {
+    if (nandinaConfig.getExportFormat().equalsIgnoreCase("json")) {
       sender.sendJSON("QuestionnaireResponse JSON", "Please see the attached questionnaireResponse json file", questionnaireResponse);
-    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("xml")) {
+    } else if (nandinaConfig.getExportFormat().equalsIgnoreCase("xml")) {
       sender.sendXML("QuestionnaireResponse XML", "Please see the attached questionnaireResponse xml file", questionnaireResponse);
-    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("csv")) {
+    } else if (nandinaConfig.getExportFormat().equalsIgnoreCase("csv")) {
       sender.sendCSV("QuestionnaireResponse CSV", "Please see the attached questionnaireResponse csv file", this.convertToCSV(questionnaireResponse));
     }
     return report;
@@ -128,29 +133,30 @@ public class ReportController extends BaseController {
     contextData.put("report", report);
     contextData.put("fhirQueryClient", fhirQueryClient);
     contextData.put("fhirStoreClient", fhirStoreClient);
-    contextData.put("queryCriteria", this.jsonProperties.getQueryCriteria());
+    contextData.put("queryCriteria", this.nandinaConfig.getQueryCriteria());
 
     FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Generate, "Successful Report Generated");
 
     // Execute the prepare query plugin if configured
-    this.executePrepareQuery(jsonProperties.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
+    this.executePrepareQuery(nandinaConfig.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
 
     // Execute the form query plugin
-    this.executeFormQuery(jsonProperties.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
+    this.executeFormQuery(nandinaConfig.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
 
-    if (this.jsonProperties.getField() != null) {
-      if (this.jsonProperties.getField().containsKey("default")) {
-        Map<String, String> defaultFields = this.jsonProperties.getField().get("default");
-
-        if (defaultFields != null) {
-          for (String fieldName : defaultFields.keySet()) {
-            // Only set the default field value if one hasn't already been set
-            if (report.getAnswer(fieldName) == null) {
-              report.setAnswer(fieldName, defaultFields.get(fieldName));
-            }
-          }
+    if (this.nandinaConfig.getDefaultField() != null) {
+      List<DefaultField> defaultFieldList = mapper.convertValue(
+              this.nandinaConfig.getDefaultField(),
+              new TypeReference<List<DefaultField>>(){}
+      );
+      defaultFieldList.forEach(field -> {
+        if (report.getAnswer("facilityId") == null) {
+          report.setAnswer("facilityId", field.getFacilityId());
         }
-      }
+
+        if (report.getAnswer("summaryCensusId") == null) {
+          report.setAnswer("summaryCensusId", field.getSummaryCensusId());
+        }
+      });
     }
 
     return report;
@@ -170,11 +176,11 @@ public class ReportController extends BaseController {
     String responseBody = null;
     IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
 
-    if (jsonProperties.getExportFormat().equals("json")) {
+    if (nandinaConfig.getExportFormat().equals("json")) {
       responseBody = this.ctx.newJsonParser().encodeResourceToString(questionnaireResponse);
       response.setContentType("application/json");
       response.setHeader("Content-Disposition", "attachment; filename=\"report.json\"");
-    } else if (jsonProperties.getExportFormat().equals("xml")) {
+    } else if (nandinaConfig.getExportFormat().equals("xml")) {
       responseBody = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
       response.setContentType("application/xml");
       response.setHeader("Content-Disposition", "attachment; filename=\"report.xml\"");

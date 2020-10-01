@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 
 import java.util.Map;
 
@@ -14,8 +14,8 @@ public interface IFormQuery {
   Map<String, Object> getContextData();
   void setContextData(Map<String, Object> contextData);
 
-  JsonProperties getProperties();
-  void setProperties(JsonProperties properties);
+  NandinaConfig getProperties();
+  void setProperties(NandinaConfig properties);
 
   IGenericClient getFhirClient();
   void setFhirClient(IGenericClient client);
