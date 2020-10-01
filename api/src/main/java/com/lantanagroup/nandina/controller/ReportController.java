@@ -1,6 +1,9 @@
 package com.lantanagroup.nandina.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.nandina.DefaultField;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
@@ -27,11 +30,13 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+  private ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
   private NandinaConfig nandinaConfig;
@@ -138,19 +143,20 @@ public class ReportController extends BaseController {
     // Execute the form query plugin
     this.executeFormQuery(nandinaConfig.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
 
-    if (this.nandinaConfig.getField() != null) {
-      if (this.nandinaConfig.getField().containsKey("default")) {
-        Map<String, String> defaultFields = this.nandinaConfig.getField().get("default");
-
-        if (defaultFields != null) {
-          for (String fieldName : defaultFields.keySet()) {
-            // Only set the default field value if one hasn't already been set
-            if (report.getAnswer(fieldName) == null) {
-              report.setAnswer(fieldName, defaultFields.get(fieldName));
-            }
-          }
+    if (this.nandinaConfig.getDefaultField() != null) {
+      List<DefaultField> defaultFieldList = mapper.convertValue(
+              this.nandinaConfig.getDefaultField(),
+              new TypeReference<List<DefaultField>>(){}
+      );
+      defaultFieldList.forEach(field -> {
+        if (report.getAnswer("facilityId") == null) {
+          report.setAnswer("facilityId", field.getFacilityId());
         }
-      }
+
+        if (report.getAnswer("summaryCensusId") == null) {
+          report.setAnswer("summaryCensusId", field.getSummaryCensusId());
+        }
+      });
     }
 
     return report;

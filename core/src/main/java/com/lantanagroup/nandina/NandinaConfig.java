@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -38,7 +39,7 @@ public class NandinaConfig {
     private String prepareQuery;
     private String formQuery;
     private Map<String, String> terminology;
-    private Map<String, Map<String, String>> field;
+    private List<DefaultField> defaultField;
     private boolean requireHttps;
     private Map<String, String> direct;
     private Map<String, String> queryCriteria;
@@ -83,12 +84,12 @@ public class NandinaConfig {
         this.terminology = terminology;
     }
 
-    public Map<String, Map<String, String>> getField() {
-        return field;
+    public List<DefaultField> getDefaultField() {
+        return defaultField;
     }
 
-    public void setField(Map<String, Map<String, String>> field) {
-        this.field = field;
+    public void setDefaultField(List<DefaultField> defaultField) {
+        this.defaultField = defaultField;
     }
 
     public boolean isRequireHttps() {
