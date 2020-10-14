@@ -2,8 +2,44 @@
   <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
 
   <div class="jumbotron">
-    <h1>Nandina</h1>
+    <div class="top-bar">
+      <div class="main-logo">
+        <img class="main-logo" src="assets/nandina_128.png" />
+        <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Nandina</span>
+        <span *ngIf="!authService.user">Nandina</span>
+      </div>
+
+      <div class="auth-info">
+        <div *ngIf="authService.user">
+          <div ngbDropdown class="d-inline-block">
+            <button class="btn btn-primary" id="dropdownBasic1" ngbDropdownToggle>{{authService.user.name}}</button>
+            <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+              <button ngbDropdownItem (click)="authService.logout()">Logout</button>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="!authService.user">
+          <button type="button" class="btn btn-primary" (click)="authService.loginLocal()">Login</button>
+        </p>
+      </div>
+    </div>
 
     <router-outlet></router-outlet>
+
+    <div class="copyright-info">
+      <a href="http://www.lantanagroup.com" target="_new">
+        <img class="lcg-logo" src="assets/lantana.png" />
+      </a>
+    </div>
   </div>
 </div>
+
+<ng-template #accessTokenPopover>
+  <div *ngIf="authService.oauthService.getAccessToken()">
+    <p title="{{authService.oauthService.getAccessToken()}}">{{authService.oauthService.getAccessToken().substring(0, 50)}}...</p>
+    <p>[<a href="javascript:void(0)" (click)="copyAccessTokenToClipboard()">copy</a>]</p>
+  </div>
+  <div *ngIf="!authService.oauthService.getAccessToken()">
+    You do not have an access token!
+  </div>
+</ng-template>

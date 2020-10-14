@@ -3,8 +3,8 @@
   "fhirServerQueryBase": "https://nandina-fhir.lantanagroup.com/fhir",
   "fhirServerStoreBase": "https://nandina-fhir.lantanagroup.com/fhir",
   "authJwksUrl": "",
-  "prepareQuery": "com.lantanagroup.nandina.query.fhir.r4.cerner.PrepareQuery",
-  "formQuery": "com.lantanagroup.nandina.query.fhir.r4.cerner.FormQuery",
+  "prepareQuery": "com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.PrepareQuery",
+  "formQuery": "com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.FormQuery",
   "fhirServerQueryAuth": {
     "mode": "",
     "username": "",

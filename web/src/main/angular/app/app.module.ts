@@ -14,12 +14,15 @@ import {ToastService} from './toast.service';
 import {ToastsContainerComponent} from './toasts-container/toasts-container.component';
 import {SmartLoginComponent} from './smart-login/smart-login.component';
 import {HomeComponent} from './home/home.component';
-import {QuestionnaireComponent} from './questionnaire/questionnaire.component';
+import {ReportBodyComponent} from './report-body/report-body.component';
 import {AuthService} from './services/auth.service';
 import {SmartHomeComponent} from './smart-home/smart-home.component';
 import {ConfigService} from './services/config.service';
 import {LocationService} from './services/location.service';
 import {ReportService} from './services/report.service';
+import {ReportBodyDirective} from './report-body.directive';
+import {PihcReportComponent} from './report-body/pihc-report/pihc-report.component';
+import {PillboxReportComponent} from './report-body/pillbox-report/pillbox-report.component';
 
 export const configFactory = (configService: ConfigService) => {
   return () => configService.loadConfig();
@@ -32,8 +35,11 @@ export const configFactory = (configService: ConfigService) => {
     ToastsContainerComponent,
     SmartLoginComponent,
     HomeComponent,
-    QuestionnaireComponent,
-    SmartHomeComponent
+    ReportBodyComponent,
+    SmartHomeComponent,
+    PihcReportComponent,
+    ReportBodyDirective,
+    PillboxReportComponent
   ],
   imports: [
     BrowserModule,
