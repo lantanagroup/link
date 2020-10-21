@@ -10,7 +10,6 @@ public class Helper {
     public static String convertResourceFileToJson(String fileName) {
         String jsonString = null;
         try(InputStream in=Thread.currentThread().getContextClassLoader().getResourceAsStream(fileName)){
-            //pass InputStream to JSON-Library, e.g. using Jackson
             ObjectMapper mapper = new ObjectMapper();
             JsonNode jsonNode = mapper.readValue(in,
                     JsonNode.class);
