@@ -3,6 +3,9 @@ package com.lantanagroup.nandina.query.fhir.r4.cerner;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.scoop.EncounterScoop;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.hl7.fhir.r4.model.CodeableConcept;
@@ -18,21 +21,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+@Getter @Setter @NoArgsConstructor
 public class PatientData {
 
-  protected static final Logger logger = LoggerFactory.getLogger(PatientData.class);
-  protected static FhirContext ctx;
-  protected SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-  protected Date dateCollected;
-  protected Patient patient;
-  protected Encounter primaryEncounter;
-  protected Bundle encounters;
-  protected Bundle conditions;
-  protected Bundle meds;
-  protected Bundle labResults;
-  protected Bundle allergies;
-  protected Bundle procedures;
-  protected CodeableConcept primaryDx = null;
+  private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
+  private static FhirContext ctx;
+  private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+  private Date dateCollected;
+  private Patient patient;
+  private Encounter primaryEncounter;
+  private Bundle encounters;
+  private Bundle conditions;
+  private Bundle meds;
+  private Bundle labResults;
+  private Bundle allergies;
+  private Bundle procedures;
+  private CodeableConcept primaryDx = null;
   private List<String> queryConstants =
           Arrays.asList("Encounter?patient=Patient/", "Condition?patient=Patient/", "MedicationRequest?patient=Patient/", "Observation?patient=Patient/", "AllergyIntolerance?patient=Patient/", "Procedure?patient=Patient/");
 
@@ -85,12 +89,6 @@ public class PatientData {
 	  return ctx.newXmlParser().encodeResourceToString(getBundle());
   }
 
-
-  public CodeableConcept getPrimaryDx() {
-    return primaryDx;
-  }
-
-
   /**
    * The setPrimaryDx() method is the only setter here,
    * since the primary diagnosis is not known until filters are run.
@@ -100,51 +98,6 @@ public class PatientData {
    */
   public void setPrimaryDx(CodeableConcept primaryDx) {
     this.primaryDx = primaryDx;
-  }
-
-
-  public Date getDateCollected() {
-    return dateCollected;
-  }
-
-
-  public Patient getPatient() {
-    return patient;
-  }
-
-
-  public Encounter getPrimaryEncounter() {
-    return primaryEncounter;
-  }
-
-
-  public Bundle getEncounters() {
-    return encounters;
-  }
-
-
-  public Bundle getConditions() {
-    return conditions;
-  }
-
-
-  public Bundle getMeds() {
-    return meds;
-  }
-
-
-  public Bundle getLabResults() {
-    return labResults;
-  }
-
-
-  public Bundle getAllergies() {
-    return allergies;
-  }
-
-
-  public Bundle getProcedures() {
-    return procedures;
   }
 
 }

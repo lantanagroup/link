@@ -49,8 +49,11 @@ public final class EncounterDateFilter extends Filter {
 					b = true;
 			}
 		}
-		if (b == false) logger.info(pd.getPatient().getId() + " did not have an encounter on " + sdf.format(date));
-		else logger.info(pd.getPatient().getId() + " had an encounter on " + sdf.format(date));
+		if (b == false) {
+			logger.info(pd.getPatient().getId() + " did not have an encounter on " + sdf.format(date));
+		} else {
+			logger.info(pd.getPatient().getId() + " had an encounter on " + sdf.format(date));
+		}
 		return b;
 	}
 

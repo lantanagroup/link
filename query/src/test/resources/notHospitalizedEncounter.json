@@ -1,0 +1,398 @@
+{
+  "resourceType": "Bundle",
+  "id": "c2494744-3950-4cb7-9ba8-db2dd3f116c6",
+  "meta": {
+    "lastUpdated": "2020-10-14T21:00:51.949+00:00"
+  },
+  "type": "searchset",
+  "total": 1,
+  "link": [
+    {
+      "relation": "self",
+      "url": "http://docker-dev0:8092/fhir/Encounter?patient=Patient%2FCER12742544"
+    }
+  ],
+  "entry": [
+    {
+      "fullUrl": "http://docker-dev0:8092/fhir/Encounter/CER97953899",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "CER97953899",
+        "meta": {
+          "versionId": "2",
+          "lastUpdated": "2020-09-11T17:31:00.756+00:00",
+          "source": "#rnMwi84R8QVl2n5g"
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p><b>Encounter</b></p><p><b>Patient</b>: TRIPLETT, KRISTEN B</p><p><b>Location</b>: Model Hospital, MX Hospital, ICU</p><p><b>Type</b>: Inpatient</p><p><b>Service Type</b>: Pulmonology</p><p><b>Class</b>: inpatient encounter</p><p><b>Status</b>: In Progress</p><p><b>Period Start Date</b>: Apr 26, 2020  5:00 A.M. UTC</p><p><b>Reason For Visit</b>: Severe fever, dry cough, shortness of breath</p><p><b>Attending Physician</b>: Carter, Kristin Cerner</p></div>"
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/319",
+                  "code": "1077",
+                  "display": "FIN NBR",
+                  "userSelected": true
+                },
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "AN",
+                  "display": "Account number",
+                  "userSelected": false
+                }
+              ],
+              "text": "FIN NBR"
+            },
+            "_system": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+                  "valueCode": "unknown"
+                }
+              ]
+            },
+            "value": "16049"
+          }
+        ],
+        "status": "in-progress",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "not-hospitalized",
+          "display": "inpatient encounter",
+          "userSelected": false
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/71",
+                "code": "309308",
+                "display": "Inpatient",
+                "userSelected": true
+              },
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0004",
+                "code": "I",
+                "display": "Inpatient",
+                "userSelected": false
+              }
+            ],
+            "text": "Inpatient"
+          }
+        ],
+        "serviceType": {
+          "coding": [
+            {
+              "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/34",
+              "code": "313017",
+              "display": "Pulmonology",
+              "userSelected": true
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "722174002",
+              "display": "Pulmonary medicine service (qualifier value)",
+              "userSelected": false
+            }
+          ],
+          "text": "Pulmonology"
+        },
+        "priority": {
+          "coding": [
+            {
+              "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/3",
+              "code": "309203",
+              "display": "Emergency",
+              "userSelected": true
+            },
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActPriority",
+              "code": "EM",
+              "display": "emergency",
+              "userSelected": false
+            }
+          ],
+          "text": "Emergency"
+        },
+        "subject": {
+          "reference": "Patient/CER12742544",
+          "display": "TRIPLETT, KRISTEN B"
+        },
+        "participant": [
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1116",
+                    "display": "Admitting Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "ADM",
+                    "display": "admitter",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Admitting Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-04-26T05:00:00.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER11817978",
+              "display": "Carter, Kristin Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1119",
+                    "display": "Attending Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "ATND",
+                    "display": "attender",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Attending Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-04-26T05:00:00.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER11817978",
+              "display": "Carter, Kristin Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1121",
+                    "display": "Consulting Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "CON",
+                    "display": "consultant",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Consulting Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-04-30T21:34:00.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER4122625",
+              "display": "Cerner Test, Physician - Cardiovascular Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1125",
+                    "display": "Registered Nurse",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "SPRF",
+                    "display": "secondary performer",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Registered Nurse"
+              }
+            ],
+            "period": {
+              "start": "2020-04-29T13:25:00.000Z",
+              "end": "2020-04-30T06:01:53.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER607928",
+              "display": "Cerner Test, Nurse Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1125",
+                    "display": "Registered Nurse",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "SPRF",
+                    "display": "secondary performer",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Registered Nurse"
+              }
+            ],
+            "period": {
+              "start": "2020-04-28T18:25:00.000Z",
+              "end": "2020-04-29T11:01:38.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER607928",
+              "display": "Cerner Test, Nurse Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "1126",
+                    "display": "Referring Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "REF",
+                    "display": "referrer",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Referring Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-04-26T05:00:00.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER11938004",
+              "display": "Bradford, MD, Michael Cerner"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "18883355",
+                    "display": "Covering Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "PPRF",
+                    "display": "primary performer",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Covering Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-05-14T18:10:04.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER12742575",
+              "display": "Torres, Drew"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+                    "code": "18883355",
+                    "display": "Covering Physician",
+                    "userSelected": true
+                  },
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "PPRF",
+                    "display": "primary performer",
+                    "userSelected": false
+                  }
+                ],
+                "text": "Covering Physician"
+              }
+            ],
+            "period": {
+              "start": "2020-04-28T20:07:49.000Z"
+            },
+            "individual": {
+              "reference": "Practitioner/CER4122622",
+              "display": "Cerner Test, Physician - Hospitalist Cerner"
+            }
+          }
+        ],
+        "period": {
+          "start": "2020-04-26T05:00:00.000Z"
+        },
+        "reasonCode": [
+          {
+            "text": "Severe fever, dry cough, shortness of breath"
+          }
+        ],
+        "hospitalization": {
+          "admitSource": {
+            "coding": [
+              {
+                "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/2",
+                "code": "309198",
+                "display": "Transfer from another HC Facility",
+                "userSelected": true
+              },
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/admit-source",
+                "code": "hosp-trans",
+                "display": "Transferred from other hospital",
+                "userSelected": false
+              }
+            ],
+            "text": "Transfer from another HC Facility"
+          }
+        },
+        "location": [
+          {
+            "location": {
+              "reference": "Location/CER29598629",
+              "display": "Model Hospital, MX Hospital, ICU"
+            },
+            "status": "active"
+          }
+        ],
+        "serviceProvider": {
+          "reference": "Organization/CER675844"
+        }
+      },
+      "search": {
+        "mode": "match"
+      }
+    }
+  ]
+}

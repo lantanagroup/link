@@ -1,0 +1,15 @@
+{
+  "resourceType": "Bundle",
+  "id": "1575c3e1-e217-43fb-b861-0ae62d693c57",
+  "meta": {
+    "lastUpdated": "2020-10-14T21:00:51.911+00:00"
+  },
+  "type": "searchset",
+  "total": 0,
+  "link": [
+    {
+      "relation": "self",
+      "url": "http://docker-dev0:8092/fhir/Observation?category=http%3A%2F%2Fterminology.hl7.org%2FCodeSystem%2Fobservation-category%7Claboratory&patient=Patient%2FCER12742544"
+    }
+  ]
+}
