@@ -70,15 +70,6 @@ public class PatientData {
         procedures = scoop.rawSearch(query);
       }
     });
-
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(patient));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(primaryEncounter));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(encounters));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(conditions));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(meds));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(labResults));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(allergies));
-//    logger.info(fhirContext.newJsonParser().encodeResourceToString(procedures));
   }
 
 
