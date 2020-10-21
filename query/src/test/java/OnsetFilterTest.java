@@ -1,6 +1,5 @@
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
-import com.lantanagroup.nandina.query.Helper;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
 import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.OnsetFilter;
 import org.hl7.fhir.r4.model.Bundle;
