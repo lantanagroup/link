@@ -1,0 +1,15 @@
+{
+  "resourceType": "Bundle",
+  "id": "c6a788cb-7af6-40c5-a0e3-a9aac7794840",
+  "meta": {
+    "lastUpdated": "2020-10-14T21:00:51.912+00:00"
+  },
+  "type": "searchset",
+  "total": 0,
+  "link": [
+    {
+      "relation": "self",
+      "url": "http://docker-dev0:8092/fhir/Procedure?patient=Patient%2FCER12742544"
+    }
+  ]
+}

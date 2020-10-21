@@ -116,12 +116,12 @@ public class PillboxCsvReport extends Report {
 
 
   public String getDateCollectedString(PatientData pd) {
-    return sdf.format(pd.dateCollected);
+    return sdf.format(pd.getDateCollected());
   }
 
   public String getPatientId(PatientData pd) {
     String idStr = "";
-    Identifier id = pd.patient.getIdentifierFirstRep();
+    Identifier id = pd.getPatient().getIdentifierFirstRep();
     if (id != null) {
       idStr = id.getSystem() + "|" + id.getValue();
     }
@@ -130,25 +130,25 @@ public class PillboxCsvReport extends Report {
 
   public String getAdmitDate(PatientData pd) {
     String dateStr = null;
-    if (pd.primaryEncounter.hasPeriod()) {
-      dateStr = sdf.format(pd.primaryEncounter.getPeriod().getStart());
+    if (pd.getPrimaryEncounter().hasPeriod()) {
+      dateStr = sdf.format(pd.getPrimaryEncounter().getPeriod().getStart());
     }
     return dateStr;
   }
 
   public String getDischargeDate(PatientData pd) {
     String dateStr = null;
-    if (pd.primaryEncounter.hasPeriod() && pd.primaryEncounter.getPeriod().hasEnd()) {
-      dateStr = sdf.format(pd.primaryEncounter.getPeriod().getEnd());
+    if (pd.getPrimaryEncounter().hasPeriod() && pd.getPrimaryEncounter().getPeriod().hasEnd()) {
+      dateStr = sdf.format(pd.getPrimaryEncounter().getPeriod().getEnd());
     }
     return dateStr;
   }
 
   public String getPatientAge(PatientData pd) {
     String patientAge = null;
-    if (pd.patient.getBirthDate() != null) {
+    if (pd.getPatient().getBirthDate() != null) {
       Calendar bd = Calendar.getInstance();
-      bd.setTime(pd.patient.getBirthDate());
+      bd.setTime(pd.getPatient().getBirthDate());
       LocalDate localBd = LocalDate.of(bd.get(Calendar.YEAR), bd.get(Calendar.MONTH) + 1, bd.get(Calendar.DAY_OF_MONTH) + 1);
       Period p = Period.between(localBd, LocalDate.now());
       patientAge = "" + p.getYears();
@@ -158,15 +158,15 @@ public class PillboxCsvReport extends Report {
 
   public String getPatientSex(PatientData pd) {
     String sex = null;
-    if (pd.patient.hasGender()) {
-      sex = pd.patient.getGender().toCode();
+    if (pd.getPatient().hasGender()) {
+      sex = pd.getPatient().getGender().toCode();
     }
     return sex;
   }
 
   public String getPatientRace(PatientData pd) {
     String value = null;
-    Extension race = pd.patient.getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-race");
+    Extension race = pd.getPatient().getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-race");
 
     if (race != null) {
       Extension omb = race.getExtensionByUrl("ombCategory");
@@ -181,7 +181,7 @@ public class PillboxCsvReport extends Report {
 
   public String getPatientEthnicity(PatientData pd) {
     String value = null;
-    Extension ethnicity = pd.patient.getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity");
+    Extension ethnicity = pd.getPatient().getExtensionByUrl("http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity");
 
     if (ethnicity != null) {
       Extension omb = ethnicity.getExtensionByUrl("ombCategory");
@@ -197,8 +197,8 @@ public class PillboxCsvReport extends Report {
 
   private String getPatientDisposition(PatientData pd) {
     String value = null;
-    if (pd.primaryEncounter != null && pd.primaryEncounter.getHospitalization() != null) {
-      EncounterHospitalizationComponent hosp = pd.primaryEncounter.getHospitalization();
+    if (pd.getPrimaryEncounter() != null && pd.getPrimaryEncounter().getHospitalization() != null) {
+      EncounterHospitalizationComponent hosp = pd.getPrimaryEncounter().getHospitalization();
       if (hosp.getDischargeDisposition() != null) {
         CodeableConcept cc = hosp.getDischargeDisposition();
         value = cc.getCodingFirstRep().getSystem() + "|" + cc.getCodingFirstRep().getCode();
@@ -209,8 +209,8 @@ public class PillboxCsvReport extends Report {
 
   private String getPatientLocation(PatientData pd) {
     String value = null;
-    if (pd.primaryEncounter != null && pd.primaryEncounter.getLocationFirstRep() != null) {
-      Location loc = pd.primaryEncounter.getLocationFirstRep().getLocationTarget();
+    if (pd.getPrimaryEncounter() != null && pd.getPrimaryEncounter().getLocationFirstRep() != null) {
+      Location loc = pd.getPrimaryEncounter().getLocationFirstRep().getLocationTarget();
       value = loc.getName();
     }
     return value;
@@ -218,16 +218,16 @@ public class PillboxCsvReport extends Report {
 
   private String getPatientPrimaryDx(PatientData pd) {
     String value = null;
-    if (pd.primaryDx != null) {
-      value = pd.primaryDx.getCodingFirstRep().getSystem() + "|" + pd.primaryDx.getCodingFirstRep().getCode();
+    if (pd.getPrimaryDx() != null) {
+      value = pd.getPrimaryDx().getCodingFirstRep().getSystem() + "|" + pd.getPrimaryDx().getCodingFirstRep().getCode();
     }
     return value;
   }
 
   private String getPatientChiefComplaint(PatientData pd) {
     String value = null;
-    if (pd.primaryEncounter != null && pd.primaryEncounter.getReasonCodeFirstRep() != null) {
-      value = pd.primaryEncounter.getReasonCodeFirstRep().getCodingFirstRep().getSystem() + "|" + pd.primaryEncounter.getReasonCodeFirstRep().getCodingFirstRep().getCode();
+    if (pd.getPrimaryEncounter() != null && pd.getPrimaryEncounter().getReasonCodeFirstRep() != null) {
+      value = pd.getPrimaryEncounter().getReasonCodeFirstRep().getCodingFirstRep().getSystem() + "|" + pd.getPrimaryEncounter().getReasonCodeFirstRep().getCodingFirstRep().getCode();
     }
     return value;
   }
@@ -369,7 +369,7 @@ public class PillboxCsvReport extends Report {
   public String getMedCsvRows(PatientData pd) {
     StringWriter sw = new StringWriter();
     PrintWriter pw = new PrintWriter(sw);
-    for (BundleEntryComponent entry : pd.meds.getEntry()) {
+    for (BundleEntryComponent entry : pd.getMeds().getEntry()) {
       MedicationRequest med = (MedicationRequest) entry.getResource();
       pw.println(
               getPatientId(pd)
@@ -391,7 +391,7 @@ public class PillboxCsvReport extends Report {
   public String getCsvDxRows(PatientData pd) {
     StringWriter sw = new StringWriter();
     PrintWriter pw = new PrintWriter(sw);
-    for (BundleEntryComponent entry : pd.conditions.getEntry()) {
+    for (BundleEntryComponent entry : pd.getConditions().getEntry()) {
       Condition c = (Condition) entry.getResource();
       pw.println(
               getPatientId(pd)
@@ -407,7 +407,7 @@ public class PillboxCsvReport extends Report {
   public String getCsvLabRows(PatientData pd) {
     StringWriter sw = new StringWriter();
     PrintWriter pw = new PrintWriter(sw);
-    for (BundleEntryComponent entry : pd.labResults.getEntry()) {
+    for (BundleEntryComponent entry : pd.getLabResults().getEntry()) {
       Observation obs = (Observation) entry.getResource();
       logger.info(obs.getId());
       pw.println(

@@ -23,10 +23,8 @@ public final class DeathFilter extends Filter {
     Patient p = pd.getPatient();
     logger.debug("Checking if " + p.getId() + " died");
     if (p.hasDeceasedDateTimeType()) {
-      DateTimeType dtt =	p.getDeceasedDateTimeType();
-      Calendar blah = dtt.toCalendar();
-      Calendar deadDate = p.getDeceasedDateTimeType().toCalendar();
-      if (DateUtils.isSameDay(deadDate.getTime(), reportDate)) {
+      Calendar deathDate = p.getDeceasedDateTimeType().toCalendar();
+      if (DateUtils.isSameDay(deathDate.getTime(), reportDate)) {
         dead = true;
       }
     }

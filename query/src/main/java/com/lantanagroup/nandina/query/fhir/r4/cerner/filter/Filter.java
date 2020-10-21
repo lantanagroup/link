@@ -31,8 +31,10 @@ public abstract class Filter {
 
   protected Set<IBaseResource> bundleToSet(Bundle b) {
     Set<IBaseResource> resSet = new HashSet<IBaseResource>();
-    for (BundleEntryComponent entry : b.getEntry()) {
-      resSet.add(entry.getResource());
+    if (null != b) {
+      for (BundleEntryComponent entry : b.getEntry()) {
+        resSet.add(entry.getResource());
+      }
     }
     return resSet;
   }
