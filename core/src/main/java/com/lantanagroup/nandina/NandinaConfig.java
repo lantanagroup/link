@@ -12,11 +12,14 @@ import org.springframework.util.ResourceUtils;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import lombok.Setter;
+import lombok.Getter;
 
 @Component
 @PropertySource(value = "classpath:config.json", factory = JsonPropertySourceFactory.class)
 @EnableConfigurationProperties
 @ConfigurationProperties
+@Getter @Setter
 public class NandinaConfig {
     private static Logger logger = LoggerFactory.getLogger(NandinaConfig.class.getName());
     private static String terminologyCovidCodes;
@@ -43,78 +46,6 @@ public class NandinaConfig {
     private boolean requireHttps;
     private Map<String, String> direct;
     private Map<String, String> queryCriteria;
-
-    public String getExportFormat() {
-        return exportFormat;
-    }
-
-    public void setExportFormat(String exportFormat) {
-        this.exportFormat = exportFormat;
-    }
-
-    public String getFhirServerQueryBase() {
-        return fhirServerQueryBase;
-    }
-
-    public void setFhirServerQueryBase(String fhirServerQueryBase) {
-        this.fhirServerQueryBase = fhirServerQueryBase;
-    }
-
-    public String getFhirServerStoreBase() {
-        return fhirServerStoreBase;
-    }
-
-    public void setFhirServerStoreBase(String fhirServerStoreBase) {
-        this.fhirServerStoreBase = fhirServerStoreBase;
-    }
-
-    public String getAuthJwksUrl() {
-        return authJwksUrl;
-    }
-
-    public void setAuthJwksUrl(String authJwksUrl) {
-        this.authJwksUrl = authJwksUrl;
-    }
-
-    public Map<String, String> getTerminology() {
-        return terminology;
-    }
-
-    public void setTerminology(Map<String, String> terminology) {
-        this.terminology = terminology;
-    }
-
-    public List<DefaultField> getDefaultField() {
-        return defaultField;
-    }
-
-    public void setDefaultField(List<DefaultField> defaultField) {
-        this.defaultField = defaultField;
-    }
-
-    public boolean isRequireHttps() {
-        return requireHttps;
-    }
-
-    public void setRequireHttps(boolean requireHttps) {
-        this.requireHttps = requireHttps;
-    }
-
-    public String getPrepareQuery() {
-        return prepareQuery;
-    }
-
-    public void setPrepareQuery(String prepareQuery) {
-        this.prepareQuery = prepareQuery;
-    }
-
-    public String getFormQuery() {
-        return formQuery;
-    }
-
-    public void setFormQuery(String formQuery) {
-        this.formQuery = formQuery;
-    }
 
     public String loadValueSet(String valueSetUri) {
         String valueSetCodes = null;
@@ -158,27 +89,4 @@ public class NandinaConfig {
         return this.terminologyIntubationProcedureCodes;
     }
 
-    public Map<String, String> getDirect() {
-        return direct;
-    }
-
-    public void setDirect(Map<String, String> direct) {
-        this.direct = direct;
-    }
-
-    public Map<String, String> getFhirServerQueryAuth() {
-        return fhirServerQueryAuth;
-    }
-
-    public void setFhirServerQueryAuth(Map<String, String> fhirServerQueryAuth) {
-        this.fhirServerQueryAuth = fhirServerQueryAuth;
-    }
-
-    public Map<String, String> getQueryCriteria() {
-        return queryCriteria;
-    }
-
-    public void setQueryCriteria(Map<String, String> queryCriteria) {
-        this.queryCriteria = queryCriteria;
-    }
 }
