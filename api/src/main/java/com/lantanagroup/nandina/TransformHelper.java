@@ -1,5 +1,7 @@
 package com.lantanagroup.nandina;
 
+import ca.uhn.fhir.context.FhirContext;
+import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.springframework.util.ResourceUtils;
 
 import javax.xml.transform.*;
@@ -13,6 +15,12 @@ public class TransformHelper {
   static final String FHIR_2_CSV_XSLT = "classpath:fhir2csv.xslt";
   private Transformer fhir2csv;
 
+  public static String questionnaireResponseToCSV(QuestionnaireResponse response, FhirContext ctx) throws FileNotFoundException, TransformerException {
+    String xml = ctx.newXmlParser().encodeResourceToString(response);
+    TransformHelper transformHelper = new TransformHelper();
+    return transformHelper.fhirXMLtoCSV(xml);
+  }
+
   public TransformHelper() throws FileNotFoundException, TransformerConfigurationException {
     TransformerFactory transFact = TransformerFactory.newInstance();
 
@@ -22,7 +30,7 @@ public class TransformHelper {
     this.fhir2csv.setErrorListener(new TransformErrorListener());
   }
 
-  public String convert(String inputXml) throws TransformerException, FileNotFoundException {
+  public String fhirXMLtoCSV(String inputXml) throws TransformerException, FileNotFoundException {
     StringWriter sw = new StringWriter();
     Source xmlSource = new StreamSource(new StringReader(inputXml));
     Result result = new javax.xml.transform.stream.StreamResult(sw);

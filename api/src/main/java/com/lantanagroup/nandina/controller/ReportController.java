@@ -6,10 +6,13 @@ import com.lantanagroup.nandina.JsonProperties;
 import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.TransformHelper;
-import com.lantanagroup.nandina.direct.DirectSender;
+import com.lantanagroup.nandina.download.IReportDownloader;
+import com.lantanagroup.nandina.download.PIHCDownloader;
 import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
+import com.lantanagroup.nandina.send.IReportSender;
+import com.lantanagroup.nandina.send.PIHCSender;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.QuestionnaireResponse;
 import org.slf4j.Logger;
@@ -100,19 +103,9 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
   @PostMapping("/api/send")
-  public QueryReport sendQuestionnaireResponse(@RequestBody() QueryReport report) throws Exception {
-    PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
-    QuestionnaireResponse questionnaireResponse = generator.generate();
-    DirectSender sender = new DirectSender(jsonProperties, ctx);
-
-    if (jsonProperties.getExportFormat().equalsIgnoreCase("json")) {
-      sender.sendJSON("QuestionnaireResponse JSON", "Please see the attached questionnaireResponse json file", questionnaireResponse);
-    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("xml")) {
-      sender.sendXML("QuestionnaireResponse XML", "Please see the attached questionnaireResponse xml file", questionnaireResponse);
-    } else if (jsonProperties.getExportFormat().equalsIgnoreCase("csv")) {
-      sender.sendCSV("QuestionnaireResponse CSV", "Please see the attached questionnaireResponse csv file", this.convertToCSV(questionnaireResponse));
-    }
-    return report;
+  public void send(@RequestBody() QueryReport report) throws Exception {
+    IReportSender sender = new PIHCSender();
+    sender.send(report, this.jsonProperties, this.ctx);
   }
 
   @PostMapping("/api/query")
@@ -156,38 +149,13 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private String convertToCSV(QuestionnaireResponse questionnaireResponse) throws TransformerException, FileNotFoundException {
-    String xml = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
-    TransformHelper transformHelper = new TransformHelper();
-    return transformHelper.convert(xml);
-  }
-
-  @PostMapping("/api/convert")
-  public void convertSimpleReport(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  @PostMapping("/api/download")
+  public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
-    PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
-    QuestionnaireResponse questionnaireResponse = generator.generate();
-    String responseBody = null;
-    IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
+    IReportDownloader downloader = new PIHCDownloader();
 
-    if (jsonProperties.getExportFormat().equals("json")) {
-      responseBody = this.ctx.newJsonParser().encodeResourceToString(questionnaireResponse);
-      response.setContentType("application/json");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.json\"");
-    } else if (jsonProperties.getExportFormat().equals("xml")) {
-      responseBody = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
-      response.setContentType("application/xml");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.xml\"");
-    } else {
-      responseBody = this.convertToCSV(questionnaireResponse);
-      response.setContentType("text/plain");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.csv\"");
-    }
+    downloader.download(report, response, this.ctx, this.jsonProperties);
 
     FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
-
-    InputStream is = new ByteArrayInputStream(responseBody.getBytes());
-    IOUtils.copy(is, response.getOutputStream());
-    response.flushBuffer();
   }
 }

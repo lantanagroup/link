@@ -14,3 +14,7 @@ table tr td:first-child {
 .sub-question {
     margin-left: 50px;
 }
+
+.btn-group.report-actions {
+    margin-top: 10px;
+}

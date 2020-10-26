@@ -1,13 +1,11 @@
 import {Component, ComponentFactory, ComponentFactoryResolver, ComponentRef, OnInit, ViewChild} from '@angular/core';
 import {LocationResponse} from '../model/location-response';
 import {formatDate, getFhirNow} from '../helper';
-import {HttpResponse} from '@angular/common/http';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {CookieService} from 'ngx-cookie-service';
 import {ToastService} from '../toast.service';
 import {SelectLocationsComponent} from '../select-locations/select-locations.component';
 import {ReportService} from '../services/report.service';
-import saveAs from 'save-as';
 import {QueryReport} from '../model/query-report';
 import {ReportBodyDirective} from '../report-body.directive';
 import {ConfigService} from '../services/config.service';
@@ -61,28 +59,14 @@ export class ReportBodyComponent implements OnInit {
     this.today = formatDate(this.report.date);
   }
 
-  private getFileName(contentDisposition: string) {
-    if (!contentDisposition) return 'report.txt';
-    const parts = contentDisposition.split(';');
-    if (parts.length !== 2 || parts[0] !== 'attachment') return 'report.txt';
-    if (parts[1].indexOf('filename=') < 0) return 'report.txt';
-    return parts[1].substring('filename='.length + 1).replace(/"/g, '');
-  }
-
   async download() {
-    let convertResponse: HttpResponse<string>;
     try {
       this.report.date = formatDate(this.report.date);
-      convertResponse = await this.reportService.convert(this.report);
+      await this.reportService.download(this.report);
     } catch (ex) {
       this.toastService.showException('Error converting report', ex);
       return;
     }
-
-    const contentType = convertResponse.headers.get('Content-Type');
-    const blob = new Blob([convertResponse.body], {type: contentType});
-
-    saveAs(blob, this.getFileName(convertResponse.headers.get('Content-Disposition')));
   }
 
   async selectOverflowLocations() {

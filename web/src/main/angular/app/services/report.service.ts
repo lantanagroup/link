@@ -1,18 +1,32 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {ConfigService} from './config.service';
-import {formatDate, getFhirNow} from '../helper';
 import {LocationResponse} from '../model/location-response';
 import {QueryReport} from '../model/query-report';
+import saveAs from 'save-as';
 
 @Injectable()
 export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  async convert(report: QueryReport) {
-    const url = this.configService.getApiUrl('/api/convert');
-    return await this.http.post(url, report, { observe: 'response', responseType: 'text' }).toPromise();
+  private getFileName(contentDisposition: string) {
+    if (!contentDisposition) return 'report.txt';
+    const parts = contentDisposition.split(';');
+    if (parts.length !== 2 || parts[0] !== 'attachment') return 'report.txt';
+    if (parts[1].indexOf('filename=') < 0) return 'report.txt';
+    return parts[1].substring('filename='.length + 1).replace(/"/g, '');
+  }
+
+  async download(report: QueryReport) {
+    const url = this.configService.getApiUrl('/api/download');
+
+    const convertResponse = await this.http.post(url, report, {responseType: 'text', observe: 'response'}).toPromise();
+
+    const contentType = convertResponse.headers.get('Content-Type');
+    const blob = new Blob([convertResponse.body], {type: contentType});
+
+    saveAs(blob, this.getFileName(convertResponse.headers.get('Content-Disposition')));
   }
 
   async send(report: QueryReport) {

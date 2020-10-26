@@ -23,5 +23,7 @@
 
 <ng-template reportBody></ng-template>
 
-<button type="button" class="btn btn-primary" (click)="download()">Save to File</button>
-<button type="button" class="btn btn-primary" style="margin:5px;" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
+<div class="btn-group report-actions">
+    <button type="button" class="btn btn-primary download" (click)="download()">Save to File</button>
+    <button type="button" class="btn btn-primary send" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
+</div>
