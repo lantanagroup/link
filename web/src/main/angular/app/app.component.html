@@ -12,9 +12,12 @@
       <div class="auth-info">
         <div *ngIf="authService.user">
           <div ngbDropdown class="d-inline-block">
-            <button class="btn btn-primary" id="dropdownBasic1" ngbDropdownToggle>{{authService.user.name}}</button>
-            <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+            <button class="btn btn-primary" id="userDropDown" ngbDropdownToggle>{{authService.user.name}}</button>
+            <div ngbDropdownMenu aria-labelledby="userDropDown">
               <button ngbDropdownItem (click)="authService.logout()">Logout</button>
+              <div class="dropdown-divider"></div>
+              <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About Nandina</a>
+              <a href="https://github.com/lantanagroup/nandina" target="_new" ngbDropdownItem>GitHub</a>
             </div>
           </div>
         </div>
@@ -25,12 +28,6 @@
     </div>
 
     <router-outlet></router-outlet>
-
-    <div class="copyright-info">
-      <a href="http://www.lantanagroup.com" target="_new">
-        <img class="lcg-logo" src="assets/lantana.png" />
-      </a>
-    </div>
   </div>
 </div>
 
