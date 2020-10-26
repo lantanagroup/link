@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.download;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.TransformHelper;
@@ -16,7 +16,7 @@ import java.io.InputStream;
 
 public class PIHCDownloader implements IReportDownloader {
   @Override
-  public void download(QueryReport report, HttpServletResponse response, FhirContext ctx, JsonProperties config) throws IOException, TransformerException {
+  public void download(QueryReport report, HttpServletResponse response, FhirContext ctx, NandinaConfig config) throws IOException, TransformerException {
     PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
     QuestionnaireResponse questionnaireResponse = generator.generate();
     String responseBody = null;

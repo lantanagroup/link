@@ -29,7 +29,6 @@ public class OnsetFilter extends Filter {
         boolean onset = false;
         LocalDate encounterStart = null;
         LocalDate encounterEnd = null;
-        LocalDate reportDate = LocalDate.parse(this.reportDate.toString());
 
         if (null != pd.getPrimaryEncounter().getPeriod()) {
             if (null != pd.getPrimaryEncounter().getPeriod().getStart())
@@ -37,20 +36,26 @@ public class OnsetFilter extends Filter {
             if (null != pd.getPrimaryEncounter().getPeriod().getEnd())
                 encounterEnd = LocalDate.ofInstant(pd.getPrimaryEncounter().getPeriod().getEnd().toInstant(), ZoneId.systemDefault());
 
-            for (Bundle.BundleEntryComponent entry : pd.getConditions().getEntry()) {
-                Condition condition = (Condition) entry.getResource();
-                if (condition.hasOnsetDateTimeType()) {
-                    LocalDate onsetDate = LocalDate.ofInstant(condition.getOnsetDateTimeType().getValue().toInstant(), ZoneId.systemDefault());
-                    onset = onsetDuringEncounter(onsetDate, encounterStart, encounterEnd);
-                    if (null != this.previousDay && !this.previousDay.equals(onsetDate)) {
-                        onset = false;
+            if (null != pd) {
+                for (Bundle.BundleEntryComponent entry : pd.getConditions().getEntry()) {
+                    Condition condition = (Condition) entry.getResource();
+                    if (condition.hasOnsetDateTimeType()) {
+                        LocalDate onsetDate = LocalDate.ofInstant(condition.getOnsetDateTimeType().getValue().toInstant(), ZoneId.systemDefault());
+                        onset = onsetDuringEncounter(onsetDate, encounterStart, encounterEnd);
+                        if (null != this.previousDay && !this.previousDay.equals(onsetDate)) {
+                            onset = false;
+                        }
+                    } else if (condition.hasOnsetPeriod()) {
+                        LocalDate onsetPeriodStart = LocalDate.ofInstant(condition.getOnsetPeriod().getStartElement().getValue().toInstant(), ZoneId.systemDefault());
+                        onset = onsetDuringEncounter(onsetPeriodStart, encounterStart, encounterEnd);
+                        if (onset == true && null != encounterEnd) {
+                            LocalDate onsetPeriodEnd = LocalDate.ofInstant(condition.getOnsetPeriod().getEndElement().getValue().toInstant(), ZoneId.systemDefault());
+                            onset = onsetDuringEncounter(onsetPeriodEnd, encounterStart, encounterEnd);
+                        }
                     }
-                } else if (condition.hasOnsetPeriod()) {
-                    LocalDate onsetPeriodStart = LocalDate.ofInstant(condition.getOnsetPeriod().getStartElement().getValue().toInstant(), ZoneId.systemDefault());
-                    onset = onsetDuringEncounter(onsetPeriodStart, encounterStart, encounterEnd);
-                    if (onset == false) {
-                        LocalDate onsetPeriodEnd = LocalDate.ofInstant(condition.getOnsetPeriod().getEndElement().getValue().toInstant(), ZoneId.systemDefault());
-                        onset = onsetDuringEncounter(onsetPeriodEnd, encounterStart, encounterEnd);
+                    // checking if onset == true. if it is then just break, no need to keep looping through the conditions
+                    if (onset) {
+                        break;
                     }
                 }
             }
@@ -66,7 +71,7 @@ public class OnsetFilter extends Filter {
      * @param encounterEndDate
      * @return
      */
-    private boolean onsetDuringEncounter(LocalDate onsetDate, LocalDate encounterStartDate, LocalDate encounterEndDate) {
+    public boolean onsetDuringEncounter(LocalDate onsetDate, LocalDate encounterStartDate, LocalDate encounterEndDate) {
         boolean hospitalOnset = false;
         if (encounterStartDate != null) {
             LocalDate encounterStartPlus14 = encounterStartDate.plusDays(14);

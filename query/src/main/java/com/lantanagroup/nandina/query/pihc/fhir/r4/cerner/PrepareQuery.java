@@ -1,7 +1,7 @@
-package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner;
+package com.lantanagroup.nandina.query.fhir.r4.cerner;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.query.BasePrepareQuery;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.EncounterScoop;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ public class PrepareQuery extends BasePrepareQuery {
     private static final Logger logger = LoggerFactory.getLogger(PrepareQuery.class);
 
     @Autowired
-    JsonProperties jsonProperties;
+    NandinaConfig nandinaConfig;
 
     @Override
     public void execute() throws Exception {

@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.direct;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -19,21 +19,21 @@ import java.util.List;
 
 public class DirectSender {
   private FhirContext fhirContext;
-  private JsonProperties jsonProperties;
+  private NandinaConfig nandinaConfig;
 
-  public DirectSender(JsonProperties jsonProperties, FhirContext fhirContext) throws ConfigurationException {
-    this.jsonProperties = jsonProperties;
+  public DirectSender(NandinaConfig nandinaConfig, FhirContext fhirContext) throws ConfigurationException {
+    this.nandinaConfig = nandinaConfig;
     this.fhirContext = fhirContext;
 
-    if (jsonProperties.getDirect() == null) {
+    if (nandinaConfig.getDirect() == null) {
       throw new ConfigurationException("Direct integration is not configured");
-    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.DIRECT_URL))) {
+    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL))) {
       throw new ConfigurationException("direct.url is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME))) {
+    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME))) {
       throw new ConfigurationException("direct.username is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))) {
+    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))) {
       throw new ConfigurationException("direct.password is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(jsonProperties.getDirect().get(JsonProperties.DIRECT_TO_ADDRESS))) {
+    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_TO_ADDRESS))) {
       throw new ConfigurationException("direct.toAddress is required for Direct integration");
     }
   }
@@ -76,10 +76,10 @@ public class DirectSender {
     List<String> attachmentIds = new ArrayList<>();
 
     for (Attachment attachment : attachments) {
-      URL attachmentUrl = new URL(new URL(jsonProperties.getDirect().get(JsonProperties.DIRECT_URL)), "/MailManagement/ws/v3/send/message/attachment");
+      URL attachmentUrl = new URL(new URL(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL)), "/MailManagement/ws/v3/send/message/attachment");
       HttpResponse<JsonNode> attachmentResponse = Unirest.put(attachmentUrl.toString())
               .header("accept", "application/json")
-              .basicAuth(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME), jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))
+              .basicAuth(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME), nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))
               .field("attachment", attachment.getInputStream(), ContentType.create(attachment.getMimeType()), attachment.getFileName())
               .asJson();
       JSONObject attachmentJson = attachmentResponse.getBody().getObject();
@@ -94,12 +94,12 @@ public class DirectSender {
       attachmentIds.add(attachmentId);
     }
 
-    URL messageUrl = new URL(new URL(this.jsonProperties.getDirect().get(JsonProperties.DIRECT_URL)), "/MailManagement/ws/v3/send/message");
+    URL messageUrl = new URL(new URL(this.nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL)), "/MailManagement/ws/v3/send/message");
     String attachmentIdList = String.join(",", attachmentIds);
     HttpResponse<JsonNode> response = Unirest.put(messageUrl.toString())
             .header("accept", "application/json")
-            .basicAuth(jsonProperties.getDirect().get(JsonProperties.DIRECT_USERNAME), jsonProperties.getDirect().get(JsonProperties.DIRECT_PASSWORD))
-            .field("to", jsonProperties.getDirect().get(JsonProperties.DIRECT_TO_ADDRESS))
+            .basicAuth(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME), nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))
+            .field("to", nandinaConfig.getDirect().get(NandinaConfig.DIRECT_TO_ADDRESS))
             .field("subject", subject)
             .field("body", message)
             .field("attachmentId", attachmentIdList)

@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
 
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Map;
 public abstract class BaseFormQuery implements IFormQuery {
   protected Map<String, String> criteria;
   protected Map<String, Object> contextData;
-  protected JsonProperties properties;
+  protected NandinaConfig properties;
   protected IGenericClient fhirClient;
 
   @Override
@@ -33,12 +33,12 @@ public abstract class BaseFormQuery implements IFormQuery {
   }
 
   @Override
-  public JsonProperties getProperties() {
+  public NandinaConfig getProperties() {
     return this.properties;
   }
 
   @Override
-  public void setProperties(JsonProperties properties) {
+  public void setProperties(NandinaConfig properties) {
     this.properties = properties;
   }
 

@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.send;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.nandina.JsonProperties;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.TransformHelper;
@@ -10,7 +10,7 @@ import org.hl7.fhir.r4.model.QuestionnaireResponse;
 
 public class PIHCSender implements IReportSender {
   @Override
-  public void send(QueryReport report, JsonProperties config, FhirContext ctx) throws Exception {
+  public void send(QueryReport report, NandinaConfig config, FhirContext ctx) throws Exception {
     PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
     QuestionnaireResponse questionnaireResponse = generator.generate();
     DirectSender sender = new DirectSender(config, ctx);
