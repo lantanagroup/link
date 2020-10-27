@@ -6,29 +6,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.nandina.DefaultField;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.NandinaConfig;
-import com.lantanagroup.nandina.PIHCQuestionnaireResponseGenerator;
 import com.lantanagroup.nandina.QueryReport;
-import com.lantanagroup.nandina.TransformHelper;
-import com.lantanagroup.nandina.direct.DirectSender;
+import com.lantanagroup.nandina.download.IReportDownloader;
 import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
-import org.apache.commons.io.IOUtils;
-import org.hl7.fhir.r4.model.QuestionnaireResponse;
+import com.lantanagroup.nandina.send.IReportSender;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.TransformerException;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,29 +94,6 @@ public class ReportController extends BaseController {
     return criteria;
   }
 
-  /**
-   * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
-   * responses using the DirectSender class.
-   * @param report - this is the report data after generate report was clicked
-   * @return
-   * @throws Exception
-   */
-  @PostMapping("/api/send")
-  public QueryReport sendQuestionnaireResponse(@RequestBody() QueryReport report) throws Exception {
-    PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
-    QuestionnaireResponse questionnaireResponse = generator.generate();
-    DirectSender sender = new DirectSender(nandinaConfig, ctx);
-
-    if (nandinaConfig.getExportFormat().equalsIgnoreCase("json")) {
-      sender.sendJSON("QuestionnaireResponse JSON", "Please see the attached questionnaireResponse json file", questionnaireResponse);
-    } else if (nandinaConfig.getExportFormat().equalsIgnoreCase("xml")) {
-      sender.sendXML("QuestionnaireResponse XML", "Please see the attached questionnaireResponse xml file", questionnaireResponse);
-    } else if (nandinaConfig.getExportFormat().equalsIgnoreCase("csv")) {
-      sender.sendCSV("QuestionnaireResponse CSV", "Please see the attached questionnaireResponse csv file", this.convertToCSV(questionnaireResponse));
-    }
-    return report;
-  }
-
   @PostMapping("/api/query")
   public QueryReport generateReport(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
     IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
@@ -162,38 +136,39 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private String convertToCSV(QuestionnaireResponse questionnaireResponse) throws TransformerException, FileNotFoundException {
-    String xml = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
-    TransformHelper transformHelper = new TransformHelper();
-    return transformHelper.convert(xml);
+  /**
+   * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
+   * responses using the DirectSender class.
+   * @param report - this is the report data after generate report was clicked
+   * @return
+   * @throws Exception
+   */
+  @PostMapping("/api/send")
+  public void send(@RequestBody() QueryReport report) throws Exception {
+    if (StringUtils.isEmpty(this.nandinaConfig.getSender()))
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
+
+    IReportSender sender;
+    Class<?> prepareQueryClass = Class.forName(this.nandinaConfig.getSender());
+    Constructor<?> queryConstructor = prepareQueryClass.getConstructor();
+    sender = (IReportSender) queryConstructor.newInstance();
+
+    sender.send(report, this.nandinaConfig, this.ctx);
   }
 
-  @PostMapping("/api/convert")
-  public void convertSimpleReport(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
-    PIHCQuestionnaireResponseGenerator generator = new PIHCQuestionnaireResponseGenerator(report);
-    QuestionnaireResponse questionnaireResponse = generator.generate();
-    String responseBody = null;
-    IGenericClient fhirQueryClient = this.getFhirQueryClient(authentication, request);
+  @PostMapping("/api/download")
+  public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+    if (StringUtils.isEmpty(this.nandinaConfig.getDownloader()))
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
-    if (nandinaConfig.getExportFormat().equals("json")) {
-      responseBody = this.ctx.newJsonParser().encodeResourceToString(questionnaireResponse);
-      response.setContentType("application/json");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.json\"");
-    } else if (nandinaConfig.getExportFormat().equals("xml")) {
-      responseBody = this.ctx.newXmlParser().encodeResourceToString(questionnaireResponse);
-      response.setContentType("application/xml");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.xml\"");
-    } else {
-      responseBody = this.convertToCSV(questionnaireResponse);
-      response.setContentType("text/plain");
-      response.setHeader("Content-Disposition", "attachment; filename=\"report.csv\"");
-    }
+    IReportDownloader downloader;
+    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    Class<?> downloaderClass = Class.forName(this.nandinaConfig.getDownloader());
+    Constructor<?> downloaderCtor = downloaderClass.getConstructor();
+    downloader = (IReportDownloader) downloaderCtor.newInstance();
+
+    downloader.download(report, response, this.ctx, this.nandinaConfig);
 
     FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
-
-    InputStream is = new ByteArrayInputStream(responseBody.getBytes());
-    IOUtils.copy(is, response.getOutputStream());
-    response.flushBuffer();
   }
 }

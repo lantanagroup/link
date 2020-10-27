@@ -1,0 +1,29 @@
+<div class="card">
+    <div class="card-header">Report Generation Criteria</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p><strong>Report Date</strong></p>
+                <p class="help-block">For which patient impact and hospital capacity counts are reported.</p>
+                <div class="input-group">
+                    <input class="form-control" placeholder="{{today | date: 'yyyy-MM-dd'}}"
+                           name="dp" [(ngModel)]="report.date" ngbDatepicker #d="ngbDatepicker" (ngModelChange)="onDateSelected()">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="loading">Generate Report</button>
+        <p class="help-block" *ngIf="loading">Generating report...</p>
+    </div>
+</div>
+
+<ng-template reportBody></ng-template>
+
+<div class="btn-group report-actions">
+    <button type="button" class="btn btn-primary download" (click)="download()">Save to File</button>
+    <button type="button" class="btn btn-primary send" (click)="send()" [disabled]="!reportGenerated">Send Report</button>
+</div>

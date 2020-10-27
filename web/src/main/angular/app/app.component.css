@@ -15,3 +15,36 @@
 .help-block {
   color: gray;
 }
+
+.top-bar {
+  display: block;
+  height: 85px;
+}
+
+.main-logo {
+  float: left;
+  font-family: "Century Gothic", "Segoe UI", "Helvetica Neue", Arial;
+  font-size: 3.5rem;
+  font-weight: bold;
+}
+
+.main-logo img {
+  width: 75px;
+  margin-top: 8px;
+  margin-right: 5px;
+}
+
+.auth-info {
+  float: right;
+}
+
+.copyright-info {
+  display: block;
+}
+
+.copyright-info .lcg-logo {
+  float: right;
+  width: 150px;
+  margin-right: -25px;
+  margin-top: 25px;
+}

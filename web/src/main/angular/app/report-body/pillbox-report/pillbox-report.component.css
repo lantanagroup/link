@@ -1,0 +1,9 @@
+.code {
+    display: flex;
+}
+
+.code i {
+    margin-top: 5px;
+    margin-left: 3px;
+    opacity: 0.2;
+}

@@ -1,7 +1,7 @@
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
-import com.lantanagroup.nandina.query.fhir.r4.cerner.PatientData;
-import com.lantanagroup.nandina.query.fhir.r4.cerner.filter.CovidFilter;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.PatientData;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.filter.CovidFilter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Patient;

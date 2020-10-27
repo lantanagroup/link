@@ -1,13 +1,9 @@
 package com.lantanagroup.nandina.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter @Setter
 public class CernerClaimData {
   private String tenant;
-
-  public String getTenant() {
-    return tenant;
-  }
-
-  public void setTenant(String tenant) {
-    this.tenant = tenant;
-  }
 }
