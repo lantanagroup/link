@@ -41,6 +41,8 @@ public class NandinaConfig {
     private String authJwksUrl;
     private String prepareQuery;
     private String formQuery;
+    private String downloader;
+    private String sender;
     private Map<String, String> terminology;
     private List<DefaultField> defaultField;
     private boolean requireHttps;

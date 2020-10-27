@@ -3,6 +3,10 @@ package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.filter.Filter;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.model.DiagnosisReportModel;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.model.LabReportModel;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.model.MedReportModel;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.model.PatientReportModel;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.report.*;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.EncounterScoop;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
@@ -35,6 +39,10 @@ public class PillboxCsvReport extends Report {
   protected String facilityId;
   protected String censusId;
   private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+  public PillboxCsvReport(FhirContext ctx) {
+    super(null, new ArrayList<>(), ctx);
+  }
 
   public PillboxCsvReport(EncounterScoop scoop, List<Filter> filters, FhirContext ctx) {
     super(scoop, addFilters(filters), ctx);

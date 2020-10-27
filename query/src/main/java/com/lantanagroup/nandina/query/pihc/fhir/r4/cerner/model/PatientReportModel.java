@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.report;
+package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.model;
 
 public class PatientReportModel {
   private String facilityId;

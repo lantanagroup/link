@@ -20,13 +20,9 @@ export class ReportService {
 
   async download(report: QueryReport) {
     const url = this.configService.getApiUrl('/api/download');
+    const convertResponse = await this.http.post(url, report, {observe: 'response', responseType: 'blob'}).toPromise();
 
-    const convertResponse = await this.http.post(url, report, {responseType: 'text', observe: 'response'}).toPromise();
-
-    const contentType = convertResponse.headers.get('Content-Type');
-    const blob = new Blob([convertResponse.body], {type: contentType});
-
-    saveAs(blob, this.getFileName(convertResponse.headers.get('Content-Disposition')));
+    saveAs(convertResponse.body, this.getFileName(convertResponse.headers.get('Content-Disposition')));
   }
 
   async send(report: QueryReport) {
