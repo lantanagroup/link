@@ -3,6 +3,7 @@ package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.EncounterScoop;
+import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.PatientScoop;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -40,11 +41,40 @@ public class PatientData {
   private List<String> queryConstants =
           Arrays.asList("Encounter?patient=Patient/", "Condition?patient=Patient/", "MedicationRequest?patient=Patient/", "Observation?patient=Patient/", "AllergyIntolerance?patient=Patient/", "Procedure?patient=Patient/");
 
-  public PatientData(EncounterScoop scoop, Patient pat, FhirContext fhirContext) {
+  public PatientData(PatientScoop patientScoop, Patient patient, FhirContext fhirContext) {
+    this.patient = patient;
+    ctx = fhirContext;
+    List<String> queryString = new ArrayList<>();
+    queryConstants.parallelStream().forEach(query -> {
+      if (query.contains("Observation")) {
+        queryString.add(query + patient.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
+      } else {
+        queryString.add(query + patient.getIdElement().getIdPart());
+      }
+    });
+
+    queryString.parallelStream().forEach(query -> {
+      if (query.contains("Encounter")) {
+        encounters = patientScoop.rawSearch(query);
+      } else if (query.contains("Condition")) {
+        conditions = patientScoop.rawSearch(query);
+      } else if (query.contains("MedicationRequest")) {
+        meds = patientScoop.rawSearch(query);
+      } else if (query.contains("Observation")) {
+        labResults = patientScoop.rawSearch(query);
+      } else if (query.contains("AllergyIntolerance")) {
+        allergies = patientScoop.rawSearch(query);
+      } else if (query.contains("Procedure")) {
+        procedures = patientScoop.rawSearch(query);
+      }
+    });
+  }
+
+  public PatientData(EncounterScoop encounterScoop, Patient pat, FhirContext fhirContext) {
     patient = pat;
     ctx = fhirContext;
     dateCollected = new Date();
-    Map<Patient, Encounter> patEncMap = scoop.getPatientEncounterMap();
+    Map<Patient, Encounter> patEncMap = encounterScoop.getPatientEncounterMap();
     primaryEncounter = patEncMap.get(patient);
     List<String> queryString = new ArrayList<>();
     queryConstants.parallelStream().forEach(query -> {
@@ -57,21 +87,34 @@ public class PatientData {
 
     queryString.parallelStream().forEach(query -> {
       if (query.contains("Encounter")) {
-        encounters = scoop.rawSearch(query);
+        encounters = encounterScoop.rawSearch(query);
       } else if (query.contains("Condition")) {
-        conditions = scoop.rawSearch(query);
+        conditions = encounterScoop.rawSearch(query);
       } else if (query.contains("MedicationRequest")) {
-        meds = scoop.rawSearch(query);
+        meds = encounterScoop.rawSearch(query);
       } else if (query.contains("Observation")) {
-        labResults = scoop.rawSearch(query);
+        labResults = encounterScoop.rawSearch(query);
       } else if (query.contains("AllergyIntolerance")) {
-        allergies = scoop.rawSearch(query);
+        allergies = encounterScoop.rawSearch(query);
       } else if (query.contains("Procedure")) {
-        procedures = scoop.rawSearch(query);
+        procedures = encounterScoop.rawSearch(query);
       }
     });
   }
 
+
+  public Bundle getBundleTransaction() {
+    Bundle b = new Bundle();
+    b.setType(BundleType.TRANSACTION);
+    b.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    // TODO need to remove the setType(BundleType.COLLECTION) after we stand up our own server
+    b.addEntry().setResource(encounters.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    b.addEntry().setResource(conditions.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    b.addEntry().setResource(meds.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    b.addEntry().setResource(labResults.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    b.addEntry().setResource(allergies.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    return b;
+  }
 
   public Bundle getBundle() {
     Bundle b = new Bundle();
