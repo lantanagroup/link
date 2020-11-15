@@ -9,6 +9,7 @@ import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -59,12 +60,13 @@ public class PatientScoopTest {
      * every time someone runs mvn clean install
      */
     @Test
+    @Ignore
     public void PostBundleToFhirServerTest() throws Exception {
         PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIdList);
         patientScoop.getPatientData().parallelStream().forEach(data -> {
             Bundle bundle = data.getBundleTransaction();
             IGenericClient client = ctx.newRestfulGenericClient("http://localhost:8080/cqf-ruler-r4/fhir");
-//            Bundle resp = client.transaction().withBundle(bundle).execute();
+            Bundle resp = client.transaction().withBundle(bundle).execute();
         });
         Assert.assertTrue(patientScoop != null);
         Assert.assertTrue(patientScoop.getPatientData() != null);
