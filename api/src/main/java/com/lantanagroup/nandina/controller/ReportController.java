@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.nandina.DefaultField;
 import com.lantanagroup.nandina.FhirHelper;
+import com.lantanagroup.nandina.MeasureConfig;
 import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.download.IReportDownloader;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -170,5 +172,20 @@ public class ReportController extends BaseController {
     downloader.download(report, response, this.ctx, this.nandinaConfig);
 
     FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+  }
+
+  @GetMapping("/api/report/measures")
+  public Map<String, String> getMeasureConfigs() throws Exception {
+    Map<String, String> measureConfigs = new HashMap<>();
+    if (null == nandinaConfig.getMeasureConfigs() || nandinaConfig.getMeasureConfigs().isEmpty())
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Measures are not configured");
+
+    List<MeasureConfig> measureList = mapper.convertValue(
+            nandinaConfig.getMeasureConfigs(),
+            new TypeReference<List<MeasureConfig>>(){});
+    measureList.forEach(config -> {
+      measureConfigs.put(config.getId(), config.getName());
+    });
+    return measureConfigs;
   }
 }

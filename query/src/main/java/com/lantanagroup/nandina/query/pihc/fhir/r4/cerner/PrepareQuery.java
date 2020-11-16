@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.query.fhir.r4.cerner;
+package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.NandinaConfig;
