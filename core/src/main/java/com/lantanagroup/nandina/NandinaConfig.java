@@ -48,6 +48,7 @@ public class NandinaConfig {
     private boolean requireHttps;
     private Map<String, String> direct;
     private Map<String, String> queryCriteria;
+    private List<MeasureConfig> measureConfigs;
 
     public String loadValueSet(String valueSetUri) {
         String valueSetCodes = null;
