@@ -2,6 +2,7 @@ package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.PatientData;
+import lombok.Getter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,20 +10,11 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.List;
 
+@Getter
 public abstract class Scoop {
-
 	protected static final Logger logger = LoggerFactory.getLogger(Scoop.class);
-
 	protected List<PatientData> patientData;
 	protected Date reportDate = null;
-
-	public List<PatientData> getPatientData() {
-		return patientData;
-	}
-
-	public Date getReportDate() {
-		return reportDate;
-	}
 
 	public Bundle rawSearch(IGenericClient fhirServer, String query) {
 		try {
