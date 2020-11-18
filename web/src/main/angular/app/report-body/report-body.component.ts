@@ -12,6 +12,9 @@ import {ConfigService} from '../services/config.service';
 import {PihcReportComponent} from './pihc-report/pihc-report.component';
 import {PillboxReportComponent} from './pillbox-report/pillbox-report.component';
 import {IReportPlugin} from './report-plugin';
+import {MeasureEvalComponent} from "./measure-eval/measure-eval.component";
+import {HttpClient} from "@angular/common/http";
+import {MeasureConfig} from "../model/MeasureConfig";
 
 @Component({
   selector: 'app-report-body',
@@ -27,10 +30,13 @@ export class ReportBodyComponent implements OnInit {
   overflowLocations: LocationResponse[] = [];
   today = getFhirNow();
   report: QueryReport = new QueryReport();
+  measureConfigs: MeasureConfig[] = [];
+  evaluateMeasureButtonText: String = 'Select Measure';
 
   private reportBodyComponent: ComponentRef<IReportPlugin>;
 
   constructor(
+      private http: HttpClient,
       private modal: NgbModal,
       private configService: ConfigService,
       private cookieService: CookieService,
@@ -134,12 +140,15 @@ export class ReportBodyComponent implements OnInit {
   loadReportBody() {
     let componentFactory: ComponentFactory<IReportPlugin>;
 
-    switch (this.configService.config.report) {
+    switch (this.configService.config.report as any) {
       case 'pihc':
         componentFactory = this.componentFactoryResolver.resolveComponentFactory(PihcReportComponent);
         break;
       case 'pillbox':
         componentFactory = this.componentFactoryResolver.resolveComponentFactory(PillboxReportComponent);
+        break;
+      case 'measure-eval':
+        componentFactory = this.componentFactoryResolver.resolveComponentFactory(MeasureEvalComponent);
         break;
     }
 
@@ -150,9 +159,16 @@ export class ReportBodyComponent implements OnInit {
     this.reportBodyComponent.instance.report = this.report;
   }
 
+  selectMeasure(selectedItem: string){
+    this.evaluateMeasureButtonText = selectedItem;
+  }
+
   async ngOnInit() {
     // initialize the response date to today by default.
     this.report.date = getFhirNow();
+    // TODO remove localhost:8081. using for testing only. when I use ./api/report/measures it uses 8080 but our api is on 8081
+    this.measureConfigs = await this.http.get<MeasureConfig[]>( 'http://localhost:8081/api/report/measures').toPromise();
+
 
     this.loadReportBody();
   }

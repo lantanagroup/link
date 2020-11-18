@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -175,8 +176,9 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/api/report/measures")
-  public Map<String, String> getMeasureConfigs() throws Exception {
-    Map<String, String> measureConfigs = new HashMap<>();
+  public List<MeasureConfig> getMeasureConfigs() throws Exception {
+    Map<String, String> measureMap = new HashMap<>();
+    List<MeasureConfig> measureConfigs = new ArrayList<>();
     if (null == nandinaConfig.getMeasureConfigs() || nandinaConfig.getMeasureConfigs().isEmpty())
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Measures are not configured");
 
@@ -184,7 +186,10 @@ public class ReportController extends BaseController {
             nandinaConfig.getMeasureConfigs(),
             new TypeReference<List<MeasureConfig>>(){});
     measureList.forEach(config -> {
-      measureConfigs.put(config.getId(), config.getName());
+      MeasureConfig measureConfig = new MeasureConfig();
+      measureConfig.setId(config.getId());
+      measureConfig.setName(config.getName());
+      measureConfigs.add(measureConfig);
     });
     return measureConfigs;
   }
