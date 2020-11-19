@@ -18,3 +18,7 @@ table tr td:first-child {
 .btn-group.report-actions {
     margin-top: 10px;
 }
+
+.btn-primary {
+    margin-right: 5px;
+}

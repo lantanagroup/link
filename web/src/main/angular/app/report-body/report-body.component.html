@@ -13,6 +13,18 @@
                     </div>
                 </div>
             </div>
+            <div ngbDropdown class="col-md-4">
+                <p><strong>Evaluate Measure</strong></p>
+                <p class="help-block">Select a measure from the drop down to create a Measure Report.</p>
+                <button class="btn btn-outline-primary" id="measureEvalDropDown" ngbDropdownToggle>{{evaluateMeasureButtonText}}</button>
+                <div ngbDropdownMenu aria-labelledby="measureEvalDropDown">
+                    <div *ngFor="let config of measureConfigs">
+                        <button class="dropdown-item"
+                                id="measureOption" on-click="selectMeasure(config.name)">{{config.name}}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <div class="card-footer">
