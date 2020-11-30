@@ -30,6 +30,11 @@ public class AuthTokenSecurityConfig extends WebSecurityConfigurerAdapter {
             antMatcher("/config/smart")
             .anonymous();
 
+    httpSecurity
+            .authorizeRequests()
+            .antMatchers("/api/fhir/**").permitAll()
+            .antMatchers("/api/cda").permitAll();
+
     httpSecurity.
             antMatcher("/api/**")
             .csrf()
