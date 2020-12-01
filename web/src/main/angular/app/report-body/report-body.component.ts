@@ -32,6 +32,7 @@ export class ReportBodyComponent implements OnInit {
   report: QueryReport = new QueryReport();
   measureConfigs: MeasureConfig[] = [];
   evaluateMeasureButtonText: String = 'Select Measure';
+  generateReportButtonText: String = 'Generate Report';
 
   private reportBodyComponent: ComponentRef<IReportPlugin>;
 
@@ -102,6 +103,15 @@ export class ReportBodyComponent implements OnInit {
   async reload() {
     try {
       this.loading = true;
+      this.generateReportButtonText = 'Loading...';
+
+      if (this.evaluateMeasureButtonText) {
+        this.measureConfigs.forEach(measure => {
+          if (measure.name === this.evaluateMeasureButtonText) {
+            this.report.measureId = measure.id;
+          }
+        })
+      }
 
       if (!this.report.date) {
         this.report.date = getFhirNow();
@@ -134,6 +144,7 @@ export class ReportBodyComponent implements OnInit {
       this.toastService.showException('Error running queries', ex);
     } finally {
       this.loading = false;
+      this.generateReportButtonText = 'Generate Report';
     }
   }
 
@@ -169,7 +180,14 @@ export class ReportBodyComponent implements OnInit {
     // TODO remove localhost:8081. using for testing only. when I use ./api/report/measures it uses 8080 but our api is on 8081
     this.measureConfigs = await this.http.get<MeasureConfig[]>( 'http://localhost:8081/api/report/measures').toPromise();
 
-
     this.loadReportBody();
+  }
+
+  disableGenerateReport() {
+    if (this.evaluateMeasureButtonText === 'Select Measure') {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

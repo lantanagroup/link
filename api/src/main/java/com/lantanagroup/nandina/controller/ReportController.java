@@ -94,6 +94,10 @@ public class ReportController extends BaseController {
       criteria.put("reportDate", report.getDate());
     }
 
+    if (null != report.getMeasureId() && !report.getMeasureId().isEmpty()) {
+      criteria.put("measureId", report.getMeasureId());
+    }
+
     return criteria;
   }
 

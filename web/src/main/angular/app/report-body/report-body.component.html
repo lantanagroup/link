@@ -28,7 +28,7 @@
         </div>
     </div>
     <div class="card-footer">
-        <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="loading">Generate Report</button>
+        <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="disableGenerateReport()">{{generateReportButtonText}}</button>
         <p class="help-block" *ngIf="loading">Generating report...</p>
     </div>
 </div>
