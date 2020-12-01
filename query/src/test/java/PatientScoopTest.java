@@ -2,20 +2,14 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.PatientData;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.filter.CovidFilter;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.PatientScoop;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Patient;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class PatientScoopTest {
@@ -47,6 +41,7 @@ public class PatientScoopTest {
      * Test creating and populating patient scoop data
      */
     @Test
+    @Ignore
     public void PatientScoopData() throws Exception {
         PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIdList);
         List<PatientData> patientData = patientScoop.getPatientData();

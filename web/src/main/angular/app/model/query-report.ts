@@ -2,6 +2,7 @@ import {getFhirNow} from '../helper';
 
 export class QueryReport {
   public date: string = getFhirNow();
+  public measureId: string;
   public questions: string[] = [];
   public answers: { [questionId: string]: any } = {};
 
