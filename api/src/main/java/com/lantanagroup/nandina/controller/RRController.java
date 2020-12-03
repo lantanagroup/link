@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.transform.TransformerException;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
