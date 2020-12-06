@@ -50,8 +50,12 @@ public class PatientScoop extends Scoop {
                 PatientData patientData;
                 try {
                     Patient patient = this.getPatientMap().get(id);
-                    patientData = new PatientData(this, patient, targetFhirServer.getFhirContext());
-                    patientDataList.add(patientData);
+                    if (null != patient) {
+                        patientData = new PatientData(this, patient, targetFhirServer.getFhirContext());
+                        patientDataList.add(patientData);
+                    } else {
+                        logger.warn("Patient Id: " + id + " for patientData doesn't exist.");
+                    }
                 } catch (Exception e) {
                     logger.error("Error loading data for " + id, e);
                 }
