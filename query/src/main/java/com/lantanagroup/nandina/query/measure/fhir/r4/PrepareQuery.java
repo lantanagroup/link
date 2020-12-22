@@ -17,11 +17,15 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResourceType;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.ResourceType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,6 +102,33 @@ public class PrepareQuery extends BasePrepareQuery {
      */
     private List<String> retrievePatientIds(String date) {
         IGenericClient cqfRulerClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
+        String date = this.getCriteria().get("reportDate");
+        List<String> patientIds = new ArrayList<>();
+        IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
+        ctx = fhirQueryClient.getFhirContext();
+        targetFhirServer = ctx.newRestfulGenericClient("https://fhir.nandina.org/fhir");
+        nandinaFhirServer = ctx.newRestfulGenericClient("https://fhir.nandina.org/fhir");
+
+        // retrieve the measure selected
+        Measure measure = fhirQueryClient.read().resource(Measure.class).withId(measureId).execute();
+
+        // store the latest measure onto the cqf-ruler server
+        storeLatestMeasure(measure, fhirQueryClient);
+        // retrieve patient ids from the bundles
+        patientIds = retrievePatientIds(date);
+
+        // scoop the patient data based on the list of patient ids
+        PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIds);
+        patientScoop.getPatientData().parallelStream().forEach(data -> {
+            Bundle bundle = data.getBundleTransaction();
+            IGenericClient client = ctx.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
+            Bundle bundleResponse = client.transaction().withBundle(bundle).execute();
+            logger.info(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundleResponse));
+        });
+    }
+
+    private List<String> retrievePatientIds(String date) {
+        IGenericClient cqfRulerClient = ctx.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
         List<String> patientIds = new ArrayList<>();
         List<IBaseResource> bundles = new ArrayList<>();
 
@@ -117,10 +148,12 @@ public class PrepareQuery extends BasePrepareQuery {
                         .next(bundle)
                         .execute();
                 log.info("Adding next page of bundles...");
+                logger.info("Adding next page of bundles...");
                 bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
             }
 
             bundles.parallelStream().forEach(bundleResource -> {
+
                 Bundle resource = (Bundle) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
                 resource.getEntry().parallelStream().forEach(entry -> {
                     if (entry.getResource().getResourceType().equals(ResourceType.Patient)) {
