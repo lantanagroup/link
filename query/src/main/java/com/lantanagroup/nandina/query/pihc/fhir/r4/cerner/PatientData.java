@@ -106,14 +106,23 @@ public class PatientData {
   public Bundle getBundleTransaction() {
     Bundle b = new Bundle();
     b.setType(BundleType.TRANSACTION);
-    b.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.POST);
-    // TODO need to remove the setType(BundleType.COLLECTION) after we stand up our own server
-    b.addEntry().setResource(encounters.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
-    b.addEntry().setResource(conditions.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
-    b.addEntry().setResource(meds.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
-    b.addEntry().setResource(labResults.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
-    b.addEntry().setResource(allergies.setType(BundleType.COLLECTION)).getRequest().setMethod(Bundle.HTTPVerb.POST);
+    b.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.PUT).setUrl("Patient/" + patient.getIdElement().getIdPart());
+    addEntryToBundle(encounters, b);
+    addEntryToBundle(conditions, b);
+    addEntryToBundle(meds, b);
+    addEntryToBundle(labResults, b);
+    addEntryToBundle(allergies, b);
     return b;
+  }
+
+  private void addEntryToBundle(Bundle source, Bundle destination) {
+    source.getEntry().forEach(entry -> {
+      destination.addEntry().setResource(entry
+              .getResource())
+              .getRequest()
+              .setMethod(Bundle.HTTPVerb.PUT)
+              .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
+    });
   }
 
   public Bundle getBundle() {
@@ -127,7 +136,7 @@ public class PatientData {
     b.addEntry().setResource(allergies);
     return b;
   }
-  
+
   public String getBundleXml() {
 	  return ctx.newXmlParser().encodeResourceToString(getBundle());
   }
