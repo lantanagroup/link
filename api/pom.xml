@@ -41,7 +41,7 @@
         <dependency>
             <groupId>com.lantanagroup.fhir.transform</groupId>
             <artifactId>FHIRTransforms</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>0.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
