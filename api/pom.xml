@@ -138,6 +138,14 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>7.9</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.14</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
