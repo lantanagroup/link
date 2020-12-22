@@ -54,17 +54,21 @@ public class FixMeasureBundle {
     List<ValueSet> valueSets = new ArrayList<>();
 
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+      // Remove unnecessary "meta" information from each entry in the bundle
       if (entry.getResource().getMeta() != null) {
         entry.getResource().setMeta(null);
       }
 
       if (entry.getResource() instanceof Measure) {
         Measure measure = (Measure) entry.getResource();
+
+        // Set the ID and request of the Measure to match the ID passed into the CLI
         measure.setId(measureId);
         entry.getRequest().setUrl("Measure/" + measureId);
       } else if (entry.getResource() instanceof Library) {
         Library library = (Library) entry.getResource();
 
+        // Loop through each relatedArtifact in the Library and see if it is referencing a VSAC Value Set
         for (RelatedArtifact related : library.getRelatedArtifact()) {
           if (related.getUrl() != null && related.getUrl().startsWith("http://cts.nlm.nih.gov/fhir/ValueSet")) {
             Optional<Bundle.BundleEntryComponent> foundEntry = bundle.getEntry().stream().filter(n -> {
@@ -73,6 +77,7 @@ public class FixMeasureBundle {
             }).findAny();
             Optional<ValueSet> foundDownloaded = valueSets.stream().filter(n -> n.getUrl().equals(related.getUrl())).findAny();
 
+            // Check that the value set doesn't already exist in the bundle and hasn't already been downloaded
             if (foundEntry.isPresent() || foundDownloaded.isPresent()) {
               continue;
             }
@@ -89,6 +94,7 @@ public class FixMeasureBundle {
 
             logger.info("Getting value set from VSAC " + url.toString());
 
+            // Get the value set from VSAC
             int status = conn.getResponseCode();
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -102,6 +108,7 @@ public class FixMeasureBundle {
             if (content.length() > 0) {
               logger.info("Parsing value set...");
 
+              // Parse the ValueSet XML and add it to the list of value sets to be added to the bundle
               ValueSet vs = (ValueSet) ctx.newXmlParser().parseResource(content.toString());
               valueSets.add(vs);
 
@@ -114,6 +121,7 @@ public class FixMeasureBundle {
       }
     }
 
+    // Add all value sets downloaded to the bundle
     valueSets.parallelStream().forEach(vs -> {
       bundle.addEntry()
               .setResource(vs)
@@ -122,6 +130,7 @@ public class FixMeasureBundle {
               .setUrl("ValueSet/" + vs.getIdElement().getIdPart());
     });
 
+    // Serialize and save the XML back to the file system
     String xml = ctx.newXmlParser().setPrettyPrint(true).encodeResourceToString(bundle);
     Files.write(measureBundlePath, xml.getBytes(StandardCharsets.UTF_8));
 
