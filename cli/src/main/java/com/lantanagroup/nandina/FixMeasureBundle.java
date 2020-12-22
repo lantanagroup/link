@@ -21,6 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This CLI is responsible for taking the export Bundle XML from the Mat and adding in
+ * missing value sets from the VSAC, as well as setting the ID of the Bundle and the Measure
+ * to something meaningful.
+ */
 public class FixMeasureBundle {
   private static final Logger logger = LoggerFactory.getLogger(FixMeasureBundle.class);
 
