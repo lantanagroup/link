@@ -1,5 +1,4 @@
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.param.DateRangeParam;
 import ca.uhn.fhir.util.BundleUtil;
@@ -19,9 +18,7 @@ import java.util.List;
 
 public class PatientScoopTest {
     private FhirContext ctx = FhirContext.forR4();
-    private IParser parser = ctx.newJsonParser();
     private List<String> patientIdList = new ArrayList<>();
-    private PatientData patientData = null;
     private IGenericClient targetFhirServer;
     private IGenericClient nandinaFhirServer;
 

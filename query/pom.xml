@@ -72,11 +72,7 @@
             <artifactId>hapi-fhir-structures-r4</artifactId>
             <version>4.2.0</version>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

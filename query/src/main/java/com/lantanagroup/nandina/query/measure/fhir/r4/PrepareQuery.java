@@ -1,65 +1,103 @@
 package com.lantanagroup.nandina.query.measure.fhir.r4;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.param.DateRangeParam;
 import ca.uhn.fhir.util.BundleUtil;
-import com.lantanagroup.nandina.NandinaConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.nandina.MeasureConfig;
 import com.lantanagroup.nandina.query.BasePrepareQuery;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.PatientScoop;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResourceType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class PrepareQuery extends BasePrepareQuery {
-    private static final Logger logger = LoggerFactory.getLogger(com.lantanagroup.nandina.query.measure.fhir.r4.PrepareQuery.class);
     private FhirContext ctx = null;
     private IGenericClient targetFhirServer;
     private IGenericClient nandinaFhirServer;
-
-    @Autowired
-    NandinaConfig nandinaConfig;
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void execute() throws Exception {
         String measureId = this.getCriteria().get("measureId");
-        String date = this.getCriteria().get("reportDate");
-        List<String> patientIds = new ArrayList<>();
+        String measureConfigUrl = null;
+        String reportDate = this.getCriteria().get("reportDate");
+        List<String> patientIds;
         IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
         ctx = fhirQueryClient.getFhirContext();
-        targetFhirServer = ctx.newRestfulGenericClient("https://fhir.nandina.org/fhir");
-        nandinaFhirServer = ctx.newRestfulGenericClient("https://fhir.nandina.org/fhir");
+        targetFhirServer = ctx.newRestfulGenericClient(this.properties.getFhirServerQueryBase());
+        nandinaFhirServer = ctx.newRestfulGenericClient(this.properties.getFhirServerQueryBase());
+        Bundle measureBundle = null;
 
-        // retrieve the measure selected
-        Measure measure = fhirQueryClient.read().resource(Measure.class).withId(measureId).execute();
+        List<MeasureConfig> measureConfigs = mapper.convertValue(this.properties.getMeasureConfigs(), new TypeReference<List<MeasureConfig>>() { });
 
-        // store the latest measure onto the cqf-ruler server
-        storeLatestMeasure(measure, fhirQueryClient);
-        // retrieve patient ids from the bundles
-        patientIds = retrievePatientIds(date);
+        for (MeasureConfig measureConfig : measureConfigs) {
+            if (measureConfig.getId().equals(measureId)) {
+                measureConfigUrl = measureConfig.getUrl();
+            }
+        }
 
-        // scoop the patient data based on the list of patient ids
-        PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIds);
-        patientScoop.getPatientData().parallelStream().forEach(data -> {
-            Bundle bundle = data.getBundleTransaction();
-            IGenericClient client = ctx.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
-            Bundle bundleResponse = client.transaction().withBundle(bundle).execute();
-            logger.info(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundleResponse));
-        });
+        if (null != measureConfigUrl) {
+            HttpClient client = HttpClient.newHttpClient();
+            log.info("Calling <GET> Request <" + measureConfigUrl + ">");
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(measureConfigUrl))
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info("Response statusCode: " + response.statusCode());
+
+            IParser parser = ctx.newJsonParser();
+            try {
+                measureBundle = parser.parseResource(Bundle.class, response.body());
+            } catch (Exception ex) {
+                log.error("Error trying to parse the response into a bundle from this url: " + measureConfigUrl);
+            }
+
+            // store the latest measure onto the cqf-ruler server
+            log.info("Calling storeLatestMeasure()");
+            storeLatestMeasure(measureBundle, fhirQueryClient);
+            // retrieve patient ids from the bundles
+            patientIds = retrievePatientIds(reportDate);
+
+            // scoop the patient data based on the list of patient ids
+            PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIds);
+            patientScoop.getPatientData().parallelStream().forEach(data -> {
+                Bundle bundle = data.getBundleTransaction();
+                IGenericClient newClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
+                log.info(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle));
+                Bundle bundleResponse = newClient.transaction().withBundle(bundle).execute();
+                log.info(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResponse));
+            });
+        } else {
+            log.error("measure url is null, check config!");
+        }
     }
 
+    /**
+     * This method checks the CQF-Ruler server for all bundles created on the same day as the report date from the UI
+     * It loads all the pages of bundles and returns them all. We then call the PatientScoop to scooop all of the
+     * patientData. This is then used to find all patients by identifier.
+     * @param date
+     * @return patiendId's <all of the patient identifiers found in the bundles
+     */
     private List<String> retrievePatientIds(String date) {
-        IGenericClient cqfRulerClient = ctx.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
+        IGenericClient cqfRulerClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
         List<String> patientIds = new ArrayList<>();
         List<IBaseResource> bundles = new ArrayList<>();
 
@@ -78,39 +116,39 @@ public class PrepareQuery extends BasePrepareQuery {
                         .loadPage()
                         .next(bundle)
                         .execute();
-                logger.info("Adding next page of bundles...");
+                log.info("Adding next page of bundles...");
                 bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
             }
 
             bundles.parallelStream().forEach(bundleResource -> {
-                Bundle resource = (Bundle) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundleResource));
+                Bundle resource = (Bundle) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
                 resource.getEntry().parallelStream().forEach(entry -> {
                     if (entry.getResource().getResourceType().equals(ResourceType.Patient)) {
-                        patientIds.add(entry.getResource().getIdElement().getIdPart());
+                        Patient p = (Patient) entry.getResource();
+                        if (null != p.getIdentifier().get(0)) {
+                            patientIds.add(p.getIdentifier().get(0).getValue());
+                        }
                     }
                 });
             });
         } else {
-            logger.error("Report date is null!");
+            log.error("Report date is null!");
         }
-        logger.info("Loaded " + patientIds.size() + " patient ids");
+        log.info("Loaded " + patientIds.size() + " patient ids");
+        patientIds.forEach(id -> log.info("PatientId: " + id));
         return patientIds;
     }
 
-    private void storeLatestMeasure(Measure measure, IGenericClient fhirQueryClient) {
-        Bundle bundle = getBundleTransaction(measure);
-        IGenericClient client = ctx.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/");
+    private void storeLatestMeasure(Bundle bundle, IGenericClient fhirQueryClient) {
+        log.info("Generating a Bundle Transaction of the Measure");
+        bundle.setType(Bundle.BundleType.TRANSACTION);
+        IGenericClient client = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
+        log.info("Executing the Bundle");
         Bundle resp = client.transaction().withBundle(bundle).execute();
-        logger.info("Logging measureId");
-        this.addContextData("measureId", StringUtils.substringBetween(resp.getEntry().get(0).getResponse().getLocation(), "Measure/", "/_history"));
+        log.info("Bundle executed successfully...");
+        String measureId = StringUtils.substringBetween(resp.getEntry().get(0).getResponse().getLocation(), "Measure/", "/_history");
+        log.info("Storing measureId " + measureId + " in context");
+        this.addContextData("measureId", measureId );
         this.addContextData("fhirContext", fhirQueryClient.getFhirContext());
     }
-
-    private Bundle getBundleTransaction(Measure measure) {
-        Bundle b = new Bundle();
-        b.setType(Bundle.BundleType.TRANSACTION);
-        b.addEntry().setResource(measure).getRequest().setMethod(Bundle.HTTPVerb.POST);
-        return b;
-    }
 }
-

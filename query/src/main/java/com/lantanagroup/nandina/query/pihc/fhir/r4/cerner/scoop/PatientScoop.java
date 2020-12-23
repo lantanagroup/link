@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.PatientData;
@@ -15,17 +16,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Getter @Setter
+@Getter
+@Setter
 public class PatientScoop extends Scoop {
-
+    protected FhirContext ctx = FhirContext.forR4();
+    protected IParser jsonParser = ctx.newJsonParser();
     protected IParser xmlParser;
     protected IGenericClient targetFhirServer;
     protected IGenericClient nandinaFhirServer;
     protected Map<String, Patient> patientMap = new HashMap<>();
     protected IValidationSupport validationSupport;
     protected FHIRPathEngine fhirPathEngine;
+    private final static String PATIENT_SEARCH_URL = "https://fhir.nandina.org/fhir/Patient?identifier=";
 
-    public PatientScoop(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, List<String> patientIdList) throws Exception{
+    public PatientScoop(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, List<String> patientIdList) throws Exception {
         this.targetFhirServer = targetFhirServer;
         this.nandinaFhirServer = nandinaFhirServer;
         patientData = loadPatientData(patientIdList);
@@ -35,12 +39,20 @@ public class PatientScoop extends Scoop {
         List<PatientData> patientDataList = new ArrayList<>();
 
         // first get the patients and store them in the patientMap
-        patientIdList.parallelStream().forEach(id -> {
+        patientIdList.forEach(identifier -> {
             try {
-                Patient p = targetFhirServer.read().resource(Patient.class).withId(id).execute();
-                this.patientMap.put(p.getIdElement().getIdPart(), p);
+                String searchUrl = PATIENT_SEARCH_URL + identifier;
+                Bundle response = this.nandinaFhirServer.search()
+                        .byUrl(searchUrl)
+                        .returnBundle(Bundle.class)
+                        .execute();
+                if (response.getEntry().size() != 1) {
+                    logger.info("Unable to retrieve patient with id = " + identifier);
+                }
+                Patient patient = (Patient) response.getEntryFirstRep().getResource();
+                this.patientMap.put(identifier, patient);
             } catch (Exception e) {
-                logger.info("Unable to retrieve patient with id = " + id);
+                logger.info("Unable to retrieve patient with id = " + identifier);
             }
         });
 
