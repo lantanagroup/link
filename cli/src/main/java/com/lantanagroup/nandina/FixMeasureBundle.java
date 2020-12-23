@@ -68,6 +68,11 @@ public class FixMeasureBundle {
       } else if (entry.getResource() instanceof Library) {
         Library library = (Library) entry.getResource();
 
+        if (bundle.getEntry().indexOf(entry) == 1) {
+          library.setId(measureId);
+          entry.getRequest().setUrl("Library/" + measureId);
+        }
+
         // Loop through each relatedArtifact in the Library and see if it is referencing a VSAC Value Set
         for (RelatedArtifact related : library.getRelatedArtifact()) {
           if (related.getUrl() != null && related.getUrl().startsWith("http://cts.nlm.nih.gov/fhir/ValueSet")) {
