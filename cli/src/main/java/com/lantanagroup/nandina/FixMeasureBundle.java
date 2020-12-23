@@ -3,6 +3,7 @@ package com.lantanagroup.nandina;
 import ca.uhn.fhir.context.FhirContext;
 import org.apache.commons.cli.*;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,26 @@ public class FixMeasureBundle {
     String measureId = cmd.getOptionValue("id");
     String vsacUsername = cmd.getOptionValue("vsacUsername");
     String vsacPassword = cmd.getOptionValue("vsacPassword");
+
+    if (Strings.isBlank(measureBundle)) {
+      System.err.println("The 'path' parameter is required.");
+      return;
+    }
+
+    if (Strings.isBlank(measureId)) {
+      System.err.println("The 'id' parameter is required.");
+      return;
+    }
+
+    if (Strings.isBlank(vsacUsername)) {
+      System.err.println("The 'vsacUsername' parameter is required.");
+      return;
+    }
+
+    if (Strings.isBlank(vsacPassword)) {
+      System.err.println("The 'vsacPassword' parameter is required.");
+      return;
+    }
 
     FhirContext ctx = FhirContext.forR4();
     Path measureBundlePath = Paths.get(measureBundle);
