@@ -2,8 +2,8 @@ package com.lantanagroup.nandina;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.report.HospitalizedReport;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.EncounterScoop;
+import com.lantanagroup.nandina.query.report.HospitalizedReport;
+import com.lantanagroup.nandina.query.scoop.EncounterScoop;
 
 import java.text.SimpleDateFormat;
 
