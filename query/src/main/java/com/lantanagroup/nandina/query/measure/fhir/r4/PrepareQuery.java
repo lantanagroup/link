@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.nandina.MeasureConfig;
 import com.lantanagroup.nandina.query.BasePrepareQuery;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.scoop.PatientScoop;
+import com.lantanagroup.nandina.query.scoop.PatientScoop;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;

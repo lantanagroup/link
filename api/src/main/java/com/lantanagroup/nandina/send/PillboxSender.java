@@ -5,7 +5,7 @@ import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.direct.Attachment;
 import com.lantanagroup.nandina.direct.DirectSender;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.QueryReportConverter;
+import com.lantanagroup.nandina.query.QueryReportConverter;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

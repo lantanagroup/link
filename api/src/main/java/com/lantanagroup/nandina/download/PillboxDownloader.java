@@ -3,7 +3,7 @@ package com.lantanagroup.nandina.download;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
-import com.lantanagroup.nandina.query.pihc.fhir.r4.cerner.QueryReportConverter;
+import com.lantanagroup.nandina.query.QueryReportConverter;
 import org.apache.commons.io.IOUtils;
 
 import javax.servlet.http.HttpServletResponse;
