@@ -1,6 +1,7 @@
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,12 +16,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ResourceLoader {
     private FhirContext ctx = FhirContext.forR4();
     private IParser xmlParser = ctx.newXmlParser();
+    private IParser jsonParser = ctx.newJsonParser();
 
     @Test
     @Ignore
@@ -137,5 +141,47 @@ public class ResourceLoader {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private List<String> getResourceIds(String resourceType) throws IOException, InterruptedException {
+        List<String> idList = new ArrayList<>();
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/" + resourceType))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        Bundle bundle = jsonParser.parseResource(Bundle.class, response.body());
+
+        bundle.getEntry().forEach(entry -> {
+            System.out.println(entry.getResource().getIdElement().getIdPart());
+            idList.add(entry.getResource().getIdElement().getIdPart());
+        });
+        return idList;
+    }
+
+    private void deleteResource(String resourceType, List<String> idList) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newBuilder().build();
+        for (String id : idList) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/" + resourceType + "/" + id))
+                    .DELETE()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.body());
+        }
+    }
+
+    @Test
+    @Ignore
+    public void deleteAllResources() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newBuilder().build();
+        List<String> patientIds = getResourceIds("Patient");
+        List<String> bundleIds = getResourceIds("Bundle");
+        List<String> conditionIds = getResourceIds("Condition");
+        deleteResource("Patient", patientIds);
+        deleteResource("Bundle", bundleIds);
+        deleteResource("Condition", conditionIds);
     }
 }
