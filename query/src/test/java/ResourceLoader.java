@@ -176,12 +176,25 @@ public class ResourceLoader {
     @Test
     @Ignore
     public void deleteAllResources() throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newBuilder().build();
         List<String> patientIds = getResourceIds("Patient");
         List<String> bundleIds = getResourceIds("Bundle");
         List<String> conditionIds = getResourceIds("Condition");
+        List<String> encounterIds = getResourceIds("Encounter");
+        List<String> coverageIds = getResourceIds("Coverage");
+        List<String> medicationRequestIds = getResourceIds("MedicationRequest");
+        List<String> observationIds = getResourceIds("Observation");
+        List<String> procedureIds = getResourceIds("Procedure");
+        List<String> locationIds = getResourceIds("Location");
+        List<String> allergyIntoleranceIds = getResourceIds("AllergyIntolerance");
         deleteResource("Patient", patientIds);
         deleteResource("Bundle", bundleIds);
         deleteResource("Condition", conditionIds);
+        deleteResource("Encounter", encounterIds);
+        deleteResource("Coverage", coverageIds);
+        deleteResource("MedicationRequest", medicationRequestIds);
+        deleteResource("Observation", observationIds);
+        deleteResource("Procedure", procedureIds);
+        deleteResource("Location", locationIds);
+        deleteResource("AllergyIntolerance", allergyIntoleranceIds);
     }
 }
