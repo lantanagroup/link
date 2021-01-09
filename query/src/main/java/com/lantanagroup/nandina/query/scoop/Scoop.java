@@ -24,10 +24,12 @@ public abstract class Scoop {
 				logger.error("Client is null");
 			}
 
-			return fhirServer.search()
-							.byUrl(query)
-							.returnBundle(Bundle.class)
-							.execute();
+			Bundle retBundle = fhirServer.search()
+					.byUrl(query)
+					.returnBundle(Bundle.class)
+					.execute();
+			logger.info(query + " Found " + retBundle.getEntry().size() + " resources");
+			return retBundle;
 		} catch (Exception ex) {
 			this.logger.error("Could not retrieve data for " + this.getClass().getName() + " with query " + query + ": " + ex.getMessage(), ex);
 		}

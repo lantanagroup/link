@@ -1,6 +1,7 @@
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,12 +16,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class ResourceLoader {
     private FhirContext ctx = FhirContext.forR4();
     private IParser xmlParser = ctx.newXmlParser();
+    private IParser jsonParser = ctx.newJsonParser();
 
     @Test
     @Ignore
@@ -58,7 +62,7 @@ public class ResourceLoader {
         loadResources("/Users/briannorris/Downloads/Resources/james");
         loadResources("/Users/briannorris/Downloads/Resources/colin");
         loadResources("/Users/briannorris/Downloads/Resources/charles");
-        loadResources("/Users/briannorris/Downloads/Resources/cassie");
+//        loadResources("/Users/briannorris/Downloads/Resources/cassie");
         loadResources("/Users/briannorris/Downloads/Resources/allison");
     }
 
@@ -73,7 +77,8 @@ public class ResourceLoader {
             try {
                 reader = Files.newBufferedReader(path);
                 String contents = reader.lines().collect(Collectors.joining());
-                String fileName = name.toString().replace("/Users/briannorris/Downloads/RR_Bundles/", "");
+                System.out.println(contents);
+                String fileName = name.toString().replace("/Users/briannorris/Downloads/Resources/", "");
                 fileName = fileName.replace(".xml", "");
 
                 String resourceType = contents.substring(contents.indexOf("<")+1, contents.indexOf(">"));
@@ -89,8 +94,10 @@ public class ResourceLoader {
                 }
                 putResource("https://fhir.nandina.org/fhir/" + resourceType + "/" + id, path, resourceType, fileName);
             } catch (IOException e) {
+                System.out.println(name);
                 e.printStackTrace();
             } catch (Exception e) {
+                System.out.println(name);
                 e.printStackTrace();
             }
         });
@@ -132,10 +139,101 @@ public class ResourceLoader {
         try {
             HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
+            System.out.println(response.body());
 
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    public void postBundle(String uri, Path path) throws Exception {
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(uri))
+                .timeout(Duration.ofMinutes(2))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofFile(path))
+                .build();
+
+        try {
+            HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+            System.out.println(response.body());
+
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private List<String> getResourceIds(String resourceType) throws IOException, InterruptedException {
+        List<String> idList = new ArrayList<>();
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/" + resourceType))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        Bundle bundle = jsonParser.parseResource(Bundle.class, response.body());
+
+        bundle.getEntry().forEach(entry -> {
+            System.out.println(entry.getResource().getIdElement().getIdPart());
+            idList.add(entry.getResource().getIdElement().getIdPart());
+        });
+        return idList;
+    }
+
+    private void deleteResource(String resourceType, List<String> idList) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newBuilder().build();
+        for (String id : idList) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/" + resourceType + "/" + id))
+                    .DELETE()
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.body());
+        }
+    }
+
+    @Test
+    @Ignore
+    public void deleteAllResources() throws IOException, InterruptedException {
+        List<String> patientIds = getResourceIds("Patient");
+        List<String> bundleIds = getResourceIds("Bundle");
+        List<String> conditionIds = getResourceIds("Condition");
+        List<String> encounterIds = getResourceIds("Encounter");
+        List<String> coverageIds = getResourceIds("Coverage");
+        List<String> medicationRequestIds = getResourceIds("MedicationRequest");
+        List<String> observationIds = getResourceIds("Observation");
+        List<String> procedureIds = getResourceIds("Procedure");
+        List<String> locationIds = getResourceIds("Location");
+        List<String> allergyIntoleranceIds = getResourceIds("AllergyIntolerance");
+        deleteResource("Patient", patientIds);
+        deleteResource("Bundle", bundleIds);
+        deleteResource("Condition", conditionIds);
+        deleteResource("Encounter", encounterIds);
+        deleteResource("Coverage", coverageIds);
+        deleteResource("MedicationRequest", medicationRequestIds);
+        deleteResource("Observation", observationIds);
+        deleteResource("Procedure", procedureIds);
+        deleteResource("Location", locationIds);
+        deleteResource("AllergyIntolerance", allergyIntoleranceIds);
+
+        String expungeJson = "{\"resourceType\": \"Parameters\", \"parameter\": [{\"name\": \"limit\",\"valueInteger\": 1000},{\"name\": \"expungeDeletedResources\",\"valueBoolean\": true},{\"name\": \"expungePreviousVersions\",\"valueBoolean\": true}]}";
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/$expunge"))
+                .timeout(Duration.ofMinutes(2))
+                .header("Content-Type", "application/fhir+json")
+                .POST(HttpRequest.BodyPublishers.ofString(expungeJson))
+                .build();
+        try {
+            HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+        } catch (Exception e) {
+            System.out.println("Unable to expunge server: " + e.getMessage());
         }
     }
 }
