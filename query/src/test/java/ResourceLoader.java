@@ -62,7 +62,7 @@ public class ResourceLoader {
         loadResources("/Users/briannorris/Downloads/Resources/james");
         loadResources("/Users/briannorris/Downloads/Resources/colin");
         loadResources("/Users/briannorris/Downloads/Resources/charles");
-        loadResources("/Users/briannorris/Downloads/Resources/cassie");
+//        loadResources("/Users/briannorris/Downloads/Resources/cassie");
         loadResources("/Users/briannorris/Downloads/Resources/allison");
     }
 
@@ -77,7 +77,8 @@ public class ResourceLoader {
             try {
                 reader = Files.newBufferedReader(path);
                 String contents = reader.lines().collect(Collectors.joining());
-                String fileName = name.toString().replace("/Users/briannorris/Downloads/RR_Bundles/", "");
+                System.out.println(contents);
+                String fileName = name.toString().replace("/Users/briannorris/Downloads/Resources/", "");
                 fileName = fileName.replace(".xml", "");
 
                 String resourceType = contents.substring(contents.indexOf("<")+1, contents.indexOf(">"));
@@ -93,8 +94,10 @@ public class ResourceLoader {
                 }
                 putResource("https://fhir.nandina.org/fhir/" + resourceType + "/" + id, path, resourceType, fileName);
             } catch (IOException e) {
+                System.out.println(name);
                 e.printStackTrace();
             } catch (Exception e) {
+                System.out.println(name);
                 e.printStackTrace();
             }
         });
@@ -136,6 +139,27 @@ public class ResourceLoader {
         try {
             HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.statusCode());
+            System.out.println(response.body());
+
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void postBundle(String uri, Path path) throws Exception {
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(uri))
+                .timeout(Duration.ofMinutes(2))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofFile(path))
+                .build();
+
+        try {
+            HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+            System.out.println(response.body());
 
 
         } catch (Exception e) {
@@ -196,5 +220,20 @@ public class ResourceLoader {
         deleteResource("Procedure", procedureIds);
         deleteResource("Location", locationIds);
         deleteResource("AllergyIntolerance", allergyIntoleranceIds);
+
+        String expungeJson = "{\"resourceType\": \"Parameters\", \"parameter\": [{\"name\": \"limit\",\"valueInteger\": 1000},{\"name\": \"expungeDeletedResources\",\"valueBoolean\": true},{\"name\": \"expungePreviousVersions\",\"valueBoolean\": true}]}";
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/$expunge"))
+                .timeout(Duration.ofMinutes(2))
+                .header("Content-Type", "application/fhir+json")
+                .POST(HttpRequest.BodyPublishers.ofString(expungeJson))
+                .build();
+        try {
+            HttpResponse<?> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println(response.statusCode());
+        } catch (Exception e) {
+            System.out.println("Unable to expunge server: " + e.getMessage());
+        }
     }
 }

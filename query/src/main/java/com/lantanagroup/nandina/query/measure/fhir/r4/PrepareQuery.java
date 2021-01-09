@@ -77,12 +77,16 @@ public class PrepareQuery extends BasePrepareQuery {
 
             // scoop the patient data based on the list of patient ids
             PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIds);
-            patientScoop.getPatientData().parallelStream().forEach(data -> {
-                Bundle bundle = data.getBundleTransaction();
-                IGenericClient newClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
-                log.info(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle));
-                Bundle bundleResponse = newClient.transaction().withBundle(bundle).execute();
-                log.info(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResponse));
+            patientScoop.getPatientData().forEach(data -> {
+                try {
+                    Bundle bundle = data.getBundleTransaction();
+                    IGenericClient newClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
+                    log.info("Storing scooped data on storage fhir server for PatientId: " + data.getPatient().getIdElement().getIdPart());
+                    Bundle bundleResponse = newClient.transaction().withBundle(bundle).execute();
+                    log.info("Successfully stored scooped data for PatientId: " + data.getPatient().getIdElement().getIdPart());
+                } catch (Exception e) {
+                    log.error("Could not store scooped patient data for PatientId = " + data.getPatient().getIdElement().getIdPart());
+                }
             });
         } else {
             log.error("measure url is null, check config!");
@@ -105,7 +109,7 @@ public class PrepareQuery extends BasePrepareQuery {
             Bundle bundle = cqfRulerClient
                     .search()
                     .forResource(Bundle.class)
-                    .lastUpdated(new DateRangeParam(date, LocalDate.parse(date).plusDays(1).toString()))
+                    .where(Bundle.TIMESTAMP.exactly().day(date))
                     .returnBundle(Bundle.class)
                     .execute();
             bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
