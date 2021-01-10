@@ -1,6 +1,7 @@
 package com.lantanagroup.nandina.query.measure.fhir.r4;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.query.BaseFormQuery;
@@ -26,6 +27,10 @@ public class FormQuery extends BaseFormQuery {
         fhirContext.getRestfulClientFactory().setSocketTimeout(200 * 5000);
         try {
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
+
+            // TODO commenting out this code because the narrative text isn't being generated, will need to look into this
+//            fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
+//            String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
             if (null != measureReport) {
                 this.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
                 System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
