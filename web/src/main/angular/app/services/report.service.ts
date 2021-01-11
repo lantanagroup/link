@@ -11,8 +11,11 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  private getFileName(contentDisposition: string) {
-    if (!contentDisposition) return 'report.txt';
+  private getFileName(contentDisposition: string, contentType: string) {
+    if (!contentDisposition && contentType === 'application/xml') return 'report.xml';
+    else if (!contentDisposition && contentType === 'application/json') return 'report.json';
+    else if (!contentDisposition) return 'report.txt';
+
     const parts = contentDisposition.split(';');
     if (parts.length !== 2 || parts[0] !== 'attachment') return 'report.txt';
     if (parts[1].indexOf('filename=') < 0) return 'report.txt';
@@ -23,7 +26,10 @@ export class ReportService {
     const url = this.configService.getApiUrl('/api/download');
     const convertResponse = await this.http.post(url, report, {observe: 'response', responseType: 'blob'}).toPromise();
 
-    saveAs(convertResponse.body, this.getFileName(convertResponse.headers.get('Content-Disposition')));
+    const contentDisposition = convertResponse.headers.get('Content-Disposition');
+    const contentType = convertResponse.headers.get('Content-Type');
+
+    saveAs(convertResponse.body, this.getFileName(contentDisposition, contentType));
   }
 
   async send(report: QueryReport) {

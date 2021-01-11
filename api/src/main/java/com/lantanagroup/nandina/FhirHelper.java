@@ -5,9 +5,9 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.AuditEvent;
-import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -83,5 +83,35 @@ public class FhirHelper {
     } catch (Exception ex) {
       logger.error("Failed to record AuditEvent", ex);
     }
+  }
+
+  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer) {
+    Meta meta = new Meta();
+    Coding tag = meta.addTag();
+    tag.setCode("measure-report");
+    tag.setSystem("https://nandina.org");
+
+    Bundle bundle = new Bundle();
+    bundle.setType(Bundle.BundleType.COLLECTION);
+    bundle.setMeta(meta);
+    bundle.addEntry().setResource(measureReport);
+
+    List<String> resourceReferences = new ArrayList<>();
+
+    for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
+      if (!evaluatedResource.hasReference()) continue;
+
+      if (evaluatedResource.getReference().matches("^#[A-Z].+/.+$")) {
+        resourceReferences.add(evaluatedResource.getReference().substring(1));
+      }
+    }
+
+    for (String resourceReference : resourceReferences) {
+      String[] referenceSplit = resourceReference.split("/");
+      IBaseResource resource = fhirServer.read().resource(referenceSplit[0]).withId(referenceSplit[1]).execute();
+      bundle.addEntry().setResource((Resource) resource);
+    }
+
+    return bundle;
   }
 }

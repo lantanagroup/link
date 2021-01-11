@@ -5,8 +5,8 @@
     <div class="top-bar">
       <div class="main-logo">
         <img class="main-logo" src="assets/nandina_128.png" />
-        <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Nandina</span>
-        <span *ngIf="!authService.user">Nandina</span>
+        <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">NHSN Wow</span>
+        <span *ngIf="!authService.user">NHSN Wow</span>
       </div>
 
       <div class="auth-info">
@@ -16,7 +16,7 @@
             <div ngbDropdownMenu aria-labelledby="userDropDown">
               <button ngbDropdownItem (click)="authService.logout()">Logout</button>
               <div class="dropdown-divider"></div>
-              <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About Nandina</a>
+              <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About NHSN Wow</a>
               <a href="https://github.com/lantanagroup/nandina" target="_new" ngbDropdownItem>GitHub</a>
             </div>
           </div>

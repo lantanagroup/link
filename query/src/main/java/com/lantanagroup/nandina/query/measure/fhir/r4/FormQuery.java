@@ -21,10 +21,10 @@ public class FormQuery extends BaseFormQuery {
         String measureId = this.getContextData("measureId").toString();
         QueryReport queryReport = (QueryReport) this.getContextData("report");
 
-
         String url = "https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/Measure/" + measureId + "/$evaluate-measure?periodStart=" + queryReport.getDate() + "&periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
         IGenericClient fhirClient = fhirContext.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
         fhirContext.getRestfulClientFactory().setSocketTimeout(200 * 5000);
+
         try {
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
 

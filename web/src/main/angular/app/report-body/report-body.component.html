@@ -4,7 +4,7 @@
         <div class="row">
             <div class="col-md-4">
                 <p><strong>Report Date</strong></p>
-                <p class="help-block">For which patient impact and hospital capacity counts are reported.</p>
+                <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
                 <div class="input-group">
                     <input class="form-control" placeholder="{{today | date: 'yyyy-MM-dd'}}"
                            name="dp" [(ngModel)]="report.date" ngbDatepicker #d="ngbDatepicker" (ngModelChange)="onDateSelected()">
@@ -15,7 +15,6 @@
             </div>
             <div ngbDropdown class="col-md-4">
                 <p><strong>Evaluate Measure</strong></p>
-                <p class="help-block">Select a measure from the drop down to create a Measure Report.</p>
                 <button class="btn btn-outline-primary" id="measureEvalDropDown" ngbDropdownToggle>{{evaluateMeasureButtonText}}</button>
                 <div ngbDropdownMenu aria-labelledby="measureEvalDropDown">
                     <div *ngFor="let config of measureConfigs">
@@ -24,6 +23,7 @@
                         </button>
                     </div>
                 </div>
+                <p class="help-block">Select a measure from the drop down to create a Measure Report.</p>
             </div>
         </div>
     </div>
