@@ -34,3 +34,9 @@ button.calendar, button.calendar:active {
   background-size: 23px;
   background-position: center;
 }
+
+pre {
+  border: 1px solid gray;
+  border-radius: 5px;
+  background-color: white;
+}
