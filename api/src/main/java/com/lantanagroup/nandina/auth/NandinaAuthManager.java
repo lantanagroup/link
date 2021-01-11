@@ -12,7 +12,6 @@ import com.nimbusds.jose.jwk.ECKey;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -31,8 +30,11 @@ import java.util.Map;
 public class NandinaAuthManager implements AuthenticationManager {
   private static final Logger logger = LoggerFactory.getLogger(NandinaAuthManager.class);
   private HashMap<String, String> issuerJwksUrls = new HashMap<>();
-  @Autowired
   private NandinaConfig nandinaConfig;
+
+  public NandinaAuthManager(NandinaConfig nandinaConfig) {
+    this.nandinaConfig = nandinaConfig;
+  }
 
   private String getJwksUrl(String openIdConfigUrl) {
     try {
@@ -52,6 +54,7 @@ public class NandinaAuthManager implements AuthenticationManager {
       JSONObject openIdConfigObj = new JSONObject(content.toString());
       return openIdConfigObj.getString("jwks_uri");
     } catch (Exception ex) {
+      logger.error("Attempted to test/query openid config URL and got an error in response: " + openIdConfigUrl);
       return null;
     }
   }

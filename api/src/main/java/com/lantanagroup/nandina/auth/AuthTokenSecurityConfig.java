@@ -1,5 +1,7 @@
 package com.lantanagroup.nandina.auth;
 
+import com.lantanagroup.nandina.NandinaConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
@@ -14,12 +16,14 @@ import org.springframework.security.web.authentication.Http403ForbiddenEntryPoin
 @EnableWebSecurity
 @Order(1)
 public class AuthTokenSecurityConfig extends WebSecurityConfigurerAdapter {
+  @Autowired
+  private NandinaConfig nandinaConfig;
 
   @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
 
-    authFilter.setAuthenticationManager(new NandinaAuthManager());
+    authFilter.setAuthenticationManager(new NandinaAuthManager(this.nandinaConfig));
 
     httpSecurity
             .authorizeRequests()
