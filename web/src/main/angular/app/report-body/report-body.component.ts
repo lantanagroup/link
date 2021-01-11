@@ -177,8 +177,8 @@ export class ReportBodyComponent implements OnInit {
   async ngOnInit() {
     // initialize the response date to today by default.
     this.report.date = getFhirNow();
-    // TODO remove localhost:8081. using for testing only. when I use ./api/report/measures it uses 8080 but our api is on 8081
-    this.measureConfigs = await this.http.get<MeasureConfig[]>( 'http://localhost:8081/api/report/measures').toPromise();
+
+    this.measureConfigs = await this.reportService.getMeasures();
 
     this.loadReportBody();
   }
