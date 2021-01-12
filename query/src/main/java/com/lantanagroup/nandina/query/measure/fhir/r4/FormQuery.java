@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.query.BaseFormQuery;
 import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,16 @@ public class FormQuery extends BaseFormQuery {
 //            fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
 //            String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
             if (null != measureReport) {
+                // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
+                for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
+                    if (!evaluatedResource.hasReference()) continue;
+
+                    if (evaluatedResource.getReference().matches("^#[A-Z].+/.+$")) {
+                        String newReference = evaluatedResource.getReference().substring(1);
+                        evaluatedResource.setReference(newReference);
+                    }
+                }
+
                 this.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
                 System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
             }

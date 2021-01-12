@@ -101,8 +101,8 @@ public class FhirHelper {
     for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
       if (!evaluatedResource.hasReference()) continue;
 
-      if (evaluatedResource.getReference().matches("^#[A-Z].+/.+$")) {
-        resourceReferences.add(evaluatedResource.getReference().substring(1));
+      if (!evaluatedResource.getReference().startsWith("#")) {
+        resourceReferences.add(evaluatedResource.getReference());
       }
     }
 
