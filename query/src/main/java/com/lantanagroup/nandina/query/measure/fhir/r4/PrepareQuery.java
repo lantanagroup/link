@@ -131,7 +131,11 @@ public class PrepareQuery extends BasePrepareQuery {
                     if (entry.getResource().getResourceType().equals(ResourceType.Patient)) {
                         Patient p = (Patient) entry.getResource();
                         if (null != p.getIdentifier().get(0)) {
-                            patientIds.add(p.getIdentifier().get(0).getValue());
+                            String patientId =
+                                    p.getIdentifier().get(0).getSystem() +
+                                    "|" +
+                                    p.getIdentifier().get(0).getValue();
+                            patientIds.add(patientId);
                         }
                     }
                 });

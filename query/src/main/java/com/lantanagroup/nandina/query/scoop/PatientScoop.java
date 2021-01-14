@@ -39,20 +39,22 @@ public class PatientScoop extends Scoop {
         List<PatientData> patientDataList = new ArrayList<>();
 
         // first get the patients and store them in the patientMap
-        patientIdList.forEach(identifier -> {
+        patientIdList.forEach(patientId -> {
             try {
-                String searchUrl = PATIENT_SEARCH_URL + identifier;
+                String searchUrl = "Patient?identifier=" + patientId;
                 Bundle response = this.nandinaFhirServer.search()
                         .byUrl(searchUrl)
                         .returnBundle(Bundle.class)
                         .execute();
                 if (response.getEntry().size() != 1) {
-                    logger.info("Unable to retrieve patient with id = " + identifier);
+                    logger.info("Did not find one Patient with identifier " + patientId);
+                } else {
+                    Patient patient = (Patient) response.getEntryFirstRep().getResource();
+                    this.patientMap.put(patientId, patient);
                 }
-                Patient patient = (Patient) response.getEntryFirstRep().getResource();
-                this.patientMap.put(identifier, patient);
             } catch (Exception e) {
-                logger.info("Unable to retrieve patient with id = " + identifier);
+                logger.info("Unable to retrieve patient with identifier " + patientId);
+                e.printStackTrace();
             }
         });
 
