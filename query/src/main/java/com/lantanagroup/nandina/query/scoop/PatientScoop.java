@@ -3,6 +3,7 @@ package com.lantanagroup.nandina.query.scoop;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.nandina.query.PatientData;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,8 +53,11 @@ public class PatientScoop extends Scoop {
                     Patient patient = (Patient) response.getEntryFirstRep().getResource();
                     this.patientMap.put(patientId, patient);
                 }
+            } catch (AuthenticationException ae) {
+                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.nandinaFhirServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
+                ae.printStackTrace();
             } catch (Exception e) {
-                logger.info("Unable to retrieve patient with identifier " + patientId);
+                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.nandinaFhirServer.getServerBase());
                 e.printStackTrace();
             }
         });
