@@ -111,6 +111,7 @@ export class AuthService {
         this.oauthService.initImplicitFlow();
       } else {
         this.token = this.oauthService.getIdToken();
+        console.log('Your token is: ' + this.token);
       }
     }
   }
@@ -158,6 +159,7 @@ export class AuthService {
       // in smart-on-fhir, the id_token is included in the access token, so we can pass the access token
       // to the server for validation
       this.token = this.oauthService.getAccessToken();
+      console.log('Your token is: ' + this.token);
 
       this.user = {
         name: 'Smart-on-FHIR User'
