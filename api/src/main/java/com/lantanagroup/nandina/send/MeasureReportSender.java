@@ -29,7 +29,7 @@ public class MeasureReportSender implements IReportSender {
     logger.info("Building Bundle for MeasureReport...");
 
     IGenericClient fhirServerStore = ctx.newRestfulGenericClient(config.getFhirServerStoreBase());
-    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirServerStore);
+    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirServerStore, ctx, config.getFhirServerStoreBase());
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 

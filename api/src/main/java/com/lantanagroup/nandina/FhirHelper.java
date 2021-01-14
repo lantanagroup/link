@@ -1,13 +1,19 @@
 package com.lantanagroup.nandina;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.AuditEvent;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Meta;
+import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -85,7 +91,7 @@ public class FhirHelper {
     }
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer) {
+  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode("measure-report");
@@ -106,12 +112,25 @@ public class FhirHelper {
       }
     }
 
-    for (String resourceReference : resourceReferences) {
-      String[] referenceSplit = resourceReference.split("/");
-      IBaseResource resource = fhirServer.read().resource(referenceSplit[0]).withId(referenceSplit[1]).execute();
-      bundle.addEntry().setResource((Resource) resource);
-    }
+    Bundle patientBundle = generateBundle(resourceReferences);
 
+    IGenericClient cqfRulerClient = ctx.newRestfulGenericClient(fhirServerStoreBase);
+    Bundle patientBundleResponse = cqfRulerClient.transaction().withBundle(patientBundle).execute();
+
+    patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
+      bundle.addEntry().setResource((Resource) entry.getResource());
+    });
+
+    return bundle;
+  }
+
+  private static Bundle generateBundle(List<String> resourceReferences ) {
+    Bundle bundle = new Bundle();
+    bundle.setType(Bundle.BundleType.TRANSACTION);
+    resourceReferences.parallelStream().forEach(reference -> {
+      String[] referenceSplit = reference.split("/");
+      bundle.addEntry().getRequest().setMethod(Bundle.HTTPVerb.GET).setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
+    });
     return bundle;
   }
 }
