@@ -35,8 +35,14 @@ public class OAuth2Helper {
 
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       HttpResponse result = httpClient.execute(request);
-      String json = EntityUtils.toString(result.getEntity(), "UTF-8");
-      JSONObject jsonObject = new JSONObject(json);
+
+      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+
+      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+        logger.error("Error retrieving OAuth2 token from auth service: \n" + content);
+      }
+
+      JSONObject jsonObject = new JSONObject(content);
 
       if (jsonObject.has("access_token")) {
         return jsonObject.getString("access_token");

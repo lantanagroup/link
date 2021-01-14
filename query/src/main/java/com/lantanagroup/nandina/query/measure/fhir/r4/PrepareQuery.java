@@ -3,7 +3,6 @@ package com.lantanagroup.nandina.query.measure.fhir.r4;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.param.DateRangeParam;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +21,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +28,6 @@ import java.util.List;
 public class PrepareQuery extends BasePrepareQuery {
     private FhirContext ctx = null;
     private IGenericClient targetFhirServer;
-    private IGenericClient nandinaFhirServer;
     private ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -42,7 +39,6 @@ public class PrepareQuery extends BasePrepareQuery {
         IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
         ctx = fhirQueryClient.getFhirContext();
         targetFhirServer = ctx.newRestfulGenericClient(this.properties.getFhirServerQueryBase());
-        nandinaFhirServer = ctx.newRestfulGenericClient(this.properties.getFhirServerQueryBase());
         Bundle measureBundle = null;
 
         List<MeasureConfig> measureConfigs = mapper.convertValue(this.properties.getMeasureConfigs(), new TypeReference<List<MeasureConfig>>() { });
@@ -76,7 +72,7 @@ public class PrepareQuery extends BasePrepareQuery {
             patientIds = retrievePatientIds(reportDate);
 
             // scoop the patient data based on the list of patient ids
-            PatientScoop patientScoop = new PatientScoop(targetFhirServer, nandinaFhirServer, patientIds);
+            PatientScoop patientScoop = new PatientScoop(targetFhirServer, this.getFhirClient(), patientIds);
             patientScoop.getPatientData().forEach(data -> {
                 try {
                     Bundle bundle = data.getBundleTransaction();
