@@ -1,6 +1,7 @@
 package com.lantanagroup.nandina;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Setter;
@@ -50,6 +52,7 @@ public class NandinaConfig {
     private Map<String, String> queryCriteria;
     private String sendUrl;
     private List<MeasureConfig> measureConfigs;
+    private LinkedHashMap<String, String> measureLocation;
 
     public String loadValueSet(String valueSetUri) {
         String valueSetCodes = null;
@@ -70,6 +73,14 @@ public class NandinaConfig {
 
         logger.info(String.format("Found %s concepts in ValueSet %s", valueSetCodes.split(",").length, valueSetUri));
         return valueSetCodes;
+    }
+
+    public LocationConfig getMeasureLocationConfig() {
+        if (this.getMeasureLocation() != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.convertValue(this.getMeasureLocation(), LocationConfig.class);
+        }
+        return null;
     }
 
     public String getTerminologyCovidCodes() {

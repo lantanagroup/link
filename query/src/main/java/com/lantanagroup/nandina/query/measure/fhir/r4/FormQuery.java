@@ -5,6 +5,7 @@ import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.query.BaseFormQuery;
+import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
@@ -22,16 +23,28 @@ public class FormQuery extends BaseFormQuery {
         String measureId = this.getContextData("measureId").toString();
         QueryReport queryReport = (QueryReport) this.getContextData("report");
 
-        String url = "https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir/Measure/" + measureId + "/$evaluate-measure?periodStart=" + queryReport.getDate() + "&periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
-        IGenericClient fhirClient = fhirContext.newRestfulGenericClient("https://cqf-ruler.nandina.org/cqf-ruler-r4/fhir");
+        String url = this.getProperties().getFhirServerStoreBase();
+        if (!url.endsWith("/")) url += "/";
+        url += "Measure/" + measureId + "/$evaluate-measure?" +
+                "periodStart=" + queryReport.getDate() + "&" +
+                "periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
+        IGenericClient fhirClient = fhirContext.newRestfulGenericClient(this.getProperties().getFhirServerStoreBase());
         fhirContext.getRestfulClientFactory().setSocketTimeout(200 * 5000);
 
         try {
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
 
-            // TODO commenting out this code because the narrative text isn't being generated, will need to look into this
-//            fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
-//            String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
+            if (this.getProperties().getMeasureLocationConfig() != null) {
+                Reference subjectRef = new Reference()
+                        .setIdentifier(new Identifier()
+                                .setSystem(this.getProperties().getMeasureLocationConfig().getSystem())
+                                .setValue(this.getProperties().getMeasureLocationConfig().getValue()));
+                measureReport.setSubject(subjectRef);
+            }
+
+            // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
+            // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
+            // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
             if (null != measureReport) {
                 // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
                 for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
