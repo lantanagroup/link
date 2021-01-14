@@ -23,26 +23,26 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
         case "user-bearer-token":
           if (token != null) {
             this.authHeader = token.startsWith("Bearer ") ? token : "Bearer " + token;
-            logger.trace("Using user-bearer-token for FHIR authentication with token " + token);
+            logger.debug("Using user-bearer-token for FHIR authentication with token " + token);
           } else {
-            logger.error("Expected user-bearer-token but didn't find any");
+            logger.debug("Expected user-bearer-token but didn't find any");
           }
           break;
         case "basic":
           String username = nandinaConfig.getFhirServerQueryAuth().get("username");
           String password = nandinaConfig.getFhirServerQueryAuth().get("password");
-          logger.trace("Using basic credentials for FHIR authentication with username " + username);
+          logger.debug("Using basic credentials for FHIR authentication with username " + username);
           String credentials = username + ":" + password;
           String encoded = Base64.encodeBase64String(credentials.getBytes());
           this.authHeader = "Basic " + encoded;
           break;
         case "token":
           String preDefinedToken = nandinaConfig.getFhirServerQueryAuth().get("token");
-          logger.trace("Using pre-defined token for FHIR authentication: " + preDefinedToken);
+          logger.debug("Using pre-defined token for FHIR authentication: " + preDefinedToken);
           this.authHeader = "Bearer " + preDefinedToken;
           break;
         case "oauth2":
-          logger.trace("Using OAuth2 to retrieve a system token for FHIR authentication");
+          logger.debug("Using OAuth2 to retrieve a system token for FHIR authentication");
           String tokenUrl = nandinaConfig.getFhirServerQueryAuth().get("tokenUrl");
           String tokenUsername = nandinaConfig.getFhirServerQueryAuth().get("username");
           String tokenPassword = nandinaConfig.getFhirServerQueryAuth().get("password");
@@ -51,7 +51,7 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
 
           if (!StringUtils.isEmpty(token)) {
             this.authHeader = "Bearer " + token;
-            logger.trace("Retrieved system token for FHIR authentication: " + token);
+            logger.debug("Retrieved system token for FHIR authentication: " + token);
           } else {
             logger.error("No system token to use for FHIR authentication");
           }

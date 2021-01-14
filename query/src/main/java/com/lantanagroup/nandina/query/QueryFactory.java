@@ -14,7 +14,7 @@ public class QueryFactory {
 	protected static final Logger logger = LoggerFactory.getLogger(QueryFactory.class);
 
 	public static IPrepareQuery newPrepareQueryInstance(String className, NandinaConfig nandinaConfig, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException, ClassNotFoundException {
-		logger.trace("Creating new prepare-query object: " + className);
+		logger.debug("Creating new prepare-query object: " + className);
 
 		IPrepareQuery prepareQuery;
 		Class<?> prepareQueryClass = Class.forName(className);
@@ -30,7 +30,7 @@ public class QueryFactory {
 	}
 
 	public static IFormQuery newFormQueryInstance(String className, NandinaConfig nandinaConfig, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException, ClassNotFoundException {
-		logger.trace("Creating new form query object: " + className);
+		logger.debug("Creating new form query object: " + className);
 
 		IFormQuery formQuery;
 		Class<?> formQueryClass = Class.forName(className);

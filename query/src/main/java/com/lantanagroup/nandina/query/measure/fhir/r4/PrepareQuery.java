@@ -81,7 +81,8 @@ public class PrepareQuery extends BasePrepareQuery {
                     Bundle bundleResponse = newClient.transaction().withBundle(bundle).execute();
                     log.info("Successfully stored scooped data for PatientId: " + data.getPatient().getIdElement().getIdPart());
                 } catch (Exception e) {
-                    log.error("Could not store scooped patient data for PatientId " + data.getPatient().getIdElement().getIdPart() + " due to: " + e.getMessage());
+                    String message = e.getMessage() != null ? e.getMessage() : "No message provided";
+                    log.error("Could not store scooped patient data for PatientId " + data.getPatient().getIdElement().getIdPart() + " due to: " + message);
                     e.printStackTrace();
                 }
             });
