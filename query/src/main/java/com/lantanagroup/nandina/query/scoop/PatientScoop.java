@@ -7,8 +7,10 @@ import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.nandina.query.PatientData;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.utils.FHIRPathEngine;
 
@@ -58,6 +60,7 @@ public class PatientScoop extends Scoop {
                 ae.printStackTrace();
             } catch (Exception e) {
                 logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.nandinaFhirServer.getServerBase());
+                handleFhirException(e);
                 e.printStackTrace();
             }
         });
@@ -76,13 +79,23 @@ public class PatientScoop extends Scoop {
                     }
                 } catch (Exception e) {
                     logger.error("Error loading data for " + id, e);
+                    handleFhirException(e);
                 }
             });
         } catch (Exception e) {
             logger.error(e.getMessage());
+            handleFhirException(e);
         }
         logger.info("Patient Data List count: " + patientDataList.size());
         return patientDataList;
+    }
+
+    public void handleFhirException(Exception e) {
+        String stackTrace = ExceptionUtils.getStackTrace(e);
+        if (stackTrace.contains("OperationOutcome")) {
+            OperationOutcome operationOutcome = ctx.newXmlParser().parseResource(OperationOutcome.class, stackTrace);
+            logger.error(ctx.newJsonParser().setPrettyPrint(true).encodeResourceToString(operationOutcome));
+        }
     }
 
     public Bundle rawSearch(String query) {
