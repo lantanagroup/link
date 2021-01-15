@@ -1,3 +1,4 @@
 web/
-api/target/
+query/target/
+cli/target/
 core/target/

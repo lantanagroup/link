@@ -64,14 +64,19 @@ public abstract class BasePrepareQuery implements IPrepareQuery {
     }
 
     public Bundle rawSearch(String query) {
-        try {
-            Bundle bundle = fhirClient.search().byUrl(query).returnBundle(Bundle.class).execute();
+        int interceptors = 0;
 
+        if (this.fhirClient.getInterceptorService() != null) {
+            interceptors = this.fhirClient.getInterceptorService().getAllRegisteredInterceptors().size();
+        }
+
+        try {
             logger.debug(this.getClass().getName() + " executing query: " + query);
+            Bundle bundle = fhirClient.search().byUrl(query).returnBundle(Bundle.class).execute();
 
             return bundle;
         } catch (Exception ex) {
-            this.logger.error("Could not retrieve data for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
+            this.logger.error("Could not retrieve data from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + " interceptors for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
         }
         return null;
     }

@@ -16,22 +16,28 @@ public abstract class Scoop {
 	protected List<PatientData> patientData;
 	protected Date reportDate = null;
 
-	public Bundle rawSearch(IGenericClient fhirServer, String query) {
+	public Bundle rawSearch(IGenericClient fhirClient, String query) {
+		int interceptors = 0;
+
+		if (fhirClient.getInterceptorService() != null) {
+			interceptors = fhirClient.getInterceptorService().getAllRegisteredInterceptors().size();
+		}
+
 		try {
 			logger.info("Executing query: " + query);
 
-			if (fhirServer == null) {
+			if (fhirClient == null) {
 				logger.error("Client is null");
 			}
 
-			Bundle retBundle = fhirServer.search()
+			Bundle retBundle = fhirClient.search()
 					.byUrl(query)
 					.returnBundle(Bundle.class)
 					.execute();
 			logger.info(query + " Found " + retBundle.getEntry().size() + " resources");
 			return retBundle;
 		} catch (Exception ex) {
-			this.logger.error("Could not retrieve data for " + this.getClass().getName() + " with query " + query + ": " + ex.getMessage(), ex);
+			this.logger.error("Could not retrieve data from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + " interceptors for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
 		}
 
 		return null;

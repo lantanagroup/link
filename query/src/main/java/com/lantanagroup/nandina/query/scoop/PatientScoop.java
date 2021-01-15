@@ -86,6 +86,6 @@ public class PatientScoop extends Scoop {
     }
 
     public Bundle rawSearch(String query) {
-        return rawSearch(targetFhirServer, query);
+        return rawSearch(this.nandinaFhirServer, query);
     }
 }
