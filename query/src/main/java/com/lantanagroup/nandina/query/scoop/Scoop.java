@@ -1,6 +1,7 @@
 package com.lantanagroup.nandina.query.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.nandina.query.PatientData;
 import lombok.Getter;
 import org.hl7.fhir.r4.model.Bundle;
@@ -36,6 +37,9 @@ public abstract class Scoop {
 					.execute();
 			logger.info(query + " Found " + retBundle.getEntry().size() + " resources");
 			return retBundle;
+		} catch (AuthenticationException ae) {
+			logger.error("Unable to perform rawSearch() with query " + query + " response body: " + ae.getResponseBody());
+			ae.printStackTrace();
 		} catch (Exception ex) {
 			this.logger.error("Could not retrieve data from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + " interceptors for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
 		}

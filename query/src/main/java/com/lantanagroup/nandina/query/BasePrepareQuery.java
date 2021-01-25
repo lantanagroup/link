@@ -1,6 +1,7 @@
 package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.nandina.NandinaConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Resource;
@@ -75,6 +76,9 @@ public abstract class BasePrepareQuery implements IPrepareQuery {
             Bundle bundle = fhirClient.search().byUrl(query).returnBundle(Bundle.class).execute();
 
             return bundle;
+        } catch (AuthenticationException ae) {
+            logger.error("Unable to perform rawSearch() with query " + query + " response body: " + ae.getResponseBody());
+            ae.printStackTrace();
         } catch (Exception ex) {
             this.logger.error("Could not retrieve data from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + " interceptors for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
         }

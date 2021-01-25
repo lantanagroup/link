@@ -1,5 +1,6 @@
 package com.lantanagroup.nandina.query;
 
+import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.nandina.Helper;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -89,6 +90,9 @@ public abstract class BaseQuery implements IQueryCountExecutor {
 			logger.debug(this.getClass().getName() + " executing query: " + query);
 
 			return bundle;
+		} catch (AuthenticationException ae) {
+			logger.error("Unable to perform rawSearch() with query " + query + " response body: " + ae.getResponseBody());
+			ae.printStackTrace();
 		} catch (Exception ex) {
 			this.logger.error("Could not retrieve data for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
 		}

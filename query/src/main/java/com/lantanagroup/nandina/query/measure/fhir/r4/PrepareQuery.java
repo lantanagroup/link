@@ -3,6 +3,7 @@ package com.lantanagroup.nandina.query.measure.fhir.r4;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,39 +105,46 @@ public class PrepareQuery extends BasePrepareQuery {
         List<IBaseResource> bundles = new ArrayList<>();
 
         if (null != date) {
-            Bundle bundle = cqfRulerClient
-                    .search()
-                    .forResource(Bundle.class)
-                    .where(Bundle.TIMESTAMP.exactly().day(date))
-                    .returnBundle(Bundle.class)
-                    .execute();
-            bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
-
-            // Load the subsequent pages
-            while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
-                bundle = cqfRulerClient
-                        .loadPage()
-                        .next(bundle)
+            try {
+                Bundle bundle = cqfRulerClient
+                        .search()
+                        .forResource(Bundle.class)
+                        .where(Bundle.TIMESTAMP.exactly().day(date))
+                        .returnBundle(Bundle.class)
                         .execute();
-                log.info("Adding next page of bundles...");
                 bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
-            }
 
-            bundles.parallelStream().forEach(bundleResource -> {
-                Bundle resource = (Bundle) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
-                resource.getEntry().parallelStream().forEach(entry -> {
-                    if (entry.getResource().getResourceType().equals(ResourceType.Patient)) {
-                        Patient p = (Patient) entry.getResource();
-                        if (null != p.getIdentifier().get(0)) {
-                            String patientId =
-                                    p.getIdentifier().get(0).getSystem() +
-                                    "|" +
-                                    p.getIdentifier().get(0).getValue();
-                            patientIds.add(patientId);
+                // Load the subsequent pages
+                while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
+                    bundle = cqfRulerClient
+                            .loadPage()
+                            .next(bundle)
+                            .execute();
+                    log.info("Adding next page of bundles...");
+                    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+                }
+
+                bundles.parallelStream().forEach(bundleResource -> {
+                    Bundle resource = (Bundle) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
+                    resource.getEntry().parallelStream().forEach(entry -> {
+                        if (entry.getResource().getResourceType().equals(ResourceType.Patient)) {
+                            Patient p = (Patient) entry.getResource();
+                            if (null != p.getIdentifier().get(0)) {
+                                String patientId =
+                                        p.getIdentifier().get(0).getSystem() +
+                                                "|" +
+                                                p.getIdentifier().get(0).getValue();
+                                patientIds.add(patientId);
+                            }
                         }
-                    }
+                    });
                 });
-            });
+            } catch (AuthenticationException ae) {
+                log.error("Unable to retrieve resource with date " + date + " from CQF Ruler server " + this.properties.getFhirServerStoreBase() + " due to authentication errors: \n" + ae.getResponseBody());
+                ae.printStackTrace();
+            } catch (Exception ex) {
+                log.error("Could not retrieve data from CQF Ruler server " + this.properties.getFhirServerStoreBase() + " for " + this.getClass().getName() + ": " + ex.getMessage(), ex);
+            }
         } else {
             log.error("Report date is null!");
         }
