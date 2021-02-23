@@ -1,5 +1,4 @@
 {
-  "exportFormat": "csv",
   "fhirServerQueryBase": "https://nandina-fhir.lantanagroup.com/fhir",
   "fhirServerStoreBase": "https://nandina-fhir.lantanagroup.com/fhir",
   "authJwksUrl": "",

@@ -36,7 +36,6 @@ public class NandinaConfig {
     public static final String DIRECT_PASSWORD = "password";
     public static final String DIRECT_TO_ADDRESS = "toAddress";
 
-    private String exportFormat;
     private String fhirServerQueryBase;
     private String fhirServerStoreBase;
     private Map<String, String> fhirServerQueryAuth;
