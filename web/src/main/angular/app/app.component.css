@@ -28,8 +28,12 @@
   font-weight: bold;
 }
 
+.main-logo span {
+  color: #2C68B0;
+}
+
 .main-logo img {
-  width: 75px;
+  width: 150px;
   margin-top: 8px;
   margin-right: 5px;
 }
