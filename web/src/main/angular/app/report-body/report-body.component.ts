@@ -71,7 +71,7 @@ export class ReportBodyComponent implements OnInit {
       this.report.date = formatDate(this.report.date);
       await this.reportService.download(this.report);
     } catch (ex) {
-      this.toastService.showException('Error converting report', ex);
+      this.toastService.showException('Error generating/downloading report', ex);
       return;
     }
   }
@@ -123,7 +123,7 @@ export class ReportBodyComponent implements OnInit {
         const updatedReport = await this.reportService.generate(this.report, this.overflowLocations);
         Object.assign(this.report, updatedReport);
       } catch (ex) {
-        this.toastService.showException('Error converting report', ex);
+        this.toastService.showException('Error generating report', ex);
         return;
       }
 

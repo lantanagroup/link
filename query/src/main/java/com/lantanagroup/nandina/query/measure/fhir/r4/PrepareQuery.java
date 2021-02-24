@@ -59,10 +59,12 @@ public class PrepareQuery extends BasePrepareQuery {
             log.info("Response statusCode: " + response.statusCode());
 
             IParser parser = ctx.newJsonParser();
+
             try {
                 measureBundle = parser.parseResource(Bundle.class, response.body());
             } catch (Exception ex) {
-                log.error("Error trying to parse the response into a bundle from this url: " + measureConfigUrl);
+                log.error("Error retrieving latest measure definition from " + measureConfigUrl);
+                throw new Exception("Could not retrieve the latest measure definition");
             }
 
             // store the latest measure onto the cqf-ruler server
