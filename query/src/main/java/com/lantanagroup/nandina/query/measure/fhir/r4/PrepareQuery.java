@@ -112,6 +112,16 @@ public class PrepareQuery extends BasePrepareQuery {
                     .where(Bundle.TIMESTAMP.exactly().day(date))
                     .returnBundle(Bundle.class)
                     .execute();
+
+            if (bundle == null) {
+                return patientIds;
+            }
+
+            if (bundle.getEntry().size() == 0) {
+                log.info("No RR bundles found matching time stamp " + date);
+                return patientIds;
+            }
+
             bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
 
             // Load the subsequent pages
@@ -150,10 +160,27 @@ public class PrepareQuery extends BasePrepareQuery {
     private void storeLatestMeasure(Bundle bundle, IGenericClient fhirQueryClient) {
         log.info("Generating a Bundle Transaction of the Measure");
         bundle.setType(Bundle.BundleType.TRANSACTION);
+
+        bundle.getEntry().forEach(entry -> {
+           if (entry.getRequest() == null) {
+               entry.setRequest(new Bundle.BundleEntryRequestComponent());
+           }
+
+           if (entry.getResource() != null && entry.getResource().getIdElement() != null && StringUtils.isNotEmpty(entry.getResource().getIdElement().getIdPart())) {
+               if (entry.getRequest().getMethod() == null) {
+                   entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
+               }
+
+               if (StringUtils.isEmpty(entry.getRequest().getUrl())) {
+                   entry.getRequest().setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
+               }
+           }
+        });
+
         IGenericClient client = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
-        log.info("Executing the Bundle");
+        log.info("Executing the measure definition bundle as a transaction on " + this.properties.getFhirServerStoreBase());
         Bundle resp = client.transaction().withBundle(bundle).execute();
-        log.info("Bundle executed successfully...");
+        log.info("Measure definition bundle transcation executed successfully...");
         String measureId = StringUtils.substringBetween(resp.getEntry().get(0).getResponse().getLocation(), "Measure/", "/_history");
         log.info("Storing measureId " + measureId + " in context");
         this.addContextData("measureId", measureId );
