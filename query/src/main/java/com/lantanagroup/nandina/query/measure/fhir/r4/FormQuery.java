@@ -1,10 +1,9 @@
 package com.lantanagroup.nandina.query.measure.fhir.r4;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
-import com.lantanagroup.nandina.query.BaseFormQuery;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Reference;
@@ -12,33 +11,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.Map;
 
-public class FormQuery extends BaseFormQuery {
+public class FormQuery {
     private static final Logger logger = LoggerFactory.getLogger(com.lantanagroup.nandina.query.measure.fhir.r4.FormQuery.class);
 
-    @Override
-    public void execute() {
-        FhirContext fhirContext = (FhirContext) this.getContextData("fhirContext");
-        MeasureReport measureReport = null;
-        String measureId = this.getContextData("measureId").toString();
-        QueryReport queryReport = (QueryReport) this.getContextData("report");
+    public FormQuery(Map<String, String> criteria, Map<String, Object> contextData, NandinaConfig properties, IGenericClient fhirStoreClient) {
+        this.criteria = criteria;
+        this.contextData = contextData;
+        this.config = properties;
+        this.fhirClient = fhirStoreClient;
+    }
 
-        String url = this.getProperties().getFhirServerStoreBase();
+    private Map<String, String> criteria;
+    private Map<String, Object> contextData;
+    private NandinaConfig config;
+    private IGenericClient fhirClient;
+
+    public void execute() {
+        FhirContext fhirContext = (FhirContext) this.contextData.get("fhirContext");
+        MeasureReport measureReport = null;
+        String measureId = this.contextData.get("measureId").toString();
+        QueryReport queryReport = (QueryReport) this.contextData.get("report");
+
+        String url = this.config.getFhirServerStoreBase();
         if (!url.endsWith("/")) url += "/";
         url += "Measure/" + measureId + "/$evaluate-measure?" +
                 "periodStart=" + queryReport.getDate() + "&" +
                 "periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
-        IGenericClient fhirClient = fhirContext.newRestfulGenericClient(this.getProperties().getFhirServerStoreBase());
-        fhirContext.getRestfulClientFactory().setSocketTimeout(200 * 5000);
 
         try {
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
 
-            if (this.getProperties().getMeasureLocationConfig() != null) {
+            if (this.config.getMeasureLocationConfig() != null) {
                 Reference subjectRef = new Reference()
                         .setIdentifier(new Identifier()
-                                .setSystem(this.getProperties().getMeasureLocationConfig().getSystem())
-                                .setValue(this.getProperties().getMeasureLocationConfig().getValue()));
+                                .setSystem(this.config.getMeasureLocationConfig().getSystem())
+                                .setValue(this.config.getMeasureLocationConfig().getValue()));
                 measureReport.setSubject(subjectRef);
             }
 
@@ -56,12 +65,12 @@ public class FormQuery extends BaseFormQuery {
                     }
                 }
 
-                this.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
-                System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
+                queryReport.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
+                //System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
             }
         } catch (Exception e) {
             logger.error("Error generating Measure Report - " + e.getMessage());
-            this.setAnswer("measureReport", e.getMessage());
+            queryReport.setAnswer("measureReport", e.getMessage());
         }
     }
 }

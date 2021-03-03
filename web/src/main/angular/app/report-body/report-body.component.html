@@ -33,7 +33,7 @@
     </div>
 </div>
 
-<ng-template reportBody></ng-template>
+<pre *ngIf="report.answers['measureReport']"><code>{{report.answers['measureReport']}}</code></pre>
 
 <div class="btn-group report-actions">
     <button type="button" class="btn btn-primary download" (click)="download()">Save to File</button>

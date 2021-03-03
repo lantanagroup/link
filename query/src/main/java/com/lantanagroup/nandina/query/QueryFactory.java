@@ -28,20 +28,4 @@ public class QueryFactory {
 
 		return prepareQuery;
 	}
-
-	public static IFormQuery newFormQueryInstance(String className, NandinaConfig nandinaConfig, IGenericClient fhirClient, Map<String, String> criteria, Map<String, Object> contextData) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException, ClassNotFoundException {
-		logger.debug("Creating new form query object: " + className);
-
-		IFormQuery formQuery;
-		Class<?> formQueryClass = Class.forName(className);
-		Constructor<?> queryConstructor = formQueryClass.getConstructor();
-		formQuery = (IFormQuery) queryConstructor.newInstance();
-
-		formQuery.setProperties(nandinaConfig);
-		formQuery.setFhirClient(fhirClient);
-		formQuery.setCriteria(criteria);
-		formQuery.setContextData(contextData);
-
-		return formQuery;
-	}
 }

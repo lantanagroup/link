@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class PrepareQuery extends BasePrepareQuery {
+public abstract class PrepareQuery extends BasePrepareQuery {
     private static final Logger logger = LoggerFactory.getLogger(PrepareQuery.class);
 
     @Autowired

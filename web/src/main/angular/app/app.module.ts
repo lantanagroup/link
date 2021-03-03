@@ -21,9 +21,6 @@ import {ConfigService} from './services/config.service';
 import {LocationService} from './services/location.service';
 import {ReportService} from './services/report.service';
 import {ReportBodyDirective} from './report-body.directive';
-import {PihcReportComponent} from './report-body/pihc-report/pihc-report.component';
-import {PillboxReportComponent} from './report-body/pillbox-report/pillbox-report.component';
-import { MeasureEvalComponent } from './report-body/measure-eval/measure-eval.component';
 
 export const configFactory = (configService: ConfigService) => {
   return () => configService.loadConfig();
@@ -38,10 +35,7 @@ export const configFactory = (configService: ConfigService) => {
     HomeComponent,
     ReportBodyComponent,
     SmartHomeComponent,
-    PihcReportComponent,
-    ReportBodyDirective,
-    PillboxReportComponent,
-    MeasureEvalComponent
+    ReportBodyDirective
   ],
   imports: [
     BrowserModule,

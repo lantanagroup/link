@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ResourceUtils;
 
-public abstract class BaseQuery implements IQueryCountExecutor {
+public abstract class BaseQuery {
 	protected static final Logger logger = LoggerFactory.getLogger(BaseQuery.class);
 
 	protected NandinaConfig properties;

@@ -41,7 +41,6 @@ public class NandinaConfig {
     private Map<String, String> fhirServerQueryAuth;
     private String authJwksUrl;
     private String prepareQuery;
-    private String formQuery;
     private String downloader;
     private String sender;
     private Map<String, String> terminology;

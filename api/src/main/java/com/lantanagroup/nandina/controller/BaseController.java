@@ -14,6 +14,10 @@ public class BaseController {
   @Autowired
   private NandinaConfig nandinaConfig;
 
+  BaseController() {
+    this.ctx.getRestfulClientFactory().setSocketTimeout(200 * 5000);
+  }
+
   protected IGenericClient getFhirQueryClient(Authentication authentication, HttpServletRequest request) throws Exception {
     String fhirBase = nandinaConfig.getFhirServerQueryBase();
     String token = null;

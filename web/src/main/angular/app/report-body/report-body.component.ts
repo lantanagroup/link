@@ -1,4 +1,4 @@
-import {Component, ComponentFactory, ComponentFactoryResolver, ComponentRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ComponentFactoryResolver, OnInit} from '@angular/core';
 import {LocationResponse} from '../model/location-response';
 import {formatDate, getFhirNow} from '../helper';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
@@ -7,12 +7,7 @@ import {ToastService} from '../toast.service';
 import {SelectLocationsComponent} from '../select-locations/select-locations.component';
 import {ReportService} from '../services/report.service';
 import {QueryReport} from '../model/query-report';
-import {ReportBodyDirective} from '../report-body.directive';
 import {ConfigService} from '../services/config.service';
-import {PihcReportComponent} from './pihc-report/pihc-report.component';
-import {PillboxReportComponent} from './pillbox-report/pillbox-report.component';
-import {IReportPlugin} from './report-plugin';
-import {MeasureEvalComponent} from "./measure-eval/measure-eval.component";
 import {HttpClient} from "@angular/common/http";
 import {MeasureConfig} from "../model/MeasureConfig";
 
@@ -22,8 +17,6 @@ import {MeasureConfig} from "../model/MeasureConfig";
   styleUrls: ['./report-body.component.css']
 })
 export class ReportBodyComponent implements OnInit {
-  @ViewChild(ReportBodyDirective, {static: true}) reportBody: ReportBodyDirective;
-
   loading = false;
   sending = false;
   reportGenerated = false;
@@ -33,8 +26,6 @@ export class ReportBodyComponent implements OnInit {
   measureConfigs: MeasureConfig[] = [];
   evaluateMeasureButtonText: String = 'Select Measure';
   generateReportButtonText: String = 'Generate Report';
-
-  private reportBodyComponent: ComponentRef<IReportPlugin>;
 
   constructor(
       private http: HttpClient,
@@ -134,10 +125,6 @@ export class ReportBodyComponent implements OnInit {
         }
       }
 
-      if (this.reportBodyComponent) {
-        this.reportBodyComponent.instance.refreshed();
-      }
-
       this.toastService.showInfo('Successfully ran queries!');
       this.reportGenerated = true;
     } catch (ex) {
@@ -146,28 +133,6 @@ export class ReportBodyComponent implements OnInit {
       this.loading = false;
       this.generateReportButtonText = 'Generate Report';
     }
-  }
-
-  loadReportBody() {
-    let componentFactory: ComponentFactory<IReportPlugin>;
-
-    switch (this.configService.config.report as any) {
-      case 'pihc':
-        componentFactory = this.componentFactoryResolver.resolveComponentFactory(PihcReportComponent);
-        break;
-      case 'pillbox':
-        componentFactory = this.componentFactoryResolver.resolveComponentFactory(PillboxReportComponent);
-        break;
-      case 'measure-eval':
-        componentFactory = this.componentFactoryResolver.resolveComponentFactory(MeasureEvalComponent);
-        break;
-    }
-
-    const viewContainerRef = this.reportBody.viewContainerRef;
-    viewContainerRef.clear();
-
-    this.reportBodyComponent = viewContainerRef.createComponent(componentFactory);
-    this.reportBodyComponent.instance.report = this.report;
   }
 
   selectMeasure(selectedItem: string){
@@ -179,8 +144,6 @@ export class ReportBodyComponent implements OnInit {
     this.report.date = getFhirNow();
 
     this.measureConfigs = await this.reportService.getMeasures();
-
-    this.loadReportBody();
   }
 
   disableGenerateReport() {

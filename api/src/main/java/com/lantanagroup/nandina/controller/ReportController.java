@@ -4,19 +4,17 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lantanagroup.nandina.DefaultField;
 import com.lantanagroup.nandina.FhirHelper;
 import com.lantanagroup.nandina.MeasureConfig;
 import com.lantanagroup.nandina.NandinaConfig;
 import com.lantanagroup.nandina.QueryReport;
 import com.lantanagroup.nandina.download.IReportDownloader;
-import com.lantanagroup.nandina.query.IFormQuery;
 import com.lantanagroup.nandina.query.IPrepareQuery;
 import com.lantanagroup.nandina.query.QueryFactory;
+import com.lantanagroup.nandina.query.measure.fhir.r4.FormQuery;
 import com.lantanagroup.nandina.send.IReportSender;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,30 +135,6 @@ public class ReportController extends BaseController {
     contextData.put("measureBundle", measureBundle);
   }
 
-  /**
-   * Uses reflection to determine what class should be used to execute the requested query/className, and
-   * executes the specified query, returning the result.
-   *
-   * @param className
-   * @param reportDate
-   * @param overflowLocations
-   * @return
-   */
-  private void executeFormQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) {
-    if (className == null || className.isEmpty()) return;
-
-    try {
-      IFormQuery executor = QueryFactory.newFormQueryInstance(className, nandinaConfig, fhirClient, criteria, contextData);
-      executor.execute();
-    } catch (ClassNotFoundException ex) {
-      logger.error("Could not find class for form query named " + className, ex);
-    } catch (Exception ex) {
-      logger.error("Failed to execute form query class " + className, ex);
-    }
-
-    return;
-  }
-
   private void executePrepareQuery(String className, Map<String, String> criteria, Map<String, Object> contextData, IGenericClient fhirClient, Authentication authentication) throws Exception {
     if (className == null || className.isEmpty()) return;
 
@@ -221,23 +195,12 @@ public class ReportController extends BaseController {
     // Execute the prepare query plugin if configured
     this.executePrepareQuery(nandinaConfig.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
 
-    // Execute the form query plugin
-    this.executeFormQuery(nandinaConfig.getFormQuery(), criteria, contextData, fhirQueryClient, authentication);
-
-    if (this.nandinaConfig.getDefaultField() != null) {
-      List<DefaultField> defaultFieldList = mapper.convertValue(
-              this.nandinaConfig.getDefaultField(),
-              new TypeReference<List<DefaultField>>(){}
-      );
-      defaultFieldList.forEach(field -> {
-        if (report.getAnswer("facilityId") == null) {
-          report.setAnswer("facilityId", field.getFacilityId());
-        }
-
-        if (report.getAnswer("summaryCensusId") == null) {
-          report.setAnswer("summaryCensusId", field.getSummaryCensusId());
-        }
-      });
+    try {
+      FormQuery formQuery = new FormQuery(criteria, contextData, this.nandinaConfig, fhirStoreClient);
+      formQuery.execute();
+    } catch (Exception ex) {
+      logger.error("Error executing FormQuery: " + ex.getMessage(), ex);
+      throw ex;
     }
 
     return report;
