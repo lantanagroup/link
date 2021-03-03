@@ -1,12 +1,9 @@
 package com.lantanagroup.nandina.query.measure.fhir.r4;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lantanagroup.nandina.MeasureConfig;
 import com.lantanagroup.nandina.query.BasePrepareQuery;
 import com.lantanagroup.nandina.query.scoop.PatientScoop;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +14,6 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResourceType;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,43 +26,12 @@ public class PrepareQuery extends BasePrepareQuery {
     @Override
     public void execute() throws Exception {
         String measureId = this.getCriteria().get("measureId");
-        String measureConfigUrl = null;
         String reportDate = this.getCriteria().get("reportDate");
         List<String> patientIds;
-        IGenericClient fhirQueryClient = (IGenericClient) this.getContextData("fhirQueryClient");
-        ctx = fhirQueryClient.getFhirContext();
-        targetFhirServer = ctx.newRestfulGenericClient(this.properties.getFhirServerQueryBase());
-        Bundle measureBundle = null;
+        this.targetFhirServer = (IGenericClient) this.getContextData("fhirStoreClient");
+        this.ctx = (FhirContext) this.getContextData("fhirContext");
 
-        List<MeasureConfig> measureConfigs = mapper.convertValue(this.properties.getMeasureConfigs(), new TypeReference<List<MeasureConfig>>() { });
-
-        for (MeasureConfig measureConfig : measureConfigs) {
-            if (measureConfig.getId().equals(measureId)) {
-                measureConfigUrl = measureConfig.getUrl();
-            }
-        }
-
-        if (null != measureConfigUrl) {
-            HttpClient client = HttpClient.newHttpClient();
-            log.info("Calling <GET> Request <" + measureConfigUrl + ">");
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(measureConfigUrl))
-                    .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info("Response statusCode: " + response.statusCode());
-
-            IParser parser = ctx.newJsonParser();
-
-            try {
-                measureBundle = parser.parseResource(Bundle.class, response.body());
-            } catch (Exception ex) {
-                log.error("Error retrieving latest measure definition from " + measureConfigUrl);
-                throw new Exception("Could not retrieve the latest measure definition");
-            }
-
-            // store the latest measure onto the cqf-ruler server
-            log.info("Calling storeLatestMeasure()");
-            storeLatestMeasure(measureBundle, fhirQueryClient);
+        if (StringUtils.isNotEmpty(measureId)) {
             // retrieve patient ids from the bundles
             patientIds = retrievePatientIds(reportDate);
 
@@ -78,9 +40,9 @@ public class PrepareQuery extends BasePrepareQuery {
             patientScoop.getPatientData().forEach(data -> {
                 try {
                     Bundle bundle = data.getBundleTransaction();
-                    IGenericClient newClient = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
                     log.info("Storing scooped data on storage fhir server for PatientId: " + data.getPatient().getIdElement().getIdPart());
-                    Bundle bundleResponse = newClient.transaction().withBundle(bundle).execute();
+
+                    this.targetFhirServer.transaction().withBundle(bundle).execute();
                     log.info("Successfully stored scooped data for PatientId: " + data.getPatient().getIdElement().getIdPart());
                 } catch (Exception e) {
                     String message = e.getMessage() != null ? e.getMessage() : "No message provided";
@@ -89,7 +51,7 @@ public class PrepareQuery extends BasePrepareQuery {
                 }
             });
         } else {
-            log.error("measure url is null, check config!");
+            log.error("measure id is null, can't continue!");
         }
     }
 
@@ -155,35 +117,5 @@ public class PrepareQuery extends BasePrepareQuery {
         log.info("Loaded " + patientIds.size() + " patient ids");
         patientIds.forEach(id -> log.info("PatientId: " + id));
         return patientIds;
-    }
-
-    private void storeLatestMeasure(Bundle bundle, IGenericClient fhirQueryClient) {
-        log.info("Generating a Bundle Transaction of the Measure");
-        bundle.setType(Bundle.BundleType.TRANSACTION);
-
-        bundle.getEntry().forEach(entry -> {
-           if (entry.getRequest() == null) {
-               entry.setRequest(new Bundle.BundleEntryRequestComponent());
-           }
-
-           if (entry.getResource() != null && entry.getResource().getIdElement() != null && StringUtils.isNotEmpty(entry.getResource().getIdElement().getIdPart())) {
-               if (entry.getRequest().getMethod() == null) {
-                   entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-               }
-
-               if (StringUtils.isEmpty(entry.getRequest().getUrl())) {
-                   entry.getRequest().setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-               }
-           }
-        });
-
-        IGenericClient client = ctx.newRestfulGenericClient(this.properties.getFhirServerStoreBase());
-        log.info("Executing the measure definition bundle as a transaction on " + this.properties.getFhirServerStoreBase());
-        Bundle resp = client.transaction().withBundle(bundle).execute();
-        log.info("Measure definition bundle transcation executed successfully...");
-        String measureId = StringUtils.substringBetween(resp.getEntry().get(0).getResponse().getLocation(), "Measure/", "/_history");
-        log.info("Storing measureId " + measureId + " in context");
-        this.addContextData("measureId", measureId );
-        this.addContextData("fhirContext", fhirQueryClient.getFhirContext());
     }
 }

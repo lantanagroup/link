@@ -38,8 +38,15 @@ public class PatientData {
   private Bundle allergies;
   private Bundle procedures;
   private CodeableConcept primaryDx = null;
-  private List<String> queryConstants =
-          Arrays.asList("Encounter?patient=Patient/", "Condition?patient=Patient/", "MedicationRequest?patient=Patient/", "Observation?patient=Patient/", "AllergyIntolerance?patient=Patient/", "Procedure?patient=Patient/");
+  private List<String> queryConstants = Arrays.asList(
+      "Encounter?patient=Patient/",
+      "Condition?patient=Patient/",
+      "MedicationRequest?patient=Patient/",
+      "Observation?patient=Patient/",
+      "AllergyIntolerance?patient=Patient/",
+      "Procedure?patient=Patient/",
+      "ServiceRequest?patient=Patient/",
+      "Coverage?patient=Patient/");
 
   public PatientData(PatientScoop patientScoop, Patient patient, FhirContext fhirContext) {
     this.patient = patient;
