@@ -41,9 +41,12 @@ public class FormQuery {
                 "periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
 
         try {
+            logger.info("Executing $evaluate-measure");
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
+            logger.info("Done executing $evaluate-measure");
 
             if (this.config.getMeasureLocationConfig() != null) {
+                logger.debug("Creating MeasureReport.subject based on cofing");
                 Reference subjectRef = new Reference()
                         .setIdentifier(new Identifier()
                                 .setSystem(this.config.getMeasureLocationConfig().getSystem())
@@ -54,6 +57,7 @@ public class FormQuery {
             // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
             // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
             // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
+
             if (null != measureReport) {
                 // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
                 for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
@@ -65,6 +69,7 @@ public class FormQuery {
                     }
                 }
 
+                logger.info("Done generating measure report, setting response answer to JSON of MeasureReport");
                 queryReport.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
                 //System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
             }

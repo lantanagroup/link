@@ -47,7 +47,7 @@ public class ReportController extends BaseController {
   @Autowired
   private NandinaConfig nandinaConfig;
 
-  private void storeLatestMeasure(Bundle bundle, IGenericClient fhirQueryClient) {
+  private void storeLatestMeasure(Bundle bundle, IGenericClient fhirStoreClient) {
     logger.info("Generating a Bundle Transaction of the Measure");
     bundle.setType(Bundle.BundleType.TRANSACTION);
 
@@ -68,14 +68,14 @@ public class ReportController extends BaseController {
       }
     });
 
-    IGenericClient client = ctx.newRestfulGenericClient(this.nandinaConfig.getFhirServerStoreBase());
     logger.info("Executing the measure definition bundle as a transaction on " + this.nandinaConfig.getFhirServerStoreBase());
 
-    client.transaction().withBundle(bundle).execute();
+    fhirStoreClient.transaction().withBundle(bundle).execute();
+
     logger.info("Measure definition bundle transaction executed successfully...");
   }
 
-  private void resolveMeasure(Map<String, String> criteria, IGenericClient targetFhirServer, Map<String, Object> contextData) throws Exception {
+  private void resolveMeasure(Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
     String measureConfigId = criteria.get("measureId");
     String measureId = null;
     String measureUrl = null;
@@ -91,16 +91,16 @@ public class ReportController extends BaseController {
 
     if (StringUtils.isNotEmpty(measureUrl)) {
       HttpClient client = HttpClient.newHttpClient();
-      logger.info("Calling <GET> Request <" + measureUrl + ">");
+      logger.info("Getting the latest measure definition for " + measureConfigId + " from URL " + measureUrl);
       HttpRequest request = HttpRequest.newBuilder()
               .uri(URI.create(measureUrl))
               .build();
       HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-      logger.info("Response statusCode: " + response.statusCode());
 
       IParser parser = ctx.newJsonParser();
 
       try {
+        logger.debug("Parsing the measure bundle.");
         measureBundle = parser.parseResource(Bundle.class, response.body());
       } catch (Exception ex) {
         logger.error("Error retrieving latest measure definition from " + measureUrl);
@@ -122,8 +122,8 @@ public class ReportController extends BaseController {
       
       try {
         // store the latest measure onto the cqf-ruler server
-        logger.info("Calling storeLatestMeasure()");
-        storeLatestMeasure(measureBundle, targetFhirServer);
+        logger.info("Storing the latest measure definition for " + measureConfigId + " as " + measureId + " on FHIR server");
+        storeLatestMeasure(measureBundle, fhirStoreClient);
       } catch (Exception ex) {
         logger.error("Error storing the latest measure bundle definition from " + measureUrl);
         throw new Exception("Error storing the latest measure bundle definition");
@@ -196,6 +196,7 @@ public class ReportController extends BaseController {
     this.executePrepareQuery(nandinaConfig.getPrepareQuery(), criteria, contextData, fhirQueryClient, authentication);
 
     try {
+      logger.info("Executing measure evaluation");
       FormQuery formQuery = new FormQuery(criteria, contextData, this.nandinaConfig, fhirStoreClient);
       formQuery.execute();
     } catch (Exception ex) {
