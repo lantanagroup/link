@@ -11,13 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
 
-  public static String getToken(String tokenUrl, String username, String password, String scope) throws UnsupportedEncodingException {
+  public static String getToken(String tokenUrl, String username, String password, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     String userPassCombo = username + ":" + password;
@@ -31,7 +30,13 @@ public class OAuth2Helper {
     StringBuilder sb = new StringBuilder();
     sb.append("grant_type=client_credentials&");
     sb.append("scope=" + scope);
-    request.setEntity(new StringEntity(sb.toString()));
+
+    try {
+      request.setEntity(new StringEntity(sb.toString()));
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
+      return null;
+    }
 
     try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
       HttpResponse result = httpClient.execute(request);

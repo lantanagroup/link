@@ -125,7 +125,7 @@ export class ReportBodyComponent implements OnInit {
         }
       }
 
-      this.toastService.showInfo('Successfully ran queries!');
+      this.toastService.showInfo('Report generated!');
       this.reportGenerated = true;
     } catch (ex) {
       this.toastService.showException('Error running queries', ex);

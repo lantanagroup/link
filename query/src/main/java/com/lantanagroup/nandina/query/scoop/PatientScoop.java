@@ -23,16 +23,14 @@ public class PatientScoop extends Scoop {
     protected FhirContext ctx = FhirContext.forR4();
     protected IParser jsonParser = ctx.newJsonParser();
     protected IParser xmlParser;
-    protected IGenericClient targetFhirServer;
-    protected IGenericClient nandinaFhirServer;
+    protected IGenericClient fhirQueryServer;
     protected Map<String, Patient> patientMap = new HashMap<>();
     protected IValidationSupport validationSupport;
     protected FHIRPathEngine fhirPathEngine;
-    private final static String PATIENT_SEARCH_URL = "https://fhir.nandina.org/fhir/Patient?identifier=";
 
-    public PatientScoop(IGenericClient targetFhirServer, IGenericClient nandinaFhirServer, List<String> patientIdList) throws Exception {
-        this.targetFhirServer = targetFhirServer;
-        this.nandinaFhirServer = nandinaFhirServer;
+    // TODO: Refactor into PatientScoop.getPatientData()
+    public PatientScoop(IGenericClient fhirQueryServer, List<String> patientIdList) throws Exception {
+        this.fhirQueryServer = fhirQueryServer;
         patientData = loadPatientData(patientIdList);
     }
 
@@ -43,7 +41,7 @@ public class PatientScoop extends Scoop {
         patientIdList.forEach(patientId -> {
             try {
                 String searchUrl = "Patient?identifier=" + patientId;
-                Bundle response = this.nandinaFhirServer.search()
+                Bundle response = this.fhirQueryServer.search()
                         .byUrl(searchUrl)
                         .returnBundle(Bundle.class)
                         .execute();
@@ -54,10 +52,10 @@ public class PatientScoop extends Scoop {
                     this.patientMap.put(patientId, patient);
                 }
             } catch (AuthenticationException ae) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.nandinaFhirServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
+                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
                 ae.printStackTrace();
             } catch (Exception e) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.nandinaFhirServer.getServerBase());
+                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
                 e.printStackTrace();
             }
         });
@@ -69,7 +67,7 @@ public class PatientScoop extends Scoop {
                 try {
                     Patient patient = this.getPatientMap().get(id);
                     if (null != patient) {
-                        patientData = new PatientData(this, patient, targetFhirServer.getFhirContext());
+                        patientData = new PatientData(this, patient, this.fhirQueryServer.getFhirContext());
                         patientDataList.add(patientData);
                     } else {
                         logger.warn("Patient Id: " + id + " for patientData doesn't exist.");
@@ -86,6 +84,6 @@ public class PatientScoop extends Scoop {
     }
 
     public Bundle rawSearch(String query) {
-        return rawSearch(this.nandinaFhirServer, query);
+        return rawSearch(this.fhirQueryServer, query);
     }
 }

@@ -1,0 +1,5 @@
+query:
+  fhir-server-base: http://test.com
+  prepareQuery: com.lantanagroup.nandina.query.measure.fhir.r4.PrepareQuery
+  auth:
+    auth-mode: None

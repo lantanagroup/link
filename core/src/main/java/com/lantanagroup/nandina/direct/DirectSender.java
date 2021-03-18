@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.direct;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.nandina.NandinaConfig;
+import com.lantanagroup.nandina.config.IDirectConfig;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -19,21 +19,21 @@ import java.util.List;
 
 public class DirectSender {
   private FhirContext fhirContext;
-  private NandinaConfig nandinaConfig;
+  private IDirectConfig directConfig;
 
-  public DirectSender(NandinaConfig nandinaConfig, FhirContext fhirContext) throws ConfigurationException {
-    this.nandinaConfig = nandinaConfig;
+  public DirectSender(IDirectConfig directConfig, FhirContext fhirContext) throws ConfigurationException {
+    this.directConfig = directConfig;
     this.fhirContext = fhirContext;
 
-    if (nandinaConfig.getDirect() == null) {
+    if (this.directConfig == null) {
       throw new ConfigurationException("Direct integration is not configured");
-    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL))) {
+    } else if (StringHelper.isNullOrEmptyString(this.directConfig.getUrl())) {
       throw new ConfigurationException("direct.url is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME))) {
+    } else if (StringHelper.isNullOrEmptyString(this.directConfig.getUsername())) {
       throw new ConfigurationException("direct.username is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))) {
+    } else if (StringHelper.isNullOrEmptyString(this.directConfig.getPassword())) {
       throw new ConfigurationException("direct.password is required for Direct integration");
-    } else if (StringHelper.isNullOrEmptyString(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_TO_ADDRESS))) {
+    } else if (StringHelper.isNullOrEmptyString(this.directConfig.getToAddress())) {
       throw new ConfigurationException("direct.toAddress is required for Direct integration");
     }
   }
@@ -76,10 +76,10 @@ public class DirectSender {
     List<String> attachmentIds = new ArrayList<>();
 
     for (Attachment attachment : attachments) {
-      URL attachmentUrl = new URL(new URL(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL)), "/MailManagement/ws/v3/send/message/attachment");
+      URL attachmentUrl = new URL(new URL(this.directConfig.getUrl()), "/MailManagement/ws/v3/send/message/attachment");
       HttpResponse<JsonNode> attachmentResponse = Unirest.put(attachmentUrl.toString())
               .header("accept", "application/json")
-              .basicAuth(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME), nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))
+              .basicAuth(this.directConfig.getUsername(), this.directConfig.getPassword())
               .field("attachment", attachment.getInputStream(), ContentType.create(attachment.getMimeType()), attachment.getFileName())
               .asJson();
       JSONObject attachmentJson = attachmentResponse.getBody().getObject();
@@ -94,12 +94,12 @@ public class DirectSender {
       attachmentIds.add(attachmentId);
     }
 
-    URL messageUrl = new URL(new URL(this.nandinaConfig.getDirect().get(NandinaConfig.DIRECT_URL)), "/MailManagement/ws/v3/send/message");
+    URL messageUrl = new URL(new URL(this.directConfig.getUrl()), "/MailManagement/ws/v3/send/message");
     String attachmentIdList = String.join(",", attachmentIds);
     HttpResponse<JsonNode> response = Unirest.put(messageUrl.toString())
             .header("accept", "application/json")
-            .basicAuth(nandinaConfig.getDirect().get(NandinaConfig.DIRECT_USERNAME), nandinaConfig.getDirect().get(NandinaConfig.DIRECT_PASSWORD))
-            .field("to", nandinaConfig.getDirect().get(NandinaConfig.DIRECT_TO_ADDRESS))
+            .basicAuth(this.directConfig.getUsername(), this.directConfig.getPassword())
+            .field("to", this.directConfig.getToAddress())
             .field("subject", subject)
             .field("body", message)
             .field("attachmentId", attachmentIdList)

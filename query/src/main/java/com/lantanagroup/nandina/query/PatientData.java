@@ -2,7 +2,6 @@ package com.lantanagroup.nandina.query;
 
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.nandina.query.scoop.EncounterScoop;
 import com.lantanagroup.nandina.query.scoop.PatientScoop;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 @Getter @Setter @NoArgsConstructor
 public class PatientData {
@@ -54,6 +52,7 @@ public class PatientData {
     List<String> queryString = new ArrayList<>();
     queryConstants.parallelStream().forEach(query -> {
       if (query.contains("Observation")) {
+        // TODO: This belongs somewhere else
         queryString.add(query + patient.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
       } else {
         queryString.add(query + patient.getIdElement().getIdPart());
@@ -77,48 +76,15 @@ public class PatientData {
     });
   }
 
-  public PatientData(EncounterScoop encounterScoop, Patient pat, FhirContext fhirContext) {
-    patient = pat;
-    ctx = fhirContext;
-    dateCollected = new Date();
-    Map<Patient, Encounter> patEncMap = encounterScoop.getPatientEncounterMap();
-    primaryEncounter = patEncMap.get(patient);
-    List<String> queryString = new ArrayList<>();
-    queryConstants.parallelStream().forEach(query -> {
-      if (query.contains("Observation")) {
-        queryString.add(query + pat.getIdElement().getIdPart() + "&category=http://terminology.hl7.org/CodeSystem/observation-category|laboratory");
-      } else {
-        queryString.add(query + pat.getIdElement().getIdPart());
-      }
-    });
-
-    queryString.parallelStream().forEach(query -> {
-      if (query.contains("Encounter")) {
-        encounters = encounterScoop.rawSearch(query);
-      } else if (query.contains("Condition")) {
-        conditions = encounterScoop.rawSearch(query);
-      } else if (query.contains("MedicationRequest")) {
-        meds = encounterScoop.rawSearch(query);
-      } else if (query.contains("Observation")) {
-        labResults = encounterScoop.rawSearch(query);
-      } else if (query.contains("AllergyIntolerance")) {
-        allergies = encounterScoop.rawSearch(query);
-      } else if (query.contains("Procedure")) {
-        procedures = encounterScoop.rawSearch(query);
-      }
-    });
-  }
-
-
   public Bundle getBundleTransaction() {
     Bundle b = new Bundle();
     b.setType(BundleType.TRANSACTION);
-    b.addEntry().setResource(patient).getRequest().setMethod(Bundle.HTTPVerb.PUT).setUrl("Patient/" + patient.getIdElement().getIdPart());
-    addEntryToBundle(encounters, b);
-    addEntryToBundle(conditions, b);
-    addEntryToBundle(meds, b);
-    addEntryToBundle(labResults, b);
-    addEntryToBundle(allergies, b);
+    b.addEntry().setResource(this.patient).getRequest().setMethod(Bundle.HTTPVerb.PUT).setUrl("Patient/" + patient.getIdElement().getIdPart());
+    addEntryToBundle(this.encounters, b);
+    addEntryToBundle(this.conditions, b);
+    addEntryToBundle(this.meds, b);
+    addEntryToBundle(this.labResults, b);
+    addEntryToBundle(this.allergies, b);
     return b;
   }
 
@@ -143,20 +109,4 @@ public class PatientData {
     b.addEntry().setResource(allergies);
     return b;
   }
-
-  public String getBundleXml() {
-	  return ctx.newXmlParser().encodeResourceToString(getBundle());
-  }
-
-  /**
-   * The setPrimaryDx() method is the only setter here,
-   * since the primary diagnosis is not known until filters are run.
-   * If not for that, this class could be a read-only final class.
-   *
-   * @param primaryDx
-   */
-  public void setPrimaryDx(CodeableConcept primaryDx) {
-    this.primaryDx = primaryDx;
-  }
-
 }
