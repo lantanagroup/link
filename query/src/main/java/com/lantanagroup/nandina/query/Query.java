@@ -22,8 +22,12 @@ public class Query {
   }
   
   public Bundle execute(String[] patientIdentifiers) {
-    if (patientIdentifiers == null || patientIdentifiers.length == 0) {
+    if (patientIdentifiers == null) {
       throw new IllegalArgumentException("patientIdentifiers");
+    }
+
+    if (patientIdentifiers.length == 0) {
+      return new Bundle();
     }
 
     FhirContext ctx = FhirContext.forR4();
