@@ -21,5 +21,6 @@
         <module>api</module>
         <module>cli</module>
         <module>query</module>
+        <module>query-api</module>
     </modules>
 </project>

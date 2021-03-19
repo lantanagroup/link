@@ -1,7 +1,7 @@
-package com.lantanagroup.nandina.query;
+package com.lantanagroup.nandina.query.api;
 
-import com.lantanagroup.nandina.query.auth.QueryAuthFilter;
-import com.lantanagroup.nandina.query.config.QueryConfig;
+import com.lantanagroup.nandina.query.api.auth.QueryAuthFilter;
+import com.lantanagroup.nandina.query.api.config.QueryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

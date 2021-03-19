@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.query.config;
+package com.lantanagroup.nandina.query.api.config;
 
 import com.lantanagroup.nandina.config.IQueryConfig;
 import com.lantanagroup.nandina.config.QueryAuthConfig;

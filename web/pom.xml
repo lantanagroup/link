@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.lantanagroup.nandina</groupId>
-            <artifactId>nandina-core</artifactId>
+            <artifactId>core</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>

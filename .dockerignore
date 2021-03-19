@@ -1,4 +1,1 @@
-web/
-query/target/
-cli/target/
-core/target/
+target/

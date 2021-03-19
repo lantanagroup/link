@@ -78,7 +78,6 @@ public class NandinaAuthManager implements AuthenticationManager {
 
   private String getJwksUrl(DecodedJWT jwt) {
     Claim issuerClaim = jwt.getClaim("iss");
-    Claim tenantClaim = jwt.getClaim("tenant");
 
     if (issuerClaim != null && !issuerClaim.isNull()) {
       String issuer = issuerClaim.asString();

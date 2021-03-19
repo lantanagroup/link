@@ -1,6 +1,6 @@
-package com.lantanagroup.nandina.query;
+package com.lantanagroup.nandina.query.api;
 
-import com.lantanagroup.nandina.query.config.QueryConfig;
+import com.lantanagroup.nandina.query.api.config.QueryConfig;
 import com.lantanagroup.nandina.spring.FhirMessageConverter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +11,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 
 @SpringBootApplication
-public class QueryApplication extends SpringBootServletInitializer implements InitializingBean {
+public class QueryApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private QueryConfig config;
 
   public static void main(String[] args) {
-    SpringApplication.run(QueryApplication.class, args);
+    SpringApplication.run(QueryApiApplication.class, args);
   }
 
   @Override

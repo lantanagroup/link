@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.query.auth;
+package com.lantanagroup.nandina.query.api.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

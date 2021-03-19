@@ -12,7 +12,7 @@ import com.lantanagroup.nandina.api.config.ApiMeasureConfig;
 import com.lantanagroup.nandina.api.config.ApiQueryConfigModes;
 import com.lantanagroup.nandina.api.download.IReportDownloader;
 import com.lantanagroup.nandina.api.send.IReportSender;
-import com.lantanagroup.nandina.query.controller.QueryController;
+import com.lantanagroup.nandina.query.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
@@ -259,7 +259,8 @@ public class ReportController extends BaseController {
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
-        patientDataBundle = QueryController.getData(this.config.getQuery(), patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
+        Query query = new Query(this.config.getQuery());
+        patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientDataBundle = this.getRemotePatientData(patientIdentifiers);
       }
