@@ -1,10 +1,10 @@
 query:
   fhir-server-base: https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d
   allowed-remote:
-    - test
+    - 127.0.0.1
   query-auth:
     auth-mode: OAuth2
-    username: ***REMOVED***
-    password: ***REMOVED***
-    scopes: system/AllergyIntolerance.read system/Condition.read system/Observation.read system/Encounter.read system/Patient.read system/MedicationRequest.read system/Procedure.read
-    token-url: ***REMOVED***
+    username:
+    password:
+    scopes:
+    token-url:
