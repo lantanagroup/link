@@ -4,6 +4,15 @@ api:
   downloader: com.lantanagroup.nandina.api.download.MeasureReportDownloader
   sender: com.lantanagroup.nandina.api.download.MeasureReportSender
   send-url:
+  cors:
+    allowed-origins: '*'
+    allowed-headers: '*'
+    allowed-credentials: true
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - OPTIONS
   terminology:
     covid-codes-value-set: classpath:2.16.840.1.113762.1.4.1146.1124.xml
     ventilator-codes-value-set: classpath:mechanical-ventilators.xml

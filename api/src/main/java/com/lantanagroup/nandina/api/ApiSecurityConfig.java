@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,12 +15,18 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
+ */
 @Configuration
 @EnableWebSecurity
 @Order(1)
 public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private Environment env;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -41,26 +48,5 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .anyRequest()
             .authenticated();
-  }
-
-  @Bean
-  public WebMvcConfigurer corsConfigurer() {
-    // TODO: Replace with configuration
-    String allowsOrigins = "*";
-    String[] allowedMethods = new String[] { "GET", "POST", "PUT", "OPTIONS" };
-    String allowedHeaders = "*";
-    Boolean allowCredentials = true;
-
-    return new WebMvcConfigurer() {
-      @Override
-      public void addCorsMappings(CorsRegistry registry) {
-        registry
-                .addMapping("/**")
-                .allowedOrigins(allowsOrigins)
-                .allowedMethods(allowedMethods)
-                .allowedHeaders(allowedHeaders)
-                .allowCredentials(allowCredentials);
-      }
-    };
   }
 }

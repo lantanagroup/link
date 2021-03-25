@@ -325,8 +325,7 @@ public class ReportController extends BaseController {
    * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
    * responses using the DirectSender class.
    * @param report - this is the report data after generate report was clicked
-   * @return
-   * @throws Exception
+   * @throws Exception Thrown when the configured sender class is not found or fails to initialize
    */
   @PostMapping("/api/send")
   public void send(@RequestBody() QueryReport report) throws Exception {

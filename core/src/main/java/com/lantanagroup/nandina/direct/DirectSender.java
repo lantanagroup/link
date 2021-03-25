@@ -64,7 +64,7 @@ public class DirectSender {
    * @param subject the subject of the email
    * @param message the email message
    * @param zipBytes the actual zip file contents
-   * @throws Exception
+   * @throws Exception Exception is thrown when Rosetta responds with non-PASS
    */
   public void sendZip(String subject, String message, byte[] zipBytes) throws Exception {
     InputStream inputStream = new ByteArrayInputStream(zipBytes);

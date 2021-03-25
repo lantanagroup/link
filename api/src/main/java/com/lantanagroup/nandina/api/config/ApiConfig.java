@@ -27,6 +27,9 @@ public class ApiConfig {
     private String sendUrl;
 
     @Getter
+    private ApiCorsConfig cors;
+
+    @Getter
     private ApiTerminologyConfig terminology;
 
     @Getter

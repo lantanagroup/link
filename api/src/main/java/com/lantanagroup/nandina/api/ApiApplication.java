@@ -9,7 +9,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.filter.DelegatingFilterProxy;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -45,5 +48,31 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
             .addMappingForUrlPatterns(null, false, "/*");
 
     super.onStartup(servletContext);
+  }
+
+
+  /**
+   * This method is responsible for setting the CORS configuration based on the api.yml (or its override)
+   * @return WebMvcConfigurer
+   */
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    // TODO: Replace with configuration
+    String allowsOrigins = this.config.getCors().getAllowedOrigins();
+    String[] allowedMethods = this.config.getCors().getAllowedMethods();
+    String allowedHeaders = this.config.getCors().getAllowedHeaders();
+    Boolean allowCredentials = this.config.getCors().getAllowedCredentials();
+
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry
+                .addMapping("/**")
+                .allowedOrigins(allowsOrigins)
+                .allowedMethods(allowedMethods)
+                .allowedHeaders(allowedHeaders)
+                .allowCredentials(allowCredentials);
+      }
+    };
   }
 }
