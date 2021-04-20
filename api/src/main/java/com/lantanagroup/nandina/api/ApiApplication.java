@@ -2,6 +2,7 @@ package com.lantanagroup.nandina.api;
 
 import com.lantanagroup.nandina.api.config.ApiConfig;
 import com.lantanagroup.nandina.api.config.ApiQueryConfigModes;
+import com.lantanagroup.nandina.query.auth.CernerAuthConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +18,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = { "com.lantanagroup.nandina.api", "com.lantanagroup.nandina.config", "com.lantanagroup.nandina.query.auth" })
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
 
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private CernerAuthConfig cerner;
 
   public static void main(String[] args) {
     SpringApplication.run(ApiApplication.class, args);

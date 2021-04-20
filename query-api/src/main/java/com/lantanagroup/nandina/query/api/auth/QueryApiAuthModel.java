@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class QueryAuthModel {
+public class QueryApiAuthModel {
   private String authorization;
   private String remoteAddress;
 }

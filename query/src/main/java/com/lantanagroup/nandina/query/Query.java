@@ -2,26 +2,30 @@ package com.lantanagroup.nandina.query;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.nandina.config.AuthConfigModes;
-import com.lantanagroup.nandina.config.IQueryConfig;
-import com.lantanagroup.nandina.hapi.HapiFhirAuthenticationInterceptor;
+import com.lantanagroup.nandina.config.QueryConfig;
+import com.lantanagroup.nandina.query.auth.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.nandina.query.scoop.PatientScoop;
+import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.util.List;
 
 public class Query {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
-  private IQueryConfig config;
+  private QueryConfig config;
+
+  private ApplicationContext context;
   
-  public Query(IQueryConfig config) {
-    this.config = config;
+  public Query(ApplicationContext context) {
+    this.context = context;
+    this.config = context.getBean(QueryConfig.class);
   }
   
-  public Bundle execute(String[] patientIdentifiers) {
+  public Bundle execute(String[] patientIdentifiers) throws ClassNotFoundException {
     if (patientIdentifiers == null) {
       throw new IllegalArgumentException("patientIdentifiers");
     }
@@ -36,8 +40,8 @@ public class Query {
 
     IGenericClient fhirQueryServer = ctx.newRestfulGenericClient(this.config.getFhirServerBase());
 
-    if (this.config.getQueryAuth() != null && this.config.getQueryAuth().getAuthMode() != AuthConfigModes.None) {
-      fhirQueryServer.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.config.getQueryAuth()));
+    if (Strings.isNotEmpty(this.config.getAuthClass())) {
+      fhirQueryServer.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.config, this.context));
     }
 
     try {

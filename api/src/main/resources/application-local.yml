@@ -1,0 +1,30 @@
+api:
+  fhir-server-store: https://cqf-dev.nhsnlink.org/fhir
+  auth-jwks-url: https://oauth.lantanagroup.com/auth/realms/NHSNLink/protocol/openid-connect/certs
+  downloader: com.lantanagroup.nandina.api.download.MeasureReportDownloader
+  sender: com.lantanagroup.nandina.api.download.MeasureReportSender
+  send-url: https://0047-sdc-phi.leidosweb.net/hapi-fhir-jpaserver/fhir/Bundle
+  measures:
+    - id: COVIDMin
+      url: https://fhir.nhsnlink.org/fhir/Bundle/COVIDMin
+      name: COVIDMin
+    - id: MedAdmin
+      url: https://fhir.nhsnlink.org/fhir/Bundle/NHSNMedicationAdministration
+      name: MedAdmin
+    - id: SNF
+      url: https://fhir.nhsnlink.org/fhir/Bundle/COVID19AdmissionsFromSNF
+      name: SNF
+    - id: RiskFactors
+      url: https://fhir.nhsnlink.org/fhir/Bundle/COVID19PRF
+      name: RiskFactors
+  query:
+    mode: Local
+query:
+  fhir-server-base: https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d
+  auth-class: com.lantanagroup.nandina.query.auth.CernerAuth
+  auth:
+    cerner:
+      client-id: 317986e4-e608-4d1c-9b84-da6146790730
+      secret: VStlal_dOB3LDEgG93wx0ZEPDURZWamD
+      scopes: system/AllergyIntolerance.read system/Condition.read system/Observation.read system/Encounter.read system/Patient.read system/MedicationRequest.read system/Procedure.read
+      token-url: https://authorization.cerner.com/tenants/ec2458f2-1e24-41c8-b71b-0e701af7583d/protocols/oauth2/profiles/smart-v1/token

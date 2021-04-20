@@ -16,7 +16,7 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "api")
 @Validated
-@PropertySource(value = "classpath:api.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
     @NotNull
     private String fhirServerStore;

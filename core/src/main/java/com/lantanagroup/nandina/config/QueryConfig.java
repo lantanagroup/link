@@ -1,8 +1,5 @@
-package com.lantanagroup.nandina.query.api.config;
+package com.lantanagroup.nandina.config;
 
-import com.lantanagroup.nandina.config.IQueryConfig;
-import com.lantanagroup.nandina.config.QueryAuthConfig;
-import com.lantanagroup.nandina.config.YamlPropertySourceFactory;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.URL;
@@ -17,17 +14,15 @@ import javax.validation.constraints.*;
 @Configuration
 @ConfigurationProperties(prefix = "query")
 @Validated
-@PropertySource(value = "classpath:query.yml", factory = YamlPropertySourceFactory.class)
-public class QueryConfig implements IQueryConfig {
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+public class QueryConfig {
   @NotBlank @URL
   private String fhirServerBase;
 
   @Size(min = 128)
   private String apiKey;
 
-  @NotEmpty
   private String[] allowedRemote;
 
-  @Getter @NotNull
-  private QueryAuthConfig queryAuth;
+  private String authClass;
 }

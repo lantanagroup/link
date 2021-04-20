@@ -24,6 +24,7 @@ import org.hl7.fhir.r4.model.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,6 +53,9 @@ public class ReportController extends BaseController {
 
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private ApplicationContext context;
 
   private void storeLatestMeasure(Bundle bundle, IGenericClient fhirStoreClient) {
     logger.info("Generating a Bundle Transaction of the Measure");
@@ -259,7 +263,7 @@ public class ReportController extends BaseController {
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
-        Query query = new Query(this.config.getQuery());
+        Query query = new Query(this.context);
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientDataBundle = this.getRemotePatientData(patientIdentifiers);

@@ -1,7 +1,7 @@
 package com.lantanagroup.nandina.query.api;
 
-import com.lantanagroup.nandina.query.api.auth.QueryAuthFilter;
-import com.lantanagroup.nandina.query.api.config.QueryConfig;
+import com.lantanagroup.nandina.query.api.auth.QueryApiAuthFilter;
+import com.lantanagroup.nandina.config.QueryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -18,7 +18,7 @@ public class QuerySecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    QueryAuthFilter authFilter = new QueryAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote());
+    QueryApiAuthFilter authFilter = new QueryApiAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote());
 
     http
             .csrf().disable()

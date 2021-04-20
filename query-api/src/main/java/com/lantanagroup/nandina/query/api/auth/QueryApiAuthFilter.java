@@ -11,14 +11,14 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 
-public class QueryAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
-  protected static final Logger logger = LoggerFactory.getLogger(QueryAuthFilter.class);
+public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
+  protected static final Logger logger = LoggerFactory.getLogger(QueryApiAuthFilter.class);
 
-  public QueryAuthFilter(String expectedApiKey, String[] allowedRemotes) {
+  public QueryApiAuthFilter(String expectedApiKey, String[] allowedRemotes) {
     this.setAuthenticationManager(new AuthenticationManager() {
       @Override
       public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        QueryAuthModel authModel = (QueryAuthModel) authentication.getPrincipal();
+        QueryApiAuthModel authModel = (QueryApiAuthModel) authentication.getPrincipal();
 
         if (!expectedApiKey.equals(authModel.getAuthorization())) {
           String msg = String.format("The API Key \"%s\" was not found or not the expected value.", authModel.getAuthorization());
@@ -40,7 +40,7 @@ public class QueryAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
 
   @Override
   protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
-    QueryAuthModel authModel = new QueryAuthModel();
+    QueryApiAuthModel authModel = new QueryApiAuthModel();
     String authorization = request.getHeader("Authorization");
 
     if (authorization != null && authorization.toLowerCase().startsWith("key ")) {
