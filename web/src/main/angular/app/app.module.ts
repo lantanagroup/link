@@ -6,7 +6,6 @@ import {AppComponent} from './app.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
-import {SelectLocationsComponent} from './select-locations/select-locations.component';
 import {CookieService} from 'ngx-cookie-service';
 import {OAuthModule} from 'angular-oauth2-oidc';
 import {AddHeaderInterceptor} from './auth-header-interceptor';
@@ -18,7 +17,6 @@ import {ReportBodyComponent} from './report-body/report-body.component';
 import {AuthService} from './services/auth.service';
 import {SmartHomeComponent} from './smart-home/smart-home.component';
 import {ConfigService} from './services/config.service';
-import {LocationService} from './services/location.service';
 import {ReportService} from './services/report.service';
 import {ReportBodyDirective} from './report-body.directive';
 
@@ -29,7 +27,6 @@ export const configFactory = (configService: ConfigService) => {
 @NgModule({
   declarations: [
     AppComponent,
-    SelectLocationsComponent,
     ToastsContainerComponent,
     SmartLoginComponent,
     HomeComponent,
@@ -55,7 +52,6 @@ export const configFactory = (configService: ConfigService) => {
     ConfigService,
     ToastService,
     AuthService,
-    LocationService,
     ReportService,
     CookieService,
     {

@@ -1,4 +1,4 @@
-package com.lantanagroup.nandina.api.model;
+package com.lantanagroup.nandina.model;
 
 import lombok.Getter;
 import lombok.Setter;

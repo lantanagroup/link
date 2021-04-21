@@ -1,7 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {ConfigService} from './config.service';
-import {LocationResponse} from '../model/location-response';
 import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
 import {MeasureConfig} from '../model/MeasureConfig';
@@ -34,22 +33,13 @@ export class ReportService {
 
   async send(report: QueryReport) {
     let url = '/api/send';
-
     url = this.configService.getApiUrl(url);
-
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
 
-  async generate(report: QueryReport, overflowLocations?: LocationResponse[]) {
+  async generate(report: QueryReport) {
     let url = '/api/query?';
-
-    if (overflowLocations.length > 0) {
-      const ids = overflowLocations.map(ol => ol.id);
-      url += 'overflowLocations=' + encodeURIComponent(ids.join(',')) + '&';
-    }
-
     url = this.configService.getApiUrl(url);
-
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
 
