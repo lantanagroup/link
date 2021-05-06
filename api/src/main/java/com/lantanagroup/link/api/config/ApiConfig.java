@@ -42,4 +42,15 @@ public class ApiConfig {
     private ApiQueryConfig query;
 
     @Getter ApiMeasureLocationConfig measureLocation;
+
+    public ApiMeasureConfig getMeasure(String id) {
+        if (this.measures != null) {
+            return this.measures.stream()
+                    .filter(m -> m.getId().equals(id))
+                    .findFirst()
+                    .get();
+        }
+
+        return null;
+    }
 }
