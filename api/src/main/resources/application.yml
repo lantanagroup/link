@@ -1,8 +1,8 @@
 api:
   fhir-server-store:
   auth-jwks-url:
-  downloader: com.lantanagroup.nandina.api.download.MeasureReportDownloader
-  sender: com.lantanagroup.nandina.api.download.MeasureReportSender
+  downloader: com.lantanagroup.link.api.download.MeasureReportDownloader
+  sender: com.lantanagroup.link.api.download.MeasureReportSender
   send-url:
   cors:
     allowed-origins: '*'

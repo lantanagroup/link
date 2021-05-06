@@ -34,7 +34,7 @@ export class ConfigService {
   async getSmartConfig(issuer: string): Promise<IOAuthConfig> {
     if (!this.config || !this.config.smart) throw new Error(`Server is not configured for smart-launch`);
     const found = this.config.smart.find(sc => sc.issuer === issuer);
-    if (!found) throw new Error(`Nandina is not configured for smart-launch with issuer ${issuer}`);
+    if (!found) throw new Error(`Link is not configured for smart-launch with issuer ${issuer}`);
     return found;
   }
 }

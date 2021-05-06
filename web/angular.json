@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "nandina-ui": {
+    "link-ui": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -64,18 +64,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "nandina-ui:build"
+            "browserTarget": "link-ui:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "nandina-ui:build:production"
+              "browserTarget": "link-ui:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "nandina-ui:build"
+            "browserTarget": "link-ui:build"
           }
         },
         "test": {
@@ -112,15 +112,15 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "nandina-ui:serve"
+            "devServerTarget": "link-ui:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "nandina-ui:serve:production"
+              "devServerTarget": "link-ui:serve:production"
             }
           }
         }
       }
     }},
-  "defaultProject": "nandina-ui"
+  "defaultProject": "link-ui"
 }

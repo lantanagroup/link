@@ -3,8 +3,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>nandina</artifactId>
-        <groupId>com.lantanagroup.nandina</groupId>
+        <artifactId>link</artifactId>
+        <groupId>com.lantanagroup.link</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -19,14 +19,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.lantanagroup.nandina</groupId>
+            <groupId>com.lantanagroup.link</groupId>
             <artifactId>core</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
-            <groupId>com.lantanagroup.nandina</groupId>
+            <groupId>com.lantanagroup.link</groupId>
             <artifactId>query</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>
@@ -73,4 +73,21 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <finalName>link-query-api</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

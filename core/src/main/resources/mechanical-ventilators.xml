@@ -7,7 +7,7 @@
             <h2>Mechanical Ventilator Codes</h2>
         </div>
     </text>
-    <url value="https://nandina.lantanagroup.com/fhir/ValueSet/mechanical-ventilators"/>
+    <url value="https://nhsnlink.org/fhir/ValueSet/mechanical-ventilators"/>
     <version value="20200507"/>
     <name value="Mechanical Ventilators"/>
     <status value="active"/>

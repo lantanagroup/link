@@ -1,6 +1,6 @@
 query:
   fhir-server-base: https://fhir-ehr-code.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d
-  auth-class: com.lantanagroup.nandina.query.auth.CernerOAuth2
+  auth-class: com.lantanagroup.link.query.auth.CernerOAuth2
   allowed-remote:
     - 127.0.0.1
   auth:

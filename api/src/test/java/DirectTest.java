@@ -1,4 +1,4 @@
-import com.lantanagroup.nandina.direct.DirectSender;
+import com.lantanagroup.link.direct.DirectSender;
 import org.junit.experimental.categories.Category;
 
 @Category(DirectSender.class)

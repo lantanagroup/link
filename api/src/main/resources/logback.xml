@@ -8,7 +8,7 @@
     <logger name="org.springframework" level="INFO"/>
     <logger name="ca.uhn.fhir" level="INFO"/>
     <logger name="org.apache.http" level="INFO"/>
-    <logger name="com.lantanagroup.nandina" level="DEBUG"/>
+    <logger name="com.lantanagroup.link" level="DEBUG"/>
     <root>
         <appender-ref ref="STDOUT"/>
     </root>
