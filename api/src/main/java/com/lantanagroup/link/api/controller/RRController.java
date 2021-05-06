@@ -6,8 +6,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.fhir.transform.FHIRTransformResult;
 import com.lantanagroup.fhir.transform.FHIRTransformer;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,8 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.ListResource;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -50,11 +47,11 @@ public class RRController extends BaseController {
             if (codeList.isEmpty()) {
                 throw new Exception("Code is not passed in the file.");
             }
-           // Date date = getDateWithoutTimeUsingFormat(datetime);
+            String date = getDateWithoutTimeUsingFormat(datetime);
             String code = codeList.get(0).getCode();
-            Bundle bundle = searchListByCodeData(code, datetime, fhirStoreClient);
+            Bundle bundle = searchListByCodeData(code, date, fhirStoreClient);
             if (bundle.getEntry().size() == 0) {
-              //  ((ListResource) resource).setDate(date);
+               ((ListResource) resource).setDateElement(new DateTimeType(date));
                 createResource(resource, fhirStoreClient);
             } else {
                 ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
@@ -66,7 +63,7 @@ public class RRController extends BaseController {
                 uniqueEntries.parallelStream().forEach(entry -> {
                     existingList.getEntry().add(entry);
                 });
-            //    existingList.setDate(date);
+                ((ListResource) resource).setDateElement(new DateTimeType(date));
                 updateResource(existingList, fhirStoreClient);
             }
         } else {
@@ -87,7 +84,7 @@ public class RRController extends BaseController {
         fhirStoreClient.update().resource(list).execute();
     }
 
-    private Bundle searchListByCodeData(String code, Date date, IGenericClient fhirStoreClient) {
+    private Bundle searchListByCodeData(String code, String date, IGenericClient fhirStoreClient) {
         Bundle bundle = fhirStoreClient
                 .search()
                 .forResource(ListResource.class)
@@ -98,10 +95,10 @@ public class RRController extends BaseController {
         return bundle;
     }
 
-    public static Date getDateWithoutTimeUsingFormat(Date date)
+    public static String getDateWithoutTimeUsingFormat(Date date)
             throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        return formatter.parse(formatter.format(date));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        return formatter.format(date);
     }
 
     @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_XML_VALUE)
