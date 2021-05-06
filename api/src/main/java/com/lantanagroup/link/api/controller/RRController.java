@@ -38,18 +38,20 @@ public class RRController extends BaseController {
             resource.setId((String) null);
         }
         if (resource instanceof ListResource) {
-            List<Coding> codeList = ((ListResource) resource).getCode().getCoding();
+
+            List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
             Date datetime = ((ListResource) resource).getDate();
             // added some validation code
             if (datetime == null) {
                 throw new Exception("Date is not passed in the file.");
             }
-            if (codeList.isEmpty()) {
-                throw new Exception("Code is not passed in the file.");
+            if(identifierList.isEmpty()){
+                throw new Exception("Identifier is not present.");
             }
+            String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
+            String value = ((ListResource) resource).getIdentifier().get(0).getValue();
             String date = getDateWithoutTimeUsingFormat(datetime);
-            String code = codeList.get(0).getCode();
-            Bundle bundle = searchListByCodeData(code, date, fhirStoreClient);
+            Bundle bundle = searchListByCodeData(system, value, date, fhirStoreClient);
             if (bundle.getEntry().size() == 0) {
                ((ListResource) resource).setDateElement(new DateTimeType(date));
                 createResource(resource, fhirStoreClient);
@@ -84,11 +86,11 @@ public class RRController extends BaseController {
         fhirStoreClient.update().resource(list).execute();
     }
 
-    private Bundle searchListByCodeData(String code, String date, IGenericClient fhirStoreClient) {
+    private Bundle searchListByCodeData(String system, String value, String date, IGenericClient fhirStoreClient) {
         Bundle bundle = fhirStoreClient
                 .search()
                 .forResource(ListResource.class)
-                .where(ListResource.CODE.exactly().code(code))
+                .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
                 .and(ListResource.DATE.exactly().day(date))
                 .returnBundle(Bundle.class)
                 .execute();
