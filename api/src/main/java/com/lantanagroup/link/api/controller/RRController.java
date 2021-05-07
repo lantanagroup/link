@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.fhir.transform.FHIRTransformResult;
 import com.lantanagroup.fhir.transform.FHIRTransformer;
+import com.lantanagroup.link.Helper;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -17,11 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.Date;
 
 /**
  * Reportability Response Controller
@@ -30,6 +29,7 @@ import java.util.Date;
 public class RRController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(RRController.class);
     private FhirContext ctx = FhirContext.forR4();
+
 
     private void receiveFHIR(Resource resource, HttpServletRequest request) throws Exception {
         IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
@@ -45,15 +45,15 @@ public class RRController extends BaseController {
             if (datetime == null) {
                 throw new Exception("Date is not passed in the file.");
             }
-            if(identifierList.isEmpty()){
+            if (identifierList.isEmpty()) {
                 throw new Exception("Identifier is not present.");
             }
             String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
             String value = ((ListResource) resource).getIdentifier().get(0).getValue();
-            String date = getDateWithoutTimeUsingFormat(datetime);
+            String date = Helper.getFhirDate(datetime);
             Bundle bundle = searchListByCodeData(system, value, date, fhirStoreClient);
             if (bundle.getEntry().size() == 0) {
-               ((ListResource) resource).setDateElement(new DateTimeType(date));
+                ((ListResource) resource).setDateElement(new DateTimeType(date));
                 createResource(resource, fhirStoreClient);
             } else {
                 ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
@@ -75,15 +75,22 @@ public class RRController extends BaseController {
 
     private void createResource(Resource resource, IGenericClient fhirStoreClient) {
         MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
-        if (!outcome.getCreated() && outcome.getResource() != null) {
-            logger.error("Failed to store/create FHIR Bundle");
+        if (!outcome.getCreated() || outcome.getResource() == null) {
+            logger.error("Failed to store/create FHIR resource");
         } else {
-            logger.debug("Stored FHIR Bundle with new ID of " + outcome.getResource().getIdElement().getIdPart());
+            logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
         }
     }
 
     private void updateResource(ListResource list, IGenericClient fhirStoreClient) {
-        fhirStoreClient.update().resource(list).execute();
+        int initialVersion = Integer.parseInt(list.getMeta().getVersionId());
+        MethodOutcome outcome = fhirStoreClient.update().resource(list).execute();
+        int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
+        if (updatedVersion > initialVersion) {
+            logger.debug("Update is successful for " + outcome.getResource().getIdElement().getIdPart());
+        } else {
+            logger.error("Failed to update FHIR resource");
+        }
     }
 
     private Bundle searchListByCodeData(String system, String value, String date, IGenericClient fhirStoreClient) {
@@ -95,12 +102,6 @@ public class RRController extends BaseController {
                 .returnBundle(Bundle.class)
                 .execute();
         return bundle;
-    }
-
-    public static String getDateWithoutTimeUsingFormat(Date date)
-            throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return formatter.format(date);
     }
 
     @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_XML_VALUE)
