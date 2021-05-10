@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @RestController
 public class RRController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(RRController.class);
-    private FhirContext ctx = FhirContext.forR4();
+    private final FhirContext ctx = FhirContext.forR4();
 
 
     private void receiveFHIR(Resource resource, HttpServletRequest request) throws Exception {
@@ -58,9 +58,15 @@ public class RRController extends BaseController {
             } else {
                 ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
                 // filter out duplicates
+
                 List<ListResource.ListEntryComponent> uniqueEntries = ((ListResource) resource).getEntry().parallelStream()
-                        .filter(e -> !existingList.getEntry().stream().anyMatch(s -> e.getItem().getIdentifier().getSystem().equals(s.getItem().getIdentifier().getSystem())
-                                && e.getItem().getIdentifier().getValue().equals(s.getItem().getIdentifier().getValue()))).collect(Collectors.toList());
+                        .filter(e -> {
+                            String systemA = e.getItem().getIdentifier().getSystem();
+                            String valueA = e.getItem().getIdentifier().getValue();
+                            boolean findIt = !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
+                            return findIt;
+                        }).collect(Collectors.toList());
+
                 // merge lists into existingList
                 uniqueEntries.parallelStream().forEach(entry -> {
                     existingList.getEntry().add(entry);
@@ -115,11 +121,13 @@ public class RRController extends BaseController {
         this.receiveFHIR(bundle, request);
     }
 
+
     @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void receiveFHIRJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
         logger.debug("Receiving RR FHIR JSON. Parsing...");
 
         Resource bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
+
         logger.debug("Done parsing. Storing RR FHIR JSON...");
 
         this.receiveFHIR(bundle, request);
@@ -156,7 +164,9 @@ public class RRController extends BaseController {
 
         if (!result.isSuccess()) {
             logger.error("Failed to transform RR CDA XML to FHIR4 XML!");
+
             List<String> messages = result.getMessages().stream().map(m -> m.getMessage()).collect(Collectors.toList());
+
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, StringUtils.join(messages, "\r\n"));
         } else {
             logger.debug("Parsing FHIR XML Bundle...");
