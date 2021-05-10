@@ -22,6 +22,9 @@ public class QueryConfig {
   @Size(min = 128)
   private String apiKey;
 
+  @NotBlank
+  private String queryClass;
+
   private String[] allowedRemote;
 
   private String authClass;

@@ -1,8 +1,8 @@
-package com.lantanagroup.link.query;
+package com.lantanagroup.link.query.uscore;
 
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.query.scoop.PatientScoop;
+import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

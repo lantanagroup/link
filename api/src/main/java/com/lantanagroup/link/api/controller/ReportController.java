@@ -12,7 +12,10 @@ import com.lantanagroup.link.api.config.ApiMeasureConfig;
 import com.lantanagroup.link.api.config.ApiQueryConfigModes;
 import com.lantanagroup.link.api.download.IReportDownloader;
 import com.lantanagroup.link.api.send.IReportSender;
-import com.lantanagroup.link.query.Query;
+import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.query.IQuery;
+import com.lantanagroup.link.query.QueryFactory;
+import com.lantanagroup.link.query.uscore.Query;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
@@ -263,7 +266,8 @@ public class ReportController extends BaseController {
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
-        Query query = new Query(this.context);
+        QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
+        IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig);
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientDataBundle = this.getRemotePatientData(patientIdentifiers);

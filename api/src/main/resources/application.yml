@@ -17,3 +17,5 @@ api:
     covid-codes-value-set: classpath:2.16.840.1.113762.1.4.1146.1124.xml
     ventilator-codes-value-set: classpath:mechanical-ventilators.xml
     intubation-procedure-codes-value-set: classpath:intubation-procedures.xml
+query:
+  query-class: com.lantanagroup.link.query.uscore.Query

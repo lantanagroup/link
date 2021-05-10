@@ -1,7 +1,7 @@
-package com.lantanagroup.link.query.scoop;
+package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.query.PatientData;
+import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
