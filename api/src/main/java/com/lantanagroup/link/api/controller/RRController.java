@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,6 +64,7 @@ public class RRController extends BaseController {
                         .filter(e -> {
                             String systemA = e.getItem().getIdentifier().getSystem();
                             String valueA = e.getItem().getIdentifier().getValue();
+
                             boolean findIt = !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
                             return findIt;
                         }).collect(Collectors.toList());
@@ -77,6 +79,33 @@ public class RRController extends BaseController {
         } else {
             createResource(resource, fhirStoreClient);
         }
+    }
+
+    private ListResource getListFromBundle(Bundle bundle) {
+        ListResource list = new ListResource();
+        String date = Helper.getFhirDate(bundle.getTimestamp());
+        list.setDateElement(new DateTimeType(date));
+        List<Identifier> identifierList = new ArrayList();
+        identifierList.add(bundle.getIdentifier());
+        list.setIdentifier(identifierList);
+        (bundle.getEntry().parallelStream()).forEach(bundleEntry -> {
+            if (bundleEntry.getResource().getResourceType().equals(ResourceType.Patient)) {
+                Patient p = (Patient) bundleEntry.getResource();
+                if (null != p.getIdentifier().get(0)) {
+                    String system = p.getIdentifier().get(0).getSystem();
+                    String value = p.getIdentifier().get(0).getValue();
+                    ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
+                    Identifier patientIdentifier = new Identifier();
+                    patientIdentifier.setSystemElement(new UriType(system));
+                    patientIdentifier.setValueElement(new StringType(value));
+                    Reference reference = new Reference();
+                    reference.setIdentifier(patientIdentifier);
+                    listEntry.setItem(reference);
+                    list.addEntry(listEntry);
+                }
+            }
+        });
+        return list;
     }
 
     private void createResource(Resource resource, IGenericClient fhirStoreClient) {
@@ -115,10 +144,11 @@ public class RRController extends BaseController {
         logger.debug("Receiving RR FHIR XML. Parsing...");
 
         Resource bundle = this.ctx.newXmlParser().parseResource(Bundle.class, body);
+        ListResource list = getListFromBundle((Bundle) bundle);
 
         logger.debug("Done parsing. Storing RR FHIR XML...");
 
-        this.receiveFHIR(bundle, request);
+        this.receiveFHIR(list, request);
     }
 
 
@@ -127,10 +157,11 @@ public class RRController extends BaseController {
         logger.debug("Receiving RR FHIR JSON. Parsing...");
 
         Resource bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
+        ListResource list = getListFromBundle((Bundle) bundle);
 
         logger.debug("Done parsing. Storing RR FHIR JSON...");
 
-        this.receiveFHIR(bundle, request);
+        this.receiveFHIR(list, request);
     }
 
 
