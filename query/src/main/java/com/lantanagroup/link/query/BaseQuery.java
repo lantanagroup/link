@@ -2,7 +2,7 @@ package com.lantanagroup.link.query;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.context.ApplicationContext;

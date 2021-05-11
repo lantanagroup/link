@@ -1,7 +1,7 @@
 package com.lantanagroup.link.query.api;
 
 import com.lantanagroup.link.query.api.auth.QueryApiAuthFilter;
-import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

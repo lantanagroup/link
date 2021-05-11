@@ -2,7 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.api.auth.LinkAuthManager;
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
-import com.lantanagroup.link.api.config.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

@@ -2,8 +2,7 @@ package com.lantanagroup.link.query.api.controller;
 
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import com.lantanagroup.link.query.uscore.Query;
-import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;

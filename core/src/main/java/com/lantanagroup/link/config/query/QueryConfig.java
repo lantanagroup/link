@@ -1,5 +1,6 @@
-package com.lantanagroup.link.config;
+package com.lantanagroup.link.config.query;
 
+import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.URL;

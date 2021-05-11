@@ -1,10 +1,11 @@
-package com.lantanagroup.link.api.send;
+package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.QueryReport;
-import com.lantanagroup.link.api.FhirHelper;
-import com.lantanagroup.link.api.config.ApiConfig;
+import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -18,8 +19,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class MeasureReportSender implements IReportSender {
-  protected static final Logger logger = LoggerFactory.getLogger(MeasureReportSender.class);
+public class LeidosSender implements IReportSender {
+  protected static final Logger logger = LoggerFactory.getLogger(LeidosSender.class);
 
   @Override
   public void send(QueryReport report, ApiConfig config, FhirContext ctx) throws Exception {

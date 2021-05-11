@@ -26,6 +26,13 @@
     <dependencies>
         <dependency>
             <groupId>com.lantanagroup.link</groupId>
+            <artifactId>nhsn</artifactId>
+            <scope>compile</scope>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.lantanagroup.link</groupId>
             <artifactId>core</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>

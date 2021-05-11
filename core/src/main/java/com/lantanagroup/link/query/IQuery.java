@@ -1,6 +1,6 @@
 package com.lantanagroup.link.query;
 
-import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.springframework.context.ApplicationContext;
 

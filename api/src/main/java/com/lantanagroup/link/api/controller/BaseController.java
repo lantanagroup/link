@@ -2,7 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.api.config.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
