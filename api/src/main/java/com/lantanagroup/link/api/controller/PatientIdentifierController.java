@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
  * Reportability Response Controller
  */
 @RestController
-public class RRController extends BaseController {
-    private static final Logger logger = LoggerFactory.getLogger(RRController.class);
+public class PatientIdentifierController extends BaseController {
+    private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
     private final FhirContext ctx = FhirContext.forR4();
 
 
