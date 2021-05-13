@@ -18,9 +18,7 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.ResourceType;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,6 +226,49 @@ public class ReportController extends BaseController {
     return patientIds;
   }
 
+
+  private List<String> getPatientIdsFromList(String date, IGenericClient fhirStoreClient) {
+    List<String> patientIds = new ArrayList<>();
+    List<IBaseResource> bundles = new ArrayList<>();
+
+    Bundle bundle = fhirStoreClient
+            .search()
+            .forResource(ListResource.class)
+            .and(ListResource.DATE.exactly().day(date))
+            .returnBundle(Bundle.class)
+            .execute();
+
+      if (bundle.getEntry().size() == 0) {
+        logger.info("No RR bundles found matching time stamp " + date);
+        return patientIds;
+      }
+
+    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+
+    // Load the subsequent pages
+    while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
+      bundle = fhirStoreClient
+              .loadPage()
+              .next(bundle)
+              .execute();
+      logger.info("Adding next page of bundles...");
+      bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+    }
+
+    bundles.parallelStream().forEach(bundleResource -> {
+      ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
+      resource.getEntry().parallelStream().forEach(entry -> {
+        String patientId = entry.getItem().getIdentifier().getSystem() +
+                        "|" + entry.getItem().getIdentifier().getValue();
+        patientIds.add(patientId);
+        });
+    });
+
+    logger.info("Loaded " + patientIds.size() + " patient ids");
+    patientIds.forEach(id -> logger.info("PatientId: " + id));
+    return patientIds;
+  }
+
   private Bundle getRemotePatientData(List<String> patientIdentifiers) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
@@ -273,6 +314,7 @@ public class ReportController extends BaseController {
         throw new Exception("patientDataBundle is null");
       }
 
+
       // Make sure the bundle is a transaction
       patientDataBundle.setType(Bundle.BundleType.TRANSACTION);
       patientDataBundle.getEntry().forEach(entry -> {
@@ -309,7 +351,7 @@ public class ReportController extends BaseController {
       this.resolveMeasure(criteria, fhirStoreClient, contextData);
 
       // Get the patient identifiers for the given date
-      List<String> patientIdentifiers = this.getPatientIds(criteria.get("reportDate"), fhirStoreClient);
+      List<String> patientIdentifiers = this.getPatientIdsFromList(criteria.get("reportDate"), fhirStoreClient);
 
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
