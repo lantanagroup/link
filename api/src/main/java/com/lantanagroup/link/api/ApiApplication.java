@@ -1,7 +1,7 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.api.config.ApiConfig;
-import com.lantanagroup.link.api.config.ApiQueryConfigModes;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.query.auth.CernerAuthConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -18,7 +18,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.api", "com.lantanagroup.link.config", "com.lantanagroup.link.query.auth"})
+@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.api", "com.lantanagroup.link.config", "com.lantanagroup.link.config.api", "com.lantanagroup.link.query.auth"})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;

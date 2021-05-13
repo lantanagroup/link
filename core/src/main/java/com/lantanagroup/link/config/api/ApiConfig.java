@@ -1,4 +1,4 @@
-package com.lantanagroup.link.api.config;
+package com.lantanagroup.link.config.api;
 
 import com.lantanagroup.link.config.IDirectConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;

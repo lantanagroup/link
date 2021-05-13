@@ -1,10 +1,10 @@
-package com.lantanagroup.link.query.scoop;
+package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import com.lantanagroup.link.query.PatientData;
+import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;

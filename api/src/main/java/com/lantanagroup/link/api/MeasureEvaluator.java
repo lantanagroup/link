@@ -3,7 +3,7 @@ package com.lantanagroup.link.api;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.QueryReport;
-import com.lantanagroup.link.api.config.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Reference;

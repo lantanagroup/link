@@ -1,4 +1,4 @@
-package com.lantanagroup.link.api.config;
+package com.lantanagroup.link.config.api;
 
 public enum ApiQueryConfigModes {
   Local,

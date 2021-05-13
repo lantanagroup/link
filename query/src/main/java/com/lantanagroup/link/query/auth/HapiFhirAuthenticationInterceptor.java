@@ -3,7 +3,7 @@ package com.lantanagroup.link.query.auth;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
-import com.lantanagroup.link.config.QueryConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,8 +1,8 @@
-package com.lantanagroup.link.api.download;
+package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.QueryReport;
-import com.lantanagroup.link.api.config.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.transform.TransformerException;

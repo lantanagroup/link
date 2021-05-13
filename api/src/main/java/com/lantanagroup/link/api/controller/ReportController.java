@@ -5,14 +5,16 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.QueryReport;
-import com.lantanagroup.link.api.FhirHelper;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.api.MeasureEvaluator;
-import com.lantanagroup.link.api.config.ApiConfig;
-import com.lantanagroup.link.api.config.ApiMeasureConfig;
-import com.lantanagroup.link.api.config.ApiQueryConfigModes;
-import com.lantanagroup.link.api.download.IReportDownloader;
-import com.lantanagroup.link.api.send.IReportSender;
-import com.lantanagroup.link.query.Query;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiMeasureConfig;
+import com.lantanagroup.link.config.api.ApiQueryConfigModes;
+import com.lantanagroup.link.IReportDownloader;
+import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.query.IQuery;
+import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
@@ -240,7 +242,8 @@ public class ReportController extends BaseController {
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
-        Query query = new Query(this.context);
+        QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
+        IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig);
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientDataBundle = this.getRemotePatientData(patientIdentifiers);
