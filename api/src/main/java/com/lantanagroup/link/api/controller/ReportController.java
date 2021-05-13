@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.QueryReport;
+
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.api.MeasureEvaluator;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -295,9 +296,11 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
 
+      FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+
       MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
 
-      FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+      FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
@@ -338,7 +341,7 @@ public class ReportController extends BaseController {
 
     downloader.download(report, response, this.ctx, this.config);
 
-    FhirHelper.recordAuditEvent(fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
   }
 
   @GetMapping("/api/report/measures")
