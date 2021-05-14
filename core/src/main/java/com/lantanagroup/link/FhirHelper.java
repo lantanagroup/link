@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
@@ -22,14 +23,15 @@ public class FhirHelper {
     Generate,
     Export,
     Send,
-    SearchLocations
+    SearchLocations,
+    InitiateQuery
   }
 
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
 
-  public static void recordAuditEvent(IGenericClient fhirClient, Authentication authentication, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, Authentication authentication, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -45,6 +47,8 @@ public class FhirHelper {
       case SearchLocations:
         auditEvent.setType(new Coding(null, "search-locations", null));
         break;
+      case InitiateQuery:
+        auditEvent.setType(new Coding(null, "initiate-query", null));
     }
 
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
@@ -63,13 +67,24 @@ public class FhirHelper {
     JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
     if (jsonObject.has(NAME)) {
       agent.setName(jsonObject.get(NAME).toString());
-    } else if (jsonObject.has(SUBJECT)) {
-      agent.setName(jsonObject.get(SUBJECT).toString());
+    }
+    if (jsonObject.has(SUBJECT)) {
+      agent.setAltId(jsonObject.get(SUBJECT).toString());
+    }
+
+    String remoteAddress = request.getRemoteAddr() != null? (request.getRemoteHost() != null ? request.getRemoteAddr()+"("+request.getRemoteHost() +")": request.getRemoteAddr()):"";
+    if (remoteAddress != null) {
+      agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
+    }
+
+    if(jsonObject.has("aud")) {
+      String aud = jsonObject.get("aud").getAsString();
+      Identifier identifier = new Identifier().setValue(aud);
+      agent.setLocation(new Reference().setIdentifier(identifier));
     }
     agentList.add(agent);
     auditEvent.setAgent(agentList);
 
-    // TODO: Need to set "source" in AuditEvent. It is required by the AuditEvent resource. Some FHIR servers may reject this as-is.
 
     try {
       MethodOutcome outcome = fhirClient.create()
