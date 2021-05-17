@@ -178,7 +178,7 @@ public class ReportController extends BaseController {
             .execute();
 
       if (bundle.getEntry().size() == 0) {
-        logger.info("No RR bundles found matching time stamp " + date);
+        logger.info("No patient identifier lists found matching time stamp " + date);
         return patientIds;
       }
 

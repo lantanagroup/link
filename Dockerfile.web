@@ -1,5 +1,5 @@
 ### STAGE 1: Build ###
-FROM node:12.7-alpine AS build
+FROM node:14.15-alpine AS build
 WORKDIR /usr/src/app
 COPY ./web/package.json ./
 COPY ./web/package-lock.json ./
