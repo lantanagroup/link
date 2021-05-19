@@ -33,6 +33,7 @@ public class PatientIdentifierController extends BaseController {
 
 
     private void receiveFHIR(Resource resource, HttpServletRequest request) throws Exception {
+        logger.info("Storing patient identifiers");
         IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
         MethodOutcome outcome = null;
         if (resource.hasId()) {
@@ -167,21 +168,17 @@ public class PatientIdentifierController extends BaseController {
 
     @PostMapping(value = "api/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
     public void getPatientIdentifierListXML(@RequestBody() String body, HttpServletRequest request) throws Exception {
-        logger.debug("Receiving RR FHIR XML. Parsing...");
+        logger.debug("Receiving patient identifier FHIR List in XML");
 
         ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
-        logger.debug("Done parsing. Storing RR FHIR XML...");
         this.receiveFHIR(list, request);
     }
 
     @PostMapping(value = "api/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
     public void getPatientIdentifierListJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
-        logger.debug("Receiving RR FHIR JSON. Parsing...");
+        logger.debug("Receiving patient identifier FHIR List in JSON");
 
         Resource bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
-
-        logger.debug("Done parsing. Storing RR FHIR JSON...");
-
         this.receiveFHIR(bundle, request);
     }
 
