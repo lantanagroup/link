@@ -28,10 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private ObjectMapper mapper = new ObjectMapper();
@@ -273,7 +271,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  @PostMapping("/api/query")
+  @PostMapping("/$generate")
   public QueryReport generateReport(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
@@ -315,7 +313,7 @@ public class ReportController extends BaseController {
    * @param report - this is the report data after generate report was clicked
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize
    */
-  @PostMapping("/api/send")
+  @PostMapping("/send")
   public void send(@RequestBody() QueryReport report) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
@@ -328,7 +326,7 @@ public class ReportController extends BaseController {
     sender.send(report, this.config, this.ctx);
   }
 
-  @PostMapping("/api/download")
+  @PostMapping("/download")
   public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
@@ -344,7 +342,7 @@ public class ReportController extends BaseController {
     FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
   }
 
-  @GetMapping("/api/report/measures")
+  @GetMapping("/measures")
   public List<ApiMeasureConfig> getMeasureConfigs() throws Exception {
     Map<String, String> measureMap = new HashMap<>();
     List<ApiMeasureConfig> measureConfigs = new ArrayList<>();

@@ -22,7 +22,7 @@ export class ReportService {
   }
 
   async download(report: QueryReport) {
-    const url = this.configService.getApiUrl('/api/download');
+    const url = this.configService.getApiUrl('/api/report/download');
     const convertResponse = await this.http.post(url, report, {observe: 'response', responseType: 'blob'}).toPromise();
 
     const contentDisposition = convertResponse.headers.get('Content-Disposition');
@@ -32,13 +32,13 @@ export class ReportService {
   }
 
   async send(report: QueryReport) {
-    let url = '/api/send';
+    let url = '/api/report/send';
     url = this.configService.getApiUrl(url);
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
 
   async generate(report: QueryReport) {
-    let url = '/api/query?';
+    let url = '/api/report/$generate?';
     url = this.configService.getApiUrl(url);
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
