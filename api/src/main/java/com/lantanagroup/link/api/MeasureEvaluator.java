@@ -4,9 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.config.api.ApiConfig;
-import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +13,7 @@ import java.util.Map;
 
 public class MeasureEvaluator {
     private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
+    public static final String POSITION_EXT_URL = "http://hl7.org/fhir/uv/saner/StructureDefinition/GeoLocation";
 
     private MeasureEvaluator(Map<String, String> criteria, Map<String, Object> contextData, ApiConfig config, IGenericClient fhirStoreClient) {
         this.criteria = criteria;
@@ -52,10 +51,32 @@ public class MeasureEvaluator {
 
             if (this.config.getMeasureLocation() != null) {
                 logger.debug("Creating MeasureReport.subject based on config");
-                Reference subjectRef = new Reference()
-                        .setIdentifier(new Identifier()
-                                .setSystem(this.config.getMeasureLocation().getSystem())
-                                .setValue(this.config.getMeasureLocation().getValue()));
+                Reference subjectRef = new Reference();
+
+                if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
+                    subjectRef.setIdentifier(new Identifier()
+                        .setSystem(this.config.getMeasureLocation().getSystem())
+                        .setValue(this.config.getMeasureLocation().getValue()));
+                }
+
+                if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
+                    Extension positionExt = new Extension(POSITION_EXT_URL);
+
+                    if (this.config.getMeasureLocation().getLongitude() != null) {
+                        Extension longExt = new Extension("longitude");
+                        longExt.setValue(new DecimalType(this.config.getMeasureLocation().getLongitude()));
+                        positionExt.addExtension(longExt);
+                    }
+
+                    if (this.config.getMeasureLocation().getLatitude() != null) {
+                        Extension latExt = new Extension("latitude");
+                        latExt.setValue(new DecimalType(this.config.getMeasureLocation().getLatitude()));
+                        positionExt.addExtension(latExt);
+                    }
+
+                    subjectRef.addExtension(positionExt);
+                }
+
                 measureReport.setSubject(subjectRef);
             }
 
