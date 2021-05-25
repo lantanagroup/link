@@ -29,12 +29,12 @@ public class PatientScoop extends Scoop {
     protected FHIRPathEngine fhirPathEngine;
 
     // TODO: Refactor into PatientScoop.getPatientData()
-    public PatientScoop(IGenericClient fhirQueryServer, List<String> patientIdList) throws Exception {
+    public PatientScoop(IGenericClient fhirQueryServer, List<String> patientIdList) {
         this.fhirQueryServer = fhirQueryServer;
         patientData = loadPatientData(patientIdList);
     }
 
-    public List<PatientData> loadPatientData(List<String> patientIdList) throws Exception {
+    public List<PatientData> loadPatientData(List<String> patientIdList) {
         List<PatientData> patientDataList = new ArrayList<>();
 
         // first get the patients and store them in the patientMap
@@ -54,9 +54,11 @@ public class PatientScoop extends Scoop {
             } catch (AuthenticationException ae) {
                 logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
                 ae.printStackTrace();
+                throw new RuntimeException(ae);
             } catch (Exception e) {
                 logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
                 e.printStackTrace();
+                throw new RuntimeException(e);
             }
         });
 
