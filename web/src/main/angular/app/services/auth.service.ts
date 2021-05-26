@@ -30,6 +30,8 @@ export class AuthService {
     this.oauthService.configure({
       issuer: config.issuer,
       redirectUri: window.location.origin + '/',
+      silentRefreshRedirectUri: window.location.origin + '/',
+      useSilentRefresh: true,
       clientId: config.clientId,
       responseType: 'code',
       scope: config.scope,
@@ -39,7 +41,7 @@ export class AuthService {
     });
 
     await this.oauthService.loadDiscoveryDocument();
-
+    await this.oauthService.setupAutomaticSilentRefresh();
     this.initialized = true;
   }
 
