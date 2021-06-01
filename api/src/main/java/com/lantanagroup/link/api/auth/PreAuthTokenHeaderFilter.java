@@ -32,7 +32,7 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       DecodedJWT jwt = JWT.decode(authHeader.substring(7));
       linkCredentials.setJwt(jwt);
-      Practitioner practitioner = getPractitioner(jwt);
+      Practitioner practitioner = toPractitioner(jwt);
       linkCredentials.setPractitioner(practitioner);
       return linkCredentials;
     }
@@ -44,7 +44,7 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     return request.getHeader(authHeaderName);
   }
 
-  private Practitioner getPractitioner (DecodedJWT jwt) {
+  private static Practitioner toPractitioner (DecodedJWT jwt) {
     Practitioner practitioner = new Practitioner();
     // set Practitioner Id
     practitioner.setId(jwt.getSubject());

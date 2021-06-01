@@ -30,7 +30,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
         IGenericClient client = FhirContext.forR4().newRestfulGenericClient(config.getFhirServerStore());
         Practitioner practitioner = ((LinkCredentials) authentication.getPrincipal()).getPractitioner();
         try {
-            client.read().resource(Practitioner.class).withId("2").execute();
+            client.read().resource(Practitioner.class).withId(practitioner.getId()).execute();
         } catch (ResourceNotFoundException ex) {
             String msg = String.format("Practitioner Resource with identifier  \"%s\"  was not found on FHIR server \"%s\". It will be created.", practitioner.getId(), config.getFhirServerStore());
             logger.debug(msg);
