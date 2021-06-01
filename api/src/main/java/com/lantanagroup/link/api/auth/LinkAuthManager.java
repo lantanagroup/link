@@ -121,7 +121,7 @@ public class LinkAuthManager implements AuthenticationManager {
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-    String authHeader = (String) authentication.getPrincipal();
+    String authHeader = (String) authentication.getCredentials();
 
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       throw new BadCredentialsException("This REST operation requires a Bearer Authorization header.");
