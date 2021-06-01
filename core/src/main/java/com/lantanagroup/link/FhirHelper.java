@@ -10,8 +10,6 @@ import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -31,7 +29,7 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
 
-  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, Authentication authentication, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -59,7 +57,6 @@ public class FhirHelper {
     AuditEvent.AuditEventAgentComponent agent = new AuditEvent.AuditEventAgentComponent();
     agent.setRequestor(false);
 
-    DecodedJWT jwt = (DecodedJWT) authentication.getCredentials();
     String payload = jwt.getPayload();
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);

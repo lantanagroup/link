@@ -4,15 +4,15 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lantanagroup.link.QueryReport;
-
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.IReportDownloader;
+import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.api.MeasureEvaluator;
+import com.lantanagroup.link.api.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiMeasureConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import com.lantanagroup.link.IReportDownloader;
-import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
@@ -21,13 +21,16 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ListResource;
+import org.hl7.fhir.r4.model.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -272,7 +275,9 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/$generate")
-  public QueryReport generateReport(Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
+  public QueryReport generateReport(@AuthenticationPrincipal LinkCredentials user, Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
+    LinkCredentials user1 = user;
+
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
 
@@ -294,11 +299,11 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
 
-      FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+      FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
       MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
 
-      FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+      FhirHelper.recordAuditEvent(request, fhirStoreClient,  user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
@@ -339,7 +344,7 @@ public class ReportController extends BaseController {
 
     downloader.download(report, response, this.ctx, this.config);
 
-    FhirHelper.recordAuditEvent(request, fhirStoreClient, authentication, FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials)authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
   }
 
   @GetMapping("/measures")
