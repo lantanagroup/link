@@ -1,0 +1,17 @@
+<div class="row"  *ngIf="authService.user">
+    <div class="col-xs-12 col-sm-4">
+        <div class="list-group">
+            <a
+                [routerLink]="['/review', report.id]"
+                href="#"
+                class="list-group-item"
+                *ngFor="let report of reports">
+                {{ report.name }}
+            </a>
+        </div>
+    </div>
+    <div class="col-xs-12 col-sm-4">
+        <!--<app-user></app-user>-->
+        <router-outlet></router-outlet>
+    </div>
+</div>
