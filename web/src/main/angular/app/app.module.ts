@@ -19,48 +19,54 @@ import {SmartHomeComponent} from './smart-home/smart-home.component';
 import {ConfigService} from './services/config.service';
 import {ReportService} from './services/report.service';
 import {ReportBodyDirective} from './report-body.directive';
+import {ReviewComponent} from "./review/review.component";
+import {GenerateComponent} from "./generate/generate.component";
+import {ReportComponent} from "./report/report.component";
 
 export const configFactory = (configService: ConfigService) => {
-  return () => configService.loadConfig();
+    return () => configService.loadConfig();
 };
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    ToastsContainerComponent,
-    SmartLoginComponent,
-    HomeComponent,
-    ReportBodyComponent,
-    SmartHomeComponent,
-    ReportBodyDirective
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    NgbModule,
-    HttpClientModule,
-    FormsModule,
-    OAuthModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: APP_INITIALIZER,
-      useFactory: configFactory,
-      deps: [ConfigService],
-      multi: true
-    },
-    ConfigService,
-    ToastService,
-    AuthService,
-    ReportService,
-    CookieService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AddHeaderInterceptor,
-      multi: true
-    }
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        ToastsContainerComponent,
+        SmartLoginComponent,
+        HomeComponent,
+        ReportBodyComponent,
+        SmartHomeComponent,
+        ReportBodyDirective,
+        ReviewComponent,
+        GenerateComponent,
+        ReportComponent
+    ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        NgbModule,
+        HttpClientModule,
+        FormsModule,
+        OAuthModule.forRoot()
+    ],
+    providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: configFactory,
+            deps: [ConfigService],
+            multi: true
+        },
+        ConfigService,
+        ToastService,
+        AuthService,
+        ReportService,
+        CookieService,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AddHeaderInterceptor,
+            multi: true
+        }
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule {
 }

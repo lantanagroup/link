@@ -1,7 +1,7 @@
 <div class="container">
   <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
 
-  <div class="jumbotron">
+   <div class="jumbotron">
     <div class="top-bar">
       <div class="main-logo">
         <img class="main-logo" src="assets/nhsn_logo.png" />
@@ -29,8 +29,17 @@
       </div>
     </div>
 
-    <router-outlet></router-outlet>
-  </div>
+     <ul ngbNav #nav="ngbNav"  *ngIf="authService.user" class="nav-tabs">
+      <li role="presentation" ngbNavItem>
+          <a ngbNavLink routerLinkActive [class.active]="rla.isActive"  #rla="routerLinkActive" routerLink="generate">Generate</a>
+      </li>
+      <li role="presentation" ngbNavItem>
+          <a ngbNavLink routerLinkActive [class.active]="rla1.isActive"  #rla1="routerLinkActive"  routerLink="review">Review</a>
+      </li>
+     </ul>
+
+     <router-outlet></router-outlet>
+   </div>
 </div>
 
 <ng-template #accessTokenPopover>

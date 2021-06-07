@@ -10,6 +10,5 @@ export class HomeComponent implements OnInit {
   constructor(public authService: AuthService) { }
 
   async ngOnInit() {
-    await this.authService.loginLocal();
   }
 }
