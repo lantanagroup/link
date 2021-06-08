@@ -1,14 +1,19 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.hl7.fhir.r4.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class BaseController {
+  private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
   protected FhirContext ctx = FhirContext.forR4();
   @Autowired
   private ApiConfig config;
@@ -21,5 +26,29 @@ public class BaseController {
     String fhirBase = config.getFhirServerStore();
     IGenericClient fhirClient = this.ctx.newRestfulGenericClient(fhirBase);
     return fhirClient;
+  }
+
+  protected void createResource(Resource resource, IGenericClient fhirStoreClient) {
+    MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
+    if (!outcome.getCreated() || outcome.getResource() == null) {
+      logger.error("Failed to store/create FHIR resource");
+    } else {
+      logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
+    }
+  }
+
+  protected void updateResource(Resource resource, IGenericClient fhirStoreClient) {
+
+    if (resource.getMeta().getVersionId() == null){
+
+    }
+    int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
+    MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
+    int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
+    if (updatedVersion > initialVersion) {
+      logger.debug("Update is successful for " + outcome.getResource().getIdElement().getIdPart());
+    } else {
+      logger.error("Failed to update FHIR resource");
+    }
   }
 }

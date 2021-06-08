@@ -16,14 +16,13 @@ import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.ListResource;
-import org.hl7.fhir.r4.model.ResourceType;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +41,9 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/report")
@@ -92,6 +90,7 @@ public class ReportController extends BaseController {
     String measureId = null;
     String measureUrl = null;
     Bundle measureBundle = null;
+    Identifier measureIdentifier = new Identifier();
 
     for (ApiMeasureConfig measureConfig : this.config.getMeasures()) {
       if (measureConfig.getId().equals(measureConfigId)) {
@@ -121,6 +120,7 @@ public class ReportController extends BaseController {
       for (Bundle.BundleEntryComponent entry : measureBundle.getEntry()) {
         if (entry.getResource().getResourceType() == ResourceType.Measure) {
           measureId = entry.getResource().getIdElement().getIdPart();
+          measureIdentifier = ((Measure)entry.getResource()).getIdentifier().get(0);
           break;
         }
       }
@@ -143,6 +143,7 @@ public class ReportController extends BaseController {
     contextData.put("measureId", measureId);
     contextData.put("measureUrl", measureUrl);
     contextData.put("measureBundle", measureBundle);
+    contextData.put("measureIdentifier", measureIdentifier);
   }
 
   private Map<String, String> getCriteria(HttpServletRequest request, QueryReport report) {
@@ -276,7 +277,6 @@ public class ReportController extends BaseController {
 
   @PostMapping("/$generate")
   public QueryReport generateReport(@AuthenticationPrincipal LinkCredentials user, Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
-    LinkCredentials user1 = user;
 
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
@@ -301,15 +301,69 @@ public class ReportController extends BaseController {
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-      MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
+      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient,  user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+
+      // Save measure report
+      String id = RandomStringUtils.randomAlphanumeric(8);
+      measureReport.setId(id);
+      updateResource(measureReport, fhirStoreClient);
+
+      // Save document reference
+      DocumentReference documentReference = getDocumentReference(user, contextData, id);
+      createResource(documentReference, fhirStoreClient);
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
     }
-
     return report;
+  }
+
+  private DocumentReference getDocumentReference (LinkCredentials user, HashMap<String, Object> contextData, String id) {
+
+    DocumentReference documentReference = new DocumentReference();
+    Identifier identifier = new Identifier();
+    identifier.setSystem(config.getDocumentReferenceSystem());
+    identifier.setValue(id);
+    documentReference.setMasterIdentifier(identifier);
+
+    Identifier measureId = (Identifier) contextData.get("measureIdentifier");
+    documentReference.addIdentifier(measureId);
+
+    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+    List<Reference> list= new ArrayList<>();
+    Reference reference = new Reference();
+    reference.setReference("Practitioner/" + user.getPractitioner().getId());
+    list.add(reference);
+    documentReference.setAuthor(list);
+    documentReference.setDocStatus( DocumentReference.ReferredDocumentStatus.PRELIMINARY);
+    CodeableConcept type = new CodeableConcept();
+    List<Coding> codings = new ArrayList<>();
+    Coding coding = new Coding();
+    coding.setCode("55186-1");
+    coding.setSystem("http://loinc.org");
+    coding.setDisplay("Measure Document");
+    codings.add(coding);
+    type.setCoding(codings);
+    documentReference.setType(type);
+    List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
+    DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
+    Attachment attachment = new Attachment();
+    attachment.setCreation(new Date());
+    doc.setAttachment(attachment);
+    listDoc.add(doc);
+    documentReference.setContent(listDoc);
+    DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
+    QueryReport queryReport = (QueryReport) contextData.get("report");
+    LocalDate startDate = LocalDate.parse(queryReport.getDate());
+    LocalDate endDate  = LocalDate.parse(queryReport.getDate()).plusDays(1);
+    Period period = new Period();
+    period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
+    period.setEnd(java.sql.Timestamp.valueOf(endDate.atStartOfDay()));
+    docReference.setPeriod(period);
+    documentReference.setContext(docReference);
+    return documentReference;
   }
 
   /**
