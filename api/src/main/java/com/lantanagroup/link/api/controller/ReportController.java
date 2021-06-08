@@ -308,11 +308,11 @@ public class ReportController extends BaseController {
       // Save measure report
       String id = RandomStringUtils.randomAlphanumeric(8);
       measureReport.setId(id);
-      updateResource(measureReport, fhirStoreClient);
+      this.updateResource(measureReport, fhirStoreClient);
 
       // Save document reference
-      DocumentReference documentReference = getDocumentReference(user, contextData, id);
-      createResource(documentReference, fhirStoreClient);
+      DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
+      this.createResource(documentReference, fhirStoreClient);
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
@@ -320,7 +320,7 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private DocumentReference getDocumentReference (LinkCredentials user, HashMap<String, Object> contextData, String id) {
+  private DocumentReference generateDocumentReference (LinkCredentials user, HashMap<String, Object> contextData, String id) {
 
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();

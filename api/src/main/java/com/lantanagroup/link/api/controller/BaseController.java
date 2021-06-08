@@ -13,7 +13,7 @@ import org.springframework.security.core.Authentication;
 import javax.servlet.http.HttpServletRequest;
 
 public class BaseController {
-  private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
+  private static final Logger logger = LoggerFactory.getLogger(BaseController.class);
   protected FhirContext ctx = FhirContext.forR4();
   @Autowired
   private ApiConfig config;
@@ -39,9 +39,6 @@ public class BaseController {
 
   protected void updateResource(Resource resource, IGenericClient fhirStoreClient) {
 
-    if (resource.getMeta().getVersionId() == null){
-
-    }
     int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
     MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
     int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
