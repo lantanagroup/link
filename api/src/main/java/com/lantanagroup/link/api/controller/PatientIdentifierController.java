@@ -66,8 +66,7 @@ public class PatientIdentifierController extends BaseController {
                             String systemA = e.getItem().getIdentifier().getSystem();
                             String valueA = e.getItem().getIdentifier().getValue();
 
-                            boolean findIt = !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
-                            return findIt;
+                            return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
                         }).collect(Collectors.toList());
 
                 // merge lists into existingList
@@ -86,7 +85,7 @@ public class PatientIdentifierController extends BaseController {
         ListResource list = new ListResource();
         String date = Helper.getFhirDate(bundle.getTimestamp());
         list.setDateElement(new DateTimeType(date));
-        List<Identifier> identifierList = new ArrayList();
+        List<Identifier> identifierList = new ArrayList<>();
         identifierList.add(bundle.getIdentifier());
         list.setIdentifier(identifierList);
         (bundle.getEntry().parallelStream()).forEach(bundleEntry -> {
@@ -109,43 +108,23 @@ public class PatientIdentifierController extends BaseController {
         return list;
     }
 
-    private void createResource(Resource resource, IGenericClient fhirStoreClient) {
-        MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
-        if (!outcome.getCreated() || outcome.getResource() == null) {
-            logger.error("Failed to store/create FHIR resource");
-        } else {
-            logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
-        }
-    }
-
-    private void updateResource(ListResource list, IGenericClient fhirStoreClient) {
-        int initialVersion = Integer.parseInt(list.getMeta().getVersionId());
-        MethodOutcome outcome = fhirStoreClient.update().resource(list).execute();
-        int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
-        if (updatedVersion > initialVersion) {
-            logger.debug("Update is successful for " + outcome.getResource().getIdElement().getIdPart());
-        } else {
-            logger.error("Failed to update FHIR resource");
-        }
-    }
 
     private Bundle searchListByCodeData(String system, String value, String date, IGenericClient fhirStoreClient) {
-        Bundle bundle = fhirStoreClient
+        return fhirStoreClient
                 .search()
                 .forResource(ListResource.class)
                 .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
                 .and(ListResource.DATE.exactly().day(date))
                 .returnBundle(Bundle.class)
                 .execute();
-        return bundle;
     }
 
     @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_XML_VALUE)
     public void receiveFHIRXML(@RequestBody() String body, HttpServletRequest request) throws Exception {
         logger.debug("Receiving RR FHIR XML. Parsing...");
 
-        Resource bundle = this.ctx.newXmlParser().parseResource(Bundle.class, body);
-        ListResource list = getListFromBundle((Bundle) bundle);
+        Bundle bundle = this.ctx.newXmlParser().parseResource(Bundle.class, body);
+        ListResource list = getListFromBundle(bundle);
 
         logger.debug("Done parsing. Storing RR FHIR XML...");
 
@@ -157,8 +136,8 @@ public class PatientIdentifierController extends BaseController {
     public void receiveFHIRJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
         logger.debug("Receiving RR FHIR JSON. Parsing...");
 
-        Resource bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
-        ListResource list = getListFromBundle((Bundle) bundle);
+        Bundle bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
+        ListResource list = getListFromBundle(bundle);
 
         logger.debug("Done parsing. Storing RR FHIR JSON...");
 

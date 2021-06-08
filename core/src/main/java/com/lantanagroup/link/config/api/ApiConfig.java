@@ -25,6 +25,7 @@ public class ApiConfig {
     private String downloader;
     private String sender;
     private String sendUrl;
+    private String documentReferenceSystem;
 
     @Getter
     private ApiCorsConfig cors;
@@ -42,6 +43,7 @@ public class ApiConfig {
     private ApiQueryConfig query;
 
     @Getter ApiMeasureLocationConfig measureLocation;
+
 
     public ApiMeasureConfig getMeasure(String id) {
         if (this.measures != null) {

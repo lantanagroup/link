@@ -22,9 +22,9 @@ public class MeasureEvaluator {
         this.fhirClient = fhirStoreClient;
     }
 
-    public static void generateMeasureReport(Map<String, String> criteria, Map<String, Object> contextData, ApiConfig config, IGenericClient fhirStoreClient) {
+    public static MeasureReport generateMeasureReport(Map<String, String> criteria, Map<String, Object> contextData, ApiConfig config, IGenericClient fhirStoreClient) {
         MeasureEvaluator evaluator = new MeasureEvaluator(criteria, contextData, config, fhirStoreClient);
-        evaluator.generateMeasureReport();
+        return evaluator.generateMeasureReport();
     }
 
     private Map<String, String> criteria;
@@ -32,7 +32,7 @@ public class MeasureEvaluator {
     private ApiConfig config;
     private IGenericClient fhirClient;
 
-    private void generateMeasureReport() {
+    private MeasureReport generateMeasureReport() {
         FhirContext fhirContext = (FhirContext) this.contextData.get("fhirContext");
         String measureId = this.contextData.get("measureId").toString();
         QueryReport queryReport = (QueryReport) this.contextData.get("report");
@@ -97,11 +97,13 @@ public class MeasureEvaluator {
 
                 logger.info("Done generating measure report, setting response answer to JSON of MeasureReport");
                 queryReport.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
+
                 //System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
             }
         } catch (Exception e) {
             logger.error("Error generating Measure Report - " + e.getMessage());
             queryReport.setAnswer("measureReport", e.getMessage());
         }
+        return measureReport;
     }
 }
