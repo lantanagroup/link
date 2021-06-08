@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {OAuthService} from 'angular-oauth2-oidc';
 import {HttpClient} from '@angular/common/http';
-import {Router} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {ConfigService} from './config.service';
 import {IProfile} from '../model/profile';
 import {AuthInitOptions} from '../model/auth-init-options';
@@ -15,12 +15,14 @@ export class AuthService {
   public token: string;
   public user: IProfile;
   public fhirBase: string;
+  public lastUrl: string;
 
   constructor(
       public oauthService: OAuthService,
       private http: HttpClient,
       private router: Router,
-      private configService: ConfigService) {
+      private configService: ConfigService,
+      private activatedRoute: ActivatedRoute) {
   }
 
   async initLocal(config: IOAuthConfig) {
@@ -30,7 +32,6 @@ export class AuthService {
     this.oauthService.configure({
       issuer: config.issuer,
       redirectUri: window.location.origin + '/',
-      silentRefreshRedirectUri: window.location.origin + '/',
       useSilentRefresh: true,
       clientId: config.clientId,
       responseType: 'code',
@@ -41,7 +42,6 @@ export class AuthService {
     });
 
     await this.oauthService.loadDiscoveryDocument();
-    await this.oauthService.setupAutomaticSilentRefresh();
     this.initialized = true;
   }
 
@@ -110,10 +110,21 @@ export class AuthService {
 
       // Force the user to login locally if they have not already logged-in via smart-on-fhir
       if (!this.user) {
-        this.oauthService.initImplicitFlow();
+        this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
       } else {
         this.token = this.oauthService.getIdToken();
+        let path;
+        if(!this.oauthService.state || this.oauthService.state !== 'undefined'){
+          path = unescape(decodeURIComponent(this.oauthService.state));
+        }
+        else{
+          path = this.activatedRoute.snapshot.queryParams.pathname || `/generate`;
+        }
+        if (path && path !== '/') {
+          this.router.navigate([path]);
+        }
         console.log('Your token is: ' + this.token);
+        await this.oauthService.setupAutomaticSilentRefresh();
       }
     }
   }

@@ -21,6 +21,7 @@ export class AddHeaderInterceptor implements HttpInterceptor {
                 headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
             }
             if (this.authService.fhirBase) {
+                headers = headers.set('Cache-Control', 'no-cache');
                 headers = headers.set('fhirBase', this.authService.fhirBase);
             }
         }
