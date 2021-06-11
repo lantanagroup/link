@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
@@ -304,18 +305,22 @@ public class ReportController extends BaseController {
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
+      // Generate the report id
+      String id = RandomStringUtils.randomAlphanumeric(8);
+      contextData.put("reportId", id);
+
       MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
-      // Save measure report
-      String id = RandomStringUtils.randomAlphanumeric(8);
-      measureReport.setId(id);
-      this.updateResource(measureReport, fhirStoreClient);
+      if(measureReport != null) {
+        // Save measure report
+        this.updateResource(measureReport, fhirStoreClient);
+        // Save document reference
+        DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
+        this.createResource(documentReference, fhirStoreClient);
+      }
 
-      // Save document reference
-      DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
-      this.createResource(documentReference, fhirStoreClient);
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
