@@ -22,7 +22,8 @@ public class FhirHelper {
     Export,
     Send,
     SearchLocations,
-    InitiateQuery
+    InitiateQuery,
+    SearchReports
   }
 
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
@@ -47,6 +48,8 @@ public class FhirHelper {
         break;
       case InitiateQuery:
         auditEvent.setType(new Coding(null, "initiate-query", null));
+      case SearchReports:
+        auditEvent.setType(new Coding(null, "search-reports", null));
     }
 
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
