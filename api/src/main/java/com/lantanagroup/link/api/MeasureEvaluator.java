@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ public class MeasureEvaluator {
     private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
     public static final String POSITION_EXT_URL = "http://hl7.org/fhir/uv/saner/StructureDefinition/GeoLocation";
 
-    private MeasureEvaluator(Map<String, String> criteria, Map<String, Object> contextData, ApiConfig config, IGenericClient fhirStoreClient) {
+    private MeasureEvaluator(Map<String, String> criteria,  Map<String, Object> contextData, ApiConfig config, IGenericClient fhirStoreClient) {
         this.criteria = criteria;
         this.contextData = contextData;
         this.config = config;
@@ -35,6 +36,7 @@ public class MeasureEvaluator {
     private MeasureReport generateMeasureReport() {
         FhirContext fhirContext = (FhirContext) this.contextData.get("fhirContext");
         String measureId = this.contextData.get("measureId").toString();
+        String reportId = this.contextData.get("reportId").toString();
         QueryReport queryReport = (QueryReport) this.contextData.get("report");
         MeasureReport measureReport = null;
 
@@ -96,9 +98,9 @@ public class MeasureEvaluator {
                 }
 
                 logger.info("Done generating measure report, setting response answer to JSON of MeasureReport");
+                measureReport.setId(reportId);
                 queryReport.setAnswer("measureReport", fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
 
-                //System.out.println(fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport));
             }
         } catch (Exception e) {
             logger.error("Error generating Measure Report - " + e.getMessage());

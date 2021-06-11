@@ -1,9 +1,11 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportDownloader;
 import com.lantanagroup.link.IReportSender;
@@ -28,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +46,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.*;
-import java.time.LocalDate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/report")
@@ -57,7 +61,7 @@ public class ReportController extends BaseController {
   @Autowired
   private ApplicationContext context;
 
-  private void storeLatestMeasure(Bundle bundle, IGenericClient fhirStoreClient) {
+  private void storeLatestMeasure (Bundle bundle, IGenericClient fhirStoreClient) {
     logger.info("Generating a Bundle Transaction of the Measure");
     bundle.setType(Bundle.BundleType.TRANSACTION);
 
@@ -85,7 +89,7 @@ public class ReportController extends BaseController {
     logger.info("Measure definition bundle transaction executed successfully...");
   }
 
-  private void resolveMeasure(Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
+  private void resolveMeasure (Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
     String measureConfigId = criteria.get("measureId");
     String measureId = null;
     String measureUrl = null;
@@ -120,7 +124,7 @@ public class ReportController extends BaseController {
       for (Bundle.BundleEntryComponent entry : measureBundle.getEntry()) {
         if (entry.getResource().getResourceType() == ResourceType.Measure) {
           measureId = entry.getResource().getIdElement().getIdPart();
-          measureIdentifier = ((Measure)entry.getResource()).getIdentifier().get(0);
+          measureIdentifier = ((Measure) entry.getResource()).getIdentifier().get(0);
           break;
         }
       }
@@ -129,7 +133,7 @@ public class ReportController extends BaseController {
         logger.error("Measure definition bundle downloaded from " + measureUrl + " does not have a Measure resource in it");
         throw new Exception("Could not find Measure in measure definition bundle");
       }
-      
+
       try {
         // store the latest measure onto the cqf-ruler server
         logger.info("Storing the latest measure definition for " + measureConfigId + " as " + measureId + " on FHIR server");
@@ -146,7 +150,7 @@ public class ReportController extends BaseController {
     contextData.put("measureIdentifier", measureIdentifier);
   }
 
-  private Map<String, String> getCriteria(HttpServletRequest request, QueryReport report) {
+  private Map<String, String> getCriteria (HttpServletRequest request, QueryReport report) {
     java.util.Enumeration<String> parameterNames = request.getParameterNames();
     Map<String, String> criteria = new HashMap<>();
 
@@ -168,7 +172,7 @@ public class ReportController extends BaseController {
   }
 
 
-  private List<String> getPatientIdsFromList(String date, IGenericClient fhirStoreClient) {
+  private List<String> getPatientIdsFromList (String date, IGenericClient fhirStoreClient) {
     List<String> patientIds = new ArrayList<>();
     List<IBaseResource> bundles = new ArrayList<>();
 
@@ -179,10 +183,10 @@ public class ReportController extends BaseController {
             .returnBundle(Bundle.class)
             .execute();
 
-      if (bundle.getEntry().size() == 0) {
-        logger.info("No patient identifier lists found matching time stamp " + date);
-        return patientIds;
-      }
+    if (bundle.getEntry().size() == 0) {
+      logger.info("No patient identifier lists found matching time stamp " + date);
+      return patientIds;
+    }
 
     bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
 
@@ -200,9 +204,9 @@ public class ReportController extends BaseController {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
       resource.getEntry().parallelStream().forEach(entry -> {
         String patientId = entry.getItem().getIdentifier().getSystem() +
-                        "|" + entry.getItem().getIdentifier().getValue();
+                "|" + entry.getItem().getIdentifier().getValue();
         patientIds.add(patientId);
-        });
+      });
     });
 
     logger.info("Loaded " + patientIds.size() + " patient ids");
@@ -210,7 +214,7 @@ public class ReportController extends BaseController {
     return patientIds;
   }
 
-  private Bundle getRemotePatientData(List<String> patientIdentifiers) {
+  private Bundle getRemotePatientData (List<String> patientIdentifiers) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -238,7 +242,7 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData(List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
+  private void queryAndStorePatientData (List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
@@ -276,7 +280,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/$generate")
-  public QueryReport generateReport(@AuthenticationPrincipal LinkCredentials user, Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
+  public QueryReport generateReport (@AuthenticationPrincipal LinkCredentials user, Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report) throws Exception {
 
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Map<String, String> criteria = this.getCriteria(request, report);
@@ -301,18 +305,22 @@ public class ReportController extends BaseController {
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
+      // Generate the report id
+      String id = RandomStringUtils.randomAlphanumeric(8);
+      contextData.put("reportId", id);
+
       MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
 
-      FhirHelper.recordAuditEvent(request, fhirStoreClient,  user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+      FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
-      // Save measure report
-      String id = RandomStringUtils.randomAlphanumeric(8);
-      measureReport.setId(id);
-      this.updateResource(measureReport, fhirStoreClient);
+      if(measureReport != null) {
+        // Save measure report
+        this.updateResource(measureReport, fhirStoreClient);
+        // Save document reference
+        DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
+        this.createResource(documentReference, fhirStoreClient);
+      }
 
-      // Save document reference
-      DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
-      this.createResource(documentReference, fhirStoreClient);
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new HttpResponseException(500, "Please contact system administrator regarding this error");
@@ -332,12 +340,12 @@ public class ReportController extends BaseController {
     documentReference.addIdentifier(measureId);
 
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-    List<Reference> list= new ArrayList<>();
+    List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
     reference.setReference("Practitioner/" + user.getPractitioner().getId());
     list.add(reference);
     documentReference.setAuthor(list);
-    documentReference.setDocStatus( DocumentReference.ReferredDocumentStatus.PRELIMINARY);
+    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
     CodeableConcept type = new CodeableConcept();
     List<Coding> codings = new ArrayList<>();
     Coding coding = new Coding();
@@ -357,7 +365,7 @@ public class ReportController extends BaseController {
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
     QueryReport queryReport = (QueryReport) contextData.get("report");
     LocalDate startDate = LocalDate.parse(queryReport.getDate());
-    LocalDate endDate  = LocalDate.parse(queryReport.getDate()).plusDays(1);
+    LocalDate endDate = LocalDate.parse(queryReport.getDate()).plusDays(1);
     Period period = new Period();
     period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
     period.setEnd(java.sql.Timestamp.valueOf(endDate.atStartOfDay()));
@@ -369,11 +377,12 @@ public class ReportController extends BaseController {
   /**
    * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
    * responses using the DirectSender class.
+   *
    * @param report - this is the report data after generate report was clicked
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize
    */
   @PostMapping("/send")
-  public void send(@RequestBody() QueryReport report) throws Exception {
+  public void send (@RequestBody() QueryReport report) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
@@ -386,7 +395,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/download")
-  public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  public void download (@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -398,11 +407,11 @@ public class ReportController extends BaseController {
 
     downloader.download(report, response, this.ctx, this.config);
 
-    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials)authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
   }
 
   @GetMapping("/measures")
-  public List<ApiMeasureConfig> getMeasureConfigs() throws Exception {
+  public List<ApiMeasureConfig> getMeasureConfigs () throws Exception {
     Map<String, String> measureMap = new HashMap<>();
     List<ApiMeasureConfig> measureConfigs = new ArrayList<>();
     if (null == this.config.getMeasures() || this.config.getMeasures().isEmpty())
@@ -416,4 +425,60 @@ public class ReportController extends BaseController {
     });
     return measureConfigs;
   }
+
+  @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
+  public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate) throws Exception {
+    Bundle documentReference;
+    boolean andCond = false;
+    try {
+      IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
+      String url = this.config.getFhirServerStore();
+      if (bundleId != null) {
+        url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
+      } else {
+        if (!url.endsWith("/")) url += "/";
+        url += "DocumentReference?";
+        if (author != null) {
+          url += "author=" + author;
+          andCond = true;
+        }
+        if (identifier != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "identifier=" + identifier;
+          andCond = true;
+        }
+        if (andCond) {
+          url += "&";
+        }
+        if (periodStartDate != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "period=gt" + periodStartDate;
+          andCond = true;
+        }
+        if (periodEndDate != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "period=lt" + periodEndDate;
+        }
+      }
+      documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
+
+      FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.SearchReports, "Successfully Searched Reports");
+    } catch (Exception ex) {
+      logger.error(String.format("Error searching Reports: %s", ex.getMessage()), ex);
+      throw new HttpResponseException(500, "Please contact system administrator regarding this error");
+    }
+    Stream<Report> lst = documentReference.getEntry().parallelStream().map(Report::new);
+    ReportBundle reportBundle = new ReportBundle();
+    reportBundle.setBundleId(documentReference.getId());
+    reportBundle.setList(lst.collect(Collectors.toList()));
+    return reportBundle;
+  }
+
 }
