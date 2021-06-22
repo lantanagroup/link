@@ -18,6 +18,8 @@ import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import com.mashape.unirest.http.utils.URLParamEncoder;
+import org.apache.catalina.util.URLEncoder;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -44,6 +46,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -421,6 +424,8 @@ public class ReportController extends BaseController {
       ApiMeasureConfig measureConfig = new ApiMeasureConfig();
       measureConfig.setId(config.getId());
       measureConfig.setName(config.getName());
+      measureConfig.setSystem(config.getSystem());
+      measureConfig.setValue(config.getValue());
       measureConfigs.add(measureConfig);
     });
     return measureConfigs;
@@ -428,7 +433,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate) throws Exception {
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required=false) String status) throws Exception {
     Bundle documentReference;
     boolean andCond = false;
     try {
@@ -447,11 +452,8 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "identifier=" + identifier;
+          url += "identifier=" + identifier.replace("|", "%7C");
           andCond = true;
-        }
-        if (andCond) {
-          url += "&";
         }
         if (periodStartDate != null) {
           if (andCond) {
@@ -465,6 +467,13 @@ public class ReportController extends BaseController {
             url += "&";
           }
           url += "period=lt" + periodEndDate;
+          andCond = true;
+        }
+        if (status != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "status=" + status.toLowerCase();
         }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
