@@ -1,4 +1,4 @@
-package com.lantanagroup.link.api.controller;
+package com.lantanagroup.link.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,10 +26,10 @@ public class Report {
     }
     this.setId(docReference.getMasterIdentifier().getValue());
     if (docReference.getStatus() != null) {
-      this.setStatus(docReference.getStatus().getDisplay());
+      this.setStatus(docReference.getStatus().toCode());
     }
     if (docReference.getDocStatus() != null) {
-      this.setDocStatus(docReference.getDocStatus().getDisplay());
+      this.setDocStatus(docReference.getDocStatus().toCode());
     }
     if (!docReference.getContent().isEmpty()) {
       this.setCreationDate((docReference.getContent().get(0)).getAttachment().getCreationElement().getValue());

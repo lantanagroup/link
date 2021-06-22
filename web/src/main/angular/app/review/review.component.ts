@@ -14,7 +14,7 @@ export class ReviewComponent implements OnInit {
 
     reports: any[];
     measures: MeasureConfig[] = [];
-    statuses = ['Current', 'Submitted', 'Rejected'];
+    statuses = [{name: 'In Review', value: "preliminary"}, {name: 'Submitted', value: "final"}];
     submitters = [];
     measure: String = 'Select measure';
     status: String = 'Select status';
@@ -65,7 +65,7 @@ export class ReviewComponent implements OnInit {
     }
 
     getLabel(status: string) {
-        if (status == 'Current') {
+        if (status == 'preliminary') {
             return "Edit";
         } else {
             return "Review";
@@ -80,7 +80,8 @@ export class ReviewComponent implements OnInit {
             filterCriteria += `identifier=${encodeURIComponent(measure.system + "|" + measure.value)}&`
         }
         if (this.filter.status !== 'Select status') {
-            filterCriteria += `status=${encodeURIComponent(this.filter.status)}&`
+            const status = this.statuses.find(p => p.name === this.filter.status);
+            filterCriteria += `docStatus=${encodeURIComponent(status.value)}&`
         }
 
         if (this.filter.period.startDate !== undefined) {
@@ -112,6 +113,15 @@ export class ReviewComponent implements OnInit {
         }
         let foundMeasure = (this.measures || []).find((m) => m.value === measureId && m.system === measureSystem);
         if (foundMeasure != undefined && foundMeasure.value != undefined) return foundMeasure.name;
+    }
+
+    getStatusName(status: string) {
+        let foundStatus;
+        if (status != null) {
+            foundStatus = (this.statuses || []).find((m) => m.value === status);
+        }
+        if (foundStatus != undefined) return foundStatus.name;
+        return "";
     }
 
     displayReport(reportId) {

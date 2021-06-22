@@ -1,5 +1,6 @@
-package com.lantanagroup.link.api.controller;
+package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.model.Report;
 import lombok.Getter;
 import lombok.Setter;
 
