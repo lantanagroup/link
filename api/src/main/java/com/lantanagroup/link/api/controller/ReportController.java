@@ -1,11 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportDownloader;
 import com.lantanagroup.link.IReportSender;
@@ -16,6 +14,8 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiMeasureConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.model.Report;
+import com.lantanagroup.link.model.ReportBundle;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -421,6 +421,8 @@ public class ReportController extends BaseController {
       ApiMeasureConfig measureConfig = new ApiMeasureConfig();
       measureConfig.setId(config.getId());
       measureConfig.setName(config.getName());
+      measureConfig.setSystem(config.getSystem());
+      measureConfig.setValue(config.getValue());
       measureConfigs.add(measureConfig);
     });
     return measureConfigs;
@@ -428,7 +430,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate) throws Exception {
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required=false) String docStatus) throws Exception {
     Bundle documentReference;
     boolean andCond = false;
     try {
@@ -447,11 +449,8 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "identifier=" + identifier;
+          url += "identifier=" + identifier.replace("|", "%7C");
           andCond = true;
-        }
-        if (andCond) {
-          url += "&";
         }
         if (periodStartDate != null) {
           if (andCond) {
@@ -465,6 +464,13 @@ public class ReportController extends BaseController {
             url += "&";
           }
           url += "period=lt" + periodEndDate;
+          andCond = true;
+        }
+        if (docStatus != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "docStatus=" + docStatus.toLowerCase();
         }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
@@ -480,5 +486,6 @@ public class ReportController extends BaseController {
     reportBundle.setList(lst.collect(Collectors.toList()));
     return reportBundle;
   }
+
 
 }
