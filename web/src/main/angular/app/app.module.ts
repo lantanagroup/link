@@ -22,7 +22,9 @@ import {ReportBodyDirective} from './report-body.directive';
 import {ReviewComponent} from "./review/review.component";
 import {GenerateComponent} from "./generate/generate.component";
 import {ReportComponent} from "./report/report.component";
-import { CalculatedFieldComponent } from './calculated-field/calculated-field.component';
+import {NgbdDatepickerRangePopup} from "./components/datepicker-range-popup";
+import {CalculatedFieldComponent} from './calculated-field/calculated-field.component';
+import {NgbdDatepickerPopup} from "./components/datepicker-popup";
 
 export const configFactory = (configService: ConfigService) => {
     return () => configService.loadConfig();
@@ -40,7 +42,9 @@ export const configFactory = (configService: ConfigService) => {
         ReviewComponent,
         GenerateComponent,
         ReportComponent,
-        CalculatedFieldComponent
+        CalculatedFieldComponent,
+        NgbdDatepickerRangePopup,
+        NgbdDatepickerPopup
     ],
     imports: [
         BrowserModule,

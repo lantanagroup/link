@@ -1,17 +1,98 @@
-<div class="row"  *ngIf="authService.user">
-    <div class="col-xs-12 col-sm-4">
-        <div class="list-group">
-            <a
-                [routerLink]="['/review', report.id]"
-                href="#"
-                class="list-group-item"
-                *ngFor="let report of reports">
-                {{ report.name }}
-            </a>
-        </div>
-    </div>
-    <div class="col-xs-12 col-sm-4">
-        <!--<app-user></app-user>-->
-        <router-outlet></router-outlet>
-    </div>
-</div>
+<table class="table table-striped column-bordered-table">
+    <thead>
+    <tr>
+        <th>Measure</th>
+        <th>Reporting Period</th>
+        <th>Status</th>
+        <th>Submitted Date</th>
+        <th>Submitter</th>
+        <th>Notes</th>
+        <th>&nbsp;</th>
+    </tr>
+    <tr>
+        <th>
+            <div ngbDropdown>
+                <button class="btn btn-outline-primary" id="measures" ngbDropdownToggle>{{filter.measure}}</button>
+                <div ngbDropdownMenu aria-labelledby="measures">
+                    <div *ngFor="let measure of measures">
+                        <button class="dropdown-item"
+                                id="measureOption" on-click="selectMeasure(measure.name)">{{measure.name}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </th>
+        <th>
+            <ngbd-datepicker-range-popup [(ngModel)]="filter.period"
+                                         (change)="selectPeriod($event)"></ngbd-datepicker-range-popup>
+        </th>
+        <th>
+            <div ngbDropdown>
+                <button class="btn btn-outline-primary" id="status" ngbDropdownToggle>{{filter.status}}</button>
+                <div ngbDropdownMenu aria-labelledby="status">
+                    <div *ngFor="let status of statuses">
+                        <button class="dropdown-item" on-click="selectStatus(status.name)">{{status.name}} </button>
+                    </div>
+
+                </div>
+            </div>
+        </th>
+        <th>
+            <ngbd-datepicker-popup [(ngModel)]="submittedDate"
+                                   (change)="selectSubmittedDate($event)"></ngbd-datepicker-popup>
+        </th>
+        <th>
+            <div ngbDropdown>
+                <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{submitter}}</button>
+                <div ngbDropdownMenu aria-labelledby="submitter">
+                    <div *ngFor="let submitter of submitters">
+                        <button class="dropdown-item">{{submitter}}</button>
+                    </div>
+                </div>
+            </div>
+        </th>
+        <th>&nbsp;</th>
+        <th>&nbsp;</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let report of reports">
+        <td>
+            {{getMeasureName(report.measureIdentifier)}}
+        </td>
+        <td>
+            {{report.periodStartDate | date: "longDate"}}
+        </td>
+        <td>
+            {{getStatusName(report.docStatus)}}
+        </td>
+        <td>
+            {{report.creationDate | date: "longDate"}}
+        </td>
+        <td>
+            {{report.author}}
+        </td>
+        <td>
+            Need to figure out
+        </td>
+        <td class="button">
+            <button class="btn btn-primary" on-click="displayReport(report.id)">{{getLabel(report.docStatus)}}</button>
+        </td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="7">
+            <ngb-pagination class="d-flex justify-content-center"
+                            [maxSize]="5"
+                            [collectionSize]="reports?.length || 0"
+                            [(page)]="page"
+                            [pageSize]="20"
+                            [boundaryLinks]="true"></ngb-pagination>
+        </td>
+    </tr>
+    </tfoot>
+</table>
+
+
+

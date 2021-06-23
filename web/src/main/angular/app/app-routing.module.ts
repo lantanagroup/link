@@ -9,7 +9,8 @@ import {ReportComponent} from "./report/report.component";
 const routes: Routes = [
     {path: 'smart-login', component: SmartLoginComponent},
     {path: 'generate',  component: GenerateComponent},
-    {path: 'review', component: ReviewComponent, children: [{path: ':id', component: ReportComponent}]},
+    {path: 'review', component: ReviewComponent},
+    {path: 'review/:id', component:ReportComponent},
     {path: 'smart-home', component: SmartHomeComponent},
     {path: '', redirectTo: 'generate', pathMatch: 'full'}
 ];

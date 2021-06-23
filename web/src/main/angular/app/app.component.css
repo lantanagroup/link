@@ -1,3 +1,7 @@
+.container {
+  max-width: 90%;
+}
+
 .card-header span {
   font-weight: bold;
   font-size: 16px;

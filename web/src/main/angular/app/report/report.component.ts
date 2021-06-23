@@ -3,7 +3,7 @@ import {ActivatedRoute, Params} from "@angular/router";
 import {Subscription} from "rxjs";
 
 @Component({
-    selector: 'nandina-report',
+    selector: 'report',
     templateUrl: './report.component.html',
     styleUrls: ['./report.component.css']
 })
