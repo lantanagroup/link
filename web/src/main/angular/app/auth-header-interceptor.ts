@@ -39,6 +39,9 @@ export class AddHeaderInterceptor implements HttpInterceptor {
                         })
                     );
                 }
+                else{
+                    throw error;
+                }
             })
         );
     }
