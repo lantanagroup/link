@@ -6,15 +6,17 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class FhirHelper {
   public enum AuditEventTypes {
@@ -141,5 +143,151 @@ public class FhirHelper {
       bundle.addEntry().getRequest().setMethod(Bundle.HTTPVerb.GET).setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
     });
     return bundle;
+  }
+
+  public static void changeIds(Bundle bundle) {
+    List<Reference> references = findReferences(bundle)
+            .stream()
+            .filter(r -> r.getReference() != null && r.getReference().split("/").length == 2)
+            .collect(Collectors.toList());
+    HashMap<String, String> ids = new HashMap<>();
+
+    for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+      if (entry.getResource() == null || StringUtils.isEmpty(entry.getResource().getId())) continue;
+      ids.put(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getId(), UUID.randomUUID().toString());
+    }
+
+    for (Reference r : references) {
+      String[] parts = r.getReference() != null ? r.getReference().split("/") : null;
+      ResourceType resourceType = ResourceType.fromCode(parts[0]);
+      String currentId = parts[1];
+
+      if (parts == null || ids.containsKey(r.getReference())) continue;
+
+      Boolean found = bundle.getEntry().stream()
+              .filter(e -> {
+                return e.getResource() != null &&
+                        e.getResource().getResourceType() == resourceType &&
+                        e.getResource().getIdElement() != null &&
+                        e.getResource().getIdElement().getIdPart() != null &&
+                        e.getResource().getIdElement().getIdPart().equals(currentId);
+              })
+              .findAny()
+              .isPresent();
+
+      if (found) {
+        ids.put(r.getReference(), UUID.randomUUID().toString());
+      }
+    }
+
+    for (String ref : ids.keySet()) {
+      String newId = ids.get(ref);
+      String[] parts = ref.split("/");
+      List<Reference> matchingRefs = references.stream()
+              .filter(r -> r.getReference().equals(ref))
+              .collect(Collectors.toList());
+
+      matchingRefs.forEach(mr -> {
+        mr.setReference(parts[0] + "/" + newId);
+      });
+
+      Bundle.BundleEntryComponent foundEntry = bundle.getEntry().stream()
+              .filter(e -> {
+                return e.getResource() != null &&
+                        e.getResource().getResourceType() == ResourceType.fromCode(parts[0]) &&
+                        e.getResource().getIdElement() != null &&
+                        e.getResource().getIdElement().getIdPart() != null &&
+                        e.getResource().getIdElement().getIdPart().equals(parts[1]);
+              })
+              .findFirst()
+              .get();
+
+      foundEntry.getResource().setId(newId);
+    }
+  }
+
+  /**
+   * Finds any instance (recursively) of a Reference within the specified object
+   * @param obj The object to search
+   * @return A list of Reference instances found in the object
+   */
+  public static List<Reference> findReferences(Object obj) {
+    List<Reference> references = new ArrayList<>();
+    scanInstance(obj, Reference.class, Collections.newSetFromMap(new IdentityHashMap<>()), references);
+    return references;
+  }
+
+  /**
+   * Scans an object recursively to find any instances of the specified type
+   * @param objectToScan The object to scan
+   * @param lookingFor The class/type to find instances of
+   * @param scanned A pre-initialized set that is used internally to determine what has already been scanned to avoid endless recursion on self-referencing objects
+   * @param results A pre-initialized collection/list that will be populated with the results of the scan
+   * @param <T> The type of class to look for instances of that must match the initialized results collection
+   * @implNote Found this code online from https://stackoverflow.com/questions/57758392/is-there-are-any-way-to-get-all-the-instances-of-type-x-by-reflection-utils
+   */
+  private static <T> void scanInstance(Object objectToScan, Class<T> lookingFor, Set<? super Object> scanned, Collection<? super T> results) {
+    if (objectToScan == null) {
+      return;
+    }
+    if (! scanned.add(objectToScan)) { // to prevent any endless scan loops
+      return;
+    }
+    // you might need some extra code if you want to correctly support scanning for primitive types
+    if (lookingFor.isInstance(objectToScan)) {
+      results.add(lookingFor.cast(objectToScan));
+      // either return or continue to scan of target object might contains references to other objects of this type
+    }
+    // we won't find anything intresting in Strings, and it is pretty popular type
+    if (objectToScan instanceof String) {
+      return;
+    }
+    // basic support for popular java types to prevent scanning too much of java internals in most common cases, but might cause
+    // side-effects in some cases
+    else if (objectToScan instanceof Iterable) {
+      ((Iterable<?>) objectToScan).forEach(obj -> scanInstance(obj, lookingFor, scanned, results));
+    }
+    else if (objectToScan instanceof Map) {
+      ((Map<?, ?>) objectToScan).forEach((key, value) -> {
+        scanInstance(key, lookingFor, scanned, results);
+        scanInstance(value, lookingFor, scanned, results);
+      });
+    }
+    // remember about arrays, if you want to support primitive types remember to use Array class instead.
+    else if (objectToScan instanceof Object[]) {
+      int length = Array.getLength(objectToScan);
+      for (int i = 0; i < length; i++) {
+        scanInstance(Array.get(objectToScan, i), lookingFor, scanned, results);
+      }
+    }
+    else if (objectToScan.getClass().isArray()) {
+      return; // primitive array
+    }
+    else {
+      Class<?> currentClass = objectToScan.getClass();
+      while (currentClass != Object.class) {
+        for (Field declaredField : currentClass.getDeclaredFields()) {
+          // skip static fields
+          if (Modifier.isStatic(declaredField.getModifiers())) {
+            continue;
+          }
+          // skip primitives, to prevent wrapping of "int" to "Integer" and then trying to scan its "value" field and loop endlessly.
+          if (declaredField.getType().isPrimitive()) {
+            return;
+          }
+          if (! declaredField.trySetAccessible()) {
+            // either throw error, skip, or use more black magic like Unsafe class to make field accessible anyways.
+            continue; // I will just skip it, it's probably some internal one.
+          }
+          try {
+            scanInstance(declaredField.get(objectToScan), lookingFor, scanned, results);
+          }
+          catch (IllegalAccessException ignored) {
+            continue;
+          }
+        }
+        currentClass = currentClass.getSuperclass();
+      }
+    }
   }
 }
