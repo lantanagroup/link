@@ -22,6 +22,7 @@ import {ReportBodyDirective} from './report-body.directive';
 import {ReviewComponent} from "./review/review.component";
 import {GenerateComponent} from "./generate/generate.component";
 import {ReportComponent} from "./report/report.component";
+import { CalculatedFieldComponent } from './calculated-field/calculated-field.component';
 
 export const configFactory = (configService: ConfigService) => {
     return () => configService.loadConfig();
@@ -38,7 +39,8 @@ export const configFactory = (configService: ConfigService) => {
         ReportBodyDirective,
         ReviewComponent,
         GenerateComponent,
-        ReportComponent
+        ReportComponent,
+        CalculatedFieldComponent
     ],
     imports: [
         BrowserModule,

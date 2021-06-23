@@ -1,0 +1,2 @@
+<input type="number" class="form-control" [(ngModel)]="value" [min]="originalValue" />
+<textarea [(ngModel)]="changedReason" *ngIf="originalValue != value" placeholder="Please indicate a reason for the change."></textarea>
