@@ -279,7 +279,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  private DocumentReference getDocumentReferenceByMeasureAndPeriod (Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient) {
+  private DocumentReference getDocumentReferenceByMeasureAndPeriod (Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception{
     DocumentReference documentReference = null;
     Bundle bundle = fhirStoreClient
             .search()
@@ -289,8 +289,14 @@ public class ReportController extends BaseController {
             .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate))
             .returnBundle(Bundle.class)
             .execute();
-    if (bundle.getEntry().size() > 0) {
-      documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
+    int size = bundle.getEntry().size();
+    if (size > 0 ) {
+      if(size == 1) {
+        documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
+      }
+      else{
+        throw new Exception("We have more than 1 report for the selected measure and report date.");
+      }
     }
     return documentReference;
   }
@@ -318,7 +324,7 @@ public class ReportController extends BaseController {
       QueryReport queryReport = (QueryReport) contextData.get("report");
       String startDate = criteria.get("reportDate");
       String endDate = LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
-      DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(measureIdentifier, startDate, endDate, fhirStoreClient);
+      DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(measureIdentifier, startDate, endDate, fhirStoreClient, regenerate);
       if (existingDocumentReference != null && !regenerate) {
         throw new HttpResponseException(409, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }

@@ -88,7 +88,12 @@ export class ReportBodyComponent implements OnInit {
       } catch (ex) {
         if (ex.error.message.includes("status code: 409")){
           if (confirm(ex.error.message)) {
-            const updatedReport = await this.reportService.generate(this.report, true);
+            try {
+              const updatedReport = await this.reportService.generate(this.report, true);
+            }
+            catch(ex){
+              this.toastService.showException('Error generating report', ex);
+            }
           }
         }
         else {
@@ -106,6 +111,7 @@ export class ReportBodyComponent implements OnInit {
 
       this.toastService.showInfo('Report generated!');
       this.reportGenerated = true;
+
     } catch (ex) {
       this.toastService.showException('Error running queries', ex);
     } finally {
