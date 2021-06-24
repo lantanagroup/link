@@ -88,11 +88,7 @@ export class ReportBodyComponent implements OnInit {
       } catch (ex) {
         if (ex.error.message.includes("status code: 409")){
           if (confirm(ex.error.message)) {
-            //  regenerate report
             const updatedReport = await this.reportService.generate(this.report, true);
-            console.log('Thing was saved to the database.');
-          } else {
-            console.log('No regeneration.');
           }
         }
         else {

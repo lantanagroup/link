@@ -332,7 +332,6 @@ public class ReportController extends BaseController {
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
       // Generate the report id
-
       String id = "";
       if (!regenerate) {
         id = RandomStringUtils.randomAlphanumeric(8);

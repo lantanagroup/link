@@ -39,7 +39,6 @@ export class ReportService {
   }
 
   async generate(report: QueryReport, regenerate:boolean) {
-
     let url = '/api/report/$generate?';
     url+= 'regenerate=' + ( regenerate?'true':'false');
     url = this.configService.getApiUrl(url);
