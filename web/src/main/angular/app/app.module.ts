@@ -23,6 +23,7 @@ import {ReviewComponent} from "./review/review.component";
 import {GenerateComponent} from "./generate/generate.component";
 import {ReportComponent} from "./report/report.component";
 import {NgbdDatepickerRangePopup} from "./components/datepicker-range-popup";
+import {CalculatedFieldComponent} from './calculated-field/calculated-field.component';
 import {NgbdDatepickerPopup} from "./components/datepicker-popup";
 
 export const configFactory = (configService: ConfigService) => {
@@ -41,6 +42,7 @@ export const configFactory = (configService: ConfigService) => {
         ReviewComponent,
         GenerateComponent,
         ReportComponent,
+        CalculatedFieldComponent,
         NgbdDatepickerRangePopup,
         NgbdDatepickerPopup
     ],
