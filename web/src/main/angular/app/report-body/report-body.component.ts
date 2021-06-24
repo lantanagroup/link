@@ -83,10 +83,21 @@ export class ReportBodyComponent implements OnInit {
       }
 
       try {
-        const updatedReport = await this.reportService.generate(this.report);
+        const updatedReport = await this.reportService.generate(this.report, false);
         Object.assign(this.report, updatedReport);
       } catch (ex) {
-        this.toastService.showException('Error generating report', ex);
+        if (ex.error.message.includes("status code: 409")){
+          if (confirm(ex.error.message)) {
+            //  regenerate report
+            const updatedReport = await this.reportService.generate(this.report, true);
+            console.log('Thing was saved to the database.');
+          } else {
+            console.log('No regeneration.');
+          }
+        }
+        else {
+          this.toastService.showException('Error generating report', ex);
+        }
         return;
       }
 

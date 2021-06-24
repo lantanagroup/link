@@ -38,8 +38,10 @@ export class ReportService {
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
 
-  async generate(report: QueryReport) {
+  async generate(report: QueryReport, regenerate:boolean) {
+
     let url = '/api/report/$generate?';
+    url+= 'regenerate=' + ( regenerate?'true':'false');
     url = this.configService.getApiUrl(url);
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
