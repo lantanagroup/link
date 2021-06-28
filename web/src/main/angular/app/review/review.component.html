@@ -38,7 +38,7 @@
             </div>
         </th>
         <th>
-            <ngbd-datepicker-popup [(ngModel)]="filter.submittedDate"
+            <ngbd-datepicker-popup [(ngModel)]="submittedDate"
                                    (change)="selectSubmittedDate($event)"></ngbd-datepicker-popup>
         </th>
         <th>
@@ -67,7 +67,7 @@
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.creationDate | date: "longDate"}}
+            {{report.submittedDate | date: "longDate"}}
         </td>
         <td>
             {{report.author}}
