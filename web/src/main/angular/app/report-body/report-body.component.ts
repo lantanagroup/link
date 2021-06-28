@@ -86,7 +86,7 @@ export class ReportBodyComponent implements OnInit {
         const updatedReport = await this.reportService.generate(this.report, false);
         Object.assign(this.report, updatedReport);
       } catch (ex) {
-        if (ex.error.message.includes("status code: 409")){
+        if (ex.status === 409){
           if (confirm(ex.error.message)) {
             try {
               const updatedReport = await this.reportService.generate(this.report, true);
