@@ -65,6 +65,14 @@ export interface IExtension {
   id?: string;
   extension?: IExtension[];
   url: string;
+  valueInteger?: number;
+  valueString?: string;
+  valueQuantity?: IQuantity;
+  valuePeriod?: IPeriod;
+  valueIdentifier?: IIdentifier;
+  valueCodeableConcept?: ICodeableConcept;
+  valueCoding?: ICoding;
+  valueCode?: string;
   // value[x]
 }
 
@@ -99,8 +107,66 @@ export interface IQuestionnaireResponse extends IDomainResource {
   status: string;
   subject?: IResourceReference;
   context?: IResourceReference;
-  authored?: Date;
+  authored?: string;
   author?: IResourceReference;
   source?: IResourceReference;
   item?: IQuestionnaireResponseItemComponent[];
+}
+
+export interface IPeriod {
+  start?: string;
+  end?: string;
+}
+
+export interface IQuantity {
+  value?: number;
+  comparator?: string;
+  unit?: string;
+  system?: string;
+  code?: string;
+}
+
+export interface IMeasureReportPopulationComponent {
+  extension?: IExtension[];
+  code?: ICodeableConcept;
+  count?: number;
+  subjectResults?: IResourceReference;
+}
+
+export interface IMeasureReportStratifierGroupPopulationComponent {
+  code?: ICodeableConcept;
+  count?: number;
+  subjectResults?: IResourceReference;
+}
+
+export interface IMeasureReportStratifierGroupComponent {
+  value: ICodeableConcept;
+  population?: IMeasureReportStratifierGroupPopulationComponent[];
+  measureScore?: IQuantity;
+}
+
+export interface IMeasureReportStratifierComponent {
+  code?: ICodeableConcept;
+  stratum?: IMeasureReportStratifierGroupComponent[];
+}
+
+export interface IMeasureReportGroupComponent {
+  code?: ICodeableConcept;
+  population?: IMeasureReportPopulationComponent[];
+  measureScore?: IQuantity;
+  stratifier?: IMeasureReportStratifierComponent[];
+}
+
+export interface IMeasureReport extends IDomainResource {
+  identifier?: IIdentifier[];
+  status: string;
+  type: string;
+  measure: string;
+  subject?: IResourceReference;
+  date?: Date;
+  reporter?: IResourceReference;
+  period: IPeriod;
+  improvementNotation?: string;
+  group?: IMeasureReportGroupComponent[];
+  evaluatedResource?: IResourceReference[];
 }
