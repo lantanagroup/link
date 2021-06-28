@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -288,6 +289,7 @@ public class ReportController extends BaseController {
             .and(DocumentReference.PERIOD.afterOrEquals().day(startDate))
             .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate))
             .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
     int size = bundle.getEntry().size();
     if (size > 0 ) {
@@ -473,7 +475,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus) throws Exception {
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required=false)  String submittedDate) throws Exception {
     Bundle documentReference;
     boolean andCond = false;
     try {
@@ -515,6 +517,12 @@ public class ReportController extends BaseController {
           }
           url += "docStatus=" + docStatus.toLowerCase();
         }
+        if (submittedDate != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "date=" + submittedDate;
+        }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
 
@@ -529,6 +537,4 @@ public class ReportController extends BaseController {
     reportBundle.setList(lst.collect(Collectors.toList()));
     return reportBundle;
   }
-
-
 }
