@@ -21,7 +21,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -328,7 +327,7 @@ public class ReportController extends BaseController {
       String endDate = LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
       DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(measureIdentifier, startDate, endDate, fhirStoreClient, regenerate);
       if (existingDocumentReference != null && !regenerate) {
-        throw new HttpResponseException(409, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
       // Get the patient identifiers for the given date
@@ -363,12 +362,12 @@ public class ReportController extends BaseController {
           this.createResource(documentReference, fhirStoreClient);
         }
       }
-    } catch (HttpResponseException ex) {
-      logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
-      throw ex;
+    } catch (ResponseStatusException rse) {
+      logger.error(String.format("Error generating report: %s", rse.getMessage()), rse);
+      throw rse;
     } catch (Exception ex) {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
-      throw new HttpResponseException(500, "Please contact system administrator regarding this error.");
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error.");
     }
     return report;
   }
@@ -523,7 +522,7 @@ public class ReportController extends BaseController {
       FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.SearchReports, "Successfully Searched Reports");
     } catch (Exception ex) {
       logger.error(String.format("Error searching Reports: %s", ex.getMessage()), ex);
-      throw new HttpResponseException(500, "Please contact system administrator regarding this error");
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error");
     }
     Stream<Report> lst = documentReference.getEntry().parallelStream().map(Report::new);
     ReportBundle reportBundle = new ReportBundle();
