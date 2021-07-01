@@ -70,7 +70,7 @@ public class ApiInit {
       IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
       Bundle searchResults = fhirClient.search()
               .forResource("Bundle")
-              .withTag(Constants.MainSystem, Constants.MeasureBundleTag)
+              .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
               .where(Bundle.IDENTIFIER.exactly().systemAndCode(measureBundle.getIdentifier().getSystem(), measureBundle.getIdentifier().getValue()))
               .returnBundle(Bundle.class)
               .execute();
@@ -79,7 +79,7 @@ public class ApiInit {
       if (searchResults.getEntry().size() == 0) {
         measureBundle.setId((String)null);
         measureBundle.setMeta(new Meta());
-        measureBundle.getMeta().addTag(Constants.MainSystem, "measure-bundle", null);
+        measureBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
         fhirClient.create().resource(measureBundle).execute();
         logger.info(String.format("Created measure bundle from URL %s as ID %s", measureConfig.getUrl(), measureBundle.getIdElement().getIdPart()));
       } else if (searchResults.getEntry().size() == 1) {

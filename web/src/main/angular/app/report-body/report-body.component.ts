@@ -1,13 +1,10 @@
-import {Component, ComponentFactoryResolver, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {formatDate, getFhirNow} from '../helper';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {CookieService} from 'ngx-cookie-service';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
 import {QueryReport} from '../model/query-report';
-import {ConfigService} from '../services/config.service';
-import {HttpClient} from "@angular/common/http";
-import {StoredMeasure} from "../model/stored-measure";
+import {StoredReportDefinition} from "../model/stored-report-definition";
+import {ReportDefinitionService} from '../services/report-definition.service';
 
 @Component({
   selector: 'app-report-body',
@@ -20,17 +17,14 @@ export class ReportBodyComponent implements OnInit {
   reportGenerated = false;
   today = getFhirNow();
   report: QueryReport = new QueryReport();
-  measureConfigs: StoredMeasure[] = [];
-  evaluateMeasureButtonText: String = 'Select Measure';
+  measureConfigs: StoredReportDefinition[] = [];
+  evaluateMeasureButtonText: String = 'Select';
   generateReportButtonText: String = 'Generate Report';
 
   constructor(
-      private http: HttpClient,
-      private modal: NgbModal,
-      private configService: ConfigService,
-      private cookieService: CookieService,
       public toastService: ToastService,
-      public reportService: ReportService) {
+      public reportService: ReportService,
+      private reportDefinitionService: ReportDefinitionService) {
   }
 
   onDateSelected() {
@@ -63,18 +57,15 @@ export class ReportBodyComponent implements OnInit {
     }
   }
 
+  get selectedReportTypeDisplay() {
+    const found = this.measureConfigs.find(mc => mc.id === this.report.measureId);
+    return found ? found.name : 'Select';
+  }
+
   async reload() {
     try {
       this.loading = true;
       this.generateReportButtonText = 'Loading...';
-
-      if (this.evaluateMeasureButtonText) {
-        this.measureConfigs.forEach(measure => {
-          if (measure.name === this.evaluateMeasureButtonText) {
-            this.report.measureId = measure.id;
-          }
-        })
-      }
 
       if (!this.report.date) {
         this.report.date = getFhirNow();
@@ -90,6 +81,7 @@ export class ReportBodyComponent implements OnInit {
           if (confirm(ex.error.message)) {
             try {
               const updatedReport = await this.reportService.generate(this.report, true);
+              Object.assign(this.report, updatedReport);
             }
             catch(ex){
               this.toastService.showException('Error generating report', ex);
@@ -120,22 +112,13 @@ export class ReportBodyComponent implements OnInit {
     }
   }
 
-  selectMeasure(selectedItem: string){
-    this.evaluateMeasureButtonText = selectedItem;
-  }
-
   async ngOnInit() {
     // initialize the response date to today by default.
     this.report.date = getFhirNow();
-
-    this.measureConfigs = await this.reportService.getMeasures();
+    this.measureConfigs = await this.reportDefinitionService.getReportDefinitions();
   }
 
   disableGenerateReport() {
-    if (this.evaluateMeasureButtonText === 'Select Measure') {
-      return true;
-    } else {
-      return false;
-    }
+    return !this.report.date || !this.report.measureId;
   }
 }

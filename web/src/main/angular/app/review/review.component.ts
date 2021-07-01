@@ -1,9 +1,10 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {AuthService} from "../services/auth.service";
 import {ReportService} from "../services/report.service";
-import {StoredMeasure} from "../model/stored-measure";
+import {StoredReportDefinition} from "../model/stored-report-definition";
 import {NgbDateParserFormatter, NgbDateStruct} from "@ng-bootstrap/ng-bootstrap";
 import {Router} from '@angular/router';
+import {ReportDefinitionService} from '../services/report-definition.service';
 
 @Component({
     selector: 'nandina-review',
@@ -13,7 +14,7 @@ import {Router} from '@angular/router';
 export class ReviewComponent implements OnInit {
 
     reports: any[];
-    measures: StoredMeasure[] = [];
+    measures: StoredReportDefinition[] = [];
     statuses = [{name: 'In Review', value: "preliminary"}, {name: 'Submitted', value: "final"}];
     submitters = [];
     measure: String = 'Select measure';
@@ -26,7 +27,7 @@ export class ReviewComponent implements OnInit {
 
     @Output() change: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(public authService: AuthService, public reportService: ReportService, private router: Router, private ngbDateParserFormatter: NgbDateParserFormatter) {
+    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router, private ngbDateParserFormatter: NgbDateParserFormatter) {
     }
 
     filter = {
@@ -130,6 +131,6 @@ export class ReviewComponent implements OnInit {
 
     async ngOnInit() {
         await this.searchReports();
-        this.measures = await this.reportService.getMeasures();
+        this.measures = await this.reportDefinitionService.getReportDefinitions();
     }
 }

@@ -99,23 +99,26 @@ public class ReportController extends BaseController {
   }
 
   private void resolveMeasure (Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
-    String reportId = criteria.get("measureId");
-    Bundle measureBundle = fhirStoreClient.read().resource(Bundle.class).withId(reportId).execute();
+    String reportDefId = criteria.get("measureId");
+
+    // Find the report definition bundle for the given ID
+    Bundle measureBundle = fhirStoreClient.read().resource(Bundle.class).withId(reportDefId).execute();
 
     if (measureBundle == null) {
-      throw new Exception("Did not find report definition with ID " + reportId);
+      throw new Exception("Did not find report definition with ID " + reportDefId);
     }
 
     try {
-      // store the latest measure onto the cqf-ruler server
-      logger.info("Storing the resources for the report definition " + reportId);
-      String measureId = storeReportBundleResources(measureBundle, fhirStoreClient);
+      // Store the resources in the report definition bundle on the internal FHIR server
+      logger.info("Storing the resources for the report definition " + reportDefId);
+      String measureId = this.storeReportBundleResources(measureBundle, fhirStoreClient);
 
+      // If there is a Measure in the bundle, add the measureId to the context so we know to run $evaluate-measure
       if (StringUtils.isNotEmpty(measureId)) {
         contextData.put("measureId", measureId);
       }
     } catch (Exception ex) {
-      logger.error("Error storing resources for the report definition " + reportId + ": " + ex.getMessage());
+      logger.error("Error storing resources for the report definition " + reportDefId + ": " + ex.getMessage());
       throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
     }
 
