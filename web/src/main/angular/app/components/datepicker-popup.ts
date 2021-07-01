@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
 import {NgbDate, NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -6,8 +6,7 @@ import {NgbDate, NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
     templateUrl: './datepicker-popup.html'
 })
 export class NgbdDatepickerPopup {
-    model: NgbDateStruct;
-
+    @Input()  model: NgbDateStruct;
     @Output() change: EventEmitter<any> = new EventEmitter<any>();
 
     onDateSelection(date: NgbDate) {

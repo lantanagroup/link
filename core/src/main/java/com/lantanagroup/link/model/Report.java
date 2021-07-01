@@ -18,6 +18,7 @@ public class Report {
   Date periodStartDate;
   Date periodEndDate;
   Date creationDate;
+  Date submittedDate;
 
   public Report(Bundle.BundleEntryComponent bundle){
     DocumentReference docReference = (DocumentReference)bundle.getResource();
@@ -42,6 +43,9 @@ public class Report {
     }
     if (!docReference.getIdentifier().isEmpty()) {
       this.setMeasureIdentifier(docReference.getIdentifier().get(0).getSystem() + "|" + docReference.getIdentifier().get(0).getValue());
+    }
+    if (docReference.getDate() != null) {
+      this.setSubmittedDate(docReference.getDate());
     }
   }
 }

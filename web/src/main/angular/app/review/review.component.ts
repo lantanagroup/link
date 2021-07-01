@@ -2,8 +2,9 @@ import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {AuthService} from "../services/auth.service";
 import {ReportService} from "../services/report.service";
 import {MeasureConfig} from "../model/MeasureConfig";
-import {NgbDateParserFormatter, NgbDateStruct} from "@ng-bootstrap/ng-bootstrap";
 import {Router} from '@angular/router';
+import {formatDate} from '../helper';
+import {UserModel} from "../model/UserModel";
 
 @Component({
     selector: 'nandina-review',
@@ -15,34 +16,37 @@ export class ReviewComponent implements OnInit {
     reports: any[];
     measures: MeasureConfig[] = [];
     statuses = [{name: 'In Review', value: "preliminary"}, {name: 'Submitted', value: "final"}];
-    submitters = [];
-    measure: String = 'Select measure';
-    status: String = 'Select status';
+    submitters: UserModel[] = [];
     page = 1;
-    bundleId;
-
-    submittedDate: NgbDateStruct;
-    submitter = "Select Submitter";
+    pageSize = 20;
 
     @Output() change: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(public authService: AuthService, public reportService: ReportService, private router: Router, private ngbDateParserFormatter: NgbDateParserFormatter) {
+    constructor(public authService: AuthService, public reportService: ReportService, private router: Router) {
     }
 
     filter = {
         measure: 'Select measure',
         status: 'Select status',
-        period: {startDate: undefined, endDate: undefined}
+        period: {startDate: null, endDate: null},
+        submittedDate: null,
+        submitter: 'Select submitter'
     };
 
 
+    resetFilters() {
+        this.page = 1;
+        this.filter.measure = 'Select measure';
+        this.filter.status = 'Select status';
+        this.filter.submitter = 'Select submitter';
+        this.filter.submittedDate = null;
+        this.filter.period = {startDate: null, endDate: null};
+        this.searchReports();
+    }
+
     selectPeriod(period) {
-        let startDate = new Date();
-        startDate.setFullYear(period.startDate.year, period.startDate.month, period.startDate.day);
-        this.filter.period.startDate = startDate;
-        let endDate = new Date();
-        startDate.setFullYear(period.endDate.year, period.endDate.month, period.endDate.day);
-        this.filter.period.endDate = endDate;
+        this.filter.period.startDate = period.startDate;
+        this.filter.period.endDate = period.endDate;
         this.searchReports();
     }
 
@@ -57,11 +61,13 @@ export class ReviewComponent implements OnInit {
     }
 
     selectSubmittedDate(submittedDate) {
-        this.submittedDate = submittedDate;
+        this.filter.submittedDate = submittedDate;
+        this.searchReports();
     }
 
     selectSubmitter(submitter) {
-        this.submitter = submitter;
+        this.filter.submitter = submitter;
+        this.searchReports();
     }
 
     getLabel(status: string) {
@@ -74,6 +80,7 @@ export class ReviewComponent implements OnInit {
 
     getFilterCriteria() {
         let filterCriteria = '';
+
         if (this.filter.measure !== "Select measure") {
             // find the measure
             const measure = this.measures.find(p => p.name === this.filter.measure);
@@ -83,16 +90,22 @@ export class ReviewComponent implements OnInit {
             const status = this.statuses.find(p => p.name === this.filter.status);
             filterCriteria += `docStatus=${encodeURIComponent(status.value)}&`
         }
-
-        if (this.filter.period.startDate !== undefined) {
-            //let myDate = this.filter.period.startDate.year + "-0" +  this.filter.period.startDate.month + "-0" + this.filter.period.startDate.day;
-            let startDate = this.ngbDateParserFormatter.format(this.filter.period.startDate);
+        if (this.filter.period.startDate !== null) {
+            let startDate = formatDate(this.filter.period.startDate);
             filterCriteria += `periodStartDate=${startDate}&`
         }
-        if (this.filter.period.endDate !== undefined) {
-            // let myDate = this.filter.period.endDate.year + "-0" +  this.filter.period.endDate.month + "-0" + this.filter.period.endDate.day;
-            let endDate = this.ngbDateParserFormatter.format(this.filter.period.endDate);
-            filterCriteria += `periodEndDate=${endDate}`
+        if (this.filter.period.endDate !== null) {
+            let endDate = formatDate(this.filter.period.endDate);
+            filterCriteria += `periodEndDate=${endDate}&`
+        }
+        if (this.filter.submittedDate !== null) {
+            let submittedDate = formatDate(this.filter.submittedDate);
+            filterCriteria += `submittedDate=${submittedDate}&`
+        }
+        if (this.filter.submitter !== "Select submitter") {
+            // find the submitter
+            const submitter = this.submitters.find(p => p.name === this.filter.submitter);
+            filterCriteria += `author=${submitter.id}`
         }
         return filterCriteria;
     }
@@ -101,10 +114,9 @@ export class ReviewComponent implements OnInit {
         const data = await this.reportService.getReports(this.getFilterCriteria());
         const reportBundle = await data;
         this.reports = reportBundle.list;
-        this.bundleId = reportBundle.bundleId;
     }
 
-    getMeasureName(measure: string) {
+    getMeasureName(measure:  string) {
         let measureSystem = '';
         let measureId = '';
         if (measure != null) {
@@ -124,6 +136,11 @@ export class ReviewComponent implements OnInit {
         return "";
     }
 
+    getSubmitterName(submitter: string) {
+        let foundSubmitter = (this.submitters || []).find((m) => m.id === submitter);
+        if (foundSubmitter != undefined && foundSubmitter.id != undefined) return foundSubmitter.name;
+    }
+
     displayReport(reportId) {
         this.router.navigateByUrl("/review/" + reportId);
     }
@@ -131,5 +148,6 @@ export class ReviewComponent implements OnInit {
     async ngOnInit() {
         await this.searchReports();
         this.measures = await this.reportService.getMeasures();
+        this.submitters = await this.reportService.getSubmitters();
     }
 }
