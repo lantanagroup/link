@@ -23,7 +23,7 @@
             </div>
         </th>
         <th>
-            <ngbd-datepicker-range-popup [(ngModel)]="filter.period"
+            <ngbd-datepicker-range-popup [fromDate]="filter.period.startDate" [toDate] = "filter.period.endDate"
                                          (change)="selectPeriod($event)"></ngbd-datepicker-range-popup>
         </th>
         <th>
@@ -38,21 +38,23 @@
             </div>
         </th>
         <th>
-            <ngbd-datepicker-popup [(ngModel)]="submittedDate"
+            <ngbd-datepicker-popup [model]="filter.submittedDate"
                                    (change)="selectSubmittedDate($event)"></ngbd-datepicker-popup>
         </th>
         <th>
             <div ngbDropdown>
-                <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{submitter}}</button>
+                <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{filter.submitter}}</button>
                 <div ngbDropdownMenu aria-labelledby="submitter">
                     <div *ngFor="let submitter of submitters">
-                        <button class="dropdown-item">{{submitter}}</button>
+                        <button class="dropdown-item" on-click="selectSubmitter(submitter.name)">{{submitter.name}}</button>
                     </div>
                 </div>
             </div>
         </th>
         <th>&nbsp;</th>
-        <th>&nbsp;</th>
+        <th class="button">
+          <button class="btn btn-primary" on-click="resetFilters()">Reset Filters</button>
+        </th>
     </tr>
     </thead>
     <tbody>
@@ -67,10 +69,10 @@
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.creationDate | date: "longDate"}}
+            {{report.submittedDate | date: "longDate"}}
         </td>
         <td>
-            {{report.author}}
+            {{getSubmitterName(report.author)}}
         </td>
         <td>
             Need to figure out
@@ -87,9 +89,11 @@
                             [maxSize]="5"
                             [collectionSize]="reports?.length || 0"
                             [(page)]="page"
-                            [pageSize]="20"
-                            [boundaryLinks]="true"></ngb-pagination>
+                            [pageSize]="pageSize"
+                            [boundaryLinks]="true">
+            </ngb-pagination>
         </td>
+
     </tr>
     </tfoot>
 </table>

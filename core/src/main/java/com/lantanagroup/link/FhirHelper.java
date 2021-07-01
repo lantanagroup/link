@@ -3,14 +3,18 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -19,20 +23,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class FhirHelper {
-  public enum AuditEventTypes {
-    Generate,
-    Export,
-    Send,
-    SearchLocations,
-    InitiateQuery,
-    SearchReports
-  }
-
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
 
-  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent (HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -74,12 +69,12 @@ public class FhirHelper {
       agent.setAltId(jsonObject.get(SUBJECT).toString());
     }
 
-    String remoteAddress = request.getRemoteAddr() != null? (request.getRemoteHost() != null ? request.getRemoteAddr()+"("+request.getRemoteHost() +")": request.getRemoteAddr()):"";
+    String remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     if (remoteAddress != null) {
       agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
     }
 
-    if(jsonObject.has("aud")) {
+    if (jsonObject.has("aud")) {
       String aud = jsonObject.get("aud").getAsString();
       Identifier identifier = new Identifier().setValue(aud);
       agent.setLocation(new Reference().setIdentifier(identifier));
@@ -102,7 +97,7 @@ public class FhirHelper {
     }
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
+  public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode("measure-report");
@@ -135,7 +130,7 @@ public class FhirHelper {
     return bundle;
   }
 
-  private static Bundle generateBundle(List<String> resourceReferences ) {
+  private static Bundle generateBundle (List<String> resourceReferences) {
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.TRANSACTION);
     resourceReferences.parallelStream().forEach(reference -> {
@@ -145,7 +140,23 @@ public class FhirHelper {
     return bundle;
   }
 
-  public static void changeIds(Bundle bundle) {
+  public static List<IBaseResource> getAllPages (Bundle bundle, IGenericClient fhirStoreClient, FhirContext ctx) {
+    List<IBaseResource> bundles = new ArrayList<>();
+    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+
+    // Load the subsequent pages
+    while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
+      bundle = fhirStoreClient
+              .loadPage()
+              .next(bundle)
+              .execute();
+      logger.info("Adding next page of bundles...");
+      bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+    }
+    return bundles;
+  }
+
+  public static void changeIds (Bundle bundle) {
     List<Reference> references = findReferences(bundle)
             .stream()
             .filter(r -> r.getReference() != null && r.getReference().split("/").length == 2)
@@ -208,10 +219,11 @@ public class FhirHelper {
 
   /**
    * Finds any instance (recursively) of a Reference within the specified object
+   *
    * @param obj The object to search
    * @return A list of Reference instances found in the object
    */
-  public static List<Reference> findReferences(Object obj) {
+  public static List<Reference> findReferences (Object obj) {
     List<Reference> references = new ArrayList<>();
     scanInstance(obj, Reference.class, Collections.newSetFromMap(new IdentityHashMap<>()), references);
     return references;
@@ -219,18 +231,19 @@ public class FhirHelper {
 
   /**
    * Scans an object recursively to find any instances of the specified type
+   *
    * @param objectToScan The object to scan
-   * @param lookingFor The class/type to find instances of
-   * @param scanned A pre-initialized set that is used internally to determine what has already been scanned to avoid endless recursion on self-referencing objects
-   * @param results A pre-initialized collection/list that will be populated with the results of the scan
-   * @param <T> The type of class to look for instances of that must match the initialized results collection
+   * @param lookingFor   The class/type to find instances of
+   * @param scanned      A pre-initialized set that is used internally to determine what has already been scanned to avoid endless recursion on self-referencing objects
+   * @param results      A pre-initialized collection/list that will be populated with the results of the scan
+   * @param <T>          The type of class to look for instances of that must match the initialized results collection
    * @implNote Found this code online from https://stackoverflow.com/questions/57758392/is-there-are-any-way-to-get-all-the-instances-of-type-x-by-reflection-utils
    */
-  private static <T> void scanInstance(Object objectToScan, Class<T> lookingFor, Set<? super Object> scanned, Collection<? super T> results) {
+  private static <T> void scanInstance (Object objectToScan, Class<T> lookingFor, Set<? super Object> scanned, Collection<? super T> results) {
     if (objectToScan == null) {
       return;
     }
-    if (! scanned.add(objectToScan)) { // to prevent any endless scan loops
+    if (!scanned.add(objectToScan)) { // to prevent any endless scan loops
       return;
     }
     // you might need some extra code if you want to correctly support scanning for primitive types
@@ -246,8 +259,7 @@ public class FhirHelper {
     // side-effects in some cases
     else if (objectToScan instanceof Iterable) {
       ((Iterable<?>) objectToScan).forEach(obj -> scanInstance(obj, lookingFor, scanned, results));
-    }
-    else if (objectToScan instanceof Map) {
+    } else if (objectToScan instanceof Map) {
       ((Map<?, ?>) objectToScan).forEach((key, value) -> {
         scanInstance(key, lookingFor, scanned, results);
         scanInstance(value, lookingFor, scanned, results);
@@ -259,11 +271,9 @@ public class FhirHelper {
       for (int i = 0; i < length; i++) {
         scanInstance(Array.get(objectToScan, i), lookingFor, scanned, results);
       }
-    }
-    else if (objectToScan.getClass().isArray()) {
+    } else if (objectToScan.getClass().isArray()) {
       return; // primitive array
-    }
-    else {
+    } else {
       Class<?> currentClass = objectToScan.getClass();
       while (currentClass != Object.class) {
         for (Field declaredField : currentClass.getDeclaredFields()) {
@@ -275,19 +285,27 @@ public class FhirHelper {
           if (declaredField.getType().isPrimitive()) {
             return;
           }
-          if (! declaredField.trySetAccessible()) {
+          if (!declaredField.trySetAccessible()) {
             // either throw error, skip, or use more black magic like Unsafe class to make field accessible anyways.
             continue; // I will just skip it, it's probably some internal one.
           }
           try {
             scanInstance(declaredField.get(objectToScan), lookingFor, scanned, results);
-          }
-          catch (IllegalAccessException ignored) {
+          } catch (IllegalAccessException ignored) {
             continue;
           }
         }
         currentClass = currentClass.getSuperclass();
       }
     }
+  }
+
+  public enum AuditEventTypes {
+    Generate,
+    Export,
+    Send,
+    SearchLocations,
+    InitiateQuery,
+    SearchReports
   }
 }

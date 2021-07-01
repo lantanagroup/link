@@ -41,9 +41,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -474,7 +476,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus) throws Exception {
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate){
     Bundle documentReference;
     boolean andCond = false;
     try {
@@ -493,7 +495,7 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "identifier=" + identifier.replace("|", "%7C");
+          url += "identifier=" + URLEncoder.encode(identifier, StandardCharsets.UTF_8);
           andCond = true;
         }
         if (periodStartDate != null) {
@@ -516,6 +518,12 @@ public class ReportController extends BaseController {
           }
           url += "docStatus=" + docStatus.toLowerCase();
         }
+        if (submittedDate != null) {
+          if (andCond) {
+            url += "&";
+          }
+          url += "date=" + submittedDate;
+        }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
 
@@ -530,6 +538,4 @@ public class ReportController extends BaseController {
     reportBundle.setList(lst.collect(Collectors.toList()));
     return reportBundle;
   }
-
-
 }
