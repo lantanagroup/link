@@ -20,8 +20,8 @@ public class Report {
   Date creationDate;
   Date submittedDate;
 
-  public Report(Bundle.BundleEntryComponent bundle){
-    DocumentReference docReference = (DocumentReference)bundle.getResource();
+  public Report(Bundle.BundleEntryComponent entry){
+    DocumentReference docReference = (DocumentReference)entry.getResource();
     if (!docReference.getAuthor().isEmpty()) {
       this.setAuthor(docReference.getAuthor().get(0).getReference());
     }

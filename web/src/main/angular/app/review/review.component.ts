@@ -136,8 +136,8 @@ export class ReviewComponent implements OnInit {
         return "";
     }
 
-    getSubmitterName(submitter: string) {
-        let foundSubmitter = (this.submitters || []).find((m) => m.id === submitter);
+    getSubmitterName(submitterId: string) {
+        let foundSubmitter = (this.submitters || []).find((m) => m.id === submitterId);
         if (foundSubmitter != undefined && foundSubmitter.id != undefined) return foundSubmitter.name;
     }
 

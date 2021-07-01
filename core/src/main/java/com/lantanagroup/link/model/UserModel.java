@@ -11,8 +11,7 @@ public class UserModel {
   String id;
   String name;
 
-  public UserModel(IBaseResource resource){
-    Practitioner practitioner = (Practitioner)resource;
+  public UserModel(Practitioner practitioner){
     String  id = practitioner.getId();
     String idValue = id.substring(id.indexOf("Practitioner"), id.indexOf("_history")-1);
     if(!practitioner.getId().isEmpty()){
