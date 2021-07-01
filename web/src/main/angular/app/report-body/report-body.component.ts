@@ -7,7 +7,7 @@ import {ReportService} from '../services/report.service';
 import {QueryReport} from '../model/query-report';
 import {ConfigService} from '../services/config.service';
 import {HttpClient} from "@angular/common/http";
-import {MeasureConfig} from "../model/MeasureConfig";
+import {StoredMeasure} from "../model/stored-measure";
 
 @Component({
   selector: 'app-report-body',
@@ -20,7 +20,7 @@ export class ReportBodyComponent implements OnInit {
   reportGenerated = false;
   today = getFhirNow();
   report: QueryReport = new QueryReport();
-  measureConfigs: MeasureConfig[] = [];
+  measureConfigs: StoredMeasure[] = [];
   evaluateMeasureButtonText: String = 'Select Measure';
   generateReportButtonText: String = 'Generate Report';
 

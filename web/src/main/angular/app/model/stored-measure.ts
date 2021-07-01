@@ -1,4 +1,4 @@
-export class MeasureConfig {
+export class StoredMeasure {
     id: string;
     name?: string;
     system?: string;

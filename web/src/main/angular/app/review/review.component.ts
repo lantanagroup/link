@@ -1,7 +1,7 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {AuthService} from "../services/auth.service";
 import {ReportService} from "../services/report.service";
-import {MeasureConfig} from "../model/MeasureConfig";
+import {StoredMeasure} from "../model/stored-measure";
 import {NgbDateParserFormatter, NgbDateStruct} from "@ng-bootstrap/ng-bootstrap";
 import {Router} from '@angular/router';
 
@@ -13,7 +13,7 @@ import {Router} from '@angular/router';
 export class ReviewComponent implements OnInit {
 
     reports: any[];
-    measures: MeasureConfig[] = [];
+    measures: StoredMeasure[] = [];
     statuses = [{name: 'In Review', value: "preliminary"}, {name: 'Submitted', value: "final"}];
     submitters = [];
     measure: String = 'Select measure';

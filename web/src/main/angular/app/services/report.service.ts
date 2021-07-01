@@ -3,7 +3,7 @@ import {HttpClient} from '@angular/common/http';
 import {ConfigService} from './config.service';
 import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
-import {MeasureConfig} from '../model/MeasureConfig';
+import {StoredMeasure} from '../model/stored-measure';
 import {ReportBundle} from '../model/ReportBundle';
 
 @Injectable()
@@ -46,8 +46,8 @@ export class ReportService {
   }
 
   getMeasures() {
-    const url = this.configService.getApiUrl('/api/report/measures');
-    return this.http.get<MeasureConfig[]>(url).toPromise();
+    const url = this.configService.getApiUrl('/api/measure');
+    return this.http.get<StoredMeasure[]>(url).toPromise();
   }
 
   getReports(queryParams) {
