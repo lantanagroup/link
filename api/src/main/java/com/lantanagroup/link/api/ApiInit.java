@@ -32,7 +32,7 @@ public class ApiInit {
     logger.info("Loading measures defined in configuration...");
 
     this.config.getMeasures().forEach(measureConfig -> {
-      logger.info("Getting the latest measure definition for " + measureConfig.getId() + " from URL " + measureConfig.getUrl());
+      logger.info(String.format("Getting the latest measure definition from URL %s", measureConfig.getUrl()));
       HttpRequest request = HttpRequest.newBuilder()
               .uri(URI.create(measureConfig.getUrl()))
               .build();

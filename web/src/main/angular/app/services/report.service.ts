@@ -4,6 +4,7 @@ import {ConfigService} from './config.service';
 import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
 import {ReportBundle} from '../model/ReportBundle';
+import {UserModel} from "../model/UserModel";
 
 @Injectable()
 export class ReportService {
@@ -51,4 +52,10 @@ export class ReportService {
     }
     return this.http.get<ReportBundle>(url).toPromise();
   }
+
+  getSubmitters() {
+    const url = this.configService.getApiUrl('/api/user');
+    return this.http.get<UserModel[]>(url).toPromise();
+  }
+
 }
