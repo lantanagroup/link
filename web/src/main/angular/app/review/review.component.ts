@@ -7,7 +7,6 @@ import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
 import {UserModel} from "../model/UserModel";
 
-
 @Component({
     selector: 'nandina-review',
     templateUrl: './review.component.html',
