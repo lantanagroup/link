@@ -1,10 +1,12 @@
 import {Component, EventEmitter, OnInit, Output} from '@angular/core';
 import {AuthService} from "../services/auth.service";
 import {ReportService} from "../services/report.service";
-import {MeasureConfig} from "../model/MeasureConfig";
+import {StoredReportDefinition} from "../model/stored-report-definition";
 import {Router} from '@angular/router';
+import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
 import {UserModel} from "../model/UserModel";
+import {NgbDateParserFormatter} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'nandina-review',
@@ -14,7 +16,7 @@ import {UserModel} from "../model/UserModel";
 export class ReviewComponent implements OnInit {
 
     reports: any[];
-    measures: MeasureConfig[] = [];
+    measures: StoredReportDefinition[] = [];
     statuses = [{name: 'In Review', value: "preliminary"}, {name: 'Submitted', value: "final"}];
     submitters: UserModel[] = [];
     page = 1;
@@ -22,7 +24,7 @@ export class ReviewComponent implements OnInit {
 
     @Output() change: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(public authService: AuthService, public reportService: ReportService, private router: Router) {
+    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router, private ngbDateParserFormatter: NgbDateParserFormatter) {
     }
 
     filter = {
@@ -114,6 +116,7 @@ export class ReviewComponent implements OnInit {
         const data = await this.reportService.getReports(this.getFilterCriteria());
         const reportBundle = await data;
         this.reports = reportBundle.list;
+        this.bundleId = reportBundle.bundleId;
     }
 
     getMeasureName(measure:  string) {
@@ -147,7 +150,7 @@ export class ReviewComponent implements OnInit {
 
     async ngOnInit() {
         await this.searchReports();
-        this.measures = await this.reportService.getMeasures();
+        this.measures = await this.reportDefinitionService.getReportDefinitions();
         this.submitters = await this.reportService.getSubmitters();
     }
 }

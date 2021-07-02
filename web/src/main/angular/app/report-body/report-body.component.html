@@ -14,22 +14,24 @@
                 </div>
             </div>
             <div ngbDropdown class="col-md-4">
-                <p><strong>Evaluate Measure</strong></p>
-                <button class="btn btn-outline-primary" id="measureEvalDropDown" ngbDropdownToggle>{{evaluateMeasureButtonText}}</button>
+                <p><strong>Report Type</strong></p>
+                <button class="btn btn-outline-primary" id="measureEvalDropDown" ngbDropdownToggle>{{selectedReportTypeDisplay}}</button>
                 <div ngbDropdownMenu aria-labelledby="measureEvalDropDown">
                     <div *ngFor="let config of measureConfigs">
-                        <button class="dropdown-item"
-                                id="measureOption" on-click="selectMeasure(config.name)">{{config.name}}
+                        <button class="dropdown-item" id="measureOption" (click)="report.measureId = config.id">{{config.name}}
                         </button>
                     </div>
+                    <div *ngIf="!measureConfigs?.length">
+                        <button class="dropdown-item">No Reports</button>
+                    </div>
                 </div>
-                <p class="help-block">Select a measure from the drop down to create a Measure Report.</p>
             </div>
         </div>
     </div>
     <div class="card-footer">
         <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="disableGenerateReport()">{{generateReportButtonText}}</button>
         <p class="help-block" *ngIf="loading">Generating report...</p>
+        <p class="help-block" *ngIf="!report.date || !report.measureId">You must select a report date and type before generating...</p>
     </div>
 </div>
 

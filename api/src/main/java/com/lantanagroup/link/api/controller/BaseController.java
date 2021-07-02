@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.hl7.fhir.r4.model.DomainResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,14 +39,14 @@ public class BaseController {
   }
 
   protected void updateResource(Resource resource, IGenericClient fhirStoreClient) {
-
     int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
     MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
+    DomainResource domainResource = (DomainResource) outcome.getResource();
     int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
     if (updatedVersion > initialVersion) {
-      logger.debug("Update is successful for " + outcome.getResource().getIdElement().getIdPart());
+      logger.debug(String.format("Update is successful for %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     } else {
-      logger.error("Failed to update FHIR resource");
+      logger.error(String.format("Failed to update FHIR resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
   }
 }
