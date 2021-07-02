@@ -3,7 +3,6 @@ import {HttpClient} from '@angular/common/http';
 import {ConfigService} from './config.service';
 import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
-import {MeasureConfig} from '../model/MeasureConfig';
 import {ReportBundle} from '../model/ReportBundle';
 import {UserModel} from "../model/UserModel";
 
@@ -44,11 +43,6 @@ export class ReportService {
     url+= 'regenerate=' + ( regenerate?'true':'false');
     url = this.configService.getApiUrl(url);
     return await this.http.post<QueryReport>(url, report).toPromise();
-  }
-
-  getMeasures() {
-    const url = this.configService.getApiUrl('/api/report/measures');
-    return this.http.get<MeasureConfig[]>(url).toPromise();
   }
 
   getReports(queryParams) {

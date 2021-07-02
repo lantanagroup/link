@@ -25,6 +25,7 @@ import {ReportComponent} from "./report/report.component";
 import {NgbdDatepickerRangePopup} from "./components/datepicker-range-popup";
 import {CalculatedFieldComponent} from './calculated-field/calculated-field.component';
 import {NgbdDatepickerPopup} from "./components/datepicker-popup";
+import {ReportDefinitionService} from './services/report-definition.service';
 
 export const configFactory = (configService: ConfigService) => {
     return () => configService.loadConfig();
@@ -66,6 +67,7 @@ export const configFactory = (configService: ConfigService) => {
         AuthService,
         ReportService,
         CookieService,
+        ReportDefinitionService,
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AddHeaderInterceptor,

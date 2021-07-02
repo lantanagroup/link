@@ -47,9 +47,9 @@ public class MeasureEvaluator {
                 "periodEnd=" + LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
 
         try {
-            logger.info("Executing $evaluate-measure");
+            logger.info(String.format("Executing $evaluate-measure for %s", measureId));
             measureReport = fhirClient.fetchResourceFromUrl(MeasureReport.class, url);
-            logger.info("Done executing $evaluate-measure");
+            logger.info(String.format("Done executing $evaluate-measure for %s", measureId));
 
             if (this.config.getMeasureLocation() != null) {
                 logger.debug("Creating MeasureReport.subject based on config");

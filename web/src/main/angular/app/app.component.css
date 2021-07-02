@@ -16,10 +16,6 @@
   margin-bottom: 10px;
 }
 
-.help-block {
-  color: gray;
-}
-
 .top-bar {
   display: block;
   height: 85px;
@@ -72,4 +68,3 @@
   border: solid #005cbf;
   border-width: 1px 1px 3px 1px;
 }
-

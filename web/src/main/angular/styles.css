@@ -4,6 +4,15 @@ html {
   margin-top: 10px;
 }
 
+.help-block {
+  color: gray;
+  font-style: italic;
+}
+
+.help-block.error {
+  color: red;
+}
+
 agm-map {
   width: 100%;
   height: 500px;

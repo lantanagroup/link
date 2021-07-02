@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
@@ -12,7 +11,6 @@ import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.api.MeasureEvaluator;
 import com.lantanagroup.link.api.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiMeasureConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.Report;
@@ -39,7 +37,6 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -63,7 +60,17 @@ public class ReportController extends BaseController {
   @Autowired
   private ApplicationContext context;
 
-  private void storeLatestMeasure (Bundle bundle, IGenericClient fhirStoreClient) {
+  private String storeReportBundleResources(Bundle bundle, IGenericClient fhirStoreClient) {
+    String measureId = null;
+
+    Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
+            .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
+            .findFirst();
+
+    if (measureEntry.isPresent()) {
+      measureId = measureEntry.get().getResource().getIdElement().getIdPart();
+    }
+
     logger.info("Generating a Bundle Transaction of the Measure");
     bundle.setType(Bundle.BundleType.TRANSACTION);
 
@@ -89,67 +96,36 @@ public class ReportController extends BaseController {
     fhirStoreClient.transaction().withBundle(bundle).execute();
 
     logger.info("Measure definition bundle transaction executed successfully...");
+
+    return measureId;
   }
 
   private void resolveMeasure (Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
-    String measureConfigId = criteria.get("measureId");
-    String measureId = null;
-    String measureUrl = null;
-    Bundle measureBundle = null;
-    Identifier measureIdentifier = new Identifier();
+    String reportDefId = criteria.get("measureId");
 
-    for (ApiMeasureConfig measureConfig : this.config.getMeasures()) {
-      if (measureConfig.getId().equals(measureConfigId)) {
-        measureUrl = measureConfig.getUrl();
-      }
+    // Find the report definition bundle for the given ID
+    Bundle measureBundle = fhirStoreClient.read().resource(Bundle.class).withId(reportDefId).execute();
+
+    if (measureBundle == null) {
+      throw new Exception("Did not find report definition with ID " + reportDefId);
     }
 
-    if (StringUtils.isNotEmpty(measureUrl)) {
-      HttpClient client = HttpClient.newHttpClient();
-      logger.info("Getting the latest measure definition for " + measureConfigId + " from URL " + measureUrl);
-      HttpRequest request = HttpRequest.newBuilder()
-              .uri(URI.create(measureUrl))
-              .build();
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    try {
+      // Store the resources in the report definition bundle on the internal FHIR server
+      logger.info("Storing the resources for the report definition " + reportDefId);
+      String measureId = this.storeReportBundleResources(measureBundle, fhirStoreClient);
 
-      IParser parser = ctx.newJsonParser();
-
-      try {
-        logger.debug("Parsing the measure bundle.");
-        measureBundle = parser.parseResource(Bundle.class, response.body());
-      } catch (Exception ex) {
-        logger.error("Error retrieving latest measure definition from " + measureUrl);
-        throw new Exception("Could not retrieve the latest measure definition");
+      // If there is a Measure in the bundle, add the measureId to the context so we know to run $evaluate-measure
+      if (StringUtils.isNotEmpty(measureId)) {
+        contextData.put("measureId", measureId);
       }
-
-      // Find the ID of the Measure resource in the measure definition bundle
-      for (Bundle.BundleEntryComponent entry : measureBundle.getEntry()) {
-        if (entry.getResource().getResourceType() == ResourceType.Measure) {
-          measureId = entry.getResource().getIdElement().getIdPart();
-          measureIdentifier = ((Measure) entry.getResource()).getIdentifier().get(0);
-          break;
-        }
-      }
-
-      if (StringUtils.isEmpty(measureId)) {
-        logger.error("Measure definition bundle downloaded from " + measureUrl + " does not have a Measure resource in it");
-        throw new Exception("Could not find Measure in measure definition bundle");
-      }
-
-      try {
-        // store the latest measure onto the cqf-ruler server
-        logger.info("Storing the latest measure definition for " + measureConfigId + " as " + measureId + " on FHIR server");
-        storeLatestMeasure(measureBundle, fhirStoreClient);
-      } catch (Exception ex) {
-        logger.error("Error storing the latest measure bundle definition from " + measureUrl + ": " + ex.getMessage());
-        throw new Exception("Error storing the latest measure bundle definition: " + ex.getMessage());
-      }
+    } catch (Exception ex) {
+      logger.error("Error storing resources for the report definition " + reportDefId + ": " + ex.getMessage());
+      throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
     }
 
-    contextData.put("measureId", measureId);
-    contextData.put("measureUrl", measureUrl);
     contextData.put("measureBundle", measureBundle);
-    contextData.put("measureIdentifier", measureIdentifier);
+    contextData.put("measureIdentifier", measureBundle.getIdentifier());
   }
 
   private Map<String, String> getCriteria (HttpServletRequest request, QueryReport report) {
@@ -454,24 +430,6 @@ public class ReportController extends BaseController {
     downloader.download(report, response, this.ctx, this.config);
 
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
-  }
-
-  @GetMapping("/measures")
-  public List<ApiMeasureConfig> getMeasureConfigs () throws Exception {
-    Map<String, String> measureMap = new HashMap<>();
-    List<ApiMeasureConfig> measureConfigs = new ArrayList<>();
-    if (null == this.config.getMeasures() || this.config.getMeasures().isEmpty())
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Measures are not configured");
-
-    this.config.getMeasures().forEach(config -> {
-      ApiMeasureConfig measureConfig = new ApiMeasureConfig();
-      measureConfig.setId(config.getId());
-      measureConfig.setName(config.getName());
-      measureConfig.setSystem(config.getSystem());
-      measureConfig.setValue(config.getValue());
-      measureConfigs.add(measureConfig);
-    });
-    return measureConfigs;
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
