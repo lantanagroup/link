@@ -6,7 +6,6 @@ import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
 import {UserModel} from "../model/UserModel";
-import {NgbDateParserFormatter} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'nandina-review',
@@ -24,7 +23,7 @@ export class ReviewComponent implements OnInit {
 
     @Output() change: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router, private ngbDateParserFormatter: NgbDateParserFormatter) {
+    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router) {
     }
 
     filter = {

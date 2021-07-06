@@ -4,10 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.hl7.fhir.r4.model.ContactPoint;
-import org.hl7.fhir.r4.model.HumanName;
-import org.hl7.fhir.r4.model.Practitioner;
-import org.hl7.fhir.r4.model.StringType;
+import com.lantanagroup.link.Constants;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +45,12 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
   private static Practitioner toPractitioner (DecodedJWT jwt) {
     Practitioner practitioner = new Practitioner();
     // set Practitioner Id
-    practitioner.setId(jwt.getSubject());
+    List identifiers = new ArrayList();
+    Identifier identifier = new Identifier();
+    identifier.setSystem(Constants.MainSystem);
+    identifier.setValue(jwt.getSubject());
+    identifiers.add(identifier);
+    practitioner.setIdentifier(identifiers);
     String payload = jwt.getPayload();
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);
