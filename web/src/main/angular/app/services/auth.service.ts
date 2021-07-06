@@ -106,31 +106,35 @@ export class AuthService {
         if (loggedIn) {
           this.user = await this.oauthService.loadUserProfile() as any;
         }
-      } catch (ex) { }
+      } catch (ex) {
+        console.log(`Error loading user profile: ${ex.message}`);
+      }
 
       // Force the user to login locally if they have not already logged-in via smart-on-fhir
       if (!this.user) {
         this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
       } else {
+        console.log('Your token is: ' + this.token);
+        await this.oauthService.setupAutomaticSilentRefresh();
+
         this.token = this.oauthService.getIdToken();
+
         let path;
-        if(!this.oauthService.state || this.oauthService.state !== 'undefined'){
+        if (!this.oauthService.state || this.oauthService.state !== 'undefined') {
           path = unescape(decodeURIComponent(this.oauthService.state));
-        }
-        else{
+        } else {
           path = this.activatedRoute.snapshot.queryParams.pathname || `/generate`;
         }
+
         if (path && path !== '/') {
           this.router.navigate([path]);
         }
-        console.log('Your token is: ' + this.token);
-        await this.oauthService.setupAutomaticSilentRefresh();
       }
     }
   }
 
   private convertFhirUserToProfile(fhirUser: IPractitioner): IProfile {
-    const profile = <IProfile> {};
+    const profile = <IProfile>{};
 
     if (fhirUser.name && fhirUser.name.length > 0) {
       const name = fhirUser.name[0];
@@ -185,7 +189,7 @@ export class AuthService {
         const fhirUserUrl = stateInfo.issuer + (stateInfo.issuer.endsWith('/') ? '' : '/') + (fhirUserReference.startsWith('/') ? fhirUserReference.substring(1) : fhirUserReference);
 
         try {
-          const fhirUser = await this.http.get<IPractitioner>(fhirUserUrl, { headers: { 'Authorization': `Bearer ${this.token}`} }).toPromise();
+          const fhirUser = await this.http.get<IPractitioner>(fhirUserUrl, {headers: {'Authorization': `Bearer ${this.token}`}}).toPromise();
           this.user = this.convertFhirUserToProfile(fhirUser);
         } catch (ex) {
           console.error(`Failed to retrieve user info from ${fhirUserUrl}`);
@@ -213,6 +217,6 @@ export class AuthService {
       ret[statePartKey] = decodeURIComponent(statePartValue);
     }
 
-    return <AuthInitOptions> ret;
+    return <AuthInitOptions>ret;
   }
 }

@@ -4,17 +4,14 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.IReportDownloader;
-import com.lantanagroup.link.IReportSender;
-import com.lantanagroup.link.QueryReport;
+import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
 import com.lantanagroup.link.api.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.model.Report;
-import com.lantanagroup.link.model.ReportBundle;
+import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -43,8 +40,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -100,64 +101,38 @@ public class ReportController extends BaseController {
     return measureId;
   }
 
-  private void resolveMeasure (Map<String, String> criteria, IGenericClient fhirStoreClient, Map<String, Object> contextData) throws Exception {
-    String reportDefId = criteria.get("measureId");
-
+  private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
     // Find the report definition bundle for the given ID
-    Bundle measureBundle = fhirStoreClient.read().resource(Bundle.class).withId(reportDefId).execute();
+    Bundle reportDefBundle = context.getFhirStoreClient()
+            .read()
+            .resource(Bundle.class)
+            .withId(criteria.getReportDefId())
+            .execute();
 
-    if (measureBundle == null) {
-      throw new Exception("Did not find report definition with ID " + reportDefId);
+    if (reportDefBundle == null) {
+      throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
     }
 
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
-      logger.info("Storing the resources for the report definition " + reportDefId);
-      String measureId = this.storeReportBundleResources(measureBundle, fhirStoreClient);
-
-      // If there is a Measure in the bundle, add the measureId to the context so we know to run $evaluate-measure
-      if (StringUtils.isNotEmpty(measureId)) {
-        contextData.put("measureId", measureId);
-      }
+      logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
+      String measureId = this.storeReportBundleResources(reportDefBundle, context.getFhirStoreClient());
+      context.setMeasureId(measureId);
+      context.setReportDefBundle(reportDefBundle);
     } catch (Exception ex) {
-      logger.error("Error storing resources for the report definition " + reportDefId + ": " + ex.getMessage());
+      logger.error("Error storing resources for the report definition " + criteria.getReportDefId() + ": " + ex.getMessage());
       throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
     }
-
-    contextData.put("measureBundle", measureBundle);
-    contextData.put("measureIdentifier", measureBundle.getIdentifier());
   }
 
-  private Map<String, String> getCriteria (HttpServletRequest request, QueryReport report) {
-    java.util.Enumeration<String> parameterNames = request.getParameterNames();
-    Map<String, String> criteria = new HashMap<>();
-
-    while (parameterNames.hasMoreElements()) {
-      String paramName = parameterNames.nextElement();
-      String[] paramValues = request.getParameterValues(paramName);
-      criteria.put(paramName, String.join(",", paramValues));
-    }
-
-    if (report.getDate() != null && !report.getDate().isEmpty()) {
-      criteria.put("reportDate", report.getDate());
-    }
-
-    if (null != report.getMeasureId() && !report.getMeasureId().isEmpty()) {
-      criteria.put("measureId", report.getMeasureId());
-    }
-
-    return criteria;
-  }
-
-
-  private List<String> getPatientIdsFromList (String date, IGenericClient fhirStoreClient) {
+  private List<String> getPatientIdsFromList(String date, IGenericClient fhirStoreClient) {
     List<String> patientIds = new ArrayList<>();
     List<IBaseResource> bundles = new ArrayList<>();
 
     Bundle bundle = fhirStoreClient
             .search()
             .forResource(ListResource.class)
-            .and(ListResource.DATE.exactly().day(date))
+            .and(ListResource.DATE.exactly().day(date))   // TODO: This should be based on BETWEEN periodStart and periodEnd
             .returnBundle(Bundle.class)
             .execute();
 
@@ -192,7 +167,7 @@ public class ReportController extends BaseController {
     return patientIds;
   }
 
-  private Bundle getRemotePatientData (List<String> patientIdentifiers) {
+  private Bundle getRemotePatientData(List<String> patientIdentifiers) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -220,7 +195,7 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData (List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
+  private void queryAndStorePatientData(List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
@@ -257,7 +232,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  private DocumentReference getDocumentReferenceByMeasureAndPeriod (Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception{
+  private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
     DocumentReference documentReference = null;
     Bundle bundle = fhirStoreClient
             .search()
@@ -269,11 +244,10 @@ public class ReportController extends BaseController {
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
     int size = bundle.getEntry().size();
-    if (size > 0 ) {
-      if(size == 1) {
+    if (size > 0) {
+      if (size == 1) {
         documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
-      }
-      else{
+      } else {
         throw new Exception("We have more than 1 report for the selected measure and report date.");
       }
     }
@@ -281,35 +255,37 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/$generate")
-  public QueryReport generateReport (@AuthenticationPrincipal LinkCredentials user, Authentication authentication, HttpServletRequest request, @RequestBody() QueryReport report, boolean regenerate) throws Exception {
+  public GenerateResponse generateReport(
+          @AuthenticationPrincipal LinkCredentials user,
+          Authentication authentication,
+          HttpServletRequest request,
+          @RequestParam("reportDefId") String reportDefId,
+          @RequestParam("periodStart") String periodStart,
+          @RequestParam("periodEnd") String periodEnd,
+          boolean regenerate) throws Exception {
 
+    GenerateResponse response = new GenerateResponse();
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
-    Map<String, String> criteria = this.getCriteria(request, report);
-
-    logger.debug("Generating report, including criteria: " + criteria.toString());
-
-    HashMap<String, Object> contextData = new HashMap<>();
-
-    contextData.put("report", report);
-    contextData.put("fhirStoreClient", fhirStoreClient);
-    contextData.put("fhirContext", this.ctx);
+    ReportCriteria criteria = new ReportCriteria(reportDefId, periodStart, periodEnd);
+    ReportContext context = new ReportContext(fhirStoreClient, this.ctx);
 
     try {
       // Get the latest measure def and update it on the FHIR storage server
-      this.resolveMeasure(criteria, fhirStoreClient, contextData);
+      this.resolveMeasure(criteria, context);
 
       // Search the reference document by measure criteria nd reporting period
-      Identifier measureIdentifier = (Identifier) contextData.get("measureIdentifier");
-      QueryReport queryReport = (QueryReport) contextData.get("report");
-      String startDate = criteria.get("reportDate");
-      String endDate = LocalDate.parse(queryReport.getDate()).plusDays(1).toString();
-      DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(measureIdentifier, startDate, endDate, fhirStoreClient, regenerate);
+      DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
+              context.getReportDefBundle().getIdentifier(),
+              criteria.getPeriodStart(),
+              criteria.getPeriodEnd(),
+              fhirStoreClient,
+              regenerate);
       if (existingDocumentReference != null && !regenerate) {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
       // Get the patient identifiers for the given date
-      List<String> patientIdentifiers = this.getPatientIdsFromList(criteria.get("reportDate"), fhirStoreClient);
+      List<String> patientIdentifiers = this.getPatientIdsFromList(criteria.getPeriodStart(), fhirStoreClient);
 
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
@@ -323,8 +299,9 @@ public class ReportController extends BaseController {
       } else {
         id = null != existingDocumentReference ? existingDocumentReference.getMasterIdentifier().getValue() : "";
       }
-      contextData.put("reportId", id);
-      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, contextData, this.config, fhirStoreClient);
+      context.setReportId(id);
+      response.setReportId(id);
+      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
@@ -332,7 +309,7 @@ public class ReportController extends BaseController {
         // Save measure report and documentReference
         this.updateResource(measureReport, fhirStoreClient);
 
-        DocumentReference documentReference = this.generateDocumentReference(user, contextData, id);
+        DocumentReference documentReference = this.generateDocumentReference(user, criteria, context, id);
         if (existingDocumentReference != null) {
           documentReference.setId(existingDocumentReference.getId());
           this.updateResource(documentReference, fhirStoreClient);
@@ -347,19 +324,18 @@ public class ReportController extends BaseController {
       logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error.");
     }
-    return report;
+
+    return response;
   }
 
-  private DocumentReference generateDocumentReference (LinkCredentials user, HashMap<String, Object> contextData, String id) {
-
+  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String id) throws ParseException {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
     identifier.setValue(id);
-    documentReference.setMasterIdentifier(identifier);
 
-    Identifier measureId = (Identifier) contextData.get("measureIdentifier");
-    documentReference.addIdentifier(measureId);
+    documentReference.setMasterIdentifier(identifier);
+    documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
 
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
     List<Reference> list = new ArrayList<>();
@@ -371,9 +347,9 @@ public class ReportController extends BaseController {
     CodeableConcept type = new CodeableConcept();
     List<Coding> codings = new ArrayList<>();
     Coding coding = new Coding();
-    coding.setCode("55186-1");
-    coding.setSystem("http://loinc.org");
-    coding.setDisplay("Measure Document");
+    coding.setCode(Constants.DocRefCode);
+    coding.setSystem(Constants.LoincSystemUrl);
+    coding.setDisplay(Constants.DocRefDisplay);
     codings.add(coding);
     type.setCoding(codings);
     documentReference.setType(type);
@@ -385,12 +361,11 @@ public class ReportController extends BaseController {
     listDoc.add(doc);
     documentReference.setContent(listDoc);
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    QueryReport queryReport = (QueryReport) contextData.get("report");
-    LocalDate startDate = LocalDate.parse(queryReport.getDate());
-    LocalDate endDate = LocalDate.parse(queryReport.getDate()).plusDays(1);
+    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
+    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
     Period period = new Period();
-    period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
-    period.setEnd(java.sql.Timestamp.valueOf(endDate.atStartOfDay()));
+    period.setStart(startDate);
+    period.setEnd(endDate);
     docReference.setPeriod(period);
     documentReference.setContext(docReference);
     return documentReference;
@@ -404,7 +379,7 @@ public class ReportController extends BaseController {
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize
    */
   @PostMapping("/send")
-  public void send (@RequestBody() QueryReport report) throws Exception {
+  public void send(@RequestBody() QueryReport report) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
@@ -417,7 +392,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/download")
-  public void download (@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -433,8 +408,8 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate){
+  public ReportBundle searchReports(Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
+                                    @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
     Bundle documentReference;
     boolean andCond = false;
     try {
