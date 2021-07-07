@@ -1,3 +1,36 @@
-<div *ngIf="authService.user">
-    <app-report-body></app-report-body>
+<div class="card">
+    <div class="card-header">Report Generation Criteria</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <p><strong>Report Date</strong></p>
+                <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
+                <div class="input-group">
+                    <input class="form-control" placeholder="{{today | date: 'yyyy-MM-dd'}}"
+                           name="dp" [(ngModel)]="criteria.periodStart" ngbDatepicker #d="ngbDatepicker" (ngModelChange)="onDateSelected()">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                    </div>
+                </div>
+            </div>
+            <div ngbDropdown class="col-md-4">
+                <p><strong>Report Type</strong></p>
+                <button class="btn btn-outline-primary" id="measureEvalDropDown" ngbDropdownToggle>{{selectedReportTypeDisplay}}</button>
+                <div ngbDropdownMenu aria-labelledby="measureEvalDropDown">
+                    <div *ngFor="let config of measureConfigs">
+                        <button class="dropdown-item" id="measureOption" (click)="criteria.reportDefId = config.id">{{config.name}}
+                        </button>
+                    </div>
+                    <div *ngIf="!measureConfigs?.length">
+                        <button class="dropdown-item">No Reports</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <button type="button" class="btn btn-primary" (click)="reload()" [disabled]="disableGenerateReport()">{{generateReportButtonText}}</button>
+        <p class="help-block" *ngIf="loading">Generating report...</p>
+        <p class="help-block" *ngIf="!criteria.periodStart || !criteria.reportDefId">You must select a report date and type before generating...</p>
+    </div>
 </div>

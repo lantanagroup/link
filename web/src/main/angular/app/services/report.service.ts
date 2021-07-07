@@ -5,6 +5,7 @@ import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
 import {ReportBundle} from '../model/ReportBundle';
 import {UserModel} from "../model/UserModel";
+import {GenerateResponse} from '../model/generate-response';
 
 @Injectable()
 export class ReportService {
@@ -38,11 +39,15 @@ export class ReportService {
     return await this.http.post<QueryReport>(url, report).toPromise();
   }
 
-  async generate(report: QueryReport, regenerate:boolean) {
+  async generate(reportDefId: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = '/api/report/$generate?';
-    url+= 'regenerate=' + ( regenerate?'true':'false');
+    url += `reportDefId=${encodeURIComponent(reportDefId)}&`;
+    url += `periodStart=${encodeURIComponent(periodStart)}&`;
+    url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
+    url += 'regenerate=' + (regenerate ? 'true' : 'false' );
     url = this.configService.getApiUrl(url);
-    return await this.http.post<QueryReport>(url, report).toPromise();
+
+    return await this.http.post<GenerateResponse>(url, null).toPromise();
   }
 
   getReports(queryParams) {

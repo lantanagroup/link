@@ -26,6 +26,5 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
-    await this.authService.loginLocal();
   }
 }

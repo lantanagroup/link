@@ -30,11 +30,4 @@ export class ConfigService {
     this.config = await this.http.get<IConfig>('./assets/config.json').toPromise();
     await this.loadOverrideConfig();
   }
-
-  async getSmartConfig(issuer: string): Promise<IOAuthConfig> {
-    if (!this.config || !this.config.smart) throw new Error(`Server is not configured for smart-launch`);
-    const found = this.config.smart.find(sc => sc.issuer === issuer);
-    if (!found) throw new Error(`Link is not configured for smart-launch with issuer ${issuer}`);
-    return found;
-  }
 }
