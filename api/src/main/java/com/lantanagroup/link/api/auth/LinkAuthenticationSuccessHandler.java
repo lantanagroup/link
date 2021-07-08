@@ -2,8 +2,8 @@ package com.lantanagroup.link.api.auth;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
+import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -14,10 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthenticationSuccessHandler.class);
@@ -29,7 +27,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
 
   @Override
-  public void onAuthenticationSuccess (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication){
+  public void onAuthenticationSuccess (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
     IGenericClient fhirStoreClient = FhirContext.forR4().newRestfulGenericClient(config.getFhirServerStore());
     Practitioner practitioner = ((LinkCredentials) authentication.getPrincipal()).getPractitioner();
     try {
@@ -42,11 +40,14 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
               .execute();
       int size = bundle.getEntry().size();
       if (size == 0) {
-        fhirStoreClient.create().resource(practitioner).execute();
+        MethodOutcome outcome = fhirStoreClient.create().resource(practitioner).execute();
+        if (outcome.getCreated() && outcome.getResource() != null) {
+          practitioner.setId(outcome.getResource().getIdElement().getIdPart());
+        }
       } else {
         Practitioner foundPractitioner = ((Practitioner) bundle.getEntry().get(0).getResource());
+        practitioner.setId(foundPractitioner.getId());
         if (!isSamePractitioner(practitioner, foundPractitioner)) {
-          practitioner.setId(foundPractitioner.getId());
           fhirStoreClient.update().resource(practitioner).execute();
         }
       }

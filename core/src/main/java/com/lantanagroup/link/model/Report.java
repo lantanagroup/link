@@ -1,5 +1,6 @@
 package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.Helper;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
@@ -15,13 +16,13 @@ public class Report {
   String status;
   String docStatus;
   String author;
-  Date periodStartDate;
-  Date periodEndDate;
+  String periodStartDate;
+  String periodEndDate;
   Date creationDate;
-  Date submittedDate;
+  String submittedDate;
 
-  public Report(Bundle.BundleEntryComponent entry){
-    DocumentReference docReference = (DocumentReference)entry.getResource();
+  public Report (Bundle.BundleEntryComponent entry) {
+    DocumentReference docReference = (DocumentReference) entry.getResource();
     if (!docReference.getAuthor().isEmpty()) {
       this.setAuthor(docReference.getAuthor().get(0).getReference());
     }
@@ -36,16 +37,16 @@ public class Report {
       this.setCreationDate((docReference.getContent().get(0)).getAttachment().getCreationElement().getValue());
     }
     if (docReference.getContext() != null && docReference.getContext().getPeriod() != null && docReference.getContext().getPeriod().getEnd() != null) {
-      this.setPeriodEndDate(docReference.getContext().getPeriod().getEnd());
+      this.setPeriodEndDate(Helper.getFhirDate(docReference.getContext().getPeriod().getEnd()));
     }
     if (docReference.getContext() != null && docReference.getContext().getPeriod() != null && docReference.getContext().getPeriod().getStart() != null) {
-      this.setPeriodStartDate(docReference.getContext().getPeriod().getStart());
+      this.setPeriodStartDate(Helper.getFhirDate(docReference.getContext().getPeriod().getStart()));
     }
     if (!docReference.getIdentifier().isEmpty()) {
       this.setMeasureIdentifier(docReference.getIdentifier().get(0).getSystem() + "|" + docReference.getIdentifier().get(0).getValue());
     }
     if (docReference.getDate() != null) {
-      this.setSubmittedDate(docReference.getDate());
+      this.setSubmittedDate(Helper.getFhirDate(docReference.getDate()));
     }
   }
 }

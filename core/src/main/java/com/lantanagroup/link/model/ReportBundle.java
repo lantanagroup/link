@@ -1,6 +1,5 @@
 package com.lantanagroup.link.model;
 
-import com.lantanagroup.link.model.Report;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +12,5 @@ public class ReportBundle {
 
   String bundleId;
   List<Report> list = new ArrayList<>();
-
+  int totalSize;
 }

@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.fhir.transform.FHIRTransformResult;
@@ -60,7 +61,6 @@ public class PatientIdentifierController extends BaseController {
             } else {
                 ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
                 // filter out duplicates
-
                 List<ListResource.ListEntryComponent> uniqueEntries = ((ListResource) resource).getEntry().parallelStream()
                         .filter(e -> {
                             String systemA = e.getItem().getIdentifier().getSystem();
@@ -116,6 +116,7 @@ public class PatientIdentifierController extends BaseController {
                 .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
                 .and(ListResource.DATE.exactly().day(date))
                 .returnBundle(Bundle.class)
+                .cacheControl(new CacheControlDirective().setNoCache(true))
                 .execute();
     }
 

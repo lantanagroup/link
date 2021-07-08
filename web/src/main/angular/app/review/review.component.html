@@ -63,13 +63,13 @@
             {{getMeasureName(report.measureIdentifier)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.periodStartDate | date: "longDate"}}
+            {{report.periodStartDate}}
         </td>
         <td>
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.submittedDate | date: "longDate"}}
+            {{report.submittedDate}}
         </td>
         <td>
             {{getSubmitterName(report.author)}}
@@ -87,14 +87,16 @@
         <td colspan="7">
             <ngb-pagination class="d-flex justify-content-center"
                             [maxSize]="5"
-                            [collectionSize]="reports?.length || 0"
+                            (pageChange)="onPageChange($event)"
                             [(page)]="page"
                             [pageSize]="pageSize"
-                            [boundaryLinks]="true">
+                            [boundaryLinks]="true"
+                            [collectionSize]="totalSize">
             </ngb-pagination>
         </td>
 
     </tr>
+
     </tfoot>
 </table>
 
