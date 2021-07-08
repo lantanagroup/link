@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -73,6 +74,7 @@ public class ApiInit {
               .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
               .where(Bundle.IDENTIFIER.exactly().systemAndCode(measureBundle.getIdentifier().getSystem(), measureBundle.getIdentifier().getValue()))
               .returnBundle(Bundle.class)
+              .cacheControl(new CacheControlDirective().setNoCache(true))
               .execute();
 
       // If none found, create. If one found, update. If more than one found, respond with error.
