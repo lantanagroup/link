@@ -3,6 +3,7 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.model.StoredReportDefinition;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.Questionnaire;
@@ -48,7 +49,9 @@ public class ReportDefinitionController extends BaseController {
       } else if (reportDefinitionBundle.getEntryFirstRep().getResource() instanceof Questionnaire) {
         Questionnaire questionnaire = (Questionnaire) reportDefinitionBundle.getEntryFirstRep().getResource();
         storedMeasure.setName(questionnaire.hasTitle() ? questionnaire.getTitle() : questionnaire.getName());
-      } else {
+      }
+
+      if (StringUtils.isEmpty(storedMeasure.getName())) {
         storedMeasure.setName(reportDefinitionBundle.getIdentifier().getValue());
       }
 
