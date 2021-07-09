@@ -37,6 +37,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -140,7 +141,9 @@ public class ReportController extends BaseController {
 
     bundles.parallelStream().forEach(bundleResource -> {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
-      List<String> patientResourceIds = resource.getEntry().stream().map((patient) -> patient.getItem().getIdentifier().getSystem() + "|" + patient.getItem().getIdentifier().getValue()).collect(Collectors.toList());
+      List<String> patientResourceIds = resource.getEntry().stream().map((patient) -> patient.getItem().getIdentifier().getSystem()
+              + "|"
+              + patient.getItem().getIdentifier().getValue()).collect(Collectors.toList());
       patientIds.addAll(patientResourceIds);
     });
 
@@ -219,8 +222,8 @@ public class ReportController extends BaseController {
             .search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(measureIdentifier.getSystem(), measureIdentifier.getValue()))
-            .and(DocumentReference.PERIOD.after().day(startDate))
-            .and(DocumentReference.PERIOD.before().day(endDate))
+            .and(DocumentReference.PERIOD.afterOrEquals().day(startDate))
+            .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
@@ -343,11 +346,11 @@ public class ReportController extends BaseController {
     listDoc.add(doc);
     documentReference.setContent(listDoc);
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
-    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
+    LocalDate startDate = LocalDate.parse(criteria.getPeriodStart());
+    LocalDate endDate = LocalDate.parse(criteria.getPeriodEnd());
     Period period = new Period();
-    period.setStart(startDate);
-    period.setEnd(endDate);
+    period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
+    period.setEnd(java.sql.Timestamp.valueOf(endDate.atTime(23, 59, 59)));
     docReference.setPeriod(period);
     documentReference.setContext(docReference);
     return documentReference;

@@ -29,19 +29,19 @@ export class ReviewComponent implements OnInit {
         period: {startDate: null, endDate: null},
         submittedDate: null,
         submitter: 'Select submitter',
-        bundleId: ''
+        reportTypeId: ''
     };
 
     constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router) {
     }
 
     async onChangeFilters() {
-        this.filter.bundleId = "";
+        this.filter.reportTypeId = "";
         await this.searchReports();
     }
 
     resetFilters() {
-        this.filter.bundleId = "";
+        this.filter.reportTypeId = "";
         this.page = 1;
         this.filter.measure = 'Select measure';
         this.filter.status = 'Select status';
@@ -89,7 +89,7 @@ export class ReviewComponent implements OnInit {
 
     getFilterCriteria() {
         let filterCriteria = '';
-        if (this.filter.bundleId == "") {
+        if (this.filter.reportTypeId == "") {
             if (this.filter.measure !== "Select measure") {
                 // find the measure
                 const measure = this.measures.find(p => p.name === this.filter.measure);
@@ -117,7 +117,7 @@ export class ReviewComponent implements OnInit {
                 filterCriteria += `author=${submitter.id}`
             }
         } else {
-            filterCriteria += `bundleId=${this.filter.bundleId}&`
+            filterCriteria += `bundleId=${this.filter.reportTypeId}&`
             filterCriteria += `page=${this.page}`
         }
         return filterCriteria;
@@ -128,7 +128,7 @@ export class ReviewComponent implements OnInit {
         const reportBundle = await data;
         this.reports = reportBundle.list;
         this.totalSize = reportBundle.totalSize;
-        this.filter.bundleId = reportBundle.bundleId;
+        this.filter.reportTypeId = reportBundle.bundleId;
     }
 
     getMeasureName(measure: string) {
@@ -162,7 +162,7 @@ export class ReviewComponent implements OnInit {
 
     async onPageChange(newPage) {
         if (newPage == 1) {
-            this.filter.bundleId = '';
+            this.filter.reportTypeId = '';
         }
         this.page = newPage;
         await this.searchReports();
@@ -172,6 +172,5 @@ export class ReviewComponent implements OnInit {
         await this.searchReports();
         this.measures = await this.reportDefinitionService.getReportDefinitions();
         this.submitters = await this.reportService.getSubmitters();
-        console.log(this.submitters);
     }
 }

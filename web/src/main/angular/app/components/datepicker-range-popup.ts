@@ -43,7 +43,7 @@ export class NgbdDatepickerRangePopup {
     onDateSelection(date: NgbDate) {
         if (!this.fromDate && !this.toDate) {
             this.fromDate = date;
-        } else if (this.fromDate && !this.toDate && date && date.after(this.fromDate)) {
+        } else if (this.fromDate && !this.toDate && date && (date.equals(this.fromDate) || date.after(this.fromDate))) {
             this.toDate = date;
             this.change.emit({startDate: this.fromDate, endDate:this.toDate})
         } else {
