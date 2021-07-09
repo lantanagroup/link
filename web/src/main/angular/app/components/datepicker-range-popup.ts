@@ -10,7 +10,6 @@ import {NgbCalendar, NgbDate, NgbDateParserFormatter} from '@ng-bootstrap/ng-boo
             margin: 0;
             border: none;
             padding: 0;
-            display: none;
         }
 
         .custom-day {
