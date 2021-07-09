@@ -52,12 +52,8 @@ export class GenerateComponent implements OnInit {
       }
 
       // TODO: calculate periodEnd
-      const periodStartDate = new Date(Date.parse(this.criteria.periodStart));
-      const periodEndDate = new Date(periodStartDate.getTime());    // Clone start Date obj
-      periodEndDate.setDate(periodEndDate.getDate() + 1);           // Add one day
-      const periodStart = periodStartDate.toISOString();
-      const periodEnd = periodEndDate.toISOString();
-
+      const periodStart = this.criteria.periodStart ;
+      const periodEnd = this.criteria.periodStart ;
       try {
         const generateResponse = await this.reportService.generate(this.criteria.reportDefId, periodStart, periodEnd);
         await this.router.navigate(['review', generateResponse.reportId]);

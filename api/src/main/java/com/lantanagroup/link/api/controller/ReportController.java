@@ -2,7 +2,6 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.util.BundleUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
@@ -17,7 +16,6 @@ import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -35,11 +33,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -61,7 +57,7 @@ public class ReportController extends BaseController {
   @Autowired
   private ApplicationContext context;
 
-  private String storeReportBundleResources(Bundle bundle, IGenericClient fhirStoreClient) {
+  private String storeReportBundleResources (Bundle bundle, IGenericClient fhirStoreClient) {
     String measureId = null;
 
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
@@ -101,7 +97,7 @@ public class ReportController extends BaseController {
     return measureId;
   }
 
-  private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
+  private void resolveMeasure (ReportCriteria criteria, ReportContext context) throws Exception {
     // Find the report definition bundle for the given ID
     Bundle reportDefBundle = context.getFhirStoreClient()
             .read()
@@ -125,15 +121,15 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<String> getPatientIdsFromList(String date, IGenericClient fhirStoreClient) {
+  private List<String> getPatientIdsFromList (String date, IGenericClient fhirStoreClient) {
     List<String> patientIds = new ArrayList<>();
-    List<IBaseResource> bundles = new ArrayList<>();
 
     Bundle bundle = fhirStoreClient
             .search()
             .forResource(ListResource.class)
-            .and(ListResource.DATE.exactly().day(date))   // TODO: This should be based on BETWEEN periodStart and periodEnd
+            .and(ListResource.DATE.exactly().day(date))
             .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
 
     if (bundle.getEntry().size() == 0) {
@@ -141,25 +137,14 @@ public class ReportController extends BaseController {
       return patientIds;
     }
 
-    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
-
-    // Load the subsequent pages
-    while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
-      bundle = fhirStoreClient
-              .loadPage()
-              .next(bundle)
-              .execute();
-      logger.info("Adding next page of bundles...");
-      bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
-    }
+    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirStoreClient, ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
-      resource.getEntry().parallelStream().forEach(entry -> {
-        String patientId = entry.getItem().getIdentifier().getSystem() +
-                "|" + entry.getItem().getIdentifier().getValue();
-        patientIds.add(patientId);
-      });
+      List<String> patientResourceIds = resource.getEntry().stream().map((patient) -> patient.getItem().getIdentifier().getSystem()
+              + "|"
+              + patient.getItem().getIdentifier().getValue()).collect(Collectors.toList());
+      patientIds.addAll(patientResourceIds);
     });
 
     logger.info("Loaded " + patientIds.size() + " patient ids");
@@ -167,7 +152,7 @@ public class ReportController extends BaseController {
     return patientIds;
   }
 
-  private Bundle getRemotePatientData(List<String> patientIdentifiers) {
+  private Bundle getRemotePatientData (List<String> patientIdentifiers) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -195,7 +180,7 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData(List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
+  private void queryAndStorePatientData (List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
@@ -212,7 +197,6 @@ public class ReportController extends BaseController {
       if (patientDataBundle == null) {
         throw new Exception("patientDataBundle is null");
       }
-
 
       // Make sure the bundle is a transaction
       patientDataBundle.setType(Bundle.BundleType.TRANSACTION);
@@ -232,7 +216,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
+  private DocumentReference getDocumentReferenceByMeasureAndPeriod (Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
     DocumentReference documentReference = null;
     Bundle bundle = fhirStoreClient
             .search()
@@ -255,7 +239,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/$generate")
-  public GenerateResponse generateReport(
+  public GenerateResponse generateReport (
           @AuthenticationPrincipal LinkCredentials user,
           Authentication authentication,
           HttpServletRequest request,
@@ -328,11 +312,11 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String id) throws ParseException {
+  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
-    identifier.setValue(id);
+    identifier.setValue(identifierValue);
 
     documentReference.setMasterIdentifier(identifier);
     documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
@@ -340,7 +324,8 @@ public class ReportController extends BaseController {
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
     List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
-    reference.setReference("Practitioner/" + user.getPractitioner().getId());
+    String practitionerId = user.getPractitioner().getId();
+    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
     list.add(reference);
     documentReference.setAuthor(list);
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
@@ -361,11 +346,11 @@ public class ReportController extends BaseController {
     listDoc.add(doc);
     documentReference.setContent(listDoc);
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
-    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
+    LocalDate startDate = LocalDate.parse(criteria.getPeriodStart());
+    LocalDate endDate = LocalDate.parse(criteria.getPeriodEnd());
     Period period = new Period();
-    period.setStart(startDate);
-    period.setEnd(endDate);
+    period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
+    period.setEnd(java.sql.Timestamp.valueOf(endDate.atTime(23, 59, 59)));
     docReference.setPeriod(period);
     documentReference.setContext(docReference);
     return documentReference;
@@ -379,7 +364,7 @@ public class ReportController extends BaseController {
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize
    */
   @PostMapping("/send")
-  public void send(@RequestBody() QueryReport report) throws Exception {
+  public void send (@RequestBody() QueryReport report) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
@@ -392,7 +377,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/download")
-  public void download(@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  public void download (@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -408,8 +393,8 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ReportBundle searchReports(Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                    @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
+  public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
+                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
     Bundle documentReference;
     boolean andCond = false;
     try {
@@ -428,21 +413,21 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "identifier=" + URLEncoder.encode(identifier, StandardCharsets.UTF_8);
+          url += "identifier=" + Helper.URLEncode(identifier);
           andCond = true;
         }
         if (periodStartDate != null) {
           if (andCond) {
             url += "&";
           }
-          url += "period=gt" + periodStartDate;
+          url += "period=ge" + periodStartDate;
           andCond = true;
         }
         if (periodEndDate != null) {
           if (andCond) {
             url += "&";
           }
-          url += "period=lt" + periodEndDate;
+          url += "period=le" + periodEndDate;
           andCond = true;
         }
         if (docStatus != null) {
@@ -467,8 +452,9 @@ public class ReportController extends BaseController {
     }
     Stream<Report> lst = documentReference.getEntry().parallelStream().map(Report::new);
     ReportBundle reportBundle = new ReportBundle();
-    reportBundle.setBundleId(documentReference.getId());
+    reportBundle.setBundleId(bundleId != null ? bundleId : documentReference.getId());
     reportBundle.setList(lst.collect(Collectors.toList()));
+    reportBundle.setTotalSize(documentReference.getTotal());
     return reportBundle;
   }
 }

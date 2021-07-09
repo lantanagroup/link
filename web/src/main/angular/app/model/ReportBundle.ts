@@ -6,9 +6,11 @@ export class ReportBundle {
         status: string;
         docStatus: string;
         author: string;
-        periodStartDate: Date;
-        periodEndDate : Date;
-        creationDate : Date;
+        periodStartDate: string;
+        periodEndDate: string;
+        creationDate: Date;
+        submittedDate: string;
     }[];
+    totalSize: bigint;
 }
 
