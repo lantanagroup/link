@@ -1,25 +1,28 @@
 import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {NgbDate, NgbCalendar, NgbDateParserFormatter} from '@ng-bootstrap/ng-bootstrap';
+import {NgbCalendar, NgbDate, NgbDateParserFormatter} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'ngbd-datepicker-range-popup',
     templateUrl: './datepicker-range-popup.html',
     styles: [`
-    .form-group.hidden {
-      width: 0;
-      margin: 0;
-      border: none;
-      padding: 0;
-    }
-    .custom-day {
-      text-align: center;
-      padding: 0.185rem 0.25rem;
-      display: inline-block;
-      height: 2rem;
-      width: 2rem;
-    }
-    .custom-day.focused {
-      background-color: #e6e6e6;
+        .form-group.hidden {
+            width: 0;
+            margin: 0;
+            border: none;
+            padding: 0;
+            display: none;
+        }
+
+        .custom-day {
+            text-align: center;
+            padding: 0.185rem 0.25rem;
+            display: inline-block;
+            height: 2rem;
+            width: 2rem;
+        }
+
+        .custom-day.focused {
+            background-color: #e6e6e6;
     }
     .custom-day.range, .custom-day:hover {
       background-color: rgb(2, 117, 216);
@@ -45,7 +48,7 @@ export class NgbdDatepickerRangePopup {
             this.fromDate = date;
         } else if (this.fromDate && !this.toDate && date && (date.equals(this.fromDate) || date.after(this.fromDate))) {
             this.toDate = date;
-            this.change.emit({startDate: this.fromDate, endDate:this.toDate})
+            this.change.emit({startDate: this.fromDate, endDate: this.toDate})
         } else {
             this.toDate = null;
             this.fromDate = date;
