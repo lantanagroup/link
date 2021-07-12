@@ -63,13 +63,13 @@
             {{getMeasureName(report.measureIdentifier)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.periodStartDate}}
+            {{report.periodStartDate | date}}
         </td>
         <td>
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.submittedDate}}
+            {{report.submittedDate | date}}
         </td>
         <td>
             {{getSubmitterName(report.author)}}
