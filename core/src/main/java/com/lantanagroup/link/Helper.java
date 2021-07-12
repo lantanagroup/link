@@ -9,8 +9,7 @@ import java.time.ZoneId;
 import java.util.Date;
 
 public class Helper {
-	
-  private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
 	
   public static boolean isNullOrEmpty(String value) {
     return value == null || value.isEmpty();
@@ -27,11 +26,11 @@ public class Helper {
   }
 
   public static String getFhirDate(Date date) {
-    return simpleDateFormat.format(date);
+    return new SimpleDateFormat("yyyy-MM-dd").format(date);
   }
   
   public static Date parseFhirDate(String dateStr) throws ParseException {
-	  return simpleDateFormat.parse(dateStr);
+	  return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
   }
 
   public static String URLEncode(String url) {
