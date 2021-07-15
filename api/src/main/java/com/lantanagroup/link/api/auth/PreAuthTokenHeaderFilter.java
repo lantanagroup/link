@@ -22,29 +22,10 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     this.linkCredentials = linkCredentials;
   }
 
-
-  @Override
-  protected Object getPreAuthenticatedPrincipal (HttpServletRequest request) {
-
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      DecodedJWT jwt = JWT.decode(authHeader.substring(7));
-      linkCredentials.setJwt(jwt);
-      Practitioner practitioner = toPractitioner(jwt);
-      linkCredentials.setPractitioner(practitioner);
-      return linkCredentials;
-    }
-    return null;
-  }
-
-  @Override
-  protected Object getPreAuthenticatedCredentials (HttpServletRequest request) {
-    return request.getHeader(authHeaderName);
-  }
-
   private static Practitioner toPractitioner (DecodedJWT jwt) {
     Practitioner practitioner = new Practitioner();
     // set Practitioner Id
+    practitioner.getMeta().addTag(Constants.MainSystem, Constants.LinkUserTag, null);
     List identifiers = new ArrayList();
     Identifier identifier = new Identifier();
     identifier.setSystem(Constants.MainSystem);
@@ -78,5 +59,24 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
       practitioner.setTelecom(contactPointList);
     }
     return practitioner;
+  }
+
+  @Override
+  protected Object getPreAuthenticatedPrincipal (HttpServletRequest request) {
+
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      DecodedJWT jwt = JWT.decode(authHeader.substring(7));
+      linkCredentials.setJwt(jwt);
+      Practitioner practitioner = toPractitioner(jwt);
+      linkCredentials.setPractitioner(practitioner);
+      return linkCredentials;
+    }
+    return null;
+  }
+
+  @Override
+  protected Object getPreAuthenticatedCredentials (HttpServletRequest request) {
+    return request.getHeader(authHeaderName);
   }
 }

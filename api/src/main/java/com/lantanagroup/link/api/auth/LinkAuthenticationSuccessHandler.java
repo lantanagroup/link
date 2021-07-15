@@ -34,6 +34,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
       Bundle bundle = fhirStoreClient
               .search()
               .forResource(Practitioner.class)
+              .withTag(Constants.MainSystem, Constants.LinkUserTag)
               .where(Practitioner.IDENTIFIER.exactly().systemAndValues(Constants.MainSystem, practitioner.getIdentifier().get(0).getValue()))
               .returnBundle(Bundle.class)
               .cacheControl(new CacheControlDirective().setNoCache(true))
