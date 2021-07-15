@@ -128,7 +128,7 @@ export class ReviewComponent implements OnInit {
         const reportBundle = await data;
         this.reports = reportBundle.list;
         this.totalSize = reportBundle.totalSize;
-        this.filter.reportTypeId = reportBundle.bundleId;
+        this.filter.reportTypeId = reportBundle.reportTypeId;
     }
 
     getMeasureName(measure: string) {

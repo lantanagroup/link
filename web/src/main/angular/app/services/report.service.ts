@@ -63,4 +63,11 @@ export class ReportService {
     return this.http.get<UserModel[]>(url).toPromise();
   }
 
+
+  sendReport(reportId: number) {
+    let url = this.configService.getApiUrl('/api/report/');
+    url += `${encodeURIComponent(reportId)}/$send`;
+    return this.http.get(url).toPromise();
+  }
+
 }

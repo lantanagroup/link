@@ -101,7 +101,7 @@ public class FhirHelper {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode("measure-report");
-    tag.setSystem("https://nhsnlink.org");
+    tag.setSystem(Constants.MainSystem);
 
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);

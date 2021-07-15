@@ -36,7 +36,6 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -312,7 +311,7 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
+  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
@@ -360,19 +359,30 @@ public class ReportController extends BaseController {
    * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
    * responses using the DirectSender class.
    *
-   * @param report - this is the report data after generate report was clicked
-   * @throws Exception Thrown when the configured sender class is not found or fails to initialize
+   * @param reportId - this is the report identifier after generate report was clicked
+   * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
-  @PostMapping("/send")
-  public void send (@RequestBody() QueryReport report) throws Exception {
+  @GetMapping("/{reportId}/$send")
+  public void send (Authentication authentication, @PathVariable String reportId, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
-
     IReportSender sender;
     Class<?> senderClass = Class.forName(this.config.getSender());
     Constructor<?> senderConstructor = senderClass.getConstructor();
     sender = (IReportSender) senderConstructor.newInstance();
-
+    // get the report
+    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    Bundle bundle = fhirStoreClient
+            .search()
+            .forResource(DocumentReference.class)
+            .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(config.getDocumentReferenceSystem(), reportId))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+    if (bundle.getTotal() == 0) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not exist.");
+    }
+    MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
     sender.send(report, this.config, this.ctx);
   }
 
@@ -452,7 +462,7 @@ public class ReportController extends BaseController {
     }
     Stream<Report> lst = documentReference.getEntry().parallelStream().map(Report::new);
     ReportBundle reportBundle = new ReportBundle();
-    reportBundle.setBundleId(bundleId != null ? bundleId : documentReference.getId());
+    reportBundle.setReportTypeId(bundleId != null ? bundleId : documentReference.getId());
     reportBundle.setList(lst.collect(Collectors.toList()));
     reportBundle.setTotalSize(documentReference.getTotal());
     return reportBundle;

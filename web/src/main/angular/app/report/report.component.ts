@@ -1,6 +1,8 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute, Params} from "@angular/router";
 import {Subscription} from "rxjs";
+import {ReportService} from "../services/report.service";
+import {ToastService} from "../toast.service";
 
 @Component({
     selector: 'report',
@@ -9,11 +11,18 @@ import {Subscription} from "rxjs";
 })
 export class ReportComponent implements OnInit, OnDestroy {
     report: { id: number };
+    paramsSubscription: Subscription;
 
-    constructor(private route: ActivatedRoute) {
+    constructor(private route: ActivatedRoute, public reportService: ReportService, public toastService: ToastService,) {
     }
 
-    paramsSubscription: Subscription;
+    async sendReport() {
+        try {
+            await this.reportService.sendReport(this.report.id);
+        } catch (ex) {
+            this.toastService.showException('Error sending report: ' + this.report.id, ex);
+        }
+    }
 
     ngOnInit() {
         this.report = {
