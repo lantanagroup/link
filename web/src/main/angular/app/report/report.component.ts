@@ -12,6 +12,7 @@ import {ToastService} from "../toast.service";
 export class ReportComponent implements OnInit, OnDestroy {
     report: { id: number };
     paramsSubscription: Subscription;
+    submitReportButtonText: String = 'Submit';
 
     constructor(private route: ActivatedRoute, public reportService: ReportService, public toastService: ToastService,) {
     }
@@ -22,6 +23,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         } catch (ex) {
             this.toastService.showException('Error sending report: ' + this.report.id, ex);
         }
+        this.toastService.showInfo('Report sent!');
     }
 
     ngOnInit() {
