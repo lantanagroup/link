@@ -2,7 +2,6 @@ package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -23,14 +22,11 @@ public class LeidosSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(LeidosSender.class);
 
   @Override
-  public void send(QueryReport report, ApiConfig config, FhirContext ctx) throws Exception {
-    String measureReportJson = (String) report.getAnswer("measureReport");
-    MeasureReport measureReport = (MeasureReport) ctx.newJsonParser().parseResource(measureReportJson);
-
+  public void send (MeasureReport report, ApiConfig config, FhirContext ctx) throws Exception {
     logger.info("Building Bundle for MeasureReport...");
 
     IGenericClient fhirServerStore = ctx.newRestfulGenericClient(config.getFhirServerStore());
-    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirServerStore, ctx, config.getFhirServerStore());
+    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirServerStore, ctx, config.getFhirServerStore());
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 

@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 public class ReportBundle {
 
-  String bundleId;
+  String reportTypeId;
   List<Report> list = new ArrayList<>();
   int totalSize;
 }

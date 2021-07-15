@@ -1,5 +1,5 @@
 export class ReportBundle {
-    bundleId: string;
+    reportTypeId: string;
     list: {
         reportIdentifier: string;
         measureIdentifier: string;
