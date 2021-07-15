@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.model.UserModel;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -33,6 +34,7 @@ public class UserController extends BaseController {
     Bundle bundle = fhirStoreClient
             .search()
             .forResource(Practitioner.class)
+            .withTag(Constants.MainSystem, Constants.LinkUserTag)
             .returnBundle(Bundle.class)
             .execute();
 
