@@ -22,6 +22,7 @@ export class ReportComponent implements OnInit, OnDestroy {
             await this.reportService.sendReport(this.report.id);
         } catch (ex) {
             this.toastService.showException('Error sending report: ' + this.report.id, ex);
+            return;
         }
         this.toastService.showInfo('Report sent!');
     }
