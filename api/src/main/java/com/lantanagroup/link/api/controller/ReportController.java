@@ -36,7 +36,6 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -312,7 +311,7 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue){
+  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
