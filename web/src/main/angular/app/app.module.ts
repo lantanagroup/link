@@ -20,54 +20,56 @@ import {NgbdDatepickerRangePopup} from "./components/datepicker-range-popup";
 import {CalculatedFieldComponent} from './calculated-field/calculated-field.component';
 import {NgbdDatepickerPopup} from "./components/datepicker-popup";
 import {ReportDefinitionService} from './services/report-definition.service';
+import {ErrorPageComponent} from './error-page/error-page.component';
 
 export const initFactory = (configService: ConfigService, authService: AuthService) => {
-  return async () => {
-    await configService.loadConfig();
+    return async () => {
+        await configService.loadConfig();
 
-    await authService.loginLocal();
-  };
+        await authService.loginLocal();
+    };
 };
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    ToastsContainerComponent,
-    ReviewComponent,
-    GenerateComponent,
-    ReportComponent,
-    CalculatedFieldComponent,
-    NgbdDatepickerRangePopup,
-    NgbdDatepickerPopup
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    NgbModule,
-    HttpClientModule,
-    FormsModule,
-    OAuthModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initFactory,
-      deps: [ConfigService, AuthService],
-      multi: true
-    },
-    ConfigService,
-    ToastService,
-    AuthService,
-    ReportService,
-    CookieService,
-    ReportDefinitionService,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AddHeaderInterceptor,
-      multi: true
-    }
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        ToastsContainerComponent,
+        ReviewComponent,
+        GenerateComponent,
+        ReportComponent,
+        CalculatedFieldComponent,
+        NgbdDatepickerRangePopup,
+        NgbdDatepickerPopup,
+        ErrorPageComponent
+    ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule,
+        NgbModule,
+        HttpClientModule,
+        FormsModule,
+        OAuthModule.forRoot()
+    ],
+    providers: [
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initFactory,
+            deps: [ConfigService, AuthService],
+            multi: true
+        },
+        ConfigService,
+        ToastService,
+        AuthService,
+        ReportService,
+        CookieService,
+        ReportDefinitionService,
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AddHeaderInterceptor,
+            multi: true
+        }
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule {
 }
