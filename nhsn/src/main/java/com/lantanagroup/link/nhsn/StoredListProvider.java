@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IPatientIdProvider;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -20,7 +21,7 @@ public class StoredListProvider implements IPatientIdProvider {
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<String> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) {
+  public List<String> getPatientIdentifiers(ReportCriteria criteria, ReportContext context, ApiConfig config) {
     List<String> patientIdentifiers = new ArrayList<>();
     FhirContext ctx = context.getFhirContext();
 

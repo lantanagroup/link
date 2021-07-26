@@ -126,7 +126,7 @@ public class ReportController extends BaseController {
     Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
     Constructor<?> senderConstructor = senderClass.getConstructor();
     provider = (IPatientIdProvider) senderConstructor.newInstance();
-    return provider.getPatientIdentifiers(criteria, context);
+    return provider.getPatientIdentifiers(criteria, context, this.config);
   }
 
   private Bundle getRemotePatientData (List<String> patientIdentifiers) {
