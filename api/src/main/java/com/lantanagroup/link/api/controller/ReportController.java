@@ -15,12 +15,10 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpException;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +38,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -408,25 +404,13 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}")
-  public DocumentReferenceReport getReport(
+  public ReportModel getReport(
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
-
-    return new DocumentReferenceReport(client, id);
-
-  }
-
-  @DeleteMapping(value = "/{id}")
-  public void deleteReport(
-          @PathVariable("id") String id,
-          Authentication authentication,
-          HttpServletRequest request) throws Exception{
-    Bundle deleteRequest = new Bundle();
-
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    ReportModel report = new ReportModel();
 
     Bundle documentReferences = client.search()
             .forResource("DocumentReference")
@@ -435,27 +419,39 @@ public class ReportController extends BaseController {
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
 
-    if (documentReferences.hasEntry() && !documentReferences.getEntry().get(0).isEmpty()) {
-      DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
-
-
-      // Make sure the bundle is a transaction
-      deleteRequest.setType(Bundle.BundleType.TRANSACTION);
-      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      deleteRequest.getEntry().forEach(entry -> {
-        entry.getRequest()
-                .setMethod(Bundle.HTTPVerb.DELETE);
-      });
-      deleteRequest.getEntry().get(0).getRequest().setUrl("MeasureReport/" + documentReference.getMasterIdentifier().getValue());
-      deleteRequest.getEntry().get(1).getRequest().setUrl("DocumentReference/" + documentReference.getId());
-
-      client.transaction().withBundle(deleteRequest).execute();
-    }
-    else {
-      throw new HttpResponseException(500, "Couldn't find DocumentReference with identifier: " + id);
+    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
+      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
     }
 
+    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+
+    Bundle measureBundle = client.search()
+            .forResource("Measure")
+            .where(Measure.IDENTIFIER.exactly().identifier(documentReference.getIdentifier().get(0).getValue()))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    MeasureReport measureReport = client.read()
+            .resource(MeasureReport.class)
+            .withId(documentReference.getMasterIdentifier().getValue())
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+    report.setMeasureReport(measureReport);
+
+    // Assuming that each measure has a unique identifier (only one measure returned per id)
+    report.setMeasure(
+            measureBundle.hasEntry() && !measureBundle.getEntry().get(0).isEmpty() ?
+            (Measure) measureBundle.getEntry().get(0).getResource() :
+            null
+    );
+
+    report.setIdentifier(id);
+    report.setVersion(null);
+    report.setStatus(documentReference.getStatus().toString());
+    report.setDate(documentReference.getDate());
+
+    return report;
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
