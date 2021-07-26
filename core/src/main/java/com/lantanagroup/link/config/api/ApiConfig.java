@@ -24,6 +24,7 @@ public class ApiConfig {
     private String authJwksUrl;
     private String downloader;
     private String sender;
+    private String patientIdResolver;
     private String sendUrl;
     private String documentReferenceSystem;
 

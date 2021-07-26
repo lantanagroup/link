@@ -3,6 +3,7 @@ api:
   auth-jwks-url:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.LeidosSender
+  patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   send-url:
   cors:
     allowed-origins: '*'
