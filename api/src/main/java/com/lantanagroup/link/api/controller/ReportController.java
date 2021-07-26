@@ -15,9 +15,12 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpException;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -400,6 +405,57 @@ public class ReportController extends BaseController {
     downloader.download(report, response, this.ctx, this.config);
 
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+  }
+
+  @GetMapping(value = "/{id}")
+  public DocumentReferenceReport getReport(
+          @PathVariable("id") String id,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception {
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+
+    return new DocumentReferenceReport(client, id);
+
+  }
+
+  @DeleteMapping(value = "/{id}")
+  public void deleteReport(
+          @PathVariable("id") String id,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception{
+    Bundle deleteRequest = new Bundle();
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+
+    Bundle documentReferences = client.search()
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    if (documentReferences.hasEntry() && !documentReferences.getEntry().get(0).isEmpty()) {
+      DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+
+
+      // Make sure the bundle is a transaction
+      deleteRequest.setType(Bundle.BundleType.TRANSACTION);
+      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+      deleteRequest.getEntry().forEach(entry -> {
+        entry.getRequest()
+                .setMethod(Bundle.HTTPVerb.DELETE);
+      });
+      deleteRequest.getEntry().get(0).getRequest().setUrl("MeasureReport/" + documentReference.getMasterIdentifier().getValue());
+      deleteRequest.getEntry().get(1).getRequest().setUrl("DocumentReference/" + documentReference.getId());
+
+      client.transaction().withBundle(deleteRequest).execute();
+    }
+    else {
+      throw new HttpResponseException(500, "Couldn't find DocumentReference with identifier: " + id);
+    }
+
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
