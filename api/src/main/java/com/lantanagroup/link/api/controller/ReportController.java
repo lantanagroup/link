@@ -16,7 +16,6 @@ import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -120,35 +120,12 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<String> getPatientIdsFromList (String date, IGenericClient fhirStoreClient) {
-    List<String> patientIds = new ArrayList<>();
-
-    Bundle bundle = fhirStoreClient
-            .search()
-            .forResource(ListResource.class)
-            .and(ListResource.DATE.exactly().day(date))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-
-    if (bundle.getEntry().size() == 0) {
-      logger.info("No patient identifier lists found matching time stamp " + date);
-      return patientIds;
-    }
-
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirStoreClient, ctx);
-
-    bundles.parallelStream().forEach(bundleResource -> {
-      ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
-      List<String> patientResourceIds = resource.getEntry().stream().map((patient) -> patient.getItem().getIdentifier().getSystem()
-              + "|"
-              + patient.getItem().getIdentifier().getValue()).collect(Collectors.toList());
-      patientIds.addAll(patientResourceIds);
-    });
-
-    logger.info("Loaded " + patientIds.size() + " patient ids");
-    patientIds.forEach(id -> logger.info("PatientId: " + id));
-    return patientIds;
+  private List<String> getPatientIdentifiers (ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    IPatientIdProvider provider;
+    Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
+    Constructor<?> senderConstructor = senderClass.getConstructor();
+    provider = (IPatientIdProvider) senderConstructor.newInstance();
+    return provider.getPatientIdentifiers(criteria, context);
   }
 
   private Bundle getRemotePatientData (List<String> patientIdentifiers) {
@@ -268,7 +245,7 @@ public class ReportController extends BaseController {
       }
 
       // Get the patient identifiers for the given date
-      List<String> patientIdentifiers = this.getPatientIdsFromList(criteria.getPeriodStart(), fhirStoreClient);
+      List<String> patientIdentifiers = this.getPatientIdentifiers(criteria, context);
 
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
