@@ -89,13 +89,15 @@ public class PatientData {
   }
 
   private void addEntryToBundle(Bundle source, Bundle destination) {
-    source.getEntry().forEach(entry -> {
-      destination.addEntry().setResource(entry
-              .getResource())
-              .getRequest()
-              .setMethod(Bundle.HTTPVerb.PUT)
-              .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-    });
+    if (source != null) {
+      source.getEntry().forEach(entry -> {
+        destination.addEntry().setResource(entry
+                .getResource())
+                .getRequest()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
+      });
+    }
   }
 
   public Bundle getBundle() {

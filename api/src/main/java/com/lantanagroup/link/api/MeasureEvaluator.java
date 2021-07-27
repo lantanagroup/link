@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.rest.param.DateParam;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -28,15 +29,21 @@ public class MeasureEvaluator {
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport = null;
 
-    String url = this.config.getFhirServerStore();
-    if (!url.endsWith("/")) url += "/";
-    url += "Measure/" + this.context.getMeasureId() + "/$evaluate-measure?" +
-            "periodStart=" + this.criteria.getPeriodStart() + "&" +
-            "periodEnd=" + this.criteria.getPeriodEnd();
-
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
-      measureReport = this.context.getFhirStoreClient().fetchResourceFromUrl(MeasureReport.class, url);
+
+      Parameters parameters = new Parameters();
+      parameters.addParameter().setName("periodStart").setValue(new DateType(this.criteria.getPeriodStart()));
+      parameters.addParameter().setName("periodEnd").setValue(new DateType(this.criteria.getPeriodEnd()));
+
+      measureReport = this.context.getFhirStoreClient().operation()
+              .onInstance(new IdType("Measure", this.context.getMeasureId()))
+              .named("$evaluate-measure")
+              .withParameters(parameters)
+              .useHttpGet()
+              .returnResourceType(MeasureReport.class)
+              .execute();
+
       logger.info(String.format("Done executing $evaluate-measure for %s", this.context.getMeasureId()));
 
       if (this.config.getMeasureLocation() != null) {

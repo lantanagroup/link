@@ -21,6 +21,7 @@ public class BaseQuery {
 
   protected IGenericClient getFhirQueryClient() throws ClassNotFoundException {
     FhirContext ctx = FhirContext.forR4();
+    ctx.getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
     IGenericClient fhirQueryServer = ctx.newRestfulGenericClient(this.config.getFhirServerBase());
 
     if (Strings.isNotEmpty(this.config.getAuthClass())) {
