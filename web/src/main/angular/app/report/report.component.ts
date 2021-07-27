@@ -10,21 +10,28 @@ import {ToastService} from "../toast.service";
     styleUrls: ['./report.component.css']
 })
 export class ReportComponent implements OnInit, OnDestroy {
-    report: { id: number };
+    report: { id: string };
     paramsSubscription: Subscription;
-    submitReportButtonText: String = 'Submit';
 
     constructor(private route: ActivatedRoute, public reportService: ReportService, public toastService: ToastService,) {
     }
 
-    async sendReport() {
+    async send() {
         try {
-            await this.reportService.sendReport(this.report.id);
+            await this.reportService.send(this.report.id);
+            this.toastService.showInfo('Report sent!');
         } catch (ex) {
             this.toastService.showException('Error sending report: ' + this.report.id, ex);
-            return;
         }
-        this.toastService.showInfo('Report sent!');
+    }
+
+    async download() {
+        try {
+            await this.reportService.download(this.report.id);
+            this.toastService.showInfo('Report downloaded!');
+        } catch (ex) {
+            this.toastService.showException('Error downloading report: ' + this.report.id, ex);
+        }
     }
 
     ngOnInit() {
@@ -42,5 +49,4 @@ export class ReportComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         this.paramsSubscription.unsubscribe();
     }
-
 }

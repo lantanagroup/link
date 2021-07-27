@@ -1,4 +1,5 @@
 <p>Report Id:  {{ report.id}}</p>
-<button class="btn btn-primary" on-click="sendReport()">{{submitReportButtonText}}</button>
-
-
+<div class="btn-group">
+    <button class="btn btn-primary" (click)="send()">Send</button>
+    <button class="btn btn-primary" (click)="download()">Download</button>
+</div>

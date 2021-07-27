@@ -344,10 +344,12 @@ public class ReportController extends BaseController {
   public void send (Authentication authentication, @PathVariable String reportId, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
+
     IReportSender sender;
     Class<?> senderClass = Class.forName(this.config.getSender());
     Constructor<?> senderConstructor = senderClass.getConstructor();
     sender = (IReportSender) senderConstructor.newInstance();
+
     // get the report
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Bundle bundle = fhirStoreClient
@@ -360,12 +362,13 @@ public class ReportController extends BaseController {
     if (bundle.getTotal() == 0) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not exist.");
     }
+
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
     sender.send(report, this.config, this.ctx);
   }
 
-  @PostMapping("/download")
-  public void download (@RequestBody() QueryReport report, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  @GetMapping("/{reportId}/$download")
+  public void download (@PathVariable String reportId, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -375,7 +378,7 @@ public class ReportController extends BaseController {
     Constructor<?> downloaderCtor = downloaderClass.getConstructor();
     downloader = (IReportDownloader) downloaderCtor.newInstance();
 
-    downloader.download(report, response, this.ctx, this.config);
+    downloader.download(reportId, fhirStoreClient, response, this.ctx, this.config);
 
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
   }

@@ -23,22 +23,6 @@ export class ReportService {
     return parts[1].substring('filename='.length + 1).replace(/"/g, '');
   }
 
-  async download(report: QueryReport) {
-    const url = this.configService.getApiUrl('/api/report/download');
-    const convertResponse = await this.http.post(url, report, {observe: 'response', responseType: 'blob'}).toPromise();
-
-    const contentDisposition = convertResponse.headers.get('Content-Disposition');
-    const contentType = convertResponse.headers.get('Content-Type');
-
-    saveAs(convertResponse.body, this.getFileName(contentDisposition, contentType));
-  }
-
-  async send(report: QueryReport) {
-    let url = '/api/report/send';
-    url = this.configService.getApiUrl(url);
-    return await this.http.post<QueryReport>(url, report).toPromise();
-  }
-
   async generate(reportDefId: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = '/api/report/$generate?';
     url += `reportDefId=${encodeURIComponent(reportDefId)}&`;
@@ -63,11 +47,18 @@ export class ReportService {
     return this.http.get<UserModel[]>(url).toPromise();
   }
 
-
-  sendReport(reportId: number) {
-    let url = this.configService.getApiUrl('/api/report/');
-    url += `${encodeURIComponent(reportId)}/$send`;
+  async send(reportId: string) {
+    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$send`);
     return this.http.get(url).toPromise();
   }
 
+  async download(reportId: string) {
+    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$download`);
+    const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
+
+    const contentDisposition = downloadResponse.headers.get('Content-Disposition');
+    const contentType = downloadResponse.headers.get('Content-Type');
+
+    saveAs(downloadResponse.body, this.getFileName(contentDisposition, contentType));
+  }
 }
