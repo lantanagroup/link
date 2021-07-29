@@ -15,6 +15,7 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
@@ -381,6 +382,95 @@ public class ReportController extends BaseController {
     downloader.download(reportId, fhirStoreClient, response, this.ctx, this.config);
 
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+  }
+
+  @GetMapping(value = "/{id}")
+  public ReportModel getReport(
+          @PathVariable("id") String id,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception {
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    ReportModel report = new ReportModel();
+
+    Bundle documentReferences = client.search()
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
+      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
+    }
+
+    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+
+    Bundle measureBundle = client.search()
+            .forResource("Measure")
+            .where(Measure.IDENTIFIER.exactly().identifier(documentReference.getIdentifier().get(0).getValue()))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    MeasureReport measureReport = client.read()
+            .resource(MeasureReport.class)
+            .withId(documentReference.getMasterIdentifier().getValue())
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+    report.setMeasureReport(measureReport);
+
+    // Assuming that each measure has a unique identifier (only one measure returned per id)
+    report.setMeasure(
+            measureBundle.hasEntry() && !measureBundle.getEntry().get(0).isEmpty() ?
+            (Measure) measureBundle.getEntry().get(0).getResource() :
+            null
+    );
+
+    report.setIdentifier(id);
+    report.setVersion(null);
+    report.setStatus(documentReference.getStatus().toString());
+    report.setDate(documentReference.getDate());
+
+    return report;
+  }
+
+  @DeleteMapping(value = "/{id}")
+  public void deleteReport(
+          @PathVariable("id") String id,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception{
+    Bundle deleteRequest = new Bundle();
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    Bundle documentReferences = client.search()
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+    if (documentReferences.hasEntry() && !documentReferences.getEntry().get(0).isEmpty()) {
+      DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+      // Make sure the bundle is a transaction
+      deleteRequest.setType(Bundle.BundleType.TRANSACTION);
+      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+      deleteRequest.getEntry().forEach(entry -> {
+        entry.getRequest()
+                .setMethod(Bundle.HTTPVerb.DELETE);
+      });
+      String documentReferenceId = documentReference.getId();
+      documentReferenceId = documentReferenceId.substring(documentReferenceId.indexOf("/DocumentReference/") + "/DocumentReference/".length(),
+              documentReferenceId.indexOf("/_history/"));
+      deleteRequest.getEntry().get(0).getRequest().setUrl("MeasureReport/" + documentReference.getMasterIdentifier().getValue());
+      deleteRequest.getEntry().get(1).getRequest().setUrl("DocumentReference/" + documentReferenceId);
+      client.transaction().withBundle(deleteRequest).execute();
+      FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
+              FhirHelper.AuditEventTypes.Export, "Successfully deleted DocumentReference" +
+              documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
+    }
+    else {
+      throw new HttpResponseException(500, "Couldn't find DocumentReference with identifier: " + id);
+    }
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})

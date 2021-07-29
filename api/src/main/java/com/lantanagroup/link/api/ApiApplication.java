@@ -1,15 +1,11 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.Constants;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.query.auth.CernerAuthConfig;
+import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Meta;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -20,13 +16,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.fasterxml.jackson.databind.Module;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 @SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.api", "com.lantanagroup.link.config", "com.lantanagroup.link.config.api", "com.lantanagroup.link.query.auth"})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
@@ -94,5 +87,12 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
     return new ApiInit();
+  }
+
+  @Bean
+  public Module module() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(new FhirJsonSerializer());
+    return module;
   }
 }
