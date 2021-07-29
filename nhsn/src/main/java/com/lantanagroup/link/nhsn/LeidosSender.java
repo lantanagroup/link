@@ -23,7 +23,11 @@ public class LeidosSender implements IReportSender {
 
   @Override
   public void send (MeasureReport report, ApiConfig config, FhirContext ctx) throws Exception {
-    logger.info("Building Bundle for MeasureReport...");
+    if (config.getSendUrl() == null || config.getSendUrl().isEmpty()) {
+      throw new Exception("Not configured with any locations to send");
+    }
+
+    logger.info("Building Bundle for MeasureReport to send...");
 
     IGenericClient fhirServerStore = ctx.newRestfulGenericClient(config.getFhirServerStore());
     Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirServerStore, ctx, config.getFhirServerStore());
@@ -32,18 +36,23 @@ public class LeidosSender implements IReportSender {
 
     String xml = ctx.newXmlParser().encodeResourceToString(bundle);
 
-    logger.info("Sending MeasureReport bundle to URL " + config.getSendUrl());
+    logger.trace(String.format("Configured to send to %s locations", config.getSendUrl().size()));
 
-    HttpPost request = new HttpPost(config.getSendUrl());
-    request.addHeader("Content-Type", "application/xml");
-    request.setEntity(new StringEntity(xml));
+    for (String sendUrl : config.getSendUrl()) {
+      logger.info("Sending MeasureReport bundle to URL " + sendUrl);
 
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      HttpResponse result = httpClient.execute(request);
-      String response = EntityUtils.toString(result.getEntity(), "UTF-8");
-    } catch (IOException ex) {
-      logger.error("Error while sending MeasureReport bundle to URL", ex);
-      throw ex;
+      HttpPost request = new HttpPost(sendUrl);
+      request.addHeader("Content-Type", "application/xml");
+      request.setEntity(new StringEntity(xml));
+
+      try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+        // HttpResponse result = httpClient.execute(request);
+        // String response = EntityUtils.toString(result.getEntity(), "UTF-8");
+        httpClient.execute(request);
+      } catch (IOException ex) {
+        logger.error("Error while sending MeasureReport bundle to URL", ex);
+        throw ex;
+      }
     }
   }
 }

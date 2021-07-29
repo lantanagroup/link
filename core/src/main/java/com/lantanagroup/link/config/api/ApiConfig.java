@@ -25,7 +25,7 @@ public class ApiConfig {
     private String downloader;
     private String sender;
     private String patientIdResolver;
-    private String sendUrl;
+    private List<String> sendUrl;
     private String documentReferenceSystem;
 
     @Getter
