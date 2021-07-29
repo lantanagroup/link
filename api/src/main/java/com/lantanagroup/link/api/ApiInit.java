@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Meta;
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ public class ApiInit {
   @Autowired
   private ApiConfig config;
 
-  private void loadMeasures() {
+  private void loadReportDefinitions() {
     HttpClient client = HttpClient.newHttpClient();
     FhirContext ctx = FhirContext.forR4();
     IParser jsonParser = ctx.newJsonParser();
@@ -32,72 +33,100 @@ public class ApiInit {
 
     logger.info("Loading measures defined in configuration...");
 
-    this.config.getMeasures().forEach(measureConfig -> {
-      logger.info(String.format("Getting the latest measure definition from URL %s", measureConfig.getUrl()));
+    this.config.getReportDefs().getUrls().parallelStream().forEach(reportDefUrl -> {
+      logger.info(String.format("Getting the latest report definition from URL %s", reportDefUrl));
       HttpRequest request = HttpRequest.newBuilder()
-              .uri(URI.create(measureConfig.getUrl()))
+              .uri(URI.create(reportDefUrl))
               .build();
 
+      Integer retryCount = 0;
       String content = null;
-      try {
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        content = response.body();
-      } catch (ConnectException ex) {
-        logger.error(String.format("Error loading measure from URL %s due to a connection issue", measureConfig.getUrl()));
-      } catch (Exception ex) {
-        logger.error(String.format("Error loading measure from URL %s due to %s", measureConfig.getUrl(), ex.getMessage()));
+
+      while (Strings.isEmpty(content) && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+        try {
+          HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+          content = response.body();
+        } catch (ConnectException ex) {
+          retryCount++;
+
+          logger.error(String.format("Error loading report definition from URL %s due to a connection issue", reportDefUrl));
+          if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
+            logger.info(String.format("Retrying to retrieve report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+          } else if (this.config.getReportDefs().getRetryWait() <= 0) {
+            logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
+            return;
+          } else {
+            logger.error(String.format("Reached maximum retry attempts for report definition %s", reportDefUrl));
+            return;
+          }
+
+          try {
+            Thread.sleep(this.config.getReportDefs().getRetryWait());
+          } catch (InterruptedException ie) {
+            return;
+          }
+        } catch (Exception ex) {
+          logger.error(String.format("Error loading report def from URL %s due to %s", reportDefUrl, ex.getMessage()));
+          return;
+        }
+      }
+
+      if (Strings.isEmpty(content)) {
+        logger.error(String.format("Could not retrieve report definition at %s", reportDefUrl));
         return;
       }
 
-      Bundle measureBundle = null;
+      Bundle reportDefBundle = null;
       try {
         if (content.trim().startsWith("{") || content.trim().startsWith("[")) {
-          measureBundle = jsonParser.parseResource(Bundle.class, content);
+          reportDefBundle = jsonParser.parseResource(Bundle.class, content);
         } else {
-          measureBundle = xmlParser.parseResource(Bundle.class, content);
+          reportDefBundle = xmlParser.parseResource(Bundle.class, content);
         }
       } catch (Exception ex) {
-        logger.error(String.format("Error parsing measure bundle from URL %s due to %s", measureConfig.getUrl(), ex.getMessage()));
+        logger.error(String.format("Error parsing report def bundle from URL %s due to %s", reportDefUrl, ex.getMessage()));
         return;
       }
 
-      // Make sure the measure bundle has an identifier
-      if (measureBundle.getIdentifier() == null) {
-        logger.error(String.format("Measure bundle from URL %s does not have an identifier to distinguish itself", measureConfig.getUrl()));
+      // Make sure the report def bundle has an identifier
+      if (reportDefBundle.getIdentifier() == null) {
+        logger.error(String.format("Report definition from URL %s does not have an identifier to distinguish itself", reportDefUrl));
         return;
       }
 
-      // Search to see if the measure bundle already exists
+      logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", reportDefBundle.getIdentifier().getValue(), reportDefBundle.getIdentifier().getSystem()));
+
+      // Search to see if the report def bundle already exists
       IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
       Bundle searchResults = fhirClient.search()
               .forResource("Bundle")
               .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
-              .where(Bundle.IDENTIFIER.exactly().systemAndCode(measureBundle.getIdentifier().getSystem(), measureBundle.getIdentifier().getValue()))
+              .where(Bundle.IDENTIFIER.exactly().systemAndCode(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()))
               .returnBundle(Bundle.class)
               .cacheControl(new CacheControlDirective().setNoCache(true))
               .execute();
 
       // If none found, create. If one found, update. If more than one found, respond with error.
       if (searchResults.getEntry().size() == 0) {
-        measureBundle.setId((String)null);
-        measureBundle.setMeta(new Meta());
-        measureBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        fhirClient.create().resource(measureBundle).execute();
-        logger.info(String.format("Created measure bundle from URL %s as ID %s", measureConfig.getUrl(), measureBundle.getIdElement().getIdPart()));
+        reportDefBundle.setId((String)null);
+        reportDefBundle.setMeta(new Meta());
+        reportDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
+        fhirClient.create().resource(reportDefBundle).execute();
+        logger.info(String.format("Created report def bundle from URL %s as ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
       } else if (searchResults.getEntry().size() == 1) {
-        Bundle foundMeasureBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
-        measureBundle.setId(foundMeasureBundle.getIdElement().getIdPart());
-        measureBundle.setMeta(foundMeasureBundle.getMeta());
-        fhirClient.update().resource(measureBundle).execute();
-        logger.info(String.format("Updated measure bundle from URL %s with ID %s", measureConfig.getUrl(), measureBundle.getIdElement().getIdPart()));
+        Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
+        reportDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
+        reportDefBundle.setMeta(foundReportDefBundle.getMeta());
+        fhirClient.update().resource(reportDefBundle).execute();
+        logger.info(String.format("Updated report def bundle from URL %s with ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
       } else {
-        logger.error(String.format("Found multiple measure bundles with identifier %s|%s", measureBundle.getIdentifier().getSystem(), measureBundle.getIdentifier().getValue()));
+        logger.error(String.format("Found multiple report def bundles with identifier %s|%s", reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()));
         return;
       }
     });
   }
 
   public void init() {
-    this.loadMeasures();
+    this.loadReportDefinitions();
   }
 }

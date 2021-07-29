@@ -38,7 +38,7 @@ public class ApiConfig {
     private IDirectConfig direct;
 
     @Getter
-    private List<ApiMeasureConfig> measures;
+    private ApiReportDefsConfig reportDefs;
 
     @Getter @NotNull
     private ApiQueryConfig query;
