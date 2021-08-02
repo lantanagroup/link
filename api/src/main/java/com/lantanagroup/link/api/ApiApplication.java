@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api;
 
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
@@ -16,12 +17,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import com.fasterxml.jackson.databind.Module;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.api", "com.lantanagroup.link.config", "com.lantanagroup.link.config.api", "com.lantanagroup.link.query.auth"})
+@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.api", "com.lantanagroup.link.config", "com.lantanagroup.link.config.api", "com.lantanagroup.link.query"})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
@@ -65,7 +65,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean
   public WebMvcConfigurer corsConfigurer() {
-    // TODO: Replace with configuration
     String allowsOrigins = this.config.getCors().getAllowedOrigins();
     String[] allowedMethods = this.config.getCors().getAllowedMethods();
     String allowedHeaders = this.config.getCors().getAllowedHeaders();

@@ -1,8 +1,8 @@
 package com.lantanagroup.link.query.api.controller;
 
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ public class QueryController {
 
     try {
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      query = QueryFactory.getQueryInstance(this.context, queryConfig);
+      query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
     } catch (Exception ex) {
       logger.error("Error instantiating instance of IQuery", ex);
       throw new HttpResponseException(500, "Internal Server Error");
