@@ -136,7 +136,7 @@ public class ReportController extends BaseController {
       URIBuilder uriBuilder = new URIBuilder(url.toString());
       patientIdentifiers.forEach(patientIdentifier -> uriBuilder.addParameter("patientIdentifier", patientIdentifier));
 
-      logger.info("Scooping data remotely for the patients: " + StringUtils.join(patientIdentifiers, ", ") + " from: " + uriBuilder.toString());
+      logger.info("Scooping data remotely for the patients: " + StringUtils.join(patientIdentifiers, ", ") + " from: " + uriBuilder);
 
       HttpRequest request = HttpRequest.newBuilder()
               .uri(uriBuilder.build().toURL().toURI())
@@ -166,7 +166,7 @@ public class ReportController extends BaseController {
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-        IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig);
+        IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientDataBundle = this.getRemotePatientData(patientIdentifiers);
@@ -178,11 +178,11 @@ public class ReportController extends BaseController {
 
       // Make sure the bundle is a transaction
       patientDataBundle.setType(Bundle.BundleType.TRANSACTION);
-      patientDataBundle.getEntry().forEach(entry -> {
-        entry.getRequest()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-      });
+      patientDataBundle.getEntry().forEach(entry ->
+              entry.getRequest()
+                      .setMethod(Bundle.HTTPVerb.PUT)
+                      .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
+      );
 
       // Store the data
       logger.info("Storing data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
@@ -454,10 +454,9 @@ public class ReportController extends BaseController {
       deleteRequest.setType(Bundle.BundleType.TRANSACTION);
       deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
       deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      deleteRequest.getEntry().forEach(entry -> {
-        entry.getRequest()
-                .setMethod(Bundle.HTTPVerb.DELETE);
-      });
+      deleteRequest.getEntry().forEach(entry ->
+              entry.getRequest().setMethod(Bundle.HTTPVerb.DELETE)
+      );
       String documentReferenceId = documentReference.getId();
       documentReferenceId = documentReferenceId.substring(documentReferenceId.indexOf("/DocumentReference/") + "/DocumentReference/".length(),
               documentReferenceId.indexOf("/_history/"));
@@ -466,7 +465,7 @@ public class ReportController extends BaseController {
       client.transaction().withBundle(deleteRequest).execute();
       FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
               FhirHelper.AuditEventTypes.Export, "Successfully deleted DocumentReference" +
-              documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
+                      documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
     }
     else {
       throw new HttpResponseException(500, "Couldn't find DocumentReference with identifier: " + id);

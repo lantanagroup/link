@@ -11,6 +11,9 @@ import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.utils.FHIRPathEngine;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,39 +22,45 @@ import java.util.Map;
 
 @Getter
 @Setter
+@Component
 public class PatientScoop extends Scoop {
-    protected FhirContext ctx = FhirContext.forR4();
-    protected IParser jsonParser = ctx.newJsonParser();
-    protected IParser xmlParser;
-    protected IGenericClient fhirQueryServer;
-    protected Map<String, Patient> patientMap = new HashMap<>();
-    protected IValidationSupport validationSupport;
-    protected FHIRPathEngine fhirPathEngine;
+  protected FhirContext ctx = FhirContext.forR4();
+  protected IParser jsonParser = ctx.newJsonParser();
+  protected IParser xmlParser;
+  protected IGenericClient fhirQueryServer;
+  protected Map<String, Patient> patientMap = new HashMap<>();
+  protected IValidationSupport validationSupport;
+  protected FHIRPathEngine fhirPathEngine;
 
-    // TODO: Refactor into PatientScoop.getPatientData()
-    public PatientScoop(IGenericClient fhirQueryServer, List<String> patientIdList) {
-        this.fhirQueryServer = fhirQueryServer;
-        patientData = loadPatientData(patientIdList);
+  @Autowired
+  private ApplicationContext context;
+
+  public void execute(List<String> patientIds) throws Exception {
+    if (this.fhirQueryServer == null) {
+      throw new Exception("No FHIR server to query");
     }
 
-    public List<PatientData> loadPatientData(List<String> patientIdList) {
-        List<PatientData> patientDataList = new ArrayList<>();
+    this.patientData = this.loadPatientData(patientIds);
+  }
 
-        // first get the patients and store them in the patientMap
-        patientIdList.forEach(patientId -> {
-            try {
-                String searchUrl = "Patient?identifier=" + patientId;
-                Bundle response = this.fhirQueryServer.search()
-                        .byUrl(searchUrl)
-                        .returnBundle(Bundle.class)
-                        .execute();
-                if (response.getEntry().size() != 1) {
-                    logger.info("Did not find one Patient with identifier " + patientId);
-                } else {
-                    Patient patient = (Patient) response.getEntryFirstRep().getResource();
-                    this.patientMap.put(patientId, patient);
-                }
-            } catch (AuthenticationException ae) {
+  public List<PatientData> loadPatientData(List<String> patientIdList) {
+    List<PatientData> patientDataList = new ArrayList<>();
+
+    // first get the patients and store them in the patientMap
+    patientIdList.forEach(patientId -> {
+      try {
+        String searchUrl = "Patient?identifier=" + patientId;
+        Bundle response = this.fhirQueryServer.search()
+                .byUrl(searchUrl)
+                .returnBundle(Bundle.class)
+                .execute();
+        if (response.getEntry().size() != 1) {
+          logger.info("Did not find one Patient with identifier " + patientId);
+        } else {
+          Patient patient = (Patient) response.getEntryFirstRep().getResource();
+          this.patientMap.put(patientId, patient);
+        }
+      } catch (AuthenticationException ae) {
                 logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
                 ae.printStackTrace();
                 throw new RuntimeException(ae);
@@ -69,8 +78,12 @@ public class PatientScoop extends Scoop {
                 try {
                     Patient patient = this.getPatientMap().get(id);
                     if (null != patient) {
-                        patientData = new PatientData(this, patient, this.fhirQueryServer.getFhirContext());
-                        patientDataList.add(patientData);
+                      patientData = this.context.getBean(PatientData.class);
+                      patientData.setPatientScoop(this);
+                      patientData.setPatient(patient);
+                      patientData.setCtx(this.fhirQueryServer.getFhirContext());
+                      patientData.loadData();
+                      patientDataList.add(patientData);
                     } else {
                         logger.warn("Patient Id: " + id + " for patientData doesn't exist.");
                     }
