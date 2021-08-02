@@ -4,8 +4,10 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Meta;
@@ -30,6 +32,7 @@ public class ApiInit {
     FhirContext ctx = FhirContext.forR4();
     IParser jsonParser = ctx.newJsonParser();
     IParser xmlParser = ctx.newXmlParser();
+    IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
 
     logger.info("Loading measures defined in configuration...");
 
@@ -96,15 +99,43 @@ public class ApiInit {
 
       logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", reportDefBundle.getIdentifier().getValue(), reportDefBundle.getIdentifier().getSystem()));
 
-      // Search to see if the report def bundle already exists
-      IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
-      Bundle searchResults = fhirClient.search()
-              .forResource("Bundle")
-              .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
-              .where(Bundle.IDENTIFIER.exactly().systemAndCode(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()))
-              .returnBundle(Bundle.class)
-              .cacheControl(new CacheControlDirective().setNoCache(true))
-              .execute();
+      Bundle searchResults = null;
+      retryCount = 0;
+
+      while (searchResults == null && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+        try {
+          // Search to see if the report def bundle already exists
+          searchResults = fhirClient.search()
+                  .forResource("Bundle")
+                  .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
+                  .where(Bundle.IDENTIFIER.exactly().systemAndCode(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()))
+                  .returnBundle(Bundle.class)
+                  .cacheControl(new CacheControlDirective().setNoCache(true))
+                  .execute();
+        } catch (FhirClientConnectionException fcce) {
+          retryCount++;
+
+          logger.error(String.format("Error storing report definition from URL %s in internal FHIR store due to a connection issue", reportDefUrl));
+          if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
+            logger.info(String.format("Retrying to store report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+          } else if (this.config.getReportDefs().getRetryWait() <= 0) {
+            logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
+            return;
+          } else {
+            logger.error(String.format("Reached maximum retry attempts to store report definition %s", reportDefUrl));
+            return;
+          }
+
+          try {
+            Thread.sleep(this.config.getReportDefs().getRetryWait());
+          } catch (InterruptedException ie) {
+            return;
+          }
+        } catch (Exception ex) {
+          logger.error(String.format("Error storing report def from URL %s due to %s", reportDefUrl, ex.getMessage()));
+          return;
+        }
+      }
 
       // If none found, create. If one found, update. If more than one found, respond with error.
       if (searchResults.getEntry().size() == 0) {
