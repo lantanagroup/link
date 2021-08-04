@@ -26,6 +26,7 @@ public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
+  private static final String REPORT_BUNDLE_TAG = "report-bundle";
 
   public static void recordAuditEvent (HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
@@ -100,7 +101,7 @@ public class FhirHelper {
   public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
-    tag.setCode("measure-report");
+    tag.setCode(REPORT_BUNDLE_TAG);
     tag.setSystem(Constants.MainSystem);
 
     Bundle bundle = new Bundle();
