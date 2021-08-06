@@ -51,7 +51,7 @@ public class MeasureReportDownloader implements IReportDownloader {
 
     String responseBody = ctx.newXmlParser().encodeResourceToString(bundle);
     response.setContentType("application/xml");
-    response.setHeader("Content-Disposition", "attachment; filename=\"report.xml\"");
+    response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
     IOUtils.copy(is, response.getOutputStream());
