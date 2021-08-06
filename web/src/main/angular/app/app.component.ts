@@ -1,5 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {AuthService} from './services/auth.service';
+import {ApiInfoModel} from './model/api-info-model';
+import {ConfigService} from './services/config.service';
 
 @Component({
   selector: 'app-root',
@@ -7,8 +9,24 @@ import {AuthService} from './services/auth.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  constructor(public authService: AuthService) {
+  public apiInfo: ApiInfoModel;
 
+  constructor(public authService: AuthService, public configService: ConfigService) {
+
+  }
+
+  get buildInfo() {
+    if (!this.apiInfo) return;
+
+    if (this.apiInfo.version && this.apiInfo.build) {
+      return `${this.apiInfo.version} (build: ${this.apiInfo.build})`;
+    } else if (this.apiInfo.build) {
+      return `build: ${this.apiInfo.build}`;
+    } else if (this.apiInfo.version) {
+      return this.apiInfo.version;
+    } else {
+      return 'Unexpected build info';
+    }
   }
 
   copyAccessTokenToClipboard() {
@@ -26,5 +44,7 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.configService.getApiInfo()
+        .then((apiInfo: ApiInfoModel) => this.apiInfo = apiInfo);
   }
 }

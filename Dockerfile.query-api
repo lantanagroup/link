@@ -1,9 +1,14 @@
 FROM maven:3.6.3-openjdk-11 AS build
 
+ARG build
+ARG version
+
 WORKDIR /tmp
 
 # Copy code and compile
 COPY . .
+
+RUN echo "version: $version\nbuild: $build" > query-api/src/main/resources/build.yml
 
 WORKDIR /tmp
 RUN mvn install

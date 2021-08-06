@@ -50,7 +50,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()
-            .antMatchers("/api/fhir/**", "/api/cda", "/config/**")
+            .antMatchers("/api/fhir/**", "/api/cda", "/config/**", "/api")
             .permitAll()
             .and()
             .antMatcher("/api/**")

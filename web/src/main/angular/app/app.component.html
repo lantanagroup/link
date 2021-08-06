@@ -1,53 +1,58 @@
 <div class="container">
-  <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
+    <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
 
-   <div class="jumbotron">
-    <div class="top-bar">
-      <div class="main-logo">
-        <img class="main-logo" src="assets/nhsn_logo.png" />
-        <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
-        <span *ngIf="!authService.user">NHSNLink</span>
-      </div>
-
-      <div class="auth-info">
-        <div *ngIf="authService.user">
-          <div ngbDropdown class="d-inline-block">
-            <button class="btn btn-primary" id="userDropDown" ngbDropdownToggle>
-              <span>{{authService.user.name}}</span>
-            </button>
-            <div ngbDropdownMenu aria-labelledby="userDropDown">
-              <button ngbDropdownItem (click)="authService.logout()">Logout</button>
-              <div class="dropdown-divider"></div>
-              <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About NHSNLink</a>
-              <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>GitHub</a>
+    <div class="jumbotron">
+        <div class="top-bar">
+            <div class="main-logo">
+                <img class="main-logo" src="assets/nhsn_logo.png"/>
+                <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
+                <span *ngIf="!authService.user">NHSNLink</span>
             </div>
-          </div>
+
+            <div class="auth-info">
+                <div *ngIf="authService.user">
+                    <div ngbDropdown class="d-inline-block">
+                        <button class="btn btn-primary" id="userDropDown" ngbDropdownToggle>
+                            <span>{{authService.user.name}}</span>
+                        </button>
+                        <div ngbDropdownMenu aria-labelledby="userDropDown">
+                            <button ngbDropdownItem (click)="authService.logout()">Logout</button>
+                            <div class="dropdown-divider"></div>
+                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About NHSNLink</a>
+                            <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>GitHub</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="javascript:void()" *ngIf="apiInfo" ngbDropdownItem>{{buildInfo}}</a>
+                        </div>
+                    </div>
+                </div>
+                <p *ngIf="!authService.user">
+                    <button type="button" class="btn btn-primary" (click)="authService.loginLocal()">Login</button>
+                </p>
+            </div>
         </div>
-        <p *ngIf="!authService.user">
-          <button type="button" class="btn btn-primary" (click)="authService.loginLocal()">Login</button>
-        </p>
-      </div>
+
+        <ul ngbNav #nav="ngbNav" *ngIf="authService.user" class="nav-tabs">
+            <li role="presentation" ngbNavItem>
+                <a ngbNavLink routerLinkActive [class.active]="rla.isActive" #rla="routerLinkActive"
+                   routerLink="generate">Generate</a>
+            </li>
+            <li role="presentation" ngbNavItem>
+                <a ngbNavLink routerLinkActive [class.active]="rla1.isActive" #rla1="routerLinkActive"
+                   routerLink="review">Review</a>
+            </li>
+        </ul>
+
+        <router-outlet></router-outlet>
     </div>
-
-     <ul ngbNav #nav="ngbNav"  *ngIf="authService.user" class="nav-tabs">
-      <li role="presentation" ngbNavItem>
-          <a ngbNavLink routerLinkActive [class.active]="rla.isActive"  #rla="routerLinkActive" routerLink="generate">Generate</a>
-      </li>
-      <li role="presentation" ngbNavItem>
-          <a ngbNavLink routerLinkActive [class.active]="rla1.isActive"  #rla1="routerLinkActive"  routerLink="review">Review</a>
-      </li>
-     </ul>
-
-     <router-outlet></router-outlet>
-   </div>
 </div>
 
 <ng-template #accessTokenPopover>
-  <div *ngIf="authService.oauthService.getAccessToken()">
-    <p title="{{authService.oauthService.getAccessToken()}}">{{authService.oauthService.getAccessToken().substring(0, 50)}}...</p>
-    <p>[<a href="javascript:void(0)" (click)="copyAccessTokenToClipboard()">copy</a>]</p>
-  </div>
-  <div *ngIf="!authService.oauthService.getAccessToken()">
-    You do not have an access token!
-  </div>
+    <div *ngIf="authService.oauthService.getAccessToken()">
+        <p title="{{authService.oauthService.getAccessToken()}}">{{authService.oauthService.getAccessToken().substring(0, 50)}}
+            ...</p>
+        <p>[<a href="javascript:void(0)" (click)="copyAccessTokenToClipboard()">copy</a>]</p>
+    </div>
+    <div *ngIf="!authService.oauthService.getAccessToken()">
+        You do not have an access token!
+    </div>
 </ng-template>

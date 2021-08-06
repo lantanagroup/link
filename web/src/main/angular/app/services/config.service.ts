@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {IOAuthConfig} from '../model/oauth-config';
 import {IConfig} from '../model/config';
+import {ApiInfoModel} from '../model/api-info-model';
 
 @Injectable({
   providedIn: 'root'
@@ -29,5 +30,9 @@ export class ConfigService {
   async loadConfig() {
     this.config = await this.http.get<IConfig>('./assets/config.json').toPromise();
     await this.loadOverrideConfig();
+  }
+
+  async getApiInfo() {
+    return await this.http.get<ApiInfoModel>(this.getApiUrl('/api')).toPromise();
   }
 }
