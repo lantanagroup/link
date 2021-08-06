@@ -12,17 +12,6 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  private getFileName(contentDisposition: string, contentType: string) {
-    if (!contentDisposition && contentType === 'application/xml') return 'report.xml';
-    else if (!contentDisposition && contentType === 'application/json') return 'report.json';
-    else if (!contentDisposition) return 'report.txt';
-
-    const parts = contentDisposition.split(';');
-    if (parts.length !== 2 || parts[0] !== 'attachment') return 'report.txt';
-    if (parts[1].indexOf('filename=') < 0) return 'report.txt';
-    return parts[1].substring('filename='.length + 1).replace(/"/g, '');
-  }
-
   async generate(reportDefId: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = '/api/report/$generate?';
     url += `reportDefId=${encodeURIComponent(reportDefId)}&`;
@@ -55,10 +44,21 @@ export class ReportService {
   async download(reportId: string) {
     const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$download`);
     const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
-
-    const contentDisposition = downloadResponse.headers.get('Content-Disposition');
     const contentType = downloadResponse.headers.get('Content-Type');
 
-    saveAs(downloadResponse.body, this.getFileName(contentDisposition, contentType));
+    let fileName = `${reportId}.txt`;
+
+    if (contentType) {
+      switch (contentType.toLowerCase().trim()) {
+        case 'application/xml':
+          fileName = `${reportId}.xml`;
+          break;
+        case 'application/json':
+          fileName = `${reportId}.json`;
+          break;
+      }
+    }
+
+    saveAs(downloadResponse.body, fileName);
   }
 }
