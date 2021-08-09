@@ -17,16 +17,31 @@ import javax.validation.constraints.*;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class QueryConfig {
+  /**
+   * <strong>query.fhir-server-base</strong><br>The base URL of the FHIR server that should be queried
+   */
   @NotBlank @URL
   private String fhirServerBase;
 
+  /**
+   * <strong>query.api-key</strong><br>If running in a Remote scenario (<strong>api.query.mode == "Remote"</strong>), the API Key that the QueryAPI component should expect to allow requests.
+   */
   @Size(min = 128)
   private String apiKey;
 
+  /**
+   * <strong>query.query-class</strong><br>The class to use for performing the queries.
+   */
   @NotBlank
   private String queryClass;
 
+  /**
+   * <strong>query.allowed-remote</strong><br>If running in a Remote scenario (<strong>query.api.mode == "Remote"), a list of the IP addresses that are allowed to perform query requests.</strong>
+   */
   private String[] allowedRemote;
 
+  /**
+   * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
+   */
   private String authClass;
 }

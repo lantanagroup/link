@@ -1,12 +1,11 @@
 com.lantanagroup.link
 com.lantanagroup.link.api
 com.lantanagroup.link.api.auth
-com.lantanagroup.link.api.config
 com.lantanagroup.link.api.controller
-com.lantanagroup.link.api.download
-com.lantanagroup.link.api.send
 com.lantanagroup.link.auth
 com.lantanagroup.link.config
+com.lantanagroup.link.config.api
+com.lantanagroup.link.config.query
 com.lantanagroup.link.direct
 com.lantanagroup.link.model
 com.lantanagroup.link.query
@@ -14,5 +13,7 @@ com.lantanagroup.link.query.api
 com.lantanagroup.link.query.api.auth
 com.lantanagroup.link.query.api.controller
 com.lantanagroup.link.query.auth
-com.lantanagroup.link.query.scoop
+com.lantanagroup.link.query.uscore
+com.lantanagroup.link.query.uscore.scoop
+com.lantanagroup.link.serialize
 com.lantanagroup.link.spring

@@ -30,11 +30,50 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
                 <configuration>
-                    <reportOutputDirectory>.</reportOutputDirectory>
+                    <reportOutputDirectory>./</reportOutputDirectory>
                     <destDir>docs</destDir>
+                    <sourcepath>
+                        cli/target/generated-sources/delombok;
+                        api/target/generated-sources/delombok;
+                        query/target/generated-sources/delombok;
+                        query-api/target/generated-sources/delombok;
+                        core/target/generated-sources/delombok;
+                    </sourcepath>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <release>11</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.2</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+                <version>1.18.16.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>delombok</goal>
+                        </goals>
+                        <configuration>
+                            <encoding>UTF-8</encoding>
+                            <addOutputDirectory>false</addOutputDirectory>
+                            <sourceDirectory>src/main/java</sourceDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
