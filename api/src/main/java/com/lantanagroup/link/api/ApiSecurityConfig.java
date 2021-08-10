@@ -2,7 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.api.auth.LinkAuthManager;
 import com.lantanagroup.link.api.auth.LinkAuthenticationSuccessHandler;
-import com.lantanagroup.link.api.auth.LinkCredentials;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +13,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 /**
  * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`

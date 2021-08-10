@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
-import com.lantanagroup.link.api.auth.LinkCredentials;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.query.QueryConfig;
@@ -365,7 +365,7 @@ public class ReportController extends BaseController {
     }
 
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
-    sender.send(report, this.config, this.ctx);
+    sender.send(report, this.config, this.ctx, request, authentication, fhirStoreClient);
   }
 
   @GetMapping("/{reportId}/$download")
@@ -381,7 +381,7 @@ public class ReportController extends BaseController {
 
     downloader.download(reportId, fhirStoreClient, response, this.ctx, this.config);
 
-    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported File");
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }
 
   @GetMapping(value = "/{id}")

@@ -1,4 +1,4 @@
-package com.lantanagroup.link.api.auth;
+package com.lantanagroup.link.auth;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
