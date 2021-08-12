@@ -2,7 +2,6 @@ package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.QueryReport;
 import com.lantanagroup.link.config.api.ApiConfig;
 
 import javax.servlet.http.HttpServletResponse;

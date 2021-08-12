@@ -5,7 +5,7 @@ import {StoredReportDefinition} from "../model/stored-report-definition";
 import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
-import {UserModel} from "../model/UserModel";
+import {UserModel} from "../model/user-model";
 
 @Component({
     selector: 'nandina-review',

@@ -335,8 +335,7 @@ public class ReportController extends BaseController {
   }
 
   /**
-   * This endpoint takes the QueryReport and creates the questionResponse. It then sends email with the json, xml report
-   * responses using the DirectSender class.
+   * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
    *
    * @param reportId - this is the report identifier after generate report was clicked
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found

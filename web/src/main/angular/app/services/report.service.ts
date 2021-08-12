@@ -1,10 +1,9 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {ConfigService} from './config.service';
-import {QueryReport} from '../model/query-report';
 import saveAs from 'save-as';
-import {ReportBundle} from '../model/ReportBundle';
-import {UserModel} from "../model/UserModel";
+import {ReportBundle} from '../model/report-bundle';
+import {UserModel} from "../model/user-model";
 import {GenerateResponse} from '../model/generate-response';
 
 @Injectable()
