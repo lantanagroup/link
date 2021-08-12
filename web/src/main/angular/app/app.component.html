@@ -16,12 +16,22 @@
                             <span>{{authService.user.name}}</span>
                         </button>
                         <div ngbDropdownMenu aria-labelledby="userDropDown">
-                            <button ngbDropdownItem (click)="authService.logout()">Logout</button>
+                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
+                                <i class="fa fa-info-circle"></i> About NHSNLink
+                            </a>
+                            <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>
+                                <i class="fa fa-github"></i> GitHub
+                            </a>
+                            <a [href]="configService.config.getHelpUrl" *ngIf="configService.config?.getHelpUrl" target="_blank" ngbDropdownItem>
+                                <i class="fa fa-question-circle"></i> Get Help
+                            </a>
                             <div class="dropdown-divider"></div>
-                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>About NHSNLink</a>
-                            <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>GitHub</a>
-                            <div class="dropdown-divider"></div>
-                            <a href="javascript:void()" *ngIf="apiInfo" ngbDropdownItem>{{buildInfo}}</a>
+                            <a href="javascript:void()" *ngIf="apiInfo && (apiInfo.build || apiInfo.version)" ngbDropdownItem>
+                                <i class="fa fa-wrench"></i>&nbsp;<span title="version" *ngIf="apiInfo.version">{{apiInfo.version}}</span><span *ngIf="apiInfo?.build && apiInfo?.version">&nbsp;|&nbsp;</span><span title="build" *ngIf="apiInfo.build">{{apiInfo.build}}</span>
+                            </a>
+                            <button ngbDropdownItem (click)="authService.logout()">
+                                <i class="fa fa-sign-out"></i> Logout
+                            </button>
                         </div>
                     </div>
                 </div>

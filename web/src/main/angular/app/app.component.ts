@@ -15,20 +15,6 @@ export class AppComponent implements OnInit {
 
   }
 
-  get buildInfo() {
-    if (!this.apiInfo) return;
-
-    if (this.apiInfo.version && this.apiInfo.build) {
-      return `${this.apiInfo.version} (build: ${this.apiInfo.build})`;
-    } else if (this.apiInfo.build) {
-      return `build: ${this.apiInfo.build}`;
-    } else if (this.apiInfo.version) {
-      return this.apiInfo.version;
-    } else {
-      return 'Unexpected build info';
-    }
-  }
-
   copyAccessTokenToClipboard() {
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
