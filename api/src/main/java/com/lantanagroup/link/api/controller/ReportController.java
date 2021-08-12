@@ -32,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.text.Document;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -364,7 +365,14 @@ public class ReportController extends BaseController {
     }
 
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
+    DocumentReference documentReference = (DocumentReference)bundle.getEntry().get(0).getResource();
+    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
+    // save the DocumentReference with the Final status
+    this.updateResource(documentReference, fhirStoreClient);
+
     sender.send(report, this.config, this.ctx, request, authentication, fhirStoreClient);
+
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
   }
 
   @GetMapping("/{reportId}/$download")
