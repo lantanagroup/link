@@ -442,6 +442,63 @@ public class ReportController extends BaseController {
     return report;
   }
 
+  @GetMapping(value = "/{id}/patient")
+  public List<PatientReportModel> getPatientReport(@PathVariable("id") String id,
+                                             Authentication authentication,
+                                             HttpServletRequest request) throws Exception {
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    List<PatientReportModel> reports = new ArrayList();
+
+    Bundle documentReferences = client.search()
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
+      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
+    }
+
+    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+
+    MeasureReport measureReport = client.read()
+            .resource(MeasureReport.class)
+            .withId(documentReference.getMasterIdentifier().getValue())
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    Bundle patientRequest = new Bundle();
+
+    for(Reference reference : measureReport.getEvaluatedResource()){
+      if(reference.getReference().contains("Patient")){
+        patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+        int index = patientRequest.getEntry().size() - 1;
+        patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+        patientRequest.getEntry().get(index).getRequest().setUrl(reference.getReference());
+      }
+    }
+
+    if(!patientRequest.hasEntry() || patientRequest.getEntry().size() < 1){
+      throw new HttpResponseException(404, String.format("No patients in report with ID %s", id));
+    }
+
+    Bundle patientBundle = client.transaction().withBundle(patientRequest).execute();
+    for(Bundle.BundleEntryComponent entry : patientBundle.getEntry()){
+      PatientReportModel report = new PatientReportModel();
+      Patient patient = (Patient) entry.getResource();
+      report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
+      report.setLastName(patient.getName().get(0).getFamily().toString());
+      report.setDateOfBirth(patient.getBirthDate().toString());
+      report.setSex(patient.getGender().toString());
+      report.setId(patient.getId());
+      reports.add(report);
+    }
+
+    return reports;
+  }
+
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
