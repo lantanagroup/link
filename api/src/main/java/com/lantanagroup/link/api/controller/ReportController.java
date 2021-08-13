@@ -443,7 +443,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}/patient")
-  public List<PatientReportModel> getPatientReport(@PathVariable("id") String id,
+  public List<PatientReportModel> getReportPatients(@PathVariable("id") String id,
                                              Authentication authentication,
                                              HttpServletRequest request) throws Exception {
 
@@ -472,7 +472,7 @@ public class ReportController extends BaseController {
     Bundle patientRequest = new Bundle();
 
     for(Reference reference : measureReport.getEvaluatedResource()){
-      if(reference.getReference().contains("Patient")){
+      if(reference.getReference().startsWith("Patient/")){
         patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
         int index = patientRequest.getEntry().size() - 1;
         patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
@@ -488,11 +488,26 @@ public class ReportController extends BaseController {
     for(Bundle.BundleEntryComponent entry : patientBundle.getEntry()){
       PatientReportModel report = new PatientReportModel();
       Patient patient = (Patient) entry.getResource();
-      report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
-      report.setLastName(patient.getName().get(0).getFamily().toString());
-      report.setDateOfBirth(patient.getBirthDate().toString());
-      report.setSex(patient.getGender().toString());
-      report.setId(patient.getId());
+
+      if(patient.getName().size() > 0){
+        report.setLastName(patient.getName().get(0).getFamily());
+        if(patient.getName().get(0).getGiven().size() > 0){
+          report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
+        }
+      }
+
+      if(patient.getBirthDate() != null){
+        report.setDateOfBirth(patient.getBirthDate().toString());
+      }
+
+      if(patient.getGender() != null){
+        report.setSex(patient.getGender().toString());
+      }
+
+      if(patient.getId() != null){
+        report.setId(patient.getId());
+      }
+
       reports.add(report);
     }
 
