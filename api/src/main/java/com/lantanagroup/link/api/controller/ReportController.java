@@ -490,8 +490,10 @@ public class ReportController extends BaseController {
       Patient patient = (Patient) entry.getResource();
 
       if(patient.getName().size() > 0){
-        report.setLastName(patient.getName().get(0).getFamily());
-        if(patient.getName().get(0).getGiven().size() > 0){
+        if(patient.getName().get(0).getFamily() != null) {
+          report.setLastName(patient.getName().get(0).getFamily());
+        }
+        if(patient.getName().get(0).getGiven().size() > 0 && patient.getName().get(0).getGiven().get(0) != null){
           report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
         }
       }
