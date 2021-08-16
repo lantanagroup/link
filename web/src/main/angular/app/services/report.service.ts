@@ -5,6 +5,8 @@ import saveAs from 'save-as';
 import {ReportBundle} from '../model/report-bundle';
 import {UserModel} from "../model/user-model";
 import {GenerateResponse} from '../model/generate-response';
+import {ReportPatient} from '../model/report-patient';
+import {map} from 'rxjs/operators';
 
 @Injectable()
 export class ReportService {
@@ -59,5 +61,18 @@ export class ReportService {
     }
 
     saveAs(downloadResponse.body, fileName);
+  }
+
+  async getReportPatients(reportId: string) {
+    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/patient`);
+    return this.http.get<ReportPatient[]>(url)
+        // map the array of objects from the response to new instances of ReportPatient
+        .pipe(map(response => {
+          return (<any[]> response).map(item => {
+            const newReportPatient = new ReportPatient();
+            Object.assign(newReportPatient, item);
+            return newReportPatient;
+          });
+        })).toPromise();
   }
 }
