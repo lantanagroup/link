@@ -26,6 +26,7 @@ export class CalculatedFieldComponent implements OnInit {
       this.ensureOriginalCount(population);
       population.count = value;
     }
+    console.log(this.report);
   }
 
   get originalValue() {
@@ -68,6 +69,7 @@ export class CalculatedFieldComponent implements OnInit {
     } else if (value && reasonExt) {
       reasonExt.valueString = value;
     }
+    console.log(this.report);
   }
 
   ngOnInit(): void {
