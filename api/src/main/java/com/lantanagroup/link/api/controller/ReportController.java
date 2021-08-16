@@ -480,37 +480,35 @@ public class ReportController extends BaseController {
       }
     }
 
-    if(!patientRequest.hasEntry() || patientRequest.getEntry().size() < 1){
-      throw new HttpResponseException(404, String.format("No patients in report with ID %s", id));
-    }
+    if (patientRequest.hasEntry()) {
+      Bundle patientBundle = client.transaction().withBundle(patientRequest).execute();
+      for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+        PatientReportModel report = new PatientReportModel();
+        Patient patient = (Patient) entry.getResource();
 
-    Bundle patientBundle = client.transaction().withBundle(patientRequest).execute();
-    for(Bundle.BundleEntryComponent entry : patientBundle.getEntry()){
-      PatientReportModel report = new PatientReportModel();
-      Patient patient = (Patient) entry.getResource();
-
-      if(patient.getName().size() > 0){
-        if(patient.getName().get(0).getFamily() != null) {
-          report.setLastName(patient.getName().get(0).getFamily());
+        if (patient.getName().size() > 0) {
+          if (patient.getName().get(0).getFamily() != null) {
+            report.setLastName(patient.getName().get(0).getFamily());
+          }
+          if (patient.getName().get(0).getGiven().size() > 0 && patient.getName().get(0).getGiven().get(0) != null) {
+            report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
+          }
         }
-        if(patient.getName().get(0).getGiven().size() > 0 && patient.getName().get(0).getGiven().get(0) != null){
-          report.setFirstName(patient.getName().get(0).getGiven().get(0).toString());
+
+        if (patient.getBirthDate() != null) {
+          report.setDateOfBirth(Helper.getFhirDate(patient.getBirthDate()));
         }
-      }
 
-      if(patient.getBirthDate() != null){
-        report.setDateOfBirth(patient.getBirthDate().toString());
-      }
+        if (patient.getGender() != null) {
+          report.setSex(patient.getGender().toString());
+        }
 
-      if(patient.getGender() != null){
-        report.setSex(patient.getGender().toString());
-      }
+        if (patient.getId() != null) {
+          report.setId(patient.getIdElement().getIdPart());
+        }
 
-      if(patient.getId() != null){
-        report.setId(patient.getId());
+        reports.add(report);
       }
-
-      reports.add(report);
     }
 
     return reports;

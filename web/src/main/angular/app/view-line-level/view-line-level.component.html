@@ -1,0 +1,43 @@
+<div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">View Line-Level Data</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <div class="alert alert-info" *ngIf="loading">Loading...</div>
+
+    <table class="table table-striped" *ngIf="!loading">
+        <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Sex</th>
+            <th>DOB</th>
+            <th>&nbsp;</th>
+        </tr>
+        </thead>
+        <tbody *ngIf="patients?.length">
+        <tr *ngFor="let patient of patients">
+            <td>{{patient.firstName}}</td>
+            <td>{{patient.lastName}}</td>
+            <td>{{patient.sex}}</td>
+            <td>{{patient.getDOBDisplay()}}</td>
+            <td>
+                <div class="btn-group pull-right">
+                    <button type="button" class="btn btn-primary">View</button>
+                    <button type="button" class="btn btn-secondary">Exclude</button>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+        <tfoot *ngIf="!patients?.length">
+            <tr>
+                <td colspan="5">No patients in this report</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">Close</button>
+</div>

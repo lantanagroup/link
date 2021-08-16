@@ -3,6 +3,8 @@ import {ActivatedRoute, Params} from "@angular/router";
 import {Subscription} from "rxjs";
 import {ReportService} from "../services/report.service";
 import {ToastService} from "../toast.service";
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 
 @Component({
     selector: 'report',
@@ -13,7 +15,16 @@ export class ReportComponent implements OnInit, OnDestroy {
     report: { id: string };
     paramsSubscription: Subscription;
 
-    constructor(private route: ActivatedRoute, public reportService: ReportService, public toastService: ToastService,) {
+    constructor(
+        private route: ActivatedRoute,
+        public reportService: ReportService,
+        public toastService: ToastService,
+        private modal: NgbModal) {
+    }
+
+    viewLineLevel() {
+        const modalRef = this.modal.open(ViewLineLevelComponent, { size: 'xl' });
+        modalRef.componentInstance.reportId = this.report.id;
     }
 
     async send() {

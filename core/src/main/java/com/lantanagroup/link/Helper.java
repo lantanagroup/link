@@ -9,8 +9,8 @@ import java.time.ZoneId;
 import java.util.Date;
 
 public class Helper {
+  public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
-	
   public static boolean isNullOrEmpty(String value) {
     return value == null || value.isEmpty();
   }
@@ -26,11 +26,11 @@ public class Helper {
   }
 
   public static String getFhirDate(Date date) {
-    return new SimpleDateFormat("yyyy-MM-dd").format(date);
+    return new SimpleDateFormat(SIMPLE_DATE_FORMAT).format(date);
   }
   
   public static Date parseFhirDate(String dateStr) throws ParseException {
-	  return new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
+	  return new SimpleDateFormat(SIMPLE_DATE_FORMAT).parse(dateStr);
   }
 
   public static String URLEncode(String url) {
