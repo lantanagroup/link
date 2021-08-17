@@ -15,7 +15,7 @@ import org.json.JSONString;
 import java.io.IOException;
 import java.text.ParseException;
 
-public class ReportSaveModelDeserializer extends JsonDeserializer{
+public class ReportSaveModelDeserializer extends JsonDeserializer<Resource>{
     FhirContext ctx = FhirContext.forR4();
 
     @Override
@@ -23,8 +23,7 @@ public class ReportSaveModelDeserializer extends JsonDeserializer{
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
         String json = objectMapper.writeValueAsString(node);
-        Resource resource = (Resource) ctx.newJsonParser().parseResource(json);
 
-        return resource;
+        return (Resource) ctx.newJsonParser().parseResource(json);
     }
 }
