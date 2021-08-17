@@ -514,6 +514,37 @@ public class ReportController extends BaseController {
     return reports;
   }
 
+  @PutMapping(value = "/{id}")
+  public void saveReport(
+          @PathVariable("id") String id,
+          Authentication authentication,
+          HttpServletRequest request,
+          @RequestBody ReportSaveModel data) throws Exception {
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+
+    Bundle documentReferences = client.search()
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+
+    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
+      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
+    }
+
+    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+
+    this.updateResource(data.getMeasureReport(), client);
+
+    FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
+            FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
+                    documentReference.getMasterIdentifier().getValue());
+
+    //TODO: Add QuestionnaireResponse update
+  }
+
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
