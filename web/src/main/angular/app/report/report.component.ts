@@ -34,7 +34,7 @@ export class ReportComponent implements OnInit, OnDestroy {
             await this.reportService.send(this.reportId);
             this.toastService.showInfo('Report sent!');
         } catch (ex) {
-            this.toastService.showException('Error sending report: ' + this.report.id, ex);
+            this.toastService.showException('Error sending report: ' + this.reportId, ex);
         }
     }
 
@@ -43,7 +43,7 @@ export class ReportComponent implements OnInit, OnDestroy {
             await this.reportService.download(this.reportId);
             this.toastService.showInfo('Report downloaded!');
         } catch (ex) {
-            this.toastService.showException('Error downloading report: ' + this.report.id, ex);
+            this.toastService.showException('Error downloading report: ' + this.reportId, ex);
         }
     }
 
