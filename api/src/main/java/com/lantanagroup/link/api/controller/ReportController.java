@@ -400,18 +400,9 @@ public class ReportController extends BaseController {
     IGenericClient client = this.getFhirStoreClient(authentication, request);
     ReportModel report = new ReportModel();
 
-    Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
-            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
+    DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
-    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
-      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
-    }
-
-    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+    report.setMeasureReport(FhirHelper.getMeasureReport(client, documentReference.getMasterIdentifier().getValue()));
 
     Bundle measureBundle = client.search()
             .forResource("Measure")
@@ -419,13 +410,6 @@ public class ReportController extends BaseController {
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
-
-    MeasureReport measureReport = client.read()
-            .resource(MeasureReport.class)
-            .withId(documentReference.getMasterIdentifier().getValue())
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-    report.setMeasureReport(measureReport);
 
     // Assuming that each measure has a unique identifier (only one measure returned per id)
     report.setMeasure(
@@ -450,24 +434,9 @@ public class ReportController extends BaseController {
     IGenericClient client = this.getFhirStoreClient(authentication, request);
     List<PatientReportModel> reports = new ArrayList();
 
-    Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
-            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
+    DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
-    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
-      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
-    }
-
-    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
-
-    MeasureReport measureReport = client.read()
-            .resource(MeasureReport.class)
-            .withId(documentReference.getMasterIdentifier().getValue())
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
+    MeasureReport measureReport = FhirHelper.getMeasureReport(client, documentReference.getMasterIdentifier().getValue());
 
     Bundle patientRequest = new Bundle();
 
@@ -523,18 +492,7 @@ public class ReportController extends BaseController {
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
 
-    Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
-            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-
-    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
-      throw new HttpResponseException(404, String.format("Report with id %s does not exist", id));
-    }
-
-    DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
+    DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
     this.updateResource(data.getMeasureReport(), client);
 
@@ -552,34 +510,25 @@ public class ReportController extends BaseController {
           HttpServletRequest request) throws Exception{
     Bundle deleteRequest = new Bundle();
     IGenericClient client = this.getFhirStoreClient(authentication, request);
-    Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
-            .where(DocumentReference.IDENTIFIER.exactly().identifier(id))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-    if (documentReferences.hasEntry() && !documentReferences.getEntry().get(0).isEmpty()) {
-      DocumentReference documentReference = (DocumentReference) documentReferences.getEntry().get(0).getResource();
-      // Make sure the bundle is a transaction
-      deleteRequest.setType(Bundle.BundleType.TRANSACTION);
-      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      deleteRequest.getEntry().forEach(entry ->
-              entry.getRequest().setMethod(Bundle.HTTPVerb.DELETE)
-      );
-      String documentReferenceId = documentReference.getId();
-      documentReferenceId = documentReferenceId.substring(documentReferenceId.indexOf("/DocumentReference/") + "/DocumentReference/".length(),
-              documentReferenceId.indexOf("/_history/"));
-      deleteRequest.getEntry().get(0).getRequest().setUrl("MeasureReport/" + documentReference.getMasterIdentifier().getValue());
-      deleteRequest.getEntry().get(1).getRequest().setUrl("DocumentReference/" + documentReferenceId);
-      client.transaction().withBundle(deleteRequest).execute();
-      FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
-              FhirHelper.AuditEventTypes.Export, "Successfully deleted DocumentReference" +
-                      documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
-    }
-    else {
-      throw new HttpResponseException(500, "Couldn't find DocumentReference with identifier: " + id);
-    }
+
+    DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
+
+    // Make sure the bundle is a transaction
+    deleteRequest.setType(Bundle.BundleType.TRANSACTION);
+    deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+    deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+    deleteRequest.getEntry().forEach(entry ->
+            entry.getRequest().setMethod(Bundle.HTTPVerb.DELETE)
+    );
+    String documentReferenceId = documentReference.getId();
+    documentReferenceId = documentReferenceId.substring(documentReferenceId.indexOf("/DocumentReference/") + "/DocumentReference/".length(),
+            documentReferenceId.indexOf("/_history/"));
+    deleteRequest.getEntry().get(0).getRequest().setUrl("MeasureReport/" + documentReference.getMasterIdentifier().getValue());
+    deleteRequest.getEntry().get(1).getRequest().setUrl("DocumentReference/" + documentReferenceId);
+    client.transaction().withBundle(deleteRequest).execute();
+    FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
+            FhirHelper.AuditEventTypes.Export, "Successfully deleted DocumentReference" +
+                    documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})

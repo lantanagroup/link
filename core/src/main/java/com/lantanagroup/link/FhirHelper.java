@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
@@ -8,6 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -96,6 +98,30 @@ public class FhirHelper {
     } catch (Exception ex) {
       logger.error("Failed to record AuditEvent", ex);
     }
+  }
+
+  public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException{
+    Bundle documentReferences = client.search()
+      .forResource("DocumentReference")
+      .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
+      .returnBundle(Bundle.class)
+      .cacheControl(new CacheControlDirective().setNoCache(true))
+      .execute();
+
+
+    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
+      throw new HttpResponseException(404, String.format("Report with id %s does not exist", reportId));
+    }
+
+    return (DocumentReference) documentReferences.getEntry().get(0).getResource();
+  }
+
+  public static MeasureReport getMeasureReport(IGenericClient client, String reportId){
+    return client.read()
+            .resource(MeasureReport.class)
+            .withId(reportId)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
   }
 
   public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
