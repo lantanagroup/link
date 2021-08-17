@@ -22,6 +22,7 @@ import {NgbdDatepickerPopup} from "./components/datepicker-popup";
 import {ReportDefinitionService} from './services/report-definition.service';
 import {ErrorPageComponent} from './error-page/error-page.component';
 import { ViewLineLevelComponent } from './view-line-level/view-line-level.component';
+import {MedAdminComponent} from "./report/med-admin.component";
 
 export const initFactory = (configService: ConfigService, authService: AuthService) => {
     return async () => {
@@ -42,7 +43,8 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         NgbdDatepickerRangePopup,
         NgbdDatepickerPopup,
         ErrorPageComponent,
-        ViewLineLevelComponent
+        ViewLineLevelComponent,
+        MedAdminComponent
     ],
     imports: [
         BrowserModule,
@@ -73,5 +75,4 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
     ],
     bootstrap: [AppComponent]
 })
-export class AppModule {
-}
+export class AppModule {}

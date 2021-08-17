@@ -5,6 +5,7 @@ import {ReportService} from "../services/report.service";
 import {ToastService} from "../toast.service";
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
+import {ReportModel} from "../model/ReportModel";
 
 @Component({
     selector: 'report',
@@ -12,7 +13,8 @@ import {ViewLineLevelComponent} from '../view-line-level/view-line-level.compone
     styleUrls: ['./report.component.css']
 })
 export class ReportComponent implements OnInit, OnDestroy {
-    report: { id: string };
+    reportId: string;
+    report: ReportModel;
     paramsSubscription: Subscription;
 
     constructor(
@@ -24,35 +26,55 @@ export class ReportComponent implements OnInit, OnDestroy {
 
     viewLineLevel() {
         const modalRef = this.modal.open(ViewLineLevelComponent, { size: 'xl' });
-        modalRef.componentInstance.reportId = this.report.id;
+        modalRef.componentInstance.reportId = this.reportId;
     }
 
     async send() {
         try {
-            await this.reportService.send(this.report.id);
+            await this.reportService.send(this.reportId);
             this.toastService.showInfo('Report sent!');
         } catch (ex) {
-            this.toastService.showException('Error sending report: ' + this.report.id, ex);
+            this.toastService.showException('Error sending report: ' + this.reportId, ex);
         }
     }
 
     async download() {
         try {
-            await this.reportService.download(this.report.id);
+            await this.reportService.download(this.reportId);
             this.toastService.showInfo('Report downloaded!');
         } catch (ex) {
-            this.toastService.showException('Error downloading report: ' + this.report.id, ex);
+            this.toastService.showException('Error downloading report: ' + this.reportId, ex);
         }
     }
 
-    ngOnInit() {
-        this.report = {
-            id: this.route.snapshot.params['id']
-        };
+    async initReport() {
+        this.report = await this.reportService.getReport(this.reportId);
+        console.log("report is: " + this.report.measure.identifier[0].value);
+    }
+
+    async save() {
+        try {
+            await this.reportService.save(this.report);
+            this.toastService.showInfo('Report saved!');
+        } catch (ex) {
+            this.toastService.showException('Error saving report: ' + this.reportId, ex);
+        }
+    }
+
+    isMeasureIdentifier(measureId) {
+        if (this.report != undefined && this.report.measure.identifier[0].value == measureId) {
+            return true;
+        }
+        return false;
+    }
+
+    async ngOnInit() {
+        this.reportId = this.route.snapshot.params['id']
+        await this.initReport();
 
         this.paramsSubscription = this.route.params.subscribe(
             (params: Params) => {
-                this.report.id = params['id'];
+                this.reportId = params['id'];
             }
         );
     }
