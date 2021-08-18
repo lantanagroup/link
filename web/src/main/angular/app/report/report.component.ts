@@ -6,6 +6,7 @@ import {ToastService} from "../toast.service";
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 import {ReportModel} from "../model/ReportModel";
+import {ReportSaveModel} from "../model/ReportSaveModel"
 
 @Component({
     selector: 'report',
@@ -53,8 +54,11 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
 
     async save() {
+        let reportSaveModel = new ReportSaveModel();
+        reportSaveModel.measureReport = this.report.measureReport;
+        reportSaveModel.questionnaireResponse = null;
         try {
-            await this.reportService.save(this.report);
+            await this.reportService.save(reportSaveModel, this.reportId);
             this.toastService.showInfo('Report saved!');
         } catch (ex) {
             this.toastService.showException('Error saving report: ' + this.reportId, ex);

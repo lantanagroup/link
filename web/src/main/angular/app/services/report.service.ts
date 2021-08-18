@@ -8,6 +8,7 @@ import {GenerateResponse} from '../model/generate-response';
 import {ReportPatient} from '../model/report-patient';
 import {map} from 'rxjs/operators';
 import {ReportModel} from "../model/ReportModel";
+import {ReportSaveModel} from "../model/ReportSaveModel";
 
 @Injectable()
 export class ReportService {
@@ -82,8 +83,8 @@ export class ReportService {
     return await this.http.get<ReportModel>(url).toPromise();
   }
 
-  async save(report: ReportModel) {
-    const url = this.configService.getApiUrl(`/api/report/save`);
-    return await this.http.put<ReportModel>(url, report).toPromise();
+  async save(report: ReportSaveModel, id: String) {
+    const url = this.configService.getApiUrl(`/api/report/` + id);
+    return await this.http.put<ReportSaveModel>(url, report).toPromise();
   }
 }
