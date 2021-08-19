@@ -17,6 +17,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     reportId: string;
     report: ReportModel;
     paramsSubscription: Subscription;
+    loading = false;
 
     constructor(
         private route: ActivatedRoute,
@@ -49,8 +50,24 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
 
     async initReport() {
-        this.report = await this.reportService.getReport(this.reportId);
-        console.log("report is: " + this.report.measure.identifier[0].value);
+        this.loading = true;
+
+        try {
+            this.report = await this.reportService.getReport(this.reportId);
+        } catch (ex) {
+            this.toastService.showException('Error loading report', ex);
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    getStatusDisplay() {
+        switch (this.report.status.toLowerCase()) {
+            case 'current':
+                return 'Reviewing';
+            case 'final':
+                return 'Submitted';
+        }
     }
 
     async save() {
