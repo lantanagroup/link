@@ -29,6 +29,7 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String REPORT_BUNDLE_TAG = "report-bundle";
+  private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   public static void recordAuditEvent (HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
@@ -125,7 +126,7 @@ public class FhirHelper {
   }
 
   public static Extension createVersionExtension(){
-    return new Extension("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version", new StringType("0.1"));
+    return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType("0.1"));
   }
 
   /**
@@ -135,11 +136,11 @@ public class FhirHelper {
    */
   public static DocumentReference incrementMinorVersion(DocumentReference documentReference){
     String version = documentReference
-            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
             .getValue().toString();
 
-    documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
-            .setValue(new StringType(version.substring(0, 2) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
+    documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+            .setValue(new StringType(version.substring(0, version.indexOf(".") + 1) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
 
     return documentReference;
   }
@@ -151,11 +152,11 @@ public class FhirHelper {
    */
   public static DocumentReference incrementMajorVersion(DocumentReference documentReference){
     String version = documentReference
-            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
             .getValue().toString();
 
     version = version.substring(0, version.indexOf("."));
-    documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+    documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
             .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
 
     return documentReference;

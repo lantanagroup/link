@@ -17,7 +17,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +46,7 @@ import java.util.stream.Collectors;
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private ObjectMapper mapper = new ObjectMapper();
+  private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   @Autowired
   private ApiConfig config;
@@ -243,7 +243,7 @@ public class ReportController extends BaseController {
       }
 
       if(existingDocumentReference != null){
-        if(existingDocumentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version") != null){
+        if(existingDocumentReference.getExtensionByUrl(documentReferenceVersionUrl) != null){
           existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
         }
         else{
@@ -279,10 +279,11 @@ public class ReportController extends BaseController {
         DocumentReference documentReference = this.generateDocumentReference(user, criteria, context, id);
         if (existingDocumentReference != null) {
           documentReference.setId(existingDocumentReference.getId());
-          documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
-                  .setValue(new StringType(existingDocumentReference
-                                  .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
-                                  .getValue().toString()));
+
+          Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(documentReferenceVersionUrl);
+          String existingVersion = existingVersionExt.getValue().toString();
+
+          documentReference.getExtensionByUrl(documentReferenceVersionUrl).setValue(new StringType(existingVersion));
           this.updateResource(documentReference, fhirStoreClient);
         } else {
           this.createResource(documentReference, fhirStoreClient);
@@ -442,7 +443,7 @@ public class ReportController extends BaseController {
 
     report.setIdentifier(id);
     report.setVersion(documentReference
-            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getExtensionByUrl(documentReferenceVersionUrl)
             .getValue().toString());
     report.setStatus(documentReference.getStatus().toString());
     report.setDate(documentReference.getDate());
