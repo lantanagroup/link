@@ -15,7 +15,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
@@ -32,7 +31,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.swing.text.Document;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -40,12 +38,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/report")
@@ -365,7 +359,7 @@ public class ReportController extends BaseController {
     }
 
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
-    DocumentReference documentReference = (DocumentReference)bundle.getEntry().get(0).getResource();
+    DocumentReference documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
     // save the DocumentReference with the Final status
     this.updateResource(documentReference, fhirStoreClient);
@@ -392,7 +386,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}")
-  public ReportModel getReport(
+  public ReportModel getReport (
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
@@ -414,8 +408,8 @@ public class ReportController extends BaseController {
     // Assuming that each measure has a unique identifier (only one measure returned per id)
     report.setMeasure(
             measureBundle.hasEntry() && !measureBundle.getEntry().get(0).isEmpty() ?
-            (Measure) measureBundle.getEntry().get(0).getResource() :
-            null
+                    (Measure) measureBundle.getEntry().get(0).getResource() :
+                    null
     );
 
     report.setIdentifier(id);
@@ -427,9 +421,9 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}/patient")
-  public List<PatientReportModel> getReportPatients(@PathVariable("id") String id,
-                                             Authentication authentication,
-                                             HttpServletRequest request) throws Exception {
+  public List<PatientReportModel> getReportPatients (@PathVariable("id") String id,
+                                                     Authentication authentication,
+                                                     HttpServletRequest request) throws Exception {
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
     List<PatientReportModel> reports = new ArrayList();
@@ -440,8 +434,8 @@ public class ReportController extends BaseController {
 
     Bundle patientRequest = new Bundle();
 
-    for(Reference reference : measureReport.getEvaluatedResource()){
-      if(reference.getReference().startsWith("Patient/")){
+    for (Reference reference : measureReport.getEvaluatedResource()) {
+      if (reference.getReference().startsWith("Patient/")) {
         patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
         int index = patientRequest.getEntry().size() - 1;
         patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
@@ -484,7 +478,7 @@ public class ReportController extends BaseController {
   }
 
   @PutMapping(value = "/{id}")
-  public void saveReport(
+  public void saveReport (
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request,
@@ -504,10 +498,10 @@ public class ReportController extends BaseController {
   }
 
   @DeleteMapping(value = "/{id}")
-  public void deleteReport(
+  public void deleteReport (
           @PathVariable("id") String id,
           Authentication authentication,
-          HttpServletRequest request) throws Exception{
+          HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
     IGenericClient client = this.getFhirStoreClient(authentication, request);
 
@@ -536,6 +530,7 @@ public class ReportController extends BaseController {
                                      @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
     Bundle documentReference;
     boolean andCond = false;
+    ReportBundle reportBundle = new ReportBundle();
     try {
       IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
       String url = this.config.getFhirServerStore();
@@ -583,17 +578,37 @@ public class ReportController extends BaseController {
         }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);
+      List<Report> lst = documentReference.getEntry().parallelStream().map(Report::new).collect(Collectors.toList());
+      Collection<String> reportIds = lst.stream().map(report -> report.getId()).collect(Collectors.toList());
+      Bundle response = fhirStoreClient
+              .search()
+              .forResource(MeasureReport.class)
+              .where(Resource.RES_ID.exactly().codes(reportIds))
+              .returnBundle(Bundle.class)
+              .cacheControl(new CacheControlDirective().setNoCache(true))
+              .execute();
+
+      response.getEntry().parallelStream().forEach(bundleEntry -> {
+        if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {
+          MeasureReport measureReport = (MeasureReport) bundleEntry.getResource();
+          Extension extension = measureReport.getExtensionByUrl(Constants.NotesUrl);
+          Report foundReport = lst.stream().filter(rep -> rep.getId().equals(measureReport.getIdElement().getIdPart())).findAny().orElse(null);
+          if (extension != null && foundReport != null) {
+            foundReport.setNote(extension.getValue().toString());
+          }
+        }
+      });
+      reportBundle.setReportTypeId(bundleId != null ? bundleId : documentReference.getId());
+      reportBundle.setList(lst);
+      reportBundle.setTotalSize(documentReference.getTotal());
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.SearchReports, "Successfully Searched Reports");
     } catch (Exception ex) {
       logger.error(String.format("Error searching Reports: %s", ex.getMessage()), ex);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error");
     }
-    Stream<Report> lst = documentReference.getEntry().parallelStream().map(Report::new);
-    ReportBundle reportBundle = new ReportBundle();
-    reportBundle.setReportTypeId(bundleId != null ? bundleId : documentReference.getId());
-    reportBundle.setList(lst.collect(Collectors.toList()));
-    reportBundle.setTotalSize(documentReference.getTotal());
+
     return reportBundle;
   }
 }
+
