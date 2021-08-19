@@ -124,6 +124,43 @@ public class FhirHelper {
             .execute();
   }
 
+  public static Extension createVersionExtension(){
+    return new Extension("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version", new StringType("0.1"));
+  }
+
+  /**
+   *
+   * @param documentReference - DocumentReference whose minor version is to be incremented
+   * @return - the DocumentReference with the minor version incremented by 1
+   */
+  public static DocumentReference incrementMinorVersion(DocumentReference documentReference){
+    String version = documentReference
+            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getValue().toString();
+
+    documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .setValue(new StringType(version.substring(0, 2) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
+
+    return documentReference;
+  }
+
+  /**
+   *
+   * @param documentReference - DocumentReference whose major version is to be incremented
+   * @return - the DocumentReference with the major version incremented by 1
+   */
+  public static DocumentReference incrementMajorVersion(DocumentReference documentReference){
+    String version = documentReference
+            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getValue().toString();
+
+    version = version.substring(0, version.indexOf("."));
+    documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
+
+    return documentReference;
+  }
+
   public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();

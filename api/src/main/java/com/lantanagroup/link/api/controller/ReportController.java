@@ -17,6 +17,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.instance.model.api.IBaseDatatype;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -241,6 +242,15 @@ public class ReportController extends BaseController {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
+      if(existingDocumentReference != null){
+        if(existingDocumentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version") != null){
+          existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+        }
+        else{
+          existingDocumentReference.addExtension(FhirHelper.createVersionExtension());
+        }
+      }
+
       // Get the patient identifiers for the given date
       List<String> patientIdentifiers = this.getPatientIdentifiers(criteria, context);
 
@@ -269,6 +279,10 @@ public class ReportController extends BaseController {
         DocumentReference documentReference = this.generateDocumentReference(user, criteria, context, id);
         if (existingDocumentReference != null) {
           documentReference.setId(existingDocumentReference.getId());
+          documentReference.getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+                  .setValue(new StringType(existingDocumentReference
+                                  .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+                                  .getValue().toString()));
           this.updateResource(documentReference, fhirStoreClient);
         } else {
           this.createResource(documentReference, fhirStoreClient);
@@ -295,13 +309,16 @@ public class ReportController extends BaseController {
     documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
 
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+
     List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
     String practitionerId = user.getPractitioner().getId();
     reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
     list.add(reference);
     documentReference.setAuthor(list);
+
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
+
     CodeableConcept type = new CodeableConcept();
     List<Coding> codings = new ArrayList<>();
     Coding coding = new Coding();
@@ -311,6 +328,7 @@ public class ReportController extends BaseController {
     codings.add(coding);
     type.setCoding(codings);
     documentReference.setType(type);
+
     List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
     DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
     Attachment attachment = new Attachment();
@@ -318,14 +336,21 @@ public class ReportController extends BaseController {
     doc.setAttachment(attachment);
     listDoc.add(doc);
     documentReference.setContent(listDoc);
+
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
+
     LocalDate startDate = LocalDate.parse(criteria.getPeriodStart());
     LocalDate endDate = LocalDate.parse(criteria.getPeriodEnd());
+
     Period period = new Period();
     period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
     period.setEnd(java.sql.Timestamp.valueOf(endDate.atTime(23, 59, 59)));
     docReference.setPeriod(period);
+
     documentReference.setContext(docReference);
+
+    documentReference.addExtension(FhirHelper.createVersionExtension());
+
     return documentReference;
   }
 
@@ -361,6 +386,9 @@ public class ReportController extends BaseController {
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
     DocumentReference documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
+
+    documentReference = FhirHelper.incrementMajorVersion(documentReference);
+
     // save the DocumentReference with the Final status
     this.updateResource(documentReference, fhirStoreClient);
 
@@ -413,7 +441,9 @@ public class ReportController extends BaseController {
     );
 
     report.setIdentifier(id);
-    report.setVersion(null);
+    report.setVersion(documentReference
+            .getExtensionByUrl("https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version")
+            .getValue().toString());
     report.setStatus(documentReference.getStatus().toString());
     report.setDate(documentReference.getDate());
 
@@ -488,6 +518,9 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
+    documentReference = FhirHelper.incrementMinorVersion(documentReference);
+
+    this.updateResource(documentReference, client);
     this.updateResource(data.getMeasureReport(), client);
 
     FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
