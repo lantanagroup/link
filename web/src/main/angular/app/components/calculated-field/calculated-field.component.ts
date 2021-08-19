@@ -1,5 +1,5 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {IMeasureReport, IMeasureReportPopulationComponent} from '../fhir';
+import {IMeasureReport, IMeasureReportPopulationComponent} from '../../fhir';
 
 @Component({
   selector: 'app-calculated-field',

@@ -1,0 +1,16 @@
+.input-group-text {
+    width: 150px;
+}
+
+.input-group {
+    margin-bottom: 6px;
+}
+
+div.report,
+div.alert {
+    margin-top: 5px;
+}
+
+div.card {
+    margin-bottom: 10px;
+}
