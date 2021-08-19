@@ -1,7 +1,11 @@
 <p>Report Id:  {{ reportId}}</p>
-
-<app-report-med-admin *ngIf="isMeasureIdentifier('nhsn-medication-administration')" [measureReport]="report.measureReport"></app-report-med-admin>
-
+<div>
+    <notes [measureReport]="report.measureReport">Notes</notes>
+</div>
+<div>
+    <app-report-med-admin *ngIf="isMeasureIdentifier('nhsn-medication-administration')"
+                          [measureReport]="report.measureReport"></app-report-med-admin>
+</div>
 <div class="btn-group">
     <button class="btn btn-primary" (click)="viewLineLevel()">View Line-Level Data</button>
     <button class="btn btn-primary" (click)="save()">Save</button>

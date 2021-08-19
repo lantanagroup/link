@@ -8,4 +8,5 @@ public class Constants {
   public static final String DocRefDisplay = "Measure Document";
   public static final String ReportPositionExtUrl = "http://hl7.org/fhir/uv/saner/StructureDefinition/GeoLocation";
   public static final String LinkUserTag = "link-user";
+  public static final String NotesUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-note";
 }

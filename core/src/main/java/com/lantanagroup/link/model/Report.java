@@ -20,6 +20,7 @@ public class Report {
   String periodEndDate;
   Date creationDate;
   String submittedDate;
+  String note;
 
   public Report (Bundle.BundleEntryComponent entry) {
     DocumentReference docReference = (DocumentReference) entry.getResource();

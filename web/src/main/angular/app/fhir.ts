@@ -73,6 +73,7 @@ export interface IExtension {
   valueCodeableConcept?: ICodeableConcept;
   valueCoding?: ICoding;
   valueCode?: string;
+  valueMarkdown?: string;
   // value[x]
 }
 
