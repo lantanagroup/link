@@ -516,8 +516,13 @@ public class ReportController extends BaseController {
 
     documentReference = FhirHelper.incrementMinorVersion(documentReference);
 
-    this.updateResource(documentReference, client);
-    this.updateResource(data.getMeasureReport(), client);
+    try {
+      this.updateResource(documentReference, client);
+      this.updateResource(data.getMeasureReport(), client);
+    } catch (Exception ex) {
+      logger.error(String.format("Error saving changes to report: %s", ex.getMessage()));
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving changes to report");
+    }
 
     FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +

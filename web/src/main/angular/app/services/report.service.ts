@@ -83,14 +83,8 @@ export class ReportService {
     return await this.http.get<ReportModel>(url).toPromise();
   }
 
-  async getCurrentReportVersion(reportId: string){
-    const currentReport: ReportModel = await this.getReport(reportId);
-    return currentReport.measureReport.meta.versionId;
-  }
-
   async save(report: ReportSaveModel, id: string) {
     const url = this.configService.getApiUrl(`/api/report/` + id);
-    report.measureReport.meta.versionId = this.getCurrentReportVersion(id);
     return await this.http.put<ReportSaveModel>(url, report).toPromise();
   }
 }
