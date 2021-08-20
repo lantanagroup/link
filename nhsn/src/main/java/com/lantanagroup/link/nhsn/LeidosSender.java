@@ -37,7 +37,7 @@ public class LeidosSender implements IReportSender {
 
     String xml = ctx.newXmlParser().encodeResourceToString(bundle);
 
-    logger.trace(String.format("Configured to send to %s locations", config.getSendUrl().size()));
+    logger.debug(String.format("Configured to send to %s locations", config.getSendUrl().size()));
 
     for (String sendUrl : config.getSendUrl()) {
       logger.info("Sending MeasureReport bundle to URL " + sendUrl);

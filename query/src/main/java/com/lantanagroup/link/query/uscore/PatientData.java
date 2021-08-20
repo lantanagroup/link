@@ -2,6 +2,7 @@ package com.lantanagroup.link.query.uscore;
 
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
@@ -20,35 +21,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
-@Component
 public class PatientData {
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
 
-  private FhirContext ctx;
-  private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-  private Date dateCollected;
-  private Patient patient;
-  private String patientId;
-  private Encounter primaryEncounter;
+  private final Patient patient;
+  private final String patientId;
+  private final IGenericClient fhirQueryServer;
   private List<Bundle> bundles = new ArrayList<>();
-  private CodeableConcept primaryDx = null;
-  private PatientScoop patientScoop;
-
-  public Patient getPatient() {
-    return this.patient;
-  }
-
-  public void setPatient(Patient patient) {
-    this.patient = patient;
-    this.patientId = patient.getIdElement().getIdPart();
-  }
 
   @Autowired
   private USCoreConfig usCoreConfig;
 
-  public PatientData() {
+  public PatientData(IGenericClient fhirQueryServer, Patient patient) {
+    this.fhirQueryServer = fhirQueryServer;
+    this.patient = patient;
+    this.patientId = patient.getIdElement().getIdPart();
   }
 
   public void loadData() {
@@ -57,7 +44,7 @@ public class PatientData {
     ).collect(Collectors.toList());
 
     queryString.parallelStream().forEach(query -> {
-      Bundle bundle = this.patientScoop.rawSearch(query);
+      Bundle bundle = PatientScoop.rawSearch(this.fhirQueryServer, query);
       this.bundles.add(bundle);
     });
   }

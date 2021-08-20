@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Getter
@@ -45,11 +46,7 @@ public class PatientScoop extends Scoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = this.context.getBean(PatientData.class);
-      patientData.setPatientScoop(this);
-      patientData.setPatient(patient);
-      patientData.setCtx(this.fhirQueryServer.getFhirContext());
-      patientData.loadData();
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -59,8 +56,6 @@ public class PatientScoop extends Scoop {
   }
 
   public List<PatientData> loadPatientData(List<String> patientIdList) {
-    Collection<PatientData> patientDataList = Collections.synchronizedCollection(new ArrayList<>());
-
     // first get the patients and store them in the patientMap
     patientIdList.forEach(patientId -> {
       try {
@@ -76,33 +71,33 @@ public class PatientScoop extends Scoop {
           this.patientMap.put(patientId, patient);
         }
       } catch (AuthenticationException ae) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
-                ae.printStackTrace();
-                throw new RuntimeException(ae);
-            } catch (Exception e) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
+        ae.printStackTrace();
+        throw new RuntimeException(ae);
+      } catch (Exception e) {
+        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
+        e.printStackTrace();
+        throw new RuntimeException(e);
+      }
+    });
 
-        try {
-          List<Patient> patients = new ArrayList<>(this.getPatientMap().values());
+    try {
+      List<Patient> patients = new ArrayList<>(this.getPatientMap().values());
+      ConcurrentHashMap<String, PatientData> patientDataMap = new ConcurrentHashMap<>();
 
-          // loop through the patient ids to retrieve the patientData using each patient.
-          patients.parallelStream().forEach(patient -> {
-            PatientData patientData = this.loadPatientData(patient);
-            patientDataList.add(patientData);
-          });
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
+      // loop through the patient ids to retrieve the patientData using each patient.
+      patients.parallelStream().forEach(patient -> {
+        logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+        PatientData patientData = this.loadPatientData(patient);
+        patientDataMap.put(patient.getIdElement().getIdPart(), patientData);
+      });
 
-        logger.info("Patient Data List count: " + patientDataList.size());
-        return new ArrayList<>(patientDataList);
+      logger.info("Patient Data List count: " + patientDataMap.size());
+      return new ArrayList<>(patientDataMap.values());
+    } catch (Exception e) {
+      logger.error(e.getMessage());
     }
 
-    public Bundle rawSearch(String query) {
-        return rawSearch(this.fhirQueryServer, query);
-    }
+    return new ArrayList<>();
+  }
 }

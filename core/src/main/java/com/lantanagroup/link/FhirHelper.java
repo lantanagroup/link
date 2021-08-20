@@ -354,7 +354,7 @@ public class FhirHelper {
 
       // Only add the resource to the bundle if it doesn't already exist
       if (found.isPresent()) {
-        logger.trace(String.format("Resource %s/%s is a duplicate, skipping...", sourceEntry.getResource().getResourceType(), sourceEntry.getResource().getIdElement().getIdPart()));
+        logger.debug(String.format("Resource %s/%s is a duplicate, skipping...", sourceEntry.getResource().getResourceType(), sourceEntry.getResource().getIdElement().getIdPart()));
       } else {
         destination.addEntry()
                 .setResource(sourceEntry.getResource())
