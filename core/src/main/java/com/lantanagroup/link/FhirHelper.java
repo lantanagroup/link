@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.swing.text.html.Option;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -325,6 +326,51 @@ public class FhirHelper {
         currentClass = currentClass.getSuperclass();
       }
     }
+  }
+
+  public static void addEntriesToBundle(Bundle source, Bundle destination) {
+    if (source == null) return;
+
+    List<Bundle.BundleEntryComponent> sourceEntries = source.getEntry();
+
+    for (Bundle.BundleEntryComponent sourceEntry : sourceEntries) {
+      if (sourceEntry.getResource() == null || sourceEntry.getResource().getIdElement() == null || sourceEntry.getResource().getId() == null) return;
+
+      if (sourceEntry.getResource().getIdElement().getIdPart().length() > 64) {
+        String invalidIdMsg = String.format("Resource %s/%s has an ID that is longer than 64 characters. Skipping it...",
+                sourceEntry.getResource().getResourceType(),
+                sourceEntry.getResource().getIdElement().getIdPart());
+        logger.error(invalidIdMsg);
+        return;
+      }
+
+      List<Bundle.BundleEntryComponent> destEntries = new ArrayList<>(destination.getEntry());
+      Optional<Bundle.BundleEntryComponent> found =
+              destEntries.stream()
+                      .filter(n ->
+                              n.getResource().getResourceType() == sourceEntry.getResource().getResourceType() &&
+                                      n.getResource().getIdElement().getIdPart() == sourceEntry.getResource().getIdElement().getIdPart())
+                      .findFirst();
+
+      // Only add the resource to the bundle if it doesn't already exist
+      if (found.isPresent()) {
+        logger.trace(String.format("Resource %s/%s is a duplicate, skipping...", sourceEntry.getResource().getResourceType(), sourceEntry.getResource().getIdElement().getIdPart()));
+      } else {
+        destination.addEntry()
+                .setResource(sourceEntry.getResource())
+                .getRequest()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(sourceEntry.getResource().getResourceType().toString() + "/" + sourceEntry.getResource().getIdElement().getIdPart());
+      }
+    }
+  }
+
+  public static Bundle.BundleEntryComponent findEntry(Bundle bundle, ResourceType resourceType, String id) {
+    Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream().filter(e ->
+                    e.getResource().getResourceType() == resourceType &&
+                    e.getResource().getIdElement().getIdPart().equals(id))
+            .findFirst();
+    return found.isPresent() ? found.get() : null;
   }
 
   public enum AuditEventTypes {

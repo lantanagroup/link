@@ -159,7 +159,7 @@ public class ReportController extends BaseController {
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-        logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
+        logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
@@ -178,6 +178,9 @@ public class ReportController extends BaseController {
                       .setMethod(Bundle.HTTPVerb.PUT)
                       .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
       );
+
+      // For debugging purposes:
+      String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
       // Store the data
       logger.info("Storing data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
