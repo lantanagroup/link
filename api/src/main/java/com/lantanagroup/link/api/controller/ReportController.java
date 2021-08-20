@@ -247,7 +247,7 @@ public class ReportController extends BaseController {
           existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
         }
         else{
-          existingDocumentReference.addExtension(FhirHelper.createVersionExtension());
+          existingDocumentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
         }
       }
 
@@ -350,7 +350,7 @@ public class ReportController extends BaseController {
 
     documentReference.setContext(docReference);
 
-    documentReference.addExtension(FhirHelper.createVersionExtension());
+    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
 
     return documentReference;
   }
@@ -443,8 +443,8 @@ public class ReportController extends BaseController {
 
     report.setIdentifier(id);
     report.setVersion(documentReference
-            .getExtensionByUrl(documentReferenceVersionUrl)
-            .getValue().toString());
+            .getExtensionByUrl(documentReferenceVersionUrl) != null ?
+            documentReference.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
     report.setStatus(documentReference.getStatus().toString());
     report.setDate(documentReference.getDate());
 

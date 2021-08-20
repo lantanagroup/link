@@ -125,8 +125,8 @@ public class FhirHelper {
             .execute();
   }
 
-  public static Extension createVersionExtension(){
-    return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType("0.1"));
+  public static Extension createVersionExtension(String value){
+    return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
   }
 
   /**
@@ -135,12 +135,18 @@ public class FhirHelper {
    * @return - the DocumentReference with the minor version incremented by 1
    */
   public static DocumentReference incrementMinorVersion(DocumentReference documentReference){
-    String version = documentReference
-            .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-            .getValue().toString();
 
-    documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-            .setValue(new StringType(version.substring(0, version.indexOf(".") + 1) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
+    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+      documentReference.addExtension(createVersionExtension("0.1"));
+    }
+    else {
+      String version = documentReference
+              .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .getValue().toString();
+
+      documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .setValue(new StringType(version.substring(0, version.indexOf(".") + 1) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
+    }
 
     return documentReference;
   }
@@ -151,14 +157,18 @@ public class FhirHelper {
    * @return - the DocumentReference with the major version incremented by 1
    */
   public static DocumentReference incrementMajorVersion(DocumentReference documentReference){
-    String version = documentReference
-            .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-            .getValue().toString();
+    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+      documentReference.addExtension(createVersionExtension("1.0"));
+    }
+    else {
+      String version = documentReference
+              .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .getValue().toString();
 
-    version = version.substring(0, version.indexOf("."));
-    documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-            .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
-
+      version = version.substring(0, version.indexOf("."));
+      documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
+    }
     return documentReference;
   }
 
