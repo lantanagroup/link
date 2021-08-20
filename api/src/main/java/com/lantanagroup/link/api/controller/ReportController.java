@@ -243,12 +243,7 @@ public class ReportController extends BaseController {
       }
 
       if(existingDocumentReference != null){
-        if(existingDocumentReference.getExtensionByUrl(documentReferenceVersionUrl) != null){
           existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
-        }
-        else{
-          existingDocumentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
-        }
       }
 
       // Get the patient identifiers for the given date
