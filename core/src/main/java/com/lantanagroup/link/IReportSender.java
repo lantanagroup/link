@@ -9,5 +9,5 @@ import org.springframework.security.core.Authentication;
 import javax.servlet.http.HttpServletRequest;
 
 public interface IReportSender {
-  void send (MeasureReport report, ApiConfig config, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception;
+  void send (MeasureReport report, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception;
 }

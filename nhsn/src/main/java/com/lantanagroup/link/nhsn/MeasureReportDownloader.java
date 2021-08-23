@@ -44,7 +44,7 @@ public class MeasureReportDownloader implements IReportDownloader {
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirStoreClient, ctx, config.getFhirServerStore());
+    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirStoreClient);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
