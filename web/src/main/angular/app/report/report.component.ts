@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {ActivatedRoute, Params} from "@angular/router";
+import {ActivatedRoute, Params, Router} from "@angular/router";
 import {Subscription} from "rxjs";
 import {ReportService} from "../services/report.service";
 import {ToastService} from "../toast.service";
@@ -23,7 +23,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         public reportService: ReportService,
         public toastService: ToastService,
-        private modal: NgbModal) {
+        private modal: NgbModal){
     }
 
     viewLineLevel() {
@@ -33,8 +33,12 @@ export class ReportComponent implements OnInit, OnDestroy {
 
     async send() {
         try {
-            await this.reportService.send(this.reportId);
-            this.toastService.showInfo('Report sent!');
+            if (confirm('Are you sure you want to submit? Changes will be saved before submitting...')) {
+                await this.save();
+                await this.reportService.send(this.reportId);
+                this.toastService.showInfo('Report sent!');
+                await this.initReport();
+            }
         } catch (ex) {
             this.toastService.showException('Error sending report: ' + this.reportId, ex);
         }

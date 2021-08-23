@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {IMeasureReport, IMeasureReportPopulationComponent} from '../../fhir';
+import {IMeasureReportPopulationComponent} from '../../fhir';
+import {ReportModel} from "../../model/ReportModel";
 
 @Component({
   selector: 'app-calculated-field',
@@ -9,7 +10,7 @@ import {IMeasureReport, IMeasureReportPopulationComponent} from '../../fhir';
 export class CalculatedFieldComponent implements OnInit {
   private static readonly PopOrigCountUrl = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-pop-orig-count';
   private static readonly PopCountChangedReason = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-pop-count-changed-reason';
-  @Input() report: IMeasureReport;
+  @Input() report: ReportModel;
   @Input() groupCode: string;
   @Input() populationCode: string;
 
@@ -86,10 +87,15 @@ export class CalculatedFieldComponent implements OnInit {
     }
   }
 
+  get isDisabled() {
+    if (!this.report) return;
+    return this.report.status === 'FINAL';
+  }
+
   private getPopulation() {
     if (!this.report) return;
 
-    const group = (this.report.group || []).find(g => {
+    const group = (this.report.measureReport.group || []).find(g => {
       if (this.groupCode) {
         return g.code && g.code.coding && g.code.coding.length > 0 && !!g.code.coding.find(c => c.code === this.groupCode);
       } else {
@@ -103,4 +109,5 @@ export class CalculatedFieldComponent implements OnInit {
       });
     }
   }
+
 }

@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {IExtension, IMeasureReport} from "../../fhir";
+import {IExtension} from "../../fhir";
+import {ReportModel} from "../../model/ReportModel";
 
 @Component({
     selector: 'notes',
@@ -8,7 +9,7 @@ import {IExtension, IMeasureReport} from "../../fhir";
 })
 export class NotesComponent implements OnInit {
     private static readonly notesUrl = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-note';
-    @Input() measureReport: IMeasureReport;
+    @Input() report: ReportModel;
 
     constructor() {
     }
@@ -34,7 +35,7 @@ export class NotesComponent implements OnInit {
 
         if (!value && notesExtension) {
             extensions.splice(extensions.indexOf(notesExt), 1);
-            if (extensions.length === 0) delete this.measureReport.extension;
+            if (extensions.length === 0) delete this.report.measureReport.extension;
         } else if (!notesExtension && value) {
             extensions.push(notesExt);
         } else {
@@ -42,18 +43,24 @@ export class NotesComponent implements OnInit {
         }
     }
 
+    get isDisabled() {
+        if (!this.report) return;
+        return this.report.status === 'FINAL';
+    }
+
+    private getExtensions() {
+        if (!this.report) return;
+        this.report.measureReport.extension = this.report.measureReport.extension || [];
+        return this.report.measureReport.extension;
+    }
+
+
     async ngOnInit() {
 
     }
 
     ngOnDestroy() {
 
-    }
-
-    private getExtensions() {
-        if (!this.measureReport) return;
-        this.measureReport.extension = this.measureReport.extension || [];
-        return this.measureReport.extension;
     }
 
 }
