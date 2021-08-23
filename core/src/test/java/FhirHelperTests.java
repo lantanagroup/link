@@ -5,8 +5,6 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static com.lantanagroup.link.FhirHelper.findReferences;
-
 public class FhirHelperTests {
   @Test
   public void findReferencesBundleTest() {
@@ -56,5 +54,33 @@ public class FhirHelperTests {
     Assert.assertEquals("Composition/" + comp2.getIdElement().getIdPart(), comp1.getRelatesToFirstRep().getTargetReference().getReference());
     Assert.assertNotEquals("obs2", obs2.getId());
     Assert.assertEquals(36, obs2.getId().length());
+  }
+
+  @Test
+  public void fixResourceIdsTest() {
+    Bundle bundle = new Bundle();
+
+    Condition cond1 = new Condition();
+    cond1.setId("lkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdf");  // 78 chars
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond1));
+
+    Encounter enc1 = new Encounter();
+    enc1.setId("ThisIsATest");
+    enc1.addDiagnosis().setCondition(new Reference("Condition/lkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdflkajsdf"));
+    bundle.addEntry().setResource(enc1);
+
+    FhirHelper.fixResourceIds(bundle);
+
+    // Make sure the Condition's ID was changed
+    Assert.assertEquals("HASH-530656147", cond1.getIdElement().getIdPart());
+
+    // Make sure an extension was added to the resource to track the original ID
+    Assert.assertNotNull(cond1.getExtensionByUrl(FhirHelper.ORIG_ID_EXT_URL));
+
+    // Make sure the reference to the Condition in the encounter got updated
+
+    // Make sure the reference to the Condition has an extension to track the original reference
+    Assert.assertEquals("Condition/HASH-530656147", enc1.getDiagnosisFirstRep().getCondition().getReference());
+    Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(FhirHelper.ORIG_ID_EXT_URL));
   }
 }

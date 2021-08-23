@@ -54,7 +54,7 @@ public class ReportController extends BaseController {
   @Autowired
   private ApplicationContext context;
 
-  private String storeReportBundleResources (Bundle bundle, IGenericClient fhirStoreClient) {
+  private String storeReportBundleResources(Bundle bundle, IGenericClient fhirStoreClient) {
     String measureId = null;
 
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
@@ -94,7 +94,7 @@ public class ReportController extends BaseController {
     return measureId;
   }
 
-  private void resolveMeasure (ReportCriteria criteria, ReportContext context) throws Exception {
+  private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
     // Find the report definition bundle for the given ID
     Bundle reportDefBundle = context.getFhirStoreClient()
             .read()
@@ -118,7 +118,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<String> getPatientIdentifiers (ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+  private List<String> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;
     Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
     Constructor<?> senderConstructor = senderClass.getConstructor();
@@ -126,7 +126,7 @@ public class ReportController extends BaseController {
     return provider.getPatientIdentifiers(criteria, context, this.config);
   }
 
-  private Bundle getRemotePatientData (List<String> patientIdentifiers) {
+  private Bundle getRemotePatientData(List<String> patientIdentifiers) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -154,13 +154,13 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData (List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
+  private void queryAndStorePatientData(List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-        logger.info("Scooping data locally for the patients: " + StringUtils.join(patientIdentifiers, ", "));
+        logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
         patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
@@ -172,17 +172,42 @@ public class ReportController extends BaseController {
         throw new Exception("patientDataBundle is null");
       }
 
-      // Make sure the bundle is a transaction
-      patientDataBundle.setType(Bundle.BundleType.TRANSACTION);
+      // Make sure the bundle is a batch - it will load as much as it can
+      patientDataBundle.setType(Bundle.BundleType.BATCH);
       patientDataBundle.getEntry().forEach(entry ->
               entry.getRequest()
                       .setMethod(Bundle.HTTPVerb.PUT)
                       .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
       );
 
+      // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
+      // (note: this also fixes the references to resources within invalid ids)
+      FhirHelper.fixResourceIds(patientDataBundle);
+
+      // For debugging purposes:
+      //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
+
       // Store the data
       logger.info("Storing data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
-      fhirStoreClient.transaction().withBundle(patientDataBundle).execute();
+      Bundle response = fhirStoreClient.transaction().withBundle(patientDataBundle).execute();
+
+      response.getEntry().stream()
+              .filter(e -> e.getResponse() != null && e.getResponse().getStatus() != null && !e.getResponse().getStatus().startsWith("20"))   // 200 or 201
+              .forEach(e -> {
+                if (e.getResponse().getOutcome() != null) {
+                  OperationOutcome outcome = (OperationOutcome) e.getResponse().getOutcome();
+
+                  if (outcome.hasIssue()) {
+                    outcome.getIssue().forEach(i -> {
+                      logger.error(String.format("Entry in response from storing patient data has error: %s", i.getDiagnostics()));
+                    });
+                  } else if (outcome.getText() != null && outcome.getText().getDivAsString() != null) {
+                    logger.error(String.format("Entry in response from storing patient has issue: %s", outcome.getText().getDivAsString()));
+                  }
+                } else {
+                  logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
+                }
+              });
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientIdentifiers, ", "), ex.getMessage());
       logger.error(msg);
@@ -190,7 +215,7 @@ public class ReportController extends BaseController {
     }
   }
 
-  private DocumentReference getDocumentReferenceByMeasureAndPeriod (Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
+  private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
     DocumentReference documentReference = null;
     Bundle bundle = fhirStoreClient
             .search()
@@ -213,7 +238,7 @@ public class ReportController extends BaseController {
   }
 
   @PostMapping("/$generate")
-  public GenerateResponse generateReport (
+  public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           Authentication authentication,
           HttpServletRequest request,
@@ -295,7 +320,7 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference (LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) {
+  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
@@ -357,7 +382,7 @@ public class ReportController extends BaseController {
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
   @GetMapping("/{reportId}/$send")
-  public void send (Authentication authentication, @PathVariable String reportId, HttpServletRequest request) throws Exception {
+  public void send(Authentication authentication, @PathVariable String reportId, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
@@ -391,7 +416,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/{reportId}/$download")
-  public void download (@PathVariable String reportId, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  public void download(@PathVariable String reportId, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -407,7 +432,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}")
-  public ReportModel getReport (
+  public ReportModel getReport(
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
@@ -444,9 +469,9 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}/patient")
-  public List<PatientReportModel> getReportPatients (@PathVariable("id") String id,
-                                                     Authentication authentication,
-                                                     HttpServletRequest request) throws Exception {
+  public List<PatientReportModel> getReportPatients(@PathVariable("id") String id,
+                                                    Authentication authentication,
+                                                    HttpServletRequest request) throws Exception {
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
     List<PatientReportModel> reports = new ArrayList();
@@ -501,7 +526,7 @@ public class ReportController extends BaseController {
   }
 
   @PutMapping(value = "/{id}")
-  public void saveReport (
+  public void saveReport(
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request,
@@ -529,7 +554,7 @@ public class ReportController extends BaseController {
   }
 
   @DeleteMapping(value = "/{id}")
-  public void deleteReport (
+  public void deleteReport(
           @PathVariable("id") String id,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
@@ -557,8 +582,8 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ReportBundle searchReports (Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                     @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
+  public ReportBundle searchReports(Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
+                                    @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
     Bundle documentReference;
     boolean andCond = false;
     ReportBundle reportBundle = new ReportBundle();

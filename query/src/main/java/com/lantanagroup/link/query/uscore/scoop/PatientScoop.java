@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -35,6 +35,9 @@ public class PatientScoop extends Scoop {
   @Autowired
   private ApplicationContext context;
 
+  @Autowired
+  private USCoreConfig usCoreConfig;
+
   public void execute(List<String> patientIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
@@ -43,9 +46,21 @@ public class PatientScoop extends Scoop {
     this.patientData = this.loadPatientData(patientIds);
   }
 
-  public List<PatientData> loadPatientData(List<String> patientIdList) {
-    List<PatientData> patientDataList = new ArrayList<>();
+  private synchronized PatientData loadPatientData(Patient patient) {
+    if (patient == null) return null;
 
+    try {
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig);
+      patientData.loadData();
+      return patientData;
+    } catch (Exception e) {
+      logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
+    }
+
+    return null;
+  }
+
+  public List<PatientData> loadPatientData(List<String> patientIdList) {
     // first get the patients and store them in the patientMap
     patientIdList.forEach(patientId -> {
       try {
@@ -61,44 +76,32 @@ public class PatientScoop extends Scoop {
           this.patientMap.put(patientId, patient);
         }
       } catch (AuthenticationException ae) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
-                ae.printStackTrace();
-                throw new RuntimeException(ae);
-            } catch (Exception e) {
-                logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
+        ae.printStackTrace();
+        throw new RuntimeException(ae);
+      } catch (Exception e) {
+        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
+        e.printStackTrace();
+        throw new RuntimeException(e);
+      }
+    });
 
-        try {
-            // loop through the patient ids to retrieve the patientData using each patient.
-            patientIdList.parallelStream().forEach(id -> {
-                PatientData patientData;
-                try {
-                    Patient patient = this.getPatientMap().get(id);
-                    if (null != patient) {
-                      patientData = this.context.getBean(PatientData.class);
-                      patientData.setPatientScoop(this);
-                      patientData.setPatient(patient);
-                      patientData.setCtx(this.fhirQueryServer.getFhirContext());
-                      patientData.loadData();
-                      patientDataList.add(patientData);
-                    } else {
-                        logger.warn("Patient Id: " + id + " for patientData doesn't exist.");
-                    }
-                } catch (Exception e) {
-                    logger.error("Error loading data for " + id, e);
-                }
-            });
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-        logger.info("Patient Data List count: " + patientDataList.size());
-        return patientDataList;
+    try {
+      List<Patient> patients = new ArrayList<>(this.getPatientMap().values());
+
+      // loop through the patient ids to retrieve the patientData using each patient.
+      List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
+        logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+        PatientData patientData = this.loadPatientData(patient);
+        return patientData;
+      }).collect(Collectors.toList());
+
+      logger.info("Patient Data List count: " + patientDataList.size());
+      return patientDataList;
+    } catch (Exception e) {
+      logger.error(e.getMessage());
     }
 
-    public Bundle rawSearch(String query) {
-        return rawSearch(this.fhirQueryServer, query);
-    }
+    return new ArrayList<>();
+  }
 }

@@ -1,5 +1,6 @@
 package com.lantanagroup.link.query.uscore;
 
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
@@ -32,9 +33,11 @@ public class Query extends BaseQuery implements IQuery {
       scoop.setFhirQueryServer(this.getFhirQueryClient());
       scoop.execute(List.of(patientIdentifiers));
 
-      for (PatientData patientData : scoop.getPatientData()) {
-        Bundle next = patientData.getBundleTransaction();
-        next.getEntry().forEach(bundle::addEntry);
+      List<PatientData> patientDatas = scoop.getPatientData();
+
+      for (PatientData patientData : patientDatas) {
+        Bundle patientBundle = patientData.getBundleTransaction();
+        FhirHelper.addEntriesToBundle(patientBundle, bundle);
         bundle.setTotal(bundle.getEntry().size());
       }
     } catch (Exception ex) {
