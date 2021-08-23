@@ -40,6 +40,12 @@ public class BaseController {
 
   protected void updateResource(Resource resource, IGenericClient fhirStoreClient) {
     int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
+
+    // Make sure the ID is not version-specific
+    if (resource.getIdElement() != null && resource.getIdElement().getIdPart() != null) {
+      resource.setId(resource.getIdElement().getIdPart());
+    }
+
     MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
     DomainResource domainResource = (DomainResource) outcome.getResource();
     int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());

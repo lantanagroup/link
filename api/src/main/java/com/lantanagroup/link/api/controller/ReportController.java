@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private ObjectMapper mapper = new ObjectMapper();
+  private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   @Autowired
   private ApiConfig config;
@@ -266,6 +267,10 @@ public class ReportController extends BaseController {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
+      if(existingDocumentReference != null){
+          existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+      }
+
       // Get the patient identifiers for the given date
       List<String> patientIdentifiers = this.getPatientIdentifiers(criteria, context);
 
@@ -294,6 +299,11 @@ public class ReportController extends BaseController {
         DocumentReference documentReference = this.generateDocumentReference(user, criteria, context, id);
         if (existingDocumentReference != null) {
           documentReference.setId(existingDocumentReference.getId());
+
+          Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(documentReferenceVersionUrl);
+          String existingVersion = existingVersionExt.getValue().toString();
+
+          documentReference.getExtensionByUrl(documentReferenceVersionUrl).setValue(new StringType(existingVersion));
           this.updateResource(documentReference, fhirStoreClient);
         } else {
           this.createResource(documentReference, fhirStoreClient);
@@ -320,13 +330,16 @@ public class ReportController extends BaseController {
     documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
 
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+
     List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
     String practitionerId = user.getPractitioner().getId();
     reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
     list.add(reference);
     documentReference.setAuthor(list);
+
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
+
     CodeableConcept type = new CodeableConcept();
     List<Coding> codings = new ArrayList<>();
     Coding coding = new Coding();
@@ -336,6 +349,7 @@ public class ReportController extends BaseController {
     codings.add(coding);
     type.setCoding(codings);
     documentReference.setType(type);
+
     List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
     DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
     Attachment attachment = new Attachment();
@@ -343,14 +357,21 @@ public class ReportController extends BaseController {
     doc.setAttachment(attachment);
     listDoc.add(doc);
     documentReference.setContent(listDoc);
+
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
+
     LocalDate startDate = LocalDate.parse(criteria.getPeriodStart());
     LocalDate endDate = LocalDate.parse(criteria.getPeriodEnd());
+
     Period period = new Period();
     period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
     period.setEnd(java.sql.Timestamp.valueOf(endDate.atTime(23, 59, 59)));
     docReference.setPeriod(period);
+
     documentReference.setContext(docReference);
+
+    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
+
     return documentReference;
   }
 
@@ -386,6 +407,9 @@ public class ReportController extends BaseController {
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
     DocumentReference documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
+
+    documentReference = FhirHelper.incrementMajorVersion(documentReference);
+
     // save the DocumentReference with the Final status
     this.updateResource(documentReference, fhirStoreClient);
 
@@ -438,7 +462,9 @@ public class ReportController extends BaseController {
     );
 
     report.setIdentifier(id);
-    report.setVersion(null);
+    report.setVersion(documentReference
+            .getExtensionByUrl(documentReferenceVersionUrl) != null ?
+            documentReference.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
     report.setStatus(documentReference.getStatus().toString());
     report.setDate(documentReference.getDate());
 
@@ -513,7 +539,15 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
-    this.updateResource(data.getMeasureReport(), client);
+    documentReference = FhirHelper.incrementMinorVersion(documentReference);
+
+    try {
+      this.updateResource(documentReference, client);
+      this.updateResource(data.getMeasureReport(), client);
+    } catch (Exception ex) {
+      logger.error(String.format("Error saving changes to report: %s", ex.getMessage()));
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving changes to report");
+    }
 
     FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +

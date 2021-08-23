@@ -30,6 +30,7 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String REPORT_BUNDLE_TAG = "report-bundle";
+  private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
   public static final String ORIG_ID_EXT_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-original-id";
 
   public static void recordAuditEvent (HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
@@ -124,6 +125,53 @@ public class FhirHelper {
             .withId(reportId)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
+  }
+
+  public static Extension createVersionExtension(String value){
+    return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
+  }
+
+  /**
+   *
+   * @param documentReference - DocumentReference whose minor version is to be incremented
+   * @return - the DocumentReference with the minor version incremented by 1
+   */
+  public static DocumentReference incrementMinorVersion(DocumentReference documentReference){
+
+    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+      documentReference.addExtension(createVersionExtension("0.1"));
+    }
+    else {
+      String version = documentReference
+              .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .getValue().toString();
+
+      documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .setValue(new StringType(version.substring(0, version.indexOf(".") + 1) + (Integer.parseInt(version.substring(version.indexOf(".") + 1)) + 1)));
+    }
+
+    return documentReference;
+  }
+
+  /**
+   *
+   * @param documentReference - DocumentReference whose major version is to be incremented
+   * @return - the DocumentReference with the major version incremented by 1
+   */
+  public static DocumentReference incrementMajorVersion(DocumentReference documentReference){
+    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+      documentReference.addExtension(createVersionExtension("1.0"));
+    }
+    else {
+      String version = documentReference
+              .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .getValue().toString();
+
+      version = version.substring(0, version.indexOf("."));
+      documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
+              .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
+    }
+    return documentReference;
   }
 
   public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {

@@ -83,7 +83,7 @@ export class ReportService {
     return await this.http.get<ReportModel>(url).toPromise();
   }
 
-  async save(report: ReportSaveModel, id: String) {
+  async save(report: ReportSaveModel, id: string) {
     const url = this.configService.getApiUrl(`/api/report/` + id);
     return await this.http.put<ReportSaveModel>(url, report).toPromise();
   }
