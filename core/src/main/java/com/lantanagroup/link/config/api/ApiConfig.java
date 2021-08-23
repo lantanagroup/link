@@ -45,11 +45,6 @@ public class ApiConfig {
     private String patientIdResolver;
 
     /**
-     * <strong>api.send-url</strong><br>The list of URLs to send reports to
-     */
-    private List<String> sendUrl;
-
-    /**
      * <strong>api.document-reference-system</strong><br>The "system" value of identifiers for DocumentReference resources created to index reports generated
      */
     private String documentReferenceSystem;

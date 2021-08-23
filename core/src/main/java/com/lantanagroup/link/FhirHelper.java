@@ -174,7 +174,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer, FhirContext ctx, String fhirServerStoreBase) {
+  public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(REPORT_BUNDLE_TAG);
@@ -197,8 +197,7 @@ public class FhirHelper {
 
     Bundle patientBundle = generateBundle(resourceReferences);
 
-    IGenericClient cqfRulerClient = ctx.newRestfulGenericClient(fhirServerStoreBase);
-    Bundle patientBundleResponse = cqfRulerClient.transaction().withBundle(patientBundle).execute();
+    Bundle patientBundleResponse = fhirServer.transaction().withBundle(patientBundle).execute();
 
     patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
       bundle.addEntry().setResource((Resource) entry.getResource());

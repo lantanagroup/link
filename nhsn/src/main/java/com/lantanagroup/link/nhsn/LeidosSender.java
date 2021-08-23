@@ -6,6 +6,7 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.sender.LeidosSenderConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -14,32 +15,37 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
+@Component
 public class LeidosSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(LeidosSender.class);
 
+  @Autowired
+  private LeidosSenderConfig config;
+
   @Override
-  public void send (MeasureReport report, ApiConfig config, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception {
-    if (config.getSendUrl() == null || config.getSendUrl().isEmpty()) {
+  public void send (MeasureReport report, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception {
+    if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
       throw new Exception("Not configured with any locations to send");
     }
 
     logger.info("Building Bundle for MeasureReport to send...");
 
-    IGenericClient fhirServerStore = ctx.newRestfulGenericClient(config.getFhirServerStore());
-    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirServerStore, ctx, config.getFhirServerStore());
+    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirStoreClient);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
     String xml = ctx.newXmlParser().encodeResourceToString(bundle);
 
-    logger.debug(String.format("Configured to send to %s locations", config.getSendUrl().size()));
+    logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
 
-    for (String sendUrl : config.getSendUrl()) {
+    for (String sendUrl : this.config.getSendUrls()) {
       logger.info("Sending MeasureReport bundle to URL " + sendUrl);
 
       HttpPost sendRequest = new HttpPost(sendUrl);

@@ -386,11 +386,6 @@ public class ReportController extends BaseController {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
-    IReportSender sender;
-    Class<?> senderClass = Class.forName(this.config.getSender());
-    Constructor<?> senderConstructor = senderClass.getConstructor();
-    sender = (IReportSender) senderConstructor.newInstance();
-
     // get the report
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
     Bundle bundle = fhirStoreClient
@@ -410,10 +405,12 @@ public class ReportController extends BaseController {
 
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
+    Class<?> senderClazz = Class.forName(this.config.getSender());
+    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+    sender.send(report, this.ctx, request, authentication, fhirStoreClient);
+
     // save the DocumentReference with the Final status
     this.updateResource(documentReference, fhirStoreClient);
-
-    sender.send(report, this.config, this.ctx, request, authentication, fhirStoreClient);
 
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
   }
