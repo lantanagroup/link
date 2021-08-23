@@ -1,45 +1,46 @@
-<div class="alert alert-info" *ngIf="loading">Loading...</div>
+<div *ngIf="loading" class="alert alert-info">Loading...</div>
 
-<div class="report" *ngIf="report">
+<div *ngIf="report" class="report">
     <div class="row">
         <div class="col-md-4">
-            <div class="input-group" *ngIf="report?.measure?.title">
+            <div *ngIf="report?.measure?.title" class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Type</div>
                 </div>
-                <input type="text" class="form-control" [(ngModel)]="report.measure.title" [disabled]="true" />
+                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" type="text"/>
             </div>
 
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Period</div>
                 </div>
-                <input type="text" class="form-control" [disabled]="true" value="TODO" />
+                <input [disabled]="true" class="form-control" type="text" value="TODO"/>
             </div>
 
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Status/Version</div>
                 </div>
-                <input type="text" class="form-control" [disabled]="true" value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}" />
+                <input [disabled]="true" class="form-control" type="text"
+                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}"/>
             </div>
         </div>
         <div class="col-md-8">
-            <notes [measureReport]="report.measureReport">Notes</notes>
+            <notes [report]="report">Notes</notes>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             <app-report-med-admin *ngIf="isMeasureIdentifier('nhsn-medication-administration')"
-                                  [measureReport]="report.measureReport"></app-report-med-admin>
+                                  [report]="report"></app-report-med-admin>
         </div>
     </div>
 
     <div class="btn-group">
-        <button class="btn btn-primary" (click)="viewLineLevel()">View Line-Level Data</button>
-        <button class="btn btn-primary" (click)="save()">Save</button>
-        <button class="btn btn-primary" (click)="send()">Send</button>
-        <button class="btn btn-primary" (click)="download()">Download</button>
+        <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
+        <button (click)="save()" class="btn btn-primary">Submit</button>
+        <button (click)="send()" class="btn btn-primary">Send</button>
+        <button (click)="download()" class="btn btn-primary">Download</button>
     </div>
 </div>

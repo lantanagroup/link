@@ -462,7 +462,7 @@ public class ReportController extends BaseController {
     report.setVersion(documentReference
             .getExtensionByUrl(documentReferenceVersionUrl) != null ?
             documentReference.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
-    report.setStatus(documentReference.getStatus().toString());
+    report.setStatus(documentReference.getDocStatus().toString());
     report.setDate(documentReference.getDate());
 
     return report;
