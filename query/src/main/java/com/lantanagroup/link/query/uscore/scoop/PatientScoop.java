@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,9 @@ public class PatientScoop extends Scoop {
   @Autowired
   private ApplicationContext context;
 
+  @Autowired
+  private USCoreConfig usCoreConfig;
+
   public void execute(List<String> patientIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
@@ -46,7 +50,8 @@ public class PatientScoop extends Scoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient);
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig);
+      patientData.loadData();
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -83,17 +88,16 @@ public class PatientScoop extends Scoop {
 
     try {
       List<Patient> patients = new ArrayList<>(this.getPatientMap().values());
-      ConcurrentHashMap<String, PatientData> patientDataMap = new ConcurrentHashMap<>();
 
       // loop through the patient ids to retrieve the patientData using each patient.
-      patients.parallelStream().forEach(patient -> {
+      List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
         PatientData patientData = this.loadPatientData(patient);
-        patientDataMap.put(patient.getIdElement().getIdPart(), patientData);
-      });
+        return patientData;
+      }).collect(Collectors.toList());
 
-      logger.info("Patient Data List count: " + patientDataMap.size());
-      return new ArrayList<>(patientDataMap.values());
+      logger.info("Patient Data List count: " + patientDataList.size());
+      return patientDataList;
     } catch (Exception e) {
       logger.error(e.getMessage());
     }

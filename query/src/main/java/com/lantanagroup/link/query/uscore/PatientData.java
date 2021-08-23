@@ -27,15 +27,14 @@ public class PatientData {
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
+  private final USCoreConfig usCoreConfig;
   private List<Bundle> bundles = new ArrayList<>();
 
-  @Autowired
-  private USCoreConfig usCoreConfig;
-
-  public PatientData(IGenericClient fhirQueryServer, Patient patient) {
+  public PatientData(IGenericClient fhirQueryServer, Patient patient, USCoreConfig usCoreConfig) {
     this.fhirQueryServer = fhirQueryServer;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
+    this.usCoreConfig = usCoreConfig;
   }
 
   public void loadData() {
