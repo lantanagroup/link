@@ -45,7 +45,6 @@ export class NotesComponent implements OnInit {
 
     get isDisabled() {
         if (!this.report) return;
-        console.log("Status is:" + this.report.status);
         return this.report.status === 'FINAL';
     }
 
