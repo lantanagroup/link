@@ -23,7 +23,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         private route: ActivatedRoute,
         public reportService: ReportService,
         public toastService: ToastService,
-        private modal: NgbModal){
+        private modal: NgbModal,
+        private router: Router){
     }
 
     viewLineLevel() {
@@ -53,6 +54,17 @@ export class ReportComponent implements OnInit, OnDestroy {
         }
     }
 
+    async discard() {
+        try {
+            if (confirm('Are you sure you want to discard this report?')) {
+                await this.reportService.discard(this.reportId);
+                await this.router.navigate(['/review']);
+            }
+        } catch (ex) {
+            this.toastService.showException('Error discarding report: ' + this.reportId, ex);
+        }
+    }
+
     async initReport() {
         this.loading = true;
 
@@ -67,7 +79,7 @@ export class ReportComponent implements OnInit, OnDestroy {
 
     getStatusDisplay() {
         switch (this.report.status.toLowerCase()) {
-            case 'current':
+            case 'preliminary':
                 return 'Reviewing';
             case 'final':
                 return 'Submitted';
@@ -87,10 +99,15 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
 
     isMeasureIdentifier(measureId) {
-        if (this.report != undefined && this.report.measure.identifier[0].value == measureId) {
+        if (this.report != undefined && this.report.measure != undefined && this.report.measure.identifier[0].value == measureId) {
             return true;
         }
         return false;
+    }
+
+    get isDisabled() {
+        if (!this.report) return;
+        return this.report.status === 'FINAL';
     }
 
     async ngOnInit() {
