@@ -409,6 +409,11 @@ public class ReportController extends BaseController {
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
     sender.send(report, this.ctx, request, authentication, fhirStoreClient);
 
+
+    String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
+
+    logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
+
     // save the DocumentReference with the Final status
     this.updateResource(documentReference, fhirStoreClient);
 

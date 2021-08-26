@@ -3,6 +3,8 @@ import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class FhirHelperTests {
@@ -82,5 +84,23 @@ public class FhirHelperTests {
     // Make sure the reference to the Condition has an extension to track the original reference
     Assert.assertEquals("Condition/HASH-530656147", enc1.getDiagnosisFirstRep().getCondition().getReference());
     Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(FhirHelper.ORIG_ID_EXT_URL));
+  }
+
+  @Test
+  public void getNameTest() {
+    HumanName name1 = new HumanName().setFamily("Sombody").addGiven("Joe");
+    HumanName name2 = new HumanName().addGiven("Joe Sombody");
+    HumanName name3 = new HumanName().setFamily("Joe Sombody");
+    HumanName name4 = new HumanName().setText("Joe Sombody");
+
+    String actual1 = FhirHelper.getName(Arrays.asList(name1));
+    String actual2 = FhirHelper.getName(Arrays.asList(name2));
+    String actual3 = FhirHelper.getName(Arrays.asList(name3));
+    String actual4 = FhirHelper.getName(Arrays.asList(name4));
+
+    Assert.assertEquals(actual1, "Joe Sombody");
+    Assert.assertEquals(actual2, "Joe Sombody");
+    Assert.assertEquals(actual3, "Joe Sombody");
+    Assert.assertEquals(actual4, "Joe Sombody");
   }
 }
