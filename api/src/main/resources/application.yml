@@ -12,6 +12,7 @@ api:
     allowed-methods:
       - GET
       - POST
+      - DELETE
       - PUT
       - OPTIONS
   terminology:
