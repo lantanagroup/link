@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.swing.text.html.Option;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -33,7 +32,7 @@ public class FhirHelper {
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
   public static final String ORIG_ID_EXT_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-original-id";
 
-  public static void recordAuditEvent (HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -103,29 +102,40 @@ public class FhirHelper {
     }
   }
 
-  public static String getName(List<HumanName> names){
+  public static String getName(List<HumanName> names) {
     String firstName = "", lastName = "";
-    if(names.size() > 0 && names.get(0) != null){
-      if(names.get(0).getGiven().size() > 0 && names.get(0).getGiven().get(0) != null){
+    if (names.size() > 0 && names.get(0) != null) {
+      if (StringUtils.isNotEmpty(names.get(0).getText())) {
+        return names.get(0).getText();
+      }
+      if (names.get(0).getGiven().size() > 0 && names.get(0).getGiven().get(0) != null) {
         firstName = names.get(0).getGiven().get(0).toString();
       }
-      if(names.get(0).getFamily() != null){
+      if (names.get(0).getFamily() != null) {
         lastName = names.get(0).getFamily();
       }
-    }
-    else{
+    } else {
       return "";
     }
-    return (firstName + " " + lastName).replace("\"", "");
+
+    if (StringUtils.isNotEmpty(firstName) && StringUtils.isNotEmpty(lastName)) {
+      return (firstName + " " + lastName).replace("\"", "");
+    } else if (StringUtils.isNotEmpty(lastName)) {
+      return lastName;
+    } else if (StringUtils.isNotEmpty(firstName)) {
+      return firstName;
+    }
+
+    return "";
   }
 
-  public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException{
+  public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
     Bundle documentReferences = client.search()
-      .forResource("DocumentReference")
-      .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
-      .returnBundle(Bundle.class)
-      .cacheControl(new CacheControlDirective().setNoCache(true))
-      .execute();
+            .forResource("DocumentReference")
+            .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
 
 
     if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
@@ -135,7 +145,7 @@ public class FhirHelper {
     return (DocumentReference) documentReferences.getEntry().get(0).getResource();
   }
 
-  public static MeasureReport getMeasureReport(IGenericClient client, String reportId){
+  public static MeasureReport getMeasureReport(IGenericClient client, String reportId) {
     return client.read()
             .resource(MeasureReport.class)
             .withId(reportId)
@@ -143,21 +153,19 @@ public class FhirHelper {
             .execute();
   }
 
-  public static Extension createVersionExtension(String value){
+  public static Extension createVersionExtension(String value) {
     return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
   }
 
   /**
-   *
    * @param documentReference - DocumentReference whose minor version is to be incremented
    * @return - the DocumentReference with the minor version incremented by 1
    */
-  public static DocumentReference incrementMinorVersion(DocumentReference documentReference){
+  public static DocumentReference incrementMinorVersion(DocumentReference documentReference) {
 
-    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+    if (documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null) {
       documentReference.addExtension(createVersionExtension("0.1"));
-    }
-    else {
+    } else {
       String version = documentReference
               .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
               .getValue().toString();
@@ -170,15 +178,13 @@ public class FhirHelper {
   }
 
   /**
-   *
    * @param documentReference - DocumentReference whose major version is to be incremented
    * @return - the DocumentReference with the major version incremented by 1
    */
-  public static DocumentReference incrementMajorVersion(DocumentReference documentReference){
-    if(documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null){
+  public static DocumentReference incrementMajorVersion(DocumentReference documentReference) {
+    if (documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null) {
       documentReference.addExtension(createVersionExtension("1.0"));
-    }
-    else {
+    } else {
       String version = documentReference
               .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
               .getValue().toString();
@@ -190,7 +196,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport (MeasureReport measureReport, IGenericClient fhirServer) {
+  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(REPORT_BUNDLE_TAG);
@@ -222,7 +228,7 @@ public class FhirHelper {
     return bundle;
   }
 
-  private static Bundle generateBundle (List<String> resourceReferences) {
+  private static Bundle generateBundle(List<String> resourceReferences) {
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.TRANSACTION);
     resourceReferences.parallelStream().forEach(reference -> {
@@ -232,7 +238,7 @@ public class FhirHelper {
     return bundle;
   }
 
-  public static List<IBaseResource> getAllPages (Bundle bundle, IGenericClient fhirStoreClient, FhirContext ctx) {
+  public static List<IBaseResource> getAllPages(Bundle bundle, IGenericClient fhirStoreClient, FhirContext ctx) {
     List<IBaseResource> bundles = new ArrayList<>();
     bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
 
@@ -248,7 +254,7 @@ public class FhirHelper {
     return bundles;
   }
 
-  public static void changeIds (Bundle bundle) {
+  public static void changeIds(Bundle bundle) {
     List<Reference> references = findReferences(bundle)
             .stream()
             .filter(r -> r.getReference() != null && r.getReference().split("/").length == 2)
@@ -315,7 +321,7 @@ public class FhirHelper {
    * @param obj The object to search
    * @return A list of Reference instances found in the object
    */
-  public static List<Reference> findReferences (Object obj) {
+  public static List<Reference> findReferences(Object obj) {
     List<Reference> references = new ArrayList<>();
     scanInstance(obj, Reference.class, Collections.newSetFromMap(new IdentityHashMap<>()), references);
     return references;
@@ -331,7 +337,7 @@ public class FhirHelper {
    * @param <T>          The type of class to look for instances of that must match the initialized results collection
    * @implNote Found this code online from https://stackoverflow.com/questions/57758392/is-there-are-any-way-to-get-all-the-instances-of-type-x-by-reflection-utils
    */
-  private static <T> void scanInstance (Object objectToScan, Class<T> lookingFor, Set<? super Object> scanned, Collection<? super T> results) {
+  private static <T> void scanInstance(Object objectToScan, Class<T> lookingFor, Set<? super Object> scanned, Collection<? super T> results) {
     if (objectToScan == null) {
       return;
     }
@@ -398,7 +404,8 @@ public class FhirHelper {
     List<Bundle.BundleEntryComponent> sourceEntries = source.getEntry();
 
     for (Bundle.BundleEntryComponent sourceEntry : sourceEntries) {
-      if (sourceEntry.getResource() == null || sourceEntry.getResource().getIdElement() == null || sourceEntry.getResource().getId() == null) continue;
+      if (sourceEntry.getResource() == null || sourceEntry.getResource().getIdElement() == null || sourceEntry.getResource().getId() == null)
+        continue;
 
       List<Bundle.BundleEntryComponent> destEntries = new ArrayList<>(destination.getEntry());
       Optional<Bundle.BundleEntryComponent> found =
@@ -424,7 +431,7 @@ public class FhirHelper {
   public static Bundle.BundleEntryComponent findEntry(Bundle bundle, ResourceType resourceType, String id) {
     Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream().filter(e ->
                     e.getResource().getResourceType() == resourceType &&
-                    e.getResource().getIdElement().getIdPart().equals(id))
+                            e.getResource().getIdElement().getIdPart().equals(id))
             .findFirst();
     return found.isPresent() ? found.get() : null;
   }
@@ -433,6 +440,7 @@ public class FhirHelper {
    * Finds each resource within the Bundle that has an invalid ID,
    * assigns a new ID to the resource that is based on a hash of the original
    * ID. Finds any references to those invalid IDs and updates them.
+   *
    * @param bundle The bundle to fix IDs to resources for
    */
   public static void fixResourceIds(Bundle bundle) {
@@ -444,8 +452,8 @@ public class FhirHelper {
     // Create a map where key = old id, value = new id (a hash of the old id)
     Map<IdType, IdType> newIds = invalidResourceIds.stream().map(res -> {
       IdType rId = res.getIdElement();
-      return new IdType[] { rId, new IdType(res.getResourceType().toString(), "HASH" + String.valueOf(rId.getIdPart().hashCode()))};
-    }).collect(Collectors.toMap(e -> e[0], e-> e[1]));
+      return new IdType[]{rId, new IdType(res.getResourceType().toString(), "HASH" + String.valueOf(rId.getIdPart().hashCode()))};
+    }).collect(Collectors.toMap(e -> e[0], e -> e[1]));
 
     // Find all references within the bundle
     List<Reference> references = findReferences(bundle);
@@ -467,8 +475,8 @@ public class FhirHelper {
 
       // Find references to the old id and update it
       List<Reference> invalidIdReferences = references.stream()
-                      .filter(ref -> ref.getReference() != null && ref.getReference().equals(invalidIdRef))
-                      .collect(Collectors.toList());
+              .filter(ref -> ref.getReference() != null && ref.getReference().equals(invalidIdRef))
+              .collect(Collectors.toList());
 
       logger.debug(String.format("Found %s references to %s to update to %s.", invalidIdReferences.size(), invalidIdRef, newId.getIdPart()));
 
@@ -482,8 +490,8 @@ public class FhirHelper {
       bundle.getEntry().stream()
               .filter(entry ->
                       entry.getRequest() != null &&
-                      entry.getRequest().getUrl() != null &&
-                      entry.getRequest().getUrl().equals(invalidIdRef))
+                              entry.getRequest().getUrl() != null &&
+                              entry.getRequest().getUrl().equals(invalidIdRef))
               .forEach(entry -> entry.getRequest().setUrl(newIdRef));
     });
   }
