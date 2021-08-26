@@ -103,6 +103,22 @@ public class FhirHelper {
     }
   }
 
+  public static String getName(List<HumanName> names){
+    String firstName = "", lastName = "";
+    if(names.size() > 0 && names.get(0) != null){
+      if(names.get(0).getGiven().size() > 0 && names.get(0).getGiven().get(0) != null){
+        firstName = names.get(0).getGiven().get(0).toString();
+      }
+      if(names.get(0).getFamily() != null){
+        lastName = names.get(0).getFamily();
+      }
+    }
+    else{
+      return "";
+    }
+    return (firstName + " " + lastName).replace("\"", "");
+  }
+
   public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException{
     Bundle documentReferences = client.search()
       .forResource("DocumentReference")
