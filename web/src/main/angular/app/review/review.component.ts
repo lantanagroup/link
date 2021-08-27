@@ -156,6 +156,13 @@ export class ReviewComponent implements OnInit {
         if (foundSubmitter != undefined && foundSubmitter.id != undefined) return foundSubmitter.name;
     }
 
+    getNote(note: string) {
+        if (note && note.length > 50) {
+            return note.substr(0, 50) + "...";
+        }
+        return note;
+    }
+
     displayReport(reportId) {
         this.router.navigate(['review', reportId]);
     }
@@ -173,4 +180,6 @@ export class ReviewComponent implements OnInit {
         this.measures = await this.reportDefinitionService.getReportDefinitions();
         this.submitters = await this.reportService.getSubmitters();
     }
+
+
 }
