@@ -10,7 +10,11 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 
-@SpringBootApplication(scanBasePackages = "com.lantanagroup.link.query")
+@SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link.query",
+        "com.lantanagroup.link.config.query",
+        "com.lantanagroup.link.auth"
+})
 public class QueryApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private QueryConfig config;
