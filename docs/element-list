@@ -6,6 +6,7 @@ com.lantanagroup.link.auth
 com.lantanagroup.link.config
 com.lantanagroup.link.config.api
 com.lantanagroup.link.config.query
+com.lantanagroup.link.config.sender
 com.lantanagroup.link.direct
 com.lantanagroup.link.model
 com.lantanagroup.link.query

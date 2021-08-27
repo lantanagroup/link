@@ -21,6 +21,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+/**
+ * Main REST API for NHSNLink. Entry point for SpringBoot. Initializes as a SpringBootApplication, which
+ * hosts controllers defined within the project.
+ */
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.api",
         "com.lantanagroup.link.config",
@@ -38,10 +42,20 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   @Autowired
   private CernerAuthConfig cerner;
 
+  /**
+   * Main entry point for SpringBoot application. Runs as a SpringBoot application.
+   * @param args
+   */
   public static void main(String[] args) {
     SpringApplication.run(ApiApplication.class, args);
   }
 
+  /**
+   * Triggered after SpringBoot has set the properties/config for the application.
+   * Performs additional validation of the configuration that are not supported by SpringBoot
+   * config validation annotations.
+   * @throws Exception
+   */
   @Override
   public void afterPropertiesSet() throws Exception {
     // Do some advanced validation on the configuration
@@ -55,6 +69,11 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     }
   }
 
+  /**
+   * Triggered during SpringBoot application's startup. Adds to the security filter chain.
+   * @param servletContext
+   * @throws ServletException
+   */
   @Override
   public void onStartup(ServletContext servletContext) throws ServletException {
     servletContext
@@ -66,7 +85,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
 
   /**
-   * This method is responsible for setting the CORS configuration based on the api.yml (or its override)
+   * Sets the CORS configuration based on the api.yml (or its override)
    * @return WebMvcConfigurer
    */
   @Bean
@@ -89,11 +108,20 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     };
   }
 
+  /**
+   * Bean injection for the ApiInit class, which causes the ApiInit class to be executed during SpringBoot startup.
+   * @return
+   */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
     return new ApiInit();
   }
 
+  /**
+   * Responds with SimpleModule, which makes SpringBoot aware of FhirJsonSerializer, and uses it to
+   * serialize FHIR resources as XML or JSON in API responses.
+   * @return
+   */
   @Bean
   public Module module() {
     SimpleModule module = new SimpleModule();

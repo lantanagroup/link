@@ -1,6 +1,9 @@
 package com.lantanagroup.link.query.api;
 
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import com.lantanagroup.link.spring.FhirMessageConverter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +34,17 @@ public class QueryApiApplication extends SpringBootServletInitializer implements
   @Bean
   public HttpMessageConverter createFhirMessageConverter() {
     return new FhirMessageConverter();
+  }
+
+  /**
+   * Responds with SimpleModule, which makes SpringBoot aware of FhirJsonSerializer, and uses it to
+   * serialize FHIR resources as XML or JSON in API responses.
+   * @return
+   */
+  @Bean
+  public Module module() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(new FhirJsonSerializer());
+    return module;
   }
 }

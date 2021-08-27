@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
+/**
+ * Implementation of HttpMessageConverter that is used by SpringBoot to serialize responses
+ * from APIs in FHIR JSON or XML. Uses the HAPI libraries to serialize.
+ */
 public class FhirMessageConverter implements HttpMessageConverter {
 
   @Override
