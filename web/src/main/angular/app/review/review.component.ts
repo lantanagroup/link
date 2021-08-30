@@ -6,7 +6,7 @@ import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
 import {UserModel} from "../model/user-model";
-import { DatePipe } from '@angular/common';
+import {DatePipe} from '@angular/common';
 
 @Component({
     selector: 'nandina-review',
@@ -168,9 +168,9 @@ export class ReviewComponent implements OnInit {
         return note;
     }
 
-    getFormattedSubmittedDate(submittedDate: Date){
-        if (submittedDate){
-           return this.datepipe.transform(submittedDate , 'MMM d, y, h:mm:ss a')
+    getFormattedSubmittedDate(submittedDate: Date) {
+        if (submittedDate) {
+            return this.datepipe.transform(submittedDate, 'MMM d, y, h:mm:ss a')
         }
     }
 

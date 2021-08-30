@@ -26,7 +26,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         public toastService: ToastService,
         private modal: NgbModal,
         private router: Router,
-        public datepipe: DatePipe){
+        public datepipe: DatePipe) {
     }
 
     viewLineLevel() {
@@ -112,9 +112,9 @@ export class ReportComponent implements OnInit, OnDestroy {
         return this.report.status === 'FINAL';
     }
 
-    getFormattedSubmittedDate(submittedDate: String){
-        if (submittedDate){
-            return this.datepipe.transform(submittedDate , 'MMM d, y, h:mm:ss a')
+    getFormattedSubmittedDate(submittedDate: String) {
+        if (submittedDate) {
+            return this.datepipe.transform(submittedDate, 'MMM d, y, h:mm:ss a')
         }
     }
 
