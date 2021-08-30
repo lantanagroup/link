@@ -32,7 +32,10 @@ export class ReviewComponent implements OnInit {
         reportTypeId: ''
     };
 
-    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router) {
+    constructor(public authService: AuthService,
+                public reportService: ReportService,
+                private reportDefinitionService: ReportDefinitionService,
+                private router: Router) {
     }
 
     async onChangeFilters() {
@@ -154,6 +157,13 @@ export class ReviewComponent implements OnInit {
     getSubmitterName(submitterId: string) {
         let foundSubmitter = (this.submitters || []).find((m) => m.id === submitterId);
         if (foundSubmitter != undefined && foundSubmitter.id != undefined) return foundSubmitter.name;
+    }
+
+    getNote(note: string) {
+        if (note && note.length > 50) {
+            return note.substr(0, 50) + "...";
+        }
+        return note;
     }
 
     displayReport(reportId) {

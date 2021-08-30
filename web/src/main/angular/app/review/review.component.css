@@ -13,8 +13,13 @@
     border-bottom: 1px solid #c3c3c3;
 }
 
-.btn{
+.btn {
     width: 100%;
+}
+
+span.message {
+    text-decoration: none;
+    padding-right: 15px
 }
 
 

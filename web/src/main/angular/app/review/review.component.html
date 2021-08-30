@@ -75,7 +75,9 @@
             {{getSubmitterName(report.author)}}
         </td>
         <td>
-            {{report.note}}
+            <span class="message">{{getNote(report.note)}}</span><i *ngIf="report.note?.length>50"
+                                                                    [ngbTooltip]="report.note"
+                                                                    class="fa fa-sticky-note"></i>
         </td>
         <td class="button">
             <button class="btn btn-primary" on-click="displayReport(report.id)">{{getLabel(report.docStatus)}}</button>

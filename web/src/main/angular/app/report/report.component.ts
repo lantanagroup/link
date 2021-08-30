@@ -24,7 +24,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         public reportService: ReportService,
         public toastService: ToastService,
         private modal: NgbModal,
-        private router: Router){
+        private router: Router) {
     }
 
     viewLineLevel() {
@@ -109,6 +109,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         if (!this.report) return;
         return this.report.status === 'FINAL';
     }
+
 
     async ngOnInit() {
         this.reportId = this.route.snapshot.params['id']
