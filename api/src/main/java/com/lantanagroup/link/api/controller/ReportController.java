@@ -402,7 +402,7 @@ public class ReportController extends BaseController {
     MeasureReport report = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
     DocumentReference documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
-    documentReference.setDate( new Date());
+    documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
     Class<?> senderClazz = Class.forName(this.config.getSender());

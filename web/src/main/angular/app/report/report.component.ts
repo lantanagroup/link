@@ -7,6 +7,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel"
+import {DatePipe} from "@angular/common";
 
 @Component({
     selector: 'report',
@@ -24,7 +25,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         public reportService: ReportService,
         public toastService: ToastService,
         private modal: NgbModal,
-        private router: Router){
+        private router: Router,
+        public datepipe: DatePipe){
     }
 
     viewLineLevel() {
@@ -108,6 +110,12 @@ export class ReportComponent implements OnInit, OnDestroy {
     get isDisabled() {
         if (!this.report) return;
         return this.report.status === 'FINAL';
+    }
+
+    getFormattedSubmittedDate(submittedDate: String){
+        if (submittedDate){
+            return this.datepipe.transform(submittedDate , 'MMM d, y, h:mm:ss a')
+        }
     }
 
     async ngOnInit() {

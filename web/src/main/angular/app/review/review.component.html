@@ -69,7 +69,7 @@
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.submittedDate | date}}
+            <span [ngbTooltip]="getFormattedSubmittedDate(report.submittedDate)">{{report.submittedDate | date}}</span>
         </td>
         <td>
             {{getSubmitterName(report.author)}}

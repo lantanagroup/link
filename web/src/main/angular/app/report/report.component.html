@@ -21,8 +21,14 @@
                 <div class="input-group-prepend">
                     <div class="input-group-text">Status/Version</div>
                 </div>
-                <input [disabled]="true" class="form-control" type="text"
-                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}"/>
+                <input [disabled]="true"  class="form-control" type="text"
+                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}" />
+            </div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">Date</div>
+                </div>
+                <div class="form-control" [ngbTooltip]="getFormattedSubmittedDate(report.date)">{{report.date | date }}</div>
             </div>
         </div>
         <div class="col-md-8">

@@ -24,6 +24,7 @@ import {ErrorPageComponent} from './error-page/error-page.component';
 import {ViewLineLevelComponent} from './view-line-level/view-line-level.component';
 import {MedAdminComponent} from "./report/med-admin.component";
 import {NotesComponent} from "./components/notes/notes.component";
+import {DatePipe} from "@angular/common";
 
 
 export const initFactory = (configService: ConfigService, authService: AuthService) => {
@@ -69,6 +70,7 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         AuthService,
         ReportService,
         CookieService,
+        DatePipe,
         ReportDefinitionService,
         {
             provide: HTTP_INTERCEPTORS,

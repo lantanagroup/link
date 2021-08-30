@@ -6,6 +6,7 @@ import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDate} from '../helper';
 import {UserModel} from "../model/user-model";
+import { DatePipe } from '@angular/common';
 
 @Component({
     selector: 'nandina-review',
@@ -32,7 +33,11 @@ export class ReviewComponent implements OnInit {
         reportTypeId: ''
     };
 
-    constructor(public authService: AuthService, public reportService: ReportService, private reportDefinitionService: ReportDefinitionService, private router: Router) {
+    constructor(public authService: AuthService,
+                public reportService: ReportService,
+                private reportDefinitionService: ReportDefinitionService,
+                private router: Router,
+                public datepipe: DatePipe) {
     }
 
     async onChangeFilters() {
@@ -161,6 +166,12 @@ export class ReviewComponent implements OnInit {
             return note.substr(0, 50) + "...";
         }
         return note;
+    }
+
+    getFormattedSubmittedDate(submittedDate: Date){
+        if (submittedDate){
+           return this.datepipe.transform(submittedDate , 'MMM d, y, h:mm:ss a')
+        }
     }
 
     displayReport(reportId) {
