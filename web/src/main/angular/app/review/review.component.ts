@@ -168,12 +168,6 @@ export class ReviewComponent implements OnInit {
         return note;
     }
 
-    getFormattedSubmittedDate(submittedDate: Date) {
-        if (submittedDate) {
-            return this.datepipe.transform(submittedDate, 'MMM d, y, h:mm:ss a')
-        }
-    }
-
     displayReport(reportId) {
         this.router.navigate(['review', reportId]);
     }
@@ -191,6 +185,4 @@ export class ReviewComponent implements OnInit {
         this.measures = await this.reportDefinitionService.getReportDefinitions();
         this.submitters = await this.reportService.getSubmitters();
     }
-
-
 }

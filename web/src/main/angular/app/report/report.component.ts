@@ -29,8 +29,13 @@ export class ReportComponent implements OnInit, OnDestroy {
         public datepipe: DatePipe) {
     }
 
+    get isDisabled() {
+        if (!this.report) return;
+        return this.report.status === 'FINAL';
+    }
+
     viewLineLevel() {
-        const modalRef = this.modal.open(ViewLineLevelComponent, { size: 'xl' });
+        const modalRef = this.modal.open(ViewLineLevelComponent, {size: 'xl'});
         modalRef.componentInstance.reportId = this.reportId;
     }
 
@@ -105,17 +110,6 @@ export class ReportComponent implements OnInit, OnDestroy {
             return true;
         }
         return false;
-    }
-
-    get isDisabled() {
-        if (!this.report) return;
-        return this.report.status === 'FINAL';
-    }
-
-    getFormattedSubmittedDate(submittedDate: String) {
-        if (submittedDate) {
-            return this.datepipe.transform(submittedDate, 'MMM d, y, h:mm:ss a')
-        }
     }
 
     async ngOnInit() {

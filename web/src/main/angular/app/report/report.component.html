@@ -28,7 +28,7 @@
                 <div class="input-group-prepend">
                     <div class="input-group-text">Date</div>
                 </div>
-                <div [ngbTooltip]="getFormattedSubmittedDate(report.date)"
+                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a'"
                      class="form-control">{{report.date | date }}</div>
             </div>
         </div>
