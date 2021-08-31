@@ -182,7 +182,7 @@ public class ReportController extends BaseController {
 
       // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
       // (note: this also fixes the references to resources within invalid ids)
-      FhirHelper.fixResourceIds(patientDataBundle);
+      ResourceIdChanger.changeIds(patientDataBundle);
 
       // For debugging purposes:
       //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
