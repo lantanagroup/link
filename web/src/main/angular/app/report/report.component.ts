@@ -7,7 +7,6 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel"
-import {DatePipe} from "@angular/common";
 
 @Component({
     selector: 'report',
@@ -25,8 +24,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         public reportService: ReportService,
         public toastService: ToastService,
         private modal: NgbModal,
-        private router: Router,
-        public datepipe: DatePipe) {
+        private router: Router) {
     }
 
     get isDisabled() {
