@@ -35,7 +35,7 @@ export class ReviewComponent implements OnInit {
     constructor(public authService: AuthService,
                 public reportService: ReportService,
                 private reportDefinitionService: ReportDefinitionService,
-                private router: Router) {
+                private router: Router){
     }
 
     async onChangeFilters() {

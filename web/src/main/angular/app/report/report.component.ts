@@ -27,8 +27,13 @@ export class ReportComponent implements OnInit, OnDestroy {
         private router: Router) {
     }
 
+    get isDisabled() {
+        if (!this.report) return;
+        return this.report.status === 'FINAL';
+    }
+
     viewLineLevel() {
-        const modalRef = this.modal.open(ViewLineLevelComponent, { size: 'xl' });
+        const modalRef = this.modal.open(ViewLineLevelComponent, {size: 'xl'});
         modalRef.componentInstance.reportId = this.reportId;
     }
 
@@ -104,12 +109,6 @@ export class ReportComponent implements OnInit, OnDestroy {
         }
         return false;
     }
-
-    get isDisabled() {
-        if (!this.report) return;
-        return this.report.status === 'FINAL';
-    }
-
 
     async ngOnInit() {
         this.reportId = this.route.snapshot.params['id']
