@@ -27,8 +27,8 @@ export class ReportComponent implements OnInit, OnDestroy {
         private router: Router) {
     }
 
-    get isDisabled() {
-        if (!this.report) return;
+    get isSubmitted() {
+        if (!this.report) return false;
         return this.report.status === 'FINAL';
     }
 

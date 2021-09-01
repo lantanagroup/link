@@ -47,7 +47,7 @@
     <div class="btn-group">
         <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
         <button (click)="save()" class="btn btn-primary">Save</button>
-        <button (click)="discard()"  [disabled]="isDisabled" class="btn btn-primary">Discard</button>
+        <button (click)="discard()" [disabled]="isSubmitted" class="btn btn-primary" [ngbTooltip]="isSubmitted ? 'A submitted report cannot be discarded' : null">Discard</button>
         <button (click)="send()" class="btn btn-primary">Submit</button>
         <button (click)="download()" class="btn btn-primary">Download</button>
     </div>
