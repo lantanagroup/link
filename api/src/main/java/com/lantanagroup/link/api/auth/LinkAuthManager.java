@@ -4,6 +4,7 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -24,6 +25,7 @@ import java.net.URL;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -163,6 +165,9 @@ public class LinkAuthManager implements AuthenticationManager {
       }
 
       algorithm.verify(jwt);
+      if (jwt.getExpiresAt().before(new Date())){
+        throw new TokenExpiredException("Token has expired.");
+      }
 
       authentication.setAuthenticated(true);
     } catch (Exception e) {

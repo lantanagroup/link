@@ -64,11 +64,8 @@ export class AuthService {
       if (!this.user) {
         this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
       } else {
-        console.log('Your token is: ' + this.token);
-        await this.oauthService.setupAutomaticSilentRefresh();
-
         this.token = this.oauthService.getIdToken();
-
+        console.log('Your token is: ' + this.token);
         let path;
         if (!this.oauthService.state || this.oauthService.state !== 'undefined') {
           path = unescape(decodeURIComponent(this.oauthService.state));
@@ -79,8 +76,15 @@ export class AuthService {
         if (path && path !== '/') {
           this.router.navigate([path]);
         }
+        await this.oauthService.setupAutomaticSilentRefresh();
+
       }
     }
+  }
+
+  getAuthToken(){
+    this.token = this.oauthService.getIdToken();
+    return this.token;
   }
 
   private convertFhirUserToProfile(fhirUser: IPractitioner): IProfile {

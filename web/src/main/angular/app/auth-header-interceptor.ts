@@ -12,13 +12,13 @@ import {catchError, switchMap} from "rxjs/operators";
 @Injectable()
 export class AddHeaderInterceptor implements HttpInterceptor {
 
-    constructor(private authService: AuthService, private configService: ConfigService) {
+    constructor(private authService: AuthService, private configService: ConfigService,) {
     }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         let headers = req.headers;
         if (this.configService.config && req.url.startsWith(this.configService.config.apiUrl)) {
-            if (this.authService.token) {
+            if (this.authService.getAuthToken()) {
                 headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
             }
             if (this.authService.fhirBase) {
