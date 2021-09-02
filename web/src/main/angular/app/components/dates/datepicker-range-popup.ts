@@ -10,8 +10,14 @@ import {NgbCalendar, NgbDate, NgbDateParserFormatter} from '@ng-bootstrap/ng-boo
             margin: 0;
             border: none;
             padding: 0;
+            display:block;
         }
-
+        .form-control.hidden {
+            padding: 0;
+            border:none;
+            width: 0;
+            margin: 0;
+        }
         .custom-day {
             text-align: center;
             padding: 0.185rem 0.25rem;
