@@ -34,11 +34,11 @@ public class LinkAuthManager implements AuthenticationManager {
   private HashMap<String, String> issuerJwksUrls = new HashMap<>();
   private ApiConfig config;
 
-  public LinkAuthManager(ApiConfig config) {
+  public LinkAuthManager (ApiConfig config) {
     this.config = config;
   }
 
-  private String getJwksUrl(String openIdConfigUrl) {
+  private String getJwksUrl (String openIdConfigUrl) {
     try {
       URL url = new URL(openIdConfigUrl);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -61,7 +61,7 @@ public class LinkAuthManager implements AuthenticationManager {
     }
   }
 
-  private CernerClaimData getCernerClaimData(DecodedJWT jwt) {
+  private CernerClaimData getCernerClaimData (DecodedJWT jwt) {
     Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
 
     if (cernerClaim != null) {
@@ -78,7 +78,7 @@ public class LinkAuthManager implements AuthenticationManager {
     return null;
   }
 
-  private String getJwksUrl(DecodedJWT jwt) {
+  private String getJwksUrl (DecodedJWT jwt) {
     Claim issuerClaim = jwt.getClaim("iss");
 
     if (issuerClaim != null && !issuerClaim.isNull()) {
@@ -109,7 +109,7 @@ public class LinkAuthManager implements AuthenticationManager {
     return config.getAuthJwksUrl();
   }
 
-  private DecodedJWT getValidationJWT(String token) {
+  private DecodedJWT getValidationJWT (String token) {
     DecodedJWT jwt = JWT.decode(token);
     Claim idTokenClaim = jwt.getClaim("id_token");
 
@@ -122,7 +122,7 @@ public class LinkAuthManager implements AuthenticationManager {
   }
 
   @Override
-  public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+  public Authentication authenticate (Authentication authentication) throws AuthenticationException {
     String authHeader = (String) authentication.getCredentials();
 
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -165,7 +165,7 @@ public class LinkAuthManager implements AuthenticationManager {
       }
 
       algorithm.verify(jwt);
-      if (jwt.getExpiresAt().before(new Date())){
+      if (jwt.getExpiresAt().before(new Date())) {
         throw new TokenExpiredException("Token has expired.");
       }
 
