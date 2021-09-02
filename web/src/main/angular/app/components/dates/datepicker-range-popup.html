@@ -32,7 +32,7 @@
                    [value]="formatter.format(fromDate)"
                    (input)="fromDate = validateInput(fromDate, dpFromDate.value)">
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary calendar" (click)="datepicker.toggle()" type="button"></button>
+                <button class="btn btn-outline-secondary calendar" (click)="datepicker.toggle()" type="button" name="date-range-picker-btn"></button>
             </div>
         </div>
     </div>

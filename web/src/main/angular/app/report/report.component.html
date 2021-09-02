@@ -7,14 +7,14 @@
                 <div class="input-group-prepend">
                     <div class="input-group-text">Type</div>
                 </div>
-                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" type="text"/>
+                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" type="text" id="report-type"/>
             </div>
 
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Period</div>
                 </div>
-                <input [disabled]="true" class="form-control" type="text" value="TODO"/>
+                <input [disabled]="true" class="form-control" type="text" value="TODO" id="report-period"/>
             </div>
 
             <div class="input-group">
@@ -22,13 +22,13 @@
                     <div class="input-group-text">Status/Version</div>
                 </div>
                 <input [disabled]="true" class="form-control" type="text"
-                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}"/>
+                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}" id="report-status-version"/>
             </div>
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Submission Date</div>
                 </div>
-                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a'"
+                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a'" id="report-submit-date"
                      class="form-control">{{report.date | date }}</div>
             </div>
         </div>
