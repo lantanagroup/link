@@ -143,7 +143,7 @@ public class FhirHelper {
 
   public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
     Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
+            .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
