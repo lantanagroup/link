@@ -29,7 +29,7 @@ public class Query extends BaseQuery implements IQuery {
     bundle.setType(Bundle.BundleType.SEARCHSET);
 
     try {
-      PatientScoop scoop = this.context.getBean(PatientScoop.class);
+      PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
       scoop.setFhirQueryServer(this.getFhirQueryClient());
       scoop.execute(List.of(patientIdentifiers));
 

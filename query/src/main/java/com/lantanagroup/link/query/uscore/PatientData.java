@@ -38,6 +38,11 @@ public class PatientData {
   }
 
   public void loadData() {
+    if (this.usCoreConfig == null || this.usCoreConfig.getQueries() == null || this.usCoreConfig.getQueries().size() == 0) {
+      logger.error("Not configured for US Core queries. Not querying for any patient data.");
+      return;
+    }
+
     List<String> queryString = this.usCoreConfig.getQueries().stream().map(query ->
             query.replace("{{patientId}}", this.patientId)
     ).collect(Collectors.toList());
