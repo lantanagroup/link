@@ -15,6 +15,7 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
@@ -556,6 +557,76 @@ public class ReportController extends BaseController {
                     documentReference.getMasterIdentifier().getValue());
 
     //TODO: Add QuestionnaireResponse update
+  }
+
+  @GetMapping(value = "/{reportId}/patient/{patientId}")
+  public SubjectReportModel getSubjectReports(
+          @PathVariable("reportId") String reportId,
+          @PathVariable("patientId") String patientId,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception{
+
+    SubjectReportModel data = new SubjectReportModel();
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+
+    //Checks to make sure the DocumentReference exists
+    FhirHelper.getDocumentReference(client, reportId);
+
+    MeasureReport measureReport = FhirHelper.getMeasureReport(client, reportId);
+
+    List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
+    if(evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()){
+      throw new HttpResponseException(404, String.format("MeasureReport evaulatedResources does not contain a " +
+              "patient with id %s", patientId));
+    }
+
+    //TODO: figure out how to do this in a separate method rather than repetitive blocks here
+    Bundle conditionBundle = FhirHelper.getSubjectBundle(client, Condition.SUBJECT.hasId(patientId), "Condition");
+    if(conditionBundle.hasEntry()){
+      List<Condition> conditionList = new ArrayList<>();
+      conditionBundle.getEntry().forEach(entry -> {
+        if(entry.hasResource()){
+          conditionList.add((Condition) entry.getResource());
+        }
+      });
+      data.setConditions(conditionList);
+    }
+
+    Bundle medRequestBundle = FhirHelper.getSubjectBundle(client, MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
+    if(medRequestBundle.hasEntry()){
+      List<MedicationRequest> medicationRequestList = new ArrayList<>();
+      medRequestBundle.getEntry().forEach(entry -> {
+        if(entry.hasResource()){
+          medicationRequestList.add((MedicationRequest) entry.getResource());
+        }
+      });
+      data.setMedicationRequests(medicationRequestList);
+    }
+
+    Bundle procedureBundle = FhirHelper.getSubjectBundle(client, Procedure.SUBJECT.hasId(patientId), "Procedure");
+    if(procedureBundle.hasEntry()){
+      List<Procedure> procedureList = new ArrayList<>();
+      procedureBundle.getEntry().forEach(entry -> {
+        if(entry.hasResource()){
+          procedureList.add((Procedure) entry.getResource());
+        }
+      });
+      data.setProcedures(procedureList);
+    }
+
+    Bundle encounterBundle = FhirHelper.getSubjectBundle(client, Encounter.SUBJECT.hasId(patientId), "Encounter");
+    if(encounterBundle.hasEntry()){
+      List<Encounter> encounterList = new ArrayList<>();
+      encounterBundle.getEntry().forEach(entry -> {
+        if(entry.hasResource()){
+          encounterList.add((Encounter) entry.getResource());
+        }
+      });
+      data.setEncounters(encounterList);
+    }
+
+    return data;
   }
 
   @DeleteMapping(value = "/{id}")

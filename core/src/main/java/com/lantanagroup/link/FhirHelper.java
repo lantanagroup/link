@@ -4,6 +4,8 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
@@ -99,6 +101,17 @@ public class FhirHelper {
     } catch (Exception ex) {
       logger.error("Failed to record AuditEvent", ex);
     }
+  }
+
+  public static Bundle getSubjectBundle(IGenericClient client, ICriterion<ReferenceClientParam> criterion, String type){
+
+    return client
+            .search()
+            .forResource(type)
+            .where(criterion)
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
   }
 
   public static String getName(List<HumanName> names) {
