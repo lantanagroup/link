@@ -4,6 +4,7 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkProvider;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -24,6 +25,7 @@ import java.net.URL;
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +34,11 @@ public class LinkAuthManager implements AuthenticationManager {
   private HashMap<String, String> issuerJwksUrls = new HashMap<>();
   private ApiConfig config;
 
-  public LinkAuthManager(ApiConfig config) {
+  public LinkAuthManager (ApiConfig config) {
     this.config = config;
   }
 
-  private String getJwksUrl(String openIdConfigUrl) {
+  private String getJwksUrl (String openIdConfigUrl) {
     try {
       URL url = new URL(openIdConfigUrl);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -59,7 +61,7 @@ public class LinkAuthManager implements AuthenticationManager {
     }
   }
 
-  private CernerClaimData getCernerClaimData(DecodedJWT jwt) {
+  private CernerClaimData getCernerClaimData (DecodedJWT jwt) {
     Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
 
     if (cernerClaim != null) {
@@ -76,7 +78,7 @@ public class LinkAuthManager implements AuthenticationManager {
     return null;
   }
 
-  private String getJwksUrl(DecodedJWT jwt) {
+  private String getJwksUrl (DecodedJWT jwt) {
     Claim issuerClaim = jwt.getClaim("iss");
 
     if (issuerClaim != null && !issuerClaim.isNull()) {
@@ -107,7 +109,7 @@ public class LinkAuthManager implements AuthenticationManager {
     return config.getAuthJwksUrl();
   }
 
-  private DecodedJWT getValidationJWT(String token) {
+  private DecodedJWT getValidationJWT (String token) {
     DecodedJWT jwt = JWT.decode(token);
     Claim idTokenClaim = jwt.getClaim("id_token");
 
@@ -120,7 +122,7 @@ public class LinkAuthManager implements AuthenticationManager {
   }
 
   @Override
-  public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+  public Authentication authenticate (Authentication authentication) throws AuthenticationException {
     String authHeader = (String) authentication.getCredentials();
 
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -163,6 +165,9 @@ public class LinkAuthManager implements AuthenticationManager {
       }
 
       algorithm.verify(jwt);
+      if (jwt.getExpiresAt().before(new Date())) {
+        throw new TokenExpiredException("Token has expired.");
+      }
 
       authentication.setAuthenticated(true);
     } catch (Exception e) {

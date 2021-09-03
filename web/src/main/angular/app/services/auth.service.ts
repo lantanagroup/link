@@ -4,7 +4,6 @@ import {HttpClient} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ConfigService} from './config.service';
 import {IProfile} from '../model/profile';
-import {AuthInitOptions} from '../model/auth-init-options';
 import {IPractitioner} from '../model/practitioner';
 import {IOAuthConfig} from '../model/oauth-config';
 
@@ -64,9 +63,6 @@ export class AuthService {
       if (!this.user) {
         this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
       } else {
-        console.log('Your token is: ' + this.token);
-        await this.oauthService.setupAutomaticSilentRefresh();
-
         this.token = this.oauthService.getIdToken();
 
         let path;
@@ -79,8 +75,14 @@ export class AuthService {
         if (path && path !== '/') {
           this.router.navigate([path]);
         }
+        await this.oauthService.setupAutomaticSilentRefresh();
       }
     }
+  }
+
+  getAuthToken(){
+    this.token = this.oauthService.getIdToken();
+    return this.token;
   }
 
   private convertFhirUserToProfile(fhirUser: IPractitioner): IProfile {
