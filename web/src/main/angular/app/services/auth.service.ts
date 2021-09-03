@@ -4,7 +4,6 @@ import {HttpClient} from '@angular/common/http';
 import {ActivatedRoute, Router} from '@angular/router';
 import {ConfigService} from './config.service';
 import {IProfile} from '../model/profile';
-import {AuthInitOptions} from '../model/auth-init-options';
 import {IPractitioner} from '../model/practitioner';
 import {IOAuthConfig} from '../model/oauth-config';
 
@@ -65,7 +64,7 @@ export class AuthService {
         this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
       } else {
         this.token = this.oauthService.getIdToken();
-        console.log('Your token is: ' + this.token);
+
         let path;
         if (!this.oauthService.state || this.oauthService.state !== 'undefined') {
           path = unescape(decodeURIComponent(this.oauthService.state));
@@ -77,7 +76,6 @@ export class AuthService {
           this.router.navigate([path]);
         }
         await this.oauthService.setupAutomaticSilentRefresh();
-
       }
     }
   }

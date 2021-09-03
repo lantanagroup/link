@@ -31,7 +31,7 @@ export class AddHeaderInterceptor implements HttpInterceptor {
                 if (error.status === 403) {
                     return from(this.authService.loginLocal()).pipe(
                         switchMap(() => {
-                            let token = this.authService.token;
+                            let token = this.authService.getAuthToken();
                             req = req.clone({
                                 headers: req.headers.set('Authorization', `Bearer ${token}`)
                             });
