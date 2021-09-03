@@ -3,7 +3,6 @@ import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.ICriterionInternal;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import org.mockito.ArgumentMatcher;
-import ca.uhn.fhir.rest.gclient.StringCriterion;
 
 public class CriterionArgumentMatcher implements ArgumentMatcher<ICriterionInternal> {
   private ICriterionInternal expectedCriterion;
@@ -17,6 +16,8 @@ public class CriterionArgumentMatcher implements ArgumentMatcher<ICriterionInter
   public boolean matches(ICriterionInternal referenceClientParamICriterion) {
     String expectedName = this.expectedCriterion.getParameterName();
     String expectedValue = this.expectedCriterion.getParameterValue(this.fhirContext);
-    return false;
+    String actualName = referenceClientParamICriterion.getParameterName();
+    String actualValue = referenceClientParamICriterion.getParameterValue(this.fhirContext);
+    return (expectedName.equals(actualName)) && (expectedValue.equals(actualValue));
   }
 }

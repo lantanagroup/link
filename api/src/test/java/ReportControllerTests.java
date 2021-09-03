@@ -71,6 +71,34 @@ public class ReportControllerTests {
     return subBundleIntQuery;
   }
 
+  public Encounter createEncounter(String id, Reference reference){
+    Encounter encounter = new Encounter();
+    encounter.setId(id);
+    encounter.setSubject(reference);
+    return encounter;
+  }
+
+  public Condition createCondition(String id, Reference reference){
+    Condition condition = new Condition();
+    condition.setId(id);
+    condition.setSubject(reference);
+    return condition;
+  }
+
+  public Procedure createProcedure(String id, Reference reference){
+    Procedure procedure = new Procedure();
+    procedure.setId(id);
+    procedure.setSubject(reference);
+    return procedure;
+  }
+
+  public MedicationRequest createMedicationRequest(String id, Reference reference){
+    MedicationRequest medicationRequest = new MedicationRequest();
+    medicationRequest.setId(id);
+    medicationRequest.setSubject(reference);
+    return medicationRequest;
+  }
+
   @Test
   public void getSubjectReportsTest() throws Exception {
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
@@ -86,34 +114,46 @@ public class ReportControllerTests {
     MeasureReport measureReport = new MeasureReport();
     measureReport.addEvaluatedResource().setReference("Patient/patient1");
 
-    Encounter enc1 = new Encounter();
-    enc1.setId("encounter1");
+    //3 Conditions
+    Condition condition1 = createCondition("condition1", new Reference("Patient/patient1"));
+    Condition condition2 = createCondition("condition2", new Reference("Patient/patient1"));
+    Condition condition3 = createCondition("condition3", new Reference("Patient/patient1"));
+
+    //2 MedicationRequests
+    MedicationRequest medReq1 = createMedicationRequest("medReq1", new Reference("Patient/patient1"));
+    MedicationRequest medReq2 = createMedicationRequest("medReq2", new Reference("Patient/patient1"));
+
+    //2 Procedures
+    Procedure proc1 = createProcedure("procedure1", new Reference("Patient/patient1"));
+    Procedure proc2 = createProcedure("procedure2", new Reference("Patient/patient1"));
+
+    //3 Encounters
+    Encounter enc1 = createEncounter("encounter1", new Reference("Patient/patient1"));
+    Encounter enc2 = createEncounter("encounter2", new Reference("Patient/patient1"));
+    Encounter enc3 = createEncounter("encounter3", new Reference("Patient/patient1"));
 
     this.mockDocRef(untypedQuery, "report1");
     this.mockMeasureReport(fhirStoreClient, "report1", "patient1");
-    IQuery<IBaseBundle> conditionQuery = this.mockSubjectBundle(untypedQuery, "Condition");
-    this.mockSubjectBundle(untypedQuery, "MedicationRequest");
-    this.mockSubjectBundle(untypedQuery, "Procedure");
-    this.mockSubjectBundle(untypedQuery, "Encounter", enc1);
 
+    //Mock server requests for subject bundles
+    IQuery<IBaseBundle> conditionQuery = this.mockSubjectBundle(untypedQuery, "Condition", condition1, condition2, condition3);
+    IQuery<IBaseBundle> medReqQuery = this.mockSubjectBundle(untypedQuery, "MedicationRequest", medReq1, medReq2);
+    IQuery<IBaseBundle> procedureQuery = this.mockSubjectBundle(untypedQuery, "Procedure", proc1, proc2);
+    IQuery<IBaseBundle> encounterQuery = this.mockSubjectBundle(untypedQuery, "Encounter", enc1, enc2, enc3);
+
+    //Get subject reports
     SubjectReportModel response = reportController.getSubjectReports("report1", "patient1", authentication, request);
 
-    // TODO: Determine how to test ICriterion
-    verify(conditionQuery, times(1)).where(argThat(new CriterionArgumentMatcher(Condition.SUBJECT.hasId("patient1"))));
+    verify(conditionQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Condition.SUBJECT.hasId("patient1"))));
+    verify(medReqQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) MedicationRequest.SUBJECT.hasId("patient1"))));
+    verify(procedureQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Procedure.SUBJECT.hasId("patient1"))));
+    verify(encounterQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Encounter.SUBJECT.hasId("patient1"))));
 
+    //Assertions
     Assert.assertNotNull(response);
+    Assert.assertNotNull(response.getConditions());
+    Assert.assertNotNull(response.getMedicationRequests());
+    Assert.assertNotNull(response.getProcedures());
     Assert.assertNotNull(response.getEncounters());
-    Assert.assertEquals(1, response.getEncounters().size());
-
-    Optional<Encounter> foundEncounter = response.getEncounters().stream().filter(e -> e == enc1).findAny();
-    Assert.assertEquals(true, foundEncounter.isPresent());
-
-    // TODO: Mock additional Encounter
-
-    // TODO: Mock and assert Condition(s)
-
-    // TODO: Mock and assert Procedure(s)
-
-    // TODO: Mock and assert medication request(s)
   }
 }
