@@ -38,8 +38,17 @@
             </div>
         </th>
         <th>
-            <ngbd-datepicker-popup [model]="filter.submittedDate"
-                                   (change)="selectSubmittedDate($event)"></ngbd-datepicker-popup>
+            <form class="form-inline" #f="ngForm">
+                <div class="form-group">
+                    <div class="input-group">
+                        <input class="form-control" placeholder="Submitted Date"  [(ngModel)]="filter.submittedDate"
+                               name="dp" (ngModelChange)="selectSubmittedDate()" ngbDatepicker #d="ngbDatepicker">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </th>
         <th>
             <div ngbDropdown>
@@ -69,7 +78,7 @@
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            <span [ngbTooltip]="report.submittedDate | date: 'MMM d, y, h:mm:ss a'">{{report.submittedDate | date}}</span>
+            <span [ngbTooltip]="report.submittedDate | date: 'MMM d, y, h:mm:ss a': 'UTC'">{{report.submittedDate | date:'MMM d, y': 'UTC'}}</span>
         </td>
         <td>
             {{getSubmitterName(report.author)}}
