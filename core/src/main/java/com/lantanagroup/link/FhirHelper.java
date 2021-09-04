@@ -4,6 +4,8 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
@@ -18,11 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
@@ -101,6 +99,24 @@ public class FhirHelper {
     }
   }
 
+  /**
+   * Gets resources of the specified type for the patient given the criterion
+   *
+   * @param fhirClient   The FHIR client to use for the HTTP interaction
+   * @param criterion    The criteria to use when searching for the specific resource type. Example: Condition.SUBJECT.hasId(patientId)
+   * @param resourceType The type of resource to search for
+   * @return
+   */
+  public static Bundle getPatientResources(IGenericClient fhirClient, ICriterion<ReferenceClientParam> criterion, String resourceType) {
+    return fhirClient
+            .search()
+            .forResource(resourceType)
+            .where(criterion)
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
   public static String getName(List<HumanName> names) {
     String firstName = "", lastName = "";
     if (names.size() > 0 && names.get(0) != null) {
@@ -130,7 +146,7 @@ public class FhirHelper {
 
   public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
     Bundle documentReferences = client.search()
-            .forResource("DocumentReference")
+            .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
