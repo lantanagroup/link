@@ -10,7 +10,7 @@ import org.hl7.fhir.r4.model.Procedure;
 import java.util.List;
 
 @Getter @Setter
-public class SubjectReportModel {
+public class PatientDataModel {
     List<Condition> conditions;
     List<MedicationRequest> medicationRequests;
     List<Procedure> procedures;

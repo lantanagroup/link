@@ -268,8 +268,8 @@ public class ReportController extends BaseController {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
-      if(existingDocumentReference != null){
-          existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+      if (existingDocumentReference != null) {
+        existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
       }
 
       // Get the patient identifiers for the given date
@@ -555,18 +555,25 @@ public class ReportController extends BaseController {
     FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
                     documentReference.getMasterIdentifier().getValue());
-
-    //TODO: Add QuestionnaireResponse update
   }
 
+    /**
+     * Retrieves data (encounters, conditions, etc.) for the specified patient within the specified report.
+     * @param reportId The report id
+     * @param patientId The patient id within the report
+     * @param authentication The authenticated user making the request
+     * @param request The HTTP request
+     * @return SubjectReportModel
+     * @throws Exception
+     */
   @GetMapping(value = "/{reportId}/patient/{patientId}")
-  public SubjectReportModel getSubjectReports(
+  public PatientDataModel getPatientData(
           @PathVariable("reportId") String reportId,
           @PathVariable("patientId") String patientId,
           Authentication authentication,
-          HttpServletRequest request) throws Exception{
+          HttpServletRequest request) throws Exception {
 
-    SubjectReportModel data = new SubjectReportModel();
+    PatientDataModel data = new PatientDataModel();
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
 
@@ -574,55 +581,49 @@ public class ReportController extends BaseController {
     FhirHelper.getDocumentReference(client, reportId);
 
     MeasureReport measureReport = FhirHelper.getMeasureReport(client, reportId);
-
     List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
-    if(evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()){
-      throw new HttpResponseException(404, String.format("MeasureReport evaulatedResources does not contain a " +
-              "patient with id %s", patientId));
+
+    if (evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()) {
+      throw new HttpResponseException(404, String.format("Report does not contain a patient with id %s", patientId));
     }
 
-    //TODO: figure out how to do this in a separate method rather than repetitive blocks here
-    Bundle conditionBundle = FhirHelper.getSubjectBundle(client, Condition.SUBJECT.hasId(patientId), "Condition");
-    if(conditionBundle.hasEntry()){
-      List<Condition> conditionList = new ArrayList<>();
-      conditionBundle.getEntry().forEach(entry -> {
-        if(entry.hasResource()){
-          conditionList.add((Condition) entry.getResource());
-        }
-      });
+    // Conditions
+    Bundle conditionBundle = FhirHelper.getPatientResources(client, Condition.SUBJECT.hasId(patientId), "Condition");
+    if (conditionBundle.hasEntry()) {
+      List<Condition> conditionList = conditionBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Condition) e.getResource())
+              .collect(Collectors.toList());
       data.setConditions(conditionList);
     }
 
-    Bundle medRequestBundle = FhirHelper.getSubjectBundle(client, MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
-    if(medRequestBundle.hasEntry()){
-      List<MedicationRequest> medicationRequestList = new ArrayList<>();
-      medRequestBundle.getEntry().forEach(entry -> {
-        if(entry.hasResource()){
-          medicationRequestList.add((MedicationRequest) entry.getResource());
-        }
-      });
+    // Medications
+    Bundle medRequestBundle = FhirHelper.getPatientResources(client, MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
+    if (medRequestBundle.hasEntry()) {
+      List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (MedicationRequest) e.getResource())
+              .collect(Collectors.toList());
       data.setMedicationRequests(medicationRequestList);
     }
 
-    Bundle procedureBundle = FhirHelper.getSubjectBundle(client, Procedure.SUBJECT.hasId(patientId), "Procedure");
-    if(procedureBundle.hasEntry()){
-      List<Procedure> procedureList = new ArrayList<>();
-      procedureBundle.getEntry().forEach(entry -> {
-        if(entry.hasResource()){
-          procedureList.add((Procedure) entry.getResource());
-        }
-      });
+    // Procedures
+    Bundle procedureBundle = FhirHelper.getPatientResources(client, Procedure.SUBJECT.hasId(patientId), "Procedure");
+    if (procedureBundle.hasEntry()) {
+      List<Procedure> procedureList = procedureBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Procedure) e.getResource())
+              .collect(Collectors.toList());
       data.setProcedures(procedureList);
     }
 
-    Bundle encounterBundle = FhirHelper.getSubjectBundle(client, Encounter.SUBJECT.hasId(patientId), "Encounter");
-    if(encounterBundle.hasEntry()){
-      List<Encounter> encounterList = new ArrayList<>();
-      encounterBundle.getEntry().forEach(entry -> {
-        if(entry.hasResource()){
-          encounterList.add((Encounter) entry.getResource());
-        }
-      });
+    // Encounters
+    Bundle encounterBundle = FhirHelper.getPatientResources(client, Encounter.SUBJECT.hasId(patientId), "Encounter");
+    if (encounterBundle.hasEntry()) {
+      List<Encounter> encounterList = encounterBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Encounter) e.getResource())
+              .collect(Collectors.toList());
       data.setEncounters(encounterList);
     }
 

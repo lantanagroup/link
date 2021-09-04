@@ -2,7 +2,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.api.controller.ReportController;
-import com.lantanagroup.link.model.SubjectReportModel;
+import com.lantanagroup.link.model.PatientDataModel;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
@@ -10,8 +10,6 @@ import org.junit.Test;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
-
-import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
@@ -142,7 +140,7 @@ public class ReportControllerTests {
     IQuery<IBaseBundle> encounterQuery = this.mockSubjectBundle(untypedQuery, "Encounter", enc1, enc2, enc3);
 
     //Get subject reports
-    SubjectReportModel response = reportController.getSubjectReports("report1", "patient1", authentication, request);
+    PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);
 
     verify(conditionQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Condition.SUBJECT.hasId("patient1"))));
     verify(medReqQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) MedicationRequest.SUBJECT.hasId("patient1"))));

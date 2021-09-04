@@ -20,11 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
@@ -103,11 +99,18 @@ public class FhirHelper {
     }
   }
 
-  public static Bundle getSubjectBundle(IGenericClient client, ICriterion<ReferenceClientParam> criterion, String type){
-
-    return client
+  /**
+   * Gets resources of the specified type for the patient given the criterion
+   *
+   * @param fhirClient   The FHIR client to use for the HTTP interaction
+   * @param criterion    The criteria to use when searching for the specific resource type. Example: Condition.SUBJECT.hasId(patientId)
+   * @param resourceType The type of resource to search for
+   * @return
+   */
+  public static Bundle getPatientResources(IGenericClient fhirClient, ICriterion<ReferenceClientParam> criterion, String resourceType) {
+    return fhirClient
             .search()
-            .forResource(type)
+            .forResource(resourceType)
             .where(criterion)
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
