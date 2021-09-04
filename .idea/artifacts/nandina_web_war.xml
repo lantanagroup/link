@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="nandina-web:war">
+    <output-path>$PROJECT_DIR$/web/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>nandina-web</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="nandina.war">
+      <element id="artifact" artifact-name="nandina-web:war exploded" />
+    </root>
+  </artifact>
+</component>
