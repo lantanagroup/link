@@ -41,7 +41,7 @@
             <form class="form-inline" #f="ngForm">
                 <div class="form-group">
                     <div class="input-group">
-                        <input class="form-control" placeholder="Submitted Date"  [(ngModel)]="filter.submittedDate"
+                        <input [(ngModel)]="filter.submittedDate" class="form-control" placeholder="YYYY-MM-DD"
                                name="dp" (ngModelChange)="selectSubmittedDate()" ngbDatepicker #d="ngbDatepicker">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
