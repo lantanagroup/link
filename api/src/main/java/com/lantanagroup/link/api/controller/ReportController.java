@@ -15,6 +15,7 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
@@ -267,8 +268,8 @@ public class ReportController extends BaseController {
         throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
       }
 
-      if(existingDocumentReference != null){
-          existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+      if (existingDocumentReference != null) {
+        existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
       }
 
       // Get the patient identifiers for the given date
@@ -554,8 +555,79 @@ public class ReportController extends BaseController {
     FhirHelper.recordAuditEvent(request, client, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
                     documentReference.getMasterIdentifier().getValue());
+  }
 
-    //TODO: Add QuestionnaireResponse update
+    /**
+     * Retrieves data (encounters, conditions, etc.) for the specified patient within the specified report.
+     * @param reportId The report id
+     * @param patientId The patient id within the report
+     * @param authentication The authenticated user making the request
+     * @param request The HTTP request
+     * @return SubjectReportModel
+     * @throws Exception
+     */
+  @GetMapping(value = "/{reportId}/patient/{patientId}")
+  public PatientDataModel getPatientData(
+          @PathVariable("reportId") String reportId,
+          @PathVariable("patientId") String patientId,
+          Authentication authentication,
+          HttpServletRequest request) throws Exception {
+
+    PatientDataModel data = new PatientDataModel();
+
+    IGenericClient client = this.getFhirStoreClient(authentication, request);
+
+    //Checks to make sure the DocumentReference exists
+    FhirHelper.getDocumentReference(client, reportId);
+
+    MeasureReport measureReport = FhirHelper.getMeasureReport(client, reportId);
+    List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
+
+    if (evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()) {
+      throw new HttpResponseException(404, String.format("Report does not contain a patient with id %s", patientId));
+    }
+
+    // Conditions
+    Bundle conditionBundle = FhirHelper.getPatientResources(client, Condition.SUBJECT.hasId(patientId), "Condition");
+    if (conditionBundle.hasEntry()) {
+      List<Condition> conditionList = conditionBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Condition) e.getResource())
+              .collect(Collectors.toList());
+      data.setConditions(conditionList);
+    }
+
+    // Medications
+    Bundle medRequestBundle = FhirHelper.getPatientResources(client, MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
+    if (medRequestBundle.hasEntry()) {
+      List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (MedicationRequest) e.getResource())
+              .collect(Collectors.toList());
+      data.setMedicationRequests(medicationRequestList);
+    }
+
+    // Procedures
+    Bundle procedureBundle = FhirHelper.getPatientResources(client, Procedure.SUBJECT.hasId(patientId), "Procedure");
+    if (procedureBundle.hasEntry()) {
+      List<Procedure> procedureList = procedureBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Procedure) e.getResource())
+              .collect(Collectors.toList());
+      data.setProcedures(procedureList);
+    }
+
+    // Encounters
+    Bundle encounterBundle = FhirHelper.getPatientResources(client, Encounter.SUBJECT.hasId(patientId), "Encounter");
+    if (encounterBundle.hasEntry()) {
+      List<Encounter> encounterList = encounterBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Encounter) e.getResource())
+              .collect(Collectors.toList());
+      data.setEncounters(encounterList);
+    }
+
+    return data;
   }
 
   @DeleteMapping(value = "/{id}")

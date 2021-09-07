@@ -18,15 +18,26 @@ public class BaseController {
   protected FhirContext ctx = FhirContext.forR4();
   @Autowired
   private ApiConfig config;
+  private IGenericClient fhirStoreClient;
 
   BaseController() {
     this.ctx.getRestfulClientFactory().setSocketTimeout(200 * 5000);
   }
 
   protected IGenericClient getFhirStoreClient(Authentication authentication, HttpServletRequest request) throws Exception {
+    if (this.fhirStoreClient != null) {
+      return this.fhirStoreClient;
+    }
+
     String fhirBase = config.getFhirServerStore();
-    IGenericClient fhirClient = this.ctx.newRestfulGenericClient(fhirBase);
-    return fhirClient;
+    IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
+
+    this.fhirStoreClient = fhirStoreClient;
+    return fhirStoreClient;
+  }
+
+  public void setFhirStoreClient(IGenericClient fhirStoreClient) {
+    this.fhirStoreClient = fhirStoreClient;
   }
 
   protected void createResource(Resource resource, IGenericClient fhirStoreClient) {
