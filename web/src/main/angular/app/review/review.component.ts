@@ -72,8 +72,7 @@ export class ReviewComponent implements OnInit {
         this.onChangeFilters().then(() => this.page = 1).catch(error => console.log(error))
     }
 
-    selectSubmittedDate(submittedDate) {
-        this.filter.submittedDate = submittedDate;
+    selectSubmittedDate() {
         this.onChangeFilters().then(() => this.page = 1).catch(error => console.log(error))
     }
 

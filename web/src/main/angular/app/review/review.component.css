@@ -13,7 +13,7 @@
     border-bottom: 1px solid #c3c3c3;
 }
 
-.btn {
+.btn.btn-outline-primary {
     width: 100%;
 }
 

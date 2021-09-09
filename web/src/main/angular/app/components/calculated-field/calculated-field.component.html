@@ -1,4 +1,5 @@
 <input [(ngModel)]="value" [disabled]="isDisabled" [min]="originalValue" class="form-control" type="number"/>
-<textarea *ngIf="originalValue != value" [(ngModel)]="changedReason" [disabled]="isDisabled"
+<textarea class="form-control"  *ngIf="originalValue != value" [(ngModel)]="changedReason" [disabled]="isDisabled" [class.is-invalid]="!changedReason"
           placeholder="Please indicate a reason for the change."></textarea>
+<div class="help-block" *ngIf="originalValue != value && !changedReason">This field is required</div>
 
