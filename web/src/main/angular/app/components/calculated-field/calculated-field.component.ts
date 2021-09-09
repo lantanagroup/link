@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {IMeasureReportPopulationComponent} from '../../fhir';
 import {ReportModel} from "../../model/ReportModel";
 
@@ -13,8 +13,10 @@ export class CalculatedFieldComponent implements OnInit {
   @Input() report: ReportModel;
   @Input() groupCode: string;
   @Input() populationCode: string;
+  @Output() invalidate: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() { }
+  constructor() {
+  }
 
   get value() {
     const population = this.getPopulation();
@@ -26,6 +28,12 @@ export class CalculatedFieldComponent implements OnInit {
     if (population) {
       this.ensureOriginalCount(population);
       population.count = value;
+    }
+    // removed the reason if value selected is the same with original value and there is a reason already entered
+    if (this.changedReason && value === this.originalValue) {
+      this.changedReason = '';
+    } else {
+      this.invalidate.emit(value !== this.originalValue && !this.changedReason);
     }
   }
 
@@ -60,6 +68,7 @@ export class CalculatedFieldComponent implements OnInit {
     if (!value && reasonExt) {
       population.extension.splice(population.extension.indexOf(reasonExt), 1);
       if (population.extension.length === 0) delete population.extension;
+
     } else if (value && !reasonExt) {
       population.extension = population.extension || [];
       population.extension.push({
@@ -69,7 +78,14 @@ export class CalculatedFieldComponent implements OnInit {
     } else if (value && reasonExt) {
       reasonExt.valueString = value;
     }
+    this.invalidate.emit(this.value !== this.originalValue && !value);
   }
+
+  get isDisabled() {
+    if (!this.report) return;
+    return this.report.status === 'FINAL';
+  }
+
 
   ngOnInit(): void {
   }
@@ -85,11 +101,6 @@ export class CalculatedFieldComponent implements OnInit {
       };
       population.extension.push(origExt);
     }
-  }
-
-  get isDisabled() {
-    if (!this.report) return;
-    return this.report.status === 'FINAL';
   }
 
   private getPopulation() {
@@ -109,5 +120,4 @@ export class CalculatedFieldComponent implements OnInit {
       });
     }
   }
-
 }
