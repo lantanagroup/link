@@ -1,3 +1,71 @@
+<div class="card">
+    <div class="card-header">Filter/Criteria</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-2">
+                <label>Report Type</label>
+                <div ngbDropdown>
+                    <button class="btn btn-outline-primary" id="measures" ngbDropdownToggle>{{filter.measure}}</button>
+                    <div ngbDropdownMenu aria-labelledby="measures">
+                        <div *ngFor="let measure of measures">
+                            <button class="dropdown-item"
+                                    id="measureOption" on-click="selectMeasure(measure.name)">{{measure.name}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label>Reporting Period</label>
+                <ngbd-datepicker-range-popup [fromDate]="filter.period.startDate" [toDate] = "filter.period.endDate"
+                                             (change)="selectPeriod($event)"></ngbd-datepicker-range-popup>
+            </div>
+            <div class="col-md-2">
+                <label>Status</label>
+                <div ngbDropdown>
+                    <button class="btn btn-outline-primary" id="status" ngbDropdownToggle>{{filter.status}}</button>
+                    <div ngbDropdownMenu aria-labelledby="status">
+                        <div *ngFor="let status of statuses">
+                            <button class="dropdown-item" on-click="selectStatus(status.name)">{{status.name}} </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label>Submitted Date</label>
+                <form class="form-inline" #f="ngForm">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input [(ngModel)]="filter.submittedDate" class="form-control" placeholder="YYYY-MM-DD"
+                                   name="dp" (ngModelChange)="selectSubmittedDate()" ngbDatepicker #d="ngbDatepicker">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-2">
+                <label>Submitter</label>
+                <div ngbDropdown>
+                    <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{filter.submitter}}</button>
+                    <div ngbDropdownMenu aria-labelledby="submitter">
+                        <div *ngFor="let submitter of submitters">
+                            <button class="dropdown-item" on-click="selectSubmitter(submitter.name)">{{submitter.name}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-md-2">
+                <button class="btn btn-primary" on-click="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <table class="table table-striped column-bordered-table">
     <thead>
     <tr>
@@ -8,62 +76,6 @@
         <th>Submitter</th>
         <th>Notes</th>
         <th>&nbsp;</th>
-    </tr>
-    <tr>
-        <th>
-            <div ngbDropdown>
-                <button class="btn btn-outline-primary" id="measures" ngbDropdownToggle>{{filter.measure}}</button>
-                <div ngbDropdownMenu aria-labelledby="measures">
-                    <div *ngFor="let measure of measures">
-                        <button class="dropdown-item"
-                                id="measureOption" on-click="selectMeasure(measure.name)">{{measure.name}}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </th>
-        <th>
-            <ngbd-datepicker-range-popup [fromDate]="filter.period.startDate" [toDate] = "filter.period.endDate"
-                                         (change)="selectPeriod($event)"></ngbd-datepicker-range-popup>
-        </th>
-        <th>
-            <div ngbDropdown>
-                <button class="btn btn-outline-primary" id="status" ngbDropdownToggle>{{filter.status}}</button>
-                <div ngbDropdownMenu aria-labelledby="status">
-                    <div *ngFor="let status of statuses">
-                        <button class="dropdown-item" on-click="selectStatus(status.name)">{{status.name}} </button>
-                    </div>
-
-                </div>
-            </div>
-        </th>
-        <th>
-            <form class="form-inline" #f="ngForm">
-                <div class="form-group">
-                    <div class="input-group">
-                        <input [(ngModel)]="filter.submittedDate" class="form-control" placeholder="YYYY-MM-DD"
-                               name="dp" (ngModelChange)="selectSubmittedDate()" ngbDatepicker #d="ngbDatepicker">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </th>
-        <th>
-            <div ngbDropdown>
-                <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{filter.submitter}}</button>
-                <div ngbDropdownMenu aria-labelledby="submitter">
-                    <div *ngFor="let submitter of submitters">
-                        <button class="dropdown-item" on-click="selectSubmitter(submitter.name)">{{submitter.name}}</button>
-                    </div>
-                </div>
-            </div>
-        </th>
-        <th>&nbsp;</th>
-        <th class="button">
-          <button class="btn btn-primary" on-click="resetFilters()">Reset Filters</button>
-        </th>
     </tr>
     </thead>
     <tbody>

@@ -22,4 +22,10 @@ span.message {
     padding-right: 15px
 }
 
+div.card {
+    margin-bottom: 10px;
+}
 
+button#measures {
+    overflow: auto;
+}
