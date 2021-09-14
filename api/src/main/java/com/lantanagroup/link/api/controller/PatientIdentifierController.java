@@ -7,6 +7,10 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.fhir.transform.FHIRTransformResult;
 import com.lantanagroup.fhir.transform.FHIRTransformer;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.model.CsvEntry;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -15,13 +19,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -145,6 +155,94 @@ public class PatientIdentifierController extends BaseController {
         this.receiveFHIR(list, request);
     }
 
+
+    /**
+     * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
+     *
+     * @param reportTypeId - the type of the report (ex covid-min) and the format should be system|value
+     */
+    @PostMapping(value = "api/poi/csv", consumes = "text/csv")
+    public void storeCSV(@RequestBody() String csvContent, @RequestParam String reportTypeId, HttpServletRequest request) throws Exception {
+        logger.debug("Receiving RR FHIR CSV. Parsing...");
+        try {
+            if (reportTypeId == null || reportTypeId.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report Type should be provided.");
+            }
+            if (!reportTypeId.contains("|")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
+            }
+            List<CsvEntry> list = getCsvEntries(csvContent);
+            Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getDate));
+            for (String key : csvMap.keySet()) {
+                ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
+                this.receiveFHIR(listResource, request);
+            }
+        } catch (ResponseStatusException ex) {
+            logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
+            throw ex;
+        } catch (Exception ex) {
+            logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
+            throw ex;
+        }
+    }
+
+    public List<CsvEntry> getCsvEntries(String csvContent) throws IOException, CsvValidationException {
+        InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
+        List<CsvEntry> list = new ArrayList<>();
+        String[] line;
+        while ((line = csvReader.readNext()) != null) {
+            if (line.length > 0) {
+                if (line[0] == null || line[0].isBlank()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier is required.");
+                }
+                if (!line[0].contains("|")) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
+                }
+                if (line[1] == null || line[1].isBlank()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required.");
+                }
+                SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    formatDate.setLenient(false);
+                    formatDate.parse(line[1]);
+                } catch (ParseException ex) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date. The date format should be: YYYY-mm-dd.");
+                }
+                CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
+                list.add(entry);
+            }
+        }
+        if (list.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
+        }
+        return list;
+    }
+
+
+    private ListResource getListResource(String reportTypeId, String listDate, List<CsvEntry> csvList) {
+        ListResource list = new ListResource();
+        List<Identifier> identifierList = new ArrayList<>();
+        identifierList.add(new Identifier());
+        identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
+        identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
+        list.setIdentifier(identifierList);
+        list.setDateElement(new DateTimeType(listDate));
+        csvList.stream().parallel().forEach(csvEntry -> {
+            ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
+            if (csvEntry.getPatientLogicalID() != null && !csvEntry.getPatientLogicalID().isBlank()) {
+                Reference reference = new Reference();
+                reference.setReference("Patient/" + csvEntry.getPatientLogicalID());
+                reference.setIdentifier(new Identifier());
+                reference.getIdentifier().setSystemElement(new UriType(csvEntry.getPatientIdentifier().substring(0, csvEntry.getPatientIdentifier().indexOf("|"))));
+                reference.getIdentifier().setValueElement(new StringType(csvEntry.getPatientIdentifier().substring(csvEntry.getPatientIdentifier().indexOf("|") + 1)));
+                listEntry.setItem(reference);
+            }
+            list.addEntry(listEntry);
+        });
+        return list;
+    }
 
     @PostMapping(value = "api/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
     public void getPatientIdentifierListXML(@RequestBody() String body, HttpServletRequest request) throws Exception {
