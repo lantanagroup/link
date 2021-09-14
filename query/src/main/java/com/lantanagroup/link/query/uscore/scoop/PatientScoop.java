@@ -5,6 +5,7 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,12 +39,12 @@ public class PatientScoop extends Scoop {
   @Autowired
   private USCoreConfig usCoreConfig;
 
-  public void execute(List<String> patientIds) throws Exception {
+  public void execute(List<PatientOfInterestModel> pois) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.patientData = this.loadPatientData(patientIds);
+    this.patientData = this.loadPatientData(pois);
   }
 
   private synchronized PatientData loadPatientData(Patient patient) {
@@ -60,27 +61,41 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public List<PatientData> loadPatientData(List<String> patientIdList) {
+  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
-    patientIdList.forEach(patientId -> {
+    patientsOfInterest.forEach(poi -> {
       try {
-        String searchUrl = "Patient?identifier=" + patientId;
-        Bundle response = this.fhirQueryServer.search()
-                .byUrl(searchUrl)
-                .returnBundle(Bundle.class)
-                .execute();
-        if (response.getEntry().size() != 1) {
-          logger.info("Did not find one Patient with identifier " + patientId);
-        } else {
-          Patient patient = (Patient) response.getEntryFirstRep().getResource();
-          this.patientMap.put(patientId, patient);
+        if (poi.getReference() != null) {
+          String id = poi.getReference();
+
+          if (id.indexOf("/") > 0) {
+            id = id.substring(id.indexOf("/") + 1);
+          }
+
+          Patient patient = this.fhirQueryServer.read()
+                  .resource(Patient.class)
+                  .withId(id)
+                  .execute();
+          this.patientMap.put(poi.getReference(), patient);
+        } else if (poi.getIdentifier() != null) {
+          String searchUrl = "Patient?identifier=" + poi.getIdentifier();
+          Bundle response = this.fhirQueryServer.search()
+                  .byUrl(searchUrl)
+                  .returnBundle(Bundle.class)
+                  .execute();
+          if (response.getEntry().size() != 1) {
+            logger.info("Did not find one Patient with identifier " + poi);
+          } else {
+            Patient patient = (Patient) response.getEntryFirstRep().getResource();
+            this.patientMap.put(poi.getIdentifier(), patient);
+          }
         }
       } catch (AuthenticationException ae) {
-        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
+        logger.error("Unable to retrieve patient with identifier " + poi + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
         ae.printStackTrace();
         throw new RuntimeException(ae);
       } catch (Exception e) {
-        logger.error("Unable to retrieve patient with identifier " + patientId + " from FHIR server " + this.fhirQueryServer.getServerBase());
+        logger.error("Unable to retrieve patient with identifier " + poi + " from FHIR server " + this.fhirQueryServer.getServerBase());
         e.printStackTrace();
         throw new RuntimeException(e);
       }

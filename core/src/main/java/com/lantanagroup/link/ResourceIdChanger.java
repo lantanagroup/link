@@ -75,6 +75,7 @@ public class ResourceIdChanger {
 
     // Find references that are invalid
     references.stream().filter(r -> {
+      if (r.getReference() == null) return false;
       String[] refParts = r.getReference().split("/");
       if (refParts.length != 2) return false;                 // Skip canonical references
       if (refParts[1].length() <= 64) return false;           // Skip references that aren't invalid
