@@ -19,6 +19,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   paramsSubscription: Subscription;
   loading = false;
   hasRequiredErrors = false;
+  dirty = false;
 
   constructor(
       private route: ActivatedRoute,
@@ -39,6 +40,10 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
+  setDirtyFlag(dirty) {
+    this.dirty = dirty;
+  }
+
   viewLineLevel() {
     const modalRef = this.modal.open(ViewLineLevelComponent, {size: 'xl'});
     modalRef.componentInstance.reportId = this.reportId;
@@ -46,11 +51,13 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async send() {
     try {
-      if (confirm('Are you sure you want to submit? Changes will be saved before submitting...')) {
+      if (confirm('Before submitting, do you want to save your changes?')) {
         await this.save();
-        await this.reportService.send(this.reportId);
-        this.toastService.showInfo('Report sent!');
-        await this.initReport();
+        if (confirm('Are you sure you want to submit this report?')) {
+          await this.reportService.send(this.reportId);
+          this.toastService.showInfo('Report sent!');
+          await this.initReport();
+        }
       }
     } catch (ex) {
       this.toastService.showException('Error sending report: ' + this.reportId, ex);
@@ -105,6 +112,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     try {
       await this.reportService.save(reportSaveModel, this.reportId);
       this.toastService.showInfo('Report saved!');
+      this.dirty = false;
     } catch (ex) {
       this.toastService.showException('Error saving report: ' + this.reportId, ex);
     }
