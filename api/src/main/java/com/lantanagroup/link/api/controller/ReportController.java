@@ -119,21 +119,28 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<String> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+  private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;
     Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
     Constructor<?> senderConstructor = senderClass.getConstructor();
     provider = (IPatientIdProvider) senderConstructor.newInstance();
-    return provider.getPatientIdentifiers(criteria, context, this.config);
+    return provider.getPatientsOfInterest(criteria, context, this.config);
   }
 
-  private Bundle getRemotePatientData(List<String> patientIdentifiers) {
+  private Bundle getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
-      patientIdentifiers.forEach(patientIdentifier -> uriBuilder.addParameter("patientIdentifier", patientIdentifier));
 
-      logger.info("Scooping data remotely for the patients: " + StringUtils.join(patientIdentifiers, ", ") + " from: " + uriBuilder);
+      patientsOfInterest.forEach(poi -> {
+        if (poi.getReference() != null) {
+          uriBuilder.addParameter("patientRef", poi.getReference());
+        } else if (poi.getIdentifier() != null) {
+          uriBuilder.addParameter("patientIdentifier", poi.getIdentifier());
+        }
+      });
+
+      logger.info("Scooping data remotely for the patients: " + StringUtils.join(patientsOfInterest, ", ") + " from: " + uriBuilder);
 
       HttpRequest request = HttpRequest.newBuilder()
               .uri(uriBuilder.build().toURL().toURI())
@@ -155,18 +162,18 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData(List<String> patientIdentifiers, IGenericClient fhirStoreClient) throws Exception {
+  private void queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, IGenericClient fhirStoreClient) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-        logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
+        logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-        patientDataBundle = query.execute(patientIdentifiers.toArray(new String[patientIdentifiers.size()]));
+        patientDataBundle = query.execute(patientsOfInterest);
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-        patientDataBundle = this.getRemotePatientData(patientIdentifiers);
+        patientDataBundle = this.getRemotePatientData(patientsOfInterest);
       }
 
       if (patientDataBundle == null) {
@@ -189,7 +196,7 @@ public class ReportController extends BaseController {
       //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
       // Store the data
-      logger.info("Storing data for the patients: " + StringUtils.join(patientIdentifiers, ", "));
+      logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       Bundle response = fhirStoreClient.transaction().withBundle(patientDataBundle).execute();
 
       response.getEntry().stream()
@@ -210,7 +217,7 @@ public class ReportController extends BaseController {
                 }
               });
     } catch (Exception ex) {
-      String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientIdentifiers, ", "), ex.getMessage());
+      String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
       logger.error(msg);
       throw new Exception(msg, ex);
     }
@@ -273,10 +280,10 @@ public class ReportController extends BaseController {
       }
 
       // Get the patient identifiers for the given date
-      List<String> patientIdentifiers = this.getPatientIdentifiers(criteria, context);
+      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
       // Scoop the data for the patients and store it
-      this.queryAndStorePatientData(patientIdentifiers, fhirStoreClient);
+      this.queryAndStorePatientData(patientsOfInterest, fhirStoreClient);
 
       FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 

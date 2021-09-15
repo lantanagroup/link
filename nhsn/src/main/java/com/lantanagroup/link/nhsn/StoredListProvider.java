@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IPatientIdProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -21,8 +22,8 @@ public class StoredListProvider implements IPatientIdProvider {
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<String> getPatientIdentifiers(ReportCriteria criteria, ReportContext context, ApiConfig config) {
-    List<String> patientIdentifiers = new ArrayList<>();
+  public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
+    List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     FhirContext ctx = context.getFhirContext();
 
     Bundle bundle = context.getFhirStoreClient()
@@ -35,21 +36,28 @@ public class StoredListProvider implements IPatientIdProvider {
 
     if (bundle.getEntry().size() == 0) {
       logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart());
-      return patientIdentifiers;
+      return patientsOfInterest;
     }
 
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirStoreClient(), ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
-      List<String> patientResourceIds = resource.getEntry().stream().map((patient) -> patient.getItem().getIdentifier().getSystem()
-              + "|"
-              + patient.getItem().getIdentifier().getValue()).collect(Collectors.toList());
-      patientIdentifiers.addAll(patientResourceIds);
+      List<PatientOfInterestModel> patientResourceIds = resource.getEntry().stream().map((patient) -> {
+        PatientOfInterestModel poi = new PatientOfInterestModel();
+        if (patient.getItem().getIdentifier() != null) {
+          poi.setIdentifier(patient.getItem().getIdentifier().getSystem() + "|" + patient.getItem().getIdentifier().getValue());
+        }
+        if (patient.getItem().getReference() != null) {
+          poi.setReference(patient.getItem().getReference());
+        }
+        return poi;
+      }).collect(Collectors.toList());
+      patientsOfInterest.addAll(patientResourceIds);
     });
 
-    logger.info("Loaded " + patientIdentifiers.size() + " patient ids");
-    patientIdentifiers.forEach(id -> logger.info("PatientId: " + id));
-    return patientIdentifiers;
+    logger.info("Loaded " + patientsOfInterest.size() + " patient ids");
+    patientsOfInterest.forEach(id -> logger.info("PatientId: " + id));
+    return patientsOfInterest;
   }
 }

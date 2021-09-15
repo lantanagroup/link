@@ -1,6 +1,7 @@
 package com.lantanagroup.link.query.uscore;
 
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
@@ -16,12 +17,12 @@ public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public Bundle execute(String[] patientIdentifiers) {
-    if (patientIdentifiers == null) {
-      throw new IllegalArgumentException("patientIdentifiers");
+  public Bundle execute(List<PatientOfInterestModel> patientsOfInterest) {
+    if (patientsOfInterest == null) {
+      throw new IllegalArgumentException("patientsOfInterest");
     }
 
-    if (patientIdentifiers.length == 0) {
+    if (patientsOfInterest.size() == 0) {
       return new Bundle();
     }
 
@@ -31,7 +32,7 @@ public class Query extends BaseQuery implements IQuery {
     try {
       PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
       scoop.setFhirQueryServer(this.getFhirQueryClient());
-      scoop.execute(List.of(patientIdentifiers));
+      scoop.execute(patientsOfInterest);
 
       List<PatientData> patientDatas = scoop.getPatientData();
 
