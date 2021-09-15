@@ -2,7 +2,8 @@
     <label>Initial Population</label>
     <app-calculated-field
             [report]="report"
-            populationCode="initial-population"
-            (invalidate)="setRequiredErrorsFlag($event)">
+            (invalidate)="setRequiredErrorsFlag($event)"
+            (dirty)="setDirtyFlag($event)"
+            populationCode="initial-population">
     </app-calculated-field>
 </div>

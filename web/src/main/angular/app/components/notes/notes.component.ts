@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {IExtension} from "../../fhir";
 import {ReportModel} from "../../model/ReportModel";
 
@@ -9,7 +9,8 @@ import {ReportModel} from "../../model/ReportModel";
 })
 export class NotesComponent implements OnInit {
     private static readonly notesUrl = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-note';
-    @Input() report: ReportModel;
+    @Input()   report: ReportModel;
+    @Output()  dirty: EventEmitter<any> = new EventEmitter<any>();
 
     constructor() {
     }
@@ -41,6 +42,7 @@ export class NotesComponent implements OnInit {
         } else {
             notesExtension.valueMarkdown = value;
         }
+        this.dirty.emit(true);
     }
 
     get isDisabled() {

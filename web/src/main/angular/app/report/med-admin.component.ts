@@ -9,9 +9,14 @@ export class MedAdminComponent implements OnInit, OnDestroy {
 
   @Input() report: any;
   @Output() invalidate: EventEmitter<any> = new EventEmitter<any>();
+  @Output() dirty: EventEmitter<any> = new EventEmitter<any>();
 
   setRequiredErrorsFlag(hasErrors) {
     this.invalidate.emit(hasErrors);
+  }
+
+  setDirtyFlag(dirty) {
+    this.dirty.emit(dirty);
   }
 
   ngOnInit() {
