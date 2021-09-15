@@ -51,13 +51,17 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async send() {
     try {
-      if (confirm('Before submitting, do you want to save your changes?')) {
-        await this.save();
-        if (confirm('Are you sure you want to submit this report?')) {
-          await this.reportService.send(this.reportId);
-          this.toastService.showInfo('Report sent!');
-          await this.initReport();
+      if (this.dirty) {
+        if (confirm('Before submitting, do you want to save your changes?')) {
+          await this.save();
+        } else {
+          return;
         }
+      }
+      if (confirm('Are you sure you want to submit this report?')) {
+        await this.reportService.send(this.reportId);
+        this.toastService.showInfo('Report sent!');
+        await this.initReport();
       }
     } catch (ex) {
       this.toastService.showException('Error sending report: ' + this.reportId, ex);
