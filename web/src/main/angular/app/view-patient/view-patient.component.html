@@ -1,0 +1,53 @@
+<div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">View Line-Level Data</h4>
+    <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss()">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <div class="alert alert-info" *ngIf="loading">Loading...</div>
+    <h6 *ngIf="!loading">ENCOUNTERS</h6>
+    <table class="table table-striped" *ngIf="!loading">
+        <thead>
+        <tr>
+            <th>Reason</th>
+            <th>Class Type(s)</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Location(s)</th>
+        </tr>
+        </thead>
+        <tbody *ngIf="patientData.encounters?.length">
+        <tr *ngFor="let encounter of patientData.encounters">
+            <td>{{encounter.reason}}</td>
+            <td>{{encounter.class.display}}</td>
+            <td>{{encounter.period.start | date}}</td>
+            <td>{{encounter.period.end   | date}}</td>
+            <td>
+                <div *ngFor="let location of encounter.location">{{getLocationData(location)}}</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <h6 *ngIf="!loading">PROBLEMS</h6>
+    <table class="table table-striped" *ngIf="!loading">
+        <thead>
+        <tr>
+            <th>Problem</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.conditions?.length">
+        <tr *ngFor="let condition of patientData.conditions">
+            <td>{{condition.code.coding[0].display}}</td>
+            <td>{{getOnSet(condition) | date}}</td>
+            <td>Unresolved</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">Close</button>
+</div>

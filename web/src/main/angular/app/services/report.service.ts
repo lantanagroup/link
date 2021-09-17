@@ -9,6 +9,7 @@ import {ReportPatient} from '../model/report-patient';
 import {map} from 'rxjs/operators';
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel";
+import {PatientDataModel} from "../model/PatientDataModel";
 
 @Injectable()
 export class ReportService {
@@ -92,4 +93,10 @@ export class ReportService {
     const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}`);
     return await this.http.delete(url).toPromise();
   }
+
+  async getPatientData(reportId: string, patientId: string) {
+    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/patient/${encodeURIComponent(patientId)}`);
+    return await this.http.get<PatientDataModel>(url).toPromise();
+  }
+
 }
