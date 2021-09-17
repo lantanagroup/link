@@ -1,0 +1,55 @@
+<div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">View Line-Level Data</h4>
+    <button (click)="activeModal.dismiss()" aria-label="Close" class="close" type="button">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="modal-body">
+    <div *ngIf="loading" class="alert alert-info">Loading...</div>
+    <h6 *ngIf="!loading">ENCOUNTERS</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Reason</th>
+            <th>Class Type(s)</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Location(s)</th>
+        </tr>
+        </thead>
+        <tbody *ngIf="patientData.encounters?.length">
+        <tr *ngFor="let encounter of patientData.encounters">
+            <td *ngIf="encounter.reasonCode?.length > 0">
+                <div *ngFor="let rc of encounter.reasonCode">{{rc | codeableConcept}}</div>
+            </td>
+            <td>{{encounter.class.display}}</td>
+            <td>{{encounter.period.start | date}}</td>
+            <td>{{encounter.period.end   | date}}</td>
+            <td *ngIf="encounter.location?.length > 0">
+                <div *ngFor="let location of encounter.location">{{getLocationData(location)}}</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <h6 *ngIf="!loading">PROBLEMS</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Problem</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.conditions?.length">
+        <tr *ngFor="let condition of patientData.conditions">
+            <td>{{condition.code | codeableConcept}}</td>
+            <td>{{getOnSet(condition) | date}}</td>
+            <td>{{getAbatement(condition) | date}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button (click)="activeModal.dismiss()" class="btn btn-outline-dark" type="button">Close</button>
+</div>
