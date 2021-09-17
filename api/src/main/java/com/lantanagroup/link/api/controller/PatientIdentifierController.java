@@ -231,14 +231,15 @@ public class PatientIdentifierController extends BaseController {
         list.setDateElement(new DateTimeType(listDate));
         csvList.stream().parallel().forEach(csvEntry -> {
             ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
+            Reference reference = new Reference();
             if (csvEntry.getPatientLogicalID() != null && !csvEntry.getPatientLogicalID().isBlank()) {
-                Reference reference = new Reference();
                 reference.setReference("Patient/" + csvEntry.getPatientLogicalID());
-                reference.setIdentifier(new Identifier());
-                reference.getIdentifier().setSystemElement(new UriType(csvEntry.getPatientIdentifier().substring(0, csvEntry.getPatientIdentifier().indexOf("|"))));
-                reference.getIdentifier().setValueElement(new StringType(csvEntry.getPatientIdentifier().substring(csvEntry.getPatientIdentifier().indexOf("|") + 1)));
-                listEntry.setItem(reference);
             }
+            reference.setIdentifier(new Identifier());
+            reference.getIdentifier().setSystemElement(new UriType(csvEntry.getPatientIdentifier().substring(0, csvEntry.getPatientIdentifier().indexOf("|"))));
+            reference.getIdentifier().setValueElement(new StringType(csvEntry.getPatientIdentifier().substring(csvEntry.getPatientIdentifier().indexOf("|") + 1)));
+            listEntry.setItem(reference);
+
             list.addEntry(listEntry);
         });
         return list;
