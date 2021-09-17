@@ -1,7 +1,10 @@
 import {
-  IAgentComponent, IAttachment,
+  IAgentComponent,
+  IAttachment,
   IAuditEvent,
-  IBundle, ICapabilityStatement, ICodeableConcept,
+  IBundle,
+  ICapabilityStatement,
+  ICodeableConcept,
   ICodeSystem,
   IContactDetail,
   IContactPoint,
@@ -15,8 +18,10 @@ import {
   IExtension,
   IHumanName,
   IImplementationGuide,
-  INetworkComponent, IOperationOutcome,
-  IPractitioner, IResourceReference,
+  INetworkComponent,
+  IOperationOutcome,
+  IPractitioner,
+  IResourceReference,
   IStructureDefinition,
   setChoice
 } from './fhirInterfaces';
@@ -359,7 +364,7 @@ export class DomainResource extends Resource implements IDomainResource {
         for (const o of obj.contained || []) {
           if (o.resourceType && classMapping[o.resourceType]) {
             const contained = new classMapping[o.resourceType](o);
-            this.contained.push(<DomainResource> contained);
+            this.contained.push(<DomainResource>contained);
           }
         }
       }
@@ -380,9 +385,9 @@ export class DomainResource extends Resource implements IDomainResource {
 }
 
 export class ContactPoint extends Element implements IContactPoint {
-  public system?: 'phone'|'fax'|'email'|'pager'|'url'|'sms'|'other';
+  public system?: 'phone' | 'fax' | 'email' | 'pager' | 'url' | 'sms' | 'other';
   public value?: string;
-  public use?: 'home'|'work'|'temp'|'old'|'mobile';
+  public use?: 'home' | 'work' | 'temp' | 'old' | 'mobile';
   public rank?: number;
   public period?: Period;
 
@@ -513,7 +518,7 @@ export class ElementDefinitionSlicingComponent extends Element implements IEleme
   public discriminator?: ElementDefinitionDiscriminatorComponent[];
   public description?: string;
   public ordered?: boolean;
-  public rules: 'closed'|'open'|'openAtEnd';
+  public rules: 'closed' | 'open' | 'openAtEnd';
 
   constructor(obj?: any) {
     super(obj);
@@ -563,7 +568,7 @@ export class ElementDefinitionBaseComponent extends Element {
 export class ElementDefinitionTypeRefComponent extends Element implements IElementDefinitionType {
   public code: string;
   public profile?: string[];
-  public _profile?: Element|Element[];
+  public _profile?: Element | Element[];
   public targetProfile?: string[];
   public aggregation?: string[];
   public versioning?: string;
@@ -1154,7 +1159,7 @@ export class StructureDefinition extends DomainResource implements IStructureDef
   public keyword?: Coding[];
   public fhirVersion?: string;
   public mapping?: StructureDefinitionMappingComponent[];
-  public kind: 'primitive-type'|'complex-type'|'resource'|'logical' = 'resource';
+  public kind: 'primitive-type' | 'complex-type' | 'resource' | 'logical' = 'resource';
   public abstract: boolean;
   public context?: StructureDefinitionContextComponent[];
   public contextInvariant?: string[];
@@ -1892,7 +1897,16 @@ export class Signature extends Element {
 
 }
 
-export type BundleTypes = 'document'|'message'|'transaction'|'transaction-response'|'batch'|'batch-response'|'history'|'searchset'|'collection';
+export type BundleTypes =
+    'document'
+    | 'message'
+    | 'transaction'
+    | 'transaction-response'
+    | 'batch'
+    | 'batch-response'
+    | 'history'
+    | 'searchset'
+    | 'collection';
 
 export class Bundle extends Resource implements IBundle {
   public resourceType = 'Bundle';
@@ -4344,7 +4358,7 @@ export class CapabilityStatementResourceInteractionComponent extends BackboneEle
 export class CapabilityStatementSearchParamComponent extends BackboneElement {
   public name: string;
   public definition?: string;
-  public type: 'number'|'date'|'string'|'token'|'reference'|'composite'|'quantity'|'uri'|'special';
+  public type: 'number' | 'date' | 'string' | 'token' | 'reference' | 'composite' | 'quantity' | 'uri' | 'special';
   public documentation?: string;
 
   constructor(obj?: any) {
@@ -4477,7 +4491,7 @@ export class CapabilityStatementResourceComponent extends BackboneElement {
 }
 
 export class CapabilityStatementSystemInteractionComponent extends BackboneElement {
-  public code: 'read'|'vread'|'update'|'patch'|'delete'|'history-instance'|'history-type'|'create'|'search-type';
+  public code: 'read' | 'vread' | 'update' | 'patch' | 'delete' | 'history-instance' | 'history-type' | 'create' | 'search-type';
   public documentation?: string;
 
   constructor(obj?: any) {
@@ -11028,7 +11042,8 @@ export class Encounter extends DomainResource {
   public appointment?: ResourceReference;
   public period?: Period;
   public length?: Duration;
-  public reason?: CodeableConcept[];
+  public reasonCode?: CodeableConcept[];
+  public reasonReference?: ResourceReference[];
   public diagnosis?: EncounterDiagnosisComponent[];
   public account?: ResourceReference[];
   public hospitalization?: EncounterHospitalizationComponent;
@@ -11105,10 +11120,16 @@ export class Encounter extends DomainResource {
       if (obj.hasOwnProperty('length')) {
         this.length = new Duration(obj.length);
       }
-      if (obj.hasOwnProperty('reason')) {
-        this.reason = [];
-        for (const o of obj.reason || []) {
-          this.reason.push(new CodeableConcept(o));
+      if (obj.hasOwnProperty('reasonReference')) {
+        this.reasonReference = [];
+        for (const o of obj.reasonReference || []) {
+          this.reasonReference.push(new ResourceReference(o));
+        }
+      }
+      if (obj.hasOwnProperty('reasonCode')) {
+        this.reasonCode = [];
+        for (const o of obj.reasonCode || []) {
+          this.reasonCode.push(new CodeableConcept(o));
         }
       }
       if (obj.hasOwnProperty('diagnosis')) {
@@ -14710,26 +14731,6 @@ export class ImplementationGuidePageComponent extends BackboneElement {
     }
   }
 
-  public getExtension() {
-    switch (this.generation) {
-      case 'markdown':
-      case 'generated':
-        return '.md';
-      default:
-        return `.${this.generation}`;
-    }
-  }
-
-  public setTitle(value: string, isRoot = false) {
-    this.title = value;
-
-    if (!isRoot && value) {
-      this.fileName = value.toLowerCase().replace(/\s/g, '_').replace(/[():]/g, '') + this.getExtension();
-    } else if (isRoot) {
-      this.fileName = 'index' + this.getExtension();
-    }
-  }
-
   public get navMenu() {
     const navMenuExt = (this.extension || []).find(e => e.url === Globals.extensionUrls['extension-ig-page-nav-menu']);
     if (navMenuExt) return navMenuExt.valueString;
@@ -14835,6 +14836,26 @@ export class ImplementationGuidePageComponent extends BackboneElement {
       this.extension.splice(index, 1);
     } else if (contentExt && value) {
       contentExt.valueMarkdown = value;
+    }
+  }
+
+  public getExtension() {
+    switch (this.generation) {
+      case 'markdown':
+      case 'generated':
+        return '.md';
+      default:
+        return `.${this.generation}`;
+    }
+  }
+
+  public setTitle(value: string, isRoot = false) {
+    this.title = value;
+
+    if (!isRoot && value) {
+      this.fileName = value.toLowerCase().replace(/\s/g, '_').replace(/[():]/g, '') + this.getExtension();
+    } else if (isRoot) {
+      this.fileName = 'index' + this.getExtension();
     }
   }
 
@@ -16708,7 +16729,7 @@ export class Media extends DomainResource {
   public identifier?: Identifier[];
   public basedOn?: ResourceReference[];
   public partOf?: ResourceReference[];
-  public status: 'preparation'|'in-progress'|'not-done'|'suspended'|'aborted'|'completed'|'entered-in-error'|'unknown';
+  public status: 'preparation' | 'in-progress' | 'not-done' | 'suspended' | 'aborted' | 'completed' | 'entered-in-error' | 'unknown';
   public type?: CodeableConcept;
   public modality?: CodeableConcept;
   public view?: CodeableConcept;

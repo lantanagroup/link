@@ -1,6 +1,6 @@
 import {CodeableConcept} from './fhir';
 
-export function setChoice(source: any, dest: any, choiceName: string, ... choices: string[]) {
+export function setChoice(source: any, dest: any, choiceName: string, ...choices: string[]) {
   const primitives = ['base64Binary', 'boolean', 'canonical', 'code', 'date', 'dateTime', 'decimal', 'id', 'instant', 'integer', 'markdown', 'oid', 'positiveInt', 'string', 'time', 'unsignedInt', 'uri', 'url', 'uuid'];
 
   if (!choices || choices.length === 0) {
@@ -37,7 +37,7 @@ export interface INetworkComponent {
   type?: ICoding;
 }
 
-export interface IAgentComponent{
+export interface IAgentComponent {
   role?: ICodeableConcept[];
   altId?: string;
   name?: string;
@@ -152,9 +152,9 @@ export interface IIdentifier {
 }
 
 export interface IContactPoint {
-  system?: 'phone'|'fax'|'email'|'pager'|'url'|'sms'|'other';
+  system?: 'phone' | 'fax' | 'email' | 'pager' | 'url' | 'sms' | 'other';
   value?: string;
-  use?: 'home'|'work'|'temp'|'old'|'mobile';
+  use?: 'home' | 'work' | 'temp' | 'old' | 'mobile';
 }
 
 export interface IContactDetail {
@@ -176,9 +176,9 @@ export interface IElement {
 
 export interface IElementDefinitionType extends IElement {
   code: string;
-  profile?: string|string[];
+  profile?: string | string[];
   _profile?: IElement | IElement[];
-  targetProfile?: string|string[];
+  targetProfile?: string | string[];
 }
 
 export interface IElementDefinitionMapping {
@@ -206,7 +206,7 @@ export interface IElementDefinitionSlicing {
   discriminator?: IElementDefinitionDiscriminator[];
   description?: string;
   ordered?: boolean;
-  rules: 'closed'|'open'|'openAtEnd';
+  rules: 'closed' | 'open' | 'openAtEnd';
 }
 
 export interface IElementDefinition extends IElement {
@@ -269,7 +269,7 @@ export interface IImplementationGuide extends IDomainResource {
   version?: string;
   name: string;
   status: string;
-  fhirVersion?: string|string[];
+  fhirVersion?: string | string[];
   description?: string;
   experimental?: boolean;
   contact?: IContactDetail[];

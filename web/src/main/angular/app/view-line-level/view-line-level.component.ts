@@ -19,7 +19,8 @@ export class ViewLineLevelComponent implements OnInit {
       public  activeModal: NgbActiveModal,
       private reportService: ReportService,
       private modal: NgbModal,
-      private toastService: ToastService) { }
+      private toastService: ToastService) {
+  }
 
   public async refresh() {
     this.loading = true;

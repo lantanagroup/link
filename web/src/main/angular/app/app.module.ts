@@ -25,6 +25,7 @@ import {ViewLineLevelComponent} from './view-line-level/view-line-level.componen
 import {MedAdminComponent} from "./report/med-admin.component";
 import {NotesComponent} from "./components/notes/notes.component";
 import {ViewPatientComponent} from "./view-patient/view-patient.component";
+import {CodeableConceptPipe} from "./pipes/codeableconcept.pipe";
 
 
 export const initFactory = (configService: ConfigService, authService: AuthService) => {
@@ -49,7 +50,8 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         ViewLineLevelComponent,
         MedAdminComponent,
         NotesComponent,
-        ViewPatientComponent
+        ViewPatientComponent,
+        CodeableConceptPipe
     ],
     imports: [
         BrowserModule,

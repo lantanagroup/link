@@ -53,10 +53,14 @@ export class ViewPatientComponent implements OnInit {
     if (condition.hasOwnProperty('onsetDateTime')) {
       const fhirDateTime = condition['onsetDateTime'] as string
       return formatDate(fhirDateTime);
-      // format date/time and return
-    } else if (condition.hasOwnProperty('onsetAge')) {
-      return 'Age: ' + condition['onsetAge'];
-    }
+    } else return "";
+  }
+
+  getAbatement(condition: Condition) {
+    if (condition.hasOwnProperty('abatementDateTime')) {
+      const fhirDateTime = condition['abatementDateTime'] as string
+      return formatDate(fhirDateTime);
+    } else return "";
   }
 
   async ngOnInit() {

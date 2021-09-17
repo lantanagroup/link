@@ -2,8 +2,8 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.api.auth.LinkAuthManager;
 import com.lantanagroup.link.api.auth.LinkAuthenticationSuccessHandler;
-import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +43,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()
-            .antMatchers("/api/fhir/**", "/api/cda", "/config/**", "/api")
+            .antMatchers("/api/fhir/**", "/api/cda", "/config/**", "/api", "/api/poi/**")
             .permitAll()
             .and()
             .antMatcher("/api/**")
