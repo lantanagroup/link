@@ -107,6 +107,11 @@
     </tbody>
     <tfoot>
     <tr>
+        <td colspan="7" *ngIf="totalSize === 0">
+            <div class="alert alert-info">No reports to review.</div>
+        </td>
+    </tr>
+    <tr>
         <td colspan="7">
             <ngb-pagination class="d-flex justify-content-center"
                             [maxSize]="5"
@@ -117,9 +122,7 @@
                             [collectionSize]="totalSize">
             </ngb-pagination>
         </td>
-
     </tr>
-
     </tfoot>
 </table>
 
