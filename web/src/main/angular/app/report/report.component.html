@@ -37,10 +37,32 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <app-report-med-admin *ngIf="isMeasureIdentifier('nhsn-medication-administration')"
-                                  (invalidate)="setRequiredErrorsFlag($event)"  (dirty)="setDirtyFlag($event)" [report]="report"></app-report-med-admin>
+    <div class="row report-fields" *ngIf="report?.measure && report?.measureReport">
+        <div class="col-md-4" *ngFor="let group of report.measure.group || []; let groupIndex = index;">
+            <div class="card">
+                <div class="card-header">
+                    {{getCodeableConceptDisplay(group.code) || 'Group ' + (groupIndex + 1)}}
+                    <!--i class="fa fa-question-circle" *ngIf="group.description" [ngbTooltip]="group.description" triggers="click"></i-->
+                    <span class="help-block" *ngIf="group.description">{{group.description}}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6" *ngFor="let population of group.population || []; let populationIndex = index;">
+                            <div class="form-group">
+                                <label>
+                                    {{getCodeableConceptDisplay(population.code) || getCodeableConceptCode(population.code)}}
+                                    <!--i class="fa fa-question-circle" *ngIf="population.description" [ngbTooltip]="population.description" triggers="click"></i-->
+                                </label>
+                                <app-calculated-field [report]="report"
+                                                      [groupCode]="getCodeableConceptCode(group.code)"
+                                                      [populationCode]="getCodeableConceptCode(population.code)">
+                                </app-calculated-field>
+                                <span class="help-block" *ngIf="population.description">{{population.description}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

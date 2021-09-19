@@ -19,4 +19,7 @@ div.card {
     background-color: #e9ecef;
 }
 
-
+.report-fields .help-block:before {
+    content: ' ';
+    display: block;
+}

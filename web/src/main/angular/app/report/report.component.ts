@@ -7,6 +7,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel"
+import {CodeableConcept} from "../model/fhir";
 
 @Component({
   selector: 'report',
@@ -47,6 +48,22 @@ export class ReportComponent implements OnInit, OnDestroy {
   viewLineLevel() {
     const modalRef = this.modal.open(ViewLineLevelComponent, {size: 'xl'});
     modalRef.componentInstance.reportId = this.reportId;
+  }
+
+  getCodeableConceptCode(codeableConcept: CodeableConcept) {
+    if (codeableConcept && codeableConcept.coding && codeableConcept.coding.length > 0) {
+      return codeableConcept.coding[0].code;
+    }
+  }
+
+  getCodeableConceptDisplay(codeableConcept: CodeableConcept) {
+    if (!codeableConcept) return '';
+
+    if (codeableConcept.text) {
+      return codeableConcept.text;
+    } else if (codeableConcept.coding && codeableConcept.coding.length > 0) {
+      return codeableConcept.coding[0].display;
+    }
   }
 
   async send() {
