@@ -10,6 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cli</artifactId>
+    <name>Command Line Interface</name>
+
     <packaging>jar</packaging>
 
     <!--
@@ -23,14 +25,14 @@
             <groupId>com.lantanagroup.link</groupId>
             <artifactId>core</artifactId>
             <scope>compile</scope>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.lantanagroup.link</groupId>
             <artifactId>query</artifactId>
             <scope>compile</scope>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
