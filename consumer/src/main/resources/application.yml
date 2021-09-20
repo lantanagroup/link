@@ -1,7 +1,7 @@
 spring:
   jpa:
     properties:
-      hibernate.dialect: org.hibernate.dialect.h2dialect
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
       hibernate.hbm2ddl.auto: update
     hibernate:
       ddl-auto: update
