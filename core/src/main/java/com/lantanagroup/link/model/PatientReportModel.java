@@ -6,8 +6,7 @@ import lombok.Setter;
 @Getter @Setter
 public class PatientReportModel {
     String id;
-    String firstName;
-    String lastName;
+    String name;
     String sex;
     String dateOfBirth;
 }

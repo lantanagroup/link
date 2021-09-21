@@ -18,15 +18,17 @@
         </processorPath>
         <module name="core" />
         <module name="cli" />
-        <module name="api" />
-        <module name="query-api" />
         <module name="nhsn" />
         <module name="query" />
+        <module name="api" />
+        <module name="consumer" />
+        <module name="query-api" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="11">
       <module name="api" target="11" />
       <module name="cli" target="11" />
+      <module name="consumer" target="11" />
       <module name="core" target="11" />
       <module name="link" target="1.8" />
       <module name="nhsn" target="11" />
@@ -38,6 +40,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api" options="-parameters" />
       <module name="cli" options="-parameters" />
+      <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
       <module name="nandina-web" options="-parameters" />
       <module name="nhsn" options="-parameters" />

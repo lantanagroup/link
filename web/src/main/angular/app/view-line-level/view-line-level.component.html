@@ -10,8 +10,7 @@
     <table class="table table-striped" *ngIf="!loading">
         <thead>
         <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
+            <th>Name</th>
             <th>Sex</th>
             <th>DOB</th>
             <th>&nbsp;</th>
@@ -19,8 +18,7 @@
         </thead>
         <tbody *ngIf="patients?.length">
         <tr *ngFor="let patient of patients">
-            <td>{{patient.firstName}}</td>
-            <td>{{patient.lastName}}</td>
+            <td>{{patient.name}}</td>
             <td>{{patient.sex}}</td>
             <td>{{patient.getDOBDisplay()}}</td>
             <td>
@@ -33,7 +31,7 @@
         </tbody>
         <tfoot *ngIf="!patients?.length">
             <tr>
-                <td colspan="5">No patients in this report</td>
+                <td colspan="4">No patients in this report</td>
             </tr>
         </tfoot>
     </table>
