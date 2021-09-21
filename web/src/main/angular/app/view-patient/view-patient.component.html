@@ -23,7 +23,7 @@
             </td>
             <td>{{encounter.period.start | date}}</td>
             <td>{{encounter.period.end   | date}}</td>
-            <td *ngIf="encounter.location?.length > 0">
+            <td>
                 <div *ngFor="let location of encounter.location">{{getLocationData(location)}}</div>
             </td>
         </tr>
