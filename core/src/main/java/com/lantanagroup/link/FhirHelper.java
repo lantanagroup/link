@@ -130,7 +130,7 @@ public class FhirHelper {
         lastName = names.get(0).getFamily();
       }
     } else {
-      return "";
+      return "Unknown";
     }
 
     if (StringUtils.isNotEmpty(firstName) && StringUtils.isNotEmpty(lastName)) {
@@ -141,7 +141,7 @@ public class FhirHelper {
       return firstName;
     }
 
-    return "";
+    return "Unknown";
   }
 
   public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
