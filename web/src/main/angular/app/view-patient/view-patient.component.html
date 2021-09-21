@@ -22,7 +22,6 @@
             <td *ngIf="encounter.reasonCode?.length > 0">
                 <div *ngFor="let rc of encounter.reasonCode">{{rc | codeableConcept}}</div>
             </td>
-            <td>{{encounter.class.display}}</td>
             <td>{{encounter.period.start | date}}</td>
             <td>{{encounter.period.end   | date}}</td>
             <td *ngIf="encounter.location?.length > 0">
