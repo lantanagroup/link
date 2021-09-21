@@ -1,7 +1,6 @@
 export class ReportPatient {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   sex: string;
   dateOfBirth: string;
 
