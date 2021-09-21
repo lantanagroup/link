@@ -4,6 +4,8 @@ import {ReportService} from '../services/report.service';
 import {ReportPatient} from '../model/report-patient';
 import {ToastService} from '../toast.service';
 import {ViewPatientComponent} from "../view-patient/view-patient.component";
+import {IPatient} from "../fhir";
+import {Patient} from "../model/fhir";
 
 @Component({
   templateUrl: './view-line-level.component.html',
