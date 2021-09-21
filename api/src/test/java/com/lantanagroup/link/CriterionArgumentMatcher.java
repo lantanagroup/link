@@ -1,3 +1,5 @@
+package com.lantanagroup.link;
+
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.ICriterionInternal;
