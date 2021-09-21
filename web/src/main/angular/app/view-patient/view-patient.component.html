@@ -18,7 +18,7 @@
         </thead>
         <tbody *ngIf="patientData.encounters?.length">
         <tr *ngFor="let encounter of patientData.encounters">
-            <td *ngIf="encounter.reasonCode?.length > 0">
+            <td>
                 <div *ngFor="let rc of encounter.reasonCode">{{rc | codeableConcept}}</div>
             </td>
             <td>{{encounter.period.start | date}}</td>
