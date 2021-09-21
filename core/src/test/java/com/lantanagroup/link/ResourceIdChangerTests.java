@@ -1,3 +1,5 @@
+package com.lantanagroup.link;
+
 import com.lantanagroup.link.ResourceIdChanger;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;

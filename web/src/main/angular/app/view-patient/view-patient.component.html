@@ -11,7 +11,6 @@
         <thead>
         <tr>
             <th>Reason</th>
-            <th>Class Type(s)</th>
             <th>Start Date</th>
             <th>End Date</th>
             <th>Location(s)</th>
@@ -19,12 +18,12 @@
         </thead>
         <tbody *ngIf="patientData.encounters?.length">
         <tr *ngFor="let encounter of patientData.encounters">
-            <td *ngIf="encounter.reasonCode?.length > 0">
+            <td>
                 <div *ngFor="let rc of encounter.reasonCode">{{rc | codeableConcept}}</div>
             </td>
             <td>{{encounter.period.start | date}}</td>
             <td>{{encounter.period.end   | date}}</td>
-            <td *ngIf="encounter.location?.length > 0">
+            <td>
                 <div *ngFor="let location of encounter.location">{{getLocationData(location)}}</div>
             </td>
         </tr>
