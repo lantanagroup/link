@@ -84,7 +84,7 @@
             {{getMeasureName(report.measureIdentifier)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.periodStartDate | date}}
+            {{report.periodStartDate | date:'MMM d, y': 'UTC'}}
         </td>
         <td>
             {{getStatusName(report.docStatus)}}

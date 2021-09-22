@@ -81,4 +81,8 @@ public class ApiConfig {
      * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
      */
     @Getter ApiMeasureLocationConfig measureLocation;
+
+    @Getter
+    private UserConfig user;
+
 }

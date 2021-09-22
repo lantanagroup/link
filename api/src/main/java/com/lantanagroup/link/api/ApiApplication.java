@@ -20,6 +20,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import java.util.TimeZone;
 
 /**
  * Main REST API for NHSNLink. Entry point for SpringBoot. Initializes as a SpringBootApplication, which
@@ -114,6 +115,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
+    TimeZone.setDefault(TimeZone.getTimeZone(this.config.getUser().getTimezone()));
     return new ApiInit();
   }
 
