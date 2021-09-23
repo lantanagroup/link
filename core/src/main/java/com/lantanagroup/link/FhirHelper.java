@@ -152,7 +152,6 @@ public class FhirHelper {
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
 
-
     if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
       throw new HttpResponseException(404, String.format("Report with id %s does not exist", reportId));
     }
