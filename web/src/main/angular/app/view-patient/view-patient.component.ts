@@ -4,7 +4,7 @@ import {ReportService} from '../services/report.service';
 import {ToastService} from '../toast.service';
 import {PatientDataModel} from "../model/PatientDataModel";
 import {Condition, EncounterLocationComponent} from "../model/fhir";
-import {formatDate} from '../helper';
+import {getFhirDate} from '../helper';
 
 @Component({
   selector: 'ViewPatientComponent',
@@ -38,9 +38,9 @@ export class ViewPatientComponent implements OnInit {
   public getLocationData(location: EncounterLocationComponent) {
     let locationData = "";
     if (location.period && location.period.start) {
-      locationData = formatDate(location.period.start);
+      locationData = getFhirDate(location.period.start);
       if (location.period && location.period.end) {
-        locationData = locationData + " - " + formatDate(location.period.end) + ": ";
+        locationData = locationData + " - " + getFhirDate(location.period.end) + ": ";
       } else {
         locationData = locationData + " - current: ";
       }
@@ -52,14 +52,14 @@ export class ViewPatientComponent implements OnInit {
   getOnSet(condition: Condition) {
     if (condition.hasOwnProperty('onsetDateTime')) {
       const fhirDateTime = condition['onsetDateTime'] as string
-      return formatDate(fhirDateTime);
+      return getFhirDate(fhirDateTime);
     } else return "";
   }
 
   getAbatement(condition: Condition) {
     if (condition.hasOwnProperty('abatementDateTime')) {
       const fhirDateTime = condition['abatementDateTime'] as string
-      return formatDate(fhirDateTime);
+      return getFhirDate(fhirDateTime);
     } else return "";
   }
 

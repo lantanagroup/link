@@ -38,7 +38,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDate;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -229,8 +229,8 @@ public class ReportController extends BaseController {
             .search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(measureIdentifier.getSystem(), measureIdentifier.getValue()))
-            .and(DocumentReference.PERIOD.afterOrEquals().day(startDate))
-            .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate))
+            .and(DocumentReference.PERIOD.afterOrEquals().second(startDate))
+            .and(DocumentReference.PERIOD.beforeOrEquals().second(endDate))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
@@ -328,7 +328,7 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) {
+  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
     identifier.setSystem(config.getDocumentReferenceSystem());
@@ -368,12 +368,12 @@ public class ReportController extends BaseController {
 
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
 
-    LocalDate startDate = LocalDate.parse(criteria.getPeriodStart());
-    LocalDate endDate = LocalDate.parse(criteria.getPeriodEnd());
-
     Period period = new Period();
-    period.setStart(java.sql.Timestamp.valueOf(startDate.atStartOfDay()));
-    period.setEnd(java.sql.Timestamp.valueOf(endDate.atTime(23, 59, 59)));
+    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
+    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
+    period.setStart(startDate);
+    period.setEnd(endDate);
+
     docReference.setPeriod(period);
 
     documentReference.setContext(docReference);
@@ -707,7 +707,10 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "date=" + submittedDate;
+          Date submittedDateAsDate = Helper.parseFhirDate(submittedDate);
+          Date theDayAfterSubmittedDateEnd = Helper.addDays(submittedDateAsDate, 1);
+          String theDayAfterSubmittedDateEndAsString = Helper.getFhirDate(theDayAfterSubmittedDateEnd);
+          url += "date=ge" + submittedDate + "&date=le" + theDayAfterSubmittedDateEndAsString;
         }
       }
       documentReference = fhirStoreClient.fetchResourceFromUrl(Bundle.class, url);

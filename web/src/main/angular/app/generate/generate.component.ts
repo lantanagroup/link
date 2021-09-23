@@ -1,10 +1,11 @@
 import {Component, OnInit} from '@angular/core';
-import {formatDate, getFhirNow} from '../helper';
+import {formatDateToISO, getFhirDate, getFhirNow} from '../helper';
 import {StoredReportDefinition} from '../model/stored-report-definition';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {Router} from '@angular/router';
+import * as moment from 'moment';
 
 @Component({
   selector: 'nandina-generate',
@@ -32,7 +33,7 @@ export class GenerateComponent implements OnInit {
   }
 
   onDateSelected() {
-    this.today = formatDate(this.criteria.periodStart);
+    this.today = getFhirDate(this.criteria.periodStart);
   }
 
   get selectedReportTypeDisplay() {
@@ -48,20 +49,24 @@ export class GenerateComponent implements OnInit {
       if (!this.criteria.periodStart) {
         this.criteria.periodStart = getFhirNow();
       } else {
-        this.criteria.periodStart = formatDate(this.criteria.periodStart);
+        this.criteria.periodStart = getFhirDate(this.criteria.periodStart);
       }
 
       // TODO: calculate periodEnd
       const periodStart = this.criteria.periodStart;
+      const periodEndDate = moment(periodStart);
+      periodEndDate.add(23, 'hours');
+      periodEndDate.add(59, 'minutes');
+      periodEndDate.add(59, 'seconds');
 
       try {
-        const generateResponse = await this.reportService.generate(this.criteria.reportDefId, periodStart, periodStart);
-        await this.router.navigate(['review', generateResponse.reportId]);
+        const generateResponse = await this.reportService.generate(this.criteria.reportDefId, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
+        this.router.navigate(['review', generateResponse.reportId]);
       } catch (ex) {
-        if (ex.status === 409){
+        if (ex.status === 409) {
           if (confirm(ex.error.message)) {
             try {
-              const generateResponse = await this.reportService.generate(this.criteria.reportDefId, this.criteria.periodStart, periodEnd, true);
+              const generateResponse = await this.reportService.generate(this.criteria.reportDefId, periodStart, periodStart, true);
               await this.router.navigate(['review', generateResponse.reportId]);
             } catch(ex) {
               this.toastService.showException('Error generating report', ex);
