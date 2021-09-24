@@ -66,7 +66,7 @@ export class GenerateComponent implements OnInit {
         if (ex.status === 409) {
           if (confirm(ex.error.message)) {
             try {
-              const generateResponse = await this.reportService.generate(this.criteria.reportDefId, periodStart, periodStart, true);
+              const generateResponse = await this.reportService.generate(this.criteria.reportDefId, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
               await this.router.navigate(['review', generateResponse.reportId]);
             } catch(ex) {
               this.toastService.showException('Error generating report', ex);
