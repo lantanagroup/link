@@ -93,10 +93,6 @@ export class CalculatedFieldComponent implements OnInit {
     return this.report.status === 'FINAL';
   }
 
-
-  ngOnInit(): void {
-  }
-
   private ensureOriginalCount(population: IMeasureReportPopulationComponent) {
     population.extension = population.extension || [];
     let origExt = population.extension.find(e => e.url === CalculatedFieldComponent.PopOrigCountUrl);
@@ -126,5 +122,9 @@ export class CalculatedFieldComponent implements OnInit {
         return p.code && p.code.coding && p.code.coding.length > 0 && !!p.code.coding.find(c => c.code === this.populationCode);
       });
     }
+  }
+
+  ngOnInit(): void {
+    console.log('debugging');
   }
 }

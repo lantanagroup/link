@@ -37,10 +37,35 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <app-report-med-admin *ngIf="isMeasureIdentifier('nhsn-medication-administration')"
-                                  (invalidate)="setRequiredErrorsFlag($event)"  (dirty)="setDirtyFlag($event)" [report]="report"></app-report-med-admin>
+    <div [ngSwitch]="measureId" *ngIf="report?.measure && report?.measureReport">
+        <!-- When report type is med-admin show the med-admin component -->
+        <app-report-med-admin *ngSwitchCase="'nhsn-medication-administration'" (invalidate)="setRequiredErrorsFlag($event)" (dirty)="setDirtyFlag($event)" [report]="report"></app-report-med-admin>
+        <!-- Otherwise, generate the fields automatically based on measure definition -->
+        <div class="row report-fields" *ngSwitchDefault>
+            <div class="col-md-4" *ngFor="let group of report.measure.group || []; let groupIndex = index;">
+                <div class="card">
+                    <div class="card-header">
+                        {{group.code | codeableConcept: false : 'Group ' + (groupIndex + 1)}}
+                        <span class="help-block" *ngIf="group.description">{{group.description}}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6" *ngFor="let population of group.population || []">
+                                <div class="form-group">
+                                    <label>
+                                        {{population.code | codeableConcept}}
+                                    </label>
+                                    <app-calculated-field [report]="report"
+                                                          [groupCode]="group.code | codeableConcept: true"
+                                                          [populationCode]="population.code | codeableConcept: true">
+                                    </app-calculated-field>
+                                    <span class="help-block" *ngIf="population.description">{{population.description}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
