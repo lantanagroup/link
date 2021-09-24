@@ -21,8 +21,8 @@
         <module name="nhsn" />
         <module name="query" />
         <module name="api" />
-        <module name="query-api" />
         <module name="consumer" />
+        <module name="query-api" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="11">

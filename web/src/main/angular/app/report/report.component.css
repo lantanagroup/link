@@ -11,12 +11,11 @@ div.alert {
     margin-top: 5px;
 }
 
-div.card {
-    margin-bottom: 10px;
-}
-
 .form-control {
     background-color: #e9ecef;
 }
 
-
+.report-fields .help-block:before {
+    content: ' ';
+    display: block;
+}

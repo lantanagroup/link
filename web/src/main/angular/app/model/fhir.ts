@@ -45,6 +45,7 @@ export class Extension implements IExtension {
   public extension?: Extension[];
   public url: string;
   public valueBoolean?: boolean;
+  public valueInteger?: number;
   public valueString?: string;
   public valueUri?: string;
   public valueReference?: ResourceReference;
@@ -63,6 +64,9 @@ export class Extension implements IExtension {
       }
       if (obj.hasOwnProperty('url')) {
         this.url = obj.url;
+      }
+      if (obj.hasOwnProperty('valueInteger')) {
+        this.valueInteger = obj.valueInteger;
       }
       if (obj.hasOwnProperty('valueBoolean')) {
         this.valueBoolean = obj.valueBoolean;

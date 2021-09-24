@@ -49,3 +49,7 @@ pre {
   border-radius: 5px;
   background-color: white;
 }
+
+div.card {
+  margin-bottom: 10px;
+}

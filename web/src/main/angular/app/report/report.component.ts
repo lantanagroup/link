@@ -7,6 +7,7 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ViewLineLevelComponent} from '../view-line-level/view-line-level.component';
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel"
+import {CodeableConcept} from "../model/fhir";
 
 @Component({
   selector: 'report',
@@ -34,6 +35,12 @@ export class ReportComponent implements OnInit, OnDestroy {
     return this.report.status === 'FINAL';
   }
 
+  get measureId() {
+    if (this.report && this.report.measure && this.report.measure.identifier && this.report.measure.identifier.length > 0) {
+      return this.report.measure.identifier[0].value;
+    }
+  }
+
   setRequiredErrorsFlag(hasErrors) {
     if ('boolean' === typeof hasErrors) {
       this.hasRequiredErrors = hasErrors;
@@ -47,6 +54,22 @@ export class ReportComponent implements OnInit, OnDestroy {
   viewLineLevel() {
     const modalRef = this.modal.open(ViewLineLevelComponent, {size: 'xl'});
     modalRef.componentInstance.reportId = this.reportId;
+  }
+
+  getCodeableConceptCode(codeableConcept: CodeableConcept) {
+    if (codeableConcept && codeableConcept.coding && codeableConcept.coding.length > 0) {
+      return codeableConcept.coding[0].code;
+    }
+  }
+
+  getCodeableConceptDisplay(codeableConcept: CodeableConcept) {
+    if (!codeableConcept) return '';
+
+    if (codeableConcept.text) {
+      return codeableConcept.text;
+    } else if (codeableConcept.coding && codeableConcept.coding.length > 0) {
+      return codeableConcept.coding[0].display;
+    }
   }
 
   async send() {
@@ -120,13 +143,6 @@ export class ReportComponent implements OnInit, OnDestroy {
     } catch (ex) {
       this.toastService.showException('Error saving report: ' + this.reportId, ex);
     }
-  }
-
-  isMeasureIdentifier(measureId) {
-    if (this.report != undefined && this.report.measure != undefined && this.report.measure.identifier[0].value == measureId) {
-      return true;
-    }
-    return false;
   }
 
   async ngOnInit() {

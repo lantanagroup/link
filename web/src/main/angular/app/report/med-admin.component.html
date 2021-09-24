@@ -1,9 +1,14 @@
-<div class="form-group">
-    <label>Initial Population</label>
-    <app-calculated-field
-            [report]="report"
-            (invalidate)="setRequiredErrorsFlag($event)"
-            (dirty)="setDirtyFlag($event)"
-            populationCode="initial-population">
-    </app-calculated-field>
+<div class="card">
+    <div class="card-header">Medications</div>
+    <div class="card-body">
+        <div class="form-group">
+            <label>Initial Population</label>
+            <app-calculated-field
+                    [report]="report"
+                    (invalidate)="setRequiredErrorsFlag($event)"
+                    (dirty)="setDirtyFlag($event)"
+                    populationCode="initial-population">
+            </app-calculated-field>
+        </div>
+    </div>
 </div>
