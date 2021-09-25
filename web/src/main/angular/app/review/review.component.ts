@@ -4,7 +4,7 @@ import {ReportService} from "../services/report.service";
 import {StoredReportDefinition} from "../model/stored-report-definition";
 import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
-import {formatDate} from '../helper';
+import {formatDateToISO, getFhirDate} from '../helper';
 import {UserModel} from "../model/user-model";
 
 @Component({
@@ -102,15 +102,15 @@ export class ReviewComponent implements OnInit {
                 filterCriteria += `docStatus=${encodeURIComponent(status.value)}&`
             }
             if (this.filter.period.startDate !== null) {
-                let startDate = formatDate(this.filter.period.startDate);
+                let startDate = formatDateToISO(getFhirDate(this.filter.period.startDate));
                 filterCriteria += `periodStartDate=${startDate}&`
             }
             if (this.filter.period.endDate !== null) {
-                let endDate = formatDate(this.filter.period.endDate);
+                let endDate = formatDateToISO(getFhirDate(this.filter.period.endDate));
                 filterCriteria += `periodEndDate=${endDate}&`
             }
             if (this.filter.submittedDate !== null) {
-                let submittedDate = formatDate(this.filter.submittedDate);
+                let submittedDate = formatDateToISO(getFhirDate(this.filter.submittedDate));
                 filterCriteria += `submittedDate=${submittedDate}&`
             }
             if (this.filter.submitter !== "Select submitter") {

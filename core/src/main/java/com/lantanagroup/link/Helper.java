@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 
 public class Helper {
@@ -28,9 +29,16 @@ public class Helper {
   public static String getFhirDate(Date date) {
     return new SimpleDateFormat(SIMPLE_DATE_FORMAT).format(date);
   }
-  
+
   public static Date parseFhirDate(String dateStr) throws ParseException {
-	  return new SimpleDateFormat(SIMPLE_DATE_FORMAT).parse(dateStr);
+    return new SimpleDateFormat(SIMPLE_DATE_FORMAT).parse(dateStr);
+  }
+
+  public static Date addDays(Date date, int numberOfDays) throws ParseException {
+    Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.add(Calendar.DATE, 1);  // number of days to add
+    return c.getTime();
   }
 
   public static String URLEncode(String url) {

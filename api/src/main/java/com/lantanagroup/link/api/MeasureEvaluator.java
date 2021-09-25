@@ -1,13 +1,18 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.rest.param.DateParam;
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.ParseException;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
@@ -32,10 +37,12 @@ public class MeasureEvaluator {
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
 
-      Parameters parameters = new Parameters();
-      parameters.addParameter().setName("periodStart").setValue(new DateType(this.criteria.getPeriodStart()));
-      parameters.addParameter().setName("periodEnd").setValue(new DateType(this.criteria.getPeriodEnd()));
+      Date startDate = Helper.parseFhirDate(this.criteria.getPeriodStart());
+      Date endDate = Helper.parseFhirDate(this.criteria.getPeriodEnd());
 
+      Parameters parameters = new Parameters();
+      parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
+      parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       measureReport = this.context.getFhirStoreClient().operation()
               .onInstance(new IdType("Measure", this.context.getMeasureId()))
               .named("$evaluate-measure")
@@ -96,6 +103,9 @@ public class MeasureEvaluator {
         measureReport.setId(this.context.getReportId());
         this.context.setMeasureReport(measureReport);
       }
+    } catch (ParseException ex) {
+      logger.error("Parsing error generating Measure Report.");
+      throw new RuntimeException(ex);
     } catch (Exception e) {
       logger.error("Error generating Measure Report: " + e.getMessage());
       throw e;

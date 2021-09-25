@@ -20,6 +20,8 @@ api:
     ventilator-codes-value-set: classpath:mechanical-ventilators.xml
     intubation-procedure-codes-value-set: classpath:intubation-procedures.xml
   document-reference-system: urn:ietf:rfc:3986
+  user:
+    timezone: UTC
 query:
   query-class: com.lantanagroup.link.query.uscore.Query
   uscore:

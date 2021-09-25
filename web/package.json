@@ -26,6 +26,7 @@
     "bootstrap": "^4.4.1",
     "font-awesome": "^4.7.0",
     "js-marker-clusterer": "^1.0.0",
+    "moment": "^2.29.1",
     "ngx-cookie-service": "^3.0.4",
     "rxjs": "^6.5.5",
     "save-as": "^0.1.8",

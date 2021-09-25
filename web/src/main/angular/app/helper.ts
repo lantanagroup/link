@@ -1,3 +1,5 @@
+import * as moment from "moment";
+
 export function padDateNumber(value: number) {
   if (value < 10) {
     return '0' + value.toString();
@@ -11,7 +13,7 @@ export function padDateNumber(value: number) {
  * first loads as well as when a date is selected from the datepicker.
  * @param date
  */
-export function formatDate(date) {
+export function getFhirDate(date) {
   // created string constants because of lint complaining
   const year = 'year';
   const month = 'month';
@@ -36,3 +38,8 @@ export function getFhirNow() {
   const date = padDateNumber(now.getDate());
   return `${year}-${month}-${date}`;
 }
+
+export function formatDateToISO(date) {
+  return moment(date).toISOString(false);
+}
+
