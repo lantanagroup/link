@@ -5,18 +5,20 @@ import lombok.Setter;
 
 import java.util.HashMap;
 
-@Getter @Setter
+@Getter
+@Setter
 public class ReportCriteria {
-  public ReportCriteria(String measureIdentifier, String periodStart, String periodEnd) {
-    this.setMeasureIdentifier(measureIdentifier);
-    this.setPeriodStart(periodStart);
-    this.setPeriodEnd(periodEnd);
-  }
 
+  String reportDefIdentifier;
   String reportDefId;
-  String measureIdentifier;
   String periodStart;
   String periodEnd;
   String measureId;
   HashMap<String, String> additional = new HashMap<>();
+
+  public ReportCriteria(String reportDefIdentifier, String periodStart, String periodEnd) {
+    this.setReportDefIdentifier(reportDefIdentifier);
+    this.setPeriodStart(periodStart);
+    this.setPeriodEnd(periodEnd);
+  }
 }

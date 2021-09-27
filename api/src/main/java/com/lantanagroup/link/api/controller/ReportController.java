@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +100,7 @@ public class ReportController extends BaseController {
     Bundle bundle = (Bundle) context.getFhirStoreClient()
             .search()
             .forResource(Bundle.class)
-            .where(Bundle.IDENTIFIER.exactly().systemAndValues(criteria.getMeasureIdentifier().substring(0, criteria.getMeasureIdentifier().indexOf("|")), criteria.getMeasureIdentifier().substring(criteria.getMeasureIdentifier().indexOf("|")+1)))
+            .where(Bundle.IDENTIFIER.exactly().systemAndValues(criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")), criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1)))
             .execute();
 
     if (bundle == null) {
@@ -110,7 +109,7 @@ public class ReportController extends BaseController {
 
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
-      Bundle reportDefBundle = (Bundle)bundle.getEntry().get(0).getResource();
+      Bundle reportDefBundle = (Bundle) bundle.getEntry().get(0).getResource();
       logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
       String measureId = this.storeReportBundleResources(reportDefBundle, context.getFhirStoreClient());
       context.setMeasureId(measureId);
