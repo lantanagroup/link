@@ -8,6 +8,7 @@ import {ViewLineLevelComponent} from '../view-line-level/view-line-level.compone
 import {ReportModel} from "../model/ReportModel";
 import {ReportSaveModel} from "../model/ReportSaveModel"
 import {CodeableConcept} from "../model/fhir";
+import {formatDateToISO} from "../helper";
 
 @Component({
   selector: 'report',
@@ -21,6 +22,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   loading = false;
   hasRequiredErrors = false;
   dirty = false;
+  regenerateReportButtonText: String = 'Re-generate';
 
   constructor(
       private route: ActivatedRoute,
@@ -142,6 +144,43 @@ export class ReportComponent implements OnInit, OnDestroy {
       this.dirty = false;
     } catch (ex) {
       this.toastService.showException('Error saving report: ' + this.reportId, ex);
+    }
+  }
+
+  async regenerate() {
+    this.loading = true;
+    this.regenerateReportButtonText = 'Loading...';
+    const identifier = this.report.measure.identifier[0].system + " | " + this.report.measure.identifier[0].value;
+    try {
+      if (confirm('Confirm re-generate?\n Re-generating will re-acquire the latest date from the EHR for the period and re-evaluate the measure. ' +
+          'Once re-evaluated, the newest calculated aggregate totals will be updated in this report. ' +
+          'Fields not calculated as part of the measure will not be affected. Are you sure you want to continue?')) {
+        try {
+          const generateResponse = await this.reportService.generate(identifier, formatDateToISO(this.report.measureReport.period.start), formatDateToISO(this.report.measureReport.period.end), true);
+          await this.router.navigate(['review', generateResponse.reportId]);
+          this.toastService.showInfo('Report re-generated!');
+          await this.initReport();
+        } catch (ex) {
+          if (ex.status === 409) {
+            if (confirm(ex.error.message)) {
+              try {
+                const generateResponse = await this.reportService.generate(identifier, formatDateToISO(this.report.measureReport.period.start), formatDateToISO(this.report.measureReport.period.end), true);
+                await this.router.navigate(['review', generateResponse.reportId]);
+              } catch (ex) {
+                this.toastService.showException('Error re-generating report', ex);
+              }
+            }
+          } else {
+            this.toastService.showException('Error re-generating report', ex);
+          }
+          return;
+        }
+      }
+    } catch (ex) {
+      this.toastService.showException('Error re-generating report: ' + this.reportId, ex);
+    } finally {
+      this.loading = false;
+      this.regenerateReportButtonText = 'Re-generate';
     }
   }
 

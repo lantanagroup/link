@@ -1,13 +1,14 @@
 <div *ngIf="loading" class="alert alert-info">Loading...</div>
 
-<div *ngIf="report" class="report">
+<div *ngIf="report && !loading" class="report">
     <div class="row">
         <div class="col-md-4">
             <div *ngIf="report?.measure?.title" class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">Type</div>
                 </div>
-                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" type="text" id="report-type"/>
+                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" id="report-type"
+                       type="text"/>
             </div>
 
             <div class="input-group">
@@ -55,11 +56,15 @@
                                     <label>
                                         {{population.code | codeableConcept}}
                                     </label>
-                                    <app-calculated-field [report]="report"
-                                                          [groupCode]="group.code | codeableConcept: true"
-                                                          [populationCode]="population.code | codeableConcept: true">
+                                    <app-calculated-field
+                                            (dirty)="setDirtyFlag($event)"
+                                            (invalidate)="setRequiredErrorsFlag($event)"
+                                            [groupCode]="group.code | codeableConcept: true"
+                                            [populationCode]="population.code | codeableConcept: true"
+                                            [report]="report">
                                     </app-calculated-field>
-                                    <span class="help-block" *ngIf="population.description">{{population.description}}</span>
+                                    <span *ngIf="population.description"
+                                          class="help-block">{{population.description}}</span>
                                 </div>
                             </div>
                         </div>
@@ -71,15 +76,17 @@
 
     <div class="btn-group">
         <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
-        <button (click)="save()" [disabled]="!dirty" class="btn btn-primary">Save</button>
-        <button (click)="discard()" [disabled]="isSubmitted"
-                [ngbTooltip]="isSubmitted ? 'A submitted report cannot be discarded' : null" class="btn btn-primary">
+        <button (click)="save()" *ngIf="!isSubmitted" [disabled]="!dirty" class="btn btn-primary">Save</button>
+        <button (click)="discard()" *ngIf="!isSubmitted" class="btn btn-primary">
             Discard
         </button>
-        <button (click)="send()" [disabled]="isSubmitted || hasRequiredErrors"
-                [ngbTooltip]="isSubmitted ? 'This report has already been submitted' : null" class="btn btn-primary">
+        <button (click)="send()" *ngIf="!isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
             Submit
+        </button>
+        <button (click)="regenerate()" *ngIf="isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
+            {{regenerateReportButtonText}}
         </button>
         <button (click)="download()" class="btn btn-primary">Download</button>
     </div>
 </div>
+

@@ -7,13 +7,14 @@ import java.util.HashMap;
 
 @Getter @Setter
 public class ReportCriteria {
-  public ReportCriteria(String reportDefId, String periodStart, String periodEnd) {
-    this.setReportDefId(reportDefId);
+  public ReportCriteria(String measureIdentifier, String periodStart, String periodEnd) {
+    this.setMeasureIdentifier(measureIdentifier);
     this.setPeriodStart(periodStart);
     this.setPeriodEnd(periodEnd);
   }
 
   String reportDefId;
+  String measureIdentifier;
   String periodStart;
   String periodEnd;
   String measureId;

@@ -16,12 +16,12 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  async generate(reportDefId: string, periodStart: string, periodEnd: string, regenerate = false) {
+  async generate(reportDefIdentifier: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = '/api/report/$generate?';
-    url += `reportDefId=${encodeURIComponent(reportDefId)}&`;
+    url += `reportDefIdentifier=${encodeURIComponent(reportDefIdentifier)}&`;
     url += `periodStart=${encodeURIComponent(periodStart)}&`;
     url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
-    url += 'regenerate=' + (regenerate ? 'true' : 'false' );
+    url += 'regenerate=' + (regenerate ? 'true' : 'false');
     url = this.configService.getApiUrl(url);
 
     return await this.http.post<GenerateResponse>(url, null).toPromise();
