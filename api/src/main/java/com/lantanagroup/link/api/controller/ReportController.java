@@ -230,8 +230,8 @@ public class ReportController extends BaseController {
             .search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(measureIdentifier.getSystem(), measureIdentifier.getValue()))
-            .and(DocumentReference.PERIOD.afterOrEquals().second(startDate))
-            .and(DocumentReference.PERIOD.beforeOrEquals().second(endDate))
+            .and(DocumentReference.PERIOD.afterOrEquals().day(startDate.substring(0, 10)))
+            .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate.substring(0, 10)))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
@@ -688,14 +688,14 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "period=ge" + periodStartDate;
+          url += "period=ge" + periodStartDate.substring(0, 10);
           andCond = true;
         }
         if (periodEndDate != null) {
           if (andCond) {
             url += "&";
           }
-          url += "period=le" + periodEndDate;
+          url += "period=le" + periodEndDate.substring(0, 10);
           andCond = true;
         }
         if (docStatus != null) {
