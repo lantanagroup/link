@@ -37,8 +37,12 @@ export class GenerateComponent implements OnInit {
   }
 
   get selectedReportTypeDisplay() {
-    const found = this.measureConfigs.find(mc => mc.id === this.criteria.reportDef);
-    return found ? found.name : 'Select';
+    if (this.criteria.reportDef != undefined) {
+      const found = this.measureConfigs.find(mc => mc.id === this.criteria.reportDef.id);
+      return found ? found.name : 'Select';
+    } else {
+      return 'Select';
+    }
   }
 
   async reload() {
@@ -95,6 +99,7 @@ export class GenerateComponent implements OnInit {
     // initialize the response date to today by default.
     this.criteria.periodStart = getFhirNow();
     this.measureConfigs = await this.reportDefinitionService.getReportDefinitions();
+    console.log(this.measureConfigs);
   }
 
   disableGenerateReport() {
