@@ -18,7 +18,7 @@ export class GenerateComponent implements OnInit {
   reportGenerated = false;
   today = getFhirNow();
   criteria: {
-    reportDefId?: string,
+    reportDef?: any,
     periodStart?: string
   } = {};
   measureConfigs: StoredReportDefinition[] = [];
@@ -37,7 +37,7 @@ export class GenerateComponent implements OnInit {
   }
 
   get selectedReportTypeDisplay() {
-    const found = this.measureConfigs.find(mc => mc.id === this.criteria.reportDefId);
+    const found = this.measureConfigs.find(mc => mc.id === this.criteria.reportDef);
     return found ? found.name : 'Select';
   }
 
@@ -51,22 +51,24 @@ export class GenerateComponent implements OnInit {
       } else {
         this.criteria.periodStart = getFhirDate(this.criteria.periodStart);
       }
-
+      const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
       // TODO: calculate periodEnd
       const periodStart = this.criteria.periodStart;
-      const periodEndDate = moment(periodStart);
+      const periodEndDate = moment.utc(periodStart);
       periodEndDate.add(23, 'hours');
       periodEndDate.add(59, 'minutes');
       periodEndDate.add(59, 'seconds');
 
       try {
-        const generateResponse = await this.reportService.generate(this.criteria.reportDefId, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
+
+        const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
         this.router.navigate(['review', generateResponse.reportId]);
       } catch (ex) {
         if (ex.status === 409) {
           if (confirm(ex.error.message)) {
             try {
-              const generateResponse = await this.reportService.generate(this.criteria.reportDefId, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
+              const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
+              const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
               await this.router.navigate(['review', generateResponse.reportId]);
             } catch(ex) {
               this.toastService.showException('Error generating report', ex);
@@ -96,6 +98,6 @@ export class GenerateComponent implements OnInit {
   }
 
   disableGenerateReport() {
-    return !this.criteria.periodStart || !this.criteria.reportDefId;
+    return !this.criteria.periodStart || !this.criteria.reportDef;
   }
 }

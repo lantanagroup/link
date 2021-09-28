@@ -29,8 +29,8 @@
                 <div class="input-group-prepend">
                     <div class="input-group-text">Submission Date</div>
                 </div>
-                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a'" class="form-control"
-                     id="report-submit-date">{{report.date | date:'MMM d, y' }}</div>
+                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a' : 'UTC'" class="form-control"
+                     id="report-submit-date">{{report.date | date:'MMM d, y' : 'UTC' }}</div>
             </div>
         </div>
         <div class="col-md-8">
