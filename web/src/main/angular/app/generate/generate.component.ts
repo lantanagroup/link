@@ -54,7 +54,7 @@ export class GenerateComponent implements OnInit {
 
       // TODO: calculate periodEnd
       const periodStart = this.criteria.periodStart;
-      const periodEndDate = moment(periodStart);
+      const periodEndDate = moment.utc(periodStart);
       periodEndDate.add(23, 'hours');
       periodEndDate.add(59, 'minutes');
       periodEndDate.add(59, 'seconds');

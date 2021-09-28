@@ -40,6 +40,6 @@ export function getFhirNow() {
 }
 
 export function formatDateToISO(date) {
-  return moment(date).toISOString(false);
+  return moment.utc(date).toISOString(false);
 }
 
