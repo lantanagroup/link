@@ -84,13 +84,13 @@
             {{getMeasureName(report.measureIdentifier)}}
         </td>
         <td style="min-width: 16rem">
-            {{report.periodStartDate | date:'MMM d, y' : 'UTC'}}
+            {{report.periodStartDate | date:'MMM d, y' :"UTC"}}
         </td>
         <td>
             {{getStatusName(report.docStatus)}}
         </td>
         <td style="min-width: 16rem">
-            <span [ngbTooltip]="report.submittedDate | date: 'MMM d, y, h:mm:ss a' : 'UTC'">{{report.submittedDate | date:'MMM d, y' :'UTC'}}</span>
+            <span [ngbTooltip]="report.submittedDate | date: 'MMM d, y, h:mm:ss a': 'UTC'">{{report.submittedDate | date:'MMM d, y' :"UTC"}}</span>
         </td>
         <td>
             {{getSubmitterName(report.author)}}

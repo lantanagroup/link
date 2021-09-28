@@ -115,7 +115,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
-    TimeZone.setDefault(TimeZone.getTimeZone(this.config.getUser().getTimezone()));
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
   }
 

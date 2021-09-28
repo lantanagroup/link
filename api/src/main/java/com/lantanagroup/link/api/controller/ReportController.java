@@ -97,18 +97,19 @@ public class ReportController extends BaseController {
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
     // Find the report definition bundle for the given ID
-    Bundle reportDefBundle = context.getFhirStoreClient()
-            .read()
-            .resource(Bundle.class)
-            .withId(criteria.getReportDefId())
+    Bundle bundle = (Bundle) context.getFhirStoreClient()
+            .search()
+            .forResource(Bundle.class)
+            .where(Bundle.IDENTIFIER.exactly().systemAndValues(criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")), criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1)))
             .execute();
 
-    if (reportDefBundle == null) {
+    if (bundle == null) {
       throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
     }
 
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
+      Bundle reportDefBundle = (Bundle) bundle.getEntry().get(0).getResource();
       logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
       String measureId = this.storeReportBundleResources(reportDefBundle, context.getFhirStoreClient());
       context.setMeasureId(measureId);
@@ -250,14 +251,14 @@ public class ReportController extends BaseController {
           @AuthenticationPrincipal LinkCredentials user,
           Authentication authentication,
           HttpServletRequest request,
-          @RequestParam("reportDefId") String reportDefId,
+          @RequestParam("reportDefIdentifier") String reportDefIdentifier,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
           boolean regenerate) throws Exception {
 
     GenerateResponse response = new GenerateResponse();
     IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
-    ReportCriteria criteria = new ReportCriteria(reportDefId, periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
     ReportContext context = new ReportContext(fhirStoreClient, this.ctx);
 
     try {
@@ -267,8 +268,8 @@ public class ReportController extends BaseController {
       // Search the reference document by measure criteria nd reporting period
       DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
               context.getReportDefBundle().getIdentifier(),
-              criteria.getPeriodStart(),
-              criteria.getPeriodEnd(),
+              periodStart,
+              periodEnd,
               fhirStoreClient,
               regenerate);
       if (existingDocumentReference != null && !regenerate) {
