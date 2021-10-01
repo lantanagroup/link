@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchParameter xmlns="http://hl7.org/fhir">
+    <id value="sp-docref-period-end"/>
+    <name value="Search for document references by period end"/>
+    <status value="active"/>
+    <date value="2021-09-29"/>
+    <code value="periodEnd"/>
+    <base value="DocumentReference"/>
+    <type value="date"/>
+    <expression value="DocumentReference.context.period.end"/>
+    <xpath value="f:DocumentReference/f:context/f:period/f:end"/>
+    <xpathUsage value="normal"/>
+</SearchParameter>
