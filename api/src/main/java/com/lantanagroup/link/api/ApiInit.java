@@ -8,12 +8,14 @@ import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Meta;
-import org.hl7.fhir.r4.model.SearchParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -30,6 +32,10 @@ public class ApiInit {
 
   @Autowired
   private ApiConfig config;
+
+  @Value("classpath:fhir/*")
+  private Resource[] resources;
+
 
   private void loadReportDefinitions() {
     HttpClient client = HttpClient.newHttpClient();
@@ -163,15 +169,11 @@ public class ApiInit {
 
   private void loadSearchParameters() {
     try {
-      String[] filenames = {"/fhir/document-reference-period-start-sp.xml",
-              "/fhir/document-reference-period-end-sp.xml",
-              "/fhir/document-reference-doc-status-sp.xml",
-              "/fhir/document-reference-creation-sp.xml"};
       FhirContext ctx = FhirContext.forR4();
-      IParser xmlParser = ctx.newXmlParser();
       IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
-      for (String filename : filenames) {
-        SearchParameter resource = readFileAsResource(xmlParser, filename);
+      IParser xmlParser = ctx.newXmlParser();
+      for (final Resource res : resources) {
+        IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());
         fhirClient.update().resource(resource).execute();
       }
     } catch (Exception ex) {
@@ -179,10 +181,9 @@ public class ApiInit {
     }
   }
 
-  private SearchParameter readFileAsResource(IParser xmlParser, String fileName) {
-    InputStream is = getClass().getResourceAsStream(fileName);
-    String resourceString = new BufferedReader(new InputStreamReader(is)).lines().parallel().collect(Collectors.joining("\n"));
-    return xmlParser.parseResource(SearchParameter.class, resourceString);
+  private IBaseResource readFileAsFhirResource(IParser xmlParser, InputStream file) {
+    String resourceString = new BufferedReader(new InputStreamReader(file)).lines().parallel().collect(Collectors.joining("\n"));
+    return xmlParser.parseResource(resourceString);
   }
 
   public void init() {
