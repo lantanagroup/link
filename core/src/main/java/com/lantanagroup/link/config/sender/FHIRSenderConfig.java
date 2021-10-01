@@ -11,11 +11,16 @@ import java.util.List;
 
 @Getter @Setter
 @Configuration
-@ConfigurationProperties(prefix = "sender.leidos")
+@ConfigurationProperties(prefix = "sender.fhir")
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
-public class LeidosSenderConfig {
+public class FHIRSenderConfig {
     /**
      * <strong>api.send-url</strong><br>The list of URLs to send reports to
      */
     private List<String> sendUrls;
+
+    /**
+     * <strong>oauth</strong><br>
+     */
+    @Getter FHIRSenderOAuthConfig oAuthConfig;
 }

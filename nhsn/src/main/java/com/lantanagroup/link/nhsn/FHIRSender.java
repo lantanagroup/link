@@ -4,13 +4,14 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportSender;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.sender.LeidosSenderConfig;
+import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -23,16 +24,23 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @Component
-public class LeidosSender implements IReportSender {
-  protected static final Logger logger = LoggerFactory.getLogger(LeidosSender.class);
+public class FHIRSender implements IReportSender {
+  protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
 
   @Autowired
-  private LeidosSenderConfig config;
+  private FHIRSenderConfig config;
 
   @Override
   public void send (MeasureReport report, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception {
     if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
       throw new Exception("Not configured with any locations to send");
+    }
+    String token = "";
+    if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().getTokenUrl() != null &&
+            !this.config.getOAuthConfig().getTokenUrl().equals("") && !this.config.getOAuthConfig().getPassword().equals("") &&
+            !this.config.getOAuthConfig().getUsername().equals("") && !this.config.getOAuthConfig().getScope().equals("")){
+      token = OAuth2Helper.getToken(this.config.getOAuthConfig().getTokenUrl(), this.config.getOAuthConfig().getUsername(),
+              this.config.getOAuthConfig().getPassword(), this.config.getOAuthConfig().getScope());
     }
 
     logger.info("Building Bundle for MeasureReport to send...");
@@ -50,6 +58,9 @@ public class LeidosSender implements IReportSender {
 
       HttpPost sendRequest = new HttpPost(sendUrl);
       sendRequest.addHeader("Content-Type", "application/xml");
+      if(Strings.isNotEmpty(token)){
+        sendRequest.addHeader("Authorization", "Bearer " + token);
+      }
       sendRequest.setEntity(new StringEntity(xml));
 
       try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
@@ -58,8 +69,13 @@ public class LeidosSender implements IReportSender {
         httpClient.execute(sendRequest);
 
         FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
-      } catch (IOException ex) {
-        logger.error("Error while sending MeasureReport bundle to URL", ex);
+      }
+      catch (IOException ex) {
+        if(ex.getMessage().contains("403")){
+          logger.error("Error authorizing send: " + ex.getMessage());
+        }else{
+          logger.error("Error while sending MeasureReport bundle to URL", ex);
+        }
         throw ex;
       }
     }
