@@ -16,6 +16,4 @@ public class ReportModel {
     Date date;
     Measure measure;
     MeasureReport measureReport;
-    String questionnaire;
-    String questionnaireReport;
 }

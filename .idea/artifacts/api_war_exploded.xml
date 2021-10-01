@@ -101,9 +101,9 @@
           <element id="library" level="project" name="Maven: net.minidev:json-smart:2.3" />
           <element id="library" level="project" name="Maven: net.minidev:accessors-smart:1.2" />
           <element id="library" level="project" name="Maven: org.ow2.asm:asm:5.0.4" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.10.5" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.1" />
           <element id="library" level="project" name="Maven: org.yaml:snakeyaml:1.23" />
-          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" />
           <element id="library" level="project" name="Maven: com.opencsv:opencsv:5.5.2" />
           <element id="library" level="project" name="Maven: commons-beanutils:commons-beanutils:1.9.4" />
           <element id="library" level="project" name="Maven: commons-logging:commons-logging:1.2" />
