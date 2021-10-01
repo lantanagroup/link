@@ -7,25 +7,35 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
-import org.apache.http.conn.HttpHostConnectException;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Meta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.stream.Collectors;
 
 public class ApiInit {
   private static final Logger logger = LoggerFactory.getLogger(ApiInit.class);
 
   @Autowired
   private ApiConfig config;
+
+  @Value("classpath:fhir/*")
+  private Resource[] resources;
+
 
   private void loadReportDefinitions() {
     HttpClient client = HttpClient.newHttpClient();
@@ -139,7 +149,7 @@ public class ApiInit {
 
       // If none found, create. If one found, update. If more than one found, respond with error.
       if (searchResults.getEntry().size() == 0) {
-        reportDefBundle.setId((String)null);
+        reportDefBundle.setId((String) null);
         reportDefBundle.setMeta(new Meta());
         reportDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
         fhirClient.create().resource(reportDefBundle).execute();
@@ -157,7 +167,27 @@ public class ApiInit {
     });
   }
 
+  private void loadSearchParameters() {
+    try {
+      FhirContext ctx = FhirContext.forR4();
+      IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
+      IParser xmlParser = ctx.newXmlParser();
+      for (final Resource res : resources) {
+        IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());
+        fhirClient.update().resource(resource).execute();
+      }
+    } catch (Exception ex) {
+      logger.error(String.format("Error in loadSearchParameters due to %s", ex.getMessage()));
+    }
+  }
+
+  private IBaseResource readFileAsFhirResource(IParser xmlParser, InputStream file) {
+    String resourceString = new BufferedReader(new InputStreamReader(file)).lines().parallel().collect(Collectors.joining("\n"));
+    return xmlParser.parseResource(resourceString);
+  }
+
   public void init() {
     this.loadReportDefinitions();
+    this.loadSearchParameters();
   }
 }

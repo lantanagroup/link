@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.DateClientParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
@@ -46,6 +47,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+  private static final String PeriodStartParamName = "periodStart";
+  private static final String PeriodEndParamName = "periodEnd";
+
   private ObjectMapper mapper = new ObjectMapper();
   private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
@@ -226,12 +230,14 @@ public class ReportController extends BaseController {
 
   private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, IGenericClient fhirStoreClient, boolean regenerate) throws Exception {
     DocumentReference documentReference = null;
+    DateClientParam periodStart = new DateClientParam(PeriodStartParamName);
+    DateClientParam periodEnd = new DateClientParam(PeriodEndParamName);
     Bundle bundle = fhirStoreClient
             .search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(measureIdentifier.getSystem(), measureIdentifier.getValue()))
-            .and(DocumentReference.PERIOD.afterOrEquals().day(startDate.substring(0, 10)))
-            .and(DocumentReference.PERIOD.beforeOrEquals().day(endDate.substring(0, 10)))
+            .and(periodStart.afterOrEquals().second(startDate))
+            .and(periodEnd.beforeOrEquals().second(endDate))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
@@ -368,7 +374,6 @@ public class ReportController extends BaseController {
     documentReference.setContent(listDoc);
 
     DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-
     Period period = new Period();
     Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
     Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
@@ -688,14 +693,14 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += "period=ge" + periodStartDate.substring(0, 10);
+          url += PeriodStartParamName + "=ge" + periodStartDate;
           andCond = true;
         }
         if (periodEndDate != null) {
           if (andCond) {
             url += "&";
           }
-          url += "period=le" + periodEndDate.substring(0, 10);
+          url += PeriodStartParamName + "=le" + periodEndDate;
           andCond = true;
         }
         if (docStatus != null) {
