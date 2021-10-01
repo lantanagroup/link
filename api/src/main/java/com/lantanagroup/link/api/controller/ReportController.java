@@ -748,6 +748,20 @@ public class ReportController extends BaseController {
     return reportBundle;
   }
 
+  /**
+   * Retrieves the DocumentReference and MeasureReport, ensures that each of the excluded Patients in the request
+   * are listed in the MeasureReport.evaluatedResources or as "excluded" extensions on the MeasureReport. Creates
+   * the excluded extension on the MR for each patient, DELETE's each patient. Re-evaluates the MeasureReport against
+   * the Measure. Increments the minor version number of the report in DocumentReference. Stores updates to the
+   * DR and MR back to the FHIR server.
+   * @param authentication Authentication information to create an IGenericClient to the internal FHIR store
+   * @param request The HTTP request to create an IGenericClient to the internal FHIR store
+   * @param user The user making the request, for the audit trail
+   * @param reportId The ID of the report to re-evaluate after DELETE'ing/excluding the patients.
+   * @param excludedPatients A list of patients to be excluded from the report, including reasons for their exclusion
+   * @return A ReportModel that has been updated to reflect the exclusions
+   * @throws HttpResponseException
+   */
   @PostMapping("/{reportId}/$exclude")
   public ReportModel excludePatients(
           Authentication authentication,
