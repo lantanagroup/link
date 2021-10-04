@@ -79,6 +79,10 @@
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
           <element id="library" level="project" name="Maven: org.json:json:20160212" />
           <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
+          <element id="library" level="project" name="Maven: org.mockito:mockito-core:3.12.4" />
+          <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy:1.9.16" />
+          <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy-agent:1.9.16" />
+          <element id="library" level="project" name="Maven: org.objenesis:objenesis:3.2" />
           <element id="archive" name="query-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="query" />
           </element>

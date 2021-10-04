@@ -3,6 +3,7 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
@@ -13,6 +14,7 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -49,7 +51,7 @@ public class ReportController extends BaseController {
   private ObjectMapper mapper = new ObjectMapper();
   private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  @Autowired
+  @Autowired @Setter
   private ApiConfig config;
 
   @Autowired
