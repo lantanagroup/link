@@ -3,6 +3,7 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
+import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
@@ -172,6 +173,7 @@ public class FhirHelper {
   }
 
   /**
+   * Increments the minor version of the specified report
    * @param documentReference - DocumentReference whose minor version is to be incremented
    * @return - the DocumentReference with the minor version incremented by 1
    */
@@ -306,8 +308,35 @@ public class FhirHelper {
     return found.isPresent() ? found.get() : null;
   }
 
+  /**
+   * Gets a Measure for the given DocumentReference, by looking for a Measure that matches the identifier
+   * included in the DocumentReference.identifier
+   * @param fhirStoreClient
+   * @param docRef
+   * @return
+   */
+  public static Measure getMeasure(IGenericClient fhirStoreClient, DocumentReference docRef) {
+    if (docRef.getIdentifier().size() > 0) {
+      for (Identifier identifier : docRef.getIdentifier()) {
+        Bundle matchingMeasures = fhirStoreClient.search()
+                .forResource(Measure.class)
+                .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
+                .returnBundle(Bundle.class)
+                .summaryMode(SummaryEnum.TRUE)
+                .execute();
+
+        if (matchingMeasures.getEntry().size() == 1) {
+          return (Measure) matchingMeasures.getEntry().get(0).getResource();
+        }
+      }
+    }
+
+    return null;
+  }
+
   public enum AuditEventTypes {
     Generate,
+    ExcludePatients,
     Export,
     Send,
     SearchLocations,

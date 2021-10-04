@@ -3,7 +3,7 @@
     <shortenClasspath name="ARGS_FILE" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.lantanagroup.link.*" />
+        <option name="PATTERN" value="com.lantanagroup.link.mock.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
