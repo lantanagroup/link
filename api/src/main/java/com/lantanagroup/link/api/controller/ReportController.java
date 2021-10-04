@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
@@ -14,6 +15,7 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -53,7 +55,7 @@ public class ReportController extends BaseController {
   private ObjectMapper mapper = new ObjectMapper();
   private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  @Autowired
+  @Autowired @Setter
   private ApiConfig config;
 
   @Autowired
@@ -450,16 +452,16 @@ public class ReportController extends BaseController {
     FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }
 
-  @GetMapping(value = "/{id}")
+  @GetMapping(value = "/{reportId}")
   public ReportModel getReport(
-          @PathVariable("id") String id,
+          @PathVariable("reportId") String reportId,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     IGenericClient client = this.getFhirStoreClient(authentication, request);
     ReportModel report = new ReportModel();
 
-    DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
+    DocumentReference documentReference = FhirHelper.getDocumentReference(client, reportId);
 
     report.setMeasureReport(FhirHelper.getMeasureReport(client, documentReference.getMasterIdentifier().getValue()));
 
@@ -477,7 +479,7 @@ public class ReportController extends BaseController {
                     null
     );
 
-    report.setIdentifier(id);
+    report.setIdentifier(reportId);
     report.setVersion(documentReference
             .getExtensionByUrl(documentReferenceVersionUrl) != null ?
             documentReference.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
@@ -751,6 +753,214 @@ public class ReportController extends BaseController {
     }
 
     return reportBundle;
+  }
+
+  /**
+   * Retrieves the DocumentReference and MeasureReport, ensures that each of the excluded Patients in the request
+   * are listed in the MeasureReport.evaluatedResources or as "excluded" extensions on the MeasureReport. Creates
+   * the excluded extension on the MR for each patient, DELETE's each patient. Re-evaluates the MeasureReport against
+   * the Measure. Increments the minor version number of the report in DocumentReference. Stores updates to the
+   * DR and MR back to the FHIR server.
+   * @param authentication Authentication information to create an IGenericClient to the internal FHIR store
+   * @param request The HTTP request to create an IGenericClient to the internal FHIR store
+   * @param user The user making the request, for the audit trail
+   * @param reportId The ID of the report to re-evaluate after DELETE'ing/excluding the patients.
+   * @param excludedPatients A list of patients to be excluded from the report, including reasons for their exclusion
+   * @return A ReportModel that has been updated to reflect the exclusions
+   * @throws HttpResponseException
+   */
+  @PostMapping("/{reportId}/$exclude")
+  public ReportModel excludePatients(
+          Authentication authentication,
+          HttpServletRequest request,
+          @AuthenticationPrincipal LinkCredentials user,
+          @PathVariable("reportId") String reportId,
+          @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
+
+    IGenericClient fhirStoreClient;
+
+    try {
+      fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    } catch (Exception ex) {
+      logger.error("Error initializing FHIR client", ex);
+      throw new HttpResponseException(500, "Internal Server Error");
+    }
+
+    DocumentReference reportDocRef = FhirHelper.getDocumentReference(fhirStoreClient, reportId);
+
+    if (reportDocRef == null) {
+      throw new HttpResponseException(404, String.format("Report %s not found", reportId));
+    }
+
+    MeasureReport measureReport = FhirHelper.getMeasureReport(fhirStoreClient, reportId);
+
+    if (measureReport == null) {
+      throw new HttpResponseException(404, String.format("Report %s does not have a MeasureReport", reportId));
+    }
+
+    if (excludedPatients == null || excludedPatients.size() == 0) {
+      throw new HttpResponseException(400, "Not patients indicated to be excluded");
+    }
+
+    Measure measure = FhirHelper.getMeasure(fhirStoreClient, reportDocRef);
+
+    if (measure == null) {
+      logger.error(String.format("The measure for report %s no longer exists on the system", reportId));
+      throw new HttpResponseException(500, "Internal Server Error");
+    }
+
+    Bundle excludeChangesBundle = new Bundle();
+    excludeChangesBundle.setType(Bundle.BundleType.TRANSACTION);
+    Boolean changedMeasureReport = false;
+
+    for (ExcludedPatientModel excludedPatient : excludedPatients) {
+      if (Strings.isEmpty(excludedPatient.getPatientId())) {
+        throw new HttpResponseException(400, String.format("Patient ID not provided for all exclusions"));
+      }
+
+      if (excludedPatient.getReason() == null || excludedPatient.getReason().isEmpty()) {
+        throw new HttpResponseException(400, String.format("Excluded patient ID %s does not specify a reason", excludedPatient.getPatientId()));
+      }
+
+      // Find any references to the Patient in the MeasureReport.evaluatedResources
+      List<Reference> foundEvaluatedPatient = measureReport.getEvaluatedResource().stream()
+              .filter(er -> er.getReference() != null && er.getReference().equals("Patient/" + excludedPatient.getPatientId()))
+              .collect(Collectors.toList());
+      // Find any extensions that list the Patient has already being excluded
+      Boolean foundExcluded = measureReport.getExtension().stream()
+              .filter(e -> e.getUrl().equals(Constants.ExcludedPatientExtUrl))
+              .anyMatch(e -> {
+                return e.getExtension().stream()
+                        .filter(nextExt -> nextExt.getUrl().equals("patient") && nextExt.getValue() instanceof Reference)
+                        .anyMatch(nextExt -> {
+                          Reference patientRef = (Reference) nextExt.getValue();
+                          return patientRef.getReference().equals("Patient/" + excludedPatient.getPatientId());
+                        });
+              });
+
+      // Throw an error if the Patient does not show up in either evaluatedResources or the excluded extensions
+      if (foundEvaluatedPatient.size() == 0 && !foundExcluded) {
+        throw new HttpResponseException(400, String.format("Patient %s is not included in report %s", excludedPatient.getPatientId(), reportId));
+      }
+
+      // Create an extension for the excluded patient on the MeasureReport
+      if (!foundExcluded) {
+        Extension newExtension = new Extension(Constants.ExcludedPatientExtUrl);
+        newExtension.addExtension("patient", new Reference("Patient/" + excludedPatient.getPatientId()));
+        newExtension.addExtension("reason", excludedPatient.getReason());
+        measureReport.addExtension(newExtension);
+        changedMeasureReport = true;
+
+        // Remove the patient from evaluatedResources, or HAPI will throw a referential integrity exception since it's getting (or has been) deleted
+        if (foundEvaluatedPatient.size() > 0) {
+          foundEvaluatedPatient.forEach(ep -> measureReport.getEvaluatedResource().remove(ep));
+        }
+      }
+
+      try {
+        // Try to GET the patient to see if it has already been deleted or not
+        fhirStoreClient
+                .read()
+                .resource(Patient.class)
+                .withId(excludedPatient.getPatientId())     // Limit the amount we ask for so it's quick
+                .elementsSubset("id")
+                .execute();
+
+        // Add a "DELETE" request to the bundle, since it hasn't been deleted
+        Bundle.BundleEntryRequestComponent deleteRequest = new Bundle.BundleEntryRequestComponent()
+                .setUrl("Patient/" + excludedPatient.getPatientId())
+                .setMethod(Bundle.HTTPVerb.DELETE);
+        excludeChangesBundle.addEntry().setRequest(deleteRequest);
+      } catch (Exception ex) {
+        // It's been deleted, just log some debugging info
+        logger.debug(String.format("During exclusions for report %s, patient %s is already deleted.", reportId, excludedPatient.getPatientId()));
+      }
+    }
+
+    if (changedMeasureReport) {
+      Bundle.BundleEntryRequestComponent updateMeasureReportReq = new Bundle.BundleEntryRequestComponent()
+              .setUrl("MeasureReport/" + reportId)
+              .setMethod(Bundle.HTTPVerb.PUT);
+      excludeChangesBundle.addEntry()
+              .setRequest(updateMeasureReportReq)
+              .setResource(measureReport);
+    }
+
+    if (excludeChangesBundle.getEntry().size() > 0) {
+      try {
+        fhirStoreClient
+                .transaction()
+                .withBundle(excludeChangesBundle)
+                .execute();
+      } catch (Exception ex) {
+        logger.error(String.format("Error updating resources for report %s to exclude %s patient(s)", reportId, excludedPatients.size()), ex);
+        throw new HttpResponseException(500, "Internal Server Error");
+      }
+    }
+
+    // Create ReportCriteria to be used by MeasureEvaluator
+    ReportCriteria criteria = new ReportCriteria(
+            measure.getIdentifier().get(0).getSystem() + "|" + measure.getIdentifier().get(0).getValue(),
+            reportDocRef.getContext().getPeriod().getStartElement().asStringValue(),
+            reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
+
+    // Create ReportContext to be used by MeasureEvaluator
+    ReportContext context = new ReportContext(fhirStoreClient, fhirStoreClient.getFhirContext());
+    context.setReportId(measureReport.getIdElement().getIdPart());
+    context.setMeasureId(measure.getIdElement().getIdPart());
+    context.setFhirContext(fhirStoreClient.getFhirContext());
+    context.setFhirStoreClient(fhirStoreClient);
+
+    // Re-evaluate the MeasureReport, now that the Patient has been DELETE'd from the system
+    MeasureReport updatedMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
+    updatedMeasureReport.setId(reportId);
+    updatedMeasureReport.setExtension(measureReport.getExtension());    // Copy extensions from the original report before overwriting
+
+    // Increment the version of the report
+    FhirHelper.incrementMinorVersion(reportDocRef);
+
+    // Create a bundle transaction to update the DocumentReference and MeasureReport
+    Bundle reportUpdateBundle = new Bundle();
+    reportUpdateBundle.setType(Bundle.BundleType.TRANSACTION);
+    reportUpdateBundle.addEntry()
+            .setRequest(
+                    new Bundle.BundleEntryRequestComponent()
+                            .setUrl("MeasureReport/" + updatedMeasureReport.getIdElement().getIdPart())
+                            .setMethod(Bundle.HTTPVerb.PUT))
+            .setResource(updatedMeasureReport);
+    reportUpdateBundle.addEntry()
+            .setRequest(
+                    new Bundle.BundleEntryRequestComponent()
+                            .setUrl("DocumentReference/" + reportDocRef.getIdElement().getIdPart())
+                            .setMethod(Bundle.HTTPVerb.PUT))
+            .setResource(reportDocRef);
+
+    try {
+      // Execute the update transaction bundle for MeasureReport and DocumentReference
+      fhirStoreClient
+              .transaction()
+              .withBundle(reportUpdateBundle)
+              .execute();
+    } catch (Exception ex) {
+      logger.error("Error updating DocumentReference and MeasureReport during patient exclusion", ex);
+      throw new HttpResponseException(500, "Internal Server Error");
+    }
+
+    // Record an audit event that the report has had exclusions
+    FhirHelper.recordAuditEvent(request, fhirStoreClient, user.getJwt(), FhirHelper.AuditEventTypes.ExcludePatients, String.format("Excluded %s patients from report %s", excludedPatients.size(), reportId));
+
+    // Create the ReportModel that will be returned
+    ReportModel report = new ReportModel();
+    report.setMeasureReport(updatedMeasureReport);
+    report.setMeasure(measure);
+    report.setIdentifier(reportId);
+    report.setVersion(reportDocRef
+            .getExtensionByUrl(documentReferenceVersionUrl) != null ?
+            reportDocRef.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
+    report.setStatus(reportDocRef.getDocStatus().toString());
+    report.setDate(reportDocRef.getDate());
+
+    return report;
   }
 }
 
