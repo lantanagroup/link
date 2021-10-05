@@ -10,7 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Helper {
-  public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX";
+  public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
 
   public static boolean isNullOrEmpty(String value) {
     return value == null || value.isEmpty();
