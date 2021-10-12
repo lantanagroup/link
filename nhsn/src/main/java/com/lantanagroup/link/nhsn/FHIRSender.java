@@ -7,6 +7,8 @@ import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
+import lombok.Setter;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -27,8 +29,12 @@ import java.io.IOException;
 public class FHIRSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
 
-  @Autowired
+  @Autowired @Setter
   private FHIRSenderConfig config;
+
+  public HttpClient getHttpClient() {
+    return HttpClientBuilder.create().build();
+  }
 
   @Override
   public void send (MeasureReport report, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception {
@@ -63,9 +69,12 @@ public class FHIRSender implements IReportSender {
       }
       sendRequest.setEntity(new StringEntity(xml));
 
-      try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      try {
+        HttpClient httpClient = this.getHttpClient();
+
         // HttpResponse result = httpClient.execute(request);
         // String response = EntityUtils.toString(result.getEntity(), "UTF-8");
+
         httpClient.execute(sendRequest);
 
         FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));

@@ -71,27 +71,6 @@ public class ReportControllerTests {
     when(readExecutable.execute()).thenReturn(measureReport);
   }
 
-  private IQuery<IBaseBundle> mockSubjectBundle(IUntypedQuery<IBaseBundle> untypedQuery, String type, Resource... resResources) {
-    IQuery<IBaseBundle> subBundleIntQuery = mock(IQuery.class);
-    IQuery<Bundle> subBundleQuery = mock(IQuery.class);
-
-    Bundle responseBundle = new Bundle();
-
-    if (resResources != null) {
-      for (Resource resource : resResources) {
-        responseBundle.addEntry().setResource(resource);
-      }
-    }
-
-    when(untypedQuery.forResource(type)).thenReturn(subBundleIntQuery);
-    when(subBundleIntQuery.where(any(ICriterion.class))).thenReturn(subBundleIntQuery);
-    when(subBundleIntQuery.returnBundle(Bundle.class)).thenReturn(subBundleQuery);
-    when(subBundleQuery.cacheControl(any(CacheControlDirective.class))).thenReturn(subBundleQuery);
-    when(subBundleQuery.execute()).thenReturn(responseBundle);
-
-    return subBundleIntQuery;
-  }
-
   public Encounter createEncounter(String id, Reference reference){
     Encounter encounter = new Encounter();
     encounter.setId(id);
@@ -161,10 +140,10 @@ public class ReportControllerTests {
     this.mockReadMeasureReport(fhirStoreClient, measureReport);
 
     //Mock server requests for subject bundles
-    IQuery<IBaseBundle> conditionQuery = this.mockSubjectBundle(untypedQuery, "Condition", condition1, condition2, condition3);
-    IQuery<IBaseBundle> medReqQuery = this.mockSubjectBundle(untypedQuery, "MedicationRequest", medReq1, medReq2);
-    IQuery<IBaseBundle> procedureQuery = this.mockSubjectBundle(untypedQuery, "Procedure", proc1, proc2);
-    IQuery<IBaseBundle> encounterQuery = this.mockSubjectBundle(untypedQuery, "Encounter", enc1, enc2, enc3);
+    IQuery<IBaseBundle> conditionQuery = MockHelper.mockSearchForResource(untypedQuery, "Condition", null, condition1, condition2, condition3);
+    IQuery<IBaseBundle> medReqQuery = MockHelper.mockSearchForResource(untypedQuery, "MedicationRequest", null, medReq1, medReq2);
+    IQuery<IBaseBundle> procedureQuery = MockHelper.mockSearchForResource(untypedQuery, "Procedure", null, proc1, proc2);
+    IQuery<IBaseBundle> encounterQuery = MockHelper.mockSearchForResource(untypedQuery, "Encounter", null, enc1, enc2, enc3);
 
     //Get subject reports
     PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);
@@ -186,7 +165,7 @@ public class ReportControllerTests {
   public void excludePatientsTest() throws HttpResponseException {
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery untypedQuery = mock(IUntypedQuery.class);
-    AuthMockInfo authMock = MockHelper.mockAudit(fhirStoreClient);
+    AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
     HttpServletRequest req = mock(HttpServletRequest.class);
     ReportController controller = new ReportController();
     controller.setFhirStoreClient(fhirStoreClient);

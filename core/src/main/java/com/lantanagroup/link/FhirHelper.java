@@ -85,7 +85,6 @@ public class FhirHelper {
     agentList.add(agent);
     auditEvent.setAgent(agentList);
 
-
     try {
       MethodOutcome outcome = fhirClient.create()
               .resource(auditEvent)
