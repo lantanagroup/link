@@ -2799,7 +2799,8 @@ export class Timing extends BackboneElement {
 
 export class DosageDoseAndRateComponent extends Element {
   public type: CodeableConcept;
-  public dose?: Element;
+  public doseRange?: Range;
+  public doseQuantity?: SimpleQuantity;
   public rate?: Element;
 
   constructor(obj?: any) {
@@ -2808,8 +2809,11 @@ export class DosageDoseAndRateComponent extends Element {
       if (obj.hasOwnProperty('type')) {
         this.type = new CodeableConcept(obj.type);
       }
-      if (obj.hasOwnProperty('dose')) {
-        this.dose = new Element(obj.dose);
+      if (obj.hasOwnProperty('doseQuantity')) {
+        this.doseQuantity = new SimpleQuantity(obj.doseQuantity);
+      }
+      if (obj.hasOwnProperty('doseRange')) {
+        this.doseRange = new Range(obj.doseRange);
       }
       if (obj.hasOwnProperty('rate')) {
         this.rate = new Element(obj.rate);
@@ -17842,7 +17846,8 @@ export class MedicationRequest extends DomainResource {
   public category?: CodeableConcept[];
   public priority?: string;
   public doNotPerform?: boolean;
-  public medication: Element;
+  public medicationCodeableConcept: CodeableConcept;
+  public medicationReference: ResourceReference;
   public subject: ResourceReference;
   public context?: ResourceReference;
   public supportingInformation?: ResourceReference[];
@@ -17893,9 +17898,6 @@ export class MedicationRequest extends DomainResource {
       }
       if (obj.hasOwnProperty('doNotPerform')) {
         this.doNotPerform = obj.doNotPerform;
-      }
-      if (obj.hasOwnProperty('medication')) {
-        this.medication = new Element(obj.medication);
       }
       if (obj.hasOwnProperty('subject')) {
         this.subject = new ResourceReference(obj.subject);
@@ -17992,6 +17994,12 @@ export class MedicationRequest extends DomainResource {
         for (const o of obj.eventHistory || []) {
           this.eventHistory.push(new ResourceReference(o));
         }
+      }
+      if (obj.hasOwnProperty('medicationReference')) {
+        this.medicationReference = new ResourceReference(obj.medicationReference);
+      }
+      if (obj.hasOwnProperty('medicationCodeableConcept')) {
+        this.medicationReference = new CodeableConcept(obj.medicationCodeableConcept);
       }
     }
   }

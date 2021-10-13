@@ -5,9 +5,9 @@ import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.CriterionArgumentMatcher;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.mock.AuthMockInfo;
 import com.lantanagroup.link.mock.MockHelper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.mock.TransactionMock;
 import com.lantanagroup.link.model.ExcludedPatientModel;
 import com.lantanagroup.link.model.PatientDataModel;
@@ -113,12 +113,20 @@ public class ReportControllerTests {
     return procedure;
   }
 
-  public MedicationRequest createMedicationRequest(String id, Reference reference){
+  public MedicationRequest createMedicationRequest(String id, Reference reference) {
     MedicationRequest medicationRequest = new MedicationRequest();
     medicationRequest.setId(id);
     medicationRequest.setSubject(reference);
     return medicationRequest;
   }
+
+  public Observation createObservation(String id, Reference reference) {
+    Observation observation = new Observation();
+    observation.setId(id);
+    observation.setSubject(reference);
+    return observation;
+  }
+
 
   @Test
   public void getSubjectReportsTest() throws Exception {
@@ -154,6 +162,11 @@ public class ReportControllerTests {
     Encounter enc2 = createEncounter("encounter2", new Reference("Patient/patient1"));
     Encounter enc3 = createEncounter("encounter3", new Reference("Patient/patient1"));
 
+    //3 Observation
+    Observation obs1 = createObservation("observation1", new Reference("Patient/patient1"));
+    Observation obs2 = createObservation("observation2", new Reference("Patient/patient1"));
+    Observation obs3 = createObservation("observation3", new Reference("Patient/patient1"));
+
     DocumentReference docRef = new DocumentReference();
     docRef.setId("report1");
 
@@ -165,6 +178,7 @@ public class ReportControllerTests {
     IQuery<IBaseBundle> medReqQuery = this.mockSubjectBundle(untypedQuery, "MedicationRequest", medReq1, medReq2);
     IQuery<IBaseBundle> procedureQuery = this.mockSubjectBundle(untypedQuery, "Procedure", proc1, proc2);
     IQuery<IBaseBundle> encounterQuery = this.mockSubjectBundle(untypedQuery, "Encounter", enc1, enc2, enc3);
+    IQuery<IBaseBundle> observationQuery = this.mockSubjectBundle(untypedQuery, "Observation", obs1, obs2, obs3);
 
     //Get subject reports
     PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);
@@ -173,13 +187,15 @@ public class ReportControllerTests {
     verify(medReqQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) MedicationRequest.SUBJECT.hasId("patient1"))));
     verify(procedureQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Procedure.SUBJECT.hasId("patient1"))));
     verify(encounterQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Encounter.SUBJECT.hasId("patient1"))));
+    verify(observationQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Observation.SUBJECT.hasId("patient1"))));
 
-    //Assertions
+
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getConditions());
     Assert.assertNotNull(response.getMedicationRequests());
     Assert.assertNotNull(response.getProcedures());
     Assert.assertNotNull(response.getEncounters());
+    Assert.assertNotNull(response.getObservations());
   }
 
   @Test
@@ -210,8 +226,8 @@ public class ReportControllerTests {
     docRef.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
     docRef.setContext(new DocumentReference.DocumentReferenceContextComponent()
             .setPeriod(
-                    new Period().setStartElement(new DateTimeType("2021-05-01T00:00:00-00:00"))
-                            .setEndElement(new DateTimeType("2021-05-01T23:59:59-00:00"))));
+                    new Period().setStartElement(new DateTimeType("2021-05-01T00:00:00.000-00:00"))
+                            .setEndElement(new DateTimeType("2021-05-01T23:59:59.000-00:00"))));
 
     MeasureReport measureReport = new MeasureReport();
     measureReport.setId("testReportId");

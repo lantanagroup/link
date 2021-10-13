@@ -47,6 +47,67 @@
         </tr>
         </tbody>
     </table>
+    <h6 *ngIf="!loading">Medications Requests (Orders)</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Medication</th>
+            <th>Dose</th>
+            <th>Instructions</th>
+            <th>Ordered Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.medicationRequests?.length">
+        <tr *ngFor="let medicationRequest of patientData.medicationRequests">
+            <td>{{medicationRequest.medicationCodeableConcept | codeableConcept}}</td>
+            <td>{{medicationRequest.dosageInstruction[0].doseAndRate[0].doseQuantity | simpleQuantity }}</td>
+            <td>{{medicationRequest.dosageInstruction[0].text}}</td>
+            <td>{{medicationRequest.authoredOn | date}}</td>
+        </tr>
+        </tbody>
+    </table>
+    <h6 *ngIf="!loading">OBSERVATIONS</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Observation</th>
+            <th>Result</th>
+            <th>Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.observations?.length">
+        <tr *ngFor="let observation of patientData.observations">
+            <td>{{observation.code | codeableConcept}}</td>
+            <td [ngSwitch]="getValueType(observation)">
+                <div *ngSwitchCase="'valueQuantity'">{{observation['valueQuantity'] | simpleQuantity}}</div>
+                <div *ngSwitchCase="'valueCodeableConcept'">{{observation['valueCodeableConcept'] | codeableConcept}}</div>
+            </td>
+            <td [ngSwitch]="getEffectiveDateTime(observation)">
+                <div *ngSwitchCase="'effectiveDateTime'">{{observation['effectiveDateTime'] | date}}</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <h6 *ngIf="!loading">PROCEDURES</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Procedure</th>
+            <th>Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.procedures?.length">
+        <tr *ngFor="let procedure of patientData.procedures">
+            <td>{{procedure.code | codeableConcept}}</td>
+            <td [ngSwitch]="getPerformedDateTime(procedure)">
+                <div *ngSwitchCase="'performedDateTime'">{{procedure['performedDateTime'] | date}}</div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </div>
 <div class="modal-footer">
     <button (click)="activeModal.dismiss()" class="btn btn-outline-dark" type="button">Close</button>
