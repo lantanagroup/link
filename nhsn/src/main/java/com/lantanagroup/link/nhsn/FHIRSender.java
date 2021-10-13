@@ -11,7 +11,6 @@ import lombok.Setter;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
@@ -41,12 +40,15 @@ public class FHIRSender implements IReportSender {
     if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
       throw new Exception("Not configured with any locations to send");
     }
+
     String token = "";
-    if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().getTokenUrl() != null &&
-            !this.config.getOAuthConfig().getTokenUrl().equals("") && !this.config.getOAuthConfig().getPassword().equals("") &&
-            !this.config.getOAuthConfig().getUsername().equals("") && !this.config.getOAuthConfig().getScope().equals("")){
-      token = OAuth2Helper.getToken(this.config.getOAuthConfig().getTokenUrl(), this.config.getOAuthConfig().getUsername(),
-              this.config.getOAuthConfig().getPassword(), this.config.getOAuthConfig().getScope());
+    if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
+      token = OAuth2Helper.getToken(
+              this.getHttpClient(),
+              this.config.getOAuthConfig().getTokenUrl(),
+              this.config.getOAuthConfig().getUsername(),
+              this.config.getOAuthConfig().getPassword(),
+              this.config.getOAuthConfig().getScope());
     }
 
     logger.info("Building Bundle for MeasureReport to send...");

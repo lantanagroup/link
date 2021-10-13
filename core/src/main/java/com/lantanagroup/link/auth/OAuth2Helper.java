@@ -1,6 +1,7 @@
 package com.lantanagroup.link.auth;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -16,7 +17,7 @@ import java.util.Base64;
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
 
-  public static String getToken(String tokenUrl, String username, String password, String scope) {
+  public static String getToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     String userPassCombo = username + ":" + password;
@@ -38,7 +39,11 @@ public class OAuth2Helper {
       return null;
     }
 
-    try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+    try {
+      if (httpClient == null) {
+        httpClient = HttpClientBuilder.create().build();
+      }
+
       HttpResponse result = httpClient.execute(request);
 
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
@@ -58,5 +63,10 @@ public class OAuth2Helper {
       logger.error("Failed to retrieve a token from OAuth2 authorization service", ex);
       return null;
     }
+  }
+
+  public static String getToken(String tokenUrl, String username, String password, String scope) {
+    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    return getToken(httpClient, tokenUrl, username, password, scope);
   }
 }

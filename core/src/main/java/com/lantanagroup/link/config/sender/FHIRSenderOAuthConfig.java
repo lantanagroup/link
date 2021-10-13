@@ -2,6 +2,7 @@ package com.lantanagroup.link.config.sender;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.logging.log4j.util.Strings;
 
 @Getter @Setter
 public class FHIRSenderOAuthConfig {
@@ -29,4 +30,11 @@ public class FHIRSenderOAuthConfig {
      * <strong>oauth.scope</strong><br>
      */
     private String scope;
+
+    public boolean hasCredentialProperties() {
+        return Strings.isNotEmpty(this.tokenUrl) &&
+                Strings.isNotEmpty(this.username) &&
+                Strings.isNotEmpty(this.password) &&
+                Strings.isNotEmpty(this.scope);
+    }
 }
