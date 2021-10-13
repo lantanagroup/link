@@ -4,7 +4,6 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
@@ -55,7 +54,8 @@ public class ReportController extends BaseController {
   private ObjectMapper mapper = new ObjectMapper();
   private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  @Autowired @Setter
+  @Autowired
+  @Setter
   private ApiConfig config;
 
   @Autowired
@@ -565,15 +565,16 @@ public class ReportController extends BaseController {
                     documentReference.getMasterIdentifier().getValue());
   }
 
-    /**
-     * Retrieves data (encounters, conditions, etc.) for the specified patient within the specified report.
-     * @param reportId The report id
-     * @param patientId The patient id within the report
-     * @param authentication The authenticated user making the request
-     * @param request The HTTP request
-     * @return SubjectReportModel
-     * @throws Exception
-     */
+  /**
+   * Retrieves data (encounters, conditions, etc.) for the specified patient within the specified report.
+   *
+   * @param reportId       The report id
+   * @param patientId      The patient id within the report
+   * @param authentication The authenticated user making the request
+   * @param request        The HTTP request
+   * @return SubjectReportModel
+   * @throws Exception
+   */
   @GetMapping(value = "/{reportId}/patient/{patientId}")
   public PatientDataModel getPatientData(
           @PathVariable("reportId") String reportId,
@@ -605,7 +606,7 @@ public class ReportController extends BaseController {
       data.setConditions(conditionList);
     }
 
-    // Medications
+    // Medications Requests
     Bundle medRequestBundle = FhirHelper.getPatientResources(client, MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
     if (medRequestBundle.hasEntry()) {
       List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
@@ -613,6 +614,16 @@ public class ReportController extends BaseController {
               .map(e -> (MedicationRequest) e.getResource())
               .collect(Collectors.toList());
       data.setMedicationRequests(medicationRequestList);
+    }
+
+    // Observations
+    Bundle observationBundle = FhirHelper.getPatientResources(client, Observation.SUBJECT.hasId(patientId), "Observation");
+    if (observationBundle.hasEntry()) {
+      List<Observation> observationList = observationBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null)
+              .map(e -> (Observation) e.getResource())
+              .collect(Collectors.toList());
+      data.setObservations(observationList);
     }
 
     // Procedures
@@ -761,10 +772,11 @@ public class ReportController extends BaseController {
    * the excluded extension on the MR for each patient, DELETE's each patient. Re-evaluates the MeasureReport against
    * the Measure. Increments the minor version number of the report in DocumentReference. Stores updates to the
    * DR and MR back to the FHIR server.
-   * @param authentication Authentication information to create an IGenericClient to the internal FHIR store
-   * @param request The HTTP request to create an IGenericClient to the internal FHIR store
-   * @param user The user making the request, for the audit trail
-   * @param reportId The ID of the report to re-evaluate after DELETE'ing/excluding the patients.
+   *
+   * @param authentication   Authentication information to create an IGenericClient to the internal FHIR store
+   * @param request          The HTTP request to create an IGenericClient to the internal FHIR store
+   * @param user             The user making the request, for the audit trail
+   * @param reportId         The ID of the report to re-evaluate after DELETE'ing/excluding the patients.
    * @param excludedPatients A list of patients to be excluded from the report, including reasons for their exclusion
    * @return A ReportModel that has been updated to reflect the exclusions
    * @throws HttpResponseException
