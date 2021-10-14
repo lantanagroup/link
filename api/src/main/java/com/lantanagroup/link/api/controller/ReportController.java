@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
@@ -379,8 +380,8 @@ public class ReportController extends BaseController {
     Period period = new Period();
     Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
     Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
-    period.setStart(startDate);
-    period.setEnd(endDate);
+    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
+    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
 
     docReference.setPeriod(period);
 
@@ -869,6 +870,8 @@ public class ReportController extends BaseController {
         }
       }
 
+      logger.debug(String.format("Checking if patient %s has been deleted already", excludedPatient.getPatientId()));
+
       try {
         // Try to GET the patient to see if it has already been deleted or not
         fhirStoreClient
@@ -877,6 +880,8 @@ public class ReportController extends BaseController {
                 .withId(excludedPatient.getPatientId())     // Limit the amount we ask for so it's quick
                 .elementsSubset("id")
                 .execute();
+
+        logger.debug(String.format("Adding patient %s to list of patients to delete", excludedPatient.getPatientId()));
 
         // Add a "DELETE" request to the bundle, since it hasn't been deleted
         Bundle.BundleEntryRequestComponent deleteRequest = new Bundle.BundleEntryRequestComponent()
@@ -899,6 +904,8 @@ public class ReportController extends BaseController {
     }
 
     if (excludeChangesBundle.getEntry().size() > 0) {
+      logger.debug(String.format("Executing transaction update bundle to delete patients and/or update MeasureReport %s", reportId));
+
       try {
         fhirStoreClient
                 .transaction()
@@ -923,6 +930,8 @@ public class ReportController extends BaseController {
     context.setFhirContext(fhirStoreClient.getFhirContext());
     context.setFhirStoreClient(fhirStoreClient);
 
+    logger.debug("Re-evaluating measure with state of data on FHIR server");
+
     // Re-evaluate the MeasureReport, now that the Patient has been DELETE'd from the system
     MeasureReport updatedMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
     updatedMeasureReport.setId(reportId);
@@ -930,6 +939,8 @@ public class ReportController extends BaseController {
 
     // Increment the version of the report
     FhirHelper.incrementMinorVersion(reportDocRef);
+
+    logger.debug(String.format("Updating DocumentReference and MeasureReport for report %s", reportId));
 
     // Create a bundle transaction to update the DocumentReference and MeasureReport
     Bundle reportUpdateBundle = new Bundle();

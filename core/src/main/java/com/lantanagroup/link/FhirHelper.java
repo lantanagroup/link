@@ -146,6 +146,8 @@ public class FhirHelper {
   }
 
   public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
+    logger.debug(String.format("Getting DocumentReference for report %s", reportId));
+
     Bundle documentReferences = client.search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
@@ -161,6 +163,8 @@ public class FhirHelper {
   }
 
   public static MeasureReport getMeasureReport(IGenericClient client, String reportId) {
+    logger.debug(String.format("Getting MeasureReport for report %s", reportId));
+
     return client.read()
             .resource(MeasureReport.class)
             .withId(reportId)
@@ -316,6 +320,8 @@ public class FhirHelper {
    * @return
    */
   public static Measure getMeasure(IGenericClient fhirStoreClient, DocumentReference docRef) {
+    logger.debug(String.format("Getting Measure for DocumentReference %s", docRef.getId()));
+
     if (docRef.getIdentifier().size() > 0) {
       for (Identifier identifier : docRef.getIdentifier()) {
         Bundle matchingMeasures = fhirStoreClient.search()
@@ -329,6 +335,8 @@ public class FhirHelper {
           return (Measure) matchingMeasures.getEntry().get(0).getResource();
         }
       }
+    } else {
+      logger.warn("No identifier specified on DocumentReference");
     }
 
     return null;
