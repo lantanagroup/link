@@ -3,7 +3,7 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {ReportService} from '../services/report.service';
 import {ToastService} from '../toast.service';
 import {PatientDataModel} from "../model/PatientDataModel";
-import {Condition, EncounterLocationComponent} from "../model/fhir";
+import {Condition, EncounterLocationComponent, Observation, Procedure} from "../model/fhir";
 import {getFhirDate} from '../helper';
 
 @Component({
@@ -61,6 +61,32 @@ export class ViewPatientComponent implements OnInit {
       const fhirDateTime = condition['abatementDateTime'] as string
       return getFhirDate(fhirDateTime);
     } else return "";
+  }
+
+  getValueType(observation: Observation) {
+    if (observation.hasOwnProperty('valueQuantity')) {
+      return 'valueQuantity';
+    } else if (observation.hasOwnProperty('valueCodeableConcept')) {
+      return 'valueCodeableConcept';
+    }
+  }
+
+  getEffectiveDateTime(observation: Observation) {
+    if (observation.hasOwnProperty('effectiveDateTime')) {
+      return 'effectiveDateTime';
+    }
+    if (observation.hasOwnProperty('effectivePeriod')) {
+      return 'effectivePeriod';
+    }
+  }
+
+  getPerformedDateTime(procedure: Procedure) {
+    if (procedure.hasOwnProperty('performedDateTime')) {
+      return 'performedDateTime';
+    }
+    if (procedure.hasOwnProperty('performedPeriod')) {
+      return 'performedPeriod';
+    }
   }
 
   async ngOnInit() {

@@ -21,8 +21,8 @@
         <module name="nhsn" />
         <module name="query" />
         <module name="api" />
-        <module name="consumer" />
         <module name="query-api" />
+        <module name="consumer" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="11">
@@ -42,7 +42,7 @@
       <module name="cli" options="-parameters" />
       <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
-      <module name="link" options="-parameters" />
+      <module name="link" options="" />
       <module name="nandina-web" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
