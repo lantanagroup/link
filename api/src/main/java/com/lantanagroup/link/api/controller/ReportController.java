@@ -1,10 +1,10 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.MeasureEvaluator;
@@ -379,8 +379,8 @@ public class ReportController extends BaseController {
     Period period = new Period();
     Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
     Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
-    period.setStart(startDate);
-    period.setEnd(endDate);
+    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
+    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
 
     docReference.setPeriod(period);
 

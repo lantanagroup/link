@@ -10,7 +10,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Helper {
-  public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+  public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+  public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
   public static boolean isNullOrEmpty(String value) {
     return value == null || value.isEmpty();
@@ -27,11 +28,19 @@ public class Helper {
   }
 
   public static String getFhirDate(Date date) {
-    return new SimpleDateFormat(SIMPLE_DATE_FORMAT).format(date);
+    return new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT).format(date);
   }
 
   public static Date parseFhirDate(String dateStr) throws ParseException {
-    return new SimpleDateFormat(SIMPLE_DATE_FORMAT).parse(dateStr);
+    SimpleDateFormat formatterMillis = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
+    SimpleDateFormat formatterSec = new SimpleDateFormat(SIMPLE_DATE_SECONDS_FORMAT);
+    Date dateReturned;
+    try {
+      dateReturned = formatterMillis.parse(dateStr);
+    } catch (Exception ex) {
+      dateReturned = formatterSec.parse(dateStr);
+    }
+    return dateReturned;
   }
 
   public static Date addDays(Date date, int numberOfDays) throws ParseException {
