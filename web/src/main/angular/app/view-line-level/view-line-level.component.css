@@ -1,0 +1,27 @@
+.column-bordered-table thead tr th {
+    border-left: 1px solid #c3c3c3;
+    border-right: 1px solid #c3c3c3;
+}
+
+.column-bordered-table td {
+    border-left: 1px solid #c3c3c3;
+    border-right: 1px solid #c3c3c3;
+}
+
+.column-bordered-table tfoot tr {
+    border-top: 1px solid #c3c3c3;
+    border-bottom: 1px solid #c3c3c3;
+}
+
+.column-bordered-table tbody tr {
+    border-top: 1px solid #c3c3c3;
+    border-bottom: 1px solid #c3c3c3;
+}
+
+.form-control {
+    margin-right: 1rem;
+}
+
+.input-group {
+    max-width: 40vw;
+}
