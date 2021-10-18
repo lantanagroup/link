@@ -108,6 +108,7 @@ export class ViewLineLevelComponent implements OnInit {
     return this.reportPatientsIncludedExcluded.filter(patient => patient.excluded == false).length;
   }
 
+
   async ngOnInit() {
     await this.refresh();
   }
