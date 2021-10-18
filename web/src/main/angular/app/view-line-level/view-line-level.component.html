@@ -34,7 +34,8 @@
             <td colspan="4">No patients in this report</td>
         </tr>
         </tfoot>
-        <h6 *ngIf="patients?.length" colspan="4">Total Patients: {{patients.length}}</h6>
+        <h6 *ngIf="patients?.length" colspan="4">Total Patients included in
+            report: {{getNoPatientsIncludedinReport()}}</h6>
     </table>
     <h6 *ngIf="!loading">Excluded Patients</h6>
     <table *ngIf="!loading" class="table table-striped  column-bordered-table">
@@ -50,11 +51,11 @@
             <td *ngIf="patient.excluded">{{patient.name}}</td>
             <td *ngIf="patient.excluded">
                 <div class="input-group">
-                    <select (ngModelChange)="validate()" [(ngModel)]="patient.coding" class="form-control">
+                    <select (change)="validate()" [(ngModel)]="patient.coding" class="form-control">
                         <option *ngFor="let o of codes" [ngValue]="o.code">{{o.display}}</option>
                         <option value="other">Other, specify</option>
                     </select>
-                    <input (ngModelChange)="validate()" *ngIf="patient.coding === 'other'" [(ngModel)]="patient.text"
+                    <input (change)="validate()" *ngIf="patient.coding === 'other'" [(ngModel)]="patient.text"
                            class="form-control" type="text"/>
                 </div>
             </td>
