@@ -152,6 +152,7 @@ public class ReportControllerTests {
     IQuery<IBaseBundle> medReqQuery = MockHelper.mockSearchForResource(untypedQuery, "MedicationRequest", null, medReq1, medReq2);
     IQuery<IBaseBundle> procedureQuery = MockHelper.mockSearchForResource(untypedQuery, "Procedure", null, proc1, proc2);
     IQuery<IBaseBundle> encounterQuery = MockHelper.mockSearchForResource(untypedQuery, "Encounter", null, enc1, enc2, enc3);
+    IQuery<IBaseBundle> observationQuery = MockHelper.mockSearchForResource(untypedQuery, "Observation", null);
 
     //Get subject reports
     PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);
@@ -160,7 +161,6 @@ public class ReportControllerTests {
     verify(medReqQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) MedicationRequest.SUBJECT.hasId("patient1"))));
     verify(procedureQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Procedure.SUBJECT.hasId("patient1"))));
     verify(encounterQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Encounter.SUBJECT.hasId("patient1"))));
-
 
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getConditions());
