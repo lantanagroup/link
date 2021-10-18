@@ -101,7 +101,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Assert.assertEquals("<Bundle xmlns=\"http://hl7.org/fhir\"><meta><tag><system value=\"https://nhsnlink.org\"/><code value=\"report-bundle\"/></tag></meta><type value=\"collection\"/><entry><resource><MeasureReport xmlns=\"http://hl7.org/fhir\"><evaluatedResource><reference value=\"Patient/testPatient1\"/></evaluatedResource><evaluatedResource><reference value=\"Condition/testCondition1\"/></evaluatedResource></MeasureReport></resource></entry></Bundle>", content);
+        Assert.assertEquals("<Bundle xmlns=\"http://hl7.org/fhir\"><meta><tag><system value=\"https://nhsnlink.org\"></system><code value=\"report-bundle\"></code></tag></meta><type value=\"collection\"></type><entry><resource><MeasureReport xmlns=\"http://hl7.org/fhir\"><evaluatedResource><reference value=\"Patient/testPatient1\"></reference></evaluatedResource><evaluatedResource><reference value=\"Condition/testCondition1\"></reference></evaluatedResource></MeasureReport></resource></entry></Bundle>", content);
         Assert.assertEquals(httpEntityEnclosingRequest.getHeaders("Authorization").length, 0);
         return true;
       }
@@ -154,7 +154,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Assert.assertEquals("<Bundle xmlns=\"http://hl7.org/fhir\"><meta><tag><system value=\"https://nhsnlink.org\"/><code value=\"report-bundle\"/></tag></meta><type value=\"collection\"/><entry><resource><MeasureReport xmlns=\"http://hl7.org/fhir\"><evaluatedResource><reference value=\"Patient/testPatient1\"/></evaluatedResource><evaluatedResource><reference value=\"Condition/testCondition1\"/></evaluatedResource></MeasureReport></resource></entry></Bundle>", content);
+        Assert.assertEquals("<Bundle xmlns=\"http://hl7.org/fhir\"><meta><tag><system value=\"https://nhsnlink.org\"></system><code value=\"report-bundle\"></code></tag></meta><type value=\"collection\"></type><entry><resource><MeasureReport xmlns=\"http://hl7.org/fhir\"><evaluatedResource><reference value=\"Patient/testPatient1\"></reference></evaluatedResource><evaluatedResource><reference value=\"Condition/testCondition1\"></reference></evaluatedResource></MeasureReport></resource></entry></Bundle>", content);
         Header[] headers = httpEntityEnclosingRequest.getHeaders("Authorization");
         Assert.assertEquals(headers.length, 1);
         Boolean found = Arrays.stream(headers).anyMatch(h -> h.getValue().equals("Bearer test-access-token"));
