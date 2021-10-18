@@ -110,8 +110,8 @@ export class CalculatedFieldComponent implements OnInit {
     if (!this.report) return;
 
     const group = (this.report.measureReport.group || []).find(g => {
-      if (this.groupCode) {
-        return g.code && g.code.coding && g.code.coding.length > 0 && !!g.code.coding.find(c => c.code === this.groupCode);
+      if (this.groupCode && g.code && g.code.coding && g.code.coding.length > 0) {
+        return !!g.code.coding.find(c => c.code === this.groupCode);
       } else {
         return true;
       }
