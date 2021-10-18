@@ -141,11 +141,6 @@ public class ReportControllerTests {
     Encounter enc2 = createEncounter("encounter2", new Reference("Patient/patient1"));
     Encounter enc3 = createEncounter("encounter3", new Reference("Patient/patient1"));
 
-    //3 Observation
-    Observation obs1 = createObservation("observation1", new Reference("Patient/patient1"));
-    Observation obs2 = createObservation("observation2", new Reference("Patient/patient1"));
-    Observation obs3 = createObservation("observation3", new Reference("Patient/patient1"));
-
     DocumentReference docRef = new DocumentReference();
     docRef.setId("report1");
 
@@ -153,11 +148,10 @@ public class ReportControllerTests {
     this.mockReadMeasureReport(fhirStoreClient, measureReport);
 
     //Mock server requests for subject bundles
-    IQuery<IBaseBundle> conditionQuery = this.mockSubjectBundle(untypedQuery, "Condition", condition1, condition2, condition3);
-    IQuery<IBaseBundle> medReqQuery = this.mockSubjectBundle(untypedQuery, "MedicationRequest", medReq1, medReq2);
-    IQuery<IBaseBundle> procedureQuery = this.mockSubjectBundle(untypedQuery, "Procedure", proc1, proc2);
-    IQuery<IBaseBundle> encounterQuery = this.mockSubjectBundle(untypedQuery, "Encounter", enc1, enc2, enc3);
-    IQuery<IBaseBundle> observationQuery = this.mockSubjectBundle(untypedQuery, "Observation", obs1, obs2, obs3);
+    IQuery<IBaseBundle> conditionQuery = MockHelper.mockSearchForResource(untypedQuery, "Condition", null, condition1, condition2, condition3);
+    IQuery<IBaseBundle> medReqQuery = MockHelper.mockSearchForResource(untypedQuery, "MedicationRequest", null, medReq1, medReq2);
+    IQuery<IBaseBundle> procedureQuery = MockHelper.mockSearchForResource(untypedQuery, "Procedure", null, proc1, proc2);
+    IQuery<IBaseBundle> encounterQuery = MockHelper.mockSearchForResource(untypedQuery, "Encounter", null, enc1, enc2, enc3);
 
     //Get subject reports
     PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);
@@ -166,7 +160,6 @@ public class ReportControllerTests {
     verify(medReqQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) MedicationRequest.SUBJECT.hasId("patient1"))));
     verify(procedureQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Procedure.SUBJECT.hasId("patient1"))));
     verify(encounterQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Encounter.SUBJECT.hasId("patient1"))));
-    verify(observationQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Observation.SUBJECT.hasId("patient1"))));
 
 
     Assert.assertNotNull(response);
@@ -174,7 +167,6 @@ public class ReportControllerTests {
     Assert.assertNotNull(response.getMedicationRequests());
     Assert.assertNotNull(response.getProcedures());
     Assert.assertNotNull(response.getEncounters());
-    Assert.assertNotNull(response.getObservations());
   }
 
   @Test
