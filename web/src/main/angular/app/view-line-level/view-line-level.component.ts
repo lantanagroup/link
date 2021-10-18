@@ -91,7 +91,7 @@ export class ViewLineLevelComponent implements OnInit {
   validate() {
     this.canSave = true;
     for (let patient of this.reportPatientsIncludedExcluded) {
-      if (patient.excluded && patient.text === '' && patient.coding === '' || patient.coding === 'other' && patient.text === '') {
+      if (patient.excluded && (patient.coding === '' || patient.coding === 'other' && patient.text.trim() === '')) {
         this.canSave = false;
         break;
       }
@@ -100,10 +100,14 @@ export class ViewLineLevelComponent implements OnInit {
 
   save() {
     if (this.canSave) {
-
       //TO-DO
     }
   }
+
+  getNoPatientsIncludedinReport() {
+    return this.reportPatientsIncludedExcluded.filter(patient => patient.excluded == false).length;
+  }
+
 
   async ngOnInit() {
     await this.refresh();
@@ -111,7 +115,7 @@ export class ViewLineLevelComponent implements OnInit {
 
   addPatientToExcludedList(patient) {
     const coding = this.codes.find(code => code.code === patient.coding);
-    const codeableConcept = {coding: [{system: "test", code: patient.coding, display: "tesT"}], text: patient.text};
+    const codeableConcept = {coding: [{system: "test", code: patient.coding, display: "test"}], text: patient.text};
     this.excludedPatients.push({patientId: patient.id, reason: codeableConcept});
   }
 
@@ -123,4 +127,5 @@ export class ViewLineLevelComponent implements OnInit {
       }
     }
   }
+
 }
