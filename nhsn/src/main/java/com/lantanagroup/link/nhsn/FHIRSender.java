@@ -43,6 +43,8 @@ public class FHIRSender implements IReportSender {
 
     String token = "";
     if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
+      logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
+
       token = OAuth2Helper.getToken(
               this.getHttpClient(),
               this.config.getOAuthConfig().getTokenUrl(),
@@ -66,9 +68,12 @@ public class FHIRSender implements IReportSender {
 
       HttpPost sendRequest = new HttpPost(sendUrl);
       sendRequest.addHeader("Content-Type", "application/xml");
+
       if(Strings.isNotEmpty(token)){
+        logger.debug("Adding auth token to submit request");
         sendRequest.addHeader("Authorization", "Bearer " + token);
       }
+
       sendRequest.setEntity(new StringEntity(xml));
 
       try {
