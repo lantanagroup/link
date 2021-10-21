@@ -29,7 +29,7 @@ export class ReportService {
 
   getReports(queryParams) {
     let url = this.configService.getApiUrl('/api/report/searchReports?');
-    if (queryParams != undefined && queryParams != ""){
+    if (queryParams != undefined && queryParams != "") {
       url += queryParams;
     }
     return this.http.get<ReportBundle>(url).toPromise();
@@ -71,7 +71,7 @@ export class ReportService {
     return this.http.get<ReportPatient[]>(url)
         // map the array of objects from the response to new instances of ReportPatient
         .pipe(map(response => {
-          return (<any[]> response).map(item => {
+          return (<any[]>response).map(item => {
             const newReportPatient = new ReportPatient();
             Object.assign(newReportPatient, item);
             return newReportPatient;
@@ -97,6 +97,12 @@ export class ReportService {
   async getPatientData(reportId: string, patientId: string) {
     const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/patient/${encodeURIComponent(patientId)}`);
     return await this.http.get<PatientDataModel>(url).toPromise();
+  }
+
+
+  async excludePatients(reportId: string, excludedPatients: any) {
+    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$exclude`);
+    return await this.http.post<void>(url, excludedPatients).toPromise();
   }
 
 }
