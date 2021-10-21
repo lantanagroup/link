@@ -3,5 +3,4 @@ export class ReportPatient {
   name: string;
   sex: string;
   dateOfBirth: string;
-
 }

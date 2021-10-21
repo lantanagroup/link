@@ -6,6 +6,7 @@ import {ToastService} from '../toast.service';
 import {ViewPatientComponent} from "../view-patient/view-patient.component";
 import {ExcludedPatientModel} from "../model/ExcludedPatientModel";
 import {ReportPatientsIncludedExcluded} from "../model/report-patients-included-excluded";
+import {CodeableConcept} from "../model/fhir";
 
 @Component({
   templateUrl: './view-line-level.component.html',
@@ -100,22 +101,29 @@ export class ViewLineLevelComponent implements OnInit {
 
   save() {
     if (this.canSave) {
-      //TO-DO
+      this.generateExcludedPatientsList();
+      this.reportService.excludePatients(this.reportId, this.excludedPatients);
+      this.reportPatientsIncludedExcluded = this.reportPatientsIncludedExcluded.filter(ar => !this.excludedPatients.find(rm => (rm.patientId === ar.id)));
+      this.excludedPatients = [];
     }
   }
 
-  getNoPatientsIncludedinReport() {
+  getNoPatientsIncludedInReport() {
     return this.reportPatientsIncludedExcluded.filter(patient => patient.excluded == false).length;
   }
-
 
   async ngOnInit() {
     await this.refresh();
   }
 
   addPatientToExcludedList(patient) {
-    const coding = this.codes.find(code => code.code === patient.coding);
-    const codeableConcept = {coding: [{system: "test", code: patient.coding, display: "test"}], text: patient.text};
+    const codeableConcept = new CodeableConcept();
+    const code = this.codes.find(code => code.code === patient.coding);
+    if (code !== undefined) {
+      codeableConcept.coding = [{system: code.system, code: patient.coding, display: code.display}]
+    } else {
+      codeableConcept.text = patient.text;
+    }
     this.excludedPatients.push({patientId: patient.id, reason: codeableConcept});
   }
 
