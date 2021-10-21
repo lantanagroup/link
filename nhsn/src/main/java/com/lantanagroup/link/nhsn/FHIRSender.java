@@ -8,7 +8,10 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import lombok.Setter;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class FHIRSender implements IReportSender {
@@ -45,12 +49,24 @@ public class FHIRSender implements IReportSender {
     if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
-      token = OAuth2Helper.getToken(
-              this.getHttpClient(),
-              this.config.getOAuthConfig().getTokenUrl(),
-              this.config.getOAuthConfig().getUsername(),
-              this.config.getOAuthConfig().getPassword(),
-              this.config.getOAuthConfig().getScope());
+      switch (this.config.getOAuthConfig().getCredentialMode()) {
+        case Client:
+          token = OAuth2Helper.getClientCredentialsToken(
+                  this.getHttpClient(),
+                  this.config.getOAuthConfig().getTokenUrl(),
+                  this.config.getOAuthConfig().getUsername(),
+                  this.config.getOAuthConfig().getPassword(),
+                  this.config.getOAuthConfig().getScope());
+          break;
+        case Password:
+          token = OAuth2Helper.getPasswordCredentialsToken(
+                  this.getHttpClient(),
+                  this.config.getOAuthConfig().getTokenUrl(),
+                  this.config.getOAuthConfig().getUsername(),
+                  this.config.getOAuthConfig().getPassword(),
+                  this.config.getOAuthConfig().getClientId(),
+                  this.config.getOAuthConfig().getScope());
+      }
     }
 
     logger.info("Building Bundle for MeasureReport to send...");
@@ -82,11 +98,16 @@ public class FHIRSender implements IReportSender {
         // HttpResponse result = httpClient.execute(request);
         // String response = EntityUtils.toString(result.getEntity(), "UTF-8");
 
-        httpClient.execute(sendRequest);
+        HttpResponse response = httpClient.execute(sendRequest);
+
+        if (response.getStatusLine().getStatusCode() >= 300) {
+          String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
+          logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), sendUrl, responseContent));
+          throw new HttpResponseException(500, "Internal Server Error");
+        }
 
         FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
-      }
-      catch (IOException ex) {
+      } catch (IOException ex) {
         if(ex.getMessage().contains("403")){
           logger.error("Error authorizing send: " + ex.getMessage());
         }else{

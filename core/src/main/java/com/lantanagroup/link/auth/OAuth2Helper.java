@@ -17,7 +17,56 @@ import java.util.Base64;
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
 
-  public static String getToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
+  public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
+    HttpPost request = new HttpPost(tokenUrl);
+
+    String userPassCombo = username + ":" + password;
+    String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
+
+    request.addHeader("Accept", "application/json");
+    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("grant_type=password&");
+    sb.append("scope=" + scope + "&");
+    sb.append("username=" + username + "&");
+    sb.append("password=" + password + "&");
+    sb.append("client_id=" + clientId);
+
+    try {
+      request.setEntity(new StringEntity(sb.toString()));
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
+      return null;
+    }
+
+    try {
+      if (httpClient == null) {
+        httpClient = HttpClientBuilder.create().build();
+      }
+
+      HttpResponse result = httpClient.execute(request);
+
+      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+
+      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+        logger.error("Error retrieving OAuth2 password token from auth service: \n" + content);
+      }
+
+      JSONObject jsonObject = new JSONObject(content);
+
+      if (jsonObject.has("access_token")) {
+        return jsonObject.getString("access_token");
+      }
+
+      return null;
+    } catch (IOException ex) {
+      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
+      return null;
+    }
+  }
+
+  public static String getClientCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     String userPassCombo = username + ":" + password;
@@ -49,7 +98,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 token from auth service: \n" + content);
+        logger.error("Error retrieving OAuth2 client credentials token from auth service: \n" + content);
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -60,13 +109,13 @@ public class OAuth2Helper {
 
       return null;
     } catch (IOException ex) {
-      logger.error("Failed to retrieve a token from OAuth2 authorization service", ex);
+      logger.error("Failed to retrieve a client credentials token from OAuth2 authorization service", ex);
       return null;
     }
   }
 
-  public static String getToken(String tokenUrl, String username, String password, String scope) {
+  public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getToken(httpClient, tokenUrl, username, password, scope);
+    return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
   }
 }

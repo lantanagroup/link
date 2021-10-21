@@ -17,7 +17,7 @@ public class CernerAuth implements ICustomAuth {
   @Override
   public String getAuthHeader() {
     logger.debug("Using OAuth2 to retrieve a system token for FHIR authentication");
-    String token = OAuth2Helper.getToken(
+    String token = OAuth2Helper.getClientCredentialsToken(
             this.config.getTokenUrl(),
             this.config.getClientId(),
             this.config.getSecret(),
