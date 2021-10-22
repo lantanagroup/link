@@ -18,10 +18,17 @@
     border-bottom: 1px solid #c3c3c3;
 }
 
-.form-control {
-    margin-right: 1rem;
+input.form-control {
+    padding: 0;
+    width: 15vw;
 }
 
 .input-group {
     max-width: 40vw;
+}
+
+select.form-control {
+    margin-right: 1vw;
+    width: 15vw;
+    padding: 0;
 }
