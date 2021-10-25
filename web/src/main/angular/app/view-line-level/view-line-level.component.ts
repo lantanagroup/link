@@ -14,13 +14,15 @@ import {CodeableConcept} from "../model/fhir";
 })
 export class ViewLineLevelComponent implements OnInit {
   @Input() reportId: string
+  loading = false;
+  patients: ReportPatient[];
+  excludedPatients: ExcludedPatientModel[] = [];
+  reportPatientsIncludedExcluded: ReportPatientsIncludedExcluded[] = [];
+  saving = false;
+  canSave = false;
+  excludedButtonText = 'Exclude Selected';
 
-  public patients: ReportPatient[];
-  public excludedPatients: ExcludedPatientModel[] = [];
-  public reportPatientsIncludedExcluded: ReportPatientsIncludedExcluded[] = [];
-  public loading = false;
-  public canSave = false;
-  public codes = [
+  codes = [
     {
       code: 'FNCIEMR',
       display: 'Findings not captured in EMR',
@@ -99,12 +101,23 @@ export class ViewLineLevelComponent implements OnInit {
     }
   }
 
-  save() {
+  async save() {
     if (this.canSave) {
-      this.generateExcludedPatientsList();
-      this.reportService.excludePatients(this.reportId, this.excludedPatients);
-      this.reportPatientsIncludedExcluded = this.reportPatientsIncludedExcluded.filter(ar => !this.excludedPatients.find(rm => (rm.patientId === ar.id)));
-      this.excludedPatients = [];
+      this.excludedButtonText = 'Excluding...';
+      this.saving = true;
+      try {
+        this.generateExcludedPatientsList();
+        await this.reportService.excludePatients(this.reportId, this.excludedPatients);
+        this.reportPatientsIncludedExcluded = this.reportPatientsIncludedExcluded.filter(ar => !this.excludedPatients.find(rm => (rm.patientId === ar.id)));
+        this.excludedPatients = [];
+        this.excludedButtonText = 'Excluded';
+      } catch (ex) {
+        this.toastService.showException('Error excluding patients', ex);
+      } finally {
+        this.excludedButtonText = "Exclude Selected";
+        this.canSave = true;
+        this.saving = false;
+      }
     }
   }
 
