@@ -122,7 +122,7 @@ export class ViewLineLevelComponent implements OnInit {
     if (code !== undefined) {
       codeableConcept.coding = [{system: code.system, code: patient.coding, display: code.display}]
     } else {
-      codeableConcept.text = patient.text;
+      codeableConcept.text = patient.text.trim();
     }
     this.excludedPatients.push({patientId: patient.id, reason: codeableConcept});
   }
