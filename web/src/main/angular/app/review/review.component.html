@@ -16,8 +16,8 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <label>Reporting Period</label>
-                <ngbd-datepicker-range-popup [fromDate]="filter.period.startDate" [toDate] = "filter.period.endDate"
+                <label>Reporting Period (Start Date - End Date) </label>
+                <ngbd-datepicker-range-popup #reportingdate
                                              (change)="selectPeriod($event)"></ngbd-datepicker-range-popup>
             </div>
             <div class="col-md-2">
@@ -39,7 +39,8 @@
                             <input [(ngModel)]="filter.submittedDate" class="form-control" placeholder="YYYY-MM-DD"
                                    name="dp" (ngModelChange)="selectSubmittedDate()" ngbDatepicker #d="ngbDatepicker">
                             <div class="input-group-append">
-                                <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+                                <button (click)="d.toggle()" class="btn btn-outline-secondary calendar"
+                                        type="button"></button>
                             </div>
                         </div>
                     </div>
@@ -48,10 +49,12 @@
             <div class="col-md-2">
                 <label>Submitter</label>
                 <div ngbDropdown>
-                    <button class="btn btn-outline-primary" id="submitter" ngbDropdownToggle>{{filter.submitter}}</button>
+                    <button class="btn btn-outline-primary" id="submitter"
+                            ngbDropdownToggle>{{filter.submitter}}</button>
                     <div ngbDropdownMenu aria-labelledby="submitter">
                         <div *ngFor="let submitter of submitters">
-                            <button class="dropdown-item" on-click="selectSubmitter(submitter.name)">{{submitter.name}}</button>
+                            <button class="dropdown-item"
+                                    on-click="selectSubmitter(submitter.name)">{{submitter.name}}</button>
                         </div>
                     </div>
                 </div>
@@ -60,7 +63,7 @@
 
         <div class="row" style="margin-top: 10px;">
             <div class="col-md-2">
-                <button class="btn btn-primary" on-click="resetFilters()">Reset Filters</button>
+                <button class="btn btn-primary" on-click="resetFilters(reportingdate)">Reset Filters</button>
             </div>
         </div>
     </div>

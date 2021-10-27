@@ -27,13 +27,22 @@
     <div class="form-group">
         <div class="input-group">
             <input #dpFromDate
-                   class="form-control" placeholder="Reporting Period"
+                   (change)="onFromDateEntered()" (input)="fromDate = validateInput(fromDate, dpFromDate.value);"
                    name="dpFromDate"
                    [value]="formatter.format(fromDate)"
-                   (input)="fromDate = validateInput(fromDate, dpFromDate.value)">
+                   class="form-control"
+                   placeholder="YYYY-MM-DD">
+            <input #dpToDate
+                   (change)="onToDateEntered()" (input)="toDate = validateInput(toDate, dpToDate.value);"
+                   [value]="formatter.format(toDate)"
+                   class="form-control"
+                   name="dpToDate"
+                   placeholder="YYYY-MM-DD">
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary calendar" (click)="datepicker.toggle()" type="button" name="date-range-picker-btn"></button>
+                <button (click)="datepicker.toggle()" class="btn btn-outline-secondary calendar" type="button"></button>
             </div>
         </div>
     </div>
+
+
 </form>
