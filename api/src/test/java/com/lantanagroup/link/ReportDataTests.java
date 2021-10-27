@@ -1,17 +1,19 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.rest.api.CacheControlDirective;
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.gclient.*;
+import ca.uhn.fhir.rest.gclient.ICreate;
+import ca.uhn.fhir.rest.gclient.IUntypedQuery;
+import ca.uhn.fhir.rest.gclient.IUpdate;
 import com.lantanagroup.link.api.controller.ReportDataController;
 import com.lantanagroup.link.mock.MockHelper;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Condition;
+import org.hl7.fhir.r4.model.Encounter;
+import org.hl7.fhir.r4.model.Procedure;
+import org.hl7.fhir.r4.model.Reference;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
@@ -136,7 +138,9 @@ public class ReportDataTests {
 
     reportDataController.storeReportData(authentication, request, "Encounter", enc1);
 
-    verify(create, times(3));
+    verify(create, times(1)).resource(any(Condition.class));
+    verify(create, times(1)).resource(any(Procedure.class));
+    verify(create, times(1)).resource(any(Encounter.class));
   }
 
   @Test
@@ -178,6 +182,8 @@ public class ReportDataTests {
 
     reportDataController.updateReportData(authentication, request, "Encounter", "encounter1", enc1);
 
-    verify(update, times(3));
+    verify(update, times(1)).resource(any(Condition.class));
+    verify(update, times(1)).resource(any(Procedure.class));
+    verify(update, times(1)).resource(any(Encounter.class));
   }
 }
