@@ -84,18 +84,4 @@ public class ReportDataController extends BaseController{
     }
 
   }
-
-  @Override
-  public void createResource(Resource resource, IGenericClient fhirStoreClient){
-    fhirStoreClient.create().resource(resource).execute();
-    //Added this line to guarantee that the ID of the resource is retained
-    MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
-    if (!outcome.getCreated() || outcome.getResource() == null) {
-      logger.error("Failed to store/create FHIR resource");
-    } else {
-      logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
-    }
-
-  }
-
 }

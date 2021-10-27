@@ -124,25 +124,19 @@ public class ReportDataTests {
     ICreate create = mock(ICreate.class);
     when(fhirStoreClient.create()).thenReturn(create);
 
-    IUpdate update = mock(IUpdate.class);
-    when(fhirStoreClient.update()).thenReturn(update);
-
     MockHelper.mockResourceCreation(create, cond1);
-    MockHelper.mockResourceUpdate(update, cond1);
 
     reportDataController.storeReportData(authentication, request, "Condition", cond1);
 
     MockHelper.mockResourceCreation(create, proc1);
-    MockHelper.mockResourceUpdate(update, proc1);
 
     reportDataController.storeReportData(authentication, request, "Procedure", proc1);
 
     MockHelper.mockResourceCreation(create, enc1);
-    MockHelper.mockResourceUpdate(update, enc1);
 
     reportDataController.storeReportData(authentication, request, "Encounter", enc1);
 
-    verify(update, times(3));
+    verify(create, times(3));
   }
 
   @Test
