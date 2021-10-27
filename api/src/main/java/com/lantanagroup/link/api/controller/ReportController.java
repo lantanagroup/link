@@ -515,6 +515,20 @@ public class ReportController extends BaseController {
       }
     }
 
+    for(Extension extension: measureReport.getExtension()){
+      if(extension.getUrl().contains("StructureDefinition/nhsnlink-excluded-patient")){
+        patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+        int index = patientRequest.getEntry().size() - 1;
+        patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+        for(Extension ext : extension.getExtension()){
+          if(ext.getUrl().contains("patient")){
+            patientRequest.getEntry().get(index).getRequest().setUrl(((Property)ext.getValue().getNamedProperty("reference")).getValues().get(0));
+          }
+        }
+
+      }
+    }
+
     if (patientRequest.hasEntry()) {
       Bundle patientBundle = client.transaction().withBundle(patientRequest).execute();
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
