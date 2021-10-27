@@ -78,7 +78,6 @@ export class NgbdDatepickerRangePopup {
     this.change.emit({startDate: this.fromDate, endDate: this.toDate})
   }
 
-
   isHovered(date: NgbDate) {
     return this.fromDate && !this.toDate && this.hoveredDate && date.after(this.fromDate) && date.before(this.hoveredDate);
   }
@@ -92,6 +91,7 @@ export class NgbdDatepickerRangePopup {
   }
 
   validateInput(currentValue: NgbDate | null, input: string): NgbDate | null {
+    if (input === '') return null;
     const parsed = this.formatter.parse(input);
     return parsed && this.calendar.isValid(NgbDate.from(parsed)) ? NgbDate.from(parsed) : currentValue;
   }
