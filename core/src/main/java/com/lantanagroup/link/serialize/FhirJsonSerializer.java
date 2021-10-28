@@ -4,9 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import org.hl7.fhir.r4.model.Resource;
-import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 

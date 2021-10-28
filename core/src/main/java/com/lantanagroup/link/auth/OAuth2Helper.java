@@ -114,7 +114,6 @@ public class OAuth2Helper {
     }
   }
 
-
   public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);

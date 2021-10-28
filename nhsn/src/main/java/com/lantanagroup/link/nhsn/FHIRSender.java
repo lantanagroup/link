@@ -47,7 +47,6 @@ public class FHIRSender implements IReportSender {
 
     String token = "";
     if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
-
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
       switch (this.config.getOAuthConfig().getCredentialMode()) {
