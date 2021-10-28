@@ -6,6 +6,7 @@
         <exploded>true</exploded>
         <module>api</module>
         <packaging>war</packaging>
+        <unpackNestedArchives>false</unpackNestedArchives>
       </options>
     </properties>
     <root id="root">
@@ -38,6 +39,10 @@
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.9" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.9" />
+          <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />
+          <element id="library" level="project" name="Maven: com.fasterxml.woodstox:woodstox-core:5.0.3" />
           <element id="archive" name="query-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="query" />
           </element>

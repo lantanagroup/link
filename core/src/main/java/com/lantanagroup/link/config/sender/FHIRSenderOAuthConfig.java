@@ -1,5 +1,6 @@
 package com.lantanagroup.link.config.sender;
 
+
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import lombok.Getter;
 import lombok.Setter;

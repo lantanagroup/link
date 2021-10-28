@@ -40,6 +40,23 @@ public class MockHelper {
     return subBundleIntQuery;
   }
 
+  public static IQuery<IBaseBundle> mockFailSearchForResource(
+          IUntypedQuery<IBaseBundle> untypedQuery,
+          String resourceType) {
+    IQuery<IBaseBundle> subBundleIntQuery = mock(IQuery.class);
+    IQuery<Bundle> subBundleQuery = mock(IQuery.class);
+
+    Bundle responseBundle = new Bundle();
+
+    when(untypedQuery.forResource(resourceType)).thenReturn(subBundleIntQuery);
+    when(subBundleIntQuery.where(any(ICriterion.class))).thenReturn(subBundleIntQuery);
+    when(subBundleIntQuery.returnBundle(Bundle.class)).thenReturn(subBundleQuery);
+    when(subBundleQuery.cacheControl(any(CacheControlDirective.class))).thenReturn(subBundleQuery);
+    when(subBundleQuery.execute()).thenReturn(responseBundle);
+
+    return subBundleIntQuery;
+  }
+
   public static AuthMockInfo mockAuth(IGenericClient client) {
     Authentication auth = mock(Authentication.class);
     LinkCredentials user = mock(LinkCredentials.class);
@@ -71,6 +88,30 @@ public class MockHelper {
     }
   }
 
+  public static void mockResourceCreation(ICreate create, Resource resource){
+    MethodOutcome createMethod = new MethodOutcome();
+    IIdType id = new IdType("OperationOutcome", "outcome1", "1");
+    createMethod.setId(id);
+    createMethod.setCreated(true);
+    createMethod.setResource(resource);
+
+    ICreateTyped createTyped = mock(ICreateTyped.class);
+    when(create.resource(resource)).thenReturn(createTyped);
+    when(createTyped.execute()).thenReturn(createMethod);
+  }
+
+  public static void mockResourceUpdate(IUpdate update, Resource resource){
+    MethodOutcome outcome = new MethodOutcome();
+    IIdType id = new IdType("OperationOutcome", "outcome1", "1");
+    outcome.setId(id);
+    outcome.setCreated(true);
+    outcome.setResource(resource);
+
+    IUpdateTyped updateTyped = mock(IUpdateTyped.class);
+    when(update.resource(any(Resource.class))).thenReturn(updateTyped);
+    when(updateTyped.execute()).thenReturn(outcome);
+  }
+  
   public static void mockAuditEvents(ICreate create) {
     MethodOutcome createMethod = new MethodOutcome();
     createMethod.setId(new IdType("test"));

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.query.auth.CernerAuthConfig;
+import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -128,6 +130,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public Module module() {
     SimpleModule module = new SimpleModule();
     module.addSerializer(new FhirJsonSerializer());
+    module.addDeserializer(Resource.class, new FhirJsonDeserializer());
     return module;
   }
 }

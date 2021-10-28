@@ -152,7 +152,6 @@ public class ReportControllerTests {
     IQuery<IBaseBundle> medReqQuery = MockHelper.mockSearchForResource(untypedQuery, "MedicationRequest", null, medReq1, medReq2);
     IQuery<IBaseBundle> procedureQuery = MockHelper.mockSearchForResource(untypedQuery, "Procedure", null, proc1, proc2);
     IQuery<IBaseBundle> encounterQuery = MockHelper.mockSearchForResource(untypedQuery, "Encounter", null, enc1, enc2, enc3);
-    IQuery<IBaseBundle> observationQuery = MockHelper.mockSearchForResource(untypedQuery, "Observation", null);
 
     //Get subject reports
     PatientDataModel response = reportController.getPatientData("report1", "patient1", authentication, request);

@@ -105,7 +105,7 @@ public class FHIRSenderTests {
         return true;
       }
     };
-
+    
     // Mock the response of the HttpClient
     HttpResponse httpResponse = mock(HttpResponse.class);
     StatusLine httpResponseStatus = mock(StatusLine.class);
@@ -139,6 +139,7 @@ public class FHIRSenderTests {
     FHIRSenderConfig config = new FHIRSenderConfig();
     config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
     config.setOAuthConfig(new FHIRSenderOAuthConfig());
+
     config.getOAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
     config.getOAuthConfig().setTokenUrl("http://test.com/auth");
     config.getOAuthConfig().setUsername("some-user");
