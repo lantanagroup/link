@@ -100,7 +100,9 @@ public class ReportDataTests {
       Assert.assertEquals("status code: 500, reason phrase: Resource with id encounter1 already exists", e.getMessage());
     }
 
-    verify(update, times(0));
+    verify(create, times(0)).resource(any(Condition.class));
+    verify(create, times(0)).resource(any(Procedure.class));
+    verify(create, times(0)).resource(any(Encounter.class));
   }
 
   @Test
