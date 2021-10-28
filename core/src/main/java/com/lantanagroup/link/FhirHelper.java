@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
@@ -97,6 +98,15 @@ public class FhirHelper {
     } catch (Exception ex) {
       logger.error("Failed to record AuditEvent", ex);
     }
+  }
+
+  /**
+   * Retrieves the relevant ID portion of the version of a resource
+   * @param version A resource's version URI
+   * @return The ID portion of the resource's version
+   */
+  public static String getIdFromVersion(String version){
+    return version.substring(version.lastIndexOf("fhir/") + 5, version.indexOf("/_history"));
   }
 
   /**

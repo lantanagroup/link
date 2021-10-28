@@ -161,7 +161,6 @@ public class ReportControllerTests {
     verify(procedureQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Procedure.SUBJECT.hasId("patient1"))));
     verify(encounterQuery, times(1)).where((ICriterion<?>) argThat(new CriterionArgumentMatcher((ICriterionInternal) Encounter.SUBJECT.hasId("patient1"))));
 
-
     Assert.assertNotNull(response);
     Assert.assertNotNull(response.getConditions());
     Assert.assertNotNull(response.getMedicationRequests());

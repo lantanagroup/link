@@ -7,7 +7,6 @@ import ca.uhn.fhir.rest.gclient.*;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.auth.LinkCredentials;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
-import org.hl7.fhir.instance.model.api.IBaseOperationOutcome;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.mockito.ArgumentMatcher;
@@ -112,7 +111,7 @@ public class MockHelper {
     when(update.resource(any(Resource.class))).thenReturn(updateTyped);
     when(updateTyped.execute()).thenReturn(outcome);
   }
-
+  
   public static void mockAuditEvents(ICreate create) {
     MethodOutcome createMethod = new MethodOutcome();
     createMethod.setId(new IdType("test"));

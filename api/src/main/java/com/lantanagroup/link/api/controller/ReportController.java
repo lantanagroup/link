@@ -45,6 +45,8 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toSet;
+
 @RestController
 @RequestMapping("/api/report")
 public class ReportController extends BaseController {
@@ -604,6 +606,14 @@ public class ReportController extends BaseController {
               .filter(e -> e.getResource() != null)
               .map(e -> (Condition) e.getResource())
               .collect(Collectors.toList());
+
+      conditionList = conditionList.stream()
+              .filter(c -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(c.getId()))))
+              .collect(Collectors.toList());
+
+
       data.setConditions(conditionList);
     }
 
@@ -614,6 +624,13 @@ public class ReportController extends BaseController {
               .filter(e -> e.getResource() != null)
               .map(e -> (MedicationRequest) e.getResource())
               .collect(Collectors.toList());
+
+      medicationRequestList = medicationRequestList.stream()
+              .filter(m -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(m.getId()))))
+              .collect(Collectors.toList());
+
       data.setMedicationRequests(medicationRequestList);
     }
 
@@ -624,6 +641,13 @@ public class ReportController extends BaseController {
               .filter(e -> e.getResource() != null)
               .map(e -> (Observation) e.getResource())
               .collect(Collectors.toList());
+
+      observationList = observationList.stream()
+              .filter(o -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(o.getId()))))
+              .collect(Collectors.toList());
+
       data.setObservations(observationList);
     }
 
@@ -634,6 +658,13 @@ public class ReportController extends BaseController {
               .filter(e -> e.getResource() != null)
               .map(e -> (Procedure) e.getResource())
               .collect(Collectors.toList());
+
+      procedureList = procedureList.stream()
+              .filter(p -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(p.getId()))))
+              .collect(Collectors.toList());
+
       data.setProcedures(procedureList);
     }
 
@@ -644,6 +675,13 @@ public class ReportController extends BaseController {
               .filter(e -> e.getResource() != null)
               .map(e -> (Encounter) e.getResource())
               .collect(Collectors.toList());
+
+      encounterList = encounterList.stream()
+              .filter(eL -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(eL.getId()))))
+              .collect(Collectors.toList());
+
       data.setEncounters(encounterList);
     }
 

@@ -34,7 +34,8 @@
             <td colspan="4">No patients in this report</td>
         </tr>
         </tfoot>
-        <h6 *ngIf="patients?.length" colspan="4">Total Patients: {{patients.length}}</h6>
+        <h6 *ngIf="getNoPatientsIncludedInReport()" colspan="4">Total Patients included in
+            report: {{getNoPatientsIncludedInReport()}}</h6>
     </table>
     <h6 *ngIf="!loading">Excluded Patients</h6>
     <table *ngIf="!loading" class="table table-striped  column-bordered-table">
@@ -50,12 +51,21 @@
             <td *ngIf="patient.excluded">{{patient.name}}</td>
             <td *ngIf="patient.excluded">
                 <div class="input-group">
-                    <select (ngModelChange)="validate()" [(ngModel)]="patient.coding" class="form-control">
-                        <option *ngFor="let o of codes" [ngValue]="o.code">{{o.display}}</option>
-                        <option value="other">Other, specify</option>
-                    </select>
-                    <input (ngModelChange)="validate()" *ngIf="patient.coding === 'other'" [(ngModel)]="patient.text"
-                           class="form-control" type="text"/>
+                    <div>
+                        <select (change)="validate()" [(ngModel)]="patient.coding" [class.is-invalid]="!patient.coding"
+                                class="form-control">
+                            <option *ngFor="let o of codes" [ngValue]="o.code">{{o.display}}</option>
+                            <option value="other">Other, specify</option>
+                        </select>
+                        <div *ngIf="!patient.coding" class="help-block">This field is required</div>
+                    </div>
+                    <div>
+                        <input (change)="validate()" *ngIf="patient.coding === 'other'" [(ngModel)]="patient.text"
+                               [class.is-invalid]="patient.text === ''" class="form-control" type="text"/>
+                        <div *ngIf="patient.coding === 'other' && patient.text === ''" class="help-block">This field is
+                            required
+                        </div>
+                    </div>
                 </div>
             </td>
             <td *ngIf="patient.excluded">
@@ -70,9 +80,12 @@
 
 </div>
 <div class="modal-footer">
-    <button (click)="save()" *ngIf="anyPatientExcluded()" [disabled]="!canSave" class="btn btn-primary " type="button">
-        Exclude Selected
-    </button>
+    <div [ngbTooltip]="!canSave?'Reason must be specified for all excluded patients.':''">
+        <button (click)="save()" *ngIf="anyPatientExcluded()" [disabled]="!canSave || saving" class="btn btn-primary "
+                type="button">
+            {{excludedButtonText}}
+        </button>
+    </div>
     <button (click)="activeModal.dismiss()" *ngIf="anyPatientExcluded()" class="btn btn-outline-dark" type="button">
         Cancel
     </button>

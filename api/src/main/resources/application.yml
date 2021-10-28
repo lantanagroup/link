@@ -2,7 +2,7 @@ api:
   fhir-server-store:
   auth-jwks-url:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
-  sender: com.lantanagroup.link.nhsn.LeidosSender
+  sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   send-url:
   cors:

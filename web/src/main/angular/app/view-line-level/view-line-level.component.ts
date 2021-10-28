@@ -6,6 +6,7 @@ import {ToastService} from '../toast.service';
 import {ViewPatientComponent} from "../view-patient/view-patient.component";
 import {ExcludedPatientModel} from "../model/ExcludedPatientModel";
 import {ReportPatientsIncludedExcluded} from "../model/report-patients-included-excluded";
+import {CodeableConcept} from "../model/fhir";
 
 @Component({
   templateUrl: './view-line-level.component.html',
@@ -13,13 +14,15 @@ import {ReportPatientsIncludedExcluded} from "../model/report-patients-included-
 })
 export class ViewLineLevelComponent implements OnInit {
   @Input() reportId: string
+  loading = false;
+  patients: ReportPatient[];
+  excludedPatients: ExcludedPatientModel[] = [];
+  reportPatientsIncludedExcluded: ReportPatientsIncludedExcluded[] = [];
+  saving = false;
+  canSave = false;
+  excludedButtonText = 'Exclude Selected';
 
-  public patients: ReportPatient[];
-  public excludedPatients: ExcludedPatientModel[] = [];
-  public reportPatientsIncludedExcluded: ReportPatientsIncludedExcluded[] = [];
-  public loading = false;
-  public canSave = false;
-  public codes = [
+  codes = [
     {
       code: 'FNCIEMR',
       display: 'Findings not captured in EMR',
@@ -91,18 +94,35 @@ export class ViewLineLevelComponent implements OnInit {
   validate() {
     this.canSave = true;
     for (let patient of this.reportPatientsIncludedExcluded) {
-      if (patient.excluded && patient.text === '' && patient.coding === '' || patient.coding === 'other' && patient.text === '') {
+      if (patient.excluded && (patient.coding === '' || patient.coding === 'other' && patient.text.trim() === '')) {
         this.canSave = false;
         break;
       }
     }
   }
 
-  save() {
+  async save() {
     if (this.canSave) {
-
-      //TO-DO
+      this.excludedButtonText = 'Excluding...';
+      this.saving = true;
+      try {
+        this.generateExcludedPatientsList();
+        await this.reportService.excludePatients(this.reportId, this.excludedPatients);
+        this.reportPatientsIncludedExcluded = this.reportPatientsIncludedExcluded.filter(ar => !this.excludedPatients.find(rm => (rm.patientId === ar.id)));
+        this.excludedPatients = [];
+        this.excludedButtonText = 'Excluded';
+      } catch (ex) {
+        this.toastService.showException('Error excluding patients', ex);
+      } finally {
+        this.excludedButtonText = "Exclude Selected";
+        this.canSave = true;
+        this.saving = false;
+      }
     }
+  }
+
+  getNoPatientsIncludedInReport() {
+    return this.reportPatientsIncludedExcluded.filter(patient => patient.excluded == false).length;
   }
 
   async ngOnInit() {
@@ -110,8 +130,13 @@ export class ViewLineLevelComponent implements OnInit {
   }
 
   addPatientToExcludedList(patient) {
-    const coding = this.codes.find(code => code.code === patient.coding);
-    const codeableConcept = {coding: [{system: "test", code: patient.coding, display: "tesT"}], text: patient.text};
+    const codeableConcept = new CodeableConcept();
+    const code = this.codes.find(code => code.code === patient.coding);
+    if (code !== undefined) {
+      codeableConcept.coding = [{system: code.system, code: patient.coding, display: code.display}]
+    } else {
+      codeableConcept.text = patient.text.trim();
+    }
     this.excludedPatients.push({patientId: patient.id, reason: codeableConcept});
   }
 
@@ -123,4 +148,5 @@ export class ViewLineLevelComponent implements OnInit {
       }
     }
   }
+
 }
