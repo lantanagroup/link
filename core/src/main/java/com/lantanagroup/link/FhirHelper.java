@@ -31,7 +31,7 @@ public class FhirHelper {
   private static final String REPORT_BUNDLE_TAG = "report-bundle";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static AuditEvent createAuditEvent(HttpServletRequest request, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -85,6 +85,12 @@ public class FhirHelper {
     }
     agentList.add(agent);
     auditEvent.setAgent(agentList);
+
+    return auditEvent;
+  }
+
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+    AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
 
     try {
       MethodOutcome outcome = fhirClient.create()

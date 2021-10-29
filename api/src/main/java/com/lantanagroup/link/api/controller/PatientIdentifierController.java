@@ -45,7 +45,7 @@ public class PatientIdentifierController extends BaseController {
 
     private void receiveFHIR(Resource resource, HttpServletRequest request) throws Exception {
         logger.info("Storing patient identifiers");
-        IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
+        IGenericClient fhirStoreClient = this.getFhirStoreClient();
         MethodOutcome outcome = null;
         if (resource.hasId()) {
             resource.setId((String) null);

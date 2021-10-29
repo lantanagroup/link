@@ -45,8 +45,6 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toSet;
-
 @RestController
 @RequestMapping("/api/report")
 public class ReportController extends BaseController {
@@ -268,7 +266,7 @@ public class ReportController extends BaseController {
           boolean regenerate) throws Exception {
 
     GenerateResponse response = new GenerateResponse();
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
     ReportContext context = new ReportContext(fhirStoreClient, this.ctx);
 
@@ -328,6 +326,9 @@ public class ReportController extends BaseController {
         } else {
           this.createResource(documentReference, fhirStoreClient);
         }
+      } else {
+        logger.error("Measure evaluator returned a null MeasureReport");
+        throw new HttpResponseException(500, "Internal Server Error");
       }
     } catch (ResponseStatusException rse) {
       logger.error(String.format("Error generating report: %s", rse.getMessage()), rse);
@@ -406,7 +407,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
     // get the report
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Bundle bundle = fhirStoreClient
             .search()
             .forResource(DocumentReference.class)
@@ -445,7 +446,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
     IReportDownloader downloader;
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Class<?> downloaderClass = Class.forName(this.config.getDownloader());
     Constructor<?> downloaderCtor = downloaderClass.getConstructor();
     downloader = (IReportDownloader) downloaderCtor.newInstance();
@@ -461,7 +462,7 @@ public class ReportController extends BaseController {
           Authentication authentication,
           HttpServletRequest request) throws Exception {
 
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    IGenericClient client = this.getFhirStoreClient();
     ReportModel report = new ReportModel();
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, reportId);
@@ -497,7 +498,7 @@ public class ReportController extends BaseController {
                                                     Authentication authentication,
                                                     HttpServletRequest request) throws Exception {
 
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    IGenericClient client = this.getFhirStoreClient();
     List<PatientReportModel> reports = new ArrayList();
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
@@ -549,7 +550,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @RequestBody ReportSaveModel data) throws Exception {
 
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    IGenericClient client = this.getFhirStoreClient();
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
@@ -587,7 +588,7 @@ public class ReportController extends BaseController {
 
     PatientDataModel data = new PatientDataModel();
 
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    IGenericClient client = this.getFhirStoreClient();
 
     //Checks to make sure the DocumentReference exists
     FhirHelper.getDocumentReference(client, reportId);
@@ -694,7 +695,7 @@ public class ReportController extends BaseController {
           Authentication authentication,
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
-    IGenericClient client = this.getFhirStoreClient(authentication, request);
+    IGenericClient client = this.getFhirStoreClient();
 
     DocumentReference documentReference = FhirHelper.getDocumentReference(client, id);
 
@@ -723,7 +724,7 @@ public class ReportController extends BaseController {
     boolean andCond = false;
     ReportBundle reportBundle = new ReportBundle();
     try {
-      IGenericClient fhirStoreClient = this.getFhirStoreClient(null, request);
+      IGenericClient fhirStoreClient = this.getFhirStoreClient();
       String url = this.config.getFhirServerStore();
       if (bundleId != null) {
         url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
@@ -831,7 +832,7 @@ public class ReportController extends BaseController {
     IGenericClient fhirStoreClient;
 
     try {
-      fhirStoreClient = this.getFhirStoreClient(authentication, request);
+      fhirStoreClient = this.getFhirStoreClient();
     } catch (Exception ex) {
       logger.error("Error initializing FHIR client", ex);
       throw new HttpResponseException(500, "Internal Server Error");

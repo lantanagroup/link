@@ -3,7 +3,9 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
+import lombok.Setter;
 import org.hl7.fhir.r4.model.DomainResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -18,26 +20,32 @@ public class BaseController {
   protected FhirContext ctx = FhirContext.forR4();
   @Autowired
   private ApiConfig config;
+
+  @Setter
   private IGenericClient fhirStoreClient;
 
-  BaseController() {
-    this.ctx.getRestfulClientFactory().setSocketTimeout(200 * 5000);
-  }
-
-  protected IGenericClient getFhirStoreClient(Authentication authentication, HttpServletRequest request) throws Exception {
-    if (this.fhirStoreClient != null) {
-      return this.fhirStoreClient;
+  protected IGenericClient getFhirStoreClient() {
+    if (this.fhirStoreClient == null) {
+      String fhirBase = config.getFhirServerStore();
+      IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
+      this.fhirStoreClient = fhirStoreClient;
     }
 
-    String fhirBase = config.getFhirServerStore();
-    IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
-
-    this.fhirStoreClient = fhirStoreClient;
-    return fhirStoreClient;
+    return this.fhirStoreClient;
   }
 
-  public void setFhirStoreClient(IGenericClient fhirStoreClient) {
-    this.fhirStoreClient = fhirStoreClient;
+  @Setter
+  private FhirDataProvider fhirStoreProvider;
+
+  protected FhirDataProvider getFhirStoreProvider() {
+    if (this.fhirStoreProvider == null) {
+      this.fhirStoreProvider = new FhirDataProvider(this.getFhirStoreClient());
+    }
+    return this.fhirStoreProvider;
+  }
+
+  public BaseController() {
+    this.ctx.getRestfulClientFactory().setSocketTimeout(200 * 5000);
   }
 
   protected void createResource(Resource resource, IGenericClient fhirStoreClient) {
