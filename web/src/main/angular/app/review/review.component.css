@@ -25,3 +25,12 @@ span.message {
 button#measures {
     overflow: auto;
 }
+
+.flex-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    margin: 1.5vw;
+    height: auto;
+    background-color: white;
+}
