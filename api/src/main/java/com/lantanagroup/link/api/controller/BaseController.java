@@ -40,16 +40,17 @@ public class BaseController {
     this.fhirStoreClient = fhirStoreClient;
   }
 
-  protected void createResource(Resource resource, IGenericClient fhirStoreClient) {
+  protected MethodOutcome createResource(Resource resource, IGenericClient fhirStoreClient) {
     MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
     if (!outcome.getCreated() || outcome.getResource() == null) {
       logger.error("Failed to store/create FHIR resource");
     } else {
       logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
     }
+    return outcome;
   }
 
-  protected void updateResource(Resource resource, IGenericClient fhirStoreClient) {
+  protected MethodOutcome updateResource(Resource resource, IGenericClient fhirStoreClient) {
     int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
 
     // Make sure the ID is not version-specific
@@ -65,5 +66,6 @@ public class BaseController {
     } else {
       logger.error(String.format("Failed to update FHIR resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
+    return outcome;
   }
 }

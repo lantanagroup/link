@@ -32,7 +32,7 @@ public class ReportDataController extends BaseController{
   }
 
   @PostMapping(value = "/{resourceType}")
-  public void storeReportData(Authentication authentication,
+  public String storeReportData(Authentication authentication,
                               HttpServletRequest request,
                               @PathVariable String resourceType,
                               @RequestBody() Resource resource) throws Exception{
@@ -53,12 +53,13 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource with id " + resource.getId() + " already exists");
     }
     else{
-      this.createResource(resource, fhirStoreClient);
+      MethodOutcome outcome = this.createResource(resource, fhirStoreClient);
+      return "Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart();
     }
   }
 
   @PutMapping(value = "/{resourceType}/{resourceId}")
-  public void updateReportData(Authentication authentication,
+  public String updateReportData(Authentication authentication,
                                HttpServletRequest request,
                                @PathVariable("resourceType") String resourceType,
                                @PathVariable("resourceId") String resourceId,
@@ -77,11 +78,11 @@ public class ReportDataController extends BaseController{
             .execute();
 
     if(searchResults.hasEntry()){
-      this.updateResource(resource, fhirStoreClient);
+      MethodOutcome outcome = this.updateResource(resource, fhirStoreClient);
+      return String.format("Update is successful for %s/%s", ((DomainResource)outcome.getResource()).getResourceType().toString(), ((DomainResource)outcome.getResource()).getIdElement().getIdPart());
     }
     else{
       throw new HttpResponseException(500, "Resource with resourceID " + resourceId + " does not exist");
     }
-
   }
 }
