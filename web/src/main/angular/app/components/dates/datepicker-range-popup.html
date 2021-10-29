@@ -6,7 +6,7 @@
                    ngbDatepicker
                    #datepicker="ngbDatepicker"
                    [autoClose]="'outside'"
-                   (dateSelect)="onDateSelection($event)"
+                   (dateSelect)="onDateSelection($event, datepicker)"
                    [displayMonths]="2"
                    [dayTemplate]="t"
                    outsideDays="hidden"

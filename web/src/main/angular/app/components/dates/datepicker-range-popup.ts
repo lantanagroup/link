@@ -40,6 +40,10 @@ import {NgbCalendar, NgbDate, NgbDateParserFormatter} from '@ng-bootstrap/ng-boo
       .custom-day.faded {
           background-color: rgba(2, 117, 216, 0.5);
       }
+
+      .form-inline .input-group {
+          width: 20rem;
+      }
   `]
 })
 export class NgbdDatepickerRangePopup {
@@ -52,12 +56,13 @@ export class NgbdDatepickerRangePopup {
   constructor(private calendar: NgbCalendar, public formatter: NgbDateParserFormatter) {
   }
 
-  onDateSelection(date: NgbDate) {
+  onDateSelection(date: NgbDate, picker: any) {
     if (!this.fromDate && !this.toDate) {
       this.fromDate = date;
     } else if (this.fromDate && !this.toDate && date && (date.equals(this.fromDate) || date.after(this.fromDate))) {
       this.toDate = date;
       this.change.emit({startDate: this.fromDate, endDate: this.toDate})
+      picker.close();
     } else {
       this.toDate = null;
       this.fromDate = date;
