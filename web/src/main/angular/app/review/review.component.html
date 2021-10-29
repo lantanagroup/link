@@ -31,19 +31,7 @@
         </div>
         <div>
             <label>Submitted Date</label>
-            <form #f="ngForm" class="form-inline">
-                <div class="form-group">
-                    <div class="input-group">
-                        <input #d="ngbDatepicker" (ngModelChange)="selectSubmittedDate()"
-                               [(ngModel)]="filter.submittedDate"
-                               class="form-control" name="dp" ngbDatepicker placeholder="YYYY-MM-DD">
-                        <div class="input-group-append">
-                            <button (click)="d.toggle()" class="btn btn-outline-secondary calendar"
-                                    type="button"></button>
-                        </div>
-                    </div>
-                </div>
-            </form>
+            <ngbd-datepicker-popup #submitteddate (change)="selectSubmittedDate($event)"></ngbd-datepicker-popup>
         </div>
         <div>
             <label>Submitter</label>
@@ -60,7 +48,8 @@
         </div>
         <div style="margin-top: 1.5vw;">
             <div>
-                <button class="btn btn-primary" on-click="resetFilters(reportingdate)">Reset Filters</button>
+                <button class="btn btn-primary" on-click="resetFilters(reportingdate, submitteddate);">Reset Filters
+                </button>
             </div>
         </div>
     </div>

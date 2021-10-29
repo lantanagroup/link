@@ -44,7 +44,7 @@ export class ReviewComponent implements OnInit {
     await this.searchReports();
   }
 
-  resetFilters(reportingDate) {
+  resetFilters(reportingDate, submittedDate) {
     this.filter.reportTypeId = "";
     this.page = 1;
     this.filter.measure = 'Select measure';
@@ -53,6 +53,7 @@ export class ReviewComponent implements OnInit {
     this.filter.submittedDate = null;
     this.filter.period = {startDate: null, endDate: null};
     reportingDate.resetDates();
+    submittedDate.resetDate();
     this.searchReports();
   }
 
@@ -75,7 +76,8 @@ export class ReviewComponent implements OnInit {
     this.onChangeFilters().then(() => this.page = 1).catch(error => console.log(error))
   }
 
-  selectSubmittedDate() {
+  selectSubmittedDate(submittedDate) {
+    this.filter.submittedDate = submittedDate;
     this.onChangeFilters().then(() => this.page = 1).catch(error => console.log(error))
   }
 
