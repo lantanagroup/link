@@ -79,10 +79,25 @@ public class ReportDataController extends BaseController{
 
     if(searchResults.hasEntry()){
       MethodOutcome outcome = this.updateResource(resource, fhirStoreClient);
+
       return String.format("Update is successful for %s/%s", ((DomainResource)outcome.getResource()).getResourceType().toString(), ((DomainResource)outcome.getResource()).getIdElement().getIdPart());
     }
     else{
       throw new HttpResponseException(500, "Resource with resourceID " + resourceId + " does not exist");
     }
+  }
+
+  @Override
+  public MethodOutcome createResource(Resource resource, IGenericClient fhirStoreClient){
+    MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
+    if(resource.getId() != null){
+      outcome = fhirStoreClient.update().resource(resource).execute();
+    }
+    if (!outcome.getCreated() || outcome.getResource() == null) {
+      logger.error("Failed to store/create FHIR resource");
+    } else {
+      logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
+    }
+    return outcome;
   }
 }
