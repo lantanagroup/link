@@ -52,7 +52,7 @@ export class ViewLineLevelComponent implements OnInit {
     try {
       this.patients = await this.reportService.getReportPatients(this.reportId);
       for (let patient of this.patients) {
-        let patientsIncludedExcluded = {...patient, excluded: false, text: '', coding: ''};
+        let patientsIncludedExcluded = {...patient, excludePending: false, text: '', coding: ''};
         this.reportPatientsIncludedExcluded.push(patientsIncludedExcluded);
       }
       this.excludedPatients = [];
@@ -65,7 +65,7 @@ export class ViewLineLevelComponent implements OnInit {
 
   excludePatient(patient: ReportPatient) {
     const foundPatient = this.reportPatientsIncludedExcluded.filter(mypatient => mypatient.id === patient.id)[0];
-    foundPatient.excluded = true;
+    foundPatient.excludePending = true;
     this.validate();
   }
 
@@ -94,7 +94,7 @@ export class ViewLineLevelComponent implements OnInit {
   validate() {
     this.canSave = true;
     for (let patient of this.reportPatientsIncludedExcluded) {
-      if (patient.excluded && (patient.coding === '' || patient.coding === 'other' && patient.text.trim() === '')) {
+      if (patient.excludePending && (patient.coding === '' || (patient.coding === 'other' && patient.text.trim() === ''))) {
         this.canSave = false;
         break;
       }
@@ -117,6 +117,8 @@ export class ViewLineLevelComponent implements OnInit {
         this.excludedButtonText = "Exclude Selected";
         this.canSave = true;
         this.saving = false;
+        this.reportPatientsIncludedExcluded = [];
+        await this.refresh();
       }
     }
   }
@@ -143,7 +145,7 @@ export class ViewLineLevelComponent implements OnInit {
   private generateExcludedPatientsList() {
     this.excludedPatients = [];
     for (let patient of this.reportPatientsIncludedExcluded) {
-      if (patient.excluded) {
+      if (patient.excludePending) {
         this.addPatientToExcludedList(patient);
       }
     }

@@ -13,18 +13,21 @@
             <th>Name</th>
             <th>Sex</th>
             <th>DOB</th>
-            <th>&nbsp;</th>
+            <th>Excluded</th>
         </tr>
         </thead>
         <tbody *ngIf="reportPatientsIncludedExcluded?.length">
         <tr *ngFor="let patient of reportPatientsIncludedExcluded">
-            <td *ngIf="!patient.excluded">{{patient.name}}</td>
-            <td *ngIf="!patient.excluded">{{patient.sex}}</td>
-            <td *ngIf="!patient.excluded">{{patient.dateOfBirth | date}}</td>
-            <td *ngIf="!patient.excluded">
+            <td *ngIf="!patient.excludePending">{{patient.name}}</td>
+            <td *ngIf="!patient.excludePending">{{patient.sex}}</td>
+            <td *ngIf="!patient.excludePending">{{patient.dateOfBirth | date}}</td>
+            <td *ngIf="!patient.excludePending">
+                <input type="checkbox" [checked]="patient.excluded" [disabled]="true">
+            </td>
+            <td *ngIf="!patient.excludePending">
                 <div class="btn-group pull-right">
                     <button (click)="viewPatientData(patient.id)" class="btn btn-primary" type="button">View</button>
-                    <button (click)="excludePatient(patient)" class="btn btn-secondary" type="button">Exclude</button>
+                    <button *ngIf="!patient.excluded" (click)="excludePatient(patient)" class="btn btn-secondary" type="button">Exclude</button>
                 </div>
             </td>
         </tr>
@@ -48,8 +51,8 @@
         </thead>
         <tbody *ngIf="reportPatientsIncludedExcluded?.length">
         <tr *ngFor="let patient of reportPatientsIncludedExcluded">
-            <td *ngIf="patient.excluded">{{patient.name}}</td>
-            <td *ngIf="patient.excluded">
+            <td *ngIf="patient.excludePending">{{patient.name}}</td>
+            <td *ngIf="patient.excludePending">
                 <div class="input-group">
                     <div>
                         <select (change)="validate()" [(ngModel)]="patient.coding" [class.is-invalid]="!patient.coding"
@@ -68,7 +71,7 @@
                     </div>
                 </div>
             </td>
-            <td *ngIf="patient.excluded">
+            <td *ngIf="patient.excludePending">
                 <div class="btn-group pull-right">
                     <button (click)="reIncludePatient(patient)" class="btn btn-secondary" type="button">Re-include
                     </button>

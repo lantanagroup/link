@@ -9,4 +9,5 @@ public class PatientReportModel {
     String name;
     String sex;
     String dateOfBirth;
+    Boolean excluded;
 }
