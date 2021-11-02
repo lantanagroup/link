@@ -71,7 +71,7 @@ export class ViewLineLevelComponent implements OnInit {
 
   reIncludePatient(patient: ReportPatient) {
     const foundPatient = this.reportPatientsIncludedExcluded.filter(mypatient => mypatient.id === patient.id)[0];
-    foundPatient.excluded = false;
+    foundPatient.excludePending = false;
     foundPatient.text = '';
     foundPatient.coding = '';
     this.validate();
