@@ -84,7 +84,7 @@ export class ViewLineLevelComponent implements OnInit {
   }
 
   anyPatientExcluded() {
-    const patient = this.reportPatientsIncludedExcluded.find(patient => patient.excluded == true);
+    const patient = this.reportPatientsIncludedExcluded.find(patient => patient.excludePending == true);
     if (patient !== undefined) {
       return true;
     }
