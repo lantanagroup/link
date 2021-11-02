@@ -613,7 +613,9 @@ public class ReportController extends BaseController {
     List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
 
     if (evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()) {
-      throw new HttpResponseException(404, String.format("Report does not contain a patient with id %s", patientId));
+      if(measureReport.getExtension().get(0).getExtension().stream().filter(ext -> ((Reference)ext.getValue()).getReference().contains(patientId)).findAny().isEmpty()){
+        throw new HttpResponseException(404, String.format("Report does not contain a patient with id %s", patientId));
+      }
     }
 
     // Conditions
