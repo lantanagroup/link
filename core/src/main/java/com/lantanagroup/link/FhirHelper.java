@@ -11,6 +11,7 @@ import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.lantanagroup.link.model.PatientReportModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -281,6 +282,29 @@ public class FhirHelper {
       bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
     }
     return bundles;
+  }
+
+  public static PatientReportModel setPatientFields(Patient patient, Boolean excluded){
+    PatientReportModel report = new PatientReportModel();
+    report.setName(FhirHelper.getName(patient.getName()));
+
+    if (patient.getBirthDate() != null) {
+      report.setDateOfBirth(Helper.getFhirDate(patient.getBirthDate()));
+    }
+
+    if (patient.getGender() != null) {
+      report.setSex(patient.getGender().toString());
+    }
+
+    if (patient.getId() != null) {
+      report.setId(patient.getIdElement().getIdPart());
+    }
+
+    if(excluded){
+      report.setExcluded(true);
+    }
+
+    return report;
   }
 
   public static void addEntriesToBundle(Bundle source, Bundle destination) {

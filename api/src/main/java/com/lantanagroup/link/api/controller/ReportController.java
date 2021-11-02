@@ -522,7 +522,8 @@ public class ReportController extends BaseController {
         patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
         for(Extension ext : extension.getExtension()){
           if(ext.getUrl().contains("patient")){
-            patientRequest.getEntry().get(index).getRequest().setUrl(((Property)ext.getValue().getNamedProperty("reference")).getValues().get(0));
+            String patientUrl = (ext.getValue().getNamedProperty("reference")).getValues().get(0).toString() + "/_history";
+            patientRequest.getEntry().get(index).getRequest().setUrl(patientUrl);
           }
         }
 
@@ -533,20 +534,22 @@ public class ReportController extends BaseController {
       Bundle patientBundle = client.transaction().withBundle(patientRequest).execute();
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
         PatientReportModel report = new PatientReportModel();
-        Patient patient = (Patient) entry.getResource();
 
-        report.setName(FhirHelper.getName(patient.getName()));
+        if(entry.getResource() != null){
+          if(entry.getResource().getResourceType().toString() == "Patient") {
 
-        if (patient.getBirthDate() != null) {
-          report.setDateOfBirth(Helper.getFhirDate(patient.getBirthDate()));
-        }
+            Patient patient = (Patient) entry.getResource();
 
-        if (patient.getGender() != null) {
-          report.setSex(patient.getGender().toString());
-        }
+            report = FhirHelper.setPatientFields(patient, false);
+          }
+          else if(entry.getResource().getResourceType().toString() == "Bundle"){
+            //This assumes that the entry right after the DELETE event is the most recent version of the Patient
+            //immediately before the DELETE (entry indexed at 1)
+            Patient deletedPatient = ((Patient) ((Bundle) entry.getResource()).getEntry().get(1).getResource());
 
-        if (patient.getId() != null) {
-          report.setId(patient.getIdElement().getIdPart());
+            report = FhirHelper.setPatientFields(deletedPatient, true);
+
+          }
         }
 
         reports.add(report);
@@ -894,14 +897,12 @@ public class ReportController extends BaseController {
       // Find any extensions that list the Patient has already being excluded
       Boolean foundExcluded = measureReport.getExtension().stream()
               .filter(e -> e.getUrl().equals(Constants.ExcludedPatientExtUrl))
-              .anyMatch(e -> {
-                return e.getExtension().stream()
-                        .filter(nextExt -> nextExt.getUrl().equals("patient") && nextExt.getValue() instanceof Reference)
-                        .anyMatch(nextExt -> {
-                          Reference patientRef = (Reference) nextExt.getValue();
-                          return patientRef.getReference().equals("Patient/" + excludedPatient.getPatientId());
-                        });
-              });
+              .anyMatch(e -> e.getExtension().stream()
+                      .filter(nextExt -> nextExt.getUrl().equals("patient") && nextExt.getValue() instanceof Reference)
+                      .anyMatch(nextExt -> {
+                        Reference patientRef = (Reference) nextExt.getValue();
+                        return patientRef.getReference().equals("Patient/" + excludedPatient.getPatientId());
+                      }));
 
       // Throw an error if the Patient does not show up in either evaluatedResources or the excluded extensions
       if (foundEvaluatedPatient.size() == 0 && !foundExcluded) {

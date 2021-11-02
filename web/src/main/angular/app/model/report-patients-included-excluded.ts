@@ -1,7 +1,7 @@
 import {ReportPatient} from "./report-patient";
 
 export class ReportPatientsIncludedExcluded extends ReportPatient {
-  excluded: boolean;
+  excludePending: boolean;
   text: string;
   coding: string;
 }
