@@ -29,7 +29,7 @@ public class ReportDefinitionController extends BaseController {
    */
   @GetMapping
   public List<StoredReportDefinition> getMeasures(Authentication authentication, HttpServletRequest request) throws Exception {
-    IGenericClient fhirClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirClient = this.getFhirStoreClient();
 
     // Find all Bundles with the report definition tag
     Bundle searchResults = fhirClient.search()
