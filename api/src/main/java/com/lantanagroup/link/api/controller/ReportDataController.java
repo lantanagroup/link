@@ -17,20 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 public class ReportDataController extends BaseController{
   private static final Logger logger = LoggerFactory.getLogger(ReportDataController.class);
 
-  //Added a get request so there was a way to test if the data was stored properly
-  @GetMapping(value = "/{resourceType}")
-  public Bundle getReportData(Authentication authentication,
-                            HttpServletRequest request,
-                            @PathVariable String resourceType) throws Exception{
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
-    return fhirStoreClient
-            .search()
-            .forResource(resourceType)
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
-
   @PostMapping(value = "/{resourceType}")
   public String storeReportData(Authentication authentication,
                               HttpServletRequest request,
