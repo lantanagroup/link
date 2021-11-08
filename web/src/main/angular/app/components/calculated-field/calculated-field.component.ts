@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {IMeasureReportPopulationComponent} from '../../fhir';
 import {ReportModel} from "../../model/ReportModel";
+import {debounceTime} from "rxjs/operators";
 
 @Component({
   selector: 'app-calculated-field',
@@ -15,8 +16,15 @@ export class CalculatedFieldComponent implements OnInit {
   @Input()   populationCode: string;
   @Output()  invalidate: EventEmitter<any> = new EventEmitter<any>();
   @Output()  dirty: EventEmitter<any> = new EventEmitter<any>();
+  valueChange: EventEmitter<any> = new EventEmitter<any>();
 
   constructor() {
+    this.valueChange.pipe(debounceTime(500))
+        .subscribe( (value:number) => {
+          if(value == null || value < this.originalValue){
+            this.getPopulation().count = this.originalValue;
+          }
+        })
   }
 
   get value() {
@@ -25,9 +33,6 @@ export class CalculatedFieldComponent implements OnInit {
   }
 
   set value(value: number) {
-    if (value == null){
-      value= this.originalValue;
-    }
     const population = this.getPopulation();
     if (population) {
       this.ensureOriginalCount(population);
