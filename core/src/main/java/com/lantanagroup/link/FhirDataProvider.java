@@ -9,11 +9,10 @@ import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -47,7 +46,7 @@ public class FhirDataProvider {
   }
 
   public void updateResource(Resource resource) {
-    int initialVersion = resource.getMeta().getVersionId() != null?Integer.parseInt(resource.getMeta().getVersionId()):0;
+    int initialVersion = resource.getMeta().getVersionId() != null ? Integer.parseInt(resource.getMeta().getVersionId()) : 0;
 
     // Make sure the ID is not version-specific
     if (resource.getIdElement() != null && resource.getIdElement().getIdPart() != null) {
@@ -157,7 +156,7 @@ public class FhirDataProvider {
                 .forResource(Measure.class)
                 .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
                 .returnBundle(Bundle.class)
-                .summaryMode(SummaryEnum.TRUE)
+                .summaryMode(SummaryEnum.FALSE)
                 .execute();
 
         if (matchingMeasures.getEntry().size() == 1) {
@@ -209,4 +208,30 @@ public class FhirDataProvider {
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
   }
+
+  public IBaseResource getResource(String resourceType, String resourceId) {
+    return this.client
+            .read()
+            .resource(resourceType)
+            .withId(resourceId)
+            .elementsSubset("id")
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
+  public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
+    MeasureReport measureReport = client.operation()
+            .onInstance(new IdType("Measure", measureId))
+            .named("$evaluate-measure")
+            .withParameters(parameters)
+            .useHttpGet()
+            .returnResourceType(MeasureReport.class)
+            .execute();
+    return measureReport;
+  }
+
+  public Bundle fetchResourceFromUrl(String url) {
+    return this.client.fetchResourceFromUrl(Bundle.class, url);
+  }
+
 }

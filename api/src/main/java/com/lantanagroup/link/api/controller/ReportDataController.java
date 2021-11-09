@@ -3,12 +3,15 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import org.apache.http.client.HttpResponseException;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DomainResource;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.http.client.HttpResponseException;
-import org.hl7.fhir.r4.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletRequest;
 
 
@@ -27,7 +30,7 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Bundle searchResults = fhirStoreClient.search()
             .forResource(resourceType)
             .where(Resource.RES_ID.exactly().identifier(resource.getId()))
@@ -55,7 +58,7 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Bundle searchResults = fhirStoreClient.search()
             .forResource(resourceType)
             .where(Resource.RES_ID.exactly().identifier(resourceId))

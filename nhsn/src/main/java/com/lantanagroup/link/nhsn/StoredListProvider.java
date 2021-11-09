@@ -24,9 +24,9 @@ public class StoredListProvider implements IPatientIdProvider {
   @Override
   public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-    FhirContext ctx = context.getFhirContext();
+    FhirContext ctx = context.getFhirProvider().getClient().getFhirContext();
 
-    Bundle bundle = context.getFhirStoreClient()
+    Bundle bundle = context.getFhirProvider().getClient()
             .search()
             .forResource(ListResource.class)
             .and(ListResource.DATE.exactly().day(criteria.getPeriodStart()))
@@ -39,7 +39,7 @@ public class StoredListProvider implements IPatientIdProvider {
       return patientsOfInterest;
     }
 
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirStoreClient(), ctx);
+    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider().getClient(), ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));

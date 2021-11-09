@@ -1,7 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -40,7 +39,7 @@ public class FHIRSender implements IReportSender {
   }
 
   @Override
-  public void send (MeasureReport report, FhirContext ctx, HttpServletRequest request, Authentication auth, IGenericClient fhirStoreClient) throws Exception {
+  public void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirProvider) throws Exception {
     if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
       throw new Exception("Not configured with any locations to send");
     }
@@ -71,11 +70,12 @@ public class FHIRSender implements IReportSender {
 
     logger.info("Building Bundle for MeasureReport to send...");
 
-    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirStoreClient);
+
+    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirProvider);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
-    String xml = ctx.newXmlParser().encodeResourceToString(bundle);
+    String xml = fhirProvider.getClient().getFhirContext().newXmlParser().encodeResourceToString(bundle);
 
     logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
 
@@ -106,7 +106,7 @@ public class FHIRSender implements IReportSender {
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
-        FhirHelper.recordAuditEvent(request, fhirStoreClient, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
+        FhirHelper.recordAuditEvent(request, fhirProvider.getClient(), ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
       } catch (IOException ex) {
         if(ex.getMessage().contains("403")){
           logger.error("Error authorizing send: " + ex.getMessage());
