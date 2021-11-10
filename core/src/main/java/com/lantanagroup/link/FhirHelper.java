@@ -257,9 +257,7 @@ public class FhirHelper {
       report.setId(patient.getIdElement().getIdPart());
     }
 
-    if(excluded){
-      report.setExcluded(true);
-    }
+    report.setExcluded(excluded);
 
     return report;
   }

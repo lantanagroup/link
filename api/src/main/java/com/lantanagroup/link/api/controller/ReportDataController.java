@@ -3,15 +3,12 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import org.apache.http.client.HttpResponseException;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DomainResource;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.http.client.HttpResponseException;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 
 
@@ -78,10 +75,7 @@ public class ReportDataController extends BaseController{
 
   @Override
   public MethodOutcome createResource(Resource resource, IGenericClient fhirStoreClient){
-    MethodOutcome outcome = fhirStoreClient.create().resource(resource).execute();
-    if(resource.getId() != null){
-      outcome = fhirStoreClient.update().resource(resource).execute();
-    }
+    MethodOutcome outcome = fhirStoreClient.update().resource(resource).execute();
     if (!outcome.getCreated() || outcome.getResource() == null) {
       logger.error("Failed to store/create FHIR resource");
     } else {
