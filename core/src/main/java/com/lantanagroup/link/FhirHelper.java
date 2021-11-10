@@ -1,19 +1,14 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.gclient.ICriterion;
-import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lantanagroup.link.model.PatientReportModel;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -23,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
@@ -32,7 +27,7 @@ public class FhirHelper {
   private static final String REPORT_BUNDLE_TAG = "report-bundle";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static AuditEvent createAuditEvent(HttpServletRequest request, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -87,6 +82,12 @@ public class FhirHelper {
     agentList.add(agent);
     auditEvent.setAgent(agentList);
 
+    return auditEvent;
+  }
+
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+    AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
+
     try {
       MethodOutcome outcome = fhirClient.create()
               .resource(auditEvent)
@@ -108,24 +109,6 @@ public class FhirHelper {
    */
   public static String getIdFromVersion(String version){
     return version.substring(version.lastIndexOf("fhir/") + 5, version.indexOf("/_history"));
-  }
-
-  /**
-   * Gets resources of the specified type for the patient given the criterion
-   *
-   * @param fhirClient   The FHIR client to use for the HTTP interaction
-   * @param criterion    The criteria to use when searching for the specific resource type. Example: Condition.SUBJECT.hasId(patientId)
-   * @param resourceType The type of resource to search for
-   * @return
-   */
-  public static Bundle getPatientResources(IGenericClient fhirClient, ICriterion<ReferenceClientParam> criterion, String resourceType) {
-    return fhirClient
-            .search()
-            .forResource(resourceType)
-            .where(criterion)
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
   }
 
   public static String getName(List<HumanName> names) {
@@ -155,32 +138,6 @@ public class FhirHelper {
     return "Unknown";
   }
 
-  public static DocumentReference getDocumentReference(IGenericClient client, String reportId) throws HttpResponseException {
-    logger.debug(String.format("Getting DocumentReference for report %s", reportId));
-
-    Bundle documentReferences = client.search()
-            .forResource(DocumentReference.class)
-            .where(DocumentReference.IDENTIFIER.exactly().identifier(reportId))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-
-    if (!documentReferences.hasEntry() || documentReferences.getEntry().size() != 1) {
-      throw new HttpResponseException(404, String.format("Report with id %s does not exist", reportId));
-    }
-
-    return (DocumentReference) documentReferences.getEntry().get(0).getResource();
-  }
-
-  public static MeasureReport getMeasureReport(IGenericClient client, String reportId) {
-    logger.debug(String.format("Getting MeasureReport for report %s", reportId));
-
-    return client.read()
-            .resource(MeasureReport.class)
-            .withId(reportId)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
 
   public static Extension createVersionExtension(String value) {
     return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
@@ -226,7 +183,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport measureReport, IGenericClient fhirServer) {
+  public static Bundle bundleMeasureReport(MeasureReport measureReport, FhirDataProvider fhirProvider) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(REPORT_BUNDLE_TAG);
@@ -249,7 +206,7 @@ public class FhirHelper {
 
     Bundle patientBundle = generateBundle(resourceReferences);
 
-    Bundle patientBundleResponse = fhirServer.transaction().withBundle(patientBundle).execute();
+    Bundle patientBundleResponse = fhirProvider.transaction(patientBundle);
 
     patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
       bundle.addEntry().setResource((Resource) entry.getResource());
@@ -343,35 +300,6 @@ public class FhirHelper {
     return found.isPresent() ? found.get() : null;
   }
 
-  /**
-   * Gets a Measure for the given DocumentReference, by looking for a Measure that matches the identifier
-   * included in the DocumentReference.identifier
-   * @param fhirStoreClient
-   * @param docRef
-   * @return
-   */
-  public static Measure getMeasure(IGenericClient fhirStoreClient, DocumentReference docRef) {
-    logger.debug(String.format("Getting Measure for DocumentReference %s", docRef.getId()));
-
-    if (docRef.getIdentifier().size() > 0) {
-      for (Identifier identifier : docRef.getIdentifier()) {
-        Bundle matchingMeasures = fhirStoreClient.search()
-                .forResource(Measure.class)
-                .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
-                .returnBundle(Bundle.class)
-                .summaryMode(SummaryEnum.TRUE)
-                .execute();
-
-        if (matchingMeasures.getEntry().size() == 1) {
-          return (Measure) matchingMeasures.getEntry().get(0).getResource();
-        }
-      }
-    } else {
-      logger.warn("No identifier specified on DocumentReference");
-    }
-
-    return null;
-  }
 
   public enum AuditEventTypes {
     Generate,

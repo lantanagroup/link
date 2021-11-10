@@ -1,10 +1,9 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.CacheControlDirective;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.IReportDownloader;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.IReportDownloader;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -25,26 +24,23 @@ public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
 
   @Override
-  public void download(String reportId, IGenericClient fhirStoreClient, HttpServletResponse response, FhirContext ctx, ApiConfig config) throws IOException, TransformerException {
-    Bundle docRefBundle = fhirStoreClient
-            .search()
-            .forResource(DocumentReference.class)
-            .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(config.getDocumentReferenceSystem(), reportId))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-    if (docRefBundle.getTotal() == 0) {
+  public void download(String reportId, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, ApiConfig config) throws IOException, TransformerException {
+
+    DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId);
+
+    if (docRefBundle == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not exist.");
     }
 
-    MeasureReport measureReport = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
+    MeasureReport measureReport = fhirDataProvider.getMeasureReportById(reportId);
+    // MeasureReport measureReport = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
 
     if (measureReport == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not have a MeasureReport");
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirStoreClient);
+    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 

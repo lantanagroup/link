@@ -43,13 +43,8 @@ public class MeasureEvaluator {
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
-      measureReport = this.context.getFhirStoreClient().operation()
-              .onInstance(new IdType("Measure", this.context.getMeasureId()))
-              .named("$evaluate-measure")
-              .withParameters(parameters)
-              .useHttpGet()
-              .returnResourceType(MeasureReport.class)
-              .execute();
+
+      measureReport = context.getFhirProvider().getMeasureReport(this.context.getMeasureId(), parameters);
 
       logger.info(String.format("Done executing $evaluate-measure for %s", this.context.getMeasureId()));
 

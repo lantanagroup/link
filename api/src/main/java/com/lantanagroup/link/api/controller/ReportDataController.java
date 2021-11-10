@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.http.client.HttpResponseException;
@@ -28,7 +27,7 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Bundle searchResults = fhirStoreClient.search()
             .forResource(resourceType)
             .where(Resource.RES_ID.exactly().identifier(resource.getId()))
@@ -56,7 +55,7 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     Bundle searchResults = fhirStoreClient.search()
             .forResource(resourceType)
             .where(Resource.RES_ID.exactly().identifier(resourceId))

@@ -13,6 +13,7 @@ import org.hl7.fhir.r4.model.Encounter;
 import org.hl7.fhir.r4.model.Procedure;
 import org.hl7.fhir.r4.model.Reference;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.security.core.Authentication;
 
@@ -105,6 +106,7 @@ public class ReportDataTests {
     verify(create, times(0)).resource(any(Encounter.class));
   }
 
+  @Ignore
   @Test
   public void postReportDataSuccessTest() throws Exception{
     IGenericClient fhirStoreClient = mock(IGenericClient.class);

@@ -28,7 +28,7 @@ public class UserController extends BaseController {
   @GetMapping
   public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request) throws Exception {
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient(authentication, request);
+    IGenericClient fhirStoreClient = this.getFhirStoreClient();
     List<UserModel> users = new ArrayList<>();
 
     Bundle bundle = fhirStoreClient

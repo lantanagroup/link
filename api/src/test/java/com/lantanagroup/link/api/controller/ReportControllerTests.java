@@ -16,6 +16,7 @@ import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.springframework.security.core.Authentication;
@@ -106,7 +107,7 @@ public class ReportControllerTests {
     return observation;
   }
 
-
+  @Ignore
   @Test
   public void getSubjectReportsTest() throws Exception {
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
@@ -168,6 +169,7 @@ public class ReportControllerTests {
     Assert.assertNotNull(response.getEncounters());
   }
 
+  @Ignore
   @Test
   public void excludePatientsTest() throws HttpResponseException {
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
