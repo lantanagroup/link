@@ -75,8 +75,7 @@ public class FHIRSender implements IReportSender {
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
-    String xml = fhirProvider.getClient().getFhirContext().newXmlParser().encodeResourceToString(bundle);
-
+    String xml = fhirProvider.bundleToXml(bundle);
     logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
 
     for (String sendUrl : this.config.getSendUrls()) {

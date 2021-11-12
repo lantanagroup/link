@@ -19,7 +19,6 @@ import org.apache.http.entity.StringEntity;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
@@ -44,17 +43,20 @@ public class FHIRSenderTests {
     MockHelper.mockTransaction(transaction, transactionMock);
 
     // Mock the HttpClient that actually sends the HTTP POST request
+    when(mockFhirDataProvider.getClient()).thenReturn(mockFhirStoreClient);
+    String xml = "<Bundle xmlns='http://hl7.org/fhir'><meta><tag><system value='https://nhsnlink.org'/><code value='report-bundle'/></tag></meta><type value='collection'/><entry><resource><MeasureReport xmlns='http://hl7.org/fhir'><evaluatedResource><reference value='Patient/testPatient1'/></evaluatedResource><evaluatedResource><reference value='Condition/testCondition1'/></evaluatedResource></MeasureReport></resource></entry></Bundle>";
+    when(mockFhirDataProvider.bundleToXml(any(Bundle.class))).thenReturn(xml);
+    FhirContext ctx = FhirContext.forR4();
+    when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
+
 
     // Mock the FHIR server's operation for POST AuditEvent
     ICreate create = mock(ICreate.class);
     when(mockFhirStoreClient.create()).thenReturn(create);
     MockHelper.mockAuditEvents(create);
-
+    when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(new Bundle());
     mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider);
-
-    // Make sure that a transaction was called to Bundle the resources for the report
-    verify(transactionMock.getTransactionTyped(), times(1)).execute();
 
     // Make sure an HttpClient request was executed
     verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
@@ -72,7 +74,7 @@ public class FHIRSenderTests {
     return sender;
   }
 
-  @Ignore
+
   @Test
   public void sendTestUnauthenticated() throws Exception {
 
@@ -120,7 +122,7 @@ public class FHIRSenderTests {
     this.runTest(mockSender, mockFhirStoreClient, mockHttpClient, measureReport, httpUriRequestArgumentMatcher);
   }
 
-  @Ignore
+
   @Test
   public void sendTestAuthenticated() throws Exception {
     // Mock the response of the HttpClient
@@ -130,6 +132,9 @@ public class FHIRSenderTests {
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
 
     HttpClient mockHttpClient = mock(HttpClient.class);
+
+    when(mockHttpClient.execute(any())).thenReturn(httpResponse);
+
     HttpResponse mockAuthResponse = mock(HttpResponse.class);
     HttpEntity mockAuthEntity = mock(HttpEntity.class);
     InputStream mockAuthEntityIS = new ByteArrayInputStream("{\"access_token\": \"test-access-token\"}".getBytes());
@@ -138,7 +143,8 @@ public class FHIRSenderTests {
 
     when(mockHttpClient.execute(any()))
             .thenReturn(mockAuthResponse)     // First call to execute HTTP request
-            .thenReturn(httpResponse);        // Second call to execute
+            .thenReturn(httpResponse);
+    // Second call to execute
 
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
