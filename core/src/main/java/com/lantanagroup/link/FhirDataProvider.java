@@ -31,7 +31,6 @@ public class FhirDataProvider {
     this.client = client;
   }
 
-
   public Resource createResource(Resource resource) {
     MethodOutcome outcome = this.client
             .create()
