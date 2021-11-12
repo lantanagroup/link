@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
+import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -209,6 +210,16 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public Bundle getResources(ICriterion<TokenClientParam> criterion, String resourceType) {
+    return this.client
+            .search()
+            .forResource(resourceType)
+            .where(criterion)
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
   public IBaseResource getResource(String resourceType, String resourceId) {
     return this.client
             .read()
@@ -232,6 +243,10 @@ public class FhirDataProvider {
 
   public Bundle fetchResourceFromUrl(String url) {
     return this.client.fetchResourceFromUrl(Bundle.class, url);
+  }
+
+  public String bundleToXml(Bundle bundle) {
+    return client.getFhirContext().newXmlParser().encodeResourceToString(bundle);
   }
 
 }
