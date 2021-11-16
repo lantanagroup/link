@@ -11,6 +11,7 @@
       <module fileurl="file://$PROJECT_DIR$/nhsn/nhsn.iml" filepath="$PROJECT_DIR$/nhsn/nhsn.iml" />
       <module fileurl="file://$PROJECT_DIR$/query/query.iml" filepath="$PROJECT_DIR$/query/query.iml" />
       <module fileurl="file://$PROJECT_DIR$/query-api/query-api.iml" filepath="$PROJECT_DIR$/query-api/query-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/thsa/thsa.iml" filepath="$PROJECT_DIR$/thsa/thsa.iml" />
     </modules>
   </component>
 </project>
