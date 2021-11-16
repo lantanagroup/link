@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="consumer:war">
+    <output-path>$PROJECT_DIR$/consumer/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <exploded>false</exploded>
+        <module>consumer</module>
+        <packaging>war</packaging>
+        <unpackNestedArchives>false</unpackNestedArchives>
+      </options>
+    </properties>
+    <root id="archive" name="link-consumer.war">
+      <element id="artifact" artifact-name="consumer:war exploded" />
+    </root>
+  </artifact>
+</component>
