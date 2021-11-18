@@ -21,6 +21,7 @@ export class ReviewComponent implements OnInit {
   page = 1;
   pageSize = 20;
   totalSize;
+  loading = false;
 
   filter = {
     measure: 'Select measure',
@@ -183,9 +184,11 @@ export class ReviewComponent implements OnInit {
   }
 
   async ngOnInit() {
+    this.loading = true;
     await this.searchReports();
     this.measures = await this.reportDefinitionService.getReportDefinitions();
     this.submitters = await this.reportService.getSubmitters();
+    this.loading = false;
   }
 
 }
