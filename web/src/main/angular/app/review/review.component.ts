@@ -6,6 +6,7 @@ import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDateToISO, getFhirDate} from '../helper';
 import {UserModel} from "../model/user-model";
+import {ToastService} from "../toast.service";
 
 @Component({
   selector: 'nandina-review',
@@ -21,6 +22,7 @@ export class ReviewComponent implements OnInit {
   page = 1;
   pageSize = 20;
   totalSize;
+  loading = false;
 
   filter = {
     measure: 'Select measure',
@@ -36,6 +38,7 @@ export class ReviewComponent implements OnInit {
   constructor(public authService: AuthService,
               public reportService: ReportService,
               private reportDefinitionService: ReportDefinitionService,
+              public toastService: ToastService,
               private router: Router) {
   }
 
@@ -183,9 +186,18 @@ export class ReviewComponent implements OnInit {
   }
 
   async ngOnInit() {
-    await this.searchReports();
-    this.measures = await this.reportDefinitionService.getReportDefinitions();
-    this.submitters = await this.reportService.getSubmitters();
+    this.loading = true;
+    try{
+      await this.searchReports();
+      this.measures = await this.reportDefinitionService.getReportDefinitions();
+      this.submitters = await this.reportService.getSubmitters();
+    }
+    catch (ex){
+      this.toastService.showException('Error populating report list.', ex);
+    }
+    finally {
+      this.loading = false;
+    }
   }
 
 }
