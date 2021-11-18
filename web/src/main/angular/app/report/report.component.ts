@@ -96,10 +96,11 @@ export class ReportComponent implements OnInit, OnDestroy {
         await this.reportService.send(this.reportId);
         this.toastService.showInfo('Report sent!');
         await this.initReport();
-        this.submitInProgress = false;
       }
     } catch (ex) {
       this.toastService.showException('Error sending report: ' + this.reportId, ex);
+    } finally {
+      this.submitInProgress = false;
     }
   }
 
