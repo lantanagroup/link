@@ -66,7 +66,7 @@ export class GenerateComponent implements OnInit {
       try {
 
         const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
-        this.router.navigate(['review', generateResponse.reportId]);
+        await this.router.navigate(['review', generateResponse.reportId]);
       } catch (ex) {
         if (ex.status === 409) {
           if (confirm(ex.error.message)) {

@@ -23,6 +23,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   hasRequiredErrors = false;
   dirty = false;
   regenerateReportButtonText: String = 'Re-generate';
+  submitInProgress = false;
 
   constructor(
       private route: ActivatedRoute,
@@ -74,6 +75,13 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
+  get submitText(){
+    if(this.submitInProgress){
+      return "Submitting...";
+    }
+    else return "Submit";
+  }
+
   async send() {
     try {
       if (this.dirty) {
@@ -84,12 +92,15 @@ export class ReportComponent implements OnInit, OnDestroy {
         }
       }
       if (confirm('Are you sure you want to submit this report?')) {
+        this.submitInProgress = true;
         await this.reportService.send(this.reportId);
         this.toastService.showInfo('Report sent!');
         await this.initReport();
       }
     } catch (ex) {
       this.toastService.showException('Error sending report: ' + this.reportId, ex);
+    } finally {
+      this.submitInProgress = false;
     }
   }
 
