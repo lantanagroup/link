@@ -80,8 +80,8 @@
         <button (click)="discard()" *ngIf="!isSubmitted" class="btn btn-primary">
             Discard
         </button>
-        <button (click)="send()" *ngIf="!isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
-            Submit
+        <button (click)="send()" *ngIf="!isSubmitted" [disabled]="hasRequiredErrors || submitInProgress" class="btn btn-primary">
+            {{submitText}}
         </button>
         <button (click)="regenerate()" *ngIf="isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
             {{regenerateReportButtonText}}
