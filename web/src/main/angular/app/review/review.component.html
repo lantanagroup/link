@@ -1,5 +1,4 @@
 <div class="card">
-    <div *ngIf="loading" class="alert alert-info">Loading...</div>
     <div class="card-header">Filter/Criteria</div>
     <div class="flex-container">
         <div>
@@ -56,7 +55,7 @@
     </div>
 </div>
 
-
+<div *ngIf="loading" class="alert alert-info">Loading...</div>
 <table class="table table-striped column-bordered-table">
     <thead>
     <tr>
