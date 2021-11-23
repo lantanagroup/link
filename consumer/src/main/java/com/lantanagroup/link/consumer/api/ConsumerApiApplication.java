@@ -7,6 +7,9 @@ import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
 import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
+import com.lantanagroup.link.config.consumer.ConsumerConfig;
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.h2.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.SpringApplication;
@@ -16,11 +19,14 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.consumer", "com.lantanagroup.link.config.consumer"})
 @ServletComponentScan(basePackageClasses = {JpaRestfulServer.class})
 public class ConsumerApiApplication extends SpringBootServletInitializer {
   @Autowired
   AutowireCapableBeanFactory beanFactory;
+
+  @Autowired
+  private ConsumerConfig consumerConfig;
 
   public static void main(String[] args) {
     SpringApplication.run(ConsumerApiApplication.class, args);
@@ -62,5 +68,23 @@ public class ConsumerApiApplication extends SpringBootServletInitializer {
     theDaoConfig.setFetchSizeDefaultMaximum(100);
     theDaoConfig.setExpireSearchResultsAfterMillis(3600000);    // 60 minutes
     return theDaoConfig;
+  }
+
+  @Bean(destroyMethod = "close")
+  public BasicDataSource dataSource() {
+    BasicDataSource retVal = new BasicDataSource();
+    if (this.consumerConfig != null && this.consumerConfig.getDataSource() != null) {
+      retVal.setDriverClassName(this.consumerConfig.getDataSource().getDriverClassName());
+      retVal.setUrl(this.consumerConfig.getDataSource().getUrl());
+      retVal.setUsername(this.consumerConfig.getDataSource().getUsername());
+      retVal.setPassword(this.consumerConfig.getDataSource().getPassword());
+    } else {
+      Driver driver = new Driver();
+      retVal.setDriver(driver);
+      retVal.setUrl("jdbc:h2:file:./target/database/h2");
+      retVal.setUsername("sa");
+      retVal.setPassword(null);
+    }
+    return retVal;
   }
 }

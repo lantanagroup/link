@@ -5,6 +5,7 @@ import ca.uhn.fhir.jpa.config.BaseJavaConfigR4;
 import ca.uhn.fhir.jpa.config.HibernatePropertiesProvider;
 import ca.uhn.fhir.jpa.search.DatabaseBackedPagingProvider;
 import ca.uhn.fhir.jpa.search.HapiLuceneAnalysisConfigurer;
+import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.apache.lucene.util.Version;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.search.backend.lucene.cfg.LuceneBackendSettings;
@@ -12,19 +13,14 @@ import org.hibernate.search.backend.lucene.cfg.LuceneIndexSettings;
 import org.hibernate.search.backend.lucene.lowlevel.directory.impl.LocalFileSystemDirectoryProvider;
 import org.hibernate.search.engine.cfg.BackendSettings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.*;
-import org.springframework.core.env.CompositePropertySource;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.PropertySource;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 @Configuration
@@ -34,7 +30,7 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
   private DataSource myDataSource;
 
   @Autowired
-  private ConfigurableEnvironment configurableEnvironment;
+  private ConsumerConfig consumerConfig;
 
   @Override
   public DatabaseBackedPagingProvider databaseBackedPagingProvider() {
@@ -58,10 +54,8 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
 
     Properties properties = new Properties();
 
-    Map<String, Object> jpaProps = getPropertiesStartingWith(this.configurableEnvironment, "spring.jpa.properties");
-    for (Map.Entry<String, Object> entry : jpaProps.entrySet()) {
-      String strippedKey = entry.getKey().replace("spring.jpa.properties.", "");
-      properties.put(strippedKey, entry.getValue().toString());
+    if (this.consumerConfig != null && this.consumerConfig.getDataSource() != null && this.consumerConfig.getDataSource().getHibernateDialect() != null) {
+      properties.putIfAbsent("hibernate.dialect", this.consumerConfig.getDataSource().getHibernateDialect());
     }
 
     properties.putIfAbsent(BackendSettings.backendKey(BackendSettings.TYPE), LuceneBackendSettings.TYPE_NAME);
@@ -87,54 +81,5 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
   @Bean
   public HibernatePropertiesProvider jpaStarterDialectProvider(LocalContainerEntityManagerFactoryBean myEntityManagerFactory) {
     return new JpaHibernatePropertiesProvider(myEntityManagerFactory);
-  }
-
-  private static Map<String, Object> getPropertiesStartingWith(ConfigurableEnvironment aEnv, String aKeyPrefix) {
-    Map<String, Object> result = new HashMap<>();
-    Map<String, Object> map = getAllProperties(aEnv);
-
-    for (Map.Entry<String, Object> entry : map.entrySet()) {
-      String key = entry.getKey();
-
-      if (key.startsWith(aKeyPrefix)) {
-        result.put(key, entry.getValue());
-      }
-    }
-
-    return result;
-  }
-
-  private static Map<String, Object> getAllProperties(ConfigurableEnvironment aEnv) {
-    Map<String, Object> result = new HashMap<>();
-    aEnv.getPropertySources().forEach(ps -> addAll(result, getAllProperties(ps)));
-    return result;
-  }
-
-  private static Map<String, Object> getAllProperties(PropertySource<?> aPropSource) {
-    Map<String, Object> result = new HashMap<>();
-
-    if (aPropSource instanceof CompositePropertySource) {
-      CompositePropertySource cps = (CompositePropertySource) aPropSource;
-      cps.getPropertySources().forEach(ps -> addAll(result, getAllProperties(ps)));
-      return result;
-    }
-
-    if (aPropSource instanceof EnumerablePropertySource<?>) {
-      EnumerablePropertySource<?> ps = (EnumerablePropertySource<?>) aPropSource;
-      Arrays.asList(ps.getPropertyNames()).forEach(key -> result.put(key, ps.getProperty(key)));
-      return result;
-    }
-
-    return result;
-  }
-
-  private static void addAll(Map<String, Object> aBase, Map<String, Object> aToBeAdded) {
-    for (Map.Entry<String, Object> entry : aToBeAdded.entrySet()) {
-      if (aBase.containsKey(entry.getKey())) {
-        continue;
-      }
-
-      aBase.put(entry.getKey(), entry.getValue());
-    }
   }
 }
