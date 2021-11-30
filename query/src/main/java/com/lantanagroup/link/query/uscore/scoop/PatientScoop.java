@@ -1,7 +1,5 @@
 package com.lantanagroup.link.query.uscore.scoop;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -9,29 +7,24 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
-import org.hl7.fhir.r4.hapi.ctx.IValidationSupport;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @Component
 public class PatientScoop extends Scoop {
-  protected FhirContext ctx = FhirContext.forR4();
-  protected IParser jsonParser = ctx.newJsonParser();
-  protected IParser xmlParser;
   protected IGenericClient fhirQueryServer;
   protected Map<String, Patient> patientMap = new HashMap<>();
-  protected IValidationSupport validationSupport;
-  protected FHIRPathEngine fhirPathEngine;
 
   @Autowired
   private ApplicationContext context;

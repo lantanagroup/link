@@ -44,7 +44,7 @@
       <module name="cli" options="-parameters" />
       <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
-      <module name="link" options="" />
+      <module name="link" options="-parameters" />
       <module name="nandina-web" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
