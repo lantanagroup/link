@@ -15,6 +15,7 @@ import * as moment from 'moment';
 export class GenerateComponent implements OnInit {
   loading = false;
   sending = false;
+  loadingMeasures = false;
   reportGenerated = false;
   today = getFhirNow();
   criteria: {
@@ -96,10 +97,19 @@ export class GenerateComponent implements OnInit {
   }
 
   async ngOnInit() {
-    // initialize the response date to today by default.
-    this.criteria.periodStart = getFhirNow();
-    this.measureConfigs = await this.reportDefinitionService.getReportDefinitions();
-    console.log(this.measureConfigs);
+    try{
+      this.loadingMeasures = true;
+      // initialize the response date to today by default.
+      this.criteria.periodStart = getFhirNow();
+      this.measureConfigs = await this.reportDefinitionService.getReportDefinitions();
+      console.log(this.measureConfigs);
+    }
+    catch (ex){
+      this.toastService.showException('Error populating measure list.', ex);
+    }
+    finally {
+      this.loadingMeasures = false;
+    }
   }
 
   disableGenerateReport() {

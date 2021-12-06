@@ -22,7 +22,10 @@
                                 id="measureOption">{{config.name}}
                         </button>
                     </div>
-                    <div *ngIf="!measureConfigs?.length">
+                    <div *ngIf="loadingMeasures">
+                        <button class="dropdown-item">Loading...</button>
+                    </div>
+                    <div *ngIf="!measureConfigs?.length && !loadingMeasures">
                         <button class="dropdown-item">No Reports</button>
                     </div>
                 </div>
