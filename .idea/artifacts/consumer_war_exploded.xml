@@ -15,10 +15,34 @@
           <element id="module-output" name="consumer" />
         </element>
         <element id="directory" name="lib">
+          <element id="archive" name="core-1.0.0-SNAPSHOT.jar">
+            <element id="module-output" name="core" />
+          </element>
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-client:4.2.0" />
+          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpclient:4.5.9" />
+          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore:4.4.12" />
+          <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot:2.1.8.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-context:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-aop:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-expression:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework.security:spring-security-core:5.1.6.RELEASE" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9.3" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-test:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: com.mashape.unirest:unirest-java:1.4.9" />
+          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
+          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
+          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
+          <element id="library" level="project" name="Maven: org.json:json:20160212" />
+          <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.9" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.9" />
+          <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />
+          <element id="library" level="project" name="Maven: org.mockito:mockito-core:3.12.4" />
+          <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy-agent:1.9.16" />
+          <element id="library" level="project" name="Maven: org.objenesis:objenesis:3.2" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-base:5.5.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9" />
-          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" />
-          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9.3" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.8.1" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-text:1.9" />
           <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.11" />
@@ -32,17 +56,15 @@
           <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.28" />
           <element id="library" level="project" name="Maven: org.slf4j:jcl-over-slf4j:1.7.28" />
           <element id="library" level="project" name="Maven: com.google.code.findbugs:jsr305:3.0.2" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.3.11" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.5.0" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.r4:5.4.10" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:5.5.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.woodstox:woodstox-core:5.0.3" />
-          <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />
           <element id="library" level="project" name="Maven: net.sf.saxon:Saxon-HE:9.8.0-15" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-csv:1.8" />
           <element id="library" level="project" name="Maven: co.elastic.apm:apm-agent-api:1.13.0" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-client:5.5.0" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpclient:4.5.9" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore:4.4.12" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-server:5.5.0" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.4.10" />
           <element id="library" level="project" name="Maven: org.springframework.batch:spring-batch-core:4.1.2.RELEASE" />
           <element id="library" level="project" name="Maven: javax.batch:javax.batch-api:1.0" />
           <element id="library" level="project" name="Maven: org.codehaus.jettison:jettison:1.2" />
@@ -67,8 +89,6 @@
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu2:5.5.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:5.5.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.dstu3:5.4.10" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.5.0" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.r4:5.4.10" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-r5:5.5.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.r5:5.4.10" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-hl7org-dstu2:5.5.0" />
@@ -101,9 +121,6 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-core:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework:spring-orm:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework:spring-jdbc:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework:spring-context:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework:spring-aop:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework:spring-expression:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework:spring-beans:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework.data:spring-data-jpa:2.1.10.RELEASE" />
           <element id="library" level="project" name="Maven: org.aspectj:aspectjrt:1.9.4" />
@@ -158,8 +175,6 @@
           <element id="library" level="project" name="Maven: org.hdrhistogram:HdrHistogram:2.1.9" />
           <element id="library" level="project" name="Maven: org.elasticsearch:jna:4.5.1" />
           <element id="library" level="project" name="Maven: org.elasticsearch.client:elasticsearch-rest-client:6.4.3" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
           <element id="library" level="project" name="Maven: org.elasticsearch.plugin:parent-join-client:6.4.3" />
           <element id="library" level="project" name="Maven: org.elasticsearch.plugin:aggs-matrix-stats-client:6.4.3" />
           <element id="library" level="project" name="Maven: org.elasticsearch.plugin:rank-eval-client:6.4.3" />
@@ -207,7 +222,6 @@
           <element id="library" level="project" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.15" />
           <element id="library" level="project" name="Maven: mysql:mysql-connector-java:8.0.16" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter:2.5.0" />
-          <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-autoconfigure:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-logging:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: ch.qos.logback:logback-classic:1.2.3" />

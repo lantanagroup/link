@@ -14,6 +14,7 @@ import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
+import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.h2.Driver;
 import org.hibernate.dialect.Dialect;
@@ -51,6 +52,9 @@ public class JpaRestfulServer extends RestfulServer {
   private ModelConfig modelConfig;
 
   @Autowired
+  private ConsumerConfig consumerConfig;
+
+  @Autowired
   ResourceProviderFactory resourceProviders;
 
   private FhirContext fhirContext;
@@ -82,17 +86,6 @@ public class JpaRestfulServer extends RestfulServer {
 
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
-  }
-
-  @Bean(destroyMethod = "close")
-  public BasicDataSource dataSource() {
-    BasicDataSource retVal = new BasicDataSource();
-    Driver driver = new Driver();
-    retVal.setDriver(driver);
-    retVal.setUrl("jdbc:h2:file:./target/database/h2");
-    retVal.setUsername("sa");
-    retVal.setPassword(null);
-    return retVal;
   }
 
   @Bean

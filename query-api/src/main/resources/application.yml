@@ -2,4 +2,4 @@ query:
   query-class: com.lantanagroup.link.query.uscore.Query
   fhir-server-base:
   allowed-remote:
-    - 127.0.0.1
+    - test.com

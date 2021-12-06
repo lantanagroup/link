@@ -18,7 +18,7 @@ public class QuerySecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    QueryApiAuthFilter authFilter = new QueryApiAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote());
+    QueryApiAuthFilter authFilter = new QueryApiAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote(), this.config.getProxyAddress());
 
     http
             .csrf().disable()

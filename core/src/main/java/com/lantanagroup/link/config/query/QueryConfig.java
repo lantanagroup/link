@@ -16,6 +16,9 @@ import javax.validation.constraints.*;
 @ConfigurationProperties(prefix = "query")
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+/**
+ * See the Link WIKI - <a href="https://github.com/lantanagroup/link/wiki/Configuration#query-api">Configuration &gt; Query-API</a>
+ */
 public class QueryConfig {
   /**
    * <strong>query.fhir-server-base</strong><br>The base URL of the FHIR server that should be queried
@@ -36,9 +39,15 @@ public class QueryConfig {
   private String queryClass;
 
   /**
-   * <strong>query.allowed-remote</strong><br>If running in a Remote scenario (<strong>query.api.mode == "Remote"), a list of the IP addresses that are allowed to perform query requests.</strong>
+   * <strong>query.allowed-remote</strong><br>If running in a Remote scenario (<strong>query.api.mode</strong> == "Remote"), a list of the IP addresses that are allowed to perform query requests. This is the immediate address of the device performing the request.
+   * If used in conjunction with <strong>query.proxy-address</strong>, this list of allowed-remote addresses is checked against the x-forwarded-for or x-real-ip headers passed to the API by the proxy.</strong>
    */
   private String[] allowedRemote;
+
+  /**
+   * <strong>query.proxy-address</strong><br>If running in a Remote scenario (<strong>query.api.mode</strong> == "Remote") where the query/agent is supported by a proxy such as NGINX, this is the host/ip address of the proxy.
+   */
+  private String proxyAddress;
 
   /**
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.

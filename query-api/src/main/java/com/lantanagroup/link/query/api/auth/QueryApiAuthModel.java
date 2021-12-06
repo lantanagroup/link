@@ -7,4 +7,5 @@ import lombok.Setter;
 public class QueryApiAuthModel {
   private String authorization;
   private String remoteAddress;
+  private String forwardedRemoteAddress;
 }
