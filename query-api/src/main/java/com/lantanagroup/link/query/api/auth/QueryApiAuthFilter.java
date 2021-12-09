@@ -68,6 +68,8 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
           String msg = String.format("The API Key \"%s\" was not found or not the expected value.", authModel.getAuthorization());
           logger.error(msg);
           throw new BadCredentialsException(msg);
+        } else {
+          logger.debug("The API key in the request matches configuration");
         }
 
         if (!Strings.isNullOrEmpty(proxyAddress)) {
@@ -77,17 +79,23 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
             String msg = String.format("The remote address \"%s\" did not match the proxy address \"%s\"", authModel.getRemoteAddress(), realProxyAddress);
             logger.error(msg);
             throw new BadCredentialsException(msg);
+          } else {
+            logger.debug(String.format("The remote address \"%s\" matches the proxy address", authModel.getRemoteAddress()));
           }
 
           if (Arrays.asList(allowedRemotes).indexOf(authModel.getForwardedRemoteAddress()) < 0) {
             String msg = String.format("The remote address \"%s\" was not in the configured allowed forwarded (proxied) addresses", authModel.getForwardedRemoteAddress());
             logger.error(msg);
             throw new BadCredentialsException(msg);
+          } else {
+            logger.debug(String.format("The addresses forwarded by the proxy server (%s) was found in the allowed list", authModel.getForwardedRemoteAddress()));
           }
         } else if (Arrays.asList(allowedRemotes).indexOf(authModel.getRemoteAddress()) < 0) {
           String msg = String.format("The remote address \"%s\" was not in the configured allowed remote addresses", authModel.getRemoteAddress());
           logger.error(msg);
           throw new BadCredentialsException(msg);
+        } else {
+          logger.debug(String.format("Remote address \"%s\" was found in the allowed list.", authModel.getRemoteAddress()));
         }
 
         authentication.setAuthenticated(true);
