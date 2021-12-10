@@ -86,6 +86,9 @@ public class JpaRestfulServer extends RestfulServer {
 
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
+
+    this.registerInterceptor(new UserInterceptor());
+    this.registerInterceptor(new AuthInterceptor());
   }
 
   @Bean
