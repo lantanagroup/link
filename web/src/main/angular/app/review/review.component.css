@@ -1,18 +1,3 @@
-.column-bordered-table thead tr th {
-    border-left: 1px solid #c3c3c3;
-    border-right: 1px solid #c3c3c3;
-}
-
-.column-bordered-table td {
-    border-left: 1px solid #c3c3c3;
-    border-right: 1px solid #c3c3c3;
-}
-
-.column-bordered-table tfoot tr {
-    border-top: 1px solid #c3c3c3;
-    border-bottom: 1px solid #c3c3c3;
-}
-
 .btn.btn-outline-primary {
     width: 100%;
 }

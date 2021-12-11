@@ -41,6 +41,12 @@
           <element id="library" level="project" name="Maven: org.mockito:mockito-core:3.12.4" />
           <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy-agent:1.9.16" />
           <element id="library" level="project" name="Maven: org.objenesis:objenesis:3.2" />
+          <element id="library" level="project" name="Maven: com.auth0:jwks-rsa:0.9.0" />
+          <element id="library" level="project" name="Maven: com.nimbusds:nimbus-jose-jwt:7.9" />
+          <element id="library" level="project" name="Maven: com.github.stephenc.jcip:jcip-annotations:1.0-1" />
+          <element id="library" level="project" name="Maven: net.minidev:json-smart:2.3" />
+          <element id="library" level="project" name="Maven: net.minidev:accessors-smart:1.2" />
+          <element id="library" level="project" name="Maven: org.ow2.asm:asm:5.0.4" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.5.10" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-base:5.5.3" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9" />
