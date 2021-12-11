@@ -40,6 +40,8 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
         next = next.substring(next.lastIndexOf("/") + 1);
       }
 
+      logger.debug(String.format("Resolved host name \"%s\" as IP \"%s\"", value, next));
+
       QueryApiAuthFilter.hostNameIPs.put(value, next);
 
       return next;
