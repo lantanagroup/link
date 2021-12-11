@@ -11,7 +11,7 @@ COPY . .
 RUN echo "version: $version\nbuild: $build" > query-api/src/main/resources/build.yml
 
 WORKDIR /tmp
-RUN mvn install
+RUN mvn install -pl query-api -am
 
 FROM tomcat:jdk15-openjdk-oracle
 COPY --from=build /tmp/query-api/target/link-query-api.war /usr/local/tomcat/webapps/ROOT.war
