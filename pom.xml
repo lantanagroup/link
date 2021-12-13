@@ -42,7 +42,7 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>
-            <version>${hapi.lib.version}</version>mvnc
+            <version>${hapi.lib.version}</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
