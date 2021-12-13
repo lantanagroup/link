@@ -40,6 +40,11 @@ public class ApiConfig {
     private String sender;
 
     /**
+     * <string>api.send-whole-bundle</string><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
+     */
+    private Boolean sendWholeBundle;
+
+    /**
      * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
      */
     private String patientIdResolver;

@@ -16,7 +16,7 @@ public class THSASender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(THSASender.class);
 
   @Override
-  public void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider) throws Exception {
+  public void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
     throw new NotImplementedException("Not yet implemented");
   }
 }

@@ -40,7 +40,7 @@ public class MeasureReportDownloader implements IReportDownloader {
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider);
+    Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider, config.getSendWholeBundle());
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
