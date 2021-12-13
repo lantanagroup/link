@@ -385,7 +385,8 @@ public class ReportController extends BaseController {
     MeasureReport report = this.getFhirStoreProvider().getMeasureReportById(reportId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-    sender.send(report, request, authentication, this.getFhirStoreProvider());
+    sender.send(report, request, authentication, this.getFhirStoreProvider(),
+            this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true);
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 

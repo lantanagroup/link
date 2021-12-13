@@ -183,7 +183,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport measureReport, FhirDataProvider fhirProvider) {
+  public static Bundle bundleMeasureReport(MeasureReport measureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(REPORT_BUNDLE_TAG);
@@ -194,23 +194,26 @@ public class FhirHelper {
     bundle.setMeta(meta);
     bundle.addEntry().setResource(measureReport);
 
-    List<String> resourceReferences = new ArrayList<>();
+    if(sendWholeBundle){
+      List<String> resourceReferences = new ArrayList<>();
 
-    for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
-      if (!evaluatedResource.hasReference()) continue;
+      for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
+        if (!evaluatedResource.hasReference()) continue;
 
-      if (!evaluatedResource.getReference().startsWith("#")) {
-        resourceReferences.add(evaluatedResource.getReference());
+        if (!evaluatedResource.getReference().startsWith("#")) {
+          resourceReferences.add(evaluatedResource.getReference());
+        }
       }
+
+      Bundle patientBundle = generateBundle(resourceReferences);
+
+      Bundle patientBundleResponse = fhirProvider.transaction(patientBundle);
+
+      patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
+        bundle.addEntry().setResource((Resource) entry.getResource());
+      });
     }
 
-    Bundle patientBundle = generateBundle(resourceReferences);
-
-    Bundle patientBundleResponse = fhirProvider.transaction(patientBundle);
-
-    patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
-      bundle.addEntry().setResource((Resource) entry.getResource());
-    });
 
     return bundle;
   }

@@ -56,7 +56,7 @@ public class FHIRSenderTests {
     when(mockFhirStoreClient.create()).thenReturn(create);
     MockHelper.mockAuditEvents(create);
     when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(new Bundle());
-    mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider);
+    mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
 
     // Make sure an HttpClient request was executed
     verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
@@ -67,7 +67,7 @@ public class FHIRSenderTests {
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
-    doCallRealMethod().when(sender).send(any(), any(), any(), any());
+    doCallRealMethod().when(sender).send(any(), any(), any(), any(), anyBoolean());
 
     sender.setConfig(config);
 

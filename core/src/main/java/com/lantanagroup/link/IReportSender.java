@@ -6,5 +6,5 @@ import org.springframework.security.core.Authentication;
 import javax.servlet.http.HttpServletRequest;
 
 public interface IReportSender {
-  void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider) throws Exception;
+  void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception;
 }

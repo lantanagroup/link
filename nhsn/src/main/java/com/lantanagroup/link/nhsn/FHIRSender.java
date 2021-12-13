@@ -39,7 +39,7 @@ public class FHIRSender implements IReportSender {
   }
 
   @Override
-  public void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirProvider) throws Exception {
+  public void send(MeasureReport report, HttpServletRequest request, Authentication auth, FhirDataProvider fhirProvider, Boolean sendWholeBundle) throws Exception {
     if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
       throw new Exception("Not configured with any locations to send");
     }
@@ -71,7 +71,7 @@ public class FHIRSender implements IReportSender {
     logger.info("Building Bundle for MeasureReport to send...");
 
 
-    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirProvider);
+    Bundle bundle = FhirHelper.bundleMeasureReport(report, fhirProvider, sendWholeBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
