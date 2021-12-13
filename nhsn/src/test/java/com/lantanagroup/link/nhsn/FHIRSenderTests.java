@@ -67,7 +67,7 @@ public class FHIRSenderTests {
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
-    doCallRealMethod().when(sender).send(any(), any(), any(), any(), true);
+    doCallRealMethod().when(sender).send(any(), any(), any(), any(), anyBoolean());
 
     sender.setConfig(config);
 
