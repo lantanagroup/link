@@ -3,7 +3,6 @@ api:
   auth-jwks-url:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
-  send-whole-bundle: false
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   send-url:
   cors:
