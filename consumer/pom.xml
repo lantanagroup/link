@@ -29,12 +29,12 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>org.hl7.fhir.utilities</artifactId>
-            <version>5.5.10</version>
+            <version>5.4.0</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>
-            <version>5.5.3</version>
+            <version>5.4.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
@@ -45,6 +45,11 @@
                     <artifactId>log4j-to-slf4j</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-structures-r4</artifactId>
+            <version>5.4.0</version>
         </dependency>
 
         <dependency>
