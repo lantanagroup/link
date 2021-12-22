@@ -47,9 +47,12 @@
           <element id="library" level="project" name="Maven: net.minidev:json-smart:2.3" />
           <element id="library" level="project" name="Maven: net.minidev:accessors-smart:1.2" />
           <element id="library" level="project" name="Maven: org.ow2.asm:asm:5.0.4" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.5.10" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-base:5.5.3" />
-          <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.4.0" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.2.71" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-base:5.4.0" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.8.1" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-text:1.9" />
           <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.11" />
@@ -63,6 +66,8 @@
           <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.28" />
           <element id="library" level="project" name="Maven: org.slf4j:jcl-over-slf4j:1.7.28" />
           <element id="library" level="project" name="Maven: com.google.code.findbugs:jsr305:3.0.2" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-r4:5.4.0" />
+          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.r4:5.4.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:5.4.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.woodstox:woodstox-core:5.0.3" />
           <element id="library" level="project" name="Maven: net.sf.saxon:Saxon-HE:9.8.0-15" />
@@ -70,6 +75,9 @@
           <element id="library" level="project" name="Maven: co.elastic.apm:apm-agent-api:1.13.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-server:5.4.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-server-mdm:5.4.0" />
+          <element id="library" level="project" name="Maven: org.fhir:ucum:1.0.3" />
+          <element id="library" level="project" name="Maven: xpp3:xpp3:1.1.4c" />
+          <element id="library" level="project" name="Maven: xpp3:xpp3_xpath:1.1.4c" />
           <element id="library" level="project" name="Maven: info.debatty:java-string-similarity:1.2.1" />
           <element id="library" level="project" name="Maven: net.jcip:jcip-annotations:1.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:5.4.0" />
@@ -83,10 +91,6 @@
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.validation:5.4.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.dstu2016may:5.4.0" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-compress:1.20" />
-          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71" />
-          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.2.71" />
-          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.2.71" />
-          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.2.71" />
           <element id="library" level="project" name="Maven: com.google.code.gson:gson:2.8.5" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu2:5.4.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:5.4.0" />
@@ -142,6 +146,8 @@
           <element id="library" level="project" name="Maven: org.hibernate.validator:hibernate-validator:6.0.17.Final" />
           <element id="library" level="project" name="Maven: javax.validation:validation-api:2.0.1.Final" />
           <element id="library" level="project" name="Maven: org.glassfish:javax.el:3.0.0" />
+          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-to-slf4j:2.15.0" />
+          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.15.0" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-mapper-orm:6.0.3.Final" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-engine:6.0.3.Final" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-mapper-pojo-base:6.0.3.Final" />
@@ -235,6 +241,7 @@
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-web:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-json:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.9" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-parameter-names:2.9.9" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-tomcat:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:9.0.24" />
@@ -244,14 +251,6 @@
           <element id="library" level="project" name="Maven: org.apache.commons:commons-dbcp2:2.8.0" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-pool2:2.6.2" />
           <element id="library" level="project" name="Maven: com.h2database:h2:1.4.200" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-r4:4.2.0" />
-          <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.r4:4.2.0" />
-          <element id="library" level="project" name="Maven: org.fhir:ucum:1.0.2" />
-          <element id="library" level="project" name="Maven: xpp3:xpp3:1.1.4c" />
-          <element id="library" level="project" name="Maven: xpp3:xpp3_xpath:1.1.4c" />
-          <element id="library" level="project" name="Maven: junit:junit:4.13.1" />
-          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.15.0" />
-          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-to-slf4j:2.15.0" />
         </element>
       </element>
       <element id="directory" name="META-INF">

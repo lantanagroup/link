@@ -32,7 +32,7 @@
         <module>api</module>
         <module>cli</module>
         <module>query</module>
-        <module>query-api</module>
+        <module>agent</module>
         <module>nhsn</module>
         <module>consumer</module>
         <module>thsa</module>
