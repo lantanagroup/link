@@ -58,15 +58,10 @@ public class GenerateAndSubmit {
         logger.error("The api-url parameter is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getApiUrl())) {
-        logger.error("The api-url parameter is required.");
-        return;
-      }
       if (Strings.isBlank(configInfo.getPeriodStart())) {
         logger.error("The period-start parameter is required.");
         return;
       }
-
       if (Strings.isBlank(configInfo.getReportTypeId())) {
         logger.error("The report-type-is is required.");
         return;
