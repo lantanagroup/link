@@ -130,11 +130,11 @@ public class ReportControllerTests {
     bundle.addEntry().setResource(condition1);
     bundle.addEntry().setResource(condition2);
     bundle.addEntry().setResource(condition3);
-    when(fhirDataProvider.getPatientResources(any(ICriterion.class), eq("Condition"))).thenReturn(bundle);
-    when(fhirDataProvider.getPatientResources(any(ICriterion.class), eq("MedicationRequest"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getPatientResources(any(ICriterion.class), eq("Procedure"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getPatientResources(any(ICriterion.class), eq("Encounter"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getPatientResources(any(ICriterion.class), eq("Observation"))).thenReturn(new Bundle());
+    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Condition"))).thenReturn(bundle);
+    when(fhirDataProvider.getResources(any(ICriterion.class), eq("MedicationRequest"))).thenReturn(new Bundle());
+    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Procedure"))).thenReturn(new Bundle());
+    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Encounter"))).thenReturn(new Bundle());
+    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Observation"))).thenReturn(new Bundle());
     PatientDataModel response = controller.getPatientData("report1", "patient1", authentication, request);
     Assert.assertNotNull(response.getConditions());
     Assert.assertNull(response.getEncounters());

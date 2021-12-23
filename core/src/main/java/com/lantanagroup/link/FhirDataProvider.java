@@ -6,8 +6,6 @@ import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
-import ca.uhn.fhir.rest.gclient.ReferenceClientParam;
-import ca.uhn.fhir.rest.gclient.TokenClientParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -125,6 +123,18 @@ public class FhirDataProvider {
     return (Bundle) bundle.getEntryFirstRep().getResource();
   }
 
+  public Bundle findListByIdentifierAndDate(String system, String value, String date) {
+    Bundle bundle = this.client
+            .search()
+            .forResource(ListResource.class)
+            .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
+            .and(ListResource.DATE.exactly().day(date))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+    return bundle;
+  }
+
   public MeasureReport getMeasureReportById(String reportId) {
     MeasureReport report = this.client
             .read()
@@ -200,17 +210,17 @@ public class FhirDataProvider {
     this.createResource(auditEvent);
   }
 
-  public Bundle getPatientResources(ICriterion<ReferenceClientParam> criterion, String resourceType) {
-    return this.client
-            .search()
-            .forResource(resourceType)
-            .where(criterion)
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
+//  public Bundle getPatientResources(ICriterion<ReferenceClientParam> criterion, String resourceType) {
+//    return this.client
+//            .search()
+//            .forResource(resourceType)
+//            .where(criterion)
+//            .returnBundle(Bundle.class)
+//            .cacheControl(new CacheControlDirective().setNoCache(true))
+//            .execute();
+//  }
 
-  public Bundle getResources(ICriterion<TokenClientParam> criterion, String resourceType) {
+  public Bundle getResources(ICriterion criterion, String resourceType) {
     return this.client
             .search()
             .forResource(resourceType)

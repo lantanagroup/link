@@ -554,7 +554,7 @@ public class ReportController extends BaseController {
     }
 
     // Conditions
-    Bundle conditionBundle = this.getFhirStoreProvider().getPatientResources(Condition.SUBJECT.hasId(patientId), "Condition");
+    Bundle conditionBundle = this.getFhirStoreProvider().getResources(Condition.SUBJECT.hasId(patientId), "Condition");
     if (conditionBundle.hasEntry()) {
       List<Condition> conditionList = conditionBundle.getEntry().stream()
               .filter(e -> e.getResource() != null)
@@ -572,7 +572,7 @@ public class ReportController extends BaseController {
     }
 
     // Medications Requests
-    Bundle medRequestBundle = this.getFhirStoreProvider().getPatientResources(MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
+    Bundle medRequestBundle = this.getFhirStoreProvider().getResources(MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
     if (medRequestBundle.hasEntry()) {
       List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
               .filter(e -> e.getResource() != null)
@@ -589,7 +589,7 @@ public class ReportController extends BaseController {
     }
 
     // Observations
-    Bundle observationBundle = this.getFhirStoreProvider().getPatientResources(Observation.SUBJECT.hasId(patientId), "Observation");
+    Bundle observationBundle = this.getFhirStoreProvider().getResources(Observation.SUBJECT.hasId(patientId), "Observation");
     if (observationBundle.hasEntry()) {
       List<Observation> observationList = observationBundle.getEntry().stream()
               .filter(e -> e.getResource() != null)
@@ -606,7 +606,7 @@ public class ReportController extends BaseController {
     }
 
     // Procedures
-    Bundle procedureBundle = this.getFhirStoreProvider().getPatientResources(Procedure.SUBJECT.hasId(patientId), "Procedure");
+    Bundle procedureBundle = this.getFhirStoreProvider().getResources(Procedure.SUBJECT.hasId(patientId), "Procedure");
     if (procedureBundle.hasEntry()) {
       List<Procedure> procedureList = procedureBundle.getEntry().stream()
               .filter(e -> e.getResource() != null)
@@ -623,7 +623,7 @@ public class ReportController extends BaseController {
     }
 
     // Encounters
-    Bundle encounterBundle = this.getFhirStoreProvider().getPatientResources(Encounter.SUBJECT.hasId(patientId), "Encounter");
+    Bundle encounterBundle = this.getFhirStoreProvider().getResources(Encounter.SUBJECT.hasId(patientId), "Encounter");
     if (encounterBundle.hasEntry()) {
       List<Encounter> encounterList = encounterBundle.getEntry().stream()
               .filter(e -> e.getResource() != null)
