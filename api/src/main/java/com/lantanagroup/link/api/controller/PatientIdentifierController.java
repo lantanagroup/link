@@ -242,8 +242,8 @@ public class PatientIdentifierController extends BaseController {
   public void getPatientIdentifierListJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
-    Resource bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
-    this.receiveFHIR(bundle, request);
+    ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
+    this.receiveFHIR(list, request);
   }
 
   @PostMapping(value = "api/cda", consumes = MediaType.APPLICATION_XML_VALUE)
