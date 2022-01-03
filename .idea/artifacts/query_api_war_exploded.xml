@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
   <artifact type="exploded-war" name="query-api:war exploded">
-    <output-path>$PROJECT_DIR$/query-api/target/link-query-api</output-path>
+    <output-path>$PROJECT_DIR$/agent/target/link-query-api</output-path>
     <properties id="maven-jee-properties">
       <options>
         <exploded>true</exploded>

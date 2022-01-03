@@ -1,10 +1,10 @@
-package com.lantanagroup.link.query.api.auth;
+package com.lantanagroup.link.agent.auth;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class QueryApiAuthModel {
+public class AgentAuthModel {
   private String authorization;
   private String remoteAddress;
   private String forwardedRemoteAddress;

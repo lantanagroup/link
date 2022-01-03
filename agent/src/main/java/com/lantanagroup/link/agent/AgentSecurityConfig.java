@@ -1,6 +1,6 @@
-package com.lantanagroup.link.query.api;
+package com.lantanagroup.link.agent;
 
-import com.lantanagroup.link.query.api.auth.QueryApiAuthFilter;
+import com.lantanagroup.link.agent.auth.AgentAuthFilter;
 import com.lantanagroup.link.config.query.QueryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -12,13 +12,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Configuration
 @EnableWebSecurity
 @Order(1)
-public class QuerySecurityConfig extends WebSecurityConfigurerAdapter {
+public class AgentSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired
   private QueryConfig config;
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    QueryApiAuthFilter authFilter = new QueryApiAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote(), this.config.getProxyAddress());
+    AgentAuthFilter authFilter = new AgentAuthFilter(this.config.getApiKey(), this.config.getAllowedRemote(), this.config.getProxyAddress());
 
     http
             .csrf().disable()
