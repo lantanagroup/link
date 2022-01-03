@@ -1,4 +1,4 @@
-package com.lantanagroup.link.query.api.controller;
+package com.lantanagroup.link.agent.controller;
 
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-public class QueryController {
-  private static final Logger logger = LoggerFactory.getLogger(QueryController.class);
+public class AgentController {
+  private static final Logger logger = LoggerFactory.getLogger(AgentController.class);
 
   @Autowired
   private ApplicationContext context;

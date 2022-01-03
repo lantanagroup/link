@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/agent/agent.iml" filepath="$PROJECT_DIR$/agent/agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/api/api.iml" filepath="$PROJECT_DIR$/api/api.iml" />
       <module fileurl="file://$PROJECT_DIR$/cli/cli.iml" filepath="$PROJECT_DIR$/cli/cli.iml" />
       <module fileurl="file://$PROJECT_DIR$/consumer/consumer.iml" filepath="$PROJECT_DIR$/consumer/consumer.iml" />
@@ -10,7 +11,6 @@
       <module fileurl="file://$PROJECT_DIR$/web/nandina-web.iml" filepath="$PROJECT_DIR$/web/nandina-web.iml" />
       <module fileurl="file://$PROJECT_DIR$/nhsn/nhsn.iml" filepath="$PROJECT_DIR$/nhsn/nhsn.iml" />
       <module fileurl="file://$PROJECT_DIR$/query/query.iml" filepath="$PROJECT_DIR$/query/query.iml" />
-      <module fileurl="file://$PROJECT_DIR$/query-api/query-api.iml" filepath="$PROJECT_DIR$/query-api/query-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/thsa/thsa.iml" filepath="$PROJECT_DIR$/thsa/thsa.iml" />
     </modules>
   </component>

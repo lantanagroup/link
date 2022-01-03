@@ -1,4 +1,4 @@
-package com.lantanagroup.link.query.api.auth;
+package com.lantanagroup.link.agent.auth;
 
 import com.google.common.base.Strings;
 import org.slf4j.Logger;
@@ -17,13 +17,13 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.regex.*;
 
-public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
-  protected static final Logger logger = LoggerFactory.getLogger(QueryApiAuthFilter.class);
+public class AgentAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
+  protected static final Logger logger = LoggerFactory.getLogger(AgentAuthFilter.class);
   private static Dictionary<String, String> hostNameIPs = new Hashtable<>();
 
   private static String getIPAddress(String value) {
-    if (QueryApiAuthFilter.hostNameIPs.get(value) != null) {
-      return QueryApiAuthFilter.hostNameIPs.get(value);
+    if (AgentAuthFilter.hostNameIPs.get(value) != null) {
+      return AgentAuthFilter.hostNameIPs.get(value);
     }
 
     Pattern ip4Pattern = Pattern.compile("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$", Pattern.MULTILINE);
@@ -42,7 +42,7 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
 
       logger.debug(String.format("Resolved host name \"%s\" as IP \"%s\"", value, next));
 
-      QueryApiAuthFilter.hostNameIPs.put(value, next);
+      AgentAuthFilter.hostNameIPs.put(value, next);
 
       return next;
     } catch(UnknownHostException e) {
@@ -52,18 +52,18 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
     return value;
   }
 
-  public QueryApiAuthFilter(String expectedApiKey, String[] allowedRemotes, String proxyAddress) {
+  public AgentAuthFilter(String expectedApiKey, String[] allowedRemotes, String proxyAddress) {
     this.setAuthenticationManager(new AuthenticationManager() {
       @Override
       public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        QueryApiAuthModel authModel = (QueryApiAuthModel) authentication.getPrincipal();
+        AgentAuthModel authModel = (AgentAuthModel) authentication.getPrincipal();
 
         //Initially had this running a check on the IP for properly formatted addresses but running the address through
         //the InetAddress.getByName method requires a try/catch block. So, it's effectively the same to just run each
         //through the method and let the catch block notify the user of incorrectly formatted IP addresses. (Error will
         //only show in the logs.)
         for (int x = 0; x < allowedRemotes.length; x++){
-          allowedRemotes[x] = QueryApiAuthFilter.getIPAddress(allowedRemotes[x].trim());
+          allowedRemotes[x] = AgentAuthFilter.getIPAddress(allowedRemotes[x].trim());
         }
 
         if (!expectedApiKey.equals(authModel.getAuthorization())) {
@@ -75,7 +75,7 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
         }
 
         if (!Strings.isNullOrEmpty(proxyAddress)) {
-          String realProxyAddress = QueryApiAuthFilter.getIPAddress(proxyAddress.trim());
+          String realProxyAddress = AgentAuthFilter.getIPAddress(proxyAddress.trim());
 
           if (!realProxyAddress.equals(authModel.getRemoteAddress())) {
             String msg = String.format("The remote address \"%s\" did not match the proxy address \"%s\"", authModel.getRemoteAddress(), realProxyAddress);
@@ -108,7 +108,7 @@ public class QueryApiAuthFilter extends AbstractPreAuthenticatedProcessingFilter
 
   @Override
   protected Object getPreAuthenticatedPrincipal(HttpServletRequest request) {
-    QueryApiAuthModel authModel = new QueryApiAuthModel();
+    AgentAuthModel authModel = new AgentAuthModel();
     String authorization = request.getHeader("Authorization");
 
     if (authorization != null && authorization.toLowerCase().startsWith("key ")) {
