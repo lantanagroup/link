@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 
 @SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link.agent",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.config.query",
         "com.lantanagroup.link.auth"
