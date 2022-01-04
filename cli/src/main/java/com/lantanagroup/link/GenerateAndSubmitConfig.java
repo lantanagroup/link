@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "cli")
-public class CliConfig {
+public class GenerateAndSubmitConfig {
 
   private String apiUrl;
   private String periodStart;

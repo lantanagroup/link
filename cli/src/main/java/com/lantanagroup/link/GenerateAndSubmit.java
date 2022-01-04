@@ -52,7 +52,7 @@ public class GenerateAndSubmit {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.setPropertyNamingStrategy(PropertyNamingStrategy.KEBAB_CASE);
 
-      CliConfig configInfo = mapper.readValue(line, CliConfig.class);
+      GenerateAndSubmitConfig configInfo = mapper.readValue(line, GenerateAndSubmitConfig.class);
 
       if (Strings.isBlank(configInfo.getApiUrl())) {
         logger.error("The api-url parameter is required.");
