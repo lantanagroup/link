@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.query.auth.CernerAuthConfig;
@@ -119,6 +120,11 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public ApiInit apiInit() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
+  }
+
+  @Bean()
+  public FhirDataProvider getProvider() {
+    return new FhirDataProvider(config);
   }
 
   /**

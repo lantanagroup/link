@@ -54,7 +54,8 @@ public class ReportDataTests {
     when(fhirStoreClient.search()).thenReturn(untypedQuery);
 
     ReportDataController reportDataController = new ReportDataController();
-    reportDataController.setFhirStoreClient(fhirStoreClient);
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
+    reportDataController.setFhirStoreProvider(fhirDataProvider);
 
     Condition cond1 = createCondition("condition1", new Reference("Patient/patient1"));
     Procedure proc1 = createProcedure("procedure1", new Reference("Patient/patient1"));
@@ -116,7 +117,8 @@ public class ReportDataTests {
     when(fhirStoreClient.search()).thenReturn(untypedQuery);
 
     ReportDataController reportDataController = new ReportDataController();
-    reportDataController.setFhirStoreClient(fhirStoreClient);
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
+    reportDataController.setFhirStoreProvider(fhirDataProvider);
 
     Condition cond1 = createCondition("condition1", new Reference("Patient/patient1"));
     Procedure proc1 = createProcedure("procedure1", new Reference("Patient/patient1"));
@@ -156,7 +158,10 @@ public class ReportDataTests {
     when(fhirStoreClient.search()).thenReturn(untypedQuery);
 
     ReportDataController reportDataController = new ReportDataController();
-    reportDataController.setFhirStoreClient(fhirStoreClient);
+
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
+    reportDataController.setFhirStoreProvider(fhirDataProvider);
+
 
     Condition cond1 = createCondition("condition1", new Reference("Patient/patient1"));
     Procedure proc1 = createProcedure("procedure1", new Reference("Patient/patient1"));
