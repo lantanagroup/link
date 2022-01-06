@@ -1,59 +1,63 @@
-package com.lantanagroup.link;
+package com.lantanagroup.link.cli;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.cli.GenerateAndSubmitConfig;
 import com.lantanagroup.link.model.GenerateResponse;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.Options;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
-public class GenerateAndSubmit {
 
-  private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmit.class);
+@ShellComponent
+public class GenerateAndSubmitCommand {
 
-  public static void main(String[] args) {
 
+  private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
+  @Autowired
+  private GenerateAndSubmitConfig configInfo;
+
+  private static Date getStartDate(int adjustment) {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Calendar cal = new GregorianCalendar();
+    cal.set(Calendar.MILLISECOND, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.add(Calendar.HOUR, adjustment);
+    return cal.getTime();
+  }
+
+  private static Date getEndOfDay(Date date) {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Calendar cal = new GregorianCalendar();
+    cal.setTime(date);
+    cal.set(Calendar.HOUR, 23);
+    cal.set(Calendar.MINUTE, 59);
+    cal.set(Calendar.SECOND, 59);
+    cal.set(Calendar.MILLISECOND, 0);
+    return cal.getTime();
+  }
+
+  @ShellMethod("generateandsubmit")
+  public void generateandsubmit() {
     try {
-      Options options = new Options();
-      CommandLineParser parser = new DefaultParser();
+      HttpClient client = HttpClientBuilder.create().build();
       RestTemplate restTemplate = new RestTemplate();
-      options.addOption("config", true, "Path to Cli.yml file.");
-
-      CommandLine cmd = parser.parse(options, args);
-      String config = cmd.getOptionValue("config");
-
-      if (Strings.isBlank(config)) {
-        logger.error("The 'config' parameter is required.");
-        return;
-      }
-
-      Path configPath = Paths.get(config);
-      String line = Files.readString(configPath);
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      mapper.setPropertyNamingStrategy(PropertyNamingStrategy.KEBAB_CASE);
-
-      GenerateAndSubmitConfig configInfo = mapper.readValue(line, GenerateAndSubmitConfig.class);
 
       if (Strings.isBlank(configInfo.getApiUrl())) {
         logger.error("The api-url parameter is required.");
@@ -92,7 +96,6 @@ public class GenerateAndSubmit {
         logger.error("Period start date should be multiple of 24.");
         return;
       }
-      HttpClient client = HttpClientBuilder.create().build();
       String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
       if (token == null) {
         logger.error("Authentication failed. Please contact the system administrator.");
@@ -133,7 +136,7 @@ public class GenerateAndSubmit {
       // send POST request
       ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);
 
-      String reportId = response.getBody() != null?response.getBody().getReportId():null;
+      String reportId = response.getBody() != null ? response.getBody().getReportId() : null;
       if (reportId == null) {
         logger.error("Error generating report. Please contact the system administrator.");
         System.exit(1);
@@ -153,30 +156,8 @@ public class GenerateAndSubmit {
     } catch (Exception ex) {
       logger.error(String.format("Error generating and submitting report: %s", ex.getMessage()), ex);
       System.exit(1);
+
     }
   }
-
-  private static Date getStartDate(int adjustment) {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    Calendar cal = new GregorianCalendar();
-    cal.set(Calendar.MILLISECOND, 0);
-    cal.set(Calendar.SECOND, 0);
-    cal.set(Calendar.MINUTE, 0);
-    cal.set(Calendar.HOUR_OF_DAY, 0);
-    cal.add(Calendar.HOUR, adjustment);
-    return cal.getTime();
-  }
-
-
-  private static Date getEndOfDay(Date date) {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    cal.set(Calendar.HOUR, 23);
-    cal.set(Calendar.MINUTE, 59);
-    cal.set(Calendar.SECOND, 59);
-    cal.set(Calendar.MILLISECOND, 0);
-    return cal.getTime();
-  }
-
 }
+
