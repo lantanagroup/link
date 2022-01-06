@@ -1,0 +1,1 @@
+java -cp target\link-cli-jar-with-dependencies.jar com.lantanagroup.link.GenerateAndSubmit -config .\cli.yml

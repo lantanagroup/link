@@ -303,6 +303,43 @@ public class FhirHelper {
     return found.isPresent() ? found.get() : null;
   }
 
+  public static Practitioner toPractitioner(DecodedJWT jwt) {
+    Practitioner practitioner = new Practitioner();
+    practitioner.getMeta().addTag(Constants.MainSystem, Constants.LinkUserTag, null);
+    List identifiers = new ArrayList();
+    Identifier identifier = new Identifier();
+    identifier.setSystem(Constants.MainSystem);
+    identifier.setValue(jwt.getSubject());
+    identifiers.add(identifier);
+    practitioner.setIdentifier(identifiers);
+    String payload = jwt.getPayload();
+    byte[] decodedBytes = Base64.getDecoder().decode(payload);
+    String decodedString = new String(decodedBytes);
+    JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
+    List<HumanName> list = new ArrayList<>();
+    HumanName dst = new HumanName();
+    if (jsonObject.has("family_name")) {
+      dst.setFamily(jsonObject.get("family_name").toString());
+    }
+    if (jsonObject.has("given_name")) {
+      List<StringType> givenNames = new ArrayList();
+      givenNames.add(new StringType(jsonObject.get("given_name").toString()));
+      dst.setGiven(givenNames);
+    }
+    list.add(dst);
+    practitioner.setName(list);
+    if (jsonObject.has("email")) {
+      List<ContactPoint> contactPointList = new ArrayList();
+      ContactPoint email = new ContactPoint();
+      email.setSystem(ContactPoint.ContactPointSystem.EMAIL);
+      email.setValue(jsonObject.get("email").toString());
+      contactPointList.add(email);
+      practitioner.setTelecom(contactPointList);
+    }
+    return practitioner;
+  }
+
+
 
   public enum AuditEventTypes {
     Generate,

@@ -1,4 +1,4 @@
-package com.lantanagroup.link.query.api;
+package com.lantanagroup.link.agent;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -14,16 +14,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.HttpMessageConverter;
 
 @SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link.agent",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.config.query",
         "com.lantanagroup.link.auth"
 })
-public class QueryApiApplication extends SpringBootServletInitializer implements InitializingBean {
+public class AgentApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private QueryConfig config;
 
   public static void main(String[] args) {
-    SpringApplication.run(QueryApiApplication.class, args);
+    SpringApplication.run(AgentApplication.class, args);
   }
 
   @Override

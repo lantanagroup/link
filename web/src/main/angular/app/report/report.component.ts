@@ -148,7 +148,6 @@ export class ReportComponent implements OnInit, OnDestroy {
   async save() {
     let reportSaveModel = new ReportSaveModel();
     reportSaveModel.measureReport = this.report.measureReport;
-    reportSaveModel.questionnaireResponse = null;
     try {
       await this.reportService.save(reportSaveModel, this.reportId);
       this.toastService.showInfo('Report saved!');
