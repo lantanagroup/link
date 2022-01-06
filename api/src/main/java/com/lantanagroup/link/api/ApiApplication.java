@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import com.lantanagroup.link.query.auth.CernerAuthConfig;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
@@ -42,9 +41,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Autowired
   private ApiConfig config;
-
-  @Autowired
-  private CernerAuthConfig cerner;
 
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.
