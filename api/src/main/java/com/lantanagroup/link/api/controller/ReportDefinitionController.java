@@ -6,7 +6,6 @@ import com.lantanagroup.link.model.StoredReportDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.Questionnaire;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +28,7 @@ public class ReportDefinitionController extends BaseController {
    */
   @GetMapping
   public List<StoredReportDefinition> getMeasures(Authentication authentication, HttpServletRequest request) throws Exception {
-    IGenericClient fhirClient = this.getFhirStoreClient();
+    IGenericClient fhirClient = this.getFhirStoreProvider().getClient();
 
     // Find all Bundles with the report definition tag
     Bundle searchResults = fhirClient.search()
@@ -46,9 +45,6 @@ public class ReportDefinitionController extends BaseController {
       if (reportDefinitionBundle.getEntryFirstRep().getResource() instanceof Measure) {
         Measure measure = (Measure) reportDefinitionBundle.getEntryFirstRep().getResource();
         storedMeasure.setName(measure.hasTitle() ? measure.getTitle() : measure.getName());
-      } else if (reportDefinitionBundle.getEntryFirstRep().getResource() instanceof Questionnaire) {
-        Questionnaire questionnaire = (Questionnaire) reportDefinitionBundle.getEntryFirstRep().getResource();
-        storedMeasure.setName(questionnaire.hasTitle() ? questionnaire.getTitle() : questionnaire.getName());
       }
 
       if (StringUtils.isEmpty(storedMeasure.getName())) {

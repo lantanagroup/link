@@ -2,10 +2,9 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.rest.api.CacheControlDirective;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -30,19 +29,22 @@ import java.util.stream.Collectors;
 public class ApiInit {
   private static final Logger logger = LoggerFactory.getLogger(ApiInit.class);
 
+
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private FhirDataProvider provider;
 
   @Value("classpath:fhir/*")
   private Resource[] resources;
 
-
   private void loadReportDefinitions() {
+
     HttpClient client = HttpClient.newHttpClient();
     FhirContext ctx = FhirContext.forR4();
     IParser jsonParser = ctx.newJsonParser();
     IParser xmlParser = ctx.newXmlParser();
-    IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
 
     logger.info("Loading measures defined in configuration...");
 
@@ -115,13 +117,8 @@ public class ApiInit {
       while (searchResults == null && retryCount <= this.config.getReportDefs().getMaxRetry()) {
         try {
           // Search to see if the report def bundle already exists
-          searchResults = fhirClient.search()
-                  .forResource("Bundle")
-                  .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
-                  .where(Bundle.IDENTIFIER.exactly().systemAndCode(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()))
-                  .returnBundle(Bundle.class)
-                  .cacheControl(new CacheControlDirective().setNoCache(true))
-                  .execute();
+
+          searchResults = provider.searchReportDefinition(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue());
         } catch (FhirClientConnectionException fcce) {
           retryCount++;
 
@@ -152,13 +149,13 @@ public class ApiInit {
         reportDefBundle.setId((String) null);
         reportDefBundle.setMeta(new Meta());
         reportDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        fhirClient.create().resource(reportDefBundle).execute();
+        provider.createResource(reportDefBundle);
         logger.info(String.format("Created report def bundle from URL %s as ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
       } else if (searchResults.getEntry().size() == 1) {
         Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
         reportDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
         reportDefBundle.setMeta(foundReportDefBundle.getMeta());
-        fhirClient.update().resource(reportDefBundle).execute();
+        provider.updateResource(reportDefBundle);
         logger.info(String.format("Updated report def bundle from URL %s with ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
       } else {
         logger.error(String.format("Found multiple report def bundles with identifier %s|%s", reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()));
@@ -170,11 +167,10 @@ public class ApiInit {
   private void loadSearchParameters() {
     try {
       FhirContext ctx = FhirContext.forR4();
-      IGenericClient fhirClient = ctx.newRestfulGenericClient(this.config.getFhirServerStore());
       IParser xmlParser = ctx.newXmlParser();
       for (final Resource res : resources) {
         IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());
-        fhirClient.update().resource(resource).execute();
+        provider.updateResource(resource);
       }
     } catch (Exception ex) {
       logger.error(String.format("Error in loadSearchParameters due to %s", ex.getMessage()));

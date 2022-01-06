@@ -190,7 +190,6 @@ public class ReportControllerTests {
     excludedPatient2.setPatientId("testPatient2");
     excludedPatient2.setReason(new CodeableConcept().setText("the reason"));
     excludedPatients.add(excludedPatient2);
-    controller.setFhirStoreClient(fhirStoreClient);
 
     when(fhirDataProvider.getMeasureReport(eq("the-measure"), any(Parameters.class))).thenReturn(measureReport);
 
@@ -245,7 +244,6 @@ public class ReportControllerTests {
     excludedPatient2.setPatientId("testPatient4");
     excludedPatient2.setReason(new CodeableConcept().setText("the reason"));
     excludedPatients.add(excludedPatient2);
-    //controller.setFhirStoreClient(fhirStoreClient);
 
     when(fhirDataProvider.getMeasureReport(eq("the-measure"), any(Parameters.class))).thenReturn(measureReport);
 

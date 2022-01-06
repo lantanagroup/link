@@ -33,7 +33,6 @@ public class PatientIdentifierControllerTests {
   }
 
   private void mockCreateResource(ICreate create) {
-    //ListResource resource = mock(ListResource.class);
     ICreateTyped createTyped = mock(ICreateTyped.class);
     MethodOutcome createMethod = mock(MethodOutcome.class);
     when(create.resource(any(ListResource.class))).thenReturn(createTyped);
@@ -154,7 +153,9 @@ public class PatientIdentifierControllerTests {
     when(fhirStoreClient.create()).thenReturn(create);
 
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.setFhirStoreClient(fhirStoreClient);
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
+    patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
+
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
 
     verify(listQuery, times(1)).forResource(ListResource.class);
@@ -178,7 +179,9 @@ public class PatientIdentifierControllerTests {
     when(fhirStoreClient.create()).thenReturn(create);
 
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.setFhirStoreClient(fhirStoreClient);
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
+    patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
+
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
 
     verify(listQuery, times(2)).forResource(ListResource.class);

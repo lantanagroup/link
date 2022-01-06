@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
@@ -7,6 +8,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.config.api.ApiConfig;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -16,11 +18,13 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
+
 public class FhirDataProvider {
   private static final Logger logger = LoggerFactory.getLogger(FhirDataProvider.class);
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
   private static final String ReportDocRefSystem = "urn:ietf:rfc:3986";
+  protected FhirContext ctx = FhirContext.forR4();
 
   @Getter
   private IGenericClient client;
@@ -29,7 +33,15 @@ public class FhirDataProvider {
     this.client = client;
   }
 
-  public Resource createResource(Resource resource) {
+  public FhirDataProvider(ApiConfig config) {
+    if (this.client == null) {
+      String fhirBase = config.getFhirServerStore();
+      IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
+      this.client = fhirStoreClient;
+    }
+  }
+
+  public Resource createResource(IBaseResource resource) {
     MethodOutcome outcome = this.client
             .create()
             .resource(resource)
@@ -44,7 +56,7 @@ public class FhirDataProvider {
     return (Resource) outcome.getResource();
   }
 
-  public void updateResource(Resource resource) {
+  public void updateResource(IBaseResource resource) {
     int initialVersion = resource.getMeta().getVersionId() != null ? Integer.parseInt(resource.getMeta().getVersionId()) : 0;
 
     // Make sure the ID is not version-specific
@@ -57,7 +69,7 @@ public class FhirDataProvider {
             .resource(resource)
             .execute();
 
-    DomainResource domainResource = (DomainResource) outcome.getResource();
+    Resource domainResource = (Resource) outcome.getResource();
     int updatedVersion = Integer.parseInt(outcome.getId().getVersionIdPart());
     if (updatedVersion > initialVersion) {
       logger.debug(String.format("Update is successful for %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
@@ -210,16 +222,6 @@ public class FhirDataProvider {
     this.createResource(auditEvent);
   }
 
-//  public Bundle getPatientResources(ICriterion<ReferenceClientParam> criterion, String resourceType) {
-//    return this.client
-//            .search()
-//            .forResource(resourceType)
-//            .where(criterion)
-//            .returnBundle(Bundle.class)
-//            .cacheControl(new CacheControlDirective().setNoCache(true))
-//            .execute();
-//  }
-
   public Bundle getResources(ICriterion criterion, String resourceType) {
     return this.client
             .search()
@@ -247,6 +249,7 @@ public class FhirDataProvider {
             .withParameters(parameters)
             .useHttpGet()
             .returnResourceType(MeasureReport.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
     return measureReport;
   }
@@ -259,4 +262,13 @@ public class FhirDataProvider {
     return client.getFhirContext().newXmlParser().encodeResourceToString(bundle);
   }
 
+  public Bundle searchReportDefinition(String system, String value) {
+    return client.search()
+            .forResource(Bundle.class)
+            .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
+            .where(Bundle.IDENTIFIER.exactly().systemAndCode(system, value))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
 }
