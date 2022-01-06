@@ -1,0 +1,10 @@
+cli:
+  generateandsubmit:
+    api-url: http://localhost:8082/api
+    auth:
+      token-url: https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/token
+      user: ariana.mihailescu@lantanagroup.com
+      pass: Lantana2021
+      scope: openid
+    period-start: 96
+    report-type-id: https://nhsnlink.org|covid-min
