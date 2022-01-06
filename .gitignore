@@ -15,3 +15,4 @@ query/src/main/resources/query-*.yml
 .idea/usage.statistics.xml
 .idea/shelf/
 .idea/libraries/
+spring-shell.log
