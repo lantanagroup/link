@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "cli.generateandsubmit")
+@ConfigurationProperties(prefix = "cli.generate-and-submit")
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class GenerateAndSubmitConfig {

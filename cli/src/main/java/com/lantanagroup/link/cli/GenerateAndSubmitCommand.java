@@ -53,8 +53,8 @@ public class GenerateAndSubmitCommand {
     return cal.getTime();
   }
 
-  @ShellMethod("generateandsubmit")
-  public void generateandsubmit() {
+  @ShellMethod("generate-and-submit")
+  public void generateAndSubmit() {
     try {
       HttpClient client = HttpClientBuilder.create().build();
       RestTemplate restTemplate = new RestTemplate();
