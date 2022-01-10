@@ -271,4 +271,16 @@ public class FhirDataProvider {
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
   }
+
+  public Bundle searchPractitioner(String practitionerId) {
+    return client
+            .search()
+            .forResource(Practitioner.class)
+            .withTag(Constants.MainSystem, Constants.LinkUserTag)
+            .where(Practitioner.IDENTIFIER.exactly().systemAndValues(Constants.MainSystem, practitionerId))
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
 }

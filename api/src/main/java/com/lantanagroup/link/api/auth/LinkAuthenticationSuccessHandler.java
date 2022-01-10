@@ -1,15 +1,12 @@
 package com.lantanagroup.link.api.auth;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.CacheControlDirective;
-import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Practitioner;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -22,41 +19,37 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthenticationSuccessHandler.class);
   private ApiConfig config;
 
-  public LinkAuthenticationSuccessHandler (ApiConfig config) {
+  private FhirDataProvider provider;
+
+  public LinkAuthenticationSuccessHandler(ApiConfig config) {
     this.config = config;
+    this.provider = new FhirDataProvider((config));
   }
 
-
   @Override
-  public void onAuthenticationSuccess (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
-    IGenericClient fhirStoreClient = FhirContext.forR4().newRestfulGenericClient(config.getFhirServerStore());
+  public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
     Practitioner practitioner = ((LinkCredentials) authentication.getPrincipal()).getPractitioner();
+
     try {
-      Bundle bundle = fhirStoreClient
-              .search()
-              .forResource(Practitioner.class)
-              .withTag(Constants.MainSystem, Constants.LinkUserTag)
-              .where(Practitioner.IDENTIFIER.exactly().systemAndValues(Constants.MainSystem, practitioner.getIdentifier().get(0).getValue()))
-              .returnBundle(Bundle.class)
-              .cacheControl(new CacheControlDirective().setNoCache(true))
-              .execute();
+
+      Bundle bundle = provider.searchPractitioner(practitioner.getIdentifier().get(0).getValue());
+
       int size = bundle.getEntry().size();
       if (size == 0) {
-        MethodOutcome outcome = fhirStoreClient.create().resource(practitioner).execute();
-        if (outcome.getCreated() && outcome.getResource() != null) {
-          practitioner.setId(outcome.getResource().getIdElement().getIdPart());
-        }
+        Resource resource = provider.createResource(practitioner);
+        practitioner.setId(resource.getIdElement().getIdPart());
+
       } else {
         Practitioner foundPractitioner = ((Practitioner) bundle.getEntry().get(0).getResource());
         practitioner.setId(foundPractitioner.getId());
         if (!isSamePractitioner(practitioner, foundPractitioner)) {
-          fhirStoreClient.update().resource(practitioner).execute();
+          provider.updateResource(practitioner);
         }
       }
     } catch (ResourceNotFoundException ex) {
       String msg = String.format("Practitioner Resource with identifier  \"%s\"  was not found on FHIR server \"%s\". It will be created.", practitioner.getId(), config.getFhirServerStore());
       logger.debug(msg);
-      fhirStoreClient.update().resource(practitioner).execute();
+      provider.updateResource(practitioner);
     } catch (Exception ex) {
       String msg = String.format("Unable to retrieve practitioner with identifier  \"%s\"  from FHIR server \"%s\"", practitioner.getId(), config.getFhirServerStore());
       logger.error(msg);
@@ -64,7 +57,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
     }
   }
 
-  private boolean isSamePractitioner (Practitioner practitioner1, Practitioner practitioner2) {
+  private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
     boolean same = true;
     String familyNamePractitioner1 = practitioner1.getName().get(0).getFamily();
     String familyNamePractitioner2 = practitioner2.getName().get(0).getFamily();
