@@ -1,17 +1,13 @@
 package com.lantanagroup.link.cli;
 
-import lombok.AllArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.shell.Input;
-import org.springframework.shell.InputProvider;
 import org.springframework.shell.Shell;
 import org.springframework.shell.jline.InteractiveShellApplicationRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +45,5 @@ public class SingleCommandShellRunner implements ApplicationRunner {
     InteractiveShellApplicationRunner.disable(this.environment);
     String[] commands = new String[commandAndArgs.size()];
     shell.run(new ShellInputProvider(commandAndArgs.toArray(commands)));
-    // TODO: shell.run()?
   }
 }
