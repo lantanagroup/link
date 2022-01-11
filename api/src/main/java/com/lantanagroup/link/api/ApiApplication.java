@@ -2,9 +2,9 @@ package com.lantanagroup.link.api;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import com.lantanagroup.link.query.auth.CernerAuthConfig;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
@@ -41,9 +41,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Autowired
   private ApiConfig config;
-
-  @Autowired
-  private CernerAuthConfig cerner;
 
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.
@@ -119,6 +116,11 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public ApiInit apiInit() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
+  }
+
+  @Bean()
+  public FhirDataProvider getProvider() {
+    return new FhirDataProvider(config);
   }
 
   /**

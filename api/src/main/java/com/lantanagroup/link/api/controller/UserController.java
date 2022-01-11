@@ -30,6 +30,7 @@ public class UserController extends BaseController {
   public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request, String tagSystem, String tagValue) throws Exception {
 
     FhirDataProvider fhirDataProvider = this.getFhirDataProvider();
+
     List<UserModel> users = new ArrayList<>();
 
     Bundle bundle = fhirDataProvider

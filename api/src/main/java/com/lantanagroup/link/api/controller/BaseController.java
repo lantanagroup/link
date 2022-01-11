@@ -11,9 +11,7 @@ import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 
-import javax.servlet.http.HttpServletRequest;
 
 public class BaseController {
   private static final Logger logger = LoggerFactory.getLogger(BaseController.class);
@@ -22,24 +20,11 @@ public class BaseController {
   private ApiConfig config;
 
   @Setter
-  private IGenericClient fhirStoreClient;
-
-  protected IGenericClient getFhirStoreClient() {
-    if (this.fhirStoreClient == null) {
-      String fhirBase = config.getFhirServerStore();
-      IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
-      this.fhirStoreClient = fhirStoreClient;
-    }
-
-    return this.fhirStoreClient;
-  }
-
-  @Setter
   private FhirDataProvider fhirStoreProvider;
 
   protected FhirDataProvider getFhirDataProvider() {
     if (this.fhirStoreProvider == null) {
-      this.fhirStoreProvider = new FhirDataProvider(this.getFhirStoreClient());
+      this.fhirStoreProvider = new FhirDataProvider(config);
     }
     return this.fhirStoreProvider;
   }
