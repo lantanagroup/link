@@ -251,6 +251,16 @@ public class FhirDataProvider {
     return measureReport;
   }
 
+  public Bundle searchPractitioner(String tagSystem, String tagValue) {
+    return this.client
+            .search()
+            .forResource(Practitioner.class)
+            .withTag(tagSystem, tagValue)
+            .returnBundle(Bundle.class)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
   public Bundle fetchResourceFromUrl(String url) {
     return this.client.fetchResourceFromUrl(Bundle.class, url);
   }

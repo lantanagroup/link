@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.model.UserModel;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -26,24 +27,20 @@ public class UserController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   @GetMapping
-  public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request) throws Exception {
+  public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request, String tagSystem, String tagValue) throws Exception {
 
-    IGenericClient fhirStoreClient = this.getFhirStoreClient();
+    FhirDataProvider fhirDataProvider = this.getFhirDataProvider();
     List<UserModel> users = new ArrayList<>();
 
-    Bundle bundle = fhirStoreClient
-            .search()
-            .forResource(Practitioner.class)
-            .withTag(Constants.MainSystem, Constants.LinkUserTag)
-            .returnBundle(Bundle.class)
-            .execute();
+    Bundle bundle = fhirDataProvider
+            .searchPractitioner(tagSystem, tagValue);
 
     if (bundle.getEntry().size() == 0) {
       logger.info("No practitioner ");
       return users;
     }
 
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirStoreClient, ctx);
+    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirDataProvider, ctx);
     Stream<UserModel> lst = bundles.parallelStream().map(practitioner -> new UserModel((Practitioner) practitioner));
 
     return lst.collect(Collectors.toList());

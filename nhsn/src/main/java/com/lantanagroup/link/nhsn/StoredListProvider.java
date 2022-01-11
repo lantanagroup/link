@@ -39,7 +39,7 @@ public class StoredListProvider implements IPatientIdProvider {
       return patientsOfInterest;
     }
 
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider().getClient(), ctx);
+    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
       ListResource resource = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));

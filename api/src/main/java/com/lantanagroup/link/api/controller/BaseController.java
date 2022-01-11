@@ -37,7 +37,7 @@ public class BaseController {
   @Setter
   private FhirDataProvider fhirStoreProvider;
 
-  protected FhirDataProvider getFhirStoreProvider() {
+  protected FhirDataProvider getFhirDataProvider() {
     if (this.fhirStoreProvider == null) {
       this.fhirStoreProvider = new FhirDataProvider(this.getFhirStoreClient());
     }

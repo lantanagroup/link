@@ -61,10 +61,10 @@ public class PatientIdentifierController extends BaseController {
       String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
       String value = ((ListResource) resource).getIdentifier().get(0).getValue();
       String date = Helper.getFhirDate(datetime);
-      Bundle bundle = this.getFhirStoreProvider().findListByIdentifierAndDate(system, value, date);
+      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, date);
       if (bundle.getEntry().size() == 0) {
         ((ListResource) resource).setDateElement(new DateTimeType(date));
-        this.getFhirStoreProvider().createResource(resource);
+        this.getFhirDataProvider().createResource(resource);
       } else {
         ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
         // filter out duplicates
@@ -80,10 +80,10 @@ public class PatientIdentifierController extends BaseController {
         uniqueEntries.parallelStream().forEach(entry -> {
           existingList.getEntry().add(entry);
         });
-        this.getFhirStoreProvider().updateResource(existingList);
+        this.getFhirDataProvider().updateResource(existingList);
       }
     } else {
-      this.getFhirStoreProvider().createResource(resource);
+      this.getFhirDataProvider().createResource(resource);
     }
   }
 
