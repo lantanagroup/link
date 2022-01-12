@@ -135,7 +135,7 @@ public class ReportController extends BaseController {
         logger.info(String.format("Acquired the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
         reportRemoteReportDefBundle.setId(reportDefBundle.getIdElement().getIdPart());
         reportRemoteReportDefBundle.setMeta(reportDefBundle.getMeta());
-        this.getFhirStoreProvider().updateResource(reportRemoteReportDefBundle);
+        this.getFhirDataProvider().updateResource(reportRemoteReportDefBundle);
         reportDefBundle = reportRemoteReportDefBundle;
         logger.info(String.format("Stored the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
       }
