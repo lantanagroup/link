@@ -5,6 +5,7 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -90,16 +91,9 @@ public class ApiInit {
         logger.error(String.format("Could not retrieve report definition at %s", reportDefUrl));
         return;
       }
-
-      Bundle reportDefBundle = null;
-      try {
-        if (content.trim().startsWith("{") || content.trim().startsWith("[")) {
-          reportDefBundle = jsonParser.parseResource(Bundle.class, content);
-        } else {
-          reportDefBundle = xmlParser.parseResource(Bundle.class, content);
-        }
-      } catch (Exception ex) {
-        logger.error(String.format("Error parsing report def bundle from URL %s due to %s", reportDefUrl, ex.getMessage()));
+      Bundle reportDefBundle = FhirHelper.getBundle(content);
+      if (reportDefBundle == null) {
+        logger.error(String.format("Error parsing report def bundle from %s", reportDefUrl));
         return;
       }
 
