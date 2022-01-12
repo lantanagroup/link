@@ -231,13 +231,14 @@ public class FhirHelper {
     return bundle;
   }
 
-  public static List<IBaseResource> getAllPages(Bundle bundle, IGenericClient fhirStoreClient, FhirContext ctx) {
+  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
     List<IBaseResource> bundles = new ArrayList<>();
     bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
 
     // Load the subsequent pages
     while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
-      bundle = fhirStoreClient
+      bundle = fhirDataProvider
+              .getClient()
               .loadPage()
               .next(bundle)
               .execute();
