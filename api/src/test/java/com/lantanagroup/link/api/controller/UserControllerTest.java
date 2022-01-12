@@ -1,24 +1,29 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.gclient.IUntypedQuery;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.mock.AuthMockInfo;
+import com.lantanagroup.link.mock.MockHelper;
 import com.lantanagroup.link.model.UserModel;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
-import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.HumanName;
+import org.hl7.fhir.r4.model.Practitioner;
+import org.hl7.fhir.r4.model.StringType;
+import org.junit.Assert;
 import org.junit.Test;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,60 +42,46 @@ public class UserControllerTest extends BaseController{
   private List<StringType> Given1;
   private String practitionerID1;
 
-  //Tests if the bundle is empty.
+  //Test 1 user is returned
   @Test
-  public void getUsersTestWithNoPractitioners(){
+  public void getUsersTest() throws Exception {
 
     setup();
-
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(clientTest);
-
-    Bundle bundle = fhirDataProvider
-            .searchPractitioner(tagSystemTest, tagValueTest);
-
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirDataProvider, ctxTest);
-    Stream<UserModel> lst = bundles.parallelStream().map(practitioner -> new UserModel((Practitioner) practitioner));
-
-    lst.collect(Collectors.toList());
-  }
-
-  //Tests when at least one practitioner is in the bundle.
-  @Test
-  public void getUsersTestWithPractitioners(){
-
-    setup();
-
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(clientTest);
-
-    Bundle bundle = fhirDataProvider
-            .searchPractitioner(tagSystemTest, tagValueTest);
-
+    IGenericClient fhirStoreClient = mock(IGenericClient.class);
+    AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    UserController userController = new UserController();
+    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
+    userController.setFhirStoreProvider(fhirDataProvider);
+    userController.setConfig(new ApiConfig());
+    Bundle bundle = new Bundle();
     bundle.addEntry().setResource(practitionerTest);
+    when(fhirDataProvider.searchPractitioner(anyString(), anyString())).thenReturn(bundle);
 
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirDataProvider, ctxTest);
-    Stream<UserModel> lst = bundles.parallelStream().map(practitioner -> new UserModel((Practitioner) practitioner));
-
-    lst.collect(Collectors.toList());
+    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request, "\"https://nhsnlink.org\"", "link-user");
+    Assert.assertEquals(1, users.size());
   }
 
-  //This tests what happens when wrong values are put into searchPractitioner, it's supposed to fail.
+
+  //Test 0 users are returned
   @Test
-  public void getUsersNegativeTestWithPractitioners(){
+  public void getZeroUsersTest() throws Exception {
 
     setup();
+    IGenericClient fhirStoreClient = mock(IGenericClient.class);
+    AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    UserController userController = new UserController();
+    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
+    userController.setFhirStoreProvider(fhirDataProvider);
+    userController.setConfig(new ApiConfig());
+    Bundle bundle = new Bundle();
+    when(fhirDataProvider.searchPractitioner(anyString(), anyString())).thenReturn(bundle);
 
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(clientTest);
-
-    Bundle bundle = fhirDataProvider
-            .searchPractitioner("WrongValue1", "WrongValue2");
-
-    bundle.addEntry().setResource(practitionerTest);
-
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, fhirDataProvider, ctxTest);
-    Stream<UserModel> lst = bundles.parallelStream().map(practitioner -> new UserModel((Practitioner) practitioner));
-
-    lst.collect(Collectors.toList());
+    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request, "\"https://nhsnlink.org\"", "link-user");
+    Assert.assertEquals(0, users.size());
   }
+
 
   private void setup(){
 
