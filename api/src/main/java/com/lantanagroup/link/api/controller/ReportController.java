@@ -34,11 +34,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,8 +51,8 @@ public class ReportController extends BaseController {
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
 
-  private ObjectMapper mapper = new ObjectMapper();
-  private String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
+  private final ObjectMapper mapper = new ObjectMapper();
+  private final String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   @Autowired
   @Setter
@@ -59,6 +61,8 @@ public class ReportController extends BaseController {
   @Autowired
   private ApplicationContext context;
 
+  @Autowired
+  private QueryConfig queryConfig;
 
   private String storeReportBundleResources(Bundle bundle) {
     String measureId = null;
@@ -100,6 +104,7 @@ public class ReportController extends BaseController {
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
+
     // Find the report definition bundle for the given ID
     Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")), criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1));
 
@@ -107,6 +112,36 @@ public class ReportController extends BaseController {
       throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
     }
 
+    // check if the remote report definition build is newer
+    SimpleDateFormat formatter = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
+    String lastUpdateDate = formatter.format(reportDefBundle.getMeta().getLastUpdated());
+
+    String url = this.queryConfig.getFhirServerBase() + "/" + reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart();
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .setHeader("if-modified-since", lastUpdateDate);
+    HttpRequest request = requestBuilder.build();
+
+    HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+
+    logger.info(String.format("Checked the latest version of the Measure bundle: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart()));
+
+    if (response.statusCode() == 200) {
+      Bundle reportRemoteReportDefBundle = FhirHelper.getBundle(response.body());
+      if (reportRemoteReportDefBundle == null) {
+        logger.error(String.format("Error parsing report def bundle from %s", url));
+      } else {
+        String latestDate = formatter.format(reportRemoteReportDefBundle.getMeta().getLastUpdated());
+        logger.info(String.format("Acquired the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
+        reportRemoteReportDefBundle.setId(reportDefBundle.getIdElement().getIdPart());
+        reportRemoteReportDefBundle.setMeta(reportDefBundle.getMeta());
+        this.getFhirDataProvider().updateResource(reportRemoteReportDefBundle);
+        reportDefBundle = reportRemoteReportDefBundle;
+        logger.info(String.format("Stored the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
+      }
+    } else {
+      logger.info("The latest version of the Measure bundle is already stored. There is no need to re-acquire it.");
+    }
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
       logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
@@ -118,6 +153,7 @@ public class ReportController extends BaseController {
       throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
     }
   }
+
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;

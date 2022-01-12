@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
@@ -104,10 +105,11 @@ public class FhirHelper {
 
   /**
    * Retrieves the relevant ID portion of the version of a resource
+   *
    * @param version A resource's version URI
    * @return The ID portion of the resource's version
    */
-  public static String getIdFromVersion(String version){
+  public static String getIdFromVersion(String version) {
     return version.substring(version.lastIndexOf("fhir/") + 5, version.indexOf("/_history"));
   }
 
@@ -145,6 +147,7 @@ public class FhirHelper {
 
   /**
    * Increments the minor version of the specified report
+   *
    * @param documentReference - DocumentReference whose minor version is to be incremented
    * @return - the DocumentReference with the minor version incremented by 1
    */
@@ -194,7 +197,7 @@ public class FhirHelper {
     bundle.setMeta(meta);
     bundle.addEntry().setResource(measureReport);
 
-    if(sendWholeBundle){
+    if (sendWholeBundle) {
       List<String> resourceReferences = new ArrayList<>();
 
       for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
@@ -245,7 +248,7 @@ public class FhirHelper {
     return bundles;
   }
 
-  public static PatientReportModel setPatientFields(Patient patient, Boolean excluded){
+  public static PatientReportModel setPatientFields(Patient patient, Boolean excluded) {
     PatientReportModel report = new PatientReportModel();
     report.setName(FhirHelper.getName(patient.getName()));
 
@@ -298,8 +301,8 @@ public class FhirHelper {
 
   public static Bundle.BundleEntryComponent findEntry(Bundle bundle, ResourceType resourceType, String id) {
     Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream().filter(e ->
-                    e.getResource().getResourceType() == resourceType &&
-                            e.getResource().getIdElement().getIdPart().equals(id))
+            e.getResource().getResourceType() == resourceType &&
+                    e.getResource().getIdElement().getIdPart().equals(id))
             .findFirst();
     return found.isPresent() ? found.get() : null;
   }
@@ -341,6 +344,23 @@ public class FhirHelper {
   }
 
 
+  public static Bundle getBundle(String content) {
+    FhirContext ctx = FhirContext.forR4();
+    IParser jsonParser = ctx.newJsonParser();
+    IParser xmlParser = ctx.newXmlParser();
+    Bundle reportDefBundle;
+    try {
+      if (content.trim().startsWith("{") || content.trim().startsWith("[")) {
+        reportDefBundle = jsonParser.parseResource(Bundle.class, content);
+      } else {
+        reportDefBundle = xmlParser.parseResource(Bundle.class, content);
+      }
+    } catch (Exception ex) {
+      logger.error(String.format("Error parsing report def bundle due to %s", ex.getMessage()));
+      return null;
+    }
+    return reportDefBundle;
+  }
 
   public enum AuditEventTypes {
     Generate,
