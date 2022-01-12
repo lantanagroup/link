@@ -4,7 +4,7 @@ import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.api.MeasureEvaluator;
+import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
@@ -52,7 +52,6 @@ public class ReportController extends BaseController {
   private static final String PeriodEndParamName = "periodEnd";
 
   private final ObjectMapper mapper = new ObjectMapper();
-  private final String documentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   @Autowired
   @Setter
@@ -198,7 +197,14 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
+  /**
+   * Executes the configured query implementation against a list of POIs. The POI at the start of this
+   * may be either identifier (such as MRN) or logical id for the FHIR Patient resource.
+   * @param patientsOfInterest
+   * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
+   * @throws Exception
+   */
+  private List<String> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
@@ -252,6 +258,12 @@ public class ReportController extends BaseController {
                   logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
                 }
               });
+
+      return patientDataBundle
+              .getEntry().stream()
+              .filter(e -> e.getResource().getResourceType() == ResourceType.Patient)
+              .map(e -> e.getResource().getIdElement().getIdPart())
+              .collect(Collectors.toList());
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
       logger.error(msg);
@@ -299,43 +311,25 @@ public class ReportController extends BaseController {
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
       // Scoop the data for the patients and store it
-      this.queryAndStorePatientData(patientsOfInterest);
+      List<String> patientIds = this.queryAndStorePatientData(patientsOfInterest);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-      // Generate the report id
+      // Generate the master report id
       String id = "";
       if (!regenerate || Strings.isEmpty(id)) {
         id = RandomStringUtils.randomAlphanumeric(8);
       } else {
         id = null != existingDocumentReference ? existingDocumentReference.getMasterIdentifier().getValue() : "";
       }
+
       context.setReportId(id);
       response.setReportId(id);
-      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
+
+      ReportGenerator generator = new ReportGenerator(context, criteria, this.config, user);
+      generator.generateAndStore(patientIds, id, existingDocumentReference);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
-
-      if (measureReport != null) {
-        // Save measure report and documentReference
-        this.getFhirDataProvider().updateResource(measureReport);
-
-        DocumentReference documentReference = this.generateDocumentReference(user, criteria, context, id);
-        if (existingDocumentReference != null) {
-          documentReference.setId(existingDocumentReference.getId());
-
-          Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(documentReferenceVersionUrl);
-          String existingVersion = existingVersionExt.getValue().toString();
-
-          documentReference.getExtensionByUrl(documentReferenceVersionUrl).setValue(new StringType(existingVersion));
-          this.getFhirDataProvider().updateResource(documentReference);
-        } else {
-          this.getFhirDataProvider().createResource(documentReference);
-        }
-      } else {
-        logger.error("Measure evaluator returned a null MeasureReport");
-        throw new HttpResponseException(500, "Internal Server Error");
-      }
     } catch (ResponseStatusException rse) {
       logger.error(String.format("Error generating report: %s", rse.getMessage()), rse);
       throw rse;
@@ -347,64 +341,11 @@ public class ReportController extends BaseController {
     return response;
   }
 
-  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
-    DocumentReference documentReference = new DocumentReference();
-    Identifier identifier = new Identifier();
-    identifier.setSystem(config.getDocumentReferenceSystem());
-    identifier.setValue(identifierValue);
-
-    documentReference.setMasterIdentifier(identifier);
-    documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
-
-    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-
-    List<Reference> list = new ArrayList<>();
-    Reference reference = new Reference();
-    String practitionerId = user.getPractitioner().getId();
-    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
-    list.add(reference);
-    documentReference.setAuthor(list);
-
-    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
-
-    CodeableConcept type = new CodeableConcept();
-    List<Coding> codings = new ArrayList<>();
-    Coding coding = new Coding();
-    coding.setCode(Constants.DocRefCode);
-    coding.setSystem(Constants.LoincSystemUrl);
-    coding.setDisplay(Constants.DocRefDisplay);
-    codings.add(coding);
-    type.setCoding(codings);
-    documentReference.setType(type);
-
-    List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
-    DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
-    Attachment attachment = new Attachment();
-    attachment.setCreation(new Date());
-    doc.setAttachment(attachment);
-    listDoc.add(doc);
-    documentReference.setContent(listDoc);
-
-    DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    Period period = new Period();
-    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
-    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
-    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-
-    docReference.setPeriod(period);
-
-    documentReference.setContext(docReference);
-
-    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
-
-    return documentReference;
-  }
-
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
    *
    * @param reportId - this is the report identifier after generate report was clicked
+   * @param request
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
   @GetMapping("/{reportId}/$send")
@@ -465,8 +406,8 @@ public class ReportController extends BaseController {
 
     report.setIdentifier(reportId);
     report.setVersion(documentReference
-            .getExtensionByUrl(documentReferenceVersionUrl) != null ?
-            documentReference.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
+            .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
+            documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
     report.setStatus(documentReference.getDocStatus().toString());
     report.setDate(documentReference.getDate());
 
@@ -933,8 +874,13 @@ public class ReportController extends BaseController {
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
+    MeasureReport updatedMeasureReport = null;
+
+    /* TODO: update to account for individual patient measure reports
     // Re-evaluate the MeasureReport, now that the Patient has been DELETE'd from the system
     MeasureReport updatedMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
+     */
+
     updatedMeasureReport.setId(reportId);
     updatedMeasureReport.setExtension(measureReport.getExtension());    // Copy extensions from the original report before overwriting
 
@@ -976,8 +922,8 @@ public class ReportController extends BaseController {
     report.setMeasure(measure);
     report.setIdentifier(reportId);
     report.setVersion(reportDocRef
-            .getExtensionByUrl(documentReferenceVersionUrl) != null ?
-            reportDocRef.getExtensionByUrl(documentReferenceVersionUrl).getValue().toString() : null);
+            .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
+            reportDocRef.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
     report.setStatus(reportDocRef.getDocStatus().toString());
     report.setDate(reportDocRef.getDate());
 

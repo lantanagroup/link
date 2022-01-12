@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 public class MeasureEvaluator {
@@ -19,16 +20,34 @@ public class MeasureEvaluator {
   private ReportCriteria criteria;
   private ReportContext context;
   private ApiConfig config;
+  private String patientId;
 
-  private MeasureEvaluator(ReportCriteria criteria, ReportContext context, ApiConfig config) {
+  private MeasureEvaluator(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
     this.criteria = criteria;
     this.context = context;
     this.config = config;
+    this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config);
+  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config, patientId);
     return evaluator.generateMeasureReport();
+  }
+
+  public static void aggregateMeasureReports(MeasureReport master, List<MeasureReport> patientMeasureReports) {
+    for (MeasureReport patientMeasureReport : patientMeasureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
+        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+          // TODO: Check if group and population code exist in master, if not create
+
+          // TODO: Add population.count to the master group/population count
+
+          // TODO: Identify or create the List for this master group/population
+
+          // TODO: If this population incremented the master, add this patient measure report to the contained List
+        }
+      }
+    }
   }
 
   private MeasureReport generateMeasureReport() {
@@ -43,6 +62,7 @@ public class MeasureEvaluator {
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
+      // TODO: add patient id as parameter to $evaluate-measure
 
       measureReport = context.getFhirProvider().getMeasureReport(this.context.getMeasureId(), parameters);
 
