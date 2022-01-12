@@ -25,7 +25,6 @@ public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
-  private static final String REPORT_BUNDLE_TAG = "report-bundle";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
   public static AuditEvent createAuditEvent(HttpServletRequest request, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
@@ -186,7 +185,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport measureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
+  public static Bundle bundleMeasureReport(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(REPORT_BUNDLE_TAG);
@@ -195,12 +194,12 @@ public class FhirHelper {
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);
     bundle.setMeta(meta);
-    bundle.addEntry().setResource(measureReport);
+    bundle.addEntry().setResource(masterMeasureReport);
 
     if (sendWholeBundle) {
       List<String> resourceReferences = new ArrayList<>();
 
-      for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
+      for (Reference evaluatedResource : masterMeasureReport.getEvaluatedResource()) {
         if (!evaluatedResource.hasReference()) continue;
 
         if (!evaluatedResource.getReference().startsWith("#")) {
@@ -217,7 +216,6 @@ public class FhirHelper {
       });
     }
 
-
     return bundle;
   }
 
@@ -226,7 +224,10 @@ public class FhirHelper {
     bundle.setType(Bundle.BundleType.TRANSACTION);
     resourceReferences.parallelStream().forEach(reference -> {
       String[] referenceSplit = reference.split("/");
-      bundle.addEntry().getRequest().setMethod(Bundle.HTTPVerb.GET).setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
+      bundle.addEntry()
+              .getRequest()
+              .setMethod(Bundle.HTTPVerb.GET)
+              .setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
     });
     return bundle;
   }
