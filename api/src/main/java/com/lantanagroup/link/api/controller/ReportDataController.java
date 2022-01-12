@@ -26,13 +26,13 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    Bundle searchResults = this.getFhirStoreProvider().getResources(Resource.RES_ID.exactly().identifier(resource.getId()), resourceType);
+    Bundle searchResults = this.getFhirDataProvider().getResources(Resource.RES_ID.exactly().identifier(resource.getId()), resourceType);
 
     if(searchResults.hasEntry()){
       throw new HttpResponseException(500, "Resource with id " + resource.getId() + " already exists");
     }
     else {
-      Resource resourceCreated = this.getFhirStoreProvider().createResource(resource);
+      Resource resourceCreated = this.getFhirDataProvider().createResource(resource);
       return "Stored FHIR resource with new ID of " + resourceCreated.getIdElement().getIdPart();
     }
   }
@@ -48,11 +48,11 @@ public class ReportDataController extends BaseController{
       throw new HttpResponseException(500, "Resource type in path and submitted resource's type must match");
     }
 
-    Bundle searchResults = this.getFhirStoreProvider().getResources(Resource.RES_ID.exactly().identifier(resource.getId()), resourceType);
+    Bundle searchResults = this.getFhirDataProvider().getResources(Resource.RES_ID.exactly().identifier(resource.getId()), resourceType);
 
 
     if (searchResults.hasEntry()) {
-      this.getFhirStoreProvider().updateResource(resource);
+      this.getFhirDataProvider().updateResource(resource);
       return String.format("Update is successful for %s/%s", resource.getResourceType().toString(), resource.getIdElement().getIdPart());
     } else {
       throw new HttpResponseException(500, "Resource with resourceID " + resourceId + " does not exist");
