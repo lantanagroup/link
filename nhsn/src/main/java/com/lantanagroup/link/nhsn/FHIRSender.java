@@ -105,7 +105,7 @@ public class FHIRSender implements IReportSender {
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
-        FhirHelper.recordAuditEvent(request, fhirProvider.getClient(), ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
+        FhirHelper.recordAuditEvent(request, fhirProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
       } catch (IOException ex) {
         if(ex.getMessage().contains("403")){
           logger.error("Error authorizing send: " + ex.getMessage());
