@@ -27,14 +27,14 @@ public class UserController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
   @GetMapping
-  public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request, String tagSystem, String tagValue) throws Exception {
+  public List<UserModel> getUsers (Authentication authentication, HttpServletRequest request) throws Exception {
 
     FhirDataProvider fhirDataProvider = this.getFhirDataProvider();
 
     List<UserModel> users = new ArrayList<>();
 
     Bundle bundle = fhirDataProvider
-            .searchPractitioner(tagSystem, tagValue);
+            .searchPractitioner("https://nhsnlink.org", "link-user");
 
     if (bundle.getEntry().size() == 0) {
       logger.info("No practitioner ");
