@@ -58,7 +58,7 @@ public class UserControllerTest extends BaseController{
     bundle.addEntry().setResource(practitionerTest);
     when(fhirDataProvider.searchPractitioner(anyString(), anyString())).thenReturn(bundle);
 
-    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request, "\"https://nhsnlink.org\"", "link-user");
+    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request);
     Assert.assertEquals(1, users.size());
   }
 
@@ -78,7 +78,7 @@ public class UserControllerTest extends BaseController{
     Bundle bundle = new Bundle();
     when(fhirDataProvider.searchPractitioner(anyString(), anyString())).thenReturn(bundle);
 
-    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request, "\"https://nhsnlink.org\"", "link-user");
+    List<UserModel> users = userController.getUsers(authMock.getAuthentication(), request);
     Assert.assertEquals(0, users.size());
   }
 
