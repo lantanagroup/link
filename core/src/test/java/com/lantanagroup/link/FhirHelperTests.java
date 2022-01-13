@@ -52,7 +52,7 @@ public class FhirHelperTests {
   @Test
   public void bundleMeasureReportTest(){
 
-    
+
   }
 
   @Test
