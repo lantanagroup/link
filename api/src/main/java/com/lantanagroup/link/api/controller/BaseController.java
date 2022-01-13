@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class BaseController {
   private static final Logger logger = LoggerFactory.getLogger(BaseController.class);
   protected FhirContext ctx = FhirContext.forR4();
+
+  @Setter
   @Autowired
   private ApiConfig config;
 
