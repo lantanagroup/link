@@ -4,12 +4,10 @@ import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.api.controller.ReportController;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +88,7 @@ public class ReportGenerator {
     return documentReference;
   }
 
-  public MeasureReport generateAndStore(List<String> patientIds, String masterReportId, DocumentReference existingDocumentReference) throws HttpResponseException, ParseException {
+  public MeasureReport generateAndStore(List<String> patientIds, String masterReportId, DocumentReference existingDocumentReference) throws ParseException {
     // Create a bundle to execute as a transaction to update multiple resources at once
     Bundle updateBundle = new Bundle();
     updateBundle.setType(Bundle.BundleType.TRANSACTION);
@@ -114,51 +112,49 @@ public class ReportGenerator {
     masterMeasureReport.setId(masterReportId);
     masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
     masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
-    // masterMeasureReport.setPeriod(TODO based on start/end dates in criteria);
-    // masterMeasureReport.setMeasure(TODO based on criteria measure url);
+    masterMeasureReport.setPeriod(new Period());
+    masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
+    masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
+    masterMeasureReport.setMeasure("Measure/" + context.getMeasureId());
 
     // Aggregate the patient measure reports into the master measure report
     MeasureEvaluator.aggregateMeasureReports(masterMeasureReport, patientMeasureReports);
 
-    if (masterMeasureReport != null) {
-      // Save measure report and documentReference
+
+    // Save measure report and documentReference
+    updateBundle.addEntry()
+            .setResource(masterMeasureReport)
+            .setRequest(new Bundle.BundleEntryRequestComponent()
+                    .setMethod(Bundle.HTTPVerb.PUT)
+                    .setUrl("MeasureReport/" + masterReportId));
+
+    DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, masterReportId);
+
+    if (existingDocumentReference != null) {
+      documentReference.setId(existingDocumentReference.getId());
+
+      Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
+      String existingVersion = existingVersionExt.getValue().toString();
+
+      documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
+
       updateBundle.addEntry()
-              .setResource(masterMeasureReport)
+              .setResource(documentReference)
               .setRequest(new Bundle.BundleEntryRequestComponent()
                       .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("MeasureReport/" + masterReportId));
-
-      DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, masterReportId);
-
-      if (existingDocumentReference != null) {
-        documentReference.setId(existingDocumentReference.getId());
-
-        Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
-        String existingVersion = existingVersionExt.getValue().toString();
-
-        documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
-
-        updateBundle.addEntry()
-                .setResource(documentReference)
-                .setRequest(new Bundle.BundleEntryRequestComponent()
-                        .setMethod(Bundle.HTTPVerb.PUT)
-                        .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
-      } else {
-        updateBundle.addEntry()
-                .setResource(documentReference)
-                .setRequest(new Bundle.BundleEntryRequestComponent()
-                        .setMethod(Bundle.HTTPVerb.POST)
-                        .setUrl("DocumentReference"));
-      }
-
-      // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-      this.context
-              .getFhirProvider()
-              .transaction(updateBundle);
+                      .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
     } else {
-      logger.error("Measure evaluator returned a null MeasureReport");
-      throw new HttpResponseException(500, "Internal Server Error");
+      updateBundle.addEntry()
+              .setResource(documentReference)
+              .setRequest(new Bundle.BundleEntryRequestComponent()
+                      .setMethod(Bundle.HTTPVerb.POST)
+                      .setUrl("DocumentReference"));
     }
+
+    // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
+    this.context
+            .getFhirProvider()
+            .transaction(updateBundle);
 
     return masterMeasureReport;
   }

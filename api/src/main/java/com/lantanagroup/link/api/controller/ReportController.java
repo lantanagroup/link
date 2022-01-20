@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
@@ -39,9 +38,11 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -317,7 +318,7 @@ public class ReportController extends BaseController {
 
       // Generate the master report id
       String id = "";
-      if (!regenerate || Strings.isEmpty(id)) {
+      if (!regenerate) {
         id = RandomStringUtils.randomAlphanumeric(8);
       } else {
         id = null != existingDocumentReference ? existingDocumentReference.getMasterIdentifier().getValue() : "";
