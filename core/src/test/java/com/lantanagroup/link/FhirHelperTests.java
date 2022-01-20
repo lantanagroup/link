@@ -1,42 +1,45 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ITransaction;
 import ca.uhn.fhir.rest.gclient.ITransactionTyped;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.ResourceIdChanger;
+import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.internal.matchers.Any;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class FhirHelperTests {
 
   private FhirDataProvider fhirDataProviderTest;
-  private IGenericClient clientTest;
   private FhirHelper fhirHelperTest;
   private FhirContext ctxTest;
   private Bundle bundleTest;
   private Bundle bundleTransactionTest;
   private Bundle bundleMeasureReportTrueTest;
   private Bundle bundleMeasureReportFalseTest;
-  private Bundle patientBundleResponseTest;
   private MeasureReport measureReportTest;
   private MeasureReport measureReportTest2;
   private HttpServletRequest httpServletRequestTest;
   private DecodedJWT decodedJWTTest;
-  private ITransaction transactionTest;
-  private ITransactionTyped<Bundle> transactionTypedBundleTest;
+  private MethodOutcome outcomeTest;
+  private IIdType iIdType;
 
   @Test
   public void getNameTest() {
@@ -64,20 +67,57 @@ public class FhirHelperTests {
   @Test
   public void recordAuditEventTest(){
     setup();
-    fhirHelperTest.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Test");
+    httpServletRequestTest = mock(HttpServletRequest.class);
+    decodedJWTTest = mock(DecodedJWT.class);
+    iIdType = mock(IIdType.class);
+    iIdType.setValue("Test Audit Event");
+    outcomeTest = new MethodOutcome();
+    outcomeTest.setId(iIdType);
+
+    when(decodedJWTTest.getPayload()).thenReturn("e30");
+    when(fhirDataProviderTest.createOutcome(any())).thenReturn(outcomeTest);
+
+    fhirHelperTest.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Testing String");
   }
 
   @Test
   public void bundleMeasureReportTest(){
     setup();
-    bundleMeasureReportTrueTest = fhirHelperTest.bundleMeasureReport(measureReportTest, fhirDataProviderTest, true);
-    //bundleMeasureReportFalseTest = fhirHelperTest.bundleMeasureReport(measureReportTest2, fhirDataProviderTest, false);
 
+    bundleTest = new Bundle();
+    bundleTransactionTest = new Bundle();
+    measureReportTest = new MeasureReport();
+    measureReportTest2 = new MeasureReport();
+
+    measureReportTest.addEvaluatedResource().setReference("Patient/patient1");
+    measureReportTest.addEvaluatedResource().setReference("Condition/condition1");
+    measureReportTest2.addEvaluatedResource().setReference("Patient/patient1");
+    measureReportTest2.addEvaluatedResource().setReference("Condition/condition2");
+
+    when(fhirDataProviderTest.transaction(any())).thenReturn(bundleTransactionTest);
+
+    bundleMeasureReportTrueTest = fhirHelperTest.bundleMeasureReport(measureReportTest, fhirDataProviderTest, true);
+    bundleMeasureReportFalseTest = fhirHelperTest.bundleMeasureReport(measureReportTest2, fhirDataProviderTest, false);
+    Assert.assertEquals( 1, bundleMeasureReportTrueTest.getEntry().size());
+    Assert.assertEquals( 1, bundleMeasureReportFalseTest.getEntry().size());
+    Assert.assertNotNull(bundleMeasureReportTrueTest.getEntry().get(0).getResource());
+    Assert.assertNotNull(bundleMeasureReportFalseTest.getEntry().get(0).getResource());
+    MeasureReport measureEval1 = (MeasureReport) bundleMeasureReportTrueTest.getEntry().get(0).getResource();
+    MeasureReport measureEval2 = (MeasureReport) bundleMeasureReportFalseTest.getEntry().get(0).getResource();
+    Assert.assertEquals(2, measureEval1.getEvaluatedResource().size());
+    Assert.assertEquals(2, measureEval2.getEvaluatedResource().size());
+    Assert.assertEquals(measureEval2.getEvaluatedResource().get(0).getReference(), measureEval1.getEvaluatedResource().get(0).getReference());
+    Assert.assertEquals("Condition/condition1", measureEval1.getEvaluatedResource().get(1).getReference());
+    Assert.assertEquals("Condition/condition2", measureEval2.getEvaluatedResource().get(1).getReference());
   }
 
   @Test
   public void getAllPagesTest(){
-    setup();
+
+    fhirDataProviderTest = mock(FhirDataProvider.class);
+    ctxTest = FhirContext.forR4();
+    bundleTest = new Bundle();
+
     Resource resourceTest = mock(Resource.class);
     bundleTest.addEntry().setResource(resourceTest);
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundleTest, fhirDataProviderTest, ctxTest);
@@ -92,31 +132,7 @@ public class FhirHelperTests {
   }
 
   private void setup(){
-
-    Condition condition1 = createCondition("http://dev-fhir/fhir/Condition/condition1/_history/1", new Reference("Patient/patient1"));
-    Condition condition2 = createCondition("http://dev-fhir/fhir/Condition/condition2/_history/1", new Reference("Patient/patient1"));
-    Condition condition3 = createCondition("http://dev-fhir/fhir/Condition/condition3/_history/1", new Reference("Patient/patient3"));
-
     fhirDataProviderTest = mock(FhirDataProvider.class);
-    clientTest = mock(IGenericClient.class);
     fhirHelperTest = new FhirHelper();
-    ctxTest = FhirContext.forR4();
-    bundleTest = new Bundle();
-    bundleTransactionTest = new Bundle();
-    patientBundleResponseTest = new Bundle();
-    measureReportTest = new MeasureReport();
-    measureReportTest2 = new MeasureReport();
-    httpServletRequestTest = mock(HttpServletRequest.class);
-    decodedJWTTest = mock(DecodedJWT.class);
-    transactionTest = mock(ITransaction.class);
-
-    measureReportTest.addEvaluatedResource().setReference("Condition/condition1");
-    measureReportTest.addEvaluatedResource().setReference("Condition/condition2");
-    measureReportTest.addEvaluatedResource().setReference("Patient/patient1");
-
-    when(fhirDataProviderTest.getClient()).thenReturn(clientTest);
-    when(clientTest.transaction()).thenReturn(transactionTest);
-    //when(transactionTest.withBundle(bundleTransactionTest)).thenReturn((ITransactionTyped<Bundle>) bundleTest);
-
   }
 }
