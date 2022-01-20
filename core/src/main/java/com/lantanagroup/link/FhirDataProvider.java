@@ -302,4 +302,13 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public Bundle searchBundleByTag(String system, String value){
+    return client
+            .search()
+            .forResource(Bundle.class)
+            .withTag(system, value)
+            .returnBundle(Bundle.class)
+            .execute();
+  }
+
 }
