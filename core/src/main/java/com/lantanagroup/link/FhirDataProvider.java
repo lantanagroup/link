@@ -264,6 +264,15 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public MethodOutcome createOutcome(IBaseResource resource){
+    return this.client
+            .create()
+            .resource(resource)
+            .prettyPrint()
+            .encodedJson()
+            .execute();
+  }
+
   public Bundle fetchResourceFromUrl(String url) {
     return this.client.fetchResourceFromUrl(Bundle.class, url);
   }
