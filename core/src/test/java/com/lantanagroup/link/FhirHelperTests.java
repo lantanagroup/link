@@ -2,22 +2,14 @@ package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.gclient.ITransaction;
-import ca.uhn.fhir.rest.gclient.ITransactionTyped;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.ResourceIdChanger;
-import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.internal.matchers.Any;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,7 +58,9 @@ public class FhirHelperTests {
 
   @Test
   public void recordAuditEventTest(){
-    setup();
+
+    fhirDataProviderTest = mock(FhirDataProvider.class);
+    fhirHelperTest = new FhirHelper();
     httpServletRequestTest = mock(HttpServletRequest.class);
     decodedJWTTest = mock(DecodedJWT.class);
     iIdType = mock(IIdType.class);
@@ -82,7 +76,9 @@ public class FhirHelperTests {
 
   @Test
   public void bundleMeasureReportTest(){
-    setup();
+
+    fhirDataProviderTest = mock(FhirDataProvider.class);
+    fhirHelperTest = new FhirHelper();
 
     bundleTest = new Bundle();
     bundleTransactionTest = new Bundle();
@@ -122,17 +118,5 @@ public class FhirHelperTests {
     bundleTest.addEntry().setResource(resourceTest);
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundleTest, fhirDataProviderTest, ctxTest);
     Assert.assertEquals(1, bundles.size());
-  }
-
-  public Condition createCondition(String id, Reference reference) {
-    Condition condition = new Condition();
-    condition.setId(id);
-    condition.setSubject(reference);
-    return condition;
-  }
-
-  private void setup(){
-    fhirDataProviderTest = mock(FhirDataProvider.class);
-    fhirHelperTest = new FhirHelper();
   }
 }
