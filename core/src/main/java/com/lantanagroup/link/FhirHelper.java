@@ -3,7 +3,6 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
@@ -86,15 +85,11 @@ public class FhirHelper {
     return auditEvent;
   }
 
-  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
 
     try {
-      MethodOutcome outcome = fhirClient.create()
-              .resource(auditEvent)
-              .prettyPrint()
-              .encodedJson()
-              .execute();
+      MethodOutcome outcome = fhirClient.createOutcome(auditEvent);
 
       IIdType id = outcome.getId();
       logger.info("AuditEvent LOGGED: " + id.getValue());
