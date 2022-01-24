@@ -1,3 +1,12 @@
+springdoc:
+  packages-to-scan: com.lantanagroup.link
+  packages-to-exclude: org.hl7.fhir, org.hl7.fhir.r4.model
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    config-url: /api-docs
+    path: /api-docs.html
 api:
   fhir-server-store:
   auth-jwks-url:
