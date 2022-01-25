@@ -19,20 +19,24 @@ public class MeasureEvaluator {
   private ReportCriteria criteria;
   private ReportContext context;
   private ApiConfig config;
+  private String patientId;
 
-  private MeasureEvaluator(ReportCriteria criteria, ReportContext context, ApiConfig config) {
+
+  private MeasureEvaluator(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
     this.criteria = criteria;
     this.context = context;
     this.config = config;
+    this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config);
+  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config, patientId);
     return evaluator.generateMeasureReport();
   }
 
+
   private MeasureReport generateMeasureReport() {
-    MeasureReport measureReport = null;
+    MeasureReport measureReport;
 
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
@@ -43,6 +47,7 @@ public class MeasureEvaluator {
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
+      parameters.addParameter().setName("patient").setValue(new StringType(patientId));
 
       measureReport = context.getFhirProvider().getMeasureReport(this.context.getMeasureId(), parameters);
 
@@ -105,7 +110,6 @@ public class MeasureEvaluator {
       logger.error("Error generating Measure Report: " + e.getMessage());
       throw e;
     }
-
     return measureReport;
   }
 }
