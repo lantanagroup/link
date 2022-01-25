@@ -877,11 +877,6 @@ public class ReportController extends BaseController {
 
     MeasureReport updatedMeasureReport = null;
 
-    /* TODO: update to account for individual patient measure reports
-    // Re-evaluate the MeasureReport, now that the Patient has been DELETE'd from the system
-    MeasureReport updatedMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config);
-     */
-
     updatedMeasureReport.setId(reportId);
     updatedMeasureReport.setExtension(measureReport.getExtension());    // Copy extensions from the original report before overwriting
 

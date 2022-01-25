@@ -7,21 +7,35 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration
 public class ReportGeneratorTests {
+
+  @Autowired
+  private ResourceLoader resourceLoader;
 
 
   @Test
-  public void testGenerateAnStore() throws ParseException {
+  public void testGenerateAnStore() throws ParseException, IOException {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     LinkCredentials user = mock(LinkCredentials.class);
     Practitioner practitioner = new Practitioner();
@@ -47,7 +61,7 @@ public class ReportGeneratorTests {
   }
 
   @Test
-  public void testGenerateAnStoreWithNoIndividualReports() throws ParseException {
+  public void testGenerateAnStoreWithNoIndividualReports() throws ParseException, IOException {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     LinkCredentials user = mock(LinkCredentials.class);
     Practitioner practitioner = new Practitioner();
@@ -72,73 +86,18 @@ public class ReportGeneratorTests {
   }
 
 
-  private Measure getMeasure() {
-
-    String measureJson = "{\"resourceType\": \"Measure\",\"id\": \"COVIDMin\",\"identifier\": [ {\"system\": \"https://nhsnlink.org\",\"value\": \"covid-min\"} ],\"name\": \"COVID Minimal\",\"group\": [ {\n" +
-            "\"population\": [{\n" +
-            "\"id\": \"A0965435-DBF6-491D-96DA-6EB69AB39C20\",\n" +
-            "\"code\": {\n" +
-            "\"coding\": [{\n" +
-            "\"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "\"code\": \"initial-population\",\n" +
-            "\"display\": \"Initial Population\"\n" +
-            "}]}},{\n" +
-            "\"id\": \"AF0E8444-5D57-4DFE-9885-BA9E18C5C239\",\n" +
-            "\"code\": {\n" +
-            "\"coding\": [{\n" +
-            "\"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "\"code\": \"denominator\",\n" +
-            "\"display\": \"Denominator\"\n" +
-            "}]}},{\n" +
-            "\"id\": \"638C0B32-BDCF-482B-9ADB-FDB9F818CF5B\",\n" +
-            "\"code\": {\n" +
-            "\"coding\": [{\n" +
-            "\"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "\"code\": \"numerator\",\n" +
-            "\"display\": \"Numerator\"\n" +
-            "}]}}]}]}";
+  private Measure getMeasure() throws IOException {
+    File measure = resourceLoader.getResource("classpath:report-generator-measure.json").getFile();
+    String measureJson = FileUtils.readFileToString(measure, StandardCharsets.UTF_8);
     FhirContext ctx = FhirContext.forR4();
     return ctx.newJsonParser().parseResource(Measure.class, measureJson);
   }
 
-  private MeasureReport getMeasureReport() {
-
-    String measureReportJson = "{\"resourceType\": \"MeasureReport\",\n" +
-            "\"id\": \"nN7N4170-128172033\",\n" +
-            "\"status\": \"complete\",\n" +
-            "\"group\": [ {\n" +
-            "\"population\": [ {\n" +
-            "\"code\": {\n" +
-            "\"coding\": [ {\n" +
-            "  \"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "  \"code\": \"initial-population\",\n" +
-            "  \"display\": \"Initial Population\"\n" +
-            "} ]\n" +
-            "},\n" +
-            "\"count\": 1\n" +
-            "}, {\n" +
-            "\"code\": {\n" +
-            "\"coding\": [ {\n" +
-            "  \"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "  \"code\": \"numerator\",\n" +
-            "  \"display\": \"Numerator\"\n" +
-            "} ]\n" +
-            "},\n" +
-            "\"count\": 0\n" +
-            "}, {\n" +
-            "\"code\": {\n" +
-            "\"coding\": [ {\n" +
-            "  \"system\": \"http://terminology.hl7.org/CodeSystem/measure-population\",\n" +
-            "  \"code\": \"denominator\",\n" +
-            "  \"display\": \"Denominator\"\n" +
-            "} ]\n" +
-            "},\n" +
-            "\"count\": 2\n" +
-            "} ]\n" +
-            "} ]\n" +
-            "}";
+  private MeasureReport getMeasureReport() throws IOException {
+    File measureReport = resourceLoader.getResource("classpath:report-generator-measure-report.json").getFile();
+    String measureReportJson = FileUtils.readFileToString(measureReport, StandardCharsets.UTF_8);
     FhirContext ctx = FhirContext.forR4();
-    return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
+    return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson.toString());
   }
-
 }
+

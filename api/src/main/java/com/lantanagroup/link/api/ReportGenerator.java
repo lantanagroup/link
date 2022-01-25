@@ -16,6 +16,9 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * This class creates a master measure report based on every individual report generated for each patient included in the "census" list..
+ */
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
 
@@ -97,7 +100,7 @@ public class ReportGenerator {
   private static MeasureReport generateMasterMeasureReport(ReportCriteria criteria, ReportContext context, List<MeasureReport> patientMeasureReports) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
-    masterMeasureReport.setId(context.getMeasureId());
+    masterMeasureReport.setId(context.getReportId());
     masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
     masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
     masterMeasureReport.setPeriod(new Period());
@@ -205,6 +208,15 @@ public class ReportGenerator {
     return documentReference;
   }
 
+  /**
+   * This method accepts a list of patients and generates an individual measure report for each patient. Then agregates all the individual reports into a master measure report.
+   * It also stores all individual reports and the master measure report on the Fhir Server. If is regenerating it is reusing the already generated Id-s for all document reference, master measure report and individual reports.
+   *
+   * @param criteria                  - the report criteria
+   * @param context                   -  the report context
+   * @param patientIds                - the list of patient id-s to generate reports for
+   * @param existingDocumentReference - the existing document reference
+   */
   public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<String> patientIds, DocumentReference existingDocumentReference) throws ParseException {
     // Create a bundle to execute as a transaction to update multiple resources at once
     Bundle updateBundle = new Bundle();
