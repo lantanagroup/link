@@ -188,7 +188,7 @@ public class FhirHelper {
   public static Bundle bundleMeasureReport(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
-    tag.setCode(REPORT_BUNDLE_TAG);
+    tag.setCode(Constants.REPORT_BUNDLE_TAG);
     tag.setSystem(Constants.MainSystem);
 
     Bundle bundle = new Bundle();

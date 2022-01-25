@@ -89,7 +89,7 @@ public class FhirBundler {
       for (MeasureReport patientMeasureReport : patientReports) {
         List<DomainResource> patientResources = this.getPatientResources(patientMeasureReport);
         for (DomainResource patientResource : patientResources) {
-          bundle.addEntry().setRequest(patientResource);
+          bundle.addEntry().setResource(patientResource);
         }
       }
     }
