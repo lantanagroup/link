@@ -264,6 +264,15 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public MethodOutcome createOutcome(IBaseResource resource){
+    return this.client
+            .create()
+            .resource(resource)
+            .prettyPrint()
+            .encodedJson()
+            .execute();
+  }
+
   public Bundle fetchResourceFromUrl(String url) {
     return this.client.fetchResourceFromUrl(Bundle.class, url);
   }
@@ -290,6 +299,15 @@ public class FhirDataProvider {
             .where(Practitioner.IDENTIFIER.exactly().systemAndValues(Constants.MainSystem, practitionerId))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
+  public Bundle searchBundleByTag(String system, String value){
+    return client
+            .search()
+            .forResource(Bundle.class)
+            .withTag(system, value)
+            .returnBundle(Bundle.class)
             .execute();
   }
 

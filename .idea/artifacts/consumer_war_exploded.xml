@@ -6,6 +6,7 @@
         <exploded>true</exploded>
         <module>consumer</module>
         <packaging>war</packaging>
+        <unpackNestedArchives>false</unpackNestedArchives>
       </options>
     </properties>
     <root id="root">
@@ -146,7 +147,7 @@
           <element id="library" level="project" name="Maven: javax.validation:validation-api:2.0.1.Final" />
           <element id="library" level="project" name="Maven: org.glassfish:javax.el:3.0.0" />
           <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-to-slf4j:2.15.0" />
-          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.17.0" />
+          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.17.1" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-mapper-orm:6.0.3.Final" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-engine:6.0.3.Final" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-mapper-pojo-base:6.0.3.Final" />
@@ -249,7 +250,7 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-web:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-dbcp2:2.8.0" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-pool2:2.6.2" />
-          <element id="library" level="project" name="Maven: com.h2database:h2:2.0.202" />
+          <element id="library" level="project" name="Maven: com.h2database:h2:2.0.206" />
         </element>
       </element>
       <element id="directory" name="META-INF">

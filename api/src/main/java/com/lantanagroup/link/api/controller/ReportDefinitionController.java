@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.model.StoredReportDefinition;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -28,14 +29,10 @@ public class ReportDefinitionController extends BaseController {
    */
   @GetMapping
   public List<StoredReportDefinition> getMeasures(Authentication authentication, HttpServletRequest request) throws Exception {
-    IGenericClient fhirClient = this.getFhirDataProvider().getClient();
+    FhirDataProvider fhirClient = this.getFhirDataProvider();
 
     // Find all Bundles with the report definition tag
-    Bundle searchResults = fhirClient.search()
-            .forResource(Bundle.class)
-            .withTag(Constants.MainSystem, Constants.ReportDefinitionTag)
-            .returnBundle(Bundle.class)
-            .execute();
+    Bundle searchResults = fhirClient.searchBundleByTag(Constants.MainSystem, Constants.ReportDefinitionTag);
 
     return searchResults.getEntry().stream().map(e -> {
       Bundle reportDefinitionBundle = (Bundle) e.getResource();
