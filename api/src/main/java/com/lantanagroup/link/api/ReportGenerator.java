@@ -13,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReportGenerator {
@@ -24,14 +21,134 @@ public class ReportGenerator {
 
   private ReportContext context;
   private ReportCriteria criteria;
-  private ApiConfig config;
   private LinkCredentials user;
+  private ApiConfig config;
 
   public ReportGenerator(ReportContext context, ReportCriteria criteria, ApiConfig config, LinkCredentials user) {
     this.context = context;
     this.criteria = criteria;
-    this.config = config;
     this.user = user;
+    this.config = config;
+  }
+
+
+  private static MeasureReport.MeasureReportGroupPopulationComponent getOrCreateGroupAndPopulation(MeasureReport masterReport, MeasureReport.MeasureReportGroupPopulationComponent reportPopulation, MeasureReport.MeasureReportGroupComponent reportGroup) {
+
+    String populationCode = reportPopulation.getCode().getCoding().size() > 0 ? reportPopulation.getCode().getCoding().get(0).getCode() : "";
+    String groupCode = reportGroup.getCode().getCoding().size() > 0 ? reportGroup.getCode().getCoding().get(0).getCode() : "";
+
+    MeasureReport.MeasureReportGroupComponent masterReportGroupValue;
+    MeasureReport.MeasureReportGroupPopulationComponent masteReportGroupPopulationValue;
+    // find the group by code
+    Optional<MeasureReport.MeasureReportGroupComponent> masterReportGroup = masterReport.getGroup().stream().filter(group -> group.getCode().getCoding().size() > 0 && group.getCode().getCoding().get(0).getCode().equals(groupCode)).findFirst();
+    // if empty find the group without the code
+    if (masterReportGroup.isPresent()) {
+      masterReportGroupValue = masterReportGroup.get();
+    } else {
+      masterReportGroupValue = masterReport.getGroup().size() > 0 ? masterReport.getGroup().get(0) : null;
+    }
+    // if still empty create it
+    if (masterReportGroupValue == null) {
+      masterReportGroupValue = new MeasureReport.MeasureReportGroupComponent();
+      masterReportGroupValue.setCode(reportGroup.getCode() != null ? reportGroup.getCode() : null);
+      masterReport.addGroup(masterReportGroupValue);
+    }
+    // find population by code
+    Optional<MeasureReport.MeasureReportGroupPopulationComponent> masterReportGroupPopulation = masterReportGroupValue.getPopulation().stream().filter(population -> population.getCode().getCoding().size() > 0 && population.getCode().getCoding().get(0).getCode().equals(populationCode)).findFirst();
+    // if empty create it
+    if (masterReportGroupPopulation.isPresent()) {
+      masteReportGroupPopulationValue = masterReportGroupPopulation.get();
+    } else {
+      masteReportGroupPopulationValue = new MeasureReport.MeasureReportGroupPopulationComponent();
+      masteReportGroupPopulationValue.setCode(reportPopulation.getCode());
+      masterReportGroupValue.addPopulation(masteReportGroupPopulationValue);
+    }
+    return masteReportGroupPopulationValue;
+  }
+
+  private static Resource getOrCreateContainedList(MeasureReport master, String code) {
+    // find the list by code
+    Optional<Resource> resource = master.getContained().stream().filter(resourceList -> resourceList.getId().contains(code)).findFirst();
+    // create the list if not found
+    if (!resource.isPresent()) {
+      ListResource listResource = new ListResource();
+      listResource.setId(code + "-subject-list");
+      listResource.setStatus(ListResource.ListStatus.CURRENT);
+      listResource.setMode(ListResource.ListMode.SNAPSHOT);
+      master.getContained().add(listResource);
+      return listResource;
+    }
+    return resource.get();
+  }
+
+  private static void addSubjectResults(MeasureReport.MeasureReportGroupPopulationComponent population, MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation) {
+    measureGroupPopulation.setSubjectResults(new Reference());
+    String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
+    measureGroupPopulation.getSubjectResults().setReference("#" + populationCode + "-subject-list");
+  }
+
+  private static void addMeasureReportReferences(MeasureReport patientMeasureReport, ListResource listResource) {
+    ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
+    listEntry.setItem(new Reference());
+    listEntry.getItem().setReference("MeasureReport/" + patientMeasureReport.getId());
+    listResource.addEntry(listEntry);
+  }
+
+  private static MeasureReport generateMasterMeasureReport(ReportCriteria criteria, ReportContext context, List<MeasureReport> patientMeasureReports) throws ParseException {
+    // Create the master measure report
+    MeasureReport masterMeasureReport = new MeasureReport();
+    masterMeasureReport.setId(context.getMeasureId());
+    masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
+    masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
+    masterMeasureReport.setPeriod(new Period());
+    masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
+    masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
+    masterMeasureReport.setMeasure("Measure/" + context.getMeasureId());
+
+    // agregate all individual reports in one
+    for (MeasureReport patientMeasureReport : patientMeasureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
+        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+          // Check if group and population code exist in master, if not create
+          MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
+          // Add population.count to the master group/population count
+          measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
+          // If this population incremented the master
+          if (population.getCount() > 0) {
+            // add subject results
+            addSubjectResults(population, measureGroupPopulation);
+            // Identify or create the List for this master group/population
+            ListResource listResource = (ListResource) getOrCreateContainedList(masterMeasureReport, population.getCode().getCoding().get(0).getCode());
+            // add this patient measure report to the contained List
+            addMeasureReportReferences(patientMeasureReport, listResource);
+          }
+        }
+      }
+    }
+    // if there are no groups generated then gets them from the measure
+    if (masterMeasureReport.getGroup().size() == 0) {
+      Bundle bundle = context.getReportDefBundle();
+      Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
+              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
+              .findFirst();
+
+      if (measureEntry.isPresent()) {
+        Measure measure = (Measure) measureEntry.get().getResource();
+        measure.getGroup().forEach(group -> {
+          MeasureReport.MeasureReportGroupComponent groupComponent = new MeasureReport.MeasureReportGroupComponent();
+          groupComponent.setCode(group.getCode());
+          group.getPopulation().forEach(population -> {
+            MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
+            populationComponent.setCode(population.getCode());
+            populationComponent.setCount(0);
+            groupComponent.addPopulation(populationComponent);
+          });
+          masterMeasureReport.addGroup(groupComponent);
+        });
+      }
+
+    }
+    return masterMeasureReport;
   }
 
   private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
@@ -88,15 +205,15 @@ public class ReportGenerator {
     return documentReference;
   }
 
-  public MeasureReport generateAndStore(List<String> patientIds, String masterReportId, DocumentReference existingDocumentReference) throws ParseException {
+  public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<String> patientIds, DocumentReference existingDocumentReference) throws ParseException {
     // Create a bundle to execute as a transaction to update multiple resources at once
     Bundle updateBundle = new Bundle();
     updateBundle.setType(Bundle.BundleType.TRANSACTION);
 
     // Generate a report for each patient
     List<MeasureReport> patientMeasureReports = patientIds.stream().map(patientId -> {
-      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, this.config, patientId);
-      patientMeasureReport.setId(masterReportId + "-" + patientId.hashCode());
+      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patientId);
+      patientMeasureReport.setId(context.getReportId() + "-" + patientId.hashCode());
 
       updateBundle.addEntry()
               .setResource(patientMeasureReport)
@@ -107,28 +224,18 @@ public class ReportGenerator {
       return patientMeasureReport;
     }).collect(Collectors.toList());
 
-    // Create the master measure report
-    MeasureReport masterMeasureReport = new MeasureReport();
-    masterMeasureReport.setId(masterReportId);
-    masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
-    masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
-    masterMeasureReport.setPeriod(new Period());
-    masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
-    masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure("Measure/" + context.getMeasureId());
 
-    // Aggregate the patient measure reports into the master measure report
-    MeasureEvaluator.aggregateMeasureReports(masterMeasureReport, patientMeasureReports);
-
+    // Generate the master measure report
+    MeasureReport masterMeasureReport = generateMasterMeasureReport(criteria, context, patientMeasureReports);
 
     // Save measure report and documentReference
     updateBundle.addEntry()
             .setResource(masterMeasureReport)
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + masterReportId));
+                    .setUrl("MeasureReport/" + context.getReportId()));
 
-    DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, masterReportId);
+    DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, context.getReportId());
 
     if (existingDocumentReference != null) {
       documentReference.setId(existingDocumentReference.getId());

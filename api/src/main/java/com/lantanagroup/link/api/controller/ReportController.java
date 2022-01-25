@@ -327,8 +327,8 @@ public class ReportController extends BaseController {
       context.setReportId(id);
       response.setReportId(id);
 
-      ReportGenerator generator = new ReportGenerator(context, criteria, this.config, user);
-      generator.generateAndStore(patientIds, id, existingDocumentReference);
+      ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
+      generator.generateAndStore(criteria, context, patientIds, existingDocumentReference);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {
