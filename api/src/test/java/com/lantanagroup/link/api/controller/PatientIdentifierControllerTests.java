@@ -25,12 +25,6 @@ public class PatientIdentifierControllerTests {
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
-  private HttpServletRequest httpServletRequest;
-
-  @Before
-  public void setup() {
-    httpServletRequest = mock(HttpServletRequest.class);
-  }
 
   private void mockCreateResource(ICreate create) {
     ICreateTyped createTyped = mock(ICreateTyped.class);
@@ -67,7 +61,7 @@ public class PatientIdentifierControllerTests {
 
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org");
   }
 
   @Test
@@ -76,7 +70,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "");
   }
 
   @Test
@@ -87,7 +81,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
   }
 
   @Test
@@ -96,7 +90,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
   }
 
   @Test
@@ -106,7 +100,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
   }
 
   @Test
@@ -116,7 +110,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
   }
 
   @Test
@@ -125,7 +119,7 @@ public class PatientIdentifierControllerTests {
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
   }
 
   @Test
@@ -156,7 +150,7 @@ public class PatientIdentifierControllerTests {
     FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
 
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
     verify(listQuery, times(1)).forResource(ListResource.class);
   }
@@ -182,7 +176,7 @@ public class PatientIdentifierControllerTests {
     FhirDataProvider fhirDataProvider = new FhirDataProvider(fhirStoreClient);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
 
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min", httpServletRequest);
+    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
     verify(listQuery, times(2)).forResource(ListResource.class);
   }
@@ -197,7 +191,7 @@ public class PatientIdentifierControllerTests {
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent, httpServletRequest);
+    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
@@ -211,7 +205,7 @@ public class PatientIdentifierControllerTests {
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.getPatientIdentifierListJSON(jsonContent, httpServletRequest);
+    patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
@@ -225,7 +219,7 @@ public class PatientIdentifierControllerTests {
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     Bundle bundle = getListBundle("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00");
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent, httpServletRequest);
+    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     // Resource mockResource = mock(Resource.class);
     verify(fhirDataProvider, times(1)).updateResource(any());
   }
@@ -256,7 +250,7 @@ public class PatientIdentifierControllerTests {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent, httpServletRequest);
+    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
   }
 
   @Test
@@ -266,7 +260,7 @@ public class PatientIdentifierControllerTests {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent, httpServletRequest);
+    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
   }
 
   @Test
@@ -278,7 +272,7 @@ public class PatientIdentifierControllerTests {
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.receiveFHIRXML(bundleXml, httpServletRequest);
+    patientIdentifierController.receiveFHIRXML(bundleXml);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
@@ -292,7 +286,7 @@ public class PatientIdentifierControllerTests {
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.receiveFHIRJSON(jsonContent, httpServletRequest);
+    patientIdentifierController.receiveFHIRJSON(jsonContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 }
