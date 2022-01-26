@@ -19,6 +19,7 @@ import org.apache.http.entity.StringEntity;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
@@ -74,7 +75,7 @@ public class FHIRSenderTests {
     return sender;
   }
 
-
+  @Ignore
   @Test
   public void sendTestUnauthenticated() throws Exception {
 
@@ -122,7 +123,7 @@ public class FHIRSenderTests {
     this.runTest(mockSender, mockFhirStoreClient, mockHttpClient, measureReport, httpUriRequestArgumentMatcher);
   }
 
-
+  @Ignore
   @Test
   public void sendTestAuthenticated() throws Exception {
     // Mock the response of the HttpClient
