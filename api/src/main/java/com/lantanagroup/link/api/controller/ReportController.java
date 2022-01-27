@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -11,6 +10,7 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +52,6 @@ public class ReportController extends BaseController {
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
 
-  private final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
   @Setter
@@ -279,7 +278,6 @@ public class ReportController extends BaseController {
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
-          Authentication authentication,
           HttpServletRequest request,
           @RequestParam("reportDefIdentifier") String reportDefIdentifier,
           @RequestParam("periodStart") String periodStart,
@@ -350,7 +348,11 @@ public class ReportController extends BaseController {
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
   @GetMapping("/{reportId}/$send")
-  public void send(Authentication authentication, @PathVariable String reportId, HttpServletRequest request) throws Exception {
+  public void send(
+          @Parameter(hidden = true) Authentication authentication,
+          @PathVariable String reportId,
+          HttpServletRequest request) throws Exception {
+
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
 
@@ -377,7 +379,12 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/{reportId}/$download")
-  public void download(@PathVariable String reportId, HttpServletResponse response, Authentication authentication, HttpServletRequest request) throws Exception {
+  public void download(
+          @PathVariable String reportId,
+          HttpServletResponse response,
+          @Parameter(hidden = true) Authentication authentication,
+          HttpServletRequest request) throws Exception {
+
     if (StringUtils.isEmpty(this.config.getDownloader()))
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
 
@@ -393,9 +400,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/{reportId}")
   public ReportModel getReport(
-          @PathVariable("reportId") String reportId,
-          Authentication authentication,
-          HttpServletRequest request) throws Exception {
+          @PathVariable("reportId") String reportId) {
 
     ReportModel report = new ReportModel();
 
@@ -416,9 +421,8 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{id}/patient")
-  public List<PatientReportModel> getReportPatients(@PathVariable("id") String id,
-                                                    Authentication authentication,
-                                                    HttpServletRequest request) throws Exception {
+  public List<PatientReportModel> getReportPatients(
+          @PathVariable("id") String id) {
 
     List<PatientReportModel> reports = new ArrayList();
 
@@ -480,7 +484,7 @@ public class ReportController extends BaseController {
   @PutMapping(value = "/{id}")
   public void saveReport(
           @PathVariable("id") String id,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request,
           @RequestBody ReportSaveModel data) throws Exception {
 
@@ -515,7 +519,7 @@ public class ReportController extends BaseController {
   public PatientDataModel getPatientData(
           @PathVariable("reportId") String reportId,
           @PathVariable("patientId") String patientId,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     PatientDataModel data = new PatientDataModel();
@@ -623,7 +627,7 @@ public class ReportController extends BaseController {
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
 
@@ -649,8 +653,18 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
-  public ReportBundle searchReports(Authentication authentication, HttpServletRequest request, @RequestParam(required = false, defaultValue = "1") Integer page, @RequestParam(required = false) String bundleId, @RequestParam(required = false) String author,
-                                    @RequestParam(required = false) String identifier, @RequestParam(required = false) String periodStartDate, @RequestParam(required = false) String periodEndDate, @RequestParam(required = false) String docStatus, @RequestParam(required = false) String submittedDate) {
+  public ReportBundle searchReports(
+          @Parameter(hidden = true) Authentication authentication,
+          HttpServletRequest request,
+          @RequestParam(required = false, defaultValue = "1") Integer page,
+          @RequestParam(required = false) String bundleId,
+          @RequestParam(required = false) String author,
+          @RequestParam(required = false) String identifier,
+          @RequestParam(required = false) String periodStartDate,
+          @RequestParam(required = false) String periodEndDate,
+          @RequestParam(required = false) String docStatus,
+          @RequestParam(required = false) String submittedDate) {
+
     Bundle bundle;
     boolean andCond = false;
     ReportBundle reportBundle = new ReportBundle();
@@ -750,11 +764,11 @@ public class ReportController extends BaseController {
    */
   @PostMapping("/{reportId}/$exclude")
   public ReportModel excludePatients(
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request,
-          @AuthenticationPrincipal LinkCredentials user,
+          @Parameter(hidden = true) @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
+          @Parameter(hidden = true) @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(reportId);
 

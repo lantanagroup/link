@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
+import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.fhir.transform.FHIRTransformResult;
 import com.lantanagroup.fhir.transform.FHIRTransformer;
 import com.lantanagroup.link.Helper;
@@ -9,6 +10,8 @@ import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -38,10 +41,168 @@ import java.util.stream.Collectors;
 @RestController
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
+  public static final String REPORT_TYPE_PARAM_DESC = "The id of the report type (measure) that these patients should be considered for";
   private final FhirContext ctx = FhirContext.forR4();
 
+  /**
+   * Submit a census of patient IDs in FHIR XML format to the API to store for use later when generating a report.
+   * @param body The FHIR List resource in XML format
+   * @throws Exception
+   */
+  @Operation(
+          summary = "Submit a FHIR ReportabilityResponsible Bundle to include the patient of the RR in a report for the matching date",
+          description = "Extracts the patient's ID and store in a List that gets persisted and made available for report generation.")
+  @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_XML_VALUE)
+  public void receiveFHIRXML(@RequestBody() String body) throws Exception {
+    logger.debug("Receiving RR FHIR XML. Parsing...");
 
-  private void receiveFHIR(Resource resource, HttpServletRequest request) throws Exception {
+    Bundle bundle = this.ctx.newXmlParser().parseResource(Bundle.class, body);
+    ListResource list = this.getListFromBundle(bundle);
+
+    logger.debug("Done parsing. Storing RR FHIR XML...");
+
+    this.receiveFHIR(list);
+  }
+
+  /**
+   * Submit a census of patient IDs in FHIR JSON format to the API to store for use later when generating a report.
+   * @param body The FHIR List resource in JSON format
+   * @throws Exception
+   */
+  @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void receiveFHIRJSON(@RequestBody() String body) throws Exception {
+    logger.debug("Receiving RR FHIR JSON. Parsing...");
+
+    Bundle bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
+    ListResource list = getListFromBundle(bundle);
+
+    logger.debug("Done parsing. Storing RR FHIR JSON...");
+
+    this.receiveFHIR(list);
+  }
+
+
+  /**
+   * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
+   * @param csvContent The content of the CSV
+   * @param reportTypeId - the type of the report (ex covid-min) and the format should be system|value
+   */
+  @Operation(
+          summary = "Submit a CSV of patients to be included in report generation",
+          description = "Extracts the patients id/identifier, date and report type, creates a List and persists the List resource in the internal FHIR server to be found/used in report generation")
+  @PostMapping(value = "api/poi/csv", consumes = "text/csv")
+  public void storeCSV(
+          @RequestBody() String csvContent,
+          @Parameter(description = REPORT_TYPE_PARAM_DESC) @RequestParam String reportTypeId) throws Exception {
+    logger.debug("Receiving RR FHIR CSV. Parsing...");
+    try {
+      if (reportTypeId == null || reportTypeId.isBlank()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report Type should be provided.");
+      }
+      if (!reportTypeId.contains("|")) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
+      }
+      List<CsvEntry> list = this.getCsvEntries(csvContent);
+      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getDate));
+      for (String key : csvMap.keySet()) {
+        ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
+        this.receiveFHIR(listResource);
+      }
+    } catch (ResponseStatusException ex) {
+      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
+      throw ex;
+    } catch (Exception ex) {
+      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
+      throw ex;
+    }
+  }
+
+  @Operation(
+          summary = "Submit a FHIR List of patients to be included in report generation",
+          description = "Uses the List date and identifier (which indicates the report-type) to find an already-existing List for the date/report-type. If none exists, this List is persisted as-is. Otherwise, updates the existing List to include the patient id/identifier if the patient isn't already part of the List.")
+  @PostMapping(value = "api/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
+  public void getPatientIdentifierListXML(
+          @RequestBody() String body) throws Exception {
+    logger.debug("Receiving patient identifier FHIR List in XML");
+
+    ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
+    this.receiveFHIR(list);
+  }
+
+  @PostMapping(value = "api/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void getPatientIdentifierListJSON(
+          @RequestBody() String body) throws Exception {
+    logger.debug("Receiving patient identifier FHIR List in JSON");
+
+    ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
+    this.receiveFHIR(list);
+  }
+
+  @Operation(
+          summary = "Submit a FHIR ReportabilityResponsible CDA XML to include the patient of the RR in a report for the matching date",
+          description = "Extracts the patient's ID and store in a List that gets persisted and made available for report generation.")
+  @PostMapping(value = "api/cda", consumes = MediaType.APPLICATION_XML_VALUE)
+  public void receiveCDA(
+          @RequestBody() String xml) throws Exception {
+    FHIRTransformer transformer = new FHIRTransformer();
+
+    logger.debug("Receiving RR CDA XML. Converting to FHIR4 XML...");
+
+    FHIRTransformResult result = transformer.cdaToFhir4(xml);
+
+    if (!result.isSuccess()) {
+      logger.error("Failed to transform RR CDA XML to FHIR4 XML!");
+
+      List<String> messages = result.getMessages().stream().map(m -> m.getMessage()).collect(Collectors.toList());
+
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, StringUtils.join(messages, "\r\n"));
+    } else {
+      logger.debug("Parsing FHIR XML Bundle...");
+
+      Resource bundle = this.ctx.newXmlParser().parseResource(Bundle.class, result.getResult());
+
+      logger.debug("Done parsing. Storing RR FHIR XML...");
+
+      this.receiveFHIR(bundle);
+    }
+  }
+
+  @VisibleForTesting
+  List<CsvEntry> getCsvEntries(String csvContent) throws IOException, CsvValidationException {
+    InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
+    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+    CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
+    List<CsvEntry> list = new ArrayList<>();
+    String[] line;
+    while ((line = csvReader.readNext()) != null) {
+      if (line.length > 0) {
+        if (line[0] == null || line[0].isBlank()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier is required.");
+        }
+        if (!line[0].contains("|")) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
+        }
+        if (line[1] == null || line[1].isBlank()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required.");
+        }
+        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+          formatDate.setLenient(false);
+          formatDate.parse(line[1]);
+        } catch (ParseException ex) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date. The date format should be: YYYY-mm-dd.");
+        }
+        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
+        list.add(entry);
+      }
+    }
+    if (list.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
+    }
+    return list;
+  }
+
+  private void receiveFHIR(Resource resource) throws Exception {
     logger.info("Storing patient identifiers");
     MethodOutcome outcome = null;
     if (resource.hasId()) {
@@ -114,98 +275,6 @@ public class PatientIdentifierController extends BaseController {
     return list;
   }
 
-
-  @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_XML_VALUE)
-  public void receiveFHIRXML(@RequestBody() String body, HttpServletRequest request) throws Exception {
-    logger.debug("Receiving RR FHIR XML. Parsing...");
-
-    Bundle bundle = this.ctx.newXmlParser().parseResource(Bundle.class, body);
-    ListResource list = getListFromBundle(bundle);
-
-    logger.debug("Done parsing. Storing RR FHIR XML...");
-
-    this.receiveFHIR(list, request);
-  }
-
-
-  @PostMapping(value = "api/fhir/Bundle", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void receiveFHIRJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
-    logger.debug("Receiving RR FHIR JSON. Parsing...");
-
-    Bundle bundle = this.ctx.newJsonParser().parseResource(Bundle.class, body);
-    ListResource list = getListFromBundle(bundle);
-
-    logger.debug("Done parsing. Storing RR FHIR JSON...");
-
-    this.receiveFHIR(list, request);
-  }
-
-
-  /**
-   * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
-   *
-   * @param reportTypeId - the type of the report (ex covid-min) and the format should be system|value
-   */
-  @PostMapping(value = "api/poi/csv", consumes = "text/csv")
-  public void storeCSV(@RequestBody() String csvContent, @RequestParam String reportTypeId, HttpServletRequest request) throws Exception {
-    logger.debug("Receiving RR FHIR CSV. Parsing...");
-    try {
-      if (reportTypeId == null || reportTypeId.isBlank()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report Type should be provided.");
-      }
-      if (!reportTypeId.contains("|")) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
-      }
-      List<CsvEntry> list = getCsvEntries(csvContent);
-      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getDate));
-      for (String key : csvMap.keySet()) {
-        ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
-        this.receiveFHIR(listResource, request);
-      }
-    } catch (ResponseStatusException ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
-    } catch (Exception ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
-    }
-  }
-
-  public List<CsvEntry> getCsvEntries(String csvContent) throws IOException, CsvValidationException {
-    InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
-    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-    CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
-    List<CsvEntry> list = new ArrayList<>();
-    String[] line;
-    while ((line = csvReader.readNext()) != null) {
-      if (line.length > 0) {
-        if (line[0] == null || line[0].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier is required.");
-        }
-        if (!line[0].contains("|")) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
-        }
-        if (line[1] == null || line[1].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required.");
-        }
-        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
-        try {
-          formatDate.setLenient(false);
-          formatDate.parse(line[1]);
-        } catch (ParseException ex) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date. The date format should be: YYYY-mm-dd.");
-        }
-        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
-        list.add(entry);
-      }
-    }
-    if (list.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
-    }
-    return list;
-  }
-
-
   private ListResource getListResource(String reportTypeId, String listDate, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
     List<Identifier> identifierList = new ArrayList<>();
@@ -228,46 +297,5 @@ public class PatientIdentifierController extends BaseController {
       list.addEntry(listEntry);
     });
     return list;
-  }
-
-  @PostMapping(value = "api/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
-  public void getPatientIdentifierListXML(@RequestBody() String body, HttpServletRequest request) throws Exception {
-    logger.debug("Receiving patient identifier FHIR List in XML");
-
-    ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
-    this.receiveFHIR(list, request);
-  }
-
-  @PostMapping(value = "api/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void getPatientIdentifierListJSON(@RequestBody() String body, HttpServletRequest request) throws Exception {
-    logger.debug("Receiving patient identifier FHIR List in JSON");
-
-    ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
-    this.receiveFHIR(list, request);
-  }
-
-  @PostMapping(value = "api/cda", consumes = MediaType.APPLICATION_XML_VALUE)
-  public void receiveCDA(@RequestBody() String xml, HttpServletRequest request) throws Exception {
-    FHIRTransformer transformer = new FHIRTransformer();
-
-    logger.debug("Receiving RR CDA XML. Converting to FHIR4 XML...");
-
-    FHIRTransformResult result = transformer.cdaToFhir4(xml);
-
-    if (!result.isSuccess()) {
-      logger.error("Failed to transform RR CDA XML to FHIR4 XML!");
-
-      List<String> messages = result.getMessages().stream().map(m -> m.getMessage()).collect(Collectors.toList());
-
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, StringUtils.join(messages, "\r\n"));
-    } else {
-      logger.debug("Parsing FHIR XML Bundle...");
-
-      Resource bundle = this.ctx.newXmlParser().parseResource(Bundle.class, result.getResult());
-
-      logger.debug("Done parsing. Storing RR FHIR XML...");
-
-      this.receiveFHIR(bundle, request);
-    }
   }
 }

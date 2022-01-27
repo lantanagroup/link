@@ -10,7 +10,11 @@ import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Resource;
+import org.springdoc.core.SpringDocUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -117,6 +121,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
+    SpringDocHelper.ignoreFhirClasses();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
   }
