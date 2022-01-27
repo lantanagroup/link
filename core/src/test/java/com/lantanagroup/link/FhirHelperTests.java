@@ -5,7 +5,10 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.HumanName;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Resource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,7 +74,7 @@ public class FhirHelperTests {
     when(decodedJWTTest.getPayload()).thenReturn("e30");
     when(fhirDataProviderTest.createOutcome(any())).thenReturn(outcomeTest);
 
-    fhirHelperTest.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Testing String");
+    fhirHelperTest.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest.getClient(), decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Testing String");
   }
 
   @Test

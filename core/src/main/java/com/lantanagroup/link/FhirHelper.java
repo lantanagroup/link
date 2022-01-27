@@ -3,6 +3,7 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.gson.JsonObject;
@@ -25,6 +26,23 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
+
+  public static void recordAuditEvent(HttpServletRequest request, IGenericClient fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+    AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
+
+    try {
+      MethodOutcome outcome = fhirClient.create()
+              .resource(auditEvent)
+              .prettyPrint()
+              .encodedJson()
+              .execute();
+
+      IIdType id = outcome.getId();
+      logger.info("AuditEvent LOGGED: " + id.getValue());
+    } catch (Exception ex) {
+      logger.error("Failed to record AuditEvent", ex);
+    }
+  }
 
   public static AuditEvent createAuditEvent(HttpServletRequest request, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
@@ -84,17 +102,14 @@ public class FhirHelper {
     return auditEvent;
   }
 
-  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
-    AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
-
-    try {
-      MethodOutcome outcome = fhirClient.createOutcome(auditEvent);
-
-      IIdType id = outcome.getId();
-      logger.info("AuditEvent LOGGED: " + id.getValue());
-    } catch (Exception ex) {
-      logger.error("Failed to record AuditEvent", ex);
-    }
+  public enum AuditEventTypes {
+    Generate,
+    ExcludePatients,
+    Export,
+    Send,
+    SearchLocations,
+    InitiateQuery,
+    SearchReports
   }
 
   /**
@@ -339,7 +354,6 @@ public class FhirHelper {
     return practitioner;
   }
 
-
   public static Bundle getBundle(String content) {
     FhirContext ctx = FhirContext.forR4();
     IParser jsonParser = ctx.newJsonParser();
@@ -356,38 +370,5 @@ public class FhirHelper {
       return null;
     }
     return reportDefBundle;
-  }
-
-  /**
-   * Creates a Bundle of type "batch" with an entry for each resource provided. Expects that each resource
-   * have an id, so that it can create a "request" with a method of "PUT resourceType/id"
-   * Example: createUpdateBatch(List.of(resource1, resource2, resource3))
-   * @param resources The list of resources to be added to the batch
-   * @return Bundle that can be executed as a transaction on the FHIR server
-   */
-  public static Bundle createUpdateBatch(List<DomainResource> resources) {
-    Bundle newBundle = new Bundle();
-    newBundle.setType(Bundle.BundleType.BATCH);
-
-    for (DomainResource resource : resources) {
-      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-      newEntry
-              .setResource(resource)
-              .getRequest()
-                  .setMethod(Bundle.HTTPVerb.PUT)
-                  .setUrl(resource.getResourceType().toString() + "/" + resource.getIdElement().getIdPart());
-    }
-
-    return newBundle;
-  }
-
-  public enum AuditEventTypes {
-    Generate,
-    ExcludePatients,
-    Export,
-    Send,
-    SearchLocations,
-    InitiateQuery,
-    SearchReports
   }
 }
