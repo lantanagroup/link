@@ -12,6 +12,7 @@ import com.lantanagroup.link.mock.AuthMockInfo;
 import com.lantanagroup.link.mock.MockHelper;
 import com.lantanagroup.link.mock.TransactionMock;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -19,12 +20,12 @@ import org.apache.http.entity.StringEntity;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -32,7 +33,10 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
+
 public class FHIRSenderTests {
+
+
   private void runTest(FHIRSender mockSender, IGenericClient mockFhirStoreClient, HttpClient mockHttpClient, MeasureReport measureReport, ArgumentMatcher<HttpUriRequest> httpArgMatcher) throws Exception {
     HttpServletRequest request = mock(HttpServletRequest.class);
     AuthMockInfo authMockInfo = MockHelper.mockAuth(mockFhirStoreClient);
@@ -56,11 +60,22 @@ public class FHIRSenderTests {
     ICreate create = mock(ICreate.class);
     when(mockFhirStoreClient.create()).thenReturn(create);
     MockHelper.mockAuditEvents(create);
-    when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(new Bundle());
+
+    Bundle bundle = getBundle();
+    when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(bundle);
     mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
 
     // Make sure an HttpClient request was executed
     verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
+  }
+
+  private Bundle getBundle() throws IOException {
+    MeasureReport report = getMeasureReport();
+    Bundle bundle = new Bundle();
+    Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
+    entry.setResource(report);
+    bundle.addEntry(entry);
+    return bundle;
   }
 
   private FHIRSender getMockSender(FHIRSenderConfig config) throws Exception {
@@ -75,7 +90,18 @@ public class FHIRSenderTests {
     return sender;
   }
 
-  @Ignore
+  private MeasureReport getMasterMeasureReport() throws IOException {
+    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
+    FhirContext ctx = FhirContext.forR4();
+    return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
+  }
+
+  private MeasureReport getMeasureReport() throws IOException {
+    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-measure-report.json"));
+    FhirContext ctx = FhirContext.forR4();
+    return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
+  }
+
   @Test
   public void sendTestUnauthenticated() throws Exception {
 
@@ -90,9 +116,7 @@ public class FHIRSenderTests {
     FHIRSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
-    MeasureReport measureReport = new MeasureReport();
-    measureReport.addEvaluatedResource().setReference("Patient/testPatient1");
-    measureReport.addEvaluatedResource().setReference("Condition/testCondition1");
+    MeasureReport measureReport = getMasterMeasureReport();
 
     ArgumentMatcher<HttpUriRequest> httpUriRequestArgumentMatcher = new ArgumentMatcher<HttpUriRequest>() {
       @SneakyThrows
@@ -123,7 +147,6 @@ public class FHIRSenderTests {
     this.runTest(mockSender, mockFhirStoreClient, mockHttpClient, measureReport, httpUriRequestArgumentMatcher);
   }
 
-  @Ignore
   @Test
   public void sendTestAuthenticated() throws Exception {
     // Mock the response of the HttpClient
@@ -162,9 +185,7 @@ public class FHIRSenderTests {
     FHIRSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
-    MeasureReport measureReport = new MeasureReport();
-    measureReport.addEvaluatedResource().setReference("Patient/testPatient1");
-    measureReport.addEvaluatedResource().setReference("Condition/testCondition1");
+    MeasureReport measureReport = getMasterMeasureReport();
 
     ArgumentMatcher<HttpUriRequest> httpUriRequestArgumentMatcher = new ArgumentMatcher<HttpUriRequest>() {
       @SneakyThrows

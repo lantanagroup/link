@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -11,9 +10,7 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.info.Info;
 import lombok.Setter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;

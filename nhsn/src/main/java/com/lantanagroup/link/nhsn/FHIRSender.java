@@ -1,6 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirBundler;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportSender;
@@ -16,7 +16,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class FHIRSender implements IReportSender {
@@ -43,22 +42,13 @@ public class FHIRSender implements IReportSender {
   private Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider) {
     logger.info("Building Bundle for MeasureReport to send...");
 
-    // TODO: construct FhirBundler
-
-    // TODO: call generate
-
-    // TODO: return bundle from fhir bundler
-
-    return null;
+    FhirBundler bundler = new FhirBundler(fhirProvider);
+    return bundler.generateBundle(true, masterMeasureReport);
   }
 
-  @Override
-  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirProvider, Boolean sendWholeBundle) throws Exception {
-    if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
-      throw new Exception("Not configured with any locations to send");
-    }
-
+  private String getToken() {
     String token = "";
+
     if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
@@ -82,6 +72,16 @@ public class FHIRSender implements IReportSender {
       }
     }
 
+    return token;
+  }
+
+  @Override
+  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirProvider, Boolean sendWholeBundle) throws Exception {
+    if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
+      throw new Exception("Not configured with any locations to send");
+    }
+
+    String token = this.getToken();
     Bundle bundle = this.generateBundle(masterMeasureReport, fhirProvider);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
@@ -104,9 +104,6 @@ public class FHIRSender implements IReportSender {
 
       try {
         HttpClient httpClient = this.getHttpClient();
-
-        // HttpResponse result = httpClient.execute(request);
-        // String response = EntityUtils.toString(result.getEntity(), "UTF-8");
 
         HttpResponse response = httpClient.execute(sendRequest);
 
