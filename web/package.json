@@ -30,7 +30,7 @@
     "ngx-cookie-service": "^3.0.4",
     "rxjs": "^6.5.5",
     "save-as": "^0.1.8",
-    "tslib": "^1.10.0",
+    "tslib": "^1.14.1",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {
