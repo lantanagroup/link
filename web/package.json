@@ -31,7 +31,7 @@
     "rxjs": "^6.5.5",
     "save-as": "^0.1.8",
     "tslib": "^1.10.0",
-    "zone.js": "~0.10.2"
+    "zone.js": "~0.11.4"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.901.4",
