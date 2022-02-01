@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,35 @@ public class PatientData {
       FhirHelper.addEntriesToBundle(next, bundle);
     }
 
+    HashSet<String> extraResources = getExtraResourses(bundle);
+
     return bundle;
+  }
+
+  private HashSet<String> getExtraResourses(Bundle inBundle){
+
+    HashSet<String> resourceReferences = new HashSet<>();
+
+    for(int i = 0; i < inBundle.getEntry().size(); i++){
+
+      if(this.usCoreConfig.getExtraResources().size() > 0){
+        String resourseType = inBundle.getEntry().get(i).getResource().getResourceType().name();
+
+        if(resourseType == "MedicationRequest" && this.usCoreConfig.getExtraResources().contains("Medication/{{medicationId}}")){
+          MedicationRequest medicationRequest = (MedicationRequest) inBundle.getEntry().get(i).getResource();
+          resourceReferences.add(medicationRequest.getMedicationReference().getReference());
+        }
+
+        if(resourseType == "Encounter" && this.usCoreConfig.getExtraResources().contains("Location/{{locationID}}")){
+          Encounter encounter = (Encounter) inBundle.getEntry().get(i).getResource();
+
+          for(int j = 0; j < encounter.getLocation().size(); j++){
+            resourceReferences.add(encounter.getLocation().get(j).getLocation().getReference());
+          }
+        }
+      }
+    }
+
+    return resourceReferences;
   }
 }

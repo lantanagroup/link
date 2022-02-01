@@ -26,8 +26,14 @@ public class QueryTests {
     List<String> queries = new ArrayList<>();
     queries.add("Condition?patient={{patientId}}");
     queries.add("Encounter?patient={{patientId}}");
+    queries.add("MedicationRequest?patient={{patientId}}");
     USCoreConfig usCoreConfig = new USCoreConfig();
     usCoreConfig.setQueries(queries);
+
+    List<String> extraResources = new ArrayList<>();
+    extraResources.add("Location/{{locationID}}");
+    extraResources.add("Medication/{{medicationId}}");
+    usCoreConfig.setExtraResources(extraResources);
 
     PatientScoop patientScoop = new PatientScoop();
     patientScoop.setUsCoreConfig(usCoreConfig);
@@ -43,18 +49,24 @@ public class QueryTests {
     IReadTyped<Patient> readTyped = mock(IReadTyped.class);
     IQuery<IBaseBundle> conditionBaseQuery1 = mock(IQuery.class);
     IQuery<IBaseBundle> encounterBaseQuery1 = mock(IQuery.class);
+    IQuery<IBaseBundle> medicationRequestBaseQuery1 = mock(IQuery.class);
     IQuery<IBaseBundle> conditionBaseQuery2 = mock(IQuery.class);
     IQuery<IBaseBundle> encounterBaseQuery2 = mock(IQuery.class);
+    IQuery<IBaseBundle> medicationRequestBaseQuery2 = mock(IQuery.class);
     IQuery<IBaseBundle> conditionBaseQuery3 = mock(IQuery.class);
     IQuery<IBaseBundle> encounterBaseQuery3 = mock(IQuery.class);
+    IQuery<IBaseBundle> medicationRequestBaseQuery3 = mock(IQuery.class);
     IQuery<Bundle> patientQuery1 = mock(IQuery.class);
     IQuery<Bundle> patientQuery2 = mock(IQuery.class);
     IQuery<Bundle> conditionQuery1 = mock(IQuery.class);
     IQuery<Bundle> encounterQuery1 = mock(IQuery.class);
+    IQuery<Bundle> medicationRequestQuery1 = mock(IQuery.class);
     IQuery<Bundle> conditionQuery2 = mock(IQuery.class);
     IQuery<Bundle> encounterQuery2 = mock(IQuery.class);
+    IQuery<Bundle> medicationRequestQuery2 = mock(IQuery.class);
     IQuery<Bundle> conditionQuery3 = mock(IQuery.class);
     IQuery<Bundle> encounterQuery3 = mock(IQuery.class);
+    IQuery<Bundle> medicationRequestQuery3 = mock(IQuery.class);
     IReadExecutable<Patient> readExec = mock(IReadExecutable.class);
 
     Patient patient1 = new Patient();
@@ -63,6 +75,39 @@ public class QueryTests {
     patient2.setId("patient2");
     Patient patient3 = new Patient();
     patient3.setId(new IdType("Patient", "patient3"));
+
+    MedicationRequest medicalRequset1 = new MedicationRequest();
+    medicalRequset1.setId("medicationrequest1");
+    medicalRequset1.getMedicationReference().setReference("medication1");
+    MedicationRequest medicalRequset2 = new MedicationRequest();
+    medicalRequset2.setId("medicationrequest2");
+    medicalRequset2.getMedicationReference().setReference("medication2");
+    MedicationRequest medicalRequset3 = new MedicationRequest();
+    medicalRequset3.setId("medicationrequest3");
+    medicalRequset3.getMedicationReference().setReference("medication3");
+    MedicationRequest medicalRequset4 = new MedicationRequest();
+    medicalRequset4.setId("medicationrequest4");
+    medicalRequset4.getMedicationReference().setReference("medication3");
+
+    Encounter.EncounterLocationComponent encounterLocationComponent1 = new Encounter.EncounterLocationComponent(new Reference("location1"));
+    List<Encounter.EncounterLocationComponent> locationList1 = new ArrayList<>();
+    locationList1.add(encounterLocationComponent1);
+    Encounter.EncounterLocationComponent encounterLocationComponent2 = new Encounter.EncounterLocationComponent(new Reference("location2"));
+    List<Encounter.EncounterLocationComponent> locationList2 = new ArrayList<>();
+    locationList2.add(encounterLocationComponent2);
+    Encounter.EncounterLocationComponent encounterLocationComponent3 = new Encounter.EncounterLocationComponent(new Reference("location3"));
+    List<Encounter.EncounterLocationComponent> locationList3 = new ArrayList<>();
+    locationList3.add(encounterLocationComponent3);
+
+    Encounter encounter1 = new Encounter();
+    encounter1.setId("encounter1");
+    encounter1.setLocation(locationList1);
+    Encounter encounter2 = new Encounter();
+    encounter2.setId("encounter2");
+    encounter2.setLocation(locationList2);
+    Encounter encounter3 = new Encounter();
+    encounter3.setId("encounter3");
+    encounter3.setLocation(locationList3);
 
     Bundle patientBundle1 = new Bundle();
     patientBundle1.addEntry().setResource(patient1);
@@ -74,28 +119,52 @@ public class QueryTests {
     conditionBundle1.addEntry().setResource(new Condition().setId("condition1"));
     conditionBundle1.addEntry().setResource(new Condition().setId("condition2"));
 
+    Bundle medicalRequestBundle1 = new Bundle();
+    medicalRequestBundle1.addEntry().setResource(medicalRequset1);
+
+
     Bundle encounterBundle1 = new Bundle();
-    encounterBundle1.addEntry().setResource(new Encounter().setId("encounter1"));
+    encounterBundle1.addEntry().setResource(encounter1);
 
     Bundle conditionBundle2 = new Bundle();
 
     Bundle encounterBundle2 = new Bundle();
-    encounterBundle2.addEntry().setResource(new Encounter().setId("encounter2"));
+    encounterBundle2.addEntry().setResource(encounter2);
+
+    Bundle medicalRequestBundle2 = new Bundle();
+    medicalRequestBundle2.addEntry().setResource(medicalRequset2);
 
     Bundle conditionBundle3 = new Bundle();
     conditionBundle3.addEntry().setResource(new Condition().setId("condition3"));
 
     Bundle encounterBundle3 = new Bundle();
-    encounterBundle3.addEntry().setResource(new Encounter().setId("encounter3"));
+    encounterBundle3.addEntry().setResource(encounter3);
+
+    Bundle medicalRequestBundle3 = new Bundle();
+    medicalRequestBundle3.addEntry().setResource(medicalRequset3);
+    medicalRequestBundle3.addEntry().setResource(medicalRequset4);
+
+    Bundle locationBundle1 = new Bundle();
+    locationBundle1.addEntry().setResource(new Location().setId("location1"));
+
+    Bundle locationBundle2 = new Bundle();
+    locationBundle2.addEntry().setResource(new Location().setId("location2"));
+
+    Bundle locationBundle3 = new Bundle();
+    locationBundle3.addEntry().setResource(new Location().setId("location3"));
 
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier1")).thenReturn(patientBaseQuery1);
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier2")).thenReturn(patientBaseQuery2);
     when(untypedQuery.byUrl("Condition?patient=patient1")).thenReturn(conditionBaseQuery1);
     when(untypedQuery.byUrl("Encounter?patient=patient1")).thenReturn(encounterBaseQuery1);
+    when(untypedQuery.byUrl("MedicationRequest?patient=patient1")).thenReturn(medicationRequestBaseQuery1);
     when(untypedQuery.byUrl("Condition?patient=patient2")).thenReturn(conditionBaseQuery2);
     when(untypedQuery.byUrl("Encounter?patient=patient2")).thenReturn(encounterBaseQuery2);
+    when(untypedQuery.byUrl("MedicationRequest?patient=patient2")).thenReturn(medicationRequestBaseQuery2);
     when(untypedQuery.byUrl("Condition?patient=patient3")).thenReturn(conditionBaseQuery3);
     when(untypedQuery.byUrl("Encounter?patient=patient3")).thenReturn(encounterBaseQuery3);
+    when(untypedQuery.byUrl("MedicationRequest?patient=patient3")).thenReturn(medicationRequestBaseQuery3);
+
     when(read.resource(Patient.class)).thenReturn(readTyped);
     when(readTyped.withId("patient3")).thenReturn(readExec);
     when(readExec.execute()).thenReturn(patient3);
@@ -104,19 +173,25 @@ public class QueryTests {
     when(patientBaseQuery2.returnBundle(Bundle.class)).thenReturn(patientQuery2);
     when(conditionBaseQuery1.returnBundle(Bundle.class)).thenReturn(conditionQuery1);
     when(encounterBaseQuery1.returnBundle(Bundle.class)).thenReturn(encounterQuery1);
+    when(medicationRequestBaseQuery1.returnBundle(Bundle.class)).thenReturn(medicationRequestQuery1);
     when(conditionBaseQuery2.returnBundle(Bundle.class)).thenReturn(conditionQuery2);
     when(encounterBaseQuery2.returnBundle(Bundle.class)).thenReturn(encounterQuery2);
+    when(medicationRequestBaseQuery2.returnBundle(Bundle.class)).thenReturn(medicationRequestQuery2);
     when(conditionBaseQuery3.returnBundle(Bundle.class)).thenReturn(conditionQuery3);
     when(encounterBaseQuery3.returnBundle(Bundle.class)).thenReturn(encounterQuery3);
+    when(medicationRequestBaseQuery3.returnBundle(Bundle.class)).thenReturn(medicationRequestQuery3);
 
     when(patientQuery1.execute()).thenReturn(patientBundle1);
     when(patientQuery2.execute()).thenReturn(patientBundle2);
     when(conditionQuery1.execute()).thenReturn(conditionBundle1);
     when(encounterQuery1.execute()).thenReturn(encounterBundle1);
+    when(medicationRequestQuery1.execute()).thenReturn(medicalRequestBundle1);
     when(conditionQuery2.execute()).thenReturn(conditionBundle2);
     when(encounterQuery2.execute()).thenReturn(encounterBundle2);
+    when(medicationRequestQuery2.execute()).thenReturn(medicalRequestBundle2);
     when(conditionQuery3.execute()).thenReturn(conditionBundle3);
     when(encounterQuery3.execute()).thenReturn(encounterBundle3);
+    when(medicationRequestQuery3.execute()).thenReturn(medicalRequestBundle3);
 
     when(fhirQueryClient.search()).thenReturn(untypedQuery);
     when(fhirQueryClient.read()).thenReturn(read);
@@ -138,14 +213,17 @@ public class QueryTests {
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier2");
     verify(untypedQuery, times(1)).byUrl("Condition?patient=patient1");
     verify(untypedQuery, times(1)).byUrl("Encounter?patient=patient1");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=patient1");
     verify(untypedQuery, times(1)).byUrl("Condition?patient=patient2");
     verify(untypedQuery, times(1)).byUrl("Encounter?patient=patient2");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=patient2");
+
     verify(read, times(1)).resource(Patient.class);
     verify(readTyped, times(1)).withId("patient3");
 
     // Make sure the patient data bundle has the expected resources in it
     Assert.assertNotNull(patientDataBundle);
-    Assert.assertEquals(9, patientDataBundle.getEntry().size());
+    Assert.assertEquals(13, patientDataBundle.getEntry().size());
 
     // Make sure the patients, encounters and conditions are in the resulting bundle
     Optional<Bundle.BundleEntryComponent> foundPatient1 = patientDataBundle.getEntry().stream()
@@ -160,6 +238,12 @@ public class QueryTests {
     Optional<Bundle.BundleEntryComponent> foundCondition2 = patientDataBundle.getEntry().stream()
             .filter(e -> e.getResource() == conditionBundle1.getEntry().get(1).getResource())
             .findAny();
+    Optional<Bundle.BundleEntryComponent> foundMedicationRequest1 = patientDataBundle.getEntry().stream()
+            .filter(e -> e.getResource() == medicalRequestBundle1.getEntry().get(0).getResource())
+            .findAny();
+    Optional<Bundle.BundleEntryComponent> foundMedicationRequest2 = patientDataBundle.getEntry().stream()
+            .filter(e -> e.getResource() == medicalRequestBundle2.getEntry().get(0).getResource())
+            .findAny();
     Optional<Bundle.BundleEntryComponent> foundEncounter1 = patientDataBundle.getEntry().stream()
             .filter(e -> e.getResource() == encounterBundle1.getEntry().get(0).getResource())
             .findAny();
@@ -173,5 +257,7 @@ public class QueryTests {
     Assert.assertEquals(true, foundCondition2.isPresent());
     Assert.assertEquals(true, foundEncounter1.isPresent());
     Assert.assertEquals(true, foundEncounter2.isPresent());
+    Assert.assertEquals(true, foundMedicationRequest1.isPresent());
+    Assert.assertEquals(true, foundMedicationRequest2.isPresent());
   }
 }
