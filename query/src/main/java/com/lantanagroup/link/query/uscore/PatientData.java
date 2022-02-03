@@ -1,24 +1,17 @@
 package com.lantanagroup.link.query.uscore;
 
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
-import lombok.Getter;
-import lombok.Setter;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,35 +57,21 @@ public class PatientData {
       FhirHelper.addEntriesToBundle(next, bundle);
     }
 
-    HashSet<String> extraResources = getExtraResourses(bundle);
+    getExtraResources(bundle, ResourceIdChanger.findReferences(bundle));
 
     return bundle;
   }
 
-  private HashSet<String> getExtraResourses(Bundle inBundle){
+  private void getExtraResources(Bundle bundle, List<Reference> resourceReferences){
+    for(Reference reference : resourceReferences){
+      String[] refParts = reference.getReference().split("/");
 
-    HashSet<String> resourceReferences = new HashSet<>();
+      Resource resource = (Resource) this.fhirQueryServer.read()
+              .resource(refParts[0])
+              .withId(refParts[1])
+              .execute();
 
-    for(int i = 0; i < inBundle.getEntry().size(); i++){
-
-      if(this.usCoreConfig.getExtraResources().size() > 0){
-        String resourseType = inBundle.getEntry().get(i).getResource().getResourceType().name();
-
-        if(resourseType == "MedicationRequest" && this.usCoreConfig.getExtraResources().contains("Medication/{{medicationId}}")){
-          MedicationRequest medicationRequest = (MedicationRequest) inBundle.getEntry().get(i).getResource();
-          resourceReferences.add(medicationRequest.getMedicationReference().getReference());
-        }
-
-        if(resourseType == "Encounter" && this.usCoreConfig.getExtraResources().contains("Location/{{locationID}}")){
-          Encounter encounter = (Encounter) inBundle.getEntry().get(i).getResource();
-
-          for(int j = 0; j < encounter.getLocation().size(); j++){
-            resourceReferences.add(encounter.getLocation().get(j).getLocation().getReference());
-          }
-        }
-      }
+      bundle.addEntry().setResource(resource);
     }
-
-    return resourceReferences;
   }
 }

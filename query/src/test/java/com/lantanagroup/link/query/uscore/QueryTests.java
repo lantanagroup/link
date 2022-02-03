@@ -6,6 +6,7 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,6 +45,14 @@ public class QueryTests {
 
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
     IRead read = mock(IRead.class);
+    IReadTyped<IBaseResource> medicineReadTyped = mock(IReadTyped.class);
+    IReadTyped<IBaseResource> locationReadTyped = mock(IReadTyped.class);
+    IReadExecutable<IBaseResource> medicineReadExecutable1 = mock(IReadExecutable.class);
+    IReadExecutable<IBaseResource> medicineReadExecutable2 = mock(IReadExecutable.class);
+    IReadExecutable<IBaseResource> medicineReadExecutable3 = mock(IReadExecutable.class);
+    IReadExecutable<IBaseResource> locationReadExecutable1 = mock(IReadExecutable.class);
+    IReadExecutable<IBaseResource> locationReadExecutable2 = mock(IReadExecutable.class);
+    IReadExecutable<IBaseResource> locationReadExecutable3 = mock(IReadExecutable.class);
     IQuery<IBaseBundle> patientBaseQuery1 = mock(IQuery.class);
     IQuery<IBaseBundle> patientBaseQuery2 = mock(IQuery.class);
     IReadTyped<Patient> readTyped = mock(IReadTyped.class);
@@ -76,26 +85,26 @@ public class QueryTests {
     Patient patient3 = new Patient();
     patient3.setId(new IdType("Patient", "patient3"));
 
-    MedicationRequest medicalRequset1 = new MedicationRequest();
-    medicalRequset1.setId("medicationrequest1");
-    medicalRequset1.getMedicationReference().setReference("medication1");
-    MedicationRequest medicalRequset2 = new MedicationRequest();
-    medicalRequset2.setId("medicationrequest2");
-    medicalRequset2.getMedicationReference().setReference("medication2");
-    MedicationRequest medicalRequset3 = new MedicationRequest();
-    medicalRequset3.setId("medicationrequest3");
-    medicalRequset3.getMedicationReference().setReference("medication3");
-    MedicationRequest medicalRequset4 = new MedicationRequest();
-    medicalRequset4.setId("medicationrequest4");
-    medicalRequset4.getMedicationReference().setReference("medication3");
+    MedicationRequest medicalRequest1 = new MedicationRequest();
+    medicalRequest1.setId("medicationrequest1");
+    medicalRequest1.getMedicationReference().setReference("Medication/medication1");
+    MedicationRequest medicalRequest2 = new MedicationRequest();
+    medicalRequest2.setId("medicationrequest2");
+    medicalRequest2.getMedicationReference().setReference("Medication/medication2");
+    MedicationRequest medicalRequest3 = new MedicationRequest();
+    medicalRequest3.setId("medicationrequest3");
+    medicalRequest3.getMedicationReference().setReference("Medication/medication3");
+    MedicationRequest medicalRequest4 = new MedicationRequest();
+    medicalRequest4.setId("medicationrequest4");
+    medicalRequest4.getMedicationReference().setReference("Medication/medication3");
 
-    Encounter.EncounterLocationComponent encounterLocationComponent1 = new Encounter.EncounterLocationComponent(new Reference("location1"));
+    Encounter.EncounterLocationComponent encounterLocationComponent1 = new Encounter.EncounterLocationComponent(new Reference("Location/location1"));
     List<Encounter.EncounterLocationComponent> locationList1 = new ArrayList<>();
     locationList1.add(encounterLocationComponent1);
-    Encounter.EncounterLocationComponent encounterLocationComponent2 = new Encounter.EncounterLocationComponent(new Reference("location2"));
+    Encounter.EncounterLocationComponent encounterLocationComponent2 = new Encounter.EncounterLocationComponent(new Reference("Location/location2"));
     List<Encounter.EncounterLocationComponent> locationList2 = new ArrayList<>();
     locationList2.add(encounterLocationComponent2);
-    Encounter.EncounterLocationComponent encounterLocationComponent3 = new Encounter.EncounterLocationComponent(new Reference("location3"));
+    Encounter.EncounterLocationComponent encounterLocationComponent3 = new Encounter.EncounterLocationComponent(new Reference("Location/location3"));
     List<Encounter.EncounterLocationComponent> locationList3 = new ArrayList<>();
     locationList3.add(encounterLocationComponent3);
 
@@ -120,8 +129,7 @@ public class QueryTests {
     conditionBundle1.addEntry().setResource(new Condition().setId("condition2"));
 
     Bundle medicalRequestBundle1 = new Bundle();
-    medicalRequestBundle1.addEntry().setResource(medicalRequset1);
-
+    medicalRequestBundle1.addEntry().setResource(medicalRequest1);
 
     Bundle encounterBundle1 = new Bundle();
     encounterBundle1.addEntry().setResource(encounter1);
@@ -132,7 +140,7 @@ public class QueryTests {
     encounterBundle2.addEntry().setResource(encounter2);
 
     Bundle medicalRequestBundle2 = new Bundle();
-    medicalRequestBundle2.addEntry().setResource(medicalRequset2);
+    medicalRequestBundle2.addEntry().setResource(medicalRequest2);
 
     Bundle conditionBundle3 = new Bundle();
     conditionBundle3.addEntry().setResource(new Condition().setId("condition3"));
@@ -141,17 +149,23 @@ public class QueryTests {
     encounterBundle3.addEntry().setResource(encounter3);
 
     Bundle medicalRequestBundle3 = new Bundle();
-    medicalRequestBundle3.addEntry().setResource(medicalRequset3);
-    medicalRequestBundle3.addEntry().setResource(medicalRequset4);
+    medicalRequestBundle3.addEntry().setResource(medicalRequest3);
+    medicalRequestBundle3.addEntry().setResource(medicalRequest4);
 
-    Bundle locationBundle1 = new Bundle();
-    locationBundle1.addEntry().setResource(new Location().setId("location1"));
 
-    Bundle locationBundle2 = new Bundle();
-    locationBundle2.addEntry().setResource(new Location().setId("location2"));
+    Medication medication1 = new Medication();
+    medication1.setId("medication1");
+    Medication medication2 = new Medication();
+    medication2.setId("medication2");
+    Medication medication3 = new Medication();
+    medication3.setId("medication3");
 
-    Bundle locationBundle3 = new Bundle();
-    locationBundle3.addEntry().setResource(new Location().setId("location3"));
+    Location location1 = new Location();
+    location1.setId("location1");
+    Location location2 = new Location();
+    location2.setId("location2");
+    Location location3 = new Location();
+    location3.setId("location3");
 
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier1")).thenReturn(patientBaseQuery1);
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier2")).thenReturn(patientBaseQuery2);
@@ -196,6 +210,23 @@ public class QueryTests {
     when(fhirQueryClient.search()).thenReturn(untypedQuery);
     when(fhirQueryClient.read()).thenReturn(read);
 
+    when(read.resource("Medication")).thenReturn(medicineReadTyped);
+    when(read.resource("Location")).thenReturn(locationReadTyped);
+
+    when(medicineReadTyped.withId("medication1")).thenReturn(medicineReadExecutable1);
+    when(medicineReadTyped.withId("medication2")).thenReturn(medicineReadExecutable2);
+    when(medicineReadTyped.withId("medication3")).thenReturn(medicineReadExecutable3);
+    when(locationReadTyped.withId("location1")).thenReturn(locationReadExecutable1);
+    when(locationReadTyped.withId("location2")).thenReturn(locationReadExecutable2);
+    when(locationReadTyped.withId("location3")).thenReturn(locationReadExecutable3);
+
+    when(medicineReadExecutable1.execute()).thenReturn(medication1);
+    when(medicineReadExecutable2.execute()).thenReturn(medication2);
+    when(medicineReadExecutable3.execute()).thenReturn(medication3);
+    when(locationReadExecutable1.execute()).thenReturn(location1);
+    when(locationReadExecutable2.execute()).thenReturn(location2);
+    when(locationReadExecutable3.execute()).thenReturn(location3);
+
     // Input data to the test - two entries with a business identifier and one with a logical reference
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     patientsOfInterest.add(new PatientOfInterestModel(null, "patientIdentifier1"));
@@ -223,7 +254,7 @@ public class QueryTests {
 
     // Make sure the patient data bundle has the expected resources in it
     Assert.assertNotNull(patientDataBundle);
-    Assert.assertEquals(13, patientDataBundle.getEntry().size());
+    Assert.assertEquals(19, patientDataBundle.getEntry().size());
 
     // Make sure the patients, encounters and conditions are in the resulting bundle
     Optional<Bundle.BundleEntryComponent> foundPatient1 = patientDataBundle.getEntry().stream()
@@ -250,6 +281,15 @@ public class QueryTests {
     Optional<Bundle.BundleEntryComponent> foundEncounter2 = patientDataBundle.getEntry().stream()
             .filter(e -> e.getResource() == encounterBundle2.getEntry().get(0).getResource())
             .findAny();
+    Optional<Bundle.BundleEntryComponent> foundMedication1 = patientDataBundle.getEntry().stream()
+            .filter(e -> e.getResource() == medication1)
+            .findAny();
+    Optional<Bundle.BundleEntryComponent> foundMedication3 = patientDataBundle.getEntry().stream()
+            .filter(e -> e.getResource() == medication3)
+            .findAny();
+    Optional<Bundle.BundleEntryComponent> foundLocation1 = patientDataBundle.getEntry().stream()
+            .filter(e -> e.getResource() == location1)
+            .findAny();
 
     Assert.assertEquals(true, foundPatient1.isPresent());
     Assert.assertEquals(true, foundPatient2.isPresent());
@@ -259,5 +299,8 @@ public class QueryTests {
     Assert.assertEquals(true, foundEncounter2.isPresent());
     Assert.assertEquals(true, foundMedicationRequest1.isPresent());
     Assert.assertEquals(true, foundMedicationRequest2.isPresent());
+    Assert.assertEquals(true, foundMedication1.isPresent());
+    Assert.assertEquals(true, foundMedication3.isPresent());
+    Assert.assertEquals(true, foundLocation1.isPresent());
   }
 }
