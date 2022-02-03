@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class PatientData {
@@ -65,13 +66,14 @@ public class PatientData {
   private void getExtraResources(Bundle bundle, List<Reference> resourceReferences){
     for(Reference reference : resourceReferences){
       String[] refParts = reference.getReference().split("/");
+      if(this.usCoreConfig.getExtraResources().contains(refParts[0] + "/{{" + refParts[0].toLowerCase() + "Id}}")){
+        Resource resource = (Resource) this.fhirQueryServer.read()
+                .resource(refParts[0])
+                .withId(refParts[1])
+                .execute();
 
-      Resource resource = (Resource) this.fhirQueryServer.read()
-              .resource(refParts[0])
-              .withId(refParts[1])
-              .execute();
-
-      bundle.addEntry().setResource(resource);
+        bundle.addEntry().setResource(resource);
+      }
     }
   }
 }

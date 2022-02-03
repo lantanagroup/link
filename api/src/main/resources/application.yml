@@ -45,5 +45,5 @@ query:
       - ServiceRequest?patient=Patient/{{patientId}}
       - Coverage?patient=Patient/{{patientId}}
     additional-resources:
-      - Location/{{locationID}}
+      - Location/{{locationId}}
       - Medication/{{medicationId}}

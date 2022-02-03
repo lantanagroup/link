@@ -32,7 +32,7 @@ public class QueryTests {
     usCoreConfig.setQueries(queries);
 
     List<String> extraResources = new ArrayList<>();
-    extraResources.add("Location/{{locationID}}");
+    extraResources.add("Location/{{locationId}}");
     extraResources.add("Medication/{{medicationId}}");
     usCoreConfig.setExtraResources(extraResources);
 
