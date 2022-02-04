@@ -200,6 +200,7 @@ public class ReportController extends BaseController {
   /**
    * Executes the configured query implementation against a list of POIs. The POI at the start of this
    * may be either identifier (such as MRN) or logical id for the FHIR Patient resource.
+   *
    * @param patientsOfInterest
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
@@ -420,6 +421,7 @@ public class ReportController extends BaseController {
     return report;
   }
 
+
   @GetMapping(value = "/{id}/patient")
   public List<PatientReportModel> getReportPatients(
           @PathVariable("id") String id) {
@@ -429,31 +431,37 @@ public class ReportController extends BaseController {
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
     Bundle patientRequest = new Bundle();
+    patientRequest.setType(Bundle.BundleType.BATCH);
+    // Get the references to the individual patient measure reports from the master
+    List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(measureReport);
+    // Retrieve the individual patient measure reports from the server
+    List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.getFhirDataProvider());
+    for (MeasureReport patientMeasureReport : patientReports) {
 
-    for (Reference reference : measureReport.getEvaluatedResource()) {
-      if (reference.getReference().startsWith("Patient/")) {
-        patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-        int index = patientRequest.getEntry().size() - 1;
-        patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
-        patientRequest.getEntry().get(index).getRequest().setUrl(reference.getReference());
-      }
-    }
-
-    for (Extension extension : measureReport.getExtension()) {
-      if (extension.getUrl().contains("StructureDefinition/nhsnlink-excluded-patient")) {
-        patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-        int index = patientRequest.getEntry().size() - 1;
-        patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
-        for (Extension ext : extension.getExtension()) {
-          if (ext.getUrl().contains("patient")) {
-            String patientUrl = (ext.getValue().getNamedProperty("reference")).getValues().get(0).toString() + "/_history";
-            patientRequest.getEntry().get(index).getRequest().setUrl(patientUrl);
-          }
+      for (Reference reference : patientMeasureReport.getEvaluatedResource()) {
+        if (reference.getReference().startsWith("Patient/")) {
+          patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+          int index = patientRequest.getEntry().size() - 1;
+          patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+          patientRequest.getEntry().get(index).getRequest().setUrl(reference.getReference());
         }
-
       }
+      // TO-DO later
+//      for (Extension extension : measureReport.getExtension()) {
+//        if (extension.getUrl().contains("StructureDefinition/nhsnlink-excluded-patient")) {
+//          patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+//          int index = patientRequest.getEntry().size() - 1;
+//          patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+//          for (Extension ext : extension.getExtension()) {
+//            if (ext.getUrl().contains("patient")) {
+//              String patientUrl = (ext.getValue().getNamedProperty("reference")).getValues().get(0).toString() + "/_history";
+//              patientRequest.getEntry().get(index).getRequest().setUrl(patientUrl);
+//            }
+//          }
+//
+//        }
+//      }
     }
-
     if (patientRequest.hasEntry()) {
       Bundle patientBundle = this.getFhirDataProvider().transaction(patientRequest);
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
@@ -477,9 +485,9 @@ public class ReportController extends BaseController {
         }
       }
     }
-
     return reports;
   }
+
 
   @PutMapping(value = "/{id}")
   public void saveReport(
