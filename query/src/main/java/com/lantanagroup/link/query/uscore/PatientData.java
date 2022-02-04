@@ -58,15 +58,15 @@ public class PatientData {
       FhirHelper.addEntriesToBundle(next, bundle);
     }
 
-    getExtraResources(bundle, ResourceIdChanger.findReferences(bundle));
+    getAdditionalResources(bundle, ResourceIdChanger.findReferences(bundle));
 
     return bundle;
   }
 
-  private void getExtraResources(Bundle bundle, List<Reference> resourceReferences){
+  private void getAdditionalResources(Bundle bundle, List<Reference> resourceReferences){
     for(Reference reference : resourceReferences){
       String[] refParts = reference.getReference().split("/");
-      if(this.usCoreConfig.getExtraResources().contains(refParts[0] + "/{{" + refParts[0].toLowerCase() + "Id}}")){
+      if(this.usCoreConfig.getAdditionalResources().contains(refParts[0] + "/{{" + refParts[0].toLowerCase() + "Id}}")){
         Resource resource = (Resource) this.fhirQueryServer.read()
                 .resource(refParts[0])
                 .withId(refParts[1])

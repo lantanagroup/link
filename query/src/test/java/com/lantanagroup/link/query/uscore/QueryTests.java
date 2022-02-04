@@ -30,11 +30,12 @@ public class QueryTests {
     queries.add("MedicationRequest?patient={{patientId}}");
     USCoreConfig usCoreConfig = new USCoreConfig();
     usCoreConfig.setQueries(queries);
-
+    usCoreConfig.getQueries();
     List<String> extraResources = new ArrayList<>();
     extraResources.add("Location/{{locationId}}");
     extraResources.add("Medication/{{medicationId}}");
-    usCoreConfig.setExtraResources(extraResources);
+    usCoreConfig.setAdditionalResources(extraResources);
+    usCoreConfig.getAdditionalResources();
 
     PatientScoop patientScoop = new PatientScoop();
     patientScoop.setUsCoreConfig(usCoreConfig);
