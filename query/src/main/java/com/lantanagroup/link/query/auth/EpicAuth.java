@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -61,7 +62,9 @@ public class EpicAuth implements ICustomAuth {
   }
 
   @Override
-  public String getAuthHeader() throws Exception {
+  public String getAuthHeader() throws URISyntaxException {
+    logger.debug("Generating JWT to request auth token from Epic");
+
     String jwt = getJwt(this.config);
     String requestBody = String.format("grant_type=client_credentials&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=%s", jwt);
 
@@ -71,16 +74,24 @@ public class EpicAuth implements ICustomAuth {
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();
 
-    HttpResponse response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    String responseBody = (String) response.body();
-    Object responseObj = new Gson().fromJson(responseBody, Object.class);
+    try {
+      HttpResponse response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      String responseBody = (String) response.body();
+      Object responseObj = new Gson().fromJson(responseBody, Object.class);
 
-    if (responseObj != null) {
-      LinkedTreeMap<String, Object> responseTreeMap = (LinkedTreeMap<String, Object>) responseObj;
+      if (responseObj != null) {
+        LinkedTreeMap<String, Object> responseTreeMap = (LinkedTreeMap<String, Object>) responseObj;
 
-      if (responseTreeMap.containsKey("access_token")) {
-        return "Bearer " + (String) responseTreeMap.get("access_token");
+        if (responseTreeMap.containsKey("access_token")) {
+          String accessToken = (String) responseTreeMap.get("access_token");
+          logger.debug("Epic access token for queries: " + accessToken);
+          return "Bearer " + accessToken;
+        } else {
+          logger.error("Response from auth token request does not include an 'access_token' property");
+        }
       }
+    } catch (Exception ex) {
+      logger.error("Error retrieving authentication token from Epic: " + ex.getMessage(), ex);
     }
 
     return null;

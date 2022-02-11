@@ -39,7 +39,7 @@ query:
       - Encounter?patient=Patient/{{patientId}}
       - Condition?patient=Patient/{{patientId}}
       - MedicationRequest?patient=Patient/{{patientId}}
-      - Observation?category=http%3A%2F%2Fterminology.hl7.org%2FCodeSystem%2Fobservation-category%7Claboratory&patient=Patient/{{patientId}}
+      - Observation?category=laboratory&patient=Patient/{{patientId}}
       - AllergyIntolerance?patient=Patient/{{patientId}}
       - Procedure?patient=Patient/{{patientId}}
       - ServiceRequest?patient=Patient/{{patientId}}
