@@ -103,9 +103,14 @@ public class ReportController extends BaseController {
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
+    String reportDefIdentifierSystem = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
+            criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) : "";
+    String reportDefIdentifierValue = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
+            criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
+            criteria.getReportDefIdentifier();
 
     // Find the report definition bundle for the given ID
-    Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")), criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1));
+    Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
 
     if (reportDefBundle == null) {
       throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
@@ -316,10 +321,10 @@ public class ReportController extends BaseController {
 
       // Generate the master report id
       String id = "";
-      if (!regenerate) {
+      if (!regenerate || existingDocumentReference == null) {
         id = RandomStringUtils.randomAlphanumeric(8);
       } else {
-        id = null != existingDocumentReference ? existingDocumentReference.getMasterIdentifier().getValue() : "";
+        id = existingDocumentReference.getMasterIdentifier().getValue();
       }
 
       context.setReportId(id);
