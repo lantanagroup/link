@@ -39,11 +39,11 @@ public class FHIRSender implements IReportSender {
     return HttpClientBuilder.create().build();
   }
 
-  private Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider) {
+  private Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle) {
     logger.info("Building Bundle for MeasureReport to send...");
 
     FhirBundler bundler = new FhirBundler(fhirProvider);
-    return bundler.generateBundle(true, masterMeasureReport);
+    return bundler.generateBundle(sendWholeBundle, masterMeasureReport);
   }
 
   private String getToken() {
@@ -82,7 +82,7 @@ public class FHIRSender implements IReportSender {
     }
 
     String token = this.getToken();
-    Bundle bundle = this.generateBundle(masterMeasureReport, fhirProvider);
+    Bundle bundle = this.generateBundle(masterMeasureReport, fhirProvider, sendWholeBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 

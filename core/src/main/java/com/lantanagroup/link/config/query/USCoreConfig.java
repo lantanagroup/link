@@ -18,5 +18,5 @@ import java.util.List;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class USCoreConfig {
   private List<String> queries;
-  private List<String> extraResources;
+  private List<String> additionalResources;
 }

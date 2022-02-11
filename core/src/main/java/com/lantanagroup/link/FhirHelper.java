@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class FhirHelper {
@@ -390,5 +391,66 @@ public class FhirHelper {
     return newBundle;
   }
 
+  /**
+   * Traverse each population in the measure report and find the subject results of the population,
+   * which is a reference to a contained List resource. The contained List resource contains each of the
+   * individual patient measure reports that is used to calculate the aggregate value of the population.
+   *
+   * @param masterMeasureReport The master measure report to search for lists of individual reports
+   * @return The list of unique references to individual patient MeasureReport resources that comprise the master
+   */
+  public static List<String> getPatientMeasureReportReferences(MeasureReport masterMeasureReport) {
+    List<String> references = new ArrayList<>();
+
+    // Loop through the groups and populations within each group
+    // Look for a reference to a contained List resource representing the measure reports
+    // that comprise the group/population's aggregate
+    for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
+      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+        String populateListRef = population.getSubjectResults().getReference();
+        Optional<ListResource> populationList = masterMeasureReport
+                .getContained().stream()
+                .filter(c -> c.getIdElement().getIdPart().equals(populateListRef))
+                .map(c -> (ListResource) c)
+                .findFirst();
+
+        // If a contained List resource was found, extract each MeasureReport reference from the list
+        if (populationList.isPresent()) {
+          for (ListResource.ListEntryComponent listEntry : populationList.get().getEntry()) {
+            String individualReportRef = listEntry.getItem().getReference();
+
+            // Should only be references to MeasureReport. Skip if not.
+            if (!individualReportRef.startsWith("MeasureReport/")) {
+              continue;
+            }
+
+            // Only add the references to the list of it is not already in the list (create a unique list of MR references)
+            if (!references.contains(listEntry.getItem().getReference())) {
+              references.add(listEntry.getItem().getReference());
+            }
+          }
+        }
+      }
+    }
+
+    return references;
+  }
+
+  public static List<MeasureReport> getPatientReports(List<String> patientMeasureReportReferences, FhirDataProvider fhirDataProvider) {
+    Bundle patientReportsReqBundle = new Bundle();
+    patientReportsReqBundle.setType(Bundle.BundleType.TRANSACTION);
+
+    for (String patientMeasureReportReference : patientMeasureReportReferences) {
+      patientReportsReqBundle.addEntry().getRequest()
+              .setMethod(Bundle.HTTPVerb.GET)
+              .setUrl(patientMeasureReportReference);
+    }
+
+    // Get each of the individual patient measure reports
+    return fhirDataProvider.transaction(patientReportsReqBundle)
+            .getEntry().stream()
+            .map(e -> (MeasureReport) e.getResource())
+            .collect(Collectors.toList());
+  }
 }
 

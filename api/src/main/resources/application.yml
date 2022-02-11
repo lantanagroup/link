@@ -44,3 +44,6 @@ query:
       - Procedure?patient=Patient/{{patientId}}
       - ServiceRequest?patient=Patient/{{patientId}}
       - Coverage?patient=Patient/{{patientId}}
+    additional-resources:
+      - Location/{{locationId}}
+      - Medication/{{medicationId}}
