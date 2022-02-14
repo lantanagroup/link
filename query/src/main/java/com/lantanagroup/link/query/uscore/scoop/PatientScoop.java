@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Component
 public class PatientScoop extends Scoop {
   protected IGenericClient fhirQueryServer;
-  protected Map<String, Patient> patientMap = new HashMap<>();
+
 
   @Autowired
   private ApplicationContext context;
@@ -56,6 +56,7 @@ public class PatientScoop extends Scoop {
 
   public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
+    Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
       try {
         if (poi.getReference() != null) {
@@ -69,7 +70,7 @@ public class PatientScoop extends Scoop {
                   .resource(Patient.class)
                   .withId(id)
                   .execute();
-          this.patientMap.put(poi.getReference(), patient);
+         patientMap.put(poi.getReference(), patient);
         } else if (poi.getIdentifier() != null) {
           String searchUrl = "Patient?identifier=" + poi.getIdentifier();
           Bundle response = this.fhirQueryServer.search()
@@ -80,7 +81,7 @@ public class PatientScoop extends Scoop {
             logger.info("Did not find one Patient with identifier " + poi);
           } else {
             Patient patient = (Patient) response.getEntryFirstRep().getResource();
-            this.patientMap.put(poi.getIdentifier(), patient);
+            patientMap.put(poi.getIdentifier(), patient);
           }
         }
       } catch (AuthenticationException ae) {
@@ -95,7 +96,7 @@ public class PatientScoop extends Scoop {
     });
 
     try {
-      List<Patient> patients = new ArrayList<>(this.getPatientMap().values());
+      List<Patient> patients = new ArrayList<>(patientMap.values());
 
       // loop through the patient ids to retrieve the patientData using each patient.
       List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
