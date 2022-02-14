@@ -271,9 +271,13 @@ public class ReportGenerator {
     }
 
     // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-    this.context
+    Bundle responseBundle = this.context
             .getFhirProvider()
             .transaction(updateBundle);
+
+    if(responseBundle != null && responseBundle.getEntry().get(0).getResponse().getLocation() != null) {
+      documentReference.getContent().get(0).getAttachment().setUrl(responseBundle.getEntry().get(0).getResponse().getLocation());
+    }
 
     return masterMeasureReport;
   }
