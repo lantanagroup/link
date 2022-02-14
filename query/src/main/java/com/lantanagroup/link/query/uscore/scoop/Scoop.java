@@ -39,7 +39,7 @@ public abstract class Scoop {
 			logger.info(query + " Found " + retBundle.getEntry().size() + " resources");
 			return retBundle;
 		} catch (Exception ex) {
-			logger.error("Could not retrieve data from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + ": " + ex.getMessage(), ex);
+			logger.error("Could not retrieve \"" + query + "\" from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + ": " + ex.getMessage(), ex);
 		}
 
 		return null;
