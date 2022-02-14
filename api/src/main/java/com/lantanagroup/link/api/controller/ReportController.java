@@ -427,7 +427,7 @@ public class ReportController extends BaseController {
           @PathVariable("id") String id) {
 
     List<PatientReportModel> reports = new ArrayList();
-
+    logger.debug("In get report patients");
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
     Bundle patientRequest = new Bundle();
@@ -441,6 +441,7 @@ public class ReportController extends BaseController {
       int index = patientRequest.getEntry().size() - 1;
       patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
       patientRequest.getEntry().get(index).getRequest().setUrl(patientMeasureReport.getSubject().getReference());
+      logger.debug("Patient: " + patientMeasureReport.getSubject().getReference());
 
       // TO-DO later
 //      for (Extension extension : measureReport.getExtension()) {
@@ -459,6 +460,7 @@ public class ReportController extends BaseController {
 //      }
     }
     if (patientRequest.hasEntry()) {
+      logger.debug("Patient has entry.");
       Bundle patientBundle = this.getFhirDataProvider().transaction(patientRequest);
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
         PatientReportModel report = new PatientReportModel();
@@ -467,7 +469,7 @@ public class ReportController extends BaseController {
           if (entry.getResource().getResourceType().toString() == "Patient") {
 
             Patient patient = (Patient) entry.getResource();
-
+            logger.debug("Patient set fields.");
             report = FhirHelper.setPatientFields(patient, false);
           } else if (entry.getResource().getResourceType().toString() == "Bundle") {
             //This assumes that the entry right after the DELETE event is the most recent version of the Patient
