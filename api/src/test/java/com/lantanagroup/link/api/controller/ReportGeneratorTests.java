@@ -8,6 +8,7 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.io.FileUtils;
+import org.apache.coyote.Response;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,6 +49,9 @@ public class ReportGeneratorTests {
     ReportContext context = new ReportContext(fhirDataProvider);
     context.setReportId("asfsfsfsfds");
     context.setMeasureId("COVIDMin");
+    Bundle responseBundle = new Bundle();
+    responseBundle.addEntry().setResponse(new Bundle.BundleEntryResponseComponent().setLocation("www.location.com"));
+    when(context.getFhirProvider().transaction(any(Bundle.class))).thenReturn(responseBundle);
     Bundle bundle = new Bundle();
     Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
     entry.setResource(getMeasure());
@@ -74,6 +78,9 @@ public class ReportGeneratorTests {
     ReportContext context = new ReportContext(fhirDataProvider);
     context.setReportId("asfsfsfsfds");
     context.setMeasureId("COVIDMin");
+    Bundle responseBundle = new Bundle();
+    responseBundle.addEntry().setResponse(new Bundle.BundleEntryResponseComponent().setLocation("www.location.com"));
+    when(context.getFhirProvider().transaction(any(Bundle.class))).thenReturn(responseBundle);
     Bundle bundle = new Bundle();
     Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
     entry.setResource(getMeasure());

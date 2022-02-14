@@ -274,9 +274,8 @@ public class ReportGenerator {
     Bundle responseBundle = this.context
             .getFhirProvider()
             .transaction(updateBundle);
-    //edit docref to have location here?
 
-    if(responseBundle.getEntry().get(0).getResponse().getLocation() != null){
+    if(responseBundle != null && responseBundle.getEntry().get(0).getResponse().getLocation() != null) {
       documentReference.getContent().get(0).getAttachment().setUrl(responseBundle.getEntry().get(0).getResponse().getLocation());
     }
 
