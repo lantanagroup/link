@@ -103,9 +103,14 @@ public class ReportController extends BaseController {
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
+    String reportDefIdentifierSystem = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
+            criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) : "";
+    String reportDefIdentifierValue = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
+            criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
+            criteria.getReportDefIdentifier();
 
     // Find the report definition bundle for the given ID
-    Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")), criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1));
+    Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
 
     if (reportDefBundle == null) {
       throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
@@ -317,10 +322,10 @@ public class ReportController extends BaseController {
 
       // Generate the master report id
       String id = "";
-      if (!regenerate) {
+      if (!regenerate || existingDocumentReference == null) {
         id = RandomStringUtils.randomAlphanumeric(8);
       } else {
-        id = null != existingDocumentReference ? existingDocumentReference.getMasterIdentifier().getValue() : "";
+        id = existingDocumentReference.getMasterIdentifier().getValue();
       }
 
       context.setReportId(id);
@@ -437,15 +442,11 @@ public class ReportController extends BaseController {
     // Retrieve the individual patient measure reports from the server
     List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.getFhirDataProvider());
     for (MeasureReport patientMeasureReport : patientReports) {
+      patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+      int index = patientRequest.getEntry().size() - 1;
+      patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+      patientRequest.getEntry().get(index).getRequest().setUrl(patientMeasureReport.getSubject().getReference());
 
-      for (Reference reference : patientMeasureReport.getEvaluatedResource()) {
-        if (reference.getReference().startsWith("Patient/")) {
-          patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-          int index = patientRequest.getEntry().size() - 1;
-          patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
-          patientRequest.getEntry().get(index).getRequest().setUrl(reference.getReference());
-        }
-      }
       // TO-DO later
 //      for (Extension extension : measureReport.getExtension()) {
 //        if (extension.getUrl().contains("StructureDefinition/nhsnlink-excluded-patient")) {
@@ -534,14 +535,9 @@ public class ReportController extends BaseController {
 
     //Checks to make sure the DocumentReference exists
     this.getFhirDataProvider().findDocRefForReport(reportId);
-    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
+    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId + "-" + patientId.hashCode());
     List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
 
-    if (evaluatedResources.stream().filter(er -> er.getReference().contains(patientId)).findAny().isEmpty()) {
-      if (measureReport.getExtension().get(0).getExtension().stream().filter(ext -> ((Reference) ext.getValue()).getReference().contains(patientId)).findAny().isEmpty()) {
-        throw new HttpResponseException(404, String.format("Report does not contain a patient with id %s", patientId));
-      }
-    }
 
     // Conditions
     Bundle conditionBundle = this.getFhirDataProvider().getResources(Condition.SUBJECT.hasId(patientId), "Condition");
