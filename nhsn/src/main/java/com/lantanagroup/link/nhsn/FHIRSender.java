@@ -120,8 +120,10 @@ public class FHIRSender implements IReportSender {
 
           String reportID = masterMeasureReport.getId().split("/")[5];
           DocumentReference documentReference = fhirProvider.findDocRefForReport(reportID);
-          documentReference.getContent().get(0).getAttachment().setUrl(location);
-          fhirProvider.updateResource(documentReference);
+          if(documentReference != null) {
+            documentReference.getContent().get(0).getAttachment().setUrl(location);
+            fhirProvider.updateResource(documentReference);
+          }
         }
 
         FhirHelper.recordAuditEvent(request, fhirProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));

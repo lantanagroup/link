@@ -381,9 +381,12 @@ public class ReportController extends BaseController {
 
     logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
 
+    //Retrieve document reference after report has been submitted
     documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
-    // save the DocumentReference with the Final status
-    this.getFhirDataProvider().updateResource(documentReference);
+    if(documentReference.getContent().get(0).getAttachment().getUrl() != null) {
+      logger.info("Response location url " + documentReference.getContent().get(0).getAttachment().getUrl()
+              + " has be added to DocumentReference of report " + reportId);
+    }
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
   }
