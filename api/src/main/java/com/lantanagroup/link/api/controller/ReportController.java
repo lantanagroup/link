@@ -371,6 +371,9 @@ public class ReportController extends BaseController {
     MeasureReport report = this.getFhirDataProvider().getMeasureReportById(reportId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+
+    // save the DocumentReference before sending report
+    this.getFhirDataProvider().updateResource(documentReference);
     sender.send(report, request, authentication, this.getFhirDataProvider(),
             this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true);
 
@@ -378,6 +381,7 @@ public class ReportController extends BaseController {
 
     logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
 
+    documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     // save the DocumentReference with the Final status
     this.getFhirDataProvider().updateResource(documentReference);
 

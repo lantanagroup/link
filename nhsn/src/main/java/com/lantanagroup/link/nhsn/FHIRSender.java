@@ -17,6 +17,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,16 @@ public class FHIRSender implements IReportSender {
           String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
           logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), sendUrl, responseContent));
           throw new HttpResponseException(500, "Internal Server Error");
+        }
+
+        if(response.getHeaders("Location") != null) {
+          String location = response.getHeaders("Location")[0].getElements()[0].getName();
+          logger.debug("Response location is " + location);
+
+          String reportID = masterMeasureReport.getId().split("/")[5];
+          DocumentReference documentReference = fhirProvider.findDocRefForReport(reportID);
+          documentReference.getContent().get(0).getAttachment().setUrl(location);
+          fhirProvider.updateResource(documentReference);
         }
 
         FhirHelper.recordAuditEvent(request, fhirProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
