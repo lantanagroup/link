@@ -49,9 +49,6 @@ public class ReportGeneratorTests {
     ReportContext context = new ReportContext(fhirDataProvider);
     context.setReportId("asfsfsfsfds");
     context.setMeasureId("COVIDMin");
-    Bundle responseBundle = new Bundle();
-    responseBundle.addEntry().setResponse(new Bundle.BundleEntryResponseComponent().setLocation("www.location.com"));
-    when(context.getFhirProvider().transaction(any(Bundle.class))).thenReturn(responseBundle);
     Bundle bundle = new Bundle();
     Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
     entry.setResource(getMeasure());
@@ -78,9 +75,6 @@ public class ReportGeneratorTests {
     ReportContext context = new ReportContext(fhirDataProvider);
     context.setReportId("asfsfsfsfds");
     context.setMeasureId("COVIDMin");
-    Bundle responseBundle = new Bundle();
-    responseBundle.addEntry().setResponse(new Bundle.BundleEntryResponseComponent().setLocation("www.location.com"));
-    when(context.getFhirProvider().transaction(any(Bundle.class))).thenReturn(responseBundle);
     Bundle bundle = new Bundle();
     Bundle.BundleEntryComponent entry = new Bundle.BundleEntryComponent();
     entry.setResource(getMeasure());
