@@ -116,9 +116,12 @@ public class FHIRSender implements IReportSender {
 
         if(response.getHeaders("Location") != null) {
           String location = response.getHeaders("Location")[0].getElements()[0].getName();
+          if(location.indexOf("/_history/") > 0) {
+            location = location.substring(0, location.indexOf("/_history/"));
+          }
           logger.debug("Response location is " + location);
 
-          String reportID = masterMeasureReport.getId().split("/")[5];
+          String reportID = masterMeasureReport.getIdElement().getIdPart();
           DocumentReference documentReference = fhirProvider.findDocRefForReport(reportID);
           if(documentReference != null) {
             documentReference.getContent().get(0).getAttachment().setUrl(location);
