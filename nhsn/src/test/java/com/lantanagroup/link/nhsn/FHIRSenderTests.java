@@ -17,8 +17,7 @@ import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -28,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,6 +46,16 @@ public class FHIRSenderTests {
     TransactionMock transactionMock = new TransactionMock(null, new Bundle());
     when(mockFhirStoreClient.transaction()).thenReturn(transaction);
     MockHelper.mockTransaction(transaction, transactionMock);
+    DocumentReference documentReference = new DocumentReference();
+    when(mockFhirDataProvider.findDocRefForReport(anyString())).thenReturn(documentReference);
+
+    Attachment attachment = new Attachment();
+    DocumentReference.DocumentReferenceContentComponent documentReferenceContentComponent
+            = new DocumentReference.DocumentReferenceContentComponent();
+    documentReferenceContentComponent.setAttachment(attachment);
+    List<DocumentReference.DocumentReferenceContentComponent> referenceContentComponents = new ArrayList<>();
+    referenceContentComponents.add(documentReferenceContentComponent);
+    documentReference.setContent(referenceContentComponents);
 
     // Mock the HttpClient that actually sends the HTTP POST request
     when(mockFhirDataProvider.getClient()).thenReturn(mockFhirStoreClient);
@@ -67,6 +77,7 @@ public class FHIRSenderTests {
 
     // Make sure an HttpClient request was executed
     verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
+    Assert.assertEquals(documentReference.getContent().get(0).getAttachment().getUrl(), "www.testLocation.com");
   }
 
   private Bundle getBundle() throws IOException {
@@ -143,6 +154,13 @@ public class FHIRSenderTests {
     when(mockHttpClient.execute(any())).thenReturn(httpResponse);
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
+    Header locationHeader = mock(Header.class);
+    Header [] headers = new Header[] {locationHeader};
+    HeaderElement headerElement = mock(HeaderElement.class);
+    HeaderElement [] headerElements = new HeaderElement[] {headerElement};
+    when(httpResponse.getHeaders("Location")).thenReturn(headers);
+    when(headers[0].getElements()).thenReturn(headerElements);
+    when(headerElement.getName()).thenReturn("www.testLocation.com/_history/");
 
     this.runTest(mockSender, mockFhirStoreClient, mockHttpClient, measureReport, httpUriRequestArgumentMatcher);
   }
@@ -154,6 +172,13 @@ public class FHIRSenderTests {
     StatusLine httpResponseStatus = mock(StatusLine.class);
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
+    Header locationHeader = mock(Header.class);
+    Header [] headers = new Header[] {locationHeader};
+    HeaderElement headerElement = mock(HeaderElement.class);
+    HeaderElement [] headerElements = new HeaderElement[] {headerElement};
+    when(httpResponse.getHeaders("Location")).thenReturn(headers);
+    when(headers[0].getElements()).thenReturn(headerElements);
+    when(headerElement.getName()).thenReturn("www.testLocation.com/_history/");
 
     HttpClient mockHttpClient = mock(HttpClient.class);
 
@@ -182,6 +207,7 @@ public class FHIRSenderTests {
     config.getOAuthConfig().setScope("scope1 scope2 scope3");
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
+    FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
     FHIRSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test

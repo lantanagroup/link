@@ -17,6 +17,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,6 +112,24 @@ public class FHIRSender implements IReportSender {
           String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
           logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), sendUrl, responseContent));
           throw new HttpResponseException(500, "Internal Server Error");
+        }
+
+        if(response.getHeaders("Location") != null) {
+          String location = response.getHeaders("Location")[0].getElements()[0].getName();
+          if(location.indexOf("/_history/") > 0) {
+            location = location.substring(0, location.indexOf("/_history/"));
+          }
+          logger.debug("Response location is " + location);
+
+          String reportID = masterMeasureReport.getIdElement().getIdPart();
+          DocumentReference documentReference = fhirProvider.findDocRefForReport(reportID);
+          if(documentReference != null) {
+            documentReference.getContent().get(0).getAttachment().setUrl(location);
+            fhirProvider.updateResource(documentReference);
+          }
+          else {
+            logger.error("No Location header provided in response to submission");
+          }
         }
 
         FhirHelper.recordAuditEvent(request, fhirProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
