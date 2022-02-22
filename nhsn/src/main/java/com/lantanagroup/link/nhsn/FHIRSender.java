@@ -127,6 +127,9 @@ public class FHIRSender implements IReportSender {
             documentReference.getContent().get(0).getAttachment().setUrl(location);
             fhirProvider.updateResource(documentReference);
           }
+          else {
+            logger.error("No Location header provided in response to submission");
+          }
         }
 
         FhirHelper.recordAuditEvent(request, fhirProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, String.format("Successfully sent report to %s", sendUrl));
