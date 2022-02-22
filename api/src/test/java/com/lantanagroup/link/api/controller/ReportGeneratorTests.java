@@ -8,7 +8,6 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.io.FileUtils;
-import org.apache.coyote.Response;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;

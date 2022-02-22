@@ -55,8 +55,8 @@ public class MeasureEvaluator {
 
       if (this.config.getMeasureLocation() != null) {
         logger.debug("Creating MeasureReport.subject based on config");
-        Reference subjectRef = new Reference();
-
+        Reference subjectRef = measureReport.getSubject() != null && measureReport.getSubject().getReference() != null
+                ? measureReport.getSubject() : new Reference();
         if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
           subjectRef.setIdentifier(new Identifier()
                   .setSystem(this.config.getMeasureLocation().getSystem())
@@ -80,7 +80,6 @@ public class MeasureEvaluator {
 
           subjectRef.addExtension(positionExt);
         }
-
         measureReport.setSubject(subjectRef);
       }
 

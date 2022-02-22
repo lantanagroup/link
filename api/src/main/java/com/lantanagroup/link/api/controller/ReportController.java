@@ -432,7 +432,6 @@ public class ReportController extends BaseController {
           @PathVariable("id") String id) {
 
     List<PatientReportModel> reports = new ArrayList();
-
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
     Bundle patientRequest = new Bundle();
@@ -472,7 +471,6 @@ public class ReportController extends BaseController {
           if (entry.getResource().getResourceType().toString() == "Patient") {
 
             Patient patient = (Patient) entry.getResource();
-
             report = FhirHelper.setPatientFields(patient, false);
           } else if (entry.getResource().getResourceType().toString() == "Bundle") {
             //This assumes that the entry right after the DELETE event is the most recent version of the Patient

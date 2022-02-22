@@ -1,7 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.CacheControlDirective;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IPatientIdProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -26,17 +26,13 @@ public class StoredListProvider implements IPatientIdProvider {
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     FhirContext ctx = context.getFhirProvider().getClient().getFhirContext();
 
-    Bundle bundle = context.getFhirProvider().getClient()
-            .search()
-            .forResource(ListResource.class)
-            .and(ListResource.DATE.exactly().day(criteria.getPeriodStart()))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
+    Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(Constants.MainSystem, context.getMeasureId(), criteria.getPeriodStart());
 
     if (bundle.getEntry().size() == 0) {
-      logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart());
+      logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
       return patientsOfInterest;
+    } else {
+      logger.info("Found patient identifier lists  matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
     }
 
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx);

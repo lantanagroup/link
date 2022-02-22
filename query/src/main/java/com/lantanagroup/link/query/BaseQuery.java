@@ -2,6 +2,7 @@ package com.lantanagroup.link.query;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import lombok.Getter;
@@ -39,6 +40,13 @@ public class BaseQuery {
 
     this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
     IGenericClient fhirQueryClient = this.getFhirContext().newRestfulGenericClient(this.queryConfig.getFhirServerBase());
+
+    /*
+    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
+    loggingInterceptor.setLogRequestSummary(true);
+    loggingInterceptor.setLogRequestBody(true);
+    fhirQueryClient.registerInterceptor(loggingInterceptor);
+     */
 
     if (Strings.isNotEmpty(this.queryConfig.getAuthClass())) {
       fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
