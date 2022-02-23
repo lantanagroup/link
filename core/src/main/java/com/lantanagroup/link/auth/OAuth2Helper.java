@@ -54,9 +54,6 @@ public class OAuth2Helper {
   public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
-    String userPassCombo = username + ":" + password;
-    String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
-
     request.addHeader("Accept", "application/json");
     request.addHeader("Content-Type", "application/x-www-form-urlencoded");
 

@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICreate;
 import ca.uhn.fhir.rest.gclient.ITransaction;
@@ -17,6 +18,11 @@ import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.IdType;
+import org.hl7.fhir.r4.model.MeasureReport;
+
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -46,16 +52,6 @@ public class FHIRSenderTests {
     TransactionMock transactionMock = new TransactionMock(null, new Bundle());
     when(mockFhirStoreClient.transaction()).thenReturn(transaction);
     MockHelper.mockTransaction(transaction, transactionMock);
-    DocumentReference documentReference = new DocumentReference();
-    when(mockFhirDataProvider.findDocRefForReport(anyString())).thenReturn(documentReference);
-
-    Attachment attachment = new Attachment();
-    DocumentReference.DocumentReferenceContentComponent documentReferenceContentComponent
-            = new DocumentReference.DocumentReferenceContentComponent();
-    documentReferenceContentComponent.setAttachment(attachment);
-    List<DocumentReference.DocumentReferenceContentComponent> referenceContentComponents = new ArrayList<>();
-    referenceContentComponents.add(documentReferenceContentComponent);
-    documentReference.setContent(referenceContentComponents);
 
     // Mock the HttpClient that actually sends the HTTP POST request
     when(mockFhirDataProvider.getClient()).thenReturn(mockFhirStoreClient);
@@ -64,20 +60,20 @@ public class FHIRSenderTests {
     FhirContext ctx = FhirContext.forR4();
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
-
-
+    when(mockSender.generateBundle(any(MeasureReport.class), any(FhirDataProvider.class), anyBoolean())).thenReturn(new Bundle());
+    when(mockSender.sendContent(anyString(), anyString())).thenReturn("www.testLocation.com");
     // Mock the FHIR server's operation for POST AuditEvent
     ICreate create = mock(ICreate.class);
-    when(mockFhirStoreClient.create()).thenReturn(create);
+    MethodOutcome createMethod = new MethodOutcome();
+    createMethod.setId(new IdType("test"));
+    when(mockFhirDataProvider.createOutcome(any())).thenReturn(createMethod);
     MockHelper.mockAuditEvents(create);
 
     Bundle bundle = getBundle();
     when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(bundle);
     mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
 
-    // Make sure an HttpClient request was executed
-    verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
-    Assert.assertEquals(documentReference.getContent().get(0).getAttachment().getUrl(), "www.testLocation.com");
+    verify(mockSender, times(1)).updateDocumentLocation(any(), any(), any());
   }
 
   private Bundle getBundle() throws IOException {
@@ -154,13 +150,6 @@ public class FHIRSenderTests {
     when(mockHttpClient.execute(any())).thenReturn(httpResponse);
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
-    Header locationHeader = mock(Header.class);
-    Header [] headers = new Header[] {locationHeader};
-    HeaderElement headerElement = mock(HeaderElement.class);
-    HeaderElement [] headerElements = new HeaderElement[] {headerElement};
-    when(httpResponse.getHeaders("Location")).thenReturn(headers);
-    when(headers[0].getElements()).thenReturn(headerElements);
-    when(headerElement.getName()).thenReturn("www.testLocation.com/_history/");
 
     this.runTest(mockSender, mockFhirStoreClient, mockHttpClient, measureReport, httpUriRequestArgumentMatcher);
   }

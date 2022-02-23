@@ -281,6 +281,10 @@ public class FhirDataProvider {
     return client.getFhirContext().newXmlParser().encodeResourceToString(bundle);
   }
 
+  public String bundleToJson(Bundle bundle) {
+    return client.getFhirContext().newJsonParser().encodeResourceToString(bundle);
+  }
+
   public Bundle searchReportDefinition(String system, String value) {
     return client.search()
             .forResource(Bundle.class)

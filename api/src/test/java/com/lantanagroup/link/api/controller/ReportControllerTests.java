@@ -126,7 +126,7 @@ public class ReportControllerTests {
     measureReport.addEvaluatedResource().setReference("Condition/condition1");
     measureReport.addEvaluatedResource().setReference("Condition/condition2");
     measureReport.addEvaluatedResource().setReference("Patient/patient1");
-    when(fhirDataProvider.getMeasureReportById("report1")).thenReturn(measureReport);
+    when(fhirDataProvider.getMeasureReportById(any())).thenReturn(measureReport);
     Bundle bundle = new Bundle();
     bundle.addEntry().setResource(condition1);
     bundle.addEntry().setResource(condition2);
