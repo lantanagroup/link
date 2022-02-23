@@ -6,6 +6,7 @@ import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,11 @@ public class FHIRSender extends GenericSender implements IReportSender {
 
     String xml = fhirDataProvider.bundleToXml(bundle);
 
-    sendContent(xml, "application/xml");
+    String location = sendContent(xml, "application/xml");
 
+    if(!"".equals(location)) {
+      updateDocumentLocation(masterMeasureReport, fhirDataProvider, location);
+    }
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 }

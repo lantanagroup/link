@@ -27,7 +27,11 @@ public class CSVSender extends GenericSender implements IReportSender {
 
     String csv = "";
 
-    this.sendContent(csv, "text/csv");
+    String location = this.sendContent(csv, "text/csv");
+
+    if(!"".equals(location)) {
+      updateDocumentLocation(masterMeasureReport, fhirDataProvider, location);
+    }
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }

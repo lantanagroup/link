@@ -18,9 +18,12 @@ import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MeasureReport;
+
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -30,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,7 +61,7 @@ public class FHIRSenderTests {
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
     when(mockSender.generateBundle(any(MeasureReport.class), any(FhirDataProvider.class), anyBoolean())).thenReturn(new Bundle());
-
+    when(mockSender.sendContent(anyString(), anyString())).thenReturn("www.testLocation.com");
     // Mock the FHIR server's operation for POST AuditEvent
     ICreate create = mock(ICreate.class);
     MethodOutcome createMethod = new MethodOutcome();
@@ -69,6 +73,7 @@ public class FHIRSenderTests {
     when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(bundle);
     mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
 
+    verify(mockSender, times(1)).updateDocumentLocation(any(), any(), any());
   }
 
   private Bundle getBundle() throws IOException {
@@ -156,6 +161,13 @@ public class FHIRSenderTests {
     StatusLine httpResponseStatus = mock(StatusLine.class);
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
+    Header locationHeader = mock(Header.class);
+    Header [] headers = new Header[] {locationHeader};
+    HeaderElement headerElement = mock(HeaderElement.class);
+    HeaderElement [] headerElements = new HeaderElement[] {headerElement};
+    when(httpResponse.getHeaders("Location")).thenReturn(headers);
+    when(headers[0].getElements()).thenReturn(headerElements);
+    when(headerElement.getName()).thenReturn("www.testLocation.com/_history/");
 
     HttpClient mockHttpClient = mock(HttpClient.class);
 
@@ -184,6 +196,7 @@ public class FHIRSenderTests {
     config.getOAuthConfig().setScope("scope1 scope2 scope3");
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
+    FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
     FHIRSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test

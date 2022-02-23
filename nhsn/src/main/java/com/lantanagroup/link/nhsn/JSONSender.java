@@ -26,7 +26,11 @@ public class JSONSender extends GenericSender implements IReportSender {
 
     String json = fhirDataProvider.bundleToJson(bundle);
 
-    this.sendContent(json, "application/json");
+    String location = this.sendContent(json, "application/json");
+
+    if(!"".equals(location)) {
+      updateDocumentLocation(masterMeasureReport, fhirDataProvider, location);
+    }
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
