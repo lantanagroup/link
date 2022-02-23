@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICreate;
 import ca.uhn.fhir.rest.gclient.ITransaction;
@@ -18,6 +19,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,19 +56,19 @@ public class FHIRSenderTests {
     FhirContext ctx = FhirContext.forR4();
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
-
+    when(mockSender.generateBundle(any(MeasureReport.class), any(FhirDataProvider.class), anyBoolean())).thenReturn(new Bundle());
 
     // Mock the FHIR server's operation for POST AuditEvent
     ICreate create = mock(ICreate.class);
-    when(mockFhirStoreClient.create()).thenReturn(create);
+    MethodOutcome createMethod = new MethodOutcome();
+    createMethod.setId(new IdType("test"));
+    when(mockFhirDataProvider.createOutcome(any())).thenReturn(createMethod);
     MockHelper.mockAuditEvents(create);
 
     Bundle bundle = getBundle();
     when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(bundle);
     mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
 
-    // Make sure an HttpClient request was executed
-    verify(mockHttpClient, times(1)).execute(argThat(httpArgMatcher));
   }
 
   private Bundle getBundle() throws IOException {

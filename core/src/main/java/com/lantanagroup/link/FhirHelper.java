@@ -27,11 +27,11 @@ public class FhirHelper {
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirClient, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
 
     try {
-      MethodOutcome outcome = fhirClient.createOutcome(auditEvent);
+      MethodOutcome outcome = fhirDataProvider.createOutcome(auditEvent);
       IIdType id = outcome.getId();
       logger.info("AuditEvent LOGGED: " + id.getValue());
     } catch (Exception ex) {

@@ -27,7 +27,7 @@ public class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  protected Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle) {
+  public Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle) {
     logger.info("Building Bundle for MeasureReport to send...");
 
     FhirBundler bundler = new FhirBundler(fhirProvider);
