@@ -1,7 +1,10 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.csv.CSVEntry;
+import com.lantanagroup.link.model.CsvEntry;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +59,18 @@ public class ReportDataController extends BaseController{
       return String.format("Update is successful for %s/%s", resource.getResourceType().toString(), resource.getIdElement().getIdPart());
     } else {
       throw new HttpResponseException(500, "Resource with resourceID " + resourceId + " does not exist");
+    }
+  }
+
+  @PostMapping(value = "/api/data/csv?type=XXX")
+  public void csvEndPoint(String type) {
+    switch (type) {
+      case "bed":
+        // TODO
+        break;
+      case "ventilator":
+        // TODO
+        break;
     }
   }
 
