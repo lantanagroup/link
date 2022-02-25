@@ -86,7 +86,7 @@ public class FhirHelper {
     }
 
     if(request.getHeader("X-REAL-IP") != null) {
-      logger.debug("X-REAL-IP IP is: " + request.getHeader("X-FORWARED-FOR"));
+      logger.debug("X-REAL-IP IP is: " + request.getHeader("X-REAL-IP"));
     }
 
     String remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
