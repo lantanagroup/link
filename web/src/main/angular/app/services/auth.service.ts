@@ -9,12 +9,12 @@ import {IOAuthConfig} from '../model/oauth-config';
 
 @Injectable()
 export class AuthService {
-  private readonly OAUTH_URIS_EXT_URL = 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
-  private initialized = false;
   public token: string;
   public user: IProfile;
   public fhirBase: string;
   public lastUrl: string;
+  private readonly OAUTH_URIS_EXT_URL = 'http://fhir-registry.smarthealthit.org/StructureDefinition/oauth-uris';
+  private initialized = false;
 
   constructor(
       public oauthService: OAuthService,
@@ -37,7 +37,7 @@ export class AuthService {
       scope: config.scope,
       showDebugInformation: false,
       requestAccessToken: true,
-      requireHttps: false
+      requireHttps: false,
     });
 
     await this.oauthService.loadDiscoveryDocument();
@@ -48,11 +48,11 @@ export class AuthService {
     await this.initLocal(this.configService.config.oauth);
 
     // Has the user already authenticated via Smart-on-FHIR?
-    if (!this.user) {
+    if (!this.oauthService.hasValidAccessToken()) {
       const loggedIn: boolean = await this.oauthService.tryLogin();
 
       try {
-        if (loggedIn) {
+        if (loggedIn && this.oauthService.hasValidAccessToken()) {
           this.user = await this.oauthService.loadUserProfile() as any;
         }
       } catch (ex) {
@@ -60,8 +60,8 @@ export class AuthService {
       }
 
       // Force the user to login locally if they have not already logged-in via smart-on-fhir
-      if (!this.user) {
-        this.oauthService.initImplicitFlow(encodeURIComponent(this.router.url));
+      if (!this.oauthService.hasValidAccessToken()) {
+        this.oauthService.initImplicitFlow(this.oauthService.state);
       } else {
         this.token = this.oauthService.getIdToken();
 
@@ -80,7 +80,7 @@ export class AuthService {
     }
   }
 
-  getAuthToken(){
+  getAuthToken() {
     this.token = this.oauthService.getIdToken();
     return this.token;
   }
