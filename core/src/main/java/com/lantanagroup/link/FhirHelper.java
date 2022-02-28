@@ -81,15 +81,20 @@ public class FhirHelper {
       agent.setAltId(jsonObject.get(SUBJECT).toString());
     }
 
+    String remoteAddress;
     if(request.getHeader("X-FORWARED-FOR") != null) {
       logger.debug("X-FORWARED-FOR IP is: " + request.getHeader("X-FORWARED-FOR"));
     }
 
     if(request.getHeader("X-REAL-IP") != null) {
-      logger.debug("X-REAL-IP IP is: " + request.getHeader("X-REAL-IP"));
+      logger.debug("X-REAL-IP is: " + request.getHeader("X-REAL-IP") + " and is being used for remoteAddress");
+      remoteAddress = request.getHeader("X-REAL-IP");
+    }
+    else {
+      logger.debug("X-REAL-IP IP is not found.");
+      remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     }
 
-    String remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     if (remoteAddress != null) {
       agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
     }
