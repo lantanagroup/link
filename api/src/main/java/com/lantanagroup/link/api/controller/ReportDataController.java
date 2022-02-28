@@ -1,7 +1,13 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.csv.CSVEntry;
+import com.lantanagroup.link.model.CsvEntry;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +15,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -56,6 +66,24 @@ public class ReportDataController extends BaseController{
       return String.format("Update is successful for %s/%s", resource.getResourceType().toString(), resource.getIdElement().getIdPart());
     } else {
       throw new HttpResponseException(500, "Resource with resourceID " + resourceId + " does not exist");
+    }
+  }
+
+  @PostMapping(value = "/api/data/csv?type=XXX")
+  public void retrieveCSVData(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
+
+    logger.debug("Receiving CSV. Parsing...");
+    InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
+    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+    CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
+    List<String[]> csvData = csvReader.readAll();
+    switch (type) {
+      case "bed":
+        // TODO
+        break;
+      case "ventilator":
+        // TODO
+        break;
     }
   }
 
