@@ -70,7 +70,7 @@ public class ReportDataController extends BaseController{
   }
 
   @PostMapping(value = "/api/data/csv?type=XXX")
-  public void csvEndPoint(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
+  public void retrieveCSVData(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
 
     logger.debug("Receiving CSV. Parsing...");
     InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));

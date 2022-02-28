@@ -9,7 +9,7 @@ public class ReportDataControllerTest {
   @Test
   public void csvEndPoint() throws Exception {
     ReportDataController reportDataController = new ReportDataController();
-    reportDataController.csvEndPoint("bed", "csv content");
-    reportDataController.csvEndPoint("ventilator", "csv content");
+    reportDataController.retrieveCSVData("bed", "csv content");
+    reportDataController.retrieveCSVData("ventilator", "csv content");
   }
 }
