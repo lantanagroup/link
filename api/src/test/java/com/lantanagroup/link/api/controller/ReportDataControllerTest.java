@@ -7,9 +7,9 @@ import static org.junit.Assert.*;
 public class ReportDataControllerTest {
 
   @Test
-  public void csvEndPoint() {
+  public void csvEndPoint() throws Exception {
     ReportDataController reportDataController = new ReportDataController();
-    reportDataController.csvEndPoint("bed");
-    reportDataController.csvEndPoint("ventilator");
+    reportDataController.csvEndPoint("bed", "csv content");
+    reportDataController.csvEndPoint("ventilator", "csv content");
   }
 }
