@@ -126,6 +126,7 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in XML");
 
     ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
+    checkPatientIdentifier(list);
     this.receiveFHIR(list);
   }
 
@@ -135,7 +136,17 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
     ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
+    checkPatientIdentifier(list);
     this.receiveFHIR(list);
+  }
+
+  private void checkPatientIdentifier(ListResource list) {
+    String system = list.getIdentifier().get(0).getSystem();
+    String value = list.getIdentifier().get(0).getValue();;
+    Bundle bundle = this.getFhirDataProvider().searchReportDefinition(system, value);
+    if(bundle.getEntry().size() < 1) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report not Found.");
+    }
   }
 
   @Operation(

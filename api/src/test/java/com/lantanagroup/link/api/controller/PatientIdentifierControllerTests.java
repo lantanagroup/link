@@ -190,6 +190,10 @@ public class PatientIdentifierControllerTests {
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
+    Bundle repDefBundle = new Bundle();
+    repDefBundle.setEntry(new ArrayList<>());
+    repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+    when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     verify(fhirDataProvider, times(1)).createResource(any());
@@ -204,6 +208,10 @@ public class PatientIdentifierControllerTests {
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     Bundle bundle = new Bundle();
     bundle.setEntry(new ArrayList<>());
+    Bundle repDefBundle = new Bundle();
+    repDefBundle.setEntry(new ArrayList<>());
+    repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+    when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
     verify(fhirDataProvider, times(1)).createResource(any());
@@ -218,6 +226,10 @@ public class PatientIdentifierControllerTests {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
     Bundle bundle = getListBundle("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00");
+    Bundle repDefBundle = new Bundle();
+    repDefBundle.setEntry(new ArrayList<>());
+    repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+    when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     // Resource mockResource = mock(Resource.class);
@@ -249,6 +261,10 @@ public class PatientIdentifierControllerTests {
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
+    Bundle repDefBundle = new Bundle();
+    repDefBundle.setEntry(new ArrayList<>());
+    repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+    when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
   }
@@ -259,6 +275,10 @@ public class PatientIdentifierControllerTests {
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
+    Bundle repDefBundle = new Bundle();
+    repDefBundle.setEntry(new ArrayList<>());
+    repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+    when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
   }
