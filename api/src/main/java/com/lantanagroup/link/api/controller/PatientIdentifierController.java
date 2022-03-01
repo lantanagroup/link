@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
@@ -126,7 +125,7 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in XML");
 
     ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
-    checkPatientIdentifier(list);
+    checkMeasureIdentifier(list);
     this.receiveFHIR(list);
   }
 
@@ -136,11 +135,11 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
     ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
-    checkPatientIdentifier(list);
+    checkMeasureIdentifier(list);
     this.receiveFHIR(list);
   }
 
-  private void checkPatientIdentifier(ListResource list) {
+  private void checkMeasureIdentifier(ListResource list) {
     String system = list.getIdentifier().get(0).getSystem();
     String value = list.getIdentifier().get(0).getValue();;
     Bundle bundle = this.getFhirDataProvider().searchReportDefinition(system, value);
