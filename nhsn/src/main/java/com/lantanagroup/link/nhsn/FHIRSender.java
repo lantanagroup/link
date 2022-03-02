@@ -23,8 +23,15 @@ public class FHIRSender extends GenericSender implements IReportSender {
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
     Bundle bundle = generateBundle(masterMeasureReport, fhirDataProvider, sendWholeBundle);
-
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
+
+    if(bundle.getEntry() != null) {
+      for (Bundle.BundleEntryComponent r : bundle.getEntry()) {
+        r.setFullUrl((r.getResource().getIdElement().getBaseUrl().contains("https:")?r.getResource().getIdElement().getBaseUrl().replace("https:", "http:"):r.getResource().getIdElement().getBaseUrl())
+                + "/" + r.getResource().getIdElement().getResourceType() + "/"
+                + r.getResource().getIdElement().getIdPart());  
+      }
+    }
 
     String xml = fhirDataProvider.bundleToXml(bundle);
 
