@@ -73,7 +73,7 @@ public class SanerCSVConverter {
                 File f = new File(arg);
                 String basename = StringUtils.substringBeforeLast(f.getName(),".");
                 outputFile = new File("target", basename + ".csv");
-                System.out.println("Output: " outputFile.getAbsolutePath());
+                System.out.println("Output: " + outputFile.getAbsolutePath());
                 MeasureReport mr = getResource(MeasureReport.class, f);
                 convertMeasureReportToCSV(mr, columns, new FileWriter(outputFile), true);
                 columns.clear();
@@ -157,7 +157,7 @@ public class SanerCSVConverter {
      * @param simplify If true, simplify codes in strata on output, if false, report a system#code
      * @throws CSVConversionException   On errors converting to CSV Format
      */
-    public static void convertMeasureReportToCSV(MeasureReport measureReport, Map<String, String> orderedHeaderMap, Writer csvOutput, boolean simplify) {
+    public static void convertMeasureReportToCSV(MeasureReport measureReport, Map<String, String> orderedHeaderMap, Writer csvOutput, boolean simplify) throws IOException {
         ReportToCsvConverter converter = new ReportToCsvConverter(csvOutput, measureReport, orderedHeaderMap);
         converter.setSimplifyCodes(simplify);
         converter.convert();
