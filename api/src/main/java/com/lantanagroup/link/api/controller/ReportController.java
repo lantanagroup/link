@@ -162,8 +162,8 @@ public class ReportController extends BaseController {
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;
     Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
-    Constructor<?> senderConstructor = senderClass.getConstructor();
-    provider = (IPatientIdProvider) senderConstructor.newInstance();
+    Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
+    provider = (IPatientIdProvider) patientIdentifierConstructor.newInstance();
     return provider.getPatientsOfInterest(criteria, context, this.config);
   }
 
@@ -265,11 +265,23 @@ public class ReportController extends BaseController {
                 }
               });
 
-      return patientDataBundle
+      List<String> patientIDs = patientDataBundle
               .getEntry().stream()
-              .filter(e -> e.getResource().getResourceType() == ResourceType.Patient)
+              .filter(e -> e .getResource().getResourceType() == ResourceType.Patient)
               .map(e -> e.getResource().getIdElement().getIdPart())
               .collect(Collectors.toList());
+
+      List<QueryResponse> queryResponses = new ArrayList<>();
+      for(Bundle.BundleEntryComponent b : patientDataBundle.getEntry()) {
+        if(b.getResource().getResourceType() == ResourceType.Patient) {
+          Resource r = b.getResource();
+          String s = b.getResource().getIdElement().getIdPart();
+          int x = 0;
+        }
+      }
+
+      return patientIDs;
+
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
       logger.error(msg);
