@@ -27,9 +27,9 @@ public class FHIRSender extends GenericSender implements IReportSender {
 
     if(bundle.getEntry() != null) {
       for (Bundle.BundleEntryComponent r : bundle.getEntry()) {
-        r.setFullUrl((r.getResource().getIdElement().getBaseUrl().contains("https:")?r.getResource().getIdElement().getBaseUrl().replace("https:", "http:"):r.getResource().getIdElement().getBaseUrl())
-                + "/" + r.getResource().getIdElement().getResourceType() + "/"
-                + r.getResource().getIdElement().getIdPart());  
+        r.setFullUrl("http://nhsnlink.org/fhir/"
+                + r.getResource().getIdElement().getResourceType() + "/"
+                + r.getResource().getIdElement().getIdPart());
       }
     }
 
