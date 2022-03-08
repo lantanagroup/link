@@ -210,7 +210,7 @@ public class ReportController extends BaseController {
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
-  private List<String> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
+  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
     try {
       Bundle patientDataBundle = null;
 
@@ -265,22 +265,26 @@ public class ReportController extends BaseController {
                 }
               });
 
-      List<String> patientIDs = patientDataBundle
-              .getEntry().stream()
-              .filter(e -> e .getResource().getResourceType() == ResourceType.Patient)
-              .map(e -> e.getResource().getIdElement().getIdPart())
-              .collect(Collectors.toList());
-
       List<QueryResponse> queryResponses = new ArrayList<>();
-      for(Bundle.BundleEntryComponent b : patientDataBundle.getEntry()) {
-        if(b.getResource().getResourceType() == ResourceType.Patient) {
-          Resource r = b.getResource();
-          String s = b.getResource().getIdElement().getIdPart();
-          int x = 0;
+      QueryResponse queryResponse = new QueryResponse();
+      for(Bundle.BundleEntryComponent e : patientDataBundle.getEntry()) {
+        if(e.getResource().getResourceType() == ResourceType.Patient) {
+          queryResponse = new QueryResponse(e.getResource().getIdElement().getIdPart(), new Bundle());
+          queryResponses.add(queryResponse);
+        }
+
+        if(queryResponse.getBundle() != null){
+          queryResponse.getBundle().addEntry(e);
         }
       }
 
-      return patientIDs;
+      /*List<String> patientIDs = patientDataBundle
+              .getEntry().stream()
+              .filter(e -> e .getResource().getResourceType() == ResourceType.Patient)
+              .map(e -> e.getResource().getIdElement().getIdPart())
+              .collect(Collectors.toList());*/
+
+      return queryResponses;
 
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
@@ -328,7 +332,7 @@ public class ReportController extends BaseController {
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
       // Scoop the data for the patients and store it
-      List<String> patientIds = this.queryAndStorePatientData(patientsOfInterest);
+      List<QueryResponse> queryResponses = this.queryAndStorePatientData(patientsOfInterest);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
@@ -344,7 +348,7 @@ public class ReportController extends BaseController {
       response.setReportId(id);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
-      generator.generateAndStore(criteria, context, patientIds, existingDocumentReference);
+      generator.generateAndStore(criteria, context, queryResponses, existingDocumentReference);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {

@@ -14,4 +14,8 @@ public class QueryResponse {
     this.patientId = patientId;
     this.bundle = bundle;
   }
+
+  public QueryResponse() {
+
+  }
 }

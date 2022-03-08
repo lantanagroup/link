@@ -6,6 +6,7 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -214,18 +215,18 @@ public class ReportGenerator {
    *
    * @param criteria                  - the report criteria
    * @param context                   -  the report context
-   * @param patientIds                - the list of patient id-s to generate reports for
+   * @param queryResponses            - the list of patient id-s and bundle-s to generate reports for
    * @param existingDocumentReference - the existing document reference
    */
-  public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<String> patientIds, DocumentReference existingDocumentReference) throws ParseException {
+  public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
     // Create a bundle to execute as a transaction to update multiple resources at once
     Bundle updateBundle = new Bundle();
     updateBundle.setType(Bundle.BundleType.TRANSACTION);
 
     // Generate a report for each patient
-    List<MeasureReport> patientMeasureReports = patientIds.stream().map(patientId -> {
-      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patientId);
-      patientMeasureReport.setId(context.getReportId() + "-" + patientId.hashCode());
+    List<MeasureReport> patientMeasureReports = queryResponses.stream().map(queryResponse -> {
+      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, queryResponse.getPatientId());
+      patientMeasureReport.setId(context.getReportId() + "-" + queryResponse.getPatientId().hashCode());
 
       updateBundle.addEntry()
               .setResource(patientMeasureReport)
