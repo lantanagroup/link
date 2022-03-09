@@ -203,7 +203,7 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
+  /*public static Bundle bundleMeasureReport(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
     tag.setCode(Constants.REPORT_BUNDLE_TAG);
@@ -235,9 +235,9 @@ public class FhirHelper {
     }
 
     return bundle;
-  }
+  }*/
 
-  private static Bundle generateBundle(List<String> resourceReferences) {
+  /*private static Bundle generateBundle(List<String> resourceReferences) {
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.TRANSACTION);
     resourceReferences.parallelStream().forEach(reference -> {
@@ -248,7 +248,7 @@ public class FhirHelper {
               .setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
     });
     return bundle;
-  }
+  }*/
 
   public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
     List<IBaseResource> bundles = new ArrayList<>();

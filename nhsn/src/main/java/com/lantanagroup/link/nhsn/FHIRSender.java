@@ -25,14 +25,6 @@ public class FHIRSender extends GenericSender implements IReportSender {
     Bundle bundle = generateBundle(masterMeasureReport, fhirDataProvider, sendWholeBundle);
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 
-    if(bundle.getEntry() != null) {
-      for (Bundle.BundleEntryComponent r : bundle.getEntry()) {
-        r.setFullUrl("http://nhsnlink.org/fhir/"
-                + r.getResource().getIdElement().getResourceType() + "/"
-                + r.getResource().getIdElement().getIdPart());
-      }
-    }
-
     String xml = fhirDataProvider.bundleToXml(bundle);
 
     String location = sendContent(xml, "application/xml");
