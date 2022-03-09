@@ -86,7 +86,7 @@ public class JpaRestfulServer extends RestfulServer {
     this.setServerConformanceProvider(confProvider);
 
     this.registerInterceptor(new UserInterceptor());
-    this.registerInterceptor(new AuthInterceptor());
+    this.registerInterceptor(new AuthInterceptor(consumerConfig));
   }
 
   @Bean
