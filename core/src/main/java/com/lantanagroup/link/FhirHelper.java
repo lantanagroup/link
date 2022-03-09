@@ -203,53 +203,6 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static Bundle bundleMeasureReport(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, Boolean sendWholeBundle) {
-    Meta meta = new Meta();
-    Coding tag = meta.addTag();
-    tag.setCode(Constants.REPORT_BUNDLE_TAG);
-    tag.setSystem(Constants.MainSystem);
-
-    Bundle bundle = new Bundle();
-    bundle.setType(Bundle.BundleType.COLLECTION);
-    bundle.setMeta(meta);
-    bundle.addEntry().setResource(masterMeasureReport);
-
-    if (sendWholeBundle) {
-      List<String> resourceReferences = new ArrayList<>();
-
-      for (Reference evaluatedResource : masterMeasureReport.getEvaluatedResource()) {
-        if (!evaluatedResource.hasReference()) continue;
-
-        if (!evaluatedResource.getReference().startsWith("#")) {
-          resourceReferences.add(evaluatedResource.getReference());
-        }
-      }
-
-      Bundle patientBundle = generateBundle(resourceReferences);
-
-      Bundle patientBundleResponse = fhirProvider.transaction(patientBundle);
-
-      patientBundleResponse.getEntry().parallelStream().forEach(entry -> {
-        bundle.addEntry().setResource((Resource) entry.getResource());
-      });
-    }
-
-    return bundle;
-  }
-
-  private static Bundle generateBundle(List<String> resourceReferences) {
-    Bundle bundle = new Bundle();
-    bundle.setType(Bundle.BundleType.TRANSACTION);
-    resourceReferences.parallelStream().forEach(reference -> {
-      String[] referenceSplit = reference.split("/");
-      bundle.addEntry()
-              .getRequest()
-              .setMethod(Bundle.HTTPVerb.GET)
-              .setUrl(referenceSplit[0] + "/" + referenceSplit[1]);
-    });
-    return bundle;
-  }
-
   public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
     List<IBaseResource> bundles = new ArrayList<>();
     bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
