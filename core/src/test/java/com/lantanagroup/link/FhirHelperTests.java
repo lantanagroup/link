@@ -76,40 +76,7 @@ public class FhirHelperTests {
 
     fhirHelperTest.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Testing String");
   }
-
- /* @Test
-  public void bundleMeasureReportTest(){
-
-    fhirDataProviderTest = mock(FhirDataProvider.class);
-    fhirHelperTest = new FhirHelper();
-
-    bundleTest = new Bundle();
-    bundleTransactionTest = new Bundle();
-    measureReportTest = new MeasureReport();
-    measureReportTest2 = new MeasureReport();
-
-    measureReportTest.addEvaluatedResource().setReference("Patient/patient1");
-    measureReportTest.addEvaluatedResource().setReference("Condition/condition1");
-    measureReportTest2.addEvaluatedResource().setReference("Patient/patient1");
-    measureReportTest2.addEvaluatedResource().setReference("Condition/condition2");
-
-    when(fhirDataProviderTest.transaction(any())).thenReturn(bundleTransactionTest);
-
-    bundleMeasureReportTrueTest = fhirHelperTest.bundleMeasureReport(measureReportTest, fhirDataProviderTest, true);
-    bundleMeasureReportFalseTest = fhirHelperTest.bundleMeasureReport(measureReportTest2, fhirDataProviderTest, false);
-    Assert.assertEquals( 1, bundleMeasureReportTrueTest.getEntry().size());
-    Assert.assertEquals( 1, bundleMeasureReportFalseTest.getEntry().size());
-    Assert.assertNotNull(bundleMeasureReportTrueTest.getEntry().get(0).getResource());
-    Assert.assertNotNull(bundleMeasureReportFalseTest.getEntry().get(0).getResource());
-    MeasureReport measureEval1 = (MeasureReport) bundleMeasureReportTrueTest.getEntry().get(0).getResource();
-    MeasureReport measureEval2 = (MeasureReport) bundleMeasureReportFalseTest.getEntry().get(0).getResource();
-    Assert.assertEquals(2, measureEval1.getEvaluatedResource().size());
-    Assert.assertEquals(2, measureEval2.getEvaluatedResource().size());
-    Assert.assertEquals(measureEval2.getEvaluatedResource().get(0).getReference(), measureEval1.getEvaluatedResource().get(0).getReference());
-    Assert.assertEquals("Condition/condition1", measureEval1.getEvaluatedResource().get(1).getReference());
-    Assert.assertEquals("Condition/condition2", measureEval2.getEvaluatedResource().get(1).getReference());
-  }*/
-
+  
   @Test
   public void getAllPagesTest(){
 
