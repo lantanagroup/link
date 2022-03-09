@@ -5,15 +5,18 @@ import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 @Interceptor
 public class UserInterceptor {
   protected static final Logger logger = LoggerFactory.getLogger(UserInterceptor.class);
+
 
   @Hook(Pointcut.SERVER_INCOMING_REQUEST_PRE_HANDLED)
   public void intercept(RequestDetails requestDetails){
@@ -27,12 +30,13 @@ public class UserInterceptor {
       throw new AuthenticationException();
     }
 
-    Boolean authenticated = OAuth2Helper.validateAuthHeader(authHeader);
-    if(!authenticated){
+    DecodedJWT jwt = OAuth2Helper.validateAuthHeader(authHeader);
+    if (jwt == null) {
       logger.error("OAuth token certificate is unknown or invalid");
       throw new AuthenticationException();
     }
 
-    //TODO: check if user is admin and put a flag in requestDetails.getUserData()
+    // retrieve all the roles for the user and stored them on requestDetails
+    requestDetails.addParameter(Constants.Roles, OAuth2Helper.getUserRoles(jwt));
   }
 }
