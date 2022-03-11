@@ -2,7 +2,6 @@ package com.lantanagroup.link.auth;
 
 import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
-import com.auth0.jwk.JwkProvider;
 import com.auth0.jwk.SigningKeyNotFoundException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -13,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import com.nimbusds.jose.jwk.ECKey;
@@ -41,15 +41,13 @@ import java.util.*;
 
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
-  private static HashMap<String, String> issuerJwksUrls = new HashMap<>();
   private static final ApiConfig config = new ApiConfig();
-
+  private final static ObjectReader reader = (new ObjectMapper()).readerFor(Map.class);
   @VisibleForTesting
   static URL url;
-
+  private static HashMap<String, String> issuerJwksUrls = new HashMap<>();
   private static Integer connectTimeout;
   private static Integer readTimeout;
-  private final static ObjectReader reader  = (new ObjectMapper()).readerFor(Map.class);
 
   public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
@@ -233,7 +231,7 @@ public class OAuth2Helper {
     return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
   }
 
-  private static CernerClaimData getCernerClaimData (DecodedJWT jwt) {
+  private static CernerClaimData getCernerClaimData(DecodedJWT jwt) {
     Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
 
     if (cernerClaim != null) {
@@ -250,7 +248,7 @@ public class OAuth2Helper {
     return null;
   }
 
-  private static String getJwksUrl (String openIdConfigUrl) {
+  private static String getJwksUrl(String openIdConfigUrl) {
     try {
       URL url = new URL(openIdConfigUrl);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -273,7 +271,7 @@ public class OAuth2Helper {
     }
   }
 
-  private static String getJwksUrl (DecodedJWT jwt) {
+  private static String getJwksUrl(DecodedJWT jwt) {
     //TODO: Need to do issuer verification
     Claim issuerClaim = jwt.getClaim("iss");
 
@@ -305,7 +303,7 @@ public class OAuth2Helper {
     return config.getAuthJwksUrl();
   }
 
-  private static DecodedJWT getValidationJWT (String token) {
+  private static DecodedJWT getValidationJWT(String token) {
     DecodedJWT jwt = JWT.decode(token);
     Claim idTokenClaim = jwt.getClaim("id_token");
 
@@ -317,8 +315,7 @@ public class OAuth2Helper {
     return jwt;
   }
 
-  public static Boolean validateAuthHeader(String authHeader){
-
+  public static DecodedJWT validateAuthHeader(String authHeader) {
 
     String token = authHeader.substring("Bearer ".length());
     DecodedJWT jwt = getValidationJWT(token);
@@ -358,12 +355,23 @@ public class OAuth2Helper {
         throw new TokenExpiredException("Token has expired.");
       }
 
-      return true;
+      return jwt;
     } catch (Exception e) {
       e.printStackTrace();
-      return false;
+      return null;
 
     }
   }
 
+  public static String[] getUserRoles(DecodedJWT jwt) {
+    String[] noRoles = {};
+    Map<String, Claim> claims = jwt.getClaims();
+    Claim claim = claims.get("realm_access");
+    if (claim != null) {
+      Map<String, Object> backMap = claim.asMap();
+      List<String> roles = (ArrayList) backMap.get(Constants.Roles);
+      return roles.toArray(new String[roles.size()]);
+    }
+    return noRoles;
+  }
 }

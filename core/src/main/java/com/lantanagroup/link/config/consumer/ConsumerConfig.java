@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-@Getter @Setter
+@Getter
+@Setter
 @Configuration
 @ConfigurationProperties(prefix = "consumer")
 @Validated
@@ -16,4 +17,6 @@ import org.springframework.validation.annotation.Validated;
 public class ConsumerConfig {
   @Getter
   private DataSourceConfig dataSource;
+  @Getter
+  private Permission[] permissions;
 }
