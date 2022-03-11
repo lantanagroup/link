@@ -330,7 +330,7 @@ public class ReportController extends BaseController {
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
       // Scoop the data for the patients and store it
-      List<QueryResponse> queryResponses = this.queryAndStorePatientData(patientsOfInterest);
+      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
@@ -346,7 +346,7 @@ public class ReportController extends BaseController {
       response.setReportId(id);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
-      generator.generateAndStore(criteria, context, queryResponses, existingDocumentReference);
+      generator.generateAndStore(criteria, context, context.getPatientData(), existingDocumentReference);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {
