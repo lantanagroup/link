@@ -1,7 +1,9 @@
 package com.lantanagroup.link.agent.controller;
 
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.http.client.HttpResponseException;
@@ -56,6 +58,12 @@ public class AgentController {
     allPatientsOfInterest.addAll(poiIdentifiers);
     allPatientsOfInterest.addAll(poiRefs);
 
-    return query.execute(allPatientsOfInterest);
+    Bundle bundle = new Bundle();
+    List<QueryResponse> queryResponses = query.execute(allPatientsOfInterest);
+    for (QueryResponse queryResponse : queryResponses) {
+      FhirHelper.addEntriesToBundle(queryResponse.getBundle(), bundle);
+    }
+
+    return bundle;
   }
 }

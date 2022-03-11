@@ -167,7 +167,7 @@ public class ReportController extends BaseController {
     return provider.getPatientsOfInterest(criteria, context, this.config);
   }
 
-  private Bundle getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
+  private List<QueryResponse> getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
     try {
       URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
       URIBuilder uriBuilder = new URIBuilder(url.toString());
@@ -194,7 +194,22 @@ public class ReportController extends BaseController {
       }
 
       String responseBody = response.body();
-      return (Bundle) this.ctx.newJsonParser().parseResource(responseBody);
+      Bundle bundle = (Bundle) this.ctx.newJsonParser().parseResource(responseBody);
+
+      List<QueryResponse> queryResponses = new ArrayList<>();
+      QueryResponse queryResponse = new QueryResponse();
+      for(Bundle.BundleEntryComponent e : bundle.getEntry()) {
+        if(e.getResource().getResourceType() == ResourceType.Patient) {
+          queryResponse = new QueryResponse(e.getResource().getIdElement().getIdPart(), new Bundle());
+          queryResponses.add(queryResponse);
+        }
+
+        if(queryResponse.getBundle() != null){
+          queryResponse.getBundle().addEntry(e);
+        }
+      }
+
+      return queryResponses;
     } catch (Exception ex) {
       logger.error("Error retrieving remote patient data: " + ex.getMessage());
     }
@@ -212,79 +227,62 @@ public class ReportController extends BaseController {
    */
   private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
     try {
-      Bundle patientDataBundle = null;
+      List<QueryResponse> patientQueryResponses = null;
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
         logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-        patientDataBundle = query.execute(patientsOfInterest);
+        patientQueryResponses = query.execute(patientsOfInterest);
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-        patientDataBundle = this.getRemotePatientData(patientsOfInterest);
+        patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
       }
 
-      if (patientDataBundle == null) {
+      if (patientQueryResponses == null) {
         throw new Exception("patientDataBundle is null");
       }
 
-      // Make sure the bundle is a batch - it will load as much as it can
-      patientDataBundle.setType(Bundle.BundleType.BATCH);
-      patientDataBundle.getEntry().forEach(entry ->
-              entry.getRequest()
-                      .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
-      );
+      for (QueryResponse patientQueryResponse : patientQueryResponses) {
+        // Make sure the bundle is a batch - it will load as much as it can
+        patientQueryResponse.getBundle().setType(Bundle.BundleType.BATCH);
+        patientQueryResponse.getBundle().getEntry().forEach(entry ->
+                entry.getRequest()
+                        .setMethod(Bundle.HTTPVerb.PUT)
+                        .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
+        );
 
-      // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
-      // (note: this also fixes the references to resources within invalid ids)
-      ResourceIdChanger.changeIds(patientDataBundle);
+        // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
+        // (note: this also fixes the references to resources within invalid ids)
+        ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
 
-      // For debugging purposes:
-      //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
+        // For debugging purposes:
+        //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
-      // Store the data
-      logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-      Bundle response = this.getFhirDataProvider().transaction(patientDataBundle);
+        // Store the data
+        logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
+        Bundle response = this.getFhirDataProvider().transaction(patientQueryResponse.getBundle());
 
-      response.getEntry().stream()
-              .filter(e -> e.getResponse() != null && e.getResponse().getStatus() != null && !e.getResponse().getStatus().startsWith("20"))   // 200 or 201
-              .forEach(e -> {
-                if (e.getResponse().getOutcome() != null) {
-                  OperationOutcome outcome = (OperationOutcome) e.getResponse().getOutcome();
+        response.getEntry().stream()
+                .filter(e -> e.getResponse() != null && e.getResponse().getStatus() != null && !e.getResponse().getStatus().startsWith("20"))   // 200 or 201
+                .forEach(e -> {
+                  if (e.getResponse().getOutcome() != null) {
+                    OperationOutcome outcome = (OperationOutcome) e.getResponse().getOutcome();
 
-                  if (outcome.hasIssue()) {
-                    outcome.getIssue().forEach(i -> {
-                      logger.error(String.format("Entry in response from storing patient data has error: %s", i.getDiagnostics()));
-                    });
-                  } else if (outcome.getText() != null && outcome.getText().getDivAsString() != null) {
-                    logger.error(String.format("Entry in response from storing patient has issue: %s", outcome.getText().getDivAsString()));
+                    if (outcome.hasIssue()) {
+                      outcome.getIssue().forEach(i -> {
+                        logger.error(String.format("Entry in response from storing patient data has error: %s", i.getDiagnostics()));
+                      });
+                    } else if (outcome.getText() != null && outcome.getText().getDivAsString() != null) {
+                      logger.error(String.format("Entry in response from storing patient has issue: %s", outcome.getText().getDivAsString()));
+                    }
+                  } else {
+                    logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
                   }
-                } else {
-                  logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
-                }
-              });
-
-      List<QueryResponse> queryResponses = new ArrayList<>();
-      QueryResponse queryResponse = new QueryResponse();
-      for(Bundle.BundleEntryComponent e : patientDataBundle.getEntry()) {
-        if(e.getResource().getResourceType() == ResourceType.Patient) {
-          queryResponse = new QueryResponse(e.getResource().getIdElement().getIdPart(), new Bundle());
-          queryResponses.add(queryResponse);
-        }
-
-        if(queryResponse.getBundle() != null){
-          queryResponse.getBundle().addEntry(e);
-        }
+                });
       }
 
-      /*List<String> patientIDs = patientDataBundle
-              .getEntry().stream()
-              .filter(e -> e .getResource().getResourceType() == ResourceType.Patient)
-              .map(e -> e.getResource().getIdElement().getIdPart())
-              .collect(Collectors.toList());*/
-
-      return queryResponses;
+      return patientQueryResponses;
 
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());

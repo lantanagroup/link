@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -238,7 +239,7 @@ public class QueryTests {
     Query theQuery = new Query();
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    Bundle patientDataBundle = theQuery.execute(patientsOfInterest);
+    List<QueryResponse> patientQueryResponses = theQuery.execute(patientsOfInterest);
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
@@ -253,42 +254,47 @@ public class QueryTests {
     verify(read, times(1)).resource(Patient.class);
     verify(readTyped, times(1)).withId("patient3");
 
+    int entryCount = 0;
+    for (QueryResponse patientQueryResponse : patientQueryResponses) {
+      entryCount += patientQueryResponse.getBundle().getEntry().size();
+    }
+
     // Make sure the patient data bundle has the expected resources in it
-    Assert.assertNotNull(patientDataBundle);
-    Assert.assertEquals(19, patientDataBundle.getEntry().size());
+    Assert.assertNotNull(patientQueryResponses);
+    Assert.assertEquals(20, entryCount);
 
     // Make sure the patients, encounters and conditions are in the resulting bundle
-    Optional<Bundle.BundleEntryComponent> foundPatient1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundPatient1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == patient1)
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundPatient2 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundPatient2 = patientQueryResponses.get(2).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == patient2)
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundCondition1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundCondition1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == conditionBundle1.getEntry().get(0).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundCondition2 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundCondition2 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == conditionBundle1.getEntry().get(1).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundMedicationRequest1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundMedicationRequest1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == medicalRequestBundle1.getEntry().get(0).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundMedicationRequest2 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundMedicationRequest2 = patientQueryResponses.get(2).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == medicalRequestBundle2.getEntry().get(0).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundEncounter1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundEncounter1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == encounterBundle1.getEntry().get(0).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundEncounter2 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundEncounter2 = patientQueryResponses.get(2).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == encounterBundle2.getEntry().get(0).getResource())
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundMedication1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundMedication1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == medication1)
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundMedication3 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundMedication3 = patientQueryResponses.get(1).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == medication3)
             .findAny();
-    Optional<Bundle.BundleEntryComponent> foundLocation1 = patientDataBundle.getEntry().stream()
+    Optional<Bundle.BundleEntryComponent> foundLocation1 = patientQueryResponses.get(0).getBundle().getEntry().stream()
             .filter(e -> e.getResource() == location1)
             .findAny();
 
