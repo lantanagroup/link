@@ -1,7 +1,6 @@
 package com.lantanagroup.link.consumer.controller;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -37,7 +36,7 @@ public class CsvController {
 
 
   /**
-   * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
+   * Receives a CVS representing a Bundle with a MeasureReport
    *
    * @param csvContent The content of the CSV
    */
@@ -56,12 +55,14 @@ public class CsvController {
     String requestUrl = request.getRequestURL().toString();
     String fhirUrl = requestUrl.substring(0, requestUrl.indexOf(request.getServletPath())) + "/fhir";
     String sendUrl = fhirUrl + "/Bundle";
+
+    //TODO: Replace with CSV->Bundle conversion logic
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);
     String content = FhirContext.forR4().newXmlParser().encodeResourceToString(bundle);
     sendRequest(user, sendUrl, content);
 
-   // IGenericClient client = FhirContext.forR4().newRestfulGenericClient(fhirUrl);
+    // IGenericClient client = FhirContext.forR4().newRestfulGenericClient(fhirUrl);
 //    MethodOutcome resourceCreated = client.create().resource(content).execute();
 //    logger.info("Bundle created: " + resourceCreated.getId());
 
