@@ -1,6 +1,3 @@
 input[type=number] {
     max-width: 250px;
 }
-.form-control {
-    width: 500px;
-}
