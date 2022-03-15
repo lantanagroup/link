@@ -1,7 +1,6 @@
 package com.lantanagroup.link.consumer.api;
 
-import com.lantanagroup.link.auth.LinkAuthManager;
-import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.api.auth.LinkAuthManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
