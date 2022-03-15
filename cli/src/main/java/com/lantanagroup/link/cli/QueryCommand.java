@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
@@ -19,6 +20,7 @@ import org.springframework.shell.standard.ShellOption;
 
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,18 +55,23 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Executing query");
 
-      Bundle patientDataBundle = query.execute(patientsOfInterest);
+      List<QueryResponse> queryResponses = query.execute(patientsOfInterest);
 
-      if (patientDataBundle.hasEntry()) {
-        String patientDataXml = FhirContext.forR4().newXmlParser().encodeResourceToString(patientDataBundle);
+      if (queryResponses != null) {
+        for (int i = 0; i < queryResponses.size(); i++) {
+          QueryResponse queryResponse = queryResponses.get(i);
+          String patientDataXml = FhirContext.forR4().newXmlParser().encodeResourceToString(queryResponse.getBundle());
 
-        if (Strings.isNotEmpty(output)) {
-          FileOutputStream fos = new FileOutputStream(output);
-          fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
-          fos.close();
-          logger.info("Stored patient data XML to " + output);
-        } else {
-          System.out.println(patientDataXml);
+          if (Strings.isNotEmpty(output)) {
+            String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
+            fos.close();
+            logger.info("Stored patient data XML to " + file);
+          } else {
+            System.out.println("Patient " + (i + 1) + " Bundle XML:");
+            System.out.println(patientDataXml);
+          }
         }
       }
 
