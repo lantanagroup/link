@@ -88,6 +88,14 @@ public class FhirBundler {
       }
     }
 
+    if(bundle.getEntry() != null) {
+      for (Bundle.BundleEntryComponent r : bundle.getEntry()) {
+        r.setFullUrl("http://nhsnlink.org/fhir/"
+                + r.getResource().getIdElement().getResourceType() + "/"
+                + r.getResource().getIdElement().getIdPart());
+      }
+    }
+
     // Bundle is complete
     return bundle;
   }

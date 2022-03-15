@@ -282,32 +282,5 @@ public class PatientIdentifierControllerTests {
     thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
   }
-
-  @Test
-  public void testGetListFromBundleXml() throws Exception {
-    String bundleXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Bundle xmlns=\"http://hl7.org/fhir\"><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><timestamp value=\"2021-11-03T00:00:00Z\"/><entry><resource><Patient><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101069999\"/></identifier></Patient></resource></entry></Bundle>";
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
-    patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
-    Bundle bundle = new Bundle();
-    bundle.setEntry(new ArrayList<>());
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.receiveFHIRXML(bundleXml);
-    verify(fhirDataProvider, times(1)).createResource(any());
-  }
-
-
-  @Test
-  public void testGetListFromBundleJson() throws Exception {
-    String jsonContent = "{\"resourceType\":\"Bundle\",\"identifier\":{\"system\":\"https://nhsnlink.org\",\"value\":\"covid-min\"},\"timestamp\":\"2021-11-03T00:00:00Z\",\"entry\":[{\"resource\":{\"resourceType\":\"Patient\",\"identifier\":[{\"system\":\"urn:oid:2.16.840.1.113883.6.1000\",\"value\":\"101069999\"}]}}]}";
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
-    patientIdentifierController.setFhirStoreProvider(fhirDataProvider);
-    Bundle bundle = new Bundle();
-    bundle.setEntry(new ArrayList<>());
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
-    patientIdentifierController.receiveFHIRJSON(jsonContent);
-    verify(fhirDataProvider, times(1)).createResource(any());
-  }
 }
 

@@ -26,7 +26,14 @@ public class StoredListProvider implements IPatientIdProvider {
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     FhirContext ctx = context.getFhirProvider().getClient().getFhirContext();
 
-    Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(Constants.MainSystem, context.getMeasureId(), criteria.getPeriodStart());
+    String system = criteria.getReportDefIdentifier().indexOf("|") > 0 ?
+            criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) :
+            Constants.MainSystem;
+    String value = criteria.getReportDefIdentifier().indexOf("|") > 0 ?
+            criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
+            criteria.getReportDefIdentifier();
+
+    Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart());
 
     if (bundle.getEntry().size() == 0) {
       logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());

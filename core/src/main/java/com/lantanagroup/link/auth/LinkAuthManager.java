@@ -1,5 +1,6 @@
-package com.lantanagroup.link.auth;
+package com.lantanagroup.link.api.auth;
 
+import com.lantanagroup.link.auth.OAuth2Helper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
