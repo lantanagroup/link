@@ -33,6 +33,12 @@ public class AuthInterceptor extends AuthorizationInterceptor {
     String[] jwtRoles = theRequestDetails.getParameters().get(Constants.Roles);
     Set<String> userRoleSet = jwtRoles != null ? Arrays.stream(jwtRoles).collect(Collectors.toSet()) : new HashSet();
 
+    String azorica = consumerConfig.getAzorica();
+    if (azorica != null) {
+      logger.info("Azorica " + azorica + " is found.");
+    } else {
+      logger.info("Azorica not found.");
+    }
     if (permissions == null) {
       logger.info("No Permissions set in the configuration file.");
       return ruleBuilder.build();

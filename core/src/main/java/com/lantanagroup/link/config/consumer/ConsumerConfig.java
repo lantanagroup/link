@@ -19,4 +19,6 @@ public class ConsumerConfig {
   private DataSourceConfig dataSource;
   @Getter
   private Permission[] permissions;
+  @Getter
+  private String azorica;
 }
