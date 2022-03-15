@@ -1,10 +1,7 @@
-package com.lantanagroup.link.api;
+package com.lantanagroup.link.consumer.api;
 
-import com.lantanagroup.link.api.auth.LinkAuthenticationSuccessHandler;
-import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
 import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -21,11 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @EnableWebSecurity
 @Order(1)
 public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
-  @Autowired
-  private ApiConfig config;
-
-  @Autowired
-  private LinkCredentials linkCredentials;
 
 
   @Autowired
@@ -33,9 +25,8 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials);
+    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
     authFilter.setAuthenticationManager(new LinkAuthManager());
-    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
     http
             .csrf().disable()
             .cors()
@@ -43,10 +34,8 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()
-            .antMatchers("/api/fhir/**", "/api/cda", "/config/**", "/api", "/api/poi/**")
-            .permitAll()
             .and()
-            .antMatcher("/api/**")
+            .antMatcher("/csv/**")
             .addFilter(authFilter)
             .authorizeRequests()
             .anyRequest()
