@@ -25,6 +25,13 @@ public class ApiConfig {
     private String fhirServerStore;
 
     /**
+     * <strong>evaluation-service: https://cqf-ruler.nhsnlink.org/fhir</strong>
+     */
+    @Getter
+    @Setter
+    private String evaluationService;
+
+    /**
      * <strong>api.auth-jwks-url</strong><br>URL used to retrieve certs from identity provider to verify that JWT's are valid
      */
     private String authJwksUrl;
