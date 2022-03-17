@@ -15,10 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.*;
@@ -35,6 +32,7 @@ import java.util.stream.Collectors;
  * Reportability Response Controller
  */
 @RestController
+@RequestMapping("/api/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
   public static final String REPORT_TYPE_PARAM_DESC = "The id of the report type (measure) that these patients should be considered for";
@@ -48,7 +46,7 @@ public class PatientIdentifierController extends BaseController {
   @Operation(
           summary = "Submit a CSV of patients to be included in report generation",
           description = "Extracts the patients id/identifier, date and report type, creates a List and persists the List resource in the internal FHIR server to be found/used in report generation")
-  @PostMapping(value = "api/poi/csv", consumes = "text/csv")
+  @PostMapping(value = "/csv", consumes = "text/csv")
   public void storeCSV(
           @RequestBody() String csvContent,
           @Parameter(description = REPORT_TYPE_PARAM_DESC) @RequestParam String reportTypeId) throws Exception {
@@ -78,7 +76,7 @@ public class PatientIdentifierController extends BaseController {
   @Operation(
           summary = "Submit a FHIR List of patients to be included in report generation",
           description = "Uses the List date and identifier (which indicates the report-type) to find an already-existing List for the date/report-type. If none exists, this List is persisted as-is. Otherwise, updates the existing List to include the patient id/identifier if the patient isn't already part of the List.")
-  @PostMapping(value = "api/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
+  @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
   public void getPatientIdentifierListXML(
           @RequestBody() String body) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in XML");
@@ -88,7 +86,7 @@ public class PatientIdentifierController extends BaseController {
     this.receiveFHIR(list);
   }
 
-  @PostMapping(value = "api/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
   public void getPatientIdentifierListJSON(
           @RequestBody() String body) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in JSON");
