@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {formatDateToISO, getFhirDate, getFhirNow} from '../helper';
+import {formatDateToISO, getFhirDate, getFhirYesterday} from '../helper';
 import {StoredReportDefinition} from '../model/stored-report-definition';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
@@ -17,10 +17,12 @@ export class GenerateComponent implements OnInit {
   sending = false;
   loadingMeasures = false;
   reportGenerated = false;
-  today = getFhirNow();
+  startDate = getFhirYesterday();
+  endDate = getFhirYesterday();
   criteria: {
     reportDef?: any,
-    periodStart?: string
+    periodStart?: string,
+    periodEnd?: string
   } = {};
   measureConfigs: StoredReportDefinition[] = [];
   evaluateMeasureButtonText: String = 'Select';
@@ -33,10 +35,6 @@ export class GenerateComponent implements OnInit {
       private router: Router) {
   }
 
-  onDateSelected() {
-    this.today = getFhirDate(this.criteria.periodStart);
-  }
-
   get selectedReportTypeDisplay() {
     if (this.criteria.reportDef != undefined) {
       const found = this.measureConfigs.find(mc => mc.id === this.criteria.reportDef.id);
@@ -46,20 +44,45 @@ export class GenerateComponent implements OnInit {
     }
   }
 
+  onStartDateSelected() {
+    this.startDate = getFhirDate(this.criteria.periodStart);
+    this.criteria.periodEnd = this.criteria.periodStart;
+    this.endDate = getFhirDate(this.criteria.periodEnd)
+  }
+
+  onEndDateSelected() {
+    this.endDate = getFhirDate(this.criteria.periodEnd);
+  }
+
+
   async reload() {
     try {
+
+      if (this.endDate < this.startDate) {
+        alert("Report End Date must be same or after Report Start Date.");
+        return;
+      }
       this.loading = true;
       this.generateReportButtonText = 'Loading...';
 
+
       if (!this.criteria.periodStart) {
-        this.criteria.periodStart = getFhirNow();
+        this.criteria.periodStart = getFhirYesterday();
       } else {
         this.criteria.periodStart = getFhirDate(this.criteria.periodStart);
       }
+
+      if (!this.criteria.periodEnd) {
+        this.criteria.periodEnd = getFhirYesterday();
+      } else {
+        this.criteria.periodEnd = getFhirDate(this.criteria.periodEnd);
+      }
+
       const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
-      // TODO: calculate periodEnd
       const periodStart = this.criteria.periodStart;
-      const periodEndDate = moment.utc(periodStart);
+      // add time to periodEnd
+      const periodEnd = this.criteria.periodEnd;
+      const periodEndDate = moment.utc(periodEnd);
       periodEndDate.add(23, 'hours');
       periodEndDate.add(59, 'minutes');
       periodEndDate.add(59, 'seconds');
@@ -75,7 +98,7 @@ export class GenerateComponent implements OnInit {
               const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
               const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
               await this.router.navigate(['review', generateResponse.reportId]);
-            } catch(ex) {
+            } catch (ex) {
               this.toastService.showException('Error generating report', ex);
             }
           }
@@ -97,22 +120,21 @@ export class GenerateComponent implements OnInit {
   }
 
   async ngOnInit() {
-    try{
+    try {
       this.loadingMeasures = true;
       // initialize the response date to today by default.
-      this.criteria.periodStart = getFhirNow();
+      this.criteria.periodStart = getFhirYesterday();
+      this.criteria.periodEnd = getFhirYesterday();
       this.measureConfigs = await this.reportDefinitionService.getReportDefinitions();
       console.log(this.measureConfigs);
-    }
-    catch (ex){
+    } catch (ex) {
       this.toastService.showException('Error populating measure list.', ex);
-    }
-    finally {
+    } finally {
       this.loadingMeasures = false;
     }
   }
 
   disableGenerateReport() {
-    return !this.criteria.periodStart || !this.criteria.reportDef;
+    return !this.criteria.periodStart || !this.criteria.periodEnd || !this.criteria.reportDef;
   }
 }
