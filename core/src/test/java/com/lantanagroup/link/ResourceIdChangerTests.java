@@ -7,24 +7,24 @@ import org.junit.Test;
 import java.util.List;
 
 public class ResourceIdChangerTests {
-//  @Test
-//  public void findReferencesBundleTest() {
-//    Bundle bundle = new Bundle();
-//    Patient patient = new Patient();
-//    patient.setId("123");
-//    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(patient));
-//    Observation obs = new Observation();
-//    obs.setSubject(new Reference("Patient/123"));
-//    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(obs));
-//    Composition comp = new Composition();
-//    comp.getRelatesTo().add(new Composition.CompositionRelatesToComponent().setTarget(new Reference("Composition/xyz")));
-//    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(comp));
-//
-//    List<Reference> references = ResourceIdChanger.findReferences(bundle);
-//    Assert.assertEquals(2, references.size());
-//    Assert.assertEquals("Patient/123", references.get(0).getReference());
-//    Assert.assertEquals("Composition/xyz", references.get(1).getReference());
-//  }
+  @Test
+  public void findReferencesBundleTest() {
+    Bundle bundle = new Bundle();
+    Patient patient = new Patient();
+    patient.setId("123");
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(patient));
+    Observation obs = new Observation();
+    obs.setSubject(new Reference("Patient/123"));
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(obs));
+    Composition comp = new Composition();
+    comp.getRelatesTo().add(new Composition.CompositionRelatesToComponent().setTarget(new Reference("Composition/xyz")));
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(comp));
+
+    List<Reference> references = ResourceIdChanger.findReferences(bundle);
+    Assert.assertEquals(2, references.size());
+    Assert.assertEquals("Patient/123", references.get(0).getReference());
+    Assert.assertEquals("Composition/xyz", references.get(1).getReference());
+  }
 
   @Test
   public void changeIdsTest() {
