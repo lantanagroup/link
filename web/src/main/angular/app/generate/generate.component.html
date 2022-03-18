@@ -40,8 +40,8 @@
         </div>
     </div>
     <div class="card-footer">
-        <button type="button" class="btn btn-primary" (click)="reload()"
-                [disabled]="disableGenerateReport()">{{generateReportButtonText}}</button>
+        <button (click)="reload()" [disabled]="disableGenerateReport()" class="btn btn-primary"
+                type="button">{{generateReportButtonText}}</button>
         <p class="help-block" *ngIf="loading">Generating report...</p>
         <p *ngIf="!criteria.periodStart || !criteria.periodEnd || !criteria.reportDef" class="help-block">You must
             select a report date and
