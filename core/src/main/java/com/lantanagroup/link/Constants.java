@@ -14,4 +14,5 @@ public class Constants {
   public static final String DocumentReferenceVersionUrl = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
   public static final String Roles = "roles";
   public static final String FhirResourcesPackageName = "org.hl7.fhir.r4.model.";
+  public static final String UuidPrefix = "urn:uuid:";
 }
