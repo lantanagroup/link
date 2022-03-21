@@ -11,10 +11,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ResourceIdChanger {
+  public static final String ORIG_ID_EXT_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-original-id";
   private Bundle bundle;
   private Logger logger = LoggerFactory.getLogger(ResourceIdChanger.class);
-
-  public static final String ORIG_ID_EXT_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-original-id";
 
   private ResourceIdChanger(Bundle bundle) {
     this.bundle = bundle;
@@ -22,6 +21,7 @@ public class ResourceIdChanger {
 
   /**
    * Creates a new instance of ResourceIdChanger and calls `changeIds()`.
+   *
    * @param bundle The bundle to fix IDs to resources for
    */
   public static void changeIds(Bundle bundle) {
@@ -30,70 +30,7 @@ public class ResourceIdChanger {
   }
 
   /**
-   * Finds each resource within the Bundle that has an invalid ID,
-   * assigns a new ID to the resource that is based on a hash of the original
-   * ID. Finds any references to those invalid IDs and updates them.
-   */
-  public void changeIds() {
-    // Find resources that invalid invalid IDs
-    List<Resource> invalidResourceIds = this.bundle.getEntry().stream()
-            .filter(e -> e.getResource().getIdElement().getIdPart().length() > 64)
-            .map(e -> e.getResource())
-            .collect(Collectors.toList());
-    // Create a map where key = old id, value = new id (a hash of the old id)
-    Map<IdType, IdType> newIds = invalidResourceIds.stream().map(res -> {
-      IdType rId = res.getIdElement();
-      return new IdType[]{rId, new IdType(res.getResourceType().toString(), "HASH" + String.valueOf(rId.getIdPart().hashCode()))};
-    }).collect(Collectors.toMap(e -> e[0], e -> e[1]));
-
-    // Find all references within the bundle
-    List<Reference> references = findReferences(this.bundle);
-
-    // For each resource with an invalid id, update the resource with the new hashed id
-    // and find any references to the old id and update those
-    invalidResourceIds.forEach(res -> {
-      IdType invalidId = res.getIdElement();
-      String invalidIdRef = res.getResourceType().toString() + "/" + invalidId.getIdPart();
-      IdType newId = newIds.get(invalidId);
-      String newIdRef = res.getResourceType().toString() + "/" + newId.getIdPart();
-
-      logger.debug(String.format("Updating invalid %s ID from %s to %s", res.getResourceType(), invalidId.getIdPart(), newId.getIdPart()));
-
-      // Update resource with the new hashed id
-      res.setIdElement(newId);
-      DomainResource resource = (DomainResource) res;
-      resource.addExtension(ORIG_ID_EXT_URL, new StringType(invalidId.getIdPart()));
-
-      // Update bundle entry's that have a request/url that matches the old ID to reference the new ID
-      this.bundle.getEntry().stream()
-              .filter(entry ->
-                      entry.getRequest() != null &&
-                              entry.getRequest().getUrl() != null &&
-                              entry.getRequest().getUrl().equals(invalidIdRef))
-              .forEach(entry -> entry.getRequest().setUrl(newIdRef));
-    });
-
-    // Find references that are invalid
-    references.stream().filter(r -> {
-      if (r.getReference() == null) return false;
-      String[] refParts = r.getReference().split("/");
-      if (refParts.length != 2) return false;                 // Skip canonical references
-      if (refParts[1].length() <= 64) return false;           // Skip references that aren't invalid
-      return true;
-    }).forEach(ref -> {
-      String origRef = ref.getReference();
-      String[] refParts = ref.getReference().split("/");
-      String newId = "HASH" + refParts[1].hashCode();
-      ref.setReference(refParts[0] + "/" + newId);
-      ref.addExtension().setUrl(ORIG_ID_EXT_URL).setValue(new StringType(origRef));
-    });
-  }
-
-
-
-  /**
    * Finds any instance (recursively) of a Reference within the specified object
-   *
    * @param obj The object to search
    * @return A list of Reference instances found in the object
    */
@@ -172,5 +109,78 @@ public class ResourceIdChanger {
         currentClass = currentClass.getSuperclass();
       }
     }
+  }
+
+  private String getNewId(String rId) {
+    String newId = rId.replace(Constants.UuidPrefix, "");
+    if (newId.length() > 64) {
+      newId = "HASH" + String.valueOf(newId.hashCode());
+    }
+    return newId;
+  }
+
+  /**
+   * Finds each resource within the Bundle that has an invalid ID,
+   * assigns a new ID to the resource that is based on a hash of the original
+   * ID. Finds any references to those invalid IDs and updates them.
+   */
+  public void changeIds() {
+
+    // Find resources that invalid invalid IDs
+    List<Resource> invalidResourceIds = this.bundle.getEntry().stream()
+            .filter(e -> e.getResource().getIdElement().getIdPart().length() > 64 || e.getResource().getIdElement().getIdPart().contains(Constants.UuidPrefix))
+            .map(e -> e.getResource())
+            .collect(Collectors.toList());
+    // Create a map where key = old id, value = new id (a hash of the old id)
+    Map<IdType, IdType> newIds = invalidResourceIds.stream().map(res -> {
+      IdType rId = res.getIdElement();
+
+      String newId = getNewId(rId.getIdPart());
+      return new IdType[]{rId, new IdType(res.getResourceType().toString(), newId)};
+    }).collect(Collectors.toMap(e -> e[0], e -> e[1]));
+
+
+    // For each resource with an invalid id, update the resource with the new hashed id
+    // and find any references to the old id and update those
+    invalidResourceIds.forEach(res -> {
+      IdType invalidId = res.getIdElement();
+      String invalidIdRef = res.getResourceType().toString() + "/" + invalidId.getIdPart();
+      IdType newId = newIds.get(invalidId);
+      String newIdRef = res.getResourceType().toString() + "/" + newId.getIdPart();
+
+      logger.debug(String.format("Updating invalid %s ID from %s to %s", res.getResourceType(), invalidId.getIdPart(), newId.getIdPart()));
+
+      // Update resource with the new hashed id
+      res.setIdElement(newId);
+      DomainResource resource = (DomainResource) res;
+
+      resource.addExtension(ORIG_ID_EXT_URL, new StringType(invalidId.getIdPart()));
+
+      // Update bundle entry's that have a request/url that matches the old ID to reference the new ID
+      this.bundle.getEntry().stream()
+              .filter(entry ->
+                      entry.getRequest() != null &&
+                              entry.getRequest().getUrl() != null &&
+                              entry.getRequest().getUrl().equals(invalidIdRef))
+              .forEach(entry -> entry.getRequest().setUrl(newIdRef));
+    });
+
+    List<Reference> references = findReferences(bundle);
+
+    // Find references that are invalid
+    references.stream().filter(r -> {
+      if (r.getReference() == null) return false;
+      String[] refParts = r.getReference().split("/");
+      if (refParts.length != 2) return false;                 // Skip canonical references
+      if (refParts[1].length() <= 64 && !refParts[1].contains(Constants.UuidPrefix))
+        return false;           // Skip references that aren't invalid
+      return true;
+    }).forEach(ref -> {
+      String origRef = ref.getReference();
+      String[] refParts = ref.getReference().split("/");
+      String newId = getNewId(refParts[1]);
+      ref.setReference(refParts[0] + "/" + newId);
+      ref.addExtension().setUrl(ORIG_ID_EXT_URL).setValue(new StringType(origRef));
+    });
   }
 }

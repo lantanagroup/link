@@ -39,6 +39,15 @@ export function getFhirNow() {
   return `${year}-${month}-${date}`;
 }
 
+export function getFhirYesterday() {
+  const now = new Date();
+  now.setDate(now.getDate() - 1);
+  const year = now.getFullYear().toString();
+  const month = padDateNumber(now.getMonth() + 1);
+  const date = padDateNumber(now.getDate());
+  return `${year}-${month}-${date}`;
+}
+
 export function formatDateToISO(date) {
   return moment.utc(date).toISOString(false);
 }
