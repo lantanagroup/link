@@ -33,8 +33,12 @@ public class FhirDataProvider {
     this.client = client;
   }
 
-  public FhirDataProvider(String fhirBase) {
-    this.client = this.ctx.newRestfulGenericClient(fhirBase);
+  public FhirDataProvider(ApiConfig config) {
+    if (this.client == null) {
+      String fhirBase = config.getFhirServerStore();
+      IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
+      this.client = fhirStoreClient;
+    }
   }
 
   public Resource createResource(IBaseResource resource) {

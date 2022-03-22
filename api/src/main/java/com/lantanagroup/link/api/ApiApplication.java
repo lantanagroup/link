@@ -128,7 +128,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Bean()
   public FhirDataProvider getProvider() {
-    return new FhirDataProvider(config.getFhirServerStore());
+    return new FhirDataProvider(config);
   }
 
   /**

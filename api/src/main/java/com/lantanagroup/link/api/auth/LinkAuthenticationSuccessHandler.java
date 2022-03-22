@@ -23,7 +23,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
   public LinkAuthenticationSuccessHandler(ApiConfig config) {
     this.config = config;
-    this.provider = new FhirDataProvider((config.getFhirServerStore()));
+    this.provider = new FhirDataProvider((config));
   }
 
   @Override
