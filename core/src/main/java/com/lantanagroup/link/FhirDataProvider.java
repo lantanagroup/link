@@ -190,6 +190,8 @@ public class FhirDataProvider {
   }
 
   public Bundle transaction(Bundle txBundle) {
+    logger.trace("Executing transaction on " + this.client.getServerBase());
+
     Bundle responseBundle = this.client
             .transaction()
             .withBundle(txBundle)

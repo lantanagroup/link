@@ -222,7 +222,7 @@ public class ReportGenerator {
   public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
 
     if(this.config.getEvaluationService() == null) {
-      throw new ConfigurationException();
+      throw new ConfigurationException("api.evaluation-service has not been configured");
     }
 
     // Create a bundle to execute as a transaction to update multiple resources at once

@@ -95,11 +95,11 @@ public class ReportController extends BaseController {
       }
     });
 
-    logger.info("Executing the measure definition bundle as a transaction on " + this.config.getFhirServerStore());
+    logger.info("Executing the measure definition bundle");
 
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getFhirServerStore());
-    fhirDataProvider.transaction(bundle);
-    logger.info("Measure definition bundle transaction executed successfully...");
+    this.getFhirDataProvider().transaction(bundle);
+
+    logger.info("Done executing the measure definition bundle");
 
     return measureId;
   }
