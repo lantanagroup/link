@@ -96,7 +96,10 @@ public class ReportController extends BaseController {
 
     logger.info("Executing the measure definition bundle as a transaction on " + this.config.getFhirServerStore());
 
-    this.getFhirDataProvider().transaction(bundle);
+    ApiConfig config = new ApiConfig();
+    config.setEvaluationService("https://cqf-ruler.nhsnlink.org/fhir");
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(config);
+    fhirDataProvider.transaction(bundle);
     logger.info("Measure definition bundle transaction executed successfully...");
 
     return measureId;
