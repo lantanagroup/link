@@ -26,7 +26,7 @@ public class BaseController {
 
   protected FhirDataProvider getFhirDataProvider() {
     if (this.fhirStoreProvider == null) {
-      this.fhirStoreProvider = new FhirDataProvider(config);
+      this.fhirStoreProvider = new FhirDataProvider(config.getFhirServerStore());
     }
     return this.fhirStoreProvider;
   }
