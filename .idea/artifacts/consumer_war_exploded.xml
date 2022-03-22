@@ -23,9 +23,6 @@
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore:4.4.12" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot:2.1.8.RELEASE" />
           <element id="library" level="project" name="Maven: org.springframework:spring-context:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework:spring-aop:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework:spring-expression:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: org.springframework.security:spring-security-core:5.1.6.RELEASE" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9.3" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" />
           <element id="library" level="project" name="Maven: org.springframework:spring-test:5.1.9.RELEASE" />
@@ -33,15 +30,12 @@
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
           <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
-          <element id="library" level="project" name="Maven: org.json:json:20160212" />
-          <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.9" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.9" />
           <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />
           <element id="library" level="project" name="Maven: org.mockito:mockito-core:3.12.4" />
           <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy-agent:1.9.16" />
           <element id="library" level="project" name="Maven: org.objenesis:objenesis:3.2" />
-          <element id="library" level="project" name="Maven: com.auth0:jwks-rsa:0.9.0" />
           <element id="library" level="project" name="Maven: com.nimbusds:nimbus-jose-jwt:7.9" />
           <element id="library" level="project" name="Maven: com.github.stephenc.jcip:jcip-annotations:1.0-1" />
           <element id="library" level="project" name="Maven: net.minidev:json-smart:2.3" />
@@ -251,6 +245,14 @@
           <element id="library" level="project" name="Maven: org.apache.commons:commons-dbcp2:2.8.0" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-pool2:2.6.2" />
           <element id="library" level="project" name="Maven: com.h2database:h2:2.1.210" />
+          <element id="library" level="project" name="Maven: org.springframework.security:spring-security-core:5.3.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-aop:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-expression:5.1.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework.security:spring-security-web:5.3.9.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework.security:spring-security-config:5.3.9.RELEASE" />
+          <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
+          <element id="library" level="project" name="Maven: com.auth0:jwks-rsa:0.9.0" />
+          <element id="library" level="project" name="Maven: org.json:json:20200518" />
         </element>
       </element>
       <element id="directory" name="META-INF">
