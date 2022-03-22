@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.ConfigurationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -95,10 +96,6 @@ public class ReportController extends BaseController {
     });
 
     logger.info("Executing the measure definition bundle as a transaction on " + this.config.getFhirServerStore());
-
-    if(this.config.getEvaluationService() == null) {
-      this.config.setEvaluationService("https://cqf-ruler.nhsnlink.org/fhir");
-    }
 
     FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getFhirServerStore());
     fhirDataProvider.transaction(bundle);
