@@ -97,7 +97,9 @@ public class ReportController extends BaseController {
 
     logger.info("Executing the measure definition bundle");
 
-    this.getFhirDataProvider().transaction(bundle);
+    // Store the resources of the measure on the evaluation service
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    fhirDataProvider.transaction(bundle);
 
     logger.info("Done executing the measure definition bundle");
 
