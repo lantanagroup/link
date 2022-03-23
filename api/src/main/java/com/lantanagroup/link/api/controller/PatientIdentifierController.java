@@ -3,6 +3,7 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.google.common.annotations.VisibleForTesting;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
@@ -22,6 +23,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -142,27 +144,47 @@ public class PatientIdentifierController extends BaseController {
 
   private void receiveFHIR(Resource resource) throws Exception {
     logger.info("Storing patient identifiers");
-    MethodOutcome outcome = null;
-    if (resource.hasId()) {
-      resource.setId((String) null);
-    }
-    if (resource instanceof ListResource) {
+    resource.setId((String) null);
 
+    if (resource instanceof ListResource) {
+      ListResource list = (ListResource) resource;
       List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
-      Date datetime = ((ListResource) resource).getDate();
-      // added some validation code
-      if (datetime == null) {
-        throw new Exception("Date is not passed in the file.");
-      }
+
       if (identifierList.isEmpty()) {
         throw new Exception("Identifier is not present.");
       }
+
+      Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
+
+      if (applicablePeriodExt == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension is required");
+      }
+
+      Period applicablePeriod = applicablePeriodExt.getValue().castToPeriod(applicablePeriodExt.getValue());
+
+      if (applicablePeriod == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension must have a value of type Period");
+      }
+
+      if (!applicablePeriod.hasStart()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have start");
+      }
+
+      if (!applicablePeriod.hasEnd()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have end");
+      }
+
       String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
       String value = ((ListResource) resource).getIdentifier().get(0).getValue();
-      String date = Helper.getFhirDate(datetime);
-      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, date);
+      DateTimeType startDate = applicablePeriod.getStartElement();
+      DateTimeType endDate = applicablePeriod.getEndElement();
+      String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
+      String end = Helper.getFhirDate(LocalDateTime.of(endDate.getYear(), endDate.getMonth() + 1, endDate.getDay(), endDate.getHour(), endDate.getMinute(), endDate.getSecond()));
+      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, start, end);
+
       if (bundle.getEntry().size() == 0) {
-        ((ListResource) resource).setDateElement(new DateTimeType(date));
+        applicablePeriod.setStartElement(new DateTimeType(start));
+        applicablePeriod.setEndElement(new DateTimeType(end));
         this.getFhirDataProvider().createResource(resource);
       } else {
         ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
@@ -182,8 +204,10 @@ public class PatientIdentifierController extends BaseController {
         this.getFhirDataProvider().updateResource(existingList);
       }
     } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only \"List\" resources are allowed");
+    } /* else {
       this.getFhirDataProvider().createResource(resource);
-    }
+    } */
   }
 
   private ListResource getListResource(String reportTypeId, String listDate, List<CsvEntry> csvList) {

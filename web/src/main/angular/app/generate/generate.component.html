@@ -2,8 +2,8 @@
     <div class="card-header">Report Generation Criteria</div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-4">
-                <p><strong>Report Date</strong></p>
+            <div class="col-md-2">
+                <p><strong>Report Start Date</strong></p>
                 <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
                 <div class="input-group">
                     <input   [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
@@ -12,9 +12,14 @@
                     <div class="input-group-append">
                         <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
                     </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <p><strong>Report End Date</strong></p>
+                <div class="input-group">
                     <input   [(ngModel)]="criteria.periodEnd" (ngModelChange)="onEndDateSelected()"
-                          class="form-control" name="dp" ngbDatepicker #d1="ngbDatepicker"
-                           placeholder="{{endDate | date: 'yyyy-MM-dd'}}">
+                             class="form-control" name="dp" ngbDatepicker #d1="ngbDatepicker"
+                             placeholder="{{endDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
                         <button (click)="d1.toggle()" class="btn btn-outline-secondary calendar" type="button"></button>
                     </div>
