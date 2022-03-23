@@ -19,6 +19,11 @@ import java.util.List;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
     /**
+     * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
+     */
+    private Boolean skipInit;
+
+    /**
      * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
      */
     @NotNull

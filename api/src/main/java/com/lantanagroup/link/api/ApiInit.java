@@ -44,8 +44,6 @@ public class ApiInit {
 
     HttpClient client = HttpClient.newHttpClient();
     FhirContext ctx = FhirContext.forR4();
-    IParser jsonParser = ctx.newJsonParser();
-    IParser xmlParser = ctx.newXmlParser();
 
     logger.info("Loading measures defined in configuration...");
 
@@ -177,6 +175,11 @@ public class ApiInit {
   }
 
   public void init() {
+    if (this.config.getSkipInit()) {
+      logger.info("Skipping API initialization processes");
+      return;
+    }
+
     this.loadReportDefinitions();
     this.loadSearchParameters();
   }

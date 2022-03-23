@@ -181,6 +181,7 @@ public class PatientIdentifierControllerTests {
     verify(listQuery, times(2)).forResource(ListResource.class);
   }
 
+  /*
   @Test
   public void testCreateNewListFromXml() throws Exception {
     String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><date value=\"2021-11-03T00:00:00Z\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
@@ -217,7 +218,6 @@ public class PatientIdentifierControllerTests {
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
-
   @Test
   public void testUpdateExistingListXml() throws Exception {
     String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><date value=\"2021-11-03T00:00:00Z\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
@@ -235,6 +235,7 @@ public class PatientIdentifierControllerTests {
     // Resource mockResource = mock(Resource.class);
     verify(fhirDataProvider, times(1)).updateResource(any());
   }
+   */
 
   private Bundle getListBundle(String system, String value, String date) {
     Bundle bundle = new Bundle();
