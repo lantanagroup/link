@@ -20,7 +20,7 @@ public class ApiConfig {
     /**
      * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
      */
-    private Boolean skipInit;
+    private Boolean skipInit = false;
 
     /**
      * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
