@@ -158,7 +158,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testCreateTwoLists() throws Exception {
-    String csvContent = "PatientIdentifier,ApplicablePeriodExtensionUrl,date,EncounterID,PatientLogicalID\n" +
+    String csvContent = "PatientIdentifier,date,EncounterID,PatientLogicalID\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,12742537\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,12742538\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,2021-12-12,121,12742537\n" +
