@@ -153,7 +153,7 @@ public class PatientIdentifierControllerTests {
 
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
-    verify(listQuery, times(1)).forResource(ListResource.class);
+    verify(listQuery, times(2)).forResource(ListResource.class);
   }
 
   @Test
@@ -161,8 +161,8 @@ public class PatientIdentifierControllerTests {
     String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-12-12,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-12-12,2021-12-12,121,12742538\n";
+            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-11-12,2021-11-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-11-12,2021-11-12,121,12742538\n";
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
@@ -179,7 +179,7 @@ public class PatientIdentifierControllerTests {
 
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
-    verify(listQuery, times(2)).forResource(ListResource.class);
+    verify(listQuery, times(4)).forResource(ListResource.class);
   }
 
   @Test
