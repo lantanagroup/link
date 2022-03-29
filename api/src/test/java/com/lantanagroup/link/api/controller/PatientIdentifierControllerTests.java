@@ -58,7 +58,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVInvalidReportTypeException() throws Exception {
-    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537";
+    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
 
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -67,7 +67,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVMissingReportTypeException() throws Exception {
-    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537";
+    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -76,9 +76,9 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVInvalidPatientIdentifierException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000,2021-12-12,121,12742537" +
-            "urn:oid:2.16.840.1.113883.6.1000,303061395,2021-12-12,121,12742538";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000,2021-12-12,2021-12-12,121,12742537" +
+            "urn:oid:2.16.840.1.113883.6.1000,303061395,2021-12-12,2021-12-12,121,12742538";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -87,7 +87,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithNoLinesException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -96,8 +96,8 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithInvalidDateException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-14-12,121,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-14-12,121,2021-14-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -106,8 +106,8 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithMissingDateException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,,121,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,,,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -116,7 +116,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithMissingPatientException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" + ",2021-14-12,,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" + ",2021-14-12,2021-14-12,,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -125,19 +125,19 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testGetCsvEntries() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n";
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     List<CsvEntry> listCsv = patientIdentifierController.getCsvEntries(csvContent);
     Assert.assertEquals(2, listCsv.size());
   }
 
-  /*@Test
+  @Test
   public void testCreateOneList() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n";
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
     IUntypedQuery<IBaseBundle> listQuery = this.mockListBundle(untypedQuery);
@@ -158,11 +158,11 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testCreateTwoLists() throws Exception {
-    String csvContent = "PatientIdentifier,date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,12742538\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-12-12,https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-12-12,2021-12-12,121,12742538\n";
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
@@ -180,7 +180,7 @@ public class PatientIdentifierControllerTests {
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
     verify(listQuery, times(2)).forResource(ListResource.class);
-  }*/
+  }
 
   @Test
   public void testCreateNewListFromXml() throws Exception {

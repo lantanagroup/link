@@ -61,8 +61,8 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
       }
       List<CsvEntry> list = this.getCsvEntries(csvContent);
-      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getDate));
-      for (String key : csvMap.keySet()) {
+      Map<Period, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriod));
+      for (Period key : csvMap.keySet()) {
         ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
         this.receiveFHIR(listResource);
       }
@@ -123,22 +123,33 @@ public class PatientIdentifierController extends BaseController {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
         }
         if (line[1] == null || line[1].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required.");
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date is required.");
         }
-        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatStartDate = new SimpleDateFormat("yyyy-MM-dd");
         try {
-          formatDate.setLenient(false);
-          formatDate.parse(line[1]);
+          formatStartDate.setLenient(false);
+          formatStartDate.parse(line[1]);
         } catch (ParseException ex) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date. The date format should be: YYYY-mm-dd.");
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid start date. The start date format should be: YYYY-mm-dd.");
         }
-        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
+        if (line[2] == null || line[1].isBlank()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is required.");
+        }
+        SimpleDateFormat formatEndDate = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+          formatEndDate.setLenient(false);
+          formatEndDate.parse(line[2]);
+        } catch (ParseException ex) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid end date. The end date format should be: YYYY-mm-dd.");
+        }
+        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3], line[4]);
         list.add(entry);
       }
     }
     if (list.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
     }
+    //list.setExtension();
     return list;
   }
 
@@ -210,14 +221,19 @@ public class PatientIdentifierController extends BaseController {
     } */
   }
 
-  private ListResource getListResource(String reportTypeId, String listDate, List<CsvEntry> csvList) {
+  private ListResource getListResource(String reportTypeId, Period listDate, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
     List<Identifier> identifierList = new ArrayList<>();
     identifierList.add(new Identifier());
     identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
     identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
     list.setIdentifier(identifierList);
-    list.setDateElement(new DateTimeType(listDate));
+
+    List<Extension> applicablePeriodExtensionUrl = new ArrayList<>();
+    applicablePeriodExtensionUrl.add(new Extension(Constants.ApplicablePeriodExtensionUrl));
+    applicablePeriodExtensionUrl.get(0).setValue(listDate);
+    list.setExtension(applicablePeriodExtensionUrl);
+    //list.setDateElement(new DateTimeType(listDate));
     csvList.stream().parallel().forEach(csvEntry -> {
       ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
       Reference reference = new Reference();
