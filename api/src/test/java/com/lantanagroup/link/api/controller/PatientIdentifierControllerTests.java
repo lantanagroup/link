@@ -153,7 +153,7 @@ public class PatientIdentifierControllerTests {
 
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
-    verify(listQuery, times(2)).forResource(ListResource.class);
+    verify(listQuery, times(1)).forResource(ListResource.class);
   }
 
   @Test
@@ -179,7 +179,7 @@ public class PatientIdentifierControllerTests {
 
     patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
 
-    verify(listQuery, times(4)).forResource(ListResource.class);
+    verify(listQuery, times(2)).forResource(ListResource.class);
   }
 
   @Test

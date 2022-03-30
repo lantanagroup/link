@@ -61,9 +61,9 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
       }
       List<CsvEntry> list = this.getCsvEntries(csvContent);
-      Map<Period, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriod));
-      for (Period key : csvMap.keySet()) {
-        ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
+        Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
+      for (String key : csvMap.keySet()) {
+        ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
         this.receiveFHIR(listResource);
       }
     } catch (ResponseStatusException ex) {
@@ -221,17 +221,16 @@ public class PatientIdentifierController extends BaseController {
     } */
   }
 
-  private ListResource getListResource(String reportTypeId, Period listDate, List<CsvEntry> csvList) {
+  private ListResource getListResource(String reportTypeId, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
     List<Identifier> identifierList = new ArrayList<>();
     identifierList.add(new Identifier());
     identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
     identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
     list.setIdentifier(identifierList);
-
     List<Extension> applicablePeriodExtensionUrl = new ArrayList<>();
     applicablePeriodExtensionUrl.add(new Extension(Constants.ApplicablePeriodExtensionUrl));
-    applicablePeriodExtensionUrl.get(0).setValue(listDate);
+    applicablePeriodExtensionUrl.get(0).setValue(csvList.get(0).getPeriod());
     list.setExtension(applicablePeriodExtensionUrl);
     //list.setDateElement(new DateTimeType(listDate));
     csvList.stream().parallel().forEach(csvEntry -> {
