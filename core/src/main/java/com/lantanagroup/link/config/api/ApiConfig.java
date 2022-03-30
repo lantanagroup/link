@@ -10,7 +10,6 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
 
 @Getter @Setter
 @Configuration
@@ -18,6 +17,11 @@ import java.util.List;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
+    /**
+     * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
+     */
+    private Boolean skipInit = false;
+
     /**
      * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
      */

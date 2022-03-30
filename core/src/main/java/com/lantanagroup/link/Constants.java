@@ -15,4 +15,5 @@ public class Constants {
   public static final String Roles = "roles";
   public static final String FhirResourcesPackageName = "org.hl7.fhir.r4.model.";
   public static final String UuidPrefix = "urn:uuid:";
+  public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
 }

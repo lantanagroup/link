@@ -2,8 +2,10 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -44,12 +46,16 @@ public class MeasureEvaluator {
       Date startDate = Helper.parseFhirDate(this.criteria.getPeriodStart());
       Date endDate = Helper.parseFhirDate(this.criteria.getPeriodEnd());
 
+      QueryResponse patientData = context.getPatientData().stream().filter(e -> e.getPatientId() == patientId).findFirst().get();
+
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("patient").setValue(new StringType(patientId));
+      parameters.addParameter().setName("additionalData").setResource(patientData.getBundle());
 
-      measureReport = context.getFhirProvider().getMeasureReport(this.context.getMeasureId(), parameters);
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+      measureReport = fhirDataProvider.getMeasureReport(this.context.getMeasureId(), parameters);
 
       logger.info(String.format("Done executing $evaluate-measure for %s", this.context.getMeasureId()));
 

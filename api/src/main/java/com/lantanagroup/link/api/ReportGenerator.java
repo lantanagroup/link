@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
@@ -219,6 +220,11 @@ public class ReportGenerator {
    * @param existingDocumentReference - the existing document reference
    */
   public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
+
+    if(this.config.getEvaluationService() == null) {
+      throw new ConfigurationException("api.evaluation-service has not been configured");
+    }
+
     // Create a bundle to execute as a transaction to update multiple resources at once
     Bundle updateBundle = new Bundle();
     updateBundle.setType(Bundle.BundleType.TRANSACTION);

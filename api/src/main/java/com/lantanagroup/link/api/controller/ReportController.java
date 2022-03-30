@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.ConfigurationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -94,10 +95,13 @@ public class ReportController extends BaseController {
       }
     });
 
-    logger.info("Executing the measure definition bundle as a transaction on " + this.config.getFhirServerStore());
+    logger.info("Executing the measure definition bundle");
 
-    this.getFhirDataProvider().transaction(bundle);
-    logger.info("Measure definition bundle transaction executed successfully...");
+    // Store the resources of the measure on the evaluation service
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    fhirDataProvider.transaction(bundle);
+
+    logger.info("Done executing the measure definition bundle");
 
     return measureId;
   }
