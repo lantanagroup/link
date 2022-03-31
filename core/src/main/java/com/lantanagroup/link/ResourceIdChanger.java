@@ -103,6 +103,20 @@ public class ResourceIdChanger {
     return references;
   }
 
+
+  /**
+   * Finds any instance (recursively) of a CodeableConcept or Coding within the specified object
+   *
+   * @param obj The object to search
+   * @return A list of CodeableConcept or Coding instances found in the object
+   */
+  public static List<Coding> findCodings(Object obj) {
+    List<Coding> codes = new ArrayList<>();
+    scanInstance(obj, Coding.class, Collections.newSetFromMap(new IdentityHashMap<>()), codes);
+    return codes;
+  }
+
+
   /**
    * Scans an object recursively to find any instances of the specified type
    *
