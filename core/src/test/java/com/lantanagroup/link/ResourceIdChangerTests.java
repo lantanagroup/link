@@ -36,7 +36,7 @@ public class ResourceIdChangerTests {
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond1));
 
     Condition cond2 = new Condition();
-    cond2.setId("urn:uuid:987654321");  // 78 chars
+    cond2.setId("urn:uuid:987654321");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond2));
 
     Condition cond3 = new Condition();
@@ -44,7 +44,7 @@ public class ResourceIdChangerTests {
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond3));
 
     Condition cond4 = new Condition();
-    cond4.setId("correctOne");  // 78 chars
+    cond4.setId("correctOne");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond4));
 
 
