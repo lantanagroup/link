@@ -3,6 +3,7 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.google.common.annotations.VisibleForTesting;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
@@ -22,6 +23,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -59,9 +61,9 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
       }
       List<CsvEntry> list = this.getCsvEntries(csvContent);
-      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getDate));
+        Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
       for (String key : csvMap.keySet()) {
-        ListResource listResource = getListResource(reportTypeId, key, csvMap.get(key));
+        ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
         this.receiveFHIR(listResource);
       }
     } catch (ResponseStatusException ex) {
@@ -121,48 +123,79 @@ public class PatientIdentifierController extends BaseController {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
         }
         if (line[1] == null || line[1].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Date is required.");
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date is required.");
         }
-        SimpleDateFormat formatDate = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat formatStartDate = new SimpleDateFormat("yyyy-MM-dd");
         try {
-          formatDate.setLenient(false);
-          formatDate.parse(line[1]);
+          formatStartDate.setLenient(false);
+          formatStartDate.parse(line[1]);
         } catch (ParseException ex) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid date. The date format should be: YYYY-mm-dd.");
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid start date. The start date format should be: YYYY-mm-dd.");
         }
-        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
+        if (line[2] == null || line[1].isBlank()) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is required.");
+        }
+        SimpleDateFormat formatEndDate = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+          formatEndDate.setLenient(false);
+          formatEndDate.parse(line[2]);
+        } catch (ParseException ex) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid end date. The end date format should be: YYYY-mm-dd.");
+        }
+        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3], line[4]);
         list.add(entry);
       }
     }
     if (list.isEmpty()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
     }
+    //list.setExtension();
     return list;
   }
 
   private void receiveFHIR(Resource resource) throws Exception {
     logger.info("Storing patient identifiers");
-    MethodOutcome outcome = null;
-    if (resource.hasId()) {
-      resource.setId((String) null);
-    }
-    if (resource instanceof ListResource) {
+    resource.setId((String) null);
 
+    if (resource instanceof ListResource) {
+      ListResource list = (ListResource) resource;
       List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
-      Date datetime = ((ListResource) resource).getDate();
-      // added some validation code
-      if (datetime == null) {
-        throw new Exception("Date is not passed in the file.");
-      }
+
       if (identifierList.isEmpty()) {
         throw new Exception("Identifier is not present.");
       }
+
+      Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
+
+      if (applicablePeriodExt == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension is required");
+      }
+
+      Period applicablePeriod = applicablePeriodExt.getValue().castToPeriod(applicablePeriodExt.getValue());
+
+      if (applicablePeriod == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension must have a value of type Period");
+      }
+
+      if (!applicablePeriod.hasStart()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have start");
+      }
+
+      if (!applicablePeriod.hasEnd()) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have end");
+      }
+
       String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
       String value = ((ListResource) resource).getIdentifier().get(0).getValue();
-      String date = Helper.getFhirDate(datetime);
-      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, date);
+      DateTimeType startDate = applicablePeriod.getStartElement();
+      DateTimeType endDate = applicablePeriod.getEndElement();
+      String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
+      String end = Helper.getFhirDate(LocalDateTime.of(endDate.getYear(), endDate.getMonth() + 1, endDate.getDay(), endDate.getHour(), endDate.getMinute(), endDate.getSecond()));
+      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, start, end);
+
       if (bundle.getEntry().size() == 0) {
-        ((ListResource) resource).setDateElement(new DateTimeType(date));
+        applicablePeriod.setStartElement(new DateTimeType(start));
+        applicablePeriod.setEndElement(new DateTimeType(end));
         this.getFhirDataProvider().createResource(resource);
       } else {
         ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
@@ -182,18 +215,24 @@ public class PatientIdentifierController extends BaseController {
         this.getFhirDataProvider().updateResource(existingList);
       }
     } else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only \"List\" resources are allowed");
+    } /* else {
       this.getFhirDataProvider().createResource(resource);
-    }
+    } */
   }
 
-  private ListResource getListResource(String reportTypeId, String listDate, List<CsvEntry> csvList) {
+  private ListResource getListResource(String reportTypeId, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
     List<Identifier> identifierList = new ArrayList<>();
     identifierList.add(new Identifier());
     identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
     identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
     list.setIdentifier(identifierList);
-    list.setDateElement(new DateTimeType(listDate));
+    List<Extension> applicablePeriodExtensionUrl = new ArrayList<>();
+    applicablePeriodExtensionUrl.add(new Extension(Constants.ApplicablePeriodExtensionUrl));
+    applicablePeriodExtensionUrl.get(0).setValue(csvList.get(0).getPeriod());
+    list.setExtension(applicablePeriodExtensionUrl);
+    //list.setDateElement(new DateTimeType(listDate));
     csvList.stream().parallel().forEach(csvEntry -> {
       ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
       Reference reference = new Reference();

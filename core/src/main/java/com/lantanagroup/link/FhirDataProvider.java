@@ -33,12 +33,8 @@ public class FhirDataProvider {
     this.client = client;
   }
 
-  public FhirDataProvider(ApiConfig config) {
-    if (this.client == null) {
-      String fhirBase = config.getFhirServerStore();
-      IGenericClient fhirStoreClient = this.ctx.newRestfulGenericClient(fhirBase);
-      this.client = fhirStoreClient;
-    }
+  public FhirDataProvider(String fhirBase) {
+    this.client = this.ctx.newRestfulGenericClient(fhirBase);
   }
 
   public Resource createResource(IBaseResource resource) {
@@ -74,7 +70,7 @@ public class FhirDataProvider {
     if (updatedVersion > initialVersion) {
       logger.debug(String.format("Update is successful for %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     } else {
-      logger.error(String.format("Failed to update FHIR resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
+      logger.info(String.format("Nothing changed in resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
   }
 
@@ -135,12 +131,13 @@ public class FhirDataProvider {
     return (Bundle) bundle.getEntryFirstRep().getResource();
   }
 
-  public Bundle findListByIdentifierAndDate(String system, String value, String date) {
+  public Bundle findListByIdentifierAndDate(String system, String value, String start, String end) {
     Bundle bundle = this.client
             .search()
             .forResource(ListResource.class)
             .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
-            .and(ListResource.DATE.exactly().day(date))
+            .and(new DateClientParam("applicable-period-start").exactly().second(start))
+            .and(new DateClientParam("applicable-period-end").exactly().second(end))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
@@ -194,6 +191,8 @@ public class FhirDataProvider {
   }
 
   public Bundle transaction(Bundle txBundle) {
+    logger.trace("Executing transaction on " + this.client.getServerBase());
+
     Bundle responseBundle = this.client
             .transaction()
             .withBundle(txBundle)

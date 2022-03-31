@@ -10,6 +10,7 @@ import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.io.FileUtils;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class ReportGeneratorTests {
   private ResourceLoader resourceLoader;
 
 
-  @Test
+  @Ignore
   public void testGenerateAnStore() throws ParseException, IOException {
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     LinkCredentials user = mock(LinkCredentials.class);

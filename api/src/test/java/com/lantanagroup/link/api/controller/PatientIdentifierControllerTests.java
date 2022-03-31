@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.model.CsvEntry;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -57,7 +58,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVInvalidReportTypeException() throws Exception {
-    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537";
+    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
 
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -66,7 +67,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVMissingReportTypeException() throws Exception {
-    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537";
+    String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -75,9 +76,9 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVInvalidPatientIdentifierException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000,2021-12-12,121,12742537" +
-            "urn:oid:2.16.840.1.113883.6.1000,303061395,2021-12-12,121,12742538";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000,2021-12-12,2021-12-12,121,12742537" +
+            "urn:oid:2.16.840.1.113883.6.1000,303061395,2021-12-12,2021-12-12,121,12742538";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -86,7 +87,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithNoLinesException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -95,8 +96,8 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithInvalidDateException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-14-12,121,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-14-12,121,2021-14-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -105,8 +106,8 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithMissingDateException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,,121,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,,,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -115,7 +116,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testStoreCSVWithMissingPatientException() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" + ",2021-14-12,,12742537";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" + ",2021-14-12,2021-14-12,,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
     thrown.expect(ResponseStatusException.class);
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
@@ -124,9 +125,9 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testGetCsvEntries() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n";
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     List<CsvEntry> listCsv = patientIdentifierController.getCsvEntries(csvContent);
     Assert.assertEquals(2, listCsv.size());
@@ -134,9 +135,9 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testCreateOneList() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n";
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
     IUntypedQuery<IBaseBundle> listQuery = this.mockListBundle(untypedQuery);
@@ -157,11 +158,11 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testCreateTwoLists() throws Exception {
-    String csvContent = "PatientIdentifier,Date,EncounterID,PatientLogicalID\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,121,12742538\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-11-12,121,12742537\n" +
-            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-11-12,121,12742538\n";
+    String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061396,2021-12-12,2021-12-12,121,12742538\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061397,2021-11-12,2021-11-12,121,12742537\n" +
+            "urn:oid:2.16.840.1.113883.6.1000|303061398,2021-11-12,2021-11-12,121,12742538\n";
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     IUntypedQuery<IBaseBundle> untypedQuery = mock(IUntypedQuery.class);
@@ -183,7 +184,7 @@ public class PatientIdentifierControllerTests {
 
   @Test
   public void testCreateNewListFromXml() throws Exception {
-    String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><date value=\"2021-11-03T00:00:00Z\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
+    String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><extension url=\"https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period\" ><valuePeriod><start value= \"2021-11-02T20:00:00.000-04:00\" /><end value= \"2021-11-02T20:00:00.000-04:00\" /></valuePeriod></extension><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
 
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
@@ -194,14 +195,14 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
   @Test
   public void testCreateNewListFromJson() throws Exception {
-    String jsonContent = "{\"resourceType\":\"List\",\"identifier\":[{\"system\":\"https://nhsnlink.org\",\"value\":\"covid-min\"}],\"status\":\"current\",\"mode\":\"working\",\"date\":\"2021-11-03T00:00:00Z\",\"entry\":[{\"item\":{\"identifier\":{\"system\":\"urn:oid:2.16.840.1.113883.6.1000\",\"value\":\"101062222\"}}}]}";
+    String jsonContent = "{\"resourceType\":\"List\",\"extension\":[{\"url\":\"https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period\",\"valuePeriod\":{\"start\":\"2021-11-02T20:00:00.000-04:00\",\"end\":\"2021-11-02T20:00:00.000-04:00\"}}],\"identifier\":[{\"system\":\"https://nhsnlink.org\",\"value\": \"covid-min\"}],\"status\":\"current\",\"mode\":\"working\",\"entry\":[{\"item\":{\"identifier\":{\"system\":\"urn:oid:2.16.840.1.113883.6.1000\",\"value\":\"101062222\"}}}]}";
 
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
@@ -211,16 +212,16 @@ public class PatientIdentifierControllerTests {
     Bundle repDefBundle = new Bundle();
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
+
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
 
-
   @Test
   public void testUpdateExistingListXml() throws Exception {
-    String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><date value=\"2021-11-03T00:00:00Z\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
+    String xmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><List xmlns=\"http://hl7.org/fhir\" xmlns:fhir=\"http://hl7.org/fhir\"><extension url=\"https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period\" ><valuePeriod><start value= \"2021-11-02T20:00:00.000-04:00\" /><end value= \"2021-11-02T20:00:00.000-04:00\" /></valuePeriod></extension><identifier><system value=\"https://nhsnlink.org\"/><value value=\"covid-min\"/></identifier><status value=\"current\"/><mode value=\"working\"/><entry><item><identifier><system value=\"urn:oid:2.16.840.1.113883.6.1000\"/><value value=\"101062222\"/></identifier></item></entry></List>";
 
     PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
@@ -230,7 +231,7 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     // Resource mockResource = mock(Resource.class);
     verify(fhirDataProvider, times(1)).updateResource(any());

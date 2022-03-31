@@ -31,7 +31,6 @@ public class ResourceIdChanger {
 
   /**
    * Finds any instance (recursively) of a Reference within the specified object
-   *
    * @param obj The object to search
    * @return A list of Reference instances found in the object
    */
