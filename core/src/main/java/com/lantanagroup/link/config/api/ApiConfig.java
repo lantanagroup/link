@@ -36,6 +36,13 @@ public class ApiConfig {
     private String evaluationService;
 
     /**
+     * <strong>terminology-service: https://tx.nhsnlink.org/fhir</strong>
+     */
+    @Getter
+    @Setter
+    private String terminologyService;
+
+    /**
      * <strong>api.auth-jwks-url</strong><br>URL used to retrieve certs from identity provider to verify that JWT's are valid
      */
     private String authJwksUrl;
