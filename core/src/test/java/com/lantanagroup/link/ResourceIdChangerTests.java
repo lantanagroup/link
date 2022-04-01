@@ -4,6 +4,7 @@ import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceIdChangerTests {
@@ -35,7 +36,7 @@ public class ResourceIdChangerTests {
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond1));
 
     Condition cond2 = new Condition();
-    cond2.setId("urn:uuid:987654321");  // 78 chars
+    cond2.setId("urn:uuid:987654321");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond2));
 
     Condition cond3 = new Condition();
@@ -43,7 +44,7 @@ public class ResourceIdChangerTests {
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond3));
 
     Condition cond4 = new Condition();
-    cond4.setId("correctOne");  // 78 chars
+    cond4.setId("correctOne");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(cond4));
 
 
@@ -98,4 +99,45 @@ public class ResourceIdChangerTests {
     Assert.assertEquals("Condition/correctOne", enc1.getDiagnosis().get(3).getCondition().getReference());
     Assert.assertNull(enc1.getDiagnosis().get(3).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
   }
+
+  @Test
+  public void findCodingsBundleTest() {
+    Bundle bundle = new Bundle();
+    Patient patient = new Patient();
+    patient.setId("123");
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(patient));
+    Observation obs = new Observation();
+    obs.setSubject(new Reference("Patient/123"));
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(obs));
+    Composition comp = new Composition();
+    comp.getRelatesTo().add(new Composition.CompositionRelatesToComponent().setTarget(new Reference("Composition/xyz")));
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(comp));
+    Location location = new Location();
+    location.setId("p0yPvH-JAN21");
+    List<CodeableConcept> codeableConceptList = new ArrayList<>();
+    CodeableConcept codeableConcept = new CodeableConcept();
+    Coding coding = new Coding();
+    coding.setSystem("http://some-system.com");
+    coding.setCode("some-type1");
+
+    Coding coding1 = new Coding();
+    coding1.setSystem("http://some-system2.com");
+    coding1.setCode("some-type2");
+
+    codeableConcept.addCoding(coding);
+    codeableConcept.addCoding(coding1);
+    codeableConceptList.add(codeableConcept);
+    location.setType(codeableConceptList);
+    location.setName("Some Location");
+    bundle.addEntry(new Bundle.BundleEntryComponent().setResource(location));
+    List codings = ResourceIdChanger.findCodings(bundle);
+    Assert.assertEquals(2, codings.size());
+    Coding codingTarget = (Coding) codings.get(0);
+    Assert.assertEquals("some-type1", codingTarget.getCode());
+    Assert.assertEquals("http://some-system.com", codingTarget.getSystem());
+    Coding codingTarget2 = (Coding) codings.get(1);
+    Assert.assertEquals("some-type2", codingTarget2.getCode());
+    Assert.assertEquals("http://some-system2.com", codingTarget2.getSystem());
+  }
+
 }
