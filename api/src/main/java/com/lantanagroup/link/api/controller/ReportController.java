@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.ConfigurationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -18,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,13 +202,13 @@ public class ReportController extends BaseController {
 
       List<QueryResponse> queryResponses = new ArrayList<>();
       QueryResponse queryResponse = new QueryResponse();
-      for(Bundle.BundleEntryComponent e : bundle.getEntry()) {
-        if(e.getResource().getResourceType() == ResourceType.Patient) {
+      for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
+        if (e.getResource().getResourceType() == ResourceType.Patient) {
           queryResponse = new QueryResponse(e.getResource().getIdElement().getIdPart(), new Bundle());
           queryResponses.add(queryResponse);
         }
 
-        if(queryResponse.getBundle() != null){
+        if (queryResponse.getBundle() != null) {
           queryResponse.getBundle().addEntry(e);
         }
       }
@@ -335,6 +335,16 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
+
+
+      List<ConceptMap> conceptMapsList = new ArrayList();
+      if (this.config.getConceptMaps() != null) {
+        // get it from fhirserver
+        this.config.getConceptMaps().stream().forEach(concepMapId -> {
+          IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
+          conceptMapsList.add((ConceptMap) conceptMap);
+        });
+      }
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 

@@ -8,7 +8,6 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.config.api.ApiConfig;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -241,6 +240,15 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public IBaseResource getResourceByTypeAndId(String resourceType, String resourceId) {
+    return this.client
+            .read()
+            .resource(resourceType)
+            .withId(resourceId)
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
     MeasureReport measureReport = client.operation()
             .onInstance(new IdType("Measure", measureId))
@@ -263,7 +271,7 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public MethodOutcome createOutcome(IBaseResource resource){
+  public MethodOutcome createOutcome(IBaseResource resource) {
     return this.client
             .create()
             .resource(resource)
@@ -305,7 +313,7 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public Bundle searchBundleByTag(String system, String value){
+  public Bundle searchBundleByTag(String system, String value) {
     return client
             .search()
             .forResource(Bundle.class)
