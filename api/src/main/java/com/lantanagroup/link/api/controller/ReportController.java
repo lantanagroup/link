@@ -75,9 +75,6 @@ public class ReportController extends BaseController {
       measureId = measureEntry.get().getResource().getIdElement().getIdPart();
     }
 
-    logger.info("Generating a Bundle Transaction of the Measure");
-    bundle.setType(Bundle.BundleType.TRANSACTION);
-
     // Make sure each entry in the bundle has a request
     bundle.getEntry().forEach(entry -> {
       if (entry.getRequest() == null) {
@@ -99,6 +96,7 @@ public class ReportController extends BaseController {
 
     // Store the resources of the measure on the evaluation service
     bundle = txServiceFilter(bundle);
+    bundle.setType(Bundle.BundleType.TRANSACTION);
     FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     fhirDataProvider.transaction(bundle);
 
@@ -112,6 +110,7 @@ public class ReportController extends BaseController {
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getTerminologyService());
       Bundle txBundle = new Bundle();
       Bundle returnBundle = new Bundle();
+      txBundle.setType(Bundle.BundleType.BATCH);
       logger.info("Filtering the measure definition bundle");
       bundle.getEntry().forEach(entry -> {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
