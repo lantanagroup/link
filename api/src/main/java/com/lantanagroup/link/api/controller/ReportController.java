@@ -75,9 +75,6 @@ public class ReportController extends BaseController {
       measureId = measureEntry.get().getResource().getIdElement().getIdPart();
     }
 
-    logger.info("Generating a Bundle Transaction of the Measure");
-    bundle.setType(Bundle.BundleType.TRANSACTION);
-
     // Make sure each entry in the bundle has a request
     bundle.getEntry().forEach(entry -> {
       if (entry.getRequest() == null) {
@@ -98,12 +95,37 @@ public class ReportController extends BaseController {
     logger.info("Executing the measure definition bundle");
 
     // Store the resources of the measure on the evaluation service
+    bundle = txServiceFilter(bundle);
+    bundle.setType(Bundle.BundleType.TRANSACTION);
     FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     fhirDataProvider.transaction(bundle);
 
     logger.info("Done executing the measure definition bundle");
 
     return measureId;
+  }
+
+  private Bundle txServiceFilter(Bundle bundle) {
+    if(bundle.getEntry() != null) {
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getTerminologyService());
+      Bundle txBundle = new Bundle();
+      Bundle returnBundle = new Bundle();
+      txBundle.setType(Bundle.BundleType.BATCH);
+      logger.info("Filtering the measure definition bundle");
+      bundle.getEntry().forEach(entry -> {
+        if (entry.getResource().getResourceType().toString() == "ValueSet"
+                || entry.getResource().getResourceType().toString() == "CodeSystem") {
+          txBundle.addEntry(entry);
+        }
+        else {
+          returnBundle.addEntry(entry);
+        }
+      });
+      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
+      fhirDataProvider.transaction(txBundle);
+      return returnBundle;
+    }
+    return bundle;
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
