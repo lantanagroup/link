@@ -180,7 +180,7 @@ public class ReportController extends BaseController {
       context.setReportDefBundle(reportDefBundle);
     } catch (Exception ex) {
       logger.error("Error storing resources for the report definition " + criteria.getReportDefId() + ": " + ex.getMessage());
-      throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
+      throw new Exception("Error storing resources for the report definition: " + ex.getMessage(), ex);
     }
   }
 
