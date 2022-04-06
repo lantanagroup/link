@@ -299,6 +299,19 @@ public class ReportController extends BaseController {
     return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
   }
 
+  private void getConvertCode(ConceptMap map, Coding code) {
+    // TODO: Lookup ConceptMap.group based on code system
+    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
+      if (group.getSource().equals(code.getSystem())) {
+        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
+        // pick the last element from list
+        code.setSystem(group.getTarget());
+        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
+        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
+      }
+    });
+  }
+
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
@@ -345,6 +358,17 @@ public class ReportController extends BaseController {
           conceptMapsList.add((ConceptMap) conceptMap);
         });
       }
+      // apply concept-maps for coding translation
+      if (!conceptMapsList.isEmpty()) {
+        context.getPatientData().stream().forEach(patientBundle -> {
+          conceptMapsList.stream().forEach(conceptMap -> {
+            List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
+            codes.stream().forEach(code -> {
+              this.getConvertCode(conceptMap, code);
+            });
+          });
+        });
+      }
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
@@ -373,6 +397,7 @@ public class ReportController extends BaseController {
 
     return response;
   }
+
 
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
