@@ -64,15 +64,15 @@ public class ReportController extends BaseController {
   @Autowired
   private QueryConfig queryConfig;
 
-  private String storeReportBundleResources(Bundle bundle) {
-    String measureId = null;
-
+  private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
             .findFirst();
 
     if (measureEntry.isPresent()) {
-      measureId = measureEntry.get().getResource().getIdElement().getIdPart();
+      Measure measure = (Measure) measureEntry.get().getResource();
+      context.setMeasureId(measure.getIdElement().getIdPart());
+      context.setMeasure(measure);
     }
 
     // Make sure each entry in the bundle has a request
@@ -101,8 +101,6 @@ public class ReportController extends BaseController {
     fhirDataProvider.transaction(bundle);
 
     logger.info("Done executing the measure definition bundle");
-
-    return measureId;
   }
 
   private Bundle txServiceFilter(Bundle bundle) {
@@ -172,18 +170,17 @@ public class ReportController extends BaseController {
     } else {
       logger.info("The latest version of the Measure bundle is already stored. There is no need to re-acquire it.");
     }
+
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
       logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
-      String measureId = this.storeReportBundleResources(reportDefBundle);
-      context.setMeasureId(measureId);
+      this.storeReportBundleResources(reportDefBundle, context);
       context.setReportDefBundle(reportDefBundle);
     } catch (Exception ex) {
       logger.error("Error storing resources for the report definition " + criteria.getReportDefId() + ": " + ex.getMessage());
       throw new Exception("Error storing resources for the report definition: " + ex.getMessage(), ex);
     }
   }
-
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;
@@ -370,7 +367,6 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
-
 
       List<ConceptMap> conceptMapsList = new ArrayList();
       if (this.config.getConceptMaps() != null) {
