@@ -487,7 +487,9 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue()));
-    Measure measure = this.getFhirDataProvider().findMeasureByIdentifier(documentReference.getIdentifier().get(0));
+
+    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(0));
 
     report.setMeasure(measure);
 

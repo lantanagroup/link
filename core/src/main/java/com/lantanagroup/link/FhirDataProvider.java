@@ -254,7 +254,6 @@ public class FhirDataProvider {
             .onInstance(new IdType("Measure", measureId))
             .named("$evaluate-measure")
             .withParameters(parameters)
-            .useHttpGet()
             .returnResourceType(MeasureReport.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
