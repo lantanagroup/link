@@ -9,7 +9,8 @@ import org.springframework.context.annotation.PropertySource;
 
 import java.util.List;
 
-@Getter @Setter
+@Getter
+@Setter
 @Configuration
 @ConfigurationProperties(prefix = "sender.fhir")
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
@@ -17,10 +18,7 @@ public class FHIRSenderConfig {
     /**
      * <strong>api.send-url</strong><br>The list of URLs to send reports to
      */
-    private List<String> sendUrls;
+    @Getter
+    private List<FhirSenderUrlOAuthConfig> sendUrls;
 
-    /**
-     * <strong>oauth</strong><br>
-     */
-    @Getter FHIRSenderOAuthConfig oAuthConfig;
 }

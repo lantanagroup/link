@@ -2,6 +2,8 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
+import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
+import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -39,29 +41,29 @@ public class GenericSender {
     return HttpClientBuilder.create().build();
   }
 
-  private String getToken() throws Exception {
+  private String getToken(FHIRSenderOAuthConfig authConfig) throws Exception {
     String token = "";
 
-    if (this.config.getOAuthConfig() != null && this.config.getOAuthConfig().hasCredentialProperties()) {
+    if (authConfig != null && authConfig.hasCredentialProperties()) {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
-      switch (this.config.getOAuthConfig().getCredentialMode()) {
+      switch (authConfig.getCredentialMode()) {
         case Client:
           token = OAuth2Helper.getClientCredentialsToken(
                   this.getHttpClient(),
-                  this.config.getOAuthConfig().getTokenUrl(),
-                  this.config.getOAuthConfig().getUsername(),
-                  this.config.getOAuthConfig().getPassword(),
-                  this.config.getOAuthConfig().getScope());
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getScope());
           break;
         case Password:
           token = OAuth2Helper.getPasswordCredentialsToken(
                   this.getHttpClient(),
-                  this.config.getOAuthConfig().getTokenUrl(),
-                  this.config.getOAuthConfig().getUsername(),
-                  this.config.getOAuthConfig().getPassword(),
-                  this.config.getOAuthConfig().getClientId(),
-                  this.config.getOAuthConfig().getScope());
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getClientId(),
+                  authConfig.getScope());
       }
     } else {
       throw new Exception("Authentication is required to submit");
@@ -80,12 +82,11 @@ public class GenericSender {
 
     logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
 
-    String token = this.getToken();
 
-    for (String sendUrl : this.config.getSendUrls()) {
-      logger.info("Sending MeasureReport bundle to URL " + sendUrl);
-
-      HttpPost sendRequest = new HttpPost(sendUrl);
+    for (FhirSenderUrlOAuthConfig authConfig : this.config.getSendUrls()) {
+      logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
+      String token = this.getToken(authConfig.getAuthConfig());
+      HttpPost sendRequest = new HttpPost(authConfig.getUrl());
       sendRequest.addHeader("Content-Type", mimeType);
 
       if (Strings.isNotEmpty(token)) {
@@ -102,7 +103,7 @@ public class GenericSender {
 
         if (response.getStatusLine().getStatusCode() >= 300) {
           String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
-          logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), sendUrl, responseContent));
+          logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), authConfig.getUrl(), responseContent));
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
