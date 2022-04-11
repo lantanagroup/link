@@ -17,9 +17,25 @@ import org.springframework.validation.annotation.Validated;
 public class GenerateAndSubmitConfig {
 
   private String apiUrl;
-  private String periodStart;
-  private String periodEnd;
+  private GenerateAndSubmitPeriodStart periodStart;
+  private GenerateAndSubmitPeriodEnd periodEnd;
   private AuthConfig auth;
   private String reportTypeId;
 }
 
+@Getter
+@Setter
+class GenerateAndSubmitPeriodStart {
+
+  private int adjustDay;
+  private int adjustMonth;
+  private boolean startOfDay;
+}
+
+@Getter
+@Setter
+class GenerateAndSubmitPeriodEnd {
+
+  private int adjustDay;
+  private boolean endOfDay;
+}

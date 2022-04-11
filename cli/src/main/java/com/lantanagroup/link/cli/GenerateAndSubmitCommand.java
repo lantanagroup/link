@@ -31,25 +31,30 @@ public class GenerateAndSubmitCommand {
   @Autowired
   private GenerateAndSubmitConfig configInfo;
 
-  private static Date getStartDate(int adjustment) {
+  private static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
-    cal.set(Calendar.MILLISECOND, 0);
-    cal.set(Calendar.SECOND, 0);
-    cal.set(Calendar.MINUTE, 0);
-    cal.set(Calendar.HOUR_OF_DAY, 0);
-    cal.add(Calendar.HOUR, adjustment);
+    cal.add(Calendar.HOUR, adjustHours);
+    cal.add(Calendar.MONTH, adjustMonths);
+    if(startOfDay) {
+      cal.set(Calendar.MILLISECOND, 0);
+      cal.set(Calendar.SECOND, 0);
+      cal.set(Calendar.MINUTE, 0);
+      cal.set(Calendar.HOUR_OF_DAY, 0);
+    }
     return cal.getTime();
   }
 
-  private static Date getEndOfDay(Date date) {
+  private static Date getEndOfDay(int adjustDays, boolean endOfDay) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
-    cal.setTime(date);
-    cal.set(Calendar.HOUR, 23);
-    cal.set(Calendar.MINUTE, 59);
-    cal.set(Calendar.SECOND, 59);
-    cal.set(Calendar.MILLISECOND, 0);
+    cal.add(Calendar.HOUR, adjustDays);
+    if(endOfDay) {
+      cal.set(Calendar.HOUR, 23);
+      cal.set(Calendar.MINUTE, 59);
+      cal.set(Calendar.SECOND, 59);
+      cal.set(Calendar.MILLISECOND, 0);
+    }
     return cal.getTime();
   }
 
@@ -63,7 +68,11 @@ public class GenerateAndSubmitCommand {
         logger.error("The api-url parameter is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getPeriodStart())) {
+      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
+        logger.error("The period-start parameter is required.");
+        return;
+      }
+      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
         logger.error("The period-start parameter is required.");
         return;
       }
@@ -91,8 +100,11 @@ public class GenerateAndSubmitCommand {
         logger.error("The scope is required.");
         return;
       }
-      int periodStartDate = Integer.parseInt(configInfo.getPeriodStart());
-      if (periodStartDate % 24 != 0) {
+      if (this.configInfo.getPeriodStart().getAdjustDay() % 24 != 0) {
+        logger.error("Period start date should be multiple of 24.");
+        return;
+      }
+      if (this.configInfo.getPeriodEnd().getAdjustDay() % 24 != 0) {
         logger.error("Period start date should be multiple of 24.");
         return;
       }
@@ -108,9 +120,9 @@ public class GenerateAndSubmitCommand {
       String url = configInfo.getApiUrl() + "/report/$generate";
 
       // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day
-      Date startDate = getStartDate(periodStartDate);
+      Date startDate = getStartDate(this.configInfo.getPeriodStart().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodStart().isStartOfDay());
       String startDateFormatted = Helper.getFhirDate(startDate);
-      String endDateFormatted = Helper.getFhirDate(getEndOfDay(startDate));
+      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay(), this.configInfo.getPeriodEnd().isEndOfDay()));
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
               // Add query parameter
