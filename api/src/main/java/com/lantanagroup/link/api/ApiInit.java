@@ -98,6 +98,8 @@ public class ApiInit {
         return;
       }
 
+      measureDefBundle = FhirHelper.txServiceFilter(measureDefBundle, this.config);
+
       Optional<Measure> foundMeasure = measureDefBundle.getEntry().stream()
               .filter(e -> e.getResource() instanceof Measure)
               .map(e -> (Measure) e.getResource())

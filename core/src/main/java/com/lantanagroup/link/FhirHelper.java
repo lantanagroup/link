@@ -8,6 +8,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -438,6 +439,30 @@ public class FhirHelper {
             .getEntry().stream()
             .map(e -> (MeasureReport) e.getResource())
             .collect(Collectors.toList());
+  }
+
+  public static Bundle txServiceFilter(Bundle bundle, ApiConfig config) {
+    if(bundle.getEntry() != null) {
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
+      Bundle txBundle = new Bundle();
+      Bundle returnBundle = new Bundle();
+      txBundle.setType(Bundle.BundleType.BATCH);
+      returnBundle.setType(bundle.getType());
+      logger.info("Filtering the measure definition bundle");
+      bundle.getEntry().forEach(entry -> {
+        if (entry.getResource().getResourceType().toString() == "ValueSet"
+                || entry.getResource().getResourceType().toString() == "CodeSystem") {
+          txBundle.addEntry(entry);
+        }
+        else {
+          returnBundle.addEntry(entry);
+        }
+      });
+      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
+      fhirDataProvider.transaction(txBundle);
+      return returnBundle;
+    }
+    return bundle;
   }
 }
 
