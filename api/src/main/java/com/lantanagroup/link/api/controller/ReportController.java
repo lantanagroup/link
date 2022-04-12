@@ -126,29 +126,6 @@ public class ReportController extends BaseController {
     return bundle;
   }
 
-  private Bundle txServiceFilter(Bundle bundle) {
-    if(bundle.getEntry() != null) {
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getTerminologyService());
-      Bundle txBundle = new Bundle();
-      Bundle returnBundle = new Bundle();
-      txBundle.setType(Bundle.BundleType.BATCH);
-      logger.info("Filtering the measure definition bundle");
-      bundle.getEntry().forEach(entry -> {
-        if (entry.getResource().getResourceType().toString() == "ValueSet"
-                || entry.getResource().getResourceType().toString() == "CodeSystem") {
-          txBundle.addEntry(entry);
-        }
-        else {
-          returnBundle.addEntry(entry);
-        }
-      });
-      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
-      fhirDataProvider.transaction(txBundle);
-      return returnBundle;
-    }
-    return bundle;
-  }
-
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
     String reportDefIdentifierSystem = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
             criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) : "";
