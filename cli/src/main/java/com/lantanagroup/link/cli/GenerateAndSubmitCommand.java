@@ -7,6 +7,8 @@ import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.model.GenerateResponse;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
@@ -28,7 +30,10 @@ public class GenerateAndSubmitCommand {
 
 
   private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
+
   @Autowired
+  @Setter
+  @Getter
   private GenerateAndSubmitConfig configInfo;
 
   private static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
