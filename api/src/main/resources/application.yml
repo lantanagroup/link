@@ -40,7 +40,6 @@ query:
       - Condition?patient=Patient/{{patientId}}
       - MedicationRequest?patient=Patient/{{patientId}}
       - Observation?category=laboratory&patient=Patient/{{patientId}}
-      - AllergyIntolerance?patient=Patient/{{patientId}}
       - Procedure?patient=Patient/{{patientId}}
       - ServiceRequest?patient=Patient/{{patientId}}
       - Coverage?patient=Patient/{{patientId}}

@@ -11,7 +11,6 @@ import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;

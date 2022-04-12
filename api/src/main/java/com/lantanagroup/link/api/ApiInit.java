@@ -10,6 +10,8 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Identifier;
+import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.Meta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ApiInit {
@@ -40,17 +43,15 @@ public class ApiInit {
   @Value("classpath:fhir/*")
   private Resource[] resources;
 
-  private void loadReportDefinitions() {
-
+  private void loadMeasureDefinitions() {
     HttpClient client = HttpClient.newHttpClient();
-    FhirContext ctx = FhirContext.forR4();
 
     logger.info("Loading measures defined in configuration...");
 
-    this.config.getReportDefs().getUrls().parallelStream().forEach(reportDefUrl -> {
-      logger.info(String.format("Getting the latest report definition from URL %s", reportDefUrl));
+    this.config.getReportDefs().getUrls().parallelStream().forEach(measureDefUrl -> {
+      logger.info(String.format("Getting the latest report definition from URL %s", measureDefUrl));
       HttpRequest request = HttpRequest.newBuilder()
-              .uri(URI.create(reportDefUrl))
+              .uri(URI.create(measureDefUrl))
               .build();
 
       Integer retryCount = 0;
@@ -63,14 +64,14 @@ public class ApiInit {
         } catch (ConnectException ex) {
           retryCount++;
 
-          logger.error(String.format("Error loading report definition from URL %s due to a connection issue", reportDefUrl));
+          logger.error(String.format("Error loading report definition from URL %s due to a connection issue", measureDefUrl));
           if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
             logger.info(String.format("Retrying to retrieve report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
           } else if (this.config.getReportDefs().getRetryWait() <= 0) {
             logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
             return;
           } else {
-            logger.error(String.format("Reached maximum retry attempts for report definition %s", reportDefUrl));
+            logger.error(String.format("Reached maximum retry attempts for report definition %s", measureDefUrl));
             return;
           }
 
@@ -80,28 +81,50 @@ public class ApiInit {
             return;
           }
         } catch (Exception ex) {
-          logger.error(String.format("Error loading report def from URL %s due to %s", reportDefUrl, ex.getMessage()));
+          logger.error(String.format("Error loading report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
           return;
         }
       }
 
       if (Strings.isEmpty(content)) {
-        logger.error(String.format("Could not retrieve report definition at %s", reportDefUrl));
+        logger.error(String.format("Could not retrieve report definition at %s", measureDefUrl));
         return;
       }
-      Bundle reportDefBundle = FhirHelper.getBundle(content);
-      if (reportDefBundle == null) {
-        logger.error(String.format("Error parsing report def bundle from %s", reportDefUrl));
+
+      Bundle measureDefBundle = FhirHelper.getBundle(content);
+
+      if (measureDefBundle == null) {
+        logger.error(String.format("Error parsing report def bundle from %s", measureDefUrl));
         return;
+      }
+
+      Optional<Measure> foundMeasure = measureDefBundle.getEntry().stream()
+              .filter(e -> e.getResource() instanceof Measure)
+              .map(e -> (Measure) e.getResource())
+              .findFirst();
+
+      if (!foundMeasure.isPresent()) {
+        logger.error(String.format("Measure definition bundle from %s does not include a Measure resource", measureDefUrl));
+        return;
+      }
+
+      Measure measure = foundMeasure.get();
+      Identifier defaultIdentifier = new Identifier()
+              .setSystem("https://nhsnlink.org")
+              .setValue(measureDefBundle.getIdElement().getIdPart());
+
+      if (measure.getIdentifier().size() == 0) {
+        measure.addIdentifier(defaultIdentifier);
+      } else {
+        defaultIdentifier = measure.getIdentifierFirstRep();
       }
 
       // Make sure the report def bundle has an identifier
-      if (reportDefBundle.getIdentifier() == null) {
-        logger.error(String.format("Report definition from URL %s does not have an identifier to distinguish itself", reportDefUrl));
-        return;
+      if (measureDefBundle.getIdentifier().isEmpty()) {
+        measureDefBundle.setIdentifier(defaultIdentifier);
       }
 
-      logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", reportDefBundle.getIdentifier().getValue(), reportDefBundle.getIdentifier().getSystem()));
+      logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", measureDefBundle.getIdentifier().getValue(), measureDefBundle.getIdentifier().getSystem()));
 
       Bundle searchResults = null;
       retryCount = 0;
@@ -110,18 +133,18 @@ public class ApiInit {
         try {
           // Search to see if the report def bundle already exists
 
-          searchResults = provider.searchReportDefinition(reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue());
+          searchResults = provider.searchReportDefinition(measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue());
         } catch (FhirClientConnectionException fcce) {
           retryCount++;
 
-          logger.error(String.format("Error storing report definition from URL %s in internal FHIR store due to a connection issue", reportDefUrl));
+          logger.error(String.format("Error storing report definition from URL %s in internal FHIR store due to a connection issue", measureDefUrl));
           if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
             logger.info(String.format("Retrying to store report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
           } else if (this.config.getReportDefs().getRetryWait() <= 0) {
             logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
             return;
           } else {
-            logger.error(String.format("Reached maximum retry attempts to store report definition %s", reportDefUrl));
+            logger.error(String.format("Reached maximum retry attempts to store report definition %s", measureDefUrl));
             return;
           }
 
@@ -131,26 +154,26 @@ public class ApiInit {
             return;
           }
         } catch (Exception ex) {
-          logger.error(String.format("Error storing report def from URL %s due to %s", reportDefUrl, ex.getMessage()));
+          logger.error(String.format("Error storing report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
           return;
         }
       }
 
       // If none found, create. If one found, update. If more than one found, respond with error.
       if (searchResults.getEntry().size() == 0) {
-        reportDefBundle.setId((String) null);
-        reportDefBundle.setMeta(new Meta());
-        reportDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        provider.createResource(reportDefBundle);
-        logger.info(String.format("Created report def bundle from URL %s as ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
+        measureDefBundle.setId((String) null);
+        measureDefBundle.setMeta(new Meta());
+        measureDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
+        provider.createResource(measureDefBundle);
+        logger.info(String.format("Created report def bundle from URL %s as ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
       } else if (searchResults.getEntry().size() == 1) {
         Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
-        reportDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
-        reportDefBundle.setMeta(foundReportDefBundle.getMeta());
-        provider.updateResource(reportDefBundle);
-        logger.info(String.format("Updated report def bundle from URL %s with ID %s", reportDefUrl, reportDefBundle.getIdElement().getIdPart()));
+        measureDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
+        measureDefBundle.setMeta(foundReportDefBundle.getMeta());
+        provider.updateResource(measureDefBundle);
+        logger.info(String.format("Updated report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
       } else {
-        logger.error(String.format("Found multiple report def bundles with identifier %s|%s", reportDefBundle.getIdentifier().getSystem(), reportDefBundle.getIdentifier().getValue()));
+        logger.error(String.format("Found multiple report def bundles with identifier %s|%s", measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue()));
         return;
       }
     });
@@ -180,7 +203,7 @@ public class ApiInit {
       return;
     }
 
-    this.loadReportDefinitions();
+    this.loadMeasureDefinitions();
     this.loadSearchParameters();
   }
 }

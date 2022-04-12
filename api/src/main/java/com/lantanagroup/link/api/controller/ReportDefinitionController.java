@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -38,9 +39,14 @@ public class ReportDefinitionController extends BaseController {
       Bundle reportDefinitionBundle = (Bundle) e.getResource();
       StoredReportDefinition storedMeasure = new StoredReportDefinition();
 
-      // Determine the name of the report based on the measure or questionnaire within the report definition bundle
-      if (reportDefinitionBundle.getEntryFirstRep().getResource() instanceof Measure) {
-        Measure measure = (Measure) reportDefinitionBundle.getEntryFirstRep().getResource();
+      // Determine the name of the report based on the measure within the report definition bundle
+      Optional<Measure> foundMeasure = reportDefinitionBundle.getEntry().stream()
+              .filter(e2 -> e2.getResource() instanceof Measure)
+              .map(e2 -> (Measure) e2.getResource())
+              .findFirst();
+
+      if (foundMeasure.isPresent()) {
+        Measure measure = foundMeasure.get();
         storedMeasure.setName(measure.hasTitle() ? measure.getTitle() : measure.getName());
       }
 

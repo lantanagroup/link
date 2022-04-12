@@ -41,18 +41,12 @@ public class MeasureEvaluator {
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
 
-      Date startDate = Helper.parseFhirDate(this.criteria.getPeriodStart());
-      Date endDate = Helper.parseFhirDate(this.criteria.getPeriodEnd());
-
       QueryResponse patientData = context.getPatientData().stream().filter(e -> e.getPatientId() == patientId).findFirst().get();
 
       Parameters parameters = new Parameters();
-      // parameters.addParameter().setName("periodStart").setValue(new InstantType(startDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
-      // parameters.addParameter().setName("periodEnd").setValue(new InstantType(endDate, TemporalPrecisionEnum.SECOND, TimeZone.getDefault()));
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
-
-      parameters.addParameter().setName("patient").setValue(new StringType(patientId));
+      parameters.addParameter().setName("subject").setValue(new StringType(patientId));
       parameters.addParameter().setName("additionalData").setResource(patientData.getBundle());
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
@@ -109,13 +103,11 @@ public class MeasureEvaluator {
         measureReport.setId(this.context.getReportId());
         this.context.setMeasureReport(measureReport);
       }
-    } catch (ParseException ex) {
-      logger.error("Parsing error generating Measure Report.");
-      throw new RuntimeException(ex);
     } catch (Exception e) {
       logger.error("Error generating Measure Report: " + e.getMessage());
       throw e;
     }
+
     return measureReport;
   }
 }

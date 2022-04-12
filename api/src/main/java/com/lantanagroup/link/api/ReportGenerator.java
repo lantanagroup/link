@@ -108,7 +108,7 @@ public class ReportGenerator {
     masterMeasureReport.setPeriod(new Period());
     masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure("Measure/" + context.getMeasureId());
+    masterMeasureReport.setMeasure(context.getMeasure().getUrl());
 
     // agregate all individual reports in one
     for (MeasureReport patientMeasureReport : patientMeasureReports) {
@@ -220,7 +220,6 @@ public class ReportGenerator {
    * @param existingDocumentReference - the existing document reference
    */
   public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
-
     if(this.config.getEvaluationService() == null) {
       throw new ConfigurationException("api.evaluation-service has not been configured");
     }

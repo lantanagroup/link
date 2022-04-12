@@ -6,6 +6,7 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
+import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 import org.apache.http.client.HttpClient;
@@ -21,10 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-
 
 public class GenericSenderTests {
 
@@ -48,18 +46,18 @@ public class GenericSenderTests {
 
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
-    config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FHIRSender mockSender = this.getMockSender(config);
 
-    config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
-    config.setOAuthConfig(new FHIRSenderOAuthConfig());
-
-    config.getOAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
-    config.getOAuthConfig().setTokenUrl("http://test.com/auth");
-    config.getOAuthConfig().setUsername("some-user");
-    config.getOAuthConfig().setPassword("some-pass");
-    config.getOAuthConfig().setScope("scope1 scope2 scope3");
+    FhirSenderUrlOAuthConfig urlAuth = new FhirSenderUrlOAuthConfig();
+    config.setSendUrls(List.of(urlAuth));
+    config.getSendUrls().get(0).setUrl("http://test.com/fhir/Bundle");
+    config.getSendUrls().get(0).setAuthConfig(new FHIRSenderOAuthConfig());
+    config.getSendUrls().get(0).getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getSendUrls().get(0).getAuthConfig().setTokenUrl("http://test.com/auth");
+    config.getSendUrls().get(0).getAuthConfig().setUsername("some-user");
+    config.getSendUrls().get(0).getAuthConfig().setPassword("some-pass");
+    config.getSendUrls().get(0).getAuthConfig().setScope("scope1 scope2 scope3");
     HttpEntity mockAuthEntity = mock(HttpEntity.class);
     InputStream mockAuthEntityIS = new ByteArrayInputStream("{\"access_token\": \"test-access-token\"}".getBytes());
     HttpResponse mockAuthResponse = mock(HttpResponse.class);
@@ -80,7 +78,15 @@ public class GenericSenderTests {
   @Test
   public void updateDocumentLocation() throws Exception {
     FHIRSenderConfig config = new FHIRSenderConfig();
-    config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
+    FhirSenderUrlOAuthConfig urlAuth = new FhirSenderUrlOAuthConfig();
+    urlAuth.setUrl("http://test.com/fhir/Bundle");
+    config.setSendUrls(List.of(urlAuth));
+    config.getSendUrls().get(0).setAuthConfig(new FHIRSenderOAuthConfig());
+    config.getSendUrls().get(0).getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getSendUrls().get(0).getAuthConfig().setTokenUrl("http://test.com/auth");
+    config.getSendUrls().get(0).getAuthConfig().setUsername("some-user");
+    config.getSendUrls().get(0).getAuthConfig().setPassword("some-pass");
+    config.getSendUrls().get(0).getAuthConfig().setScope("scope1 scope2 scope3");
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FHIRSender mockSender = this.getMockSender(config);
 

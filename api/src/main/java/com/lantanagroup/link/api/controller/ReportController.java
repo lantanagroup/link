@@ -64,15 +64,15 @@ public class ReportController extends BaseController {
   @Autowired
   private QueryConfig queryConfig;
 
-  private String storeReportBundleResources(Bundle bundle) {
-    String measureId = null;
-
+  private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
             .findFirst();
 
     if (measureEntry.isPresent()) {
-      measureId = measureEntry.get().getResource().getIdElement().getIdPart();
+      Measure measure = (Measure) measureEntry.get().getResource();
+      context.setMeasureId(measure.getIdElement().getIdPart());
+      context.setMeasure(measure);
     }
 
     // Make sure each entry in the bundle has a request
@@ -101,8 +101,29 @@ public class ReportController extends BaseController {
     fhirDataProvider.transaction(bundle);
 
     logger.info("Done executing the measure definition bundle");
+  }
 
-    return measureId;
+  private Bundle txServiceFilter(Bundle bundle) {
+    if(bundle.getEntry() != null) {
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getTerminologyService());
+      Bundle txBundle = new Bundle();
+      Bundle returnBundle = new Bundle();
+      txBundle.setType(Bundle.BundleType.BATCH);
+      logger.info("Filtering the measure definition bundle");
+      bundle.getEntry().forEach(entry -> {
+        if (entry.getResource().getResourceType().toString() == "ValueSet"
+                || entry.getResource().getResourceType().toString() == "CodeSystem") {
+          txBundle.addEntry(entry);
+        }
+        else {
+          returnBundle.addEntry(entry);
+        }
+      });
+      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
+      fhirDataProvider.transaction(txBundle);
+      return returnBundle;
+    }
+    return bundle;
   }
 
   private Bundle txServiceFilter(Bundle bundle) {
@@ -172,18 +193,17 @@ public class ReportController extends BaseController {
     } else {
       logger.info("The latest version of the Measure bundle is already stored. There is no need to re-acquire it.");
     }
+
     try {
       // Store the resources in the report definition bundle on the internal FHIR server
       logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
-      String measureId = this.storeReportBundleResources(reportDefBundle);
-      context.setMeasureId(measureId);
+      this.storeReportBundleResources(reportDefBundle, context);
       context.setReportDefBundle(reportDefBundle);
     } catch (Exception ex) {
       logger.error("Error storing resources for the report definition " + criteria.getReportDefId() + ": " + ex.getMessage());
-      throw new Exception("Error storing resources for the report definition: " + ex.getMessage());
+      throw new Exception("Error storing resources for the report definition: " + ex.getMessage(), ex);
     }
   }
-
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     IPatientIdProvider provider;
@@ -321,6 +341,19 @@ public class ReportController extends BaseController {
     return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
   }
 
+  private void getConvertCode(ConceptMap map, Coding code) {
+    // TODO: Lookup ConceptMap.group based on code system
+    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
+      if (group.getSource().equals(code.getSystem())) {
+        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
+        // pick the last element from list
+        code.setSystem(group.getTarget());
+        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
+        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
+      }
+    });
+  }
+
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
@@ -358,13 +391,23 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
 
-
       List<ConceptMap> conceptMapsList = new ArrayList();
       if (this.config.getConceptMaps() != null) {
         // get it from fhirserver
         this.config.getConceptMaps().stream().forEach(concepMapId -> {
           IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
           conceptMapsList.add((ConceptMap) conceptMap);
+        });
+      }
+      // apply concept-maps for coding translation
+      if (!conceptMapsList.isEmpty()) {
+        context.getPatientData().stream().forEach(patientBundle -> {
+          conceptMapsList.stream().forEach(conceptMap -> {
+            List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
+            codes.stream().forEach(code -> {
+              this.getConvertCode(conceptMap, code);
+            });
+          });
         });
       }
 
@@ -395,6 +438,7 @@ public class ReportController extends BaseController {
 
     return response;
   }
+
 
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
@@ -462,7 +506,9 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue()));
-    Measure measure = this.getFhirDataProvider().findMeasureByIdentifier(documentReference.getIdentifier().get(0));
+
+    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(0));
 
     report.setMeasure(measure);
 
@@ -671,6 +717,22 @@ public class ReportController extends BaseController {
               .collect(Collectors.toList());
 
       data.setEncounters(encounterList);
+    }
+
+    Bundle serviceRequestBundle = this.getFhirDataProvider().getResources(ServiceRequest.SUBJECT.hasId(patientId), "ServiceRequest");
+    if (serviceRequestBundle.hasEntry()) {
+      List<ServiceRequest> serviceRequestList = serviceRequestBundle.getEntry().stream()
+              .filter(sr -> sr.getResource() != null)
+              .map(sr -> (ServiceRequest) sr.getResource())
+              .collect(Collectors.toList());
+
+      serviceRequestList = serviceRequestList.stream()
+              .filter(srL -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(srL.getId()))))
+              .collect(Collectors.toList());
+
+      data.setServiceRequests(serviceRequestList);
     }
 
     return data;

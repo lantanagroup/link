@@ -32,6 +32,7 @@ public class FHIRSender extends GenericSender implements IReportSender {
     if(!"".equals(location)) {
       updateDocumentLocation(masterMeasureReport, fhirDataProvider, location);
     }
+
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 }
