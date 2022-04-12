@@ -5,6 +5,7 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lantanagroup.link.model.PatientReportModel;
@@ -26,6 +27,26 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
+
+  /**
+   * Removes any extra properties that should not be included in the bundle's submission
+   * @param resource
+   */
+  public static DomainResource cleanResource(DomainResource resource, FhirContext ctx) {
+    IParser jsonParser = ctx.newJsonParser();
+    String json = jsonParser.encodeResourceToString(resource);
+    DomainResource cloned = jsonParser.parseResource(resource.getClass(), json);
+    cloned.setMeta(null);
+    cloned.setText(null);
+
+    // Reset the ID. The ID element can include history information, which gets included in Resource.meta.versionId
+    // during serialization, which defeats the purpose of removing <meta>
+    if (cloned.getIdElement() != null && !Strings.isNullOrEmpty(cloned.getIdElement().getIdPart())) {
+      cloned.setId(cloned.getIdElement().getIdPart());
+    }
+
+    return cloned;
+  }
 
   public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
