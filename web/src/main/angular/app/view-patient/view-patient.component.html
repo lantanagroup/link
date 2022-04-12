@@ -61,8 +61,8 @@
         <tbody *ngIf="patientData.medicationRequests?.length">
         <tr *ngFor="let medicationRequest of patientData.medicationRequests">
             <td>{{medicationRequest.medicationCodeableConcept | codeableConcept}}</td>
-            <td>{{medicationRequest.dosageInstruction[0].doseAndRate[0].doseQuantity | simpleQuantity }}</td>
-            <td>{{medicationRequest.dosageInstruction[0].text}}</td>
+            <td>{{getMedicationRequestDoseQuantity(medicationRequest) | simpleQuantity }}</td>
+            <td>{{getMedicationRequestDosageInstructionText(medicationRequest)}}</td>
             <td>{{medicationRequest.authoredOn | date}}</td>
         </tr>
         </tbody>
@@ -105,6 +105,22 @@
             <td [ngSwitch]="getPerformedDateTime(procedure)">
                 <div *ngSwitchCase="'performedDateTime'">{{procedure['performedDateTime'] | date}}</div>
             </td>
+        </tr>
+        </tbody>
+    </table>
+    <h6 *ngIf="!loading">SERVICE REQUESTS</h6>
+    <table *ngIf="!loading" class="table table-striped">
+        <thead>
+        <tr>
+            <th>Service Request Code</th>
+            <th>Authored On Date</th>
+        </tr>
+        </thead>
+
+        <tbody *ngIf="patientData.serviceRequests?.length">
+        <tr *ngFor="let serviceRequest of patientData.serviceRequests">
+            <td>{{serviceRequest.code | codeableConcept}}</td>
+            <td>{{serviceRequest.authoredOn | date}}</td>
         </tr>
         </tbody>
     </table>
