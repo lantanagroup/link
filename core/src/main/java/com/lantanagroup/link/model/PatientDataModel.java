@@ -13,4 +13,5 @@ public class PatientDataModel {
     List<Procedure> procedures;
     List<Encounter> encounters;
     List<Observation> observations;
+    List<ServiceRequest> serviceRequests;
 }

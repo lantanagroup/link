@@ -696,6 +696,22 @@ public class ReportController extends BaseController {
       data.setEncounters(encounterList);
     }
 
+    Bundle serviceRequestBundle = this.getFhirDataProvider().getResources(ServiceRequest.SUBJECT.hasId(patientId), "ServiceRequest");
+    if (serviceRequestBundle.hasEntry()) {
+      List<ServiceRequest> serviceRequestList = serviceRequestBundle.getEntry().stream()
+              .filter(sr -> sr.getResource() != null)
+              .map(sr -> (ServiceRequest) sr.getResource())
+              .collect(Collectors.toList());
+
+      serviceRequestList = serviceRequestList.stream()
+              .filter(srL -> evaluatedResources.stream()
+                      .anyMatch(e ->
+                              e.getReference().equals(FhirHelper.getIdFromVersion(srL.getId()))))
+              .collect(Collectors.toList());
+
+      data.setServiceRequests(serviceRequestList);
+    }
+
     return data;
   }
 
