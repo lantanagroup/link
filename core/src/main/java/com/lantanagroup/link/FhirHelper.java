@@ -441,7 +441,17 @@ public class FhirHelper {
             .collect(Collectors.toList());
   }
 
-  public static Bundle txServiceFilter(Bundle bundle, ApiConfig config) {
+  /**
+   * Creates a bundle of the same type as the measure definition bundle and another bundle of type batch,
+   * Then traverses the measure definition bundle, adding all the ValueSet and CodeSystem resources to the
+   * batch bundle and stores them on the configured TX server while all the other resources are added to the
+   * new measure definition bundle to be returned.
+   *
+   * @param bundle measure definition bundle
+   * @param config contains Api configurations
+   * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
+   */
+  public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
     if(bundle.getEntry() != null) {
       FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
       Bundle txBundle = new Bundle();
