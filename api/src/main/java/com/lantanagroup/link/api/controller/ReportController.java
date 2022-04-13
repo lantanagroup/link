@@ -256,6 +256,26 @@ public class ReportController extends BaseController {
         // (note: this also fixes the references to resources within invalid ids)
         ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
 
+        // apply the concept maps
+        List<ConceptMap> conceptMapsList = new ArrayList();
+        if (this.config.getConceptMaps() != null) {
+          // get it from fhirserver
+          this.config.getConceptMaps().stream().forEach(concepMapId -> {
+            IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
+            conceptMapsList.add((ConceptMap) conceptMap);
+          });
+        }
+        // apply concept-maps for coding translation
+        if (!conceptMapsList.isEmpty()) {
+          patientQueryResponses.stream().forEach(patientBundle -> {
+            conceptMapsList.stream().forEach(conceptMap -> {
+              List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
+              codes.stream().forEach(code -> {
+                this.getConvertCode(conceptMap, code);
+              });
+            });
+          });
+        }
         // For debugging purposes:
         //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
@@ -345,25 +365,6 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
 
-      List<ConceptMap> conceptMapsList = new ArrayList();
-      if (this.config.getConceptMaps() != null) {
-        // get it from fhirserver
-        this.config.getConceptMaps().stream().forEach(concepMapId -> {
-          IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
-          conceptMapsList.add((ConceptMap) conceptMap);
-        });
-      }
-      // apply concept-maps for coding translation
-      if (!conceptMapsList.isEmpty()) {
-        context.getPatientData().stream().forEach(patientBundle -> {
-          conceptMapsList.stream().forEach(conceptMap -> {
-            List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
-            codes.stream().forEach(code -> {
-              this.getConvertCode(conceptMap, code);
-            });
-          });
-        });
-      }
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
