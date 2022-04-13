@@ -95,7 +95,7 @@ public class ReportController extends BaseController {
     logger.info("Executing the measure definition bundle");
 
     // Store the resources of the measure on the evaluation service
-    bundle.setType(Bundle.BundleType.TRANSACTION);
+    bundle.setType(Bundle.BundleType.BATCH);
     bundle = FhirHelper.storeTerminologyAndReturnOther(bundle, this.config);
     FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     fhirDataProvider.transaction(bundle);
