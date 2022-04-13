@@ -18,12 +18,9 @@ import org.apache.http.*;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.MeasureReport;
-
-import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -33,9 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -117,7 +112,17 @@ public class FHIRSenderTests {
 
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
-    config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
+    //config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
+
+    // Create a config that has one URL in it to send to
+    FHIRSenderOAuthConfig authConfig = new FHIRSenderOAuthConfig();
+    authConfig.setCredentialMode(OAuthCredentialModes.Client);
+    authConfig.setTokenUrl("http://test.com/auth");
+    authConfig.setUsername("some-user");
+    authConfig.setPassword("some-pass");
+    authConfig.setScope("scope1 scope2 scope3");
+    //config.setOAuthConfigUrl(List.of(authConfig));
+
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FHIRSender mockSender = this.getMockSender(config);
@@ -186,14 +191,14 @@ public class FHIRSenderTests {
 
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
-    config.setSendUrls(List.of("http://test.com/fhir/Bundle"));
-    config.setOAuthConfig(new FHIRSenderOAuthConfig());
-
-    config.getOAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
-    config.getOAuthConfig().setTokenUrl("http://test.com/auth");
-    config.getOAuthConfig().setUsername("some-user");
-    config.getOAuthConfig().setPassword("some-pass");
-    config.getOAuthConfig().setScope("scope1 scope2 scope3");
+    FHIRSenderOAuthConfig authConfig = new FHIRSenderOAuthConfig();
+    // authConfig.setUrl("http://test.com/fhir/Bundle");
+    authConfig.setCredentialMode(OAuthCredentialModes.Client);
+    authConfig.setTokenUrl("http://test.com/auth");
+    authConfig.setUsername("some-user");
+    authConfig.setPassword("some-pass");
+    authConfig.setScope("scope1 scope2 scope3");
+    // config.setOAuthConfigUrl(List.of(authConfig));
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);

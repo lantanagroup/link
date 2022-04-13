@@ -5,8 +5,10 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -26,6 +28,26 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
+
+  /**
+   * Removes any extra properties that should not be included in the bundle's submission
+   * @param resource
+   */
+  public static DomainResource cleanResource(DomainResource resource, FhirContext ctx) {
+    IParser jsonParser = ctx.newJsonParser();
+    String json = jsonParser.encodeResourceToString(resource);
+    DomainResource cloned = jsonParser.parseResource(resource.getClass(), json);
+    cloned.setMeta(null);
+    cloned.setText(null);
+
+    // Reset the ID. The ID element can include history information, which gets included in Resource.meta.versionId
+    // during serialization, which defeats the purpose of removing <meta>
+    if (cloned.getIdElement() != null && !Strings.isNullOrEmpty(cloned.getIdElement().getIdPart())) {
+      cloned.setId(cloned.getIdElement().getIdPart());
+    }
+
+    return cloned;
+  }
 
   public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
@@ -417,6 +439,40 @@ public class FhirHelper {
             .getEntry().stream()
             .map(e -> (MeasureReport) e.getResource())
             .collect(Collectors.toList());
+  }
+
+  /**
+   * Creates a bundle of the same type as the measure definition bundle and another bundle of type batch,
+   * Then traverses the measure definition bundle, adding all the ValueSet and CodeSystem resources to the
+   * batch bundle and stores them on the configured TX server while all the other resources are added to the
+   * new measure definition bundle to be returned.
+   *
+   * @param bundle measure definition bundle
+   * @param config contains Api configurations
+   * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
+   */
+  public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
+    if(bundle.getEntry() != null) {
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
+      Bundle txBundle = new Bundle();
+      Bundle returnBundle = new Bundle();
+      txBundle.setType(Bundle.BundleType.BATCH);
+      returnBundle.setType(bundle.getType());
+      logger.info("Filtering the measure definition bundle");
+      bundle.getEntry().forEach(entry -> {
+        if (entry.getResource().getResourceType().toString() == "ValueSet"
+                || entry.getResource().getResourceType().toString() == "CodeSystem") {
+          txBundle.addEntry(entry);
+        }
+        else {
+          returnBundle.addEntry(entry);
+        }
+      });
+      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
+      fhirDataProvider.transaction(txBundle);
+      return returnBundle;
+    }
+    return bundle;
   }
 }
 

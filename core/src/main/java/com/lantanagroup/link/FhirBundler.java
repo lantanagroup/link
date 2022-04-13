@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FhirBundler {
@@ -15,10 +16,6 @@ public class FhirBundler {
   public FhirBundler(FhirDataProvider fhirDataProvider) {
     this.fhirDataProvider = fhirDataProvider;
   }
-
-
-
-
 
   private List<DomainResource> getPatientResources(MeasureReport patientMeasureReport) {
     Bundle retrievePatientData = new Bundle();
@@ -51,10 +48,41 @@ public class FhirBundler {
     // Return a list of all the resources that are not OperationOutcomes (issues)
     return patientDataBundle.getEntry().stream()
             .filter(e -> e.getResource() != null && e.getResource().getResourceType() != ResourceType.OperationOutcome)
-            .map(e -> (DomainResource) e.getResource())
+            .map(e -> FhirHelper.cleanResource((DomainResource) e.getResource(), this.fhirDataProvider.ctx))
             .collect(Collectors.toList());
   }
 
+  /**
+   * Removes any MeasureReport.evaluatedResource entries that represent a contained resource, and removes
+   * the associated contained resource from the MeasureReport. These contained Observations are FHIR Measure SDE's
+   * that are not of interest to the recipient of the reports
+   * @param report
+   */
+  private void removeContainedEvaluatedResource(MeasureReport report) {
+    List<Reference> containedEvaluatedResources = report.getEvaluatedResource().stream()
+            .filter(er -> er.getReference() != null && er.getReference().startsWith("#"))
+            .collect(Collectors.toList());
+
+    containedEvaluatedResources.forEach(cer -> {
+      Optional<Resource> contained = report.getContained().stream()
+              .filter(c -> c.getIdElement() != null && c.getIdElement().getIdPart().replace("#", "").equals(cer.getReference().substring(1)) && c.getResourceType() == ResourceType.Observation)
+              .findFirst();
+
+      if (contained.isPresent()) {
+        report.getContained().remove(contained.get());
+        report.getEvaluatedResource().remove(cer);
+      }
+    });
+  }
+
+  /**
+   * Generates a bundle of resources based on the master measure report. Gets all individual measure
+   * reports from the master measure report, then gets all the evaluatedResources from the individual
+   * measure reports, and bundles them all together.
+   * @param allResources
+   * @param masterMeasureReport
+   * @return
+   */
   public Bundle generateBundle(boolean allResources, MeasureReport masterMeasureReport) {
     Meta meta = new Meta();
     Coding tag = meta.addTag();
@@ -66,7 +94,7 @@ public class FhirBundler {
     bundle.setMeta(meta);
 
     // Add the master measure report to the bundle
-    bundle.addEntry().setResource(masterMeasureReport);
+    bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport, this.fhirDataProvider.ctx));
 
     if (allResources) {
       // Get the references to the individual patient measure reports from the master
@@ -76,8 +104,12 @@ public class FhirBundler {
       List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, fhirDataProvider);
 
       for (MeasureReport patientMeasureReport : patientReports) {
+        MeasureReport clonedPatientMeasureReport = (MeasureReport) FhirHelper.cleanResource(patientMeasureReport, this.fhirDataProvider.ctx);
+
+        this.removeContainedEvaluatedResource(clonedPatientMeasureReport);
+
         // Add the individual patient measure report to the bundle
-        bundle.addEntry().setResource(patientMeasureReport);
+        bundle.addEntry().setResource(clonedPatientMeasureReport);
 
         // Get all the evaluated resources in the individual patient measure reports and add them to the bundle
         List<DomainResource> patientResources = this.getPatientResources(patientMeasureReport);
@@ -91,7 +123,7 @@ public class FhirBundler {
     if(bundle.getEntry() != null) {
       for (Bundle.BundleEntryComponent r : bundle.getEntry()) {
         r.setFullUrl("http://nhsnlink.org/fhir/"
-                + r.getResource().getIdElement().getResourceType() + "/"
+                + r.getResource().getResourceType() + "/"
                 + r.getResource().getIdElement().getIdPart());
       }
     }

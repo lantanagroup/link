@@ -3,7 +3,14 @@ import {NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {ReportService} from '../services/report.service';
 import {ToastService} from '../toast.service';
 import {PatientDataModel} from "../model/PatientDataModel";
-import {Condition, EncounterLocationComponent, Observation, Procedure} from "../model/fhir";
+import {
+  Condition,
+  EncounterLocationComponent,
+  MedicationRequest,
+  Observation,
+  Procedure,
+  SimpleQuantity
+} from "../model/fhir";
 import {getFhirDate} from '../helper';
 
 @Component({
@@ -86,6 +93,20 @@ export class ViewPatientComponent implements OnInit {
     }
     if (procedure.hasOwnProperty('performedPeriod')) {
       return 'performedPeriod';
+    }
+  }
+
+  getMedicationRequestDoseQuantity(medicationRequest: MedicationRequest) {
+    if(medicationRequest.dosageInstruction?.length && medicationRequest.dosageInstruction[0].doseAndRate?.length) {
+      return medicationRequest.dosageInstruction[0].doseAndRate[0].doseQuantity;
+    } else{
+      return new SimpleQuantity();
+    }
+  }
+
+  getMedicationRequestDosageInstructionText(medicationRequest: MedicationRequest){
+    if(medicationRequest.dosageInstruction?.length){
+      return medicationRequest.dosageInstruction[0].text;
     }
   }
 
