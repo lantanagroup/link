@@ -36,7 +36,7 @@ public class GenerateAndSubmitCommand {
   @Getter
   private GenerateAndSubmitConfig configInfo;
 
-  private static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
+  public static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
     cal.add(Calendar.HOUR, adjustHours);
@@ -50,7 +50,7 @@ public class GenerateAndSubmitCommand {
     return cal.getTime();
   }
 
-  private static Date getEndOfDay(int adjustDays, boolean endOfDay) {
+  public static Date getEndOfDay(int adjustDays, boolean endOfDay) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
     cal.add(Calendar.HOUR, adjustDays);
@@ -127,7 +127,7 @@ public class GenerateAndSubmitCommand {
       // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day
       Date startDate = getStartDate(this.configInfo.getPeriodStart().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodStart().isStartOfDay());
       String startDateFormatted = Helper.getFhirDate(startDate);
-      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay(), this.configInfo.getPeriodEnd().isEndOfDay()));
+      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay() * 24, this.configInfo.getPeriodEnd().isEndOfDay()));
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
               // Add query parameter
