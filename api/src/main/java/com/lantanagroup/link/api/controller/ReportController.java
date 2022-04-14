@@ -217,6 +217,31 @@ public class ReportController extends BaseController {
     return null;
   }
 
+  private void getConvertCode(ConceptMap map, Coding code) {
+    // TODO: Lookup ConceptMap.group based on code system
+    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
+      if (group.getSource().equals(code.getSystem())) {
+        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
+        // pick the last element from list
+        code.setSystem(group.getTarget());
+        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
+        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
+      }
+    });
+  }
+
+  private List<ConceptMap> getConceptMaps() {
+    List<ConceptMap> conceptMapsList = new ArrayList();
+    if (this.config.getConceptMaps() != null) {
+      // get it from fhirserver
+      this.config.getConceptMaps().stream().forEach(concepMapId -> {
+        IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
+        conceptMapsList.add((ConceptMap) conceptMap);
+      });
+    }
+    return conceptMapsList;
+  }
+
   /**
    * Executes the configured query implementation against a list of POIs. The POI at the start of this
    * may be either identifier (such as MRN) or logical id for the FHIR Patient resource.
@@ -228,6 +253,8 @@ public class ReportController extends BaseController {
   private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
+
+      List<ConceptMap> conceptMapsList = getConceptMaps();
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
@@ -256,23 +283,13 @@ public class ReportController extends BaseController {
         // (note: this also fixes the references to resources within invalid ids)
         ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
 
-        // apply the concept maps
-        List<ConceptMap> conceptMapsList = new ArrayList();
-        if (this.config.getConceptMaps() != null) {
-          // get it from fhirserver
-          this.config.getConceptMaps().stream().forEach(concepMapId -> {
-            IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
-            conceptMapsList.add((ConceptMap) conceptMap);
-          });
-        }
+
         // apply concept-maps for coding translation
         if (!conceptMapsList.isEmpty()) {
-          patientQueryResponses.stream().forEach(patientBundle -> {
-            conceptMapsList.stream().forEach(conceptMap -> {
-              List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
-              codes.stream().forEach(code -> {
-                this.getConvertCode(conceptMap, code);
-              });
+          List<Coding> codes = ResourceIdChanger.findCodings(patientQueryResponse.getBundle());
+          conceptMapsList.stream().forEach(conceptMap -> {
+            codes.stream().forEach(code -> {
+              this.getConvertCode(conceptMap, code);
             });
           });
         }
@@ -311,22 +328,11 @@ public class ReportController extends BaseController {
     }
   }
 
+
   private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, boolean regenerate) throws Exception {
     return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
   }
 
-  private void getConvertCode(ConceptMap map, Coding code) {
-    // TODO: Lookup ConceptMap.group based on code system
-    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
-      if (group.getSource().equals(code.getSystem())) {
-        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
-        // pick the last element from list
-        code.setSystem(group.getTarget());
-        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
-        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
-      }
-    });
-  }
 
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
