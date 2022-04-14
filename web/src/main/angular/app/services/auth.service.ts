@@ -48,7 +48,7 @@ export class AuthService {
     await this.initLocal(this.configService.config.oauth);
 
     // Has the user already authenticated via Smart-on-FHIR?
-    if (!this.oauthService.hasValidAccessToken()) {
+    if (!this.oauthService.hasValidAccessToken() || !this.user) {
       const loggedIn: boolean = await this.oauthService.tryLogin();
 
       try {
