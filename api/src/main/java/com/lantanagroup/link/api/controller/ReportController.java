@@ -286,7 +286,7 @@ public class ReportController extends BaseController {
 
         // apply concept-maps for coding translation
         if (!conceptMapsList.isEmpty()) {
-          List<Coding> codes = ResourceIdChanger.findCodings(patientQueryResponse.getBundle());
+          List<Coding> codes = ResourceIdChanger.findCodings(patientQueryResponse);
           conceptMapsList.stream().forEach(conceptMap -> {
             codes.stream().forEach(code -> {
               this.getConvertCode(conceptMap, code);
