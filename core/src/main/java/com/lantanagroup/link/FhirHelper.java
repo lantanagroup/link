@@ -481,7 +481,7 @@ public class FhirHelper {
             .findFirst();
 
     if (!foundLibrary.isPresent()) {
-      logger.error(String.format("Library definition bundle from %s does not include a Library resource"));
+      logger.error(String.format("Library definition bundle from %s does not include a Library resource", reportRefBundle.getIdentifier().getValue()));
     }
     Library library = foundLibrary.get();
     List dataRequirements = library.getDataRequirement().stream().map(e -> (String) e.getType()).distinct().collect(Collectors.toList());
