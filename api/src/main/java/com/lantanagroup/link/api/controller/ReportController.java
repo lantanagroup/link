@@ -368,6 +368,8 @@ public class ReportController extends BaseController {
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
+      List reportDefBundleDataReq = FhirHelper.getDataRequirementTypes(context.getReportDefBundle());
+
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
 

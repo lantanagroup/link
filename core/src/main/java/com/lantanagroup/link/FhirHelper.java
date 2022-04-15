@@ -463,8 +463,7 @@ public class FhirHelper {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
                 || entry.getResource().getResourceType().toString() == "CodeSystem") {
           txBundle.addEntry(entry);
-        }
-        else {
+        } else {
           returnBundle.addEntry(entry);
         }
       });
@@ -473,6 +472,20 @@ public class FhirHelper {
       return returnBundle;
     }
     return bundle;
+  }
+
+  public static List getDataRequirementTypes(Bundle reportRefBundle) {
+    Optional<Library> foundLibrary = reportRefBundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Library)
+            .map(e -> (Library) e.getResource())
+            .findFirst();
+
+    if (!foundLibrary.isPresent()) {
+      logger.error(String.format("Library definition bundle from %s does not include a Library resource"));
+    }
+    Library library = foundLibrary.get();
+    List dataRequirements = library.getDataRequirement().stream().map(e -> (String) e.getType()).distinct().collect(Collectors.toList());
+    return dataRequirements;
   }
 }
 
