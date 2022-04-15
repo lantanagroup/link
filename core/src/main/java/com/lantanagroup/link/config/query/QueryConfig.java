@@ -20,6 +20,13 @@ import javax.validation.constraints.*;
  * See the Link WIKI - <a href="https://github.com/lantanagroup/link/wiki/Configuration#query-api">Configuration &gt; Query-API</a>
  */
 public class QueryConfig {
+
+  /**
+   * <strong>query.require-https</strong><br>Indicates if HTTPS is required.
+   */
+  @Getter
+  private boolean requireHttps;
+
   /**
    * <strong>query.fhir-server-base</strong><br>The base URL of the FHIR server that should be queried
    */
