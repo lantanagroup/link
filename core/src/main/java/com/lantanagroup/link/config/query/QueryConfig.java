@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter @Setter
 @Configuration
@@ -53,4 +54,9 @@ public class QueryConfig {
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
    */
   private String authClass;
+
+  private String[] patientResourceTypes;
+
+  private String[] otherResourceTypes;
+
 }
