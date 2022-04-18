@@ -474,17 +474,17 @@ public class FhirHelper {
     return bundle;
   }
 
-  public static List getDataRequirementTypes(Bundle reportRefBundle) {
-    Optional<Library> foundLibrary = reportRefBundle.getEntry().stream()
+  public static Set getDataRequirementTypes(Bundle reportRefBundle) {
+    List<Library> libraryList = reportRefBundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Library)
-            .map(e -> (Library) e.getResource())
-            .findFirst();
+            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
 
-    if (!foundLibrary.isPresent()) {
-      logger.error(String.format("Library definition bundle from %s does not include a Library resource", reportRefBundle.getIdentifier().getValue()));
-    }
-    Library library = foundLibrary.get();
-    List dataRequirements = library.getDataRequirement().stream().map(e -> (String) e.getType()).distinct().collect(Collectors.toList());
+    Set dataRequirements = new HashSet();
+    libraryList.stream().forEach(library -> {
+      Set libTypes = library.getDataRequirement().stream().map(e -> e.getType()).collect(Collectors.toSet());
+      dataRequirements.addAll(libTypes);
+
+    });
     return dataRequirements;
   }
 }
