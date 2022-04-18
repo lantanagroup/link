@@ -463,8 +463,7 @@ public class FhirHelper {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
                 || entry.getResource().getResourceType().toString() == "CodeSystem") {
           txBundle.addEntry(entry);
-        }
-        else {
+        } else {
           returnBundle.addEntry(entry);
         }
       });
@@ -473,6 +472,20 @@ public class FhirHelper {
       return returnBundle;
     }
     return bundle;
+  }
+
+  public static Set getDataRequirementTypes(Bundle reportRefBundle) {
+    List<Library> libraryList = reportRefBundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Library)
+            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
+
+    Set dataRequirements = new HashSet();
+    libraryList.stream().forEach(library -> {
+      Set libTypes = library.getDataRequirement().stream().map(e -> e.getType()).collect(Collectors.toSet());
+      dataRequirements.addAll(libTypes);
+
+    });
+    return dataRequirements;
   }
 }
 
