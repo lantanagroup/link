@@ -40,7 +40,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -130,9 +133,16 @@ public class ReportController extends BaseController {
 
     if (response.statusCode() == 200) {
       Bundle reportRemoteReportDefBundle = FhirHelper.getBundle(response.body());
+      String missingResourceTypes = "";
       if (reportRemoteReportDefBundle == null) {
         logger.error(String.format("Error parsing report def bundle from %s", url));
       } else {
+        missingResourceTypes = FhirHelper.getQueryConfigurationMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), reportRemoteReportDefBundle);
+        if (!missingResourceTypes.equals("")) {
+          logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
+        }
+      }
+      if (reportRemoteReportDefBundle != null && !missingResourceTypes.equals("")) {
         String latestDate = formatter.format(reportRemoteReportDefBundle.getMeta().getLastUpdated());
         logger.info(String.format("Acquired the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
         reportRemoteReportDefBundle.setId(reportDefBundle.getIdElement().getIdPart());
@@ -365,13 +375,14 @@ public class ReportController extends BaseController {
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
-      Set reportDefBundleDataReqSet = FhirHelper.getDataRequirementTypes(context.getReportDefBundle());
+
+      //Set reportDefBundleDataReqSet = FhirHelper.getDataRequirementTypes(context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
 
 
-      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+      //  this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
       // Generate the master report id
       String id = "";
