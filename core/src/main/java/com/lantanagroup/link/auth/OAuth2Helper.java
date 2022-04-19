@@ -4,8 +4,9 @@ import com.auth0.jwk.Jwk;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwk.SigningKeyNotFoundException;
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +14,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.CernerClaimData;
-import com.nimbusds.jose.jwk.ECKey;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -34,20 +33,24 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.PublicKey;
-import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
-  private static final ApiConfig config = new ApiConfig();
   private final static ObjectReader reader = (new ObjectMapper()).readerFor(Map.class);
   @VisibleForTesting
   static URL url;
   private static HashMap<String, String> issuerJwksUrls = new HashMap<>();
   private static Integer connectTimeout;
   private static Integer readTimeout;
+
+  //token algorithms
+  public static enum TokenAlgorithmsEnum {
+    RSA256,
+    HS256,
+    EC
+  }
 
   public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
@@ -271,38 +274,6 @@ public class OAuth2Helper {
     }
   }
 
-  private static String getJwksUrl(DecodedJWT jwt) {
-    //TODO: Need to do issuer verification
-    Claim issuerClaim = jwt.getClaim("iss");
-
-    if (issuerClaim != null && !issuerClaim.isNull()) {
-      String issuer = issuerClaim.asString();
-
-      if (issuerJwksUrls.containsKey(issuer)) {
-        return issuerJwksUrls.get(issuer);
-      }
-
-      String openIdConfigUrl = issuer + (issuer.endsWith("/") ? "" : "/") + ".well-known/openid-configuration";
-      String url = getJwksUrl(openIdConfigUrl);
-
-      if (url == null && (issuer.equals("https://authorization.sandboxcerner.com/") || issuer.equals("https://authorization.cerner.com/"))) {
-        CernerClaimData ccd = getCernerClaimData(jwt);
-
-        if (ccd != null && ccd.getTenant() != null && !ccd.getTenant().isEmpty()) {
-          String cernerConfigUrl = String.format("%stenants/%s/oidc/idsps/%s/.well-known/openid-configuration", issuer, ccd.getTenant(), ccd.getTenant());
-          url = getJwksUrl(cernerConfigUrl);
-        }
-      }
-
-      if (url != null) {
-        issuerJwksUrls.put(issuer, url);
-        return url;
-      }
-    }
-
-    return config.getAuthJwksUrl();
-  }
-
   private static DecodedJWT getValidationJWT(String token) {
     DecodedJWT jwt = JWT.decode(token);
     Claim idTokenClaim = jwt.getClaim("id_token");
@@ -315,52 +286,99 @@ public class OAuth2Helper {
     return jwt;
   }
 
-  public static DecodedJWT validateAuthHeader(String authHeader) {
-
+  /**
+  * Verifies a JSON Web Token by accepting the auth header along with the issuer and alogirithm if supplied.
+   * @param authHeader supplied auth header from the request
+   * @param algo The algorithm used to create the token key, can be null if you want to determine through the JWK from the oauth endpoint
+   * @param issuer The issuer of the JWT
+   * @param jwksUrl The url of the JWKS store
+   * @return if verified, return the decoded JWT
+   *
+  * */
+  public static DecodedJWT verifyToken(String authHeader, TokenAlgorithmsEnum algo, String issuer, String jwksUrl) {
     String token = authHeader.substring("Bearer ".length());
-    DecodedJWT jwt = getValidationJWT(token);
 
     try {
-      url = new URL(getJwksUrl(jwt));
-      Jwk jwk = get(jwt.getKeyId());
-      Algorithm algorithm = null;
-      PublicKey publicKey = null;
+      //decode received token to verify against jwks, this should also validate a correctly formatted token was received
+      DecodedJWT jwt = getValidationJWT(token);
 
-      if (jwk.getType() == null || jwk.getType().isEmpty()) {
-        throw new Exception("JWK algorithm cannot be null");
+      String openIdConfigUrl = jwksUrl;
+      if(openIdConfigUrl == null || openIdConfigUrl.isEmpty()) {
+        throw new Exception("No URL was supplied to determine JWKS.");
       }
 
-      switch (jwk.getType()) {
-        case "RSA":
-        case "rsa":
-          publicKey = jwk.getPublicKey();
-          algorithm = Algorithm.RSA256((RSAPublicKey) publicKey, null);
+      //retrieve and validate web key store
+      url = new URL(openIdConfigUrl);
+      List<Jwk> jwks = getAll();
+      if(jwks == null || jwks.isEmpty()) {
+        throw new JWTVerificationException("Failed to acquire public keys");
+      }
+
+      //check to ensure the key id from the jwt matches the key id from the issuer
+      String issuerKid = "";
+      for(int i = 0; i < jwks.size(); i++) {
+        if(jwks.get(i).getId().equals(jwt.getKeyId())) {
+          issuerKid = jwt.getKeyId();
           break;
-        case "EC":
-        case "ec":
-          JSONObject jwkJsonObj = new JSONObject();
-          jwkJsonObj.put("x", jwk.getAdditionalAttributes().get("x"));
-          jwkJsonObj.put("y", jwk.getAdditionalAttributes().get("y"));
-          jwkJsonObj.put("crv", jwk.getAdditionalAttributes().get("crv"));
-          jwkJsonObj.put("kty", jwk.getType());
-          publicKey = ECKey.parse(jwkJsonObj.toString()).toECPublicKey();
-          algorithm = Algorithm.ECDSA256((ECPublicKey) publicKey, null);
-          break;
-        default:
-          throw new Exception("Unsupported JWK algorithm " + jwk.getAlgorithm());
+        }
       }
 
-      algorithm.verify(jwt);
-      if (jwt.getExpiresAt().before(new Date())) {
-        throw new TokenExpiredException("Token has expired.");
+      //if no matching key id was found, throw a JWT verification exception
+      if(issuerKid == null || issuerKid.isEmpty()) {
+        throw new JWTVerificationException("Invalid key id");
       }
 
-      return jwt;
-    } catch (Exception e) {
-      e.printStackTrace();
-      return null;
+      //get jwk using verified key id
+      Jwk jwk = get(issuerKid);
 
+      Algorithm algorithm;
+      //check if algorithm is supplied, if not use jwk to determine algorithm used
+      if(algo != null) {
+        switch(algo) {
+          case RSA256: {
+            algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null); // only the public key is used during verification
+            break;
+          }
+          default:
+            throw new Exception("Unsupported JWK algorithm");
+
+        }
+      }
+      else {
+
+        switch(jwk.getAlgorithm()) {
+          case "RS256": {
+            algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null); // only the public key is used during verification
+            break;
+          }
+//          case "HS256": {
+//            //algorithm = Algorithm.HMAC256()
+//            break;
+//          }
+          default:
+            throw new Exception("Unsupported JWK algorithm");
+
+        }
+      }
+
+      //verify token
+      JWTVerifier verifier = JWT.require(algorithm)
+              .withIssuer(issuer)
+              .build(); //Reusable verifier instance
+      DecodedJWT verifiedJwt = verifier.verify(token);
+
+      return verifiedJwt;
+
+    } catch(JWTVerificationException e){
+      //Invalid signature/claims
+      throw new JWTVerificationException(e.getMessage());
     }
+    catch(Exception e) {
+      logger.error(e.getMessage());
+      return null;
+      //throw new Exception(e.getMessage());
+    }
+
   }
 
   public static String[] getUserRoles(DecodedJWT jwt) {
