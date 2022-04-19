@@ -7,6 +7,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -36,6 +37,10 @@ public class ApiInit {
 
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private QueryConfig queryConfig;
+
 
   @Autowired
   private FhirDataProvider provider;
@@ -110,7 +115,19 @@ public class ApiInit {
         return;
       }
 
+      if (!FhirHelper.validLibraries(measureDefBundle)) {
+        logger.error(String.format("Measure definition bundle from %s contains libraries without dataRequirements.", measureDefUrl));
+        return;
+      }
+
+      String missingResourceTypes = FhirHelper.getQueryConfigurationMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
+      if (!missingResourceTypes.equals("")) {
+        logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
+        return;
+      }
+
       Measure measure = foundMeasure.get();
+
       Identifier defaultIdentifier = new Identifier()
               .setSystem("https://nhsnlink.org")
               .setValue(measureDefBundle.getIdElement().getIdPart());

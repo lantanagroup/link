@@ -6,8 +6,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 public class Helper {
   public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
@@ -59,4 +58,12 @@ public class Helper {
       return url;
     }
   }
+
+  public static List concatenate(String[] list1, String[] list2) {
+    List<String> list = new ArrayList<>();
+    Collections.addAll(list, list1);
+    Collections.addAll(list, list2);
+    return list;
+  }
+
 }
