@@ -21,4 +21,8 @@ public class ConsumerConfig {
   private Permission[] permissions;
   @Getter
   private String azorica;
+  @Getter
+  private String issuer;
+  @Getter
+  private String authJwksUrl;
 }

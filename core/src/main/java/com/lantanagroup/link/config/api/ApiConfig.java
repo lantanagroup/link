@@ -51,7 +51,14 @@ public class ApiConfig {
     /**
      * <strong>api.auth-jwks-url</strong><br>URL used to retrieve certs from identity provider to verify that JWT's are valid
      */
+    @Getter @Setter
     private String authJwksUrl;
+
+    /**
+     * <strong>api.issuer</strong><br>URL for the JWT issuer
+     */
+    @Getter @Setter
+    private String issuer;
 
     /**
      * <strong>api.downloader</strong><br>The class used to download reports

@@ -11,8 +11,11 @@ import org.springframework.security.core.AuthenticationException;
 
 public class LinkAuthManager implements AuthenticationManager {
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthManager.class);
-
-  public LinkAuthManager() {
+  private String issuer = "";
+  private String jwksUrl = "";
+  public LinkAuthManager(String issuer, String jwksUrl) {
+    this.issuer = issuer;
+    this.jwksUrl = jwksUrl;
   }
 
   @Override
@@ -23,7 +26,7 @@ public class LinkAuthManager implements AuthenticationManager {
       throw new BadCredentialsException("This REST operation requires a Bearer Authorization header.");
     }
 
-    authentication.setAuthenticated(OAuth2Helper.validateAuthHeader(authHeader) != null ? true : false);
+    authentication.setAuthenticated(OAuth2Helper.verifyToken(authHeader, OAuth2Helper.TokenAlgorithmsEnum.RSA256, this.issuer, this.jwksUrl) != null ? true : false);
 
     return authentication;
   }
