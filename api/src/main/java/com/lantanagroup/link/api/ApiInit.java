@@ -7,6 +7,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -38,6 +39,9 @@ public class ApiInit {
   private ApiConfig config;
 
   @Autowired
+  private QueryConfig queryConfig;
+
+  @Autowired
   private FhirDataProvider provider;
 
   @Value("classpath:fhir/*")
@@ -53,6 +57,11 @@ public class ApiInit {
       HttpRequest request = HttpRequest.newBuilder()
               .uri(URI.create(measureDefUrl))
               .build();
+
+      if (queryConfig.isRequireHttps() && !measureDefUrl.contains("https")) {
+        logger.error(String.format("https requires and measure definition url %s does not contain https", measureDefUrl));
+        return;
+      }
 
       Integer retryCount = 0;
       String content = null;
