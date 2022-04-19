@@ -81,6 +81,8 @@
                         query-api/target/generated-sources/delombok;
                         core/target/generated-sources/delombok;
                     </sourcepath>
+                    <additionalOptions>-Xdoclint:none</additionalOptions>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
                 </configuration>
             </plugin>
             <plugin>

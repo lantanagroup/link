@@ -37,10 +37,6 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-context:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9.3" />
           <element id="library" level="project" name="Maven: org.springframework:spring-test:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: com.mashape.unirest:unirest-java:1.4.9" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
           <element id="archive" name="query-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="query" />
           </element>

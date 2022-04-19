@@ -51,12 +51,8 @@
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" />
           <element id="library" level="project" name="Maven: org.springframework:spring-test:5.1.9.RELEASE" />
-          <element id="library" level="project" name="Maven: com.mashape.unirest:unirest-java:1.4.9" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpasyncclient:4.1.4" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpcore-nio:4.4.12" />
-          <element id="library" level="project" name="Maven: org.apache.httpcomponents:httpmime:4.5.9" />
-          <element id="library" level="project" name="Maven: org.json:json:20160212" />
           <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
+          <element id="library" level="project" name="Maven: org.json:json:20200518" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.9" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.9" />
           <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />

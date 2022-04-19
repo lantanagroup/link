@@ -41,7 +41,7 @@ public class QueryConfig {
 
   /**
    * <strong>query.allowed-remote</strong><br>If running in a Remote scenario (<strong>query.api.mode</strong> == "Remote"), a list of the IP addresses that are allowed to perform query requests. This is the immediate address of the device performing the request.
-   * If used in conjunction with <strong>query.proxy-address</strong>, this list of allowed-remote addresses is checked against the x-forwarded-for or x-real-ip headers passed to the API by the proxy.</strong>
+   * If used in conjunction with <strong>query.proxy-address</strong>, this list of allowed-remote addresses is checked against the x-forwarded-for or x-real-ip headers passed to the API by the proxy.
    */
   private String[] allowedRemote;
 

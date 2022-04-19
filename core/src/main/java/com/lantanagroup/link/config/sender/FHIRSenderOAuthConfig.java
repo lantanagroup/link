@@ -8,8 +8,6 @@ import org.apache.logging.log4j.util.Strings;
 
 @Getter @Setter
 public class FHIRSenderOAuthConfig {
-
-
     /**
      * <strong>oauth.credential-mode</strong>
      */
