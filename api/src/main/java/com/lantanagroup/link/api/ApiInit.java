@@ -59,7 +59,7 @@ public class ApiInit {
               .build();
 
       if (queryConfig.isRequireHttps() && !measureDefUrl.contains("https")) {
-        logger.error(String.format("https requires and measure definition url %s does not contain https", measureDefUrl));
+        logger.error(String.format("https required for measure definition url: ", measureDefUrl));
         return;
       }
 

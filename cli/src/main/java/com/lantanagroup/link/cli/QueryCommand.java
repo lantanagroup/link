@@ -10,6 +10,7 @@ import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
+import org.apache.http.client.HttpResponseException;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,10 @@ public class QueryCommand extends BaseShellCommand {
       this.registerBeans();
 
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
+      if(config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
+        logger.error("Error, requires https");
+        throw new HttpResponseException(500, "Internal Server Error");
+      }
 
       List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
       IQuery query = QueryFactory.getQueryInstance(this.applicationContext, config.getQueryClass());
