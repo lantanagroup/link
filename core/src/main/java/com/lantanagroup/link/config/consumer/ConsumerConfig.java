@@ -21,8 +21,15 @@ public class ConsumerConfig {
   private Permission[] permissions;
   @Getter
   private String azorica;
+
+  /***
+   <strong>consumer.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
+   */
   @Getter
   private String issuer;
+  /***
+   <strong>consumer.authJwksUrl</strong><br>The url endpoint for JSON Web Key Set (JWKS), which contains public keys to verify any JSON Web Token (JWT)
+   */
   @Getter
   private String authJwksUrl;
 }
