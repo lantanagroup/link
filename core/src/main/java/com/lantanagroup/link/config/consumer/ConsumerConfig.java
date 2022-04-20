@@ -28,7 +28,7 @@ public class ConsumerConfig {
   @Getter
   private String issuer;
   /***
-   <strong>consumer.authJwksUrl</strong><br>The url endpoint for JSON Web Key Set (JWKS), which contains public keys to verify any JSON Web Token (JWT)
+   <strong>consumer.authJwksUrl</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
    */
   @Getter
   private String authJwksUrl;
