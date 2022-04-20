@@ -316,9 +316,10 @@ public class OAuth2Helper {
 
       //check to ensure the key id from the jwt matches the key id from the issuer
       String issuerKid = "";
+      String jwtKid = jwt.getKeyId();
       for(int i = 0; i < jwks.size(); i++) {
-        if(jwks.get(i).getId().equals(jwt.getKeyId())) {
-          issuerKid = jwt.getKeyId();
+        if(jwks.get(i).getId().equals(jwtKid)) {
+          issuerKid = jwtKid;
           break;
         }
       }
