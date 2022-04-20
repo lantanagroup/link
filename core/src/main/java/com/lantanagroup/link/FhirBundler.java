@@ -4,8 +4,10 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FhirBundler {
@@ -85,13 +87,16 @@ public class FhirBundler {
    */
   public Bundle generateBundle(boolean allResources, MeasureReport masterMeasureReport) {
     Meta meta = new Meta();
-    Coding tag = meta.addTag();
-    tag.setCode(Constants.REPORT_BUNDLE_TAG);
-    tag.setSystem(Constants.MainSystem);
+    meta.addProfile(Constants.MeasureReportBundleProfileUrl);
 
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);
+    bundle.setTimestamp(new Date());
     bundle.setMeta(meta);
+
+    bundle.getIdentifier()
+            .setSystem(Constants.IdentifierSystem)
+            .setValue(UUID.randomUUID().toString());
 
     // Add the master measure report to the bundle
     bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport, this.fhirDataProvider.ctx));

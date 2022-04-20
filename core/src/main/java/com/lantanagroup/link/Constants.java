@@ -1,7 +1,6 @@
 package com.lantanagroup.link;
 
 public class Constants {
-  public static final String REPORT_BUNDLE_TAG = "report-bundle";
   public static final String MainSystem = "https://nhsnlink.org";
   public static final String ReportDefinitionTag = "report-definition";
   public static final String LoincSystemUrl = "http://loinc.org";
@@ -16,4 +15,6 @@ public class Constants {
   public static final String FhirResourcesPackageName = "org.hl7.fhir.r4.model.";
   public static final String UuidPrefix = "urn:uuid:";
   public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
+  public static final String MeasureReportBundleProfileUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/measure-report-bundle";
+  public static final String IdentifierSystem = "urn:ietf:rfc:3986";
 }

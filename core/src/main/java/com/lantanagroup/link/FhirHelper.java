@@ -9,6 +9,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -31,6 +32,7 @@ public class FhirHelper {
 
   /**
    * Removes any extra properties that should not be included in the bundle's submission
+   *
    * @param resource
    */
   public static DomainResource cleanResource(DomainResource resource, FhirContext ctx) {
@@ -104,15 +106,14 @@ public class FhirHelper {
     }
 
     String remoteAddress;
-    if(request.getHeader("X-FORWARED-FOR") != null) {
+    if (request.getHeader("X-FORWARED-FOR") != null) {
       logger.debug("X-FORWARED-FOR IP is: " + request.getHeader("X-FORWARED-FOR"));
     }
 
-    if(request.getHeader("X-REAL-IP") != null) {
+    if (request.getHeader("X-REAL-IP") != null) {
       logger.debug("X-REAL-IP is: " + request.getHeader("X-REAL-IP") + " and is being used for remoteAddress");
       remoteAddress = request.getHeader("X-REAL-IP");
-    }
-    else {
+    } else {
       logger.debug("X-REAL-IP IP is not found.");
       remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     }
@@ -130,16 +131,6 @@ public class FhirHelper {
     auditEvent.setAgent(agentList);
 
     return auditEvent;
-  }
-
-  public enum AuditEventTypes {
-    Generate,
-    ExcludePatients,
-    Export,
-    Send,
-    SearchLocations,
-    InitiateQuery,
-    SearchReports
   }
 
   /**
@@ -178,7 +169,6 @@ public class FhirHelper {
 
     return "Unknown";
   }
-
 
   public static Extension createVersionExtension(String value) {
     return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
@@ -452,7 +442,7 @@ public class FhirHelper {
    * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
    */
   public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
-    if(bundle.getEntry() != null) {
+    if (bundle.getEntry() != null) {
       FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
       Bundle txBundle = new Bundle();
       Bundle returnBundle = new Bundle();
@@ -463,8 +453,7 @@ public class FhirHelper {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
                 || entry.getResource().getResourceType().toString() == "CodeSystem") {
           txBundle.addEntry(entry);
-        }
-        else {
+        } else {
           returnBundle.addEntry(entry);
         }
       });
@@ -473,6 +462,52 @@ public class FhirHelper {
       return returnBundle;
     }
     return bundle;
+  }
+
+  public static Set getDataRequirementTypes(Bundle reportRefBundle) {
+    List<Library> libraryList = reportRefBundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Library)
+            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
+
+    Set dataRequirements = new HashSet();
+    libraryList.stream().forEach(library -> {
+      Set libTypes = library.getDataRequirement().stream().map(e -> e.getType()).collect(Collectors.toSet());
+      dataRequirements.addAll(libTypes);
+
+    });
+    return dataRequirements;
+  }
+
+  public static boolean validLibraries(Bundle reportRefBundle) {
+    List<Library> libraryList = reportRefBundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Library)
+            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
+
+    List<Library> libraryEmptyList = libraryList.stream().filter(library -> library.getDataRequirement().isEmpty()).collect(Collectors.toList());
+    if (libraryEmptyList.isEmpty()) return true;
+    return false;
+  }
+
+  public static String getQueryConfigurationMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
+    // get data requirements
+    Set<String> reportDefBundleDataReqSet = FhirHelper.getDataRequirementTypes(measureDefBundle);
+    // get all resources types that are in data requirements but missing from query properties
+    String missingResourceTypes = reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
+    return missingResourceTypes;
+  }
+
+  public static List<String> getQueryConfigurationResourceTypes(QueryConfig queryConfig) {
+    return Helper.concatenate(queryConfig.getPatientResourceTypes(), queryConfig.getOtherResourceTypes());
+  }
+
+  public enum AuditEventTypes {
+    Generate,
+    ExcludePatients,
+    Export,
+    Send,
+    SearchLocations,
+    InitiateQuery,
+    SearchReports
   }
 }
 

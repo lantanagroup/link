@@ -119,7 +119,19 @@ public class ApiInit {
         return;
       }
 
+      if (!FhirHelper.validLibraries(measureDefBundle)) {
+        logger.error(String.format("Measure definition bundle from %s contains libraries without dataRequirements.", measureDefUrl));
+        return;
+      }
+
+      String missingResourceTypes = FhirHelper.getQueryConfigurationMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
+      if (!missingResourceTypes.equals("")) {
+        logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
+        return;
+      }
+
       Measure measure = foundMeasure.get();
+
       Identifier defaultIdentifier = new Identifier()
               .setSystem("https://nhsnlink.org")
               .setValue(measureDefBundle.getIdElement().getIdPart());

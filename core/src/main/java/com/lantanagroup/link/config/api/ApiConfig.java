@@ -1,6 +1,5 @@
 package com.lantanagroup.link.config.api;
 
-import com.lantanagroup.link.config.IDirectConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,13 +36,13 @@ public class ApiConfig {
     private String fhirServerStore;
 
     /**
-     * <strong>evaluation-service: https://cqf-ruler.nhsnlink.org/fhir</strong>
+     * <strong>evaluation-service</strong><br>The measure evaluation service (CQF-Ruler) installation that is to be used to evaluate patient data against measure logic.
      */
     @Getter @Setter @NotNull
     private String evaluationService;
 
     /**
-     * <strong>terminology-service: https://tx.nhsnlink.org/fhir</strong>
+     * <strong>api.terminology-service</strong><br>The FHIR terminology service to use for storing ValueSet and CodeSystem resources, passed to the evaluation-service for use during measure evaluation.
      */
     @Getter @Setter @NotNull
     private String terminologyService;
@@ -66,7 +65,7 @@ public class ApiConfig {
     private String sender;
 
     /**
-     * <string>api.send-whole-bundle</string><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
+     * <strong>api.send-whole-bundle</strong><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
      */
     private Boolean sendWholeBundle;
 
@@ -87,15 +86,6 @@ public class ApiConfig {
     private ApiCorsConfig cors;
 
     /**
-     * <strong>api.terminology</strong><br>Configuration specific to terminology, such as value sets
-     */
-    @Getter
-    private ApiTerminologyConfig terminology;
-
-    @Getter
-    private IDirectConfig direct;
-
-    /**
      * <strong>api.report-defs</strong><br>Configuration for report definitions supported by the system
      */
     @Getter
@@ -108,6 +98,9 @@ public class ApiConfig {
     @Getter @NotNull
     private ApiQueryConfig query;
 
+    /**
+     * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
+     */
     @Getter
     private UserConfig user;
 

@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter @Setter
 @Configuration
@@ -47,7 +48,7 @@ public class QueryConfig {
 
   /**
    * <strong>query.allowed-remote</strong><br>If running in a Remote scenario (<strong>query.api.mode</strong> == "Remote"), a list of the IP addresses that are allowed to perform query requests. This is the immediate address of the device performing the request.
-   * If used in conjunction with <strong>query.proxy-address</strong>, this list of allowed-remote addresses is checked against the x-forwarded-for or x-real-ip headers passed to the API by the proxy.</strong>
+   * If used in conjunction with <strong>query.proxy-address</strong>, this list of allowed-remote addresses is checked against the x-forwarded-for or x-real-ip headers passed to the API by the proxy.
    */
   private String[] allowedRemote;
 
@@ -60,4 +61,9 @@ public class QueryConfig {
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
    */
   private String authClass;
+
+  private String[] patientResourceTypes;
+
+  private String[] otherResourceTypes;
+
 }
