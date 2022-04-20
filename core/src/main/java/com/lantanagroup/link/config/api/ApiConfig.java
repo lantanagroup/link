@@ -48,9 +48,16 @@ public class ApiConfig {
     private String terminologyService;
 
     /**
-     * <strong>api.auth-jwks-url</strong><br>URL used to retrieve certs from identity provider to verify that JWT's are valid
+     * <strong>api.auth-jwks-url</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
      */
+    @Getter @Setter
     private String authJwksUrl;
+
+    /**
+     * <strong>api.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
+     */
+    @Getter @Setter
+    private String issuer;
 
     /**
      * <strong>api.downloader</strong><br>The class used to download reports
