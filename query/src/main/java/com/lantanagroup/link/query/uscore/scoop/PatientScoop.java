@@ -2,7 +2,7 @@ package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
@@ -30,7 +30,7 @@ public class PatientScoop extends Scoop {
   private ApplicationContext context;
 
   @Autowired
-  private USCoreConfig usCoreConfig;
+  private QueryConfig queryConfig;
 
   public void execute(List<PatientOfInterestModel> pois) throws Exception {
     if (this.fhirQueryServer == null) {
@@ -44,7 +44,7 @@ public class PatientScoop extends Scoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig);
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.queryConfig);
       patientData.loadData();
       return patientData;
     } catch (Exception e) {

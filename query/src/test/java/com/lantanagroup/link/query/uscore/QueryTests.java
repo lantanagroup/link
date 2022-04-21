@@ -2,7 +2,7 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
-import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
@@ -26,20 +26,20 @@ public class QueryTests {
 
     // Configuration for which queries should be called for each patient
     List<String> queries = new ArrayList<>();
-    queries.add("Condition?patient={{patientId}}");
-    queries.add("Encounter?patient={{patientId}}");
-    queries.add("MedicationRequest?patient={{patientId}}");
-    USCoreConfig usCoreConfig = new USCoreConfig();
-    usCoreConfig.setQueries(queries);
-    usCoreConfig.getQueries();
+    queries.add("Condition");
+    queries.add("Encounter");
+    queries.add("MedicationRequest");
+    QueryConfig queryConfig = new QueryConfig();
+    queryConfig.setPatientResourceTypes(queries);
+    queryConfig.getPatientResourceTypes();
     List<String> extraResources = new ArrayList<>();
-    extraResources.add("Location/{{locationId}}");
-    extraResources.add("Medication/{{medicationId}}");
-    usCoreConfig.setAdditionalResources(extraResources);
-    usCoreConfig.getAdditionalResources();
+    extraResources.add("Location");
+    extraResources.add("Medication");
+    queryConfig.setOtherResourceTypes(extraResources);
+    queryConfig.getOtherResourceTypes();
 
     PatientScoop patientScoop = new PatientScoop();
-    patientScoop.setUsCoreConfig(usCoreConfig);
+    patientScoop.setQueryConfig(queryConfig);
     patientScoop.setFhirQueryServer(fhirQueryClient);
 
     ApplicationContext applicationContext = mock(ApplicationContext.class);

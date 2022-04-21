@@ -59,10 +59,10 @@ public class Helper {
     }
   }
 
-  public static List concatenate(String[] list1, String[] list2) {
+  public static List concatenate(List list1, List list2) {
     List<String> list = new ArrayList<>();
-    Collections.addAll(list, list1);
-    Collections.addAll(list, list2);
+    Collections.addAll(list1);
+    Collections.addAll(list2);
     return list;
   }
 
