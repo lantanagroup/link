@@ -19,4 +19,5 @@ import java.util.List;
 public class USCoreConfig {
   private List<String> queries;
   private List<String> additionalResources;
+  private int parallelPatients;
 }

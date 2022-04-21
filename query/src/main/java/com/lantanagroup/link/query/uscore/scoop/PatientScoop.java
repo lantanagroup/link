@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Getter
@@ -95,20 +96,47 @@ public class PatientScoop extends Scoop {
       }
     });
 
-    try {
-      List<Patient> patients = new ArrayList<>(patientMap.values());
+    int x = usCoreConfig.getParallelPatients();
 
-      // loop through the patient ids to retrieve the patientData using each patient.
-      List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
-        logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
-        PatientData patientData = this.loadPatientData(patient);
-        return patientData;
-      }).collect(Collectors.toList());
+    if(usCoreConfig.getParallelPatients() > 0) {
+      try {
+        List<Patient> patients = new ArrayList<>(patientMap.values());
+        List<PatientData> patientDataList = new ArrayList<>();
+        ForkJoinPool forkJoinPool = new ForkJoinPool(usCoreConfig.getParallelPatients());
+        forkJoinPool.submit(() -> {
+          try {
+            // loop through the patient ids to retrieve the patientData using each patient.
+            patients.parallelStream().map(patient -> {
+              logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+              PatientData patientData = this.loadPatientData(patient);
+              patientDataList.add(patientData);
+              return patientData;
+            });
+          } catch (Exception e) {
+            logger.error(e.getMessage());
+          }
+        });
+        forkJoinPool.shutdown();
+        return patientDataList;
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }
+    }
+    else {
+      try {
+        // loop through the patient ids to retrieve the patientData using each patient.
+        List<Patient> patients = new ArrayList<>(patientMap.values());
+        List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
+          logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+          PatientData patientData = this.loadPatientData(patient);
+          return patientData;
+        }).collect(Collectors.toList());
 
-      logger.info("Patient Data List count: " + patientDataList.size());
-      return patientDataList;
-    } catch (Exception e) {
-      logger.error(e.getMessage());
+        logger.info("Patient Data List count: " + patientDataList.size());
+        return patientDataList;
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }
     }
 
     return new ArrayList<>();
