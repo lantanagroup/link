@@ -124,7 +124,7 @@ public class ReportController extends BaseController {
     String url = this.queryConfig.getFhirServerBase() + "/" + reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(url))
-            .setHeader("if-modified-since", lastUpdateDate);
+            .setHeader("if-modified-since", lastUpdateDate); //add auth here if needed
     HttpRequest request = requestBuilder.build();
 
     HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());

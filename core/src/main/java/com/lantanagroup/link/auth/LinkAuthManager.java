@@ -15,11 +15,6 @@ public class LinkAuthManager implements AuthenticationManager {
   private final String issuer;
   private final String jwksUrl;
 
-//  public LinkAuthManager(String issuer, String jwksUrl) {
-//    this.issuer = issuer;
-//    this.jwksUrl = jwksUrl;
-//  }
-
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
     String authHeader = (String) authentication.getCredentials();
