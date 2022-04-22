@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.util.List;
 
 @Getter @Setter
 @Configuration
@@ -55,8 +56,8 @@ public class QueryConfig {
    */
   private String authClass;
 
-  private String[] patientResourceTypes;
+  private List<String> patientResourceTypes;
 
-  private String[] otherResourceTypes;
+  private List<String> otherResourceTypes;
 
 }

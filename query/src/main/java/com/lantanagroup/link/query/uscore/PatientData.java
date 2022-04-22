@@ -4,7 +4,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.ResourceIdChanger;
-import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class PatientData {
@@ -22,25 +21,34 @@ public class PatientData {
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
-  private final USCoreConfig usCoreConfig;
+  // private final USCoreConfig usCoreConfig;
+  private final QueryConfig queryConfig;
+  private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
 
-  public PatientData(IGenericClient fhirQueryServer, Patient patient, USCoreConfig usCoreConfig) {
+  public PatientData(IGenericClient fhirQueryServer, Patient patient, QueryConfig queryConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
-    this.usCoreConfig = usCoreConfig;
+    this.queryConfig = queryConfig;
+    this.resourceTypes = resourceTypes;
   }
 
   public void loadData() {
-    if (this.usCoreConfig == null || this.usCoreConfig.getQueries() == null || this.usCoreConfig.getQueries().size() == 0) {
-      logger.error("Not configured for US Core queries. Not querying for any patient data.");
+    if (resourceTypes.size() == 0) {
+      logger.error("Not querying for any patient data.");
       return;
     }
 
-    List<String> queryString = this.usCoreConfig.getQueries().stream().map(query ->
-            query.replace("{{patientId}}", this.patientId)
-    ).collect(Collectors.toList());
+    List<String> queryString = resourceTypes.stream().map(query -> {
+      String returnedQuery;
+      if (query.equals("Observation")) {
+        returnedQuery = query + "?category=laboratory&patient=Patient/" + this.patientId;
+      } else {
+        returnedQuery = query + "?patient=Patient/" + this.patientId;
+      }
+      return returnedQuery;
+    }).collect(Collectors.toList());
 
     queryString.parallelStream().forEach(query -> {
       Bundle bundle = PatientScoop.rawSearch(this.fhirQueryServer, query);
@@ -64,15 +72,15 @@ public class PatientData {
   }
 
   private void getAdditionalResources(Bundle bundle, List<Reference> resourceReferences){
-    if(this.usCoreConfig.getAdditionalResources() != null) {
-      for(Reference reference : resourceReferences) {
+    if (this.queryConfig.getOtherResourceTypes() != null) {
+      for (Reference reference : resourceReferences) {
         String[] refParts = reference.getReference().split("/");
-        if(this.usCoreConfig.getAdditionalResources().contains(refParts[0] + "/{{" + refParts[0].toLowerCase() + "Id}}")) {
+        List<String> otherResourceTypes = this.queryConfig.getOtherResourceTypes();
+        if (otherResourceTypes.contains(refParts[0])) {
           Resource resource = (Resource) this.fhirQueryServer.read()
                   .resource(refParts[0])
                   .withId(refParts[1])
                   .execute();
-
           bundle.addEntry().setResource(resource);
         }
       }
