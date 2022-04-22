@@ -34,7 +34,7 @@ public class QueryCommand extends BaseShellCommand {
   }
 
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
-  public void query(String patient, @ShellOption(defaultValue = "") String output) {
+  public void query(String patient, String resourceTypes, @ShellOption(defaultValue = "") String output) {
     try {
       this.registerBeans();
 
@@ -57,9 +57,14 @@ public class QueryCommand extends BaseShellCommand {
         patientsOfInterest.add(poi);
       }
 
+      List<String> resourceTypesList = new ArrayList<>();
+      for (String resourceType : resourceTypes.split(",")) {
+        resourceTypesList.add(resourceType);
+      }
+
       logger.info("Executing query");
 
-      List<QueryResponse> queryResponses = query.execute(patientsOfInterest);
+      List<QueryResponse> queryResponses = query.execute(patientsOfInterest, resourceTypesList);
 
       if (queryResponses != null) {
         for (int i = 0; i < queryResponses.size(); i++) {

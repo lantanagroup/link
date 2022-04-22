@@ -8,6 +8,6 @@ import org.springframework.context.ApplicationContext;
 import java.util.List;
 
 public interface IQuery {
-  List<QueryResponse>  execute(List<PatientOfInterestModel> patientIdentifiers);
+  List<QueryResponse>  execute(List<PatientOfInterestModel> patientIdentifiers, List<String> resourceTypes);
   void setApplicationContext(ApplicationContext context);
 }

@@ -32,7 +32,7 @@ public class AgentController {
   private QueryConfig config;
 
   @GetMapping(value = "/api/data", produces = {"application/json", "application/fhir+json", "application/xml", "application/fhir+xml"})
-  public @ResponseBody List<QueryResponse> getData(String[] patientIdentifier, String[] patientRef) throws HttpResponseException {
+  public @ResponseBody List<QueryResponse> getData(String[] patientIdentifier,  String[] patientRef,  String[] resourceTypes) throws HttpResponseException {
     IQuery query = null;
 
     try {
@@ -70,6 +70,10 @@ public class AgentController {
     }*/
 
     //return bundle;
-    return query.execute(allPatientsOfInterest);
+    List<String> resourceTypeList = new ArrayList<>();
+    for (String resourceType : resourceTypes) {
+      resourceTypeList.add(resourceType);
+    }
+    return query.execute(allPatientsOfInterest, resourceTypeList);
   }
 }

@@ -124,10 +124,10 @@ public class ApiInit {
         return;
       }
 
-      String missingResourceTypes = FhirHelper.getQueryConfigurationMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
+      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
       if (!missingResourceTypes.equals("")) {
-        logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
-        return;
+        logger.error(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
+       // return;
       }
 
       Measure measure = foundMeasure.get();

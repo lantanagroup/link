@@ -488,12 +488,20 @@ public class FhirHelper {
     return false;
   }
 
-  public static String getQueryConfigurationMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
+  public static String getQueryConfigurationDataReqMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
     // get data requirements
-    Set<String> reportDefBundleDataReqSet = FhirHelper.getDataRequirementTypes(measureDefBundle);
+    Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
     String missingResourceTypes = reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
     return missingResourceTypes;
+  }
+
+  public static List<String> getQueryConfigurationDataReqCommonResourceTypes(List<String> properties, Bundle measureDefBundle) {
+    // get data requirements
+    Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
+    // get all resources types that are in data requirements but missing from query properties
+    List<String> commonResourceTypes = reportDefBundleDataReqSet.stream().filter(e -> properties.contains(e)).collect(Collectors.toList());
+    return commonResourceTypes;
   }
 
   public static List<String> getQueryConfigurationResourceTypes(QueryConfig queryConfig) {
