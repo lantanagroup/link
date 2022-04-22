@@ -37,7 +37,7 @@ public class AgentController {
 
     try {
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      if(queryConfig.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
+      if(queryConfig.isRequireHttps() && !queryConfig.getFhirServerBase().contains("https")) {
         logger.error("Error, requires https");
         throw new HttpResponseException(500, "Internal Server Error");
       }
