@@ -5,9 +5,12 @@ import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +19,13 @@ import org.slf4j.LoggerFactory;
 @Interceptor
 public class UserInterceptor {
   protected static final Logger logger = LoggerFactory.getLogger(UserInterceptor.class);
+  private String issuer = "";
+  private String jwksUrl = "";
 
+  public UserInterceptor(String issuer, String jwksUrl) {
+    this.issuer = issuer;
+    this.jwksUrl = jwksUrl;
+  }
 
   @Hook(Pointcut.SERVER_INCOMING_REQUEST_PRE_HANDLED)
   public void intercept(RequestDetails requestDetails){
@@ -30,13 +39,20 @@ public class UserInterceptor {
       throw new AuthenticationException();
     }
 
-    DecodedJWT jwt = OAuth2Helper.validateAuthHeader(authHeader);
-    if (jwt == null) {
-      logger.error("OAuth token certificate is unknown or invalid");
-      throw new AuthenticationException();
+    try {
+      DecodedJWT jwt = OAuth2Helper.verifyToken(authHeader, OAuth2Helper.TokenAlgorithmsEnum.RSA256, issuer, jwksUrl);
+
+      if(jwt == null) {
+        logger.error("OAuth token certificate is unknown or invalid");
+        throw new AuthenticationException();
+      }
+
+      // retrieve all the roles for the user and stored them on requestDetails
+      requestDetails.addParameter(Constants.Roles, OAuth2Helper.getUserRoles(jwt));
+    }
+    catch(Exception e) {
+      throw new AuthenticationException(e.getMessage());
     }
 
-    // retrieve all the roles for the user and stored them on requestDetails
-    requestDetails.addParameter(Constants.Roles, OAuth2Helper.getUserRoles(jwt));
   }
 }

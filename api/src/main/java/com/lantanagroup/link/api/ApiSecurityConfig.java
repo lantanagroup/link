@@ -34,7 +34,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials);
-    authFilter.setAuthenticationManager(new LinkAuthManager());
+    authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAuthJwksUrl()));
     authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
     http
             .csrf().disable()
