@@ -341,13 +341,12 @@ public class OAuth2Helper {
       //decode received token to verify against jwks, this should also validate a correctly formatted token was received
       DecodedJWT jwt = getValidationJWT(token);
 
-      String openIdConfigUrl = jwksUrl;
-      if(openIdConfigUrl == null || openIdConfigUrl.isEmpty()) {
+      if(jwksUrl == null || jwksUrl.isEmpty()) {
         throw new Exception("No URL was supplied to determine JWKS.");
       }
 
       //retrieve and validate web key store
-      url = new URL(openIdConfigUrl);
+      url = new URL(jwksUrl);
       List<Jwk> jwks = getAll();
       if(jwks == null || jwks.isEmpty()) {
         throw new JWTVerificationException("Failed to acquire public keys");
