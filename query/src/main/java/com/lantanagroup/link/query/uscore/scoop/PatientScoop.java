@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class PatientScoop extends Scoop {
   protected IGenericClient fhirQueryServer;
 
+  private int defaultThreshold = 10;
 
   @Autowired
   private ApplicationContext context;
@@ -99,7 +100,7 @@ public class PatientScoop extends Scoop {
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
-      int threshold = usCoreConfig.getParallelPatients() > 0?usCoreConfig.getParallelPatients():5;
+      int threshold = usCoreConfig.getParallelPatients() > 0?usCoreConfig.getParallelPatients():defaultThreshold ;
       ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
 
       List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
