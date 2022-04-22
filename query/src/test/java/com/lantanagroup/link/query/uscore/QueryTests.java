@@ -171,15 +171,15 @@ public class QueryTests {
 
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier1")).thenReturn(patientBaseQuery1);
     when(untypedQuery.byUrl("Patient?identifier=patientIdentifier2")).thenReturn(patientBaseQuery2);
-    when(untypedQuery.byUrl("Condition?patient=patient1")).thenReturn(conditionBaseQuery1);
-    when(untypedQuery.byUrl("Encounter?patient=patient1")).thenReturn(encounterBaseQuery1);
-    when(untypedQuery.byUrl("MedicationRequest?patient=patient1")).thenReturn(medicationRequestBaseQuery1);
-    when(untypedQuery.byUrl("Condition?patient=patient2")).thenReturn(conditionBaseQuery2);
-    when(untypedQuery.byUrl("Encounter?patient=patient2")).thenReturn(encounterBaseQuery2);
-    when(untypedQuery.byUrl("MedicationRequest?patient=patient2")).thenReturn(medicationRequestBaseQuery2);
-    when(untypedQuery.byUrl("Condition?patient=patient3")).thenReturn(conditionBaseQuery3);
-    when(untypedQuery.byUrl("Encounter?patient=patient3")).thenReturn(encounterBaseQuery3);
-    when(untypedQuery.byUrl("MedicationRequest?patient=patient3")).thenReturn(medicationRequestBaseQuery3);
+    when(untypedQuery.byUrl("Condition?patient=Patient/patient1")).thenReturn(conditionBaseQuery1);
+    when(untypedQuery.byUrl("Encounter?patient=Patient/patient1")).thenReturn(encounterBaseQuery1);
+    when(untypedQuery.byUrl("MedicationRequest?patient=Patient/patient1")).thenReturn(medicationRequestBaseQuery1);
+    when(untypedQuery.byUrl("Condition?patient=Patient/patient2")).thenReturn(conditionBaseQuery2);
+    when(untypedQuery.byUrl("Encounter?patient=Patient/patient2")).thenReturn(encounterBaseQuery2);
+    when(untypedQuery.byUrl("MedicationRequest?patient=Patient/patient2")).thenReturn(medicationRequestBaseQuery2);
+    when(untypedQuery.byUrl("Condition?patient=Patient/patient3")).thenReturn(conditionBaseQuery3);
+    when(untypedQuery.byUrl("Encounter?patient=Patient/patient3")).thenReturn(encounterBaseQuery3);
+    when(untypedQuery.byUrl("MedicationRequest?patient=Patient/patient3")).thenReturn(medicationRequestBaseQuery3);
 
     when(read.resource(Patient.class)).thenReturn(readTyped);
     when(readTyped.withId("patient3")).thenReturn(readExec);
@@ -239,17 +239,19 @@ public class QueryTests {
     Query theQuery = new Query();
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    List<QueryResponse> patientQueryResponses = theQuery.execute(patientsOfInterest);
+    List<QueryResponse> patientQueryResponses = theQuery.execute(patientsOfInterest, queries);
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier2");
-    verify(untypedQuery, times(1)).byUrl("Condition?patient=patient1");
-    verify(untypedQuery, times(1)).byUrl("Encounter?patient=patient1");
-    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=patient1");
-    verify(untypedQuery, times(1)).byUrl("Condition?patient=patient2");
-    verify(untypedQuery, times(1)).byUrl("Encounter?patient=patient2");
-    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=patient2");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient3");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient3");
 
     verify(read, times(1)).resource(Patient.class);
     verify(readTyped, times(1)).withId("patient3");

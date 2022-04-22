@@ -23,22 +23,24 @@ public class PatientData {
   private final IGenericClient fhirQueryServer;
   // private final USCoreConfig usCoreConfig;
   private final QueryConfig queryConfig;
+  private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
 
-  public PatientData(IGenericClient fhirQueryServer, Patient patient, QueryConfig queryConfig) {
+  public PatientData(IGenericClient fhirQueryServer, Patient patient, QueryConfig queryConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
     this.queryConfig = queryConfig;
+    this.resourceTypes = resourceTypes;
   }
 
   public void loadData() {
-    if (this.queryConfig == null || this.queryConfig.getPatientResourceTypes() == null || this.queryConfig.getPatientResourceTypes().size() == 0) {
-      logger.error("Not configured for US Core queries. Not querying for any patient data.");
+    if (resourceTypes.size() == 0) {
+      logger.error("Not querying for any patient data.");
       return;
     }
 
-    List<String> queryString = this.queryConfig.getPatientResourceTypes().stream().map(query -> {
+    List<String> queryString = resourceTypes.stream().map(query -> {
       String returnedQuery;
       if (query.equals("Observation")) {
         returnedQuery = query + "?category=laboratory&patient=Patient/" + this.patientId;

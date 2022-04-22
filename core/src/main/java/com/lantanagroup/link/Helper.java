@@ -61,8 +61,8 @@ public class Helper {
 
   public static List concatenate(List list1, List list2) {
     List<String> list = new ArrayList<>();
-    Collections.addAll(list1);
-    Collections.addAll(list2);
+    list.addAll(list1);
+    list.addAll(list2);
     return list;
   }
 

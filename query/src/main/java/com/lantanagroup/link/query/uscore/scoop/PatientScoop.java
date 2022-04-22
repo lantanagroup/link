@@ -32,19 +32,19 @@ public class PatientScoop extends Scoop {
   @Autowired
   private QueryConfig queryConfig;
 
-  public void execute(List<PatientOfInterestModel> pois) throws Exception {
+  public void execute(List<PatientOfInterestModel> pois, List<String> resourceTypes) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.patientData = this.loadPatientData(pois);
+    this.patientData = this.loadPatientData(pois, resourceTypes);
   }
 
-  private synchronized PatientData loadPatientData(Patient patient) {
+  private synchronized PatientData loadPatientData(Patient patient, List<String> resourceTypes) {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.queryConfig);
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.queryConfig, resourceTypes);
       patientData.loadData();
       return patientData;
     } catch (Exception e) {
@@ -54,7 +54,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest) {
+  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -101,7 +101,7 @@ public class PatientScoop extends Scoop {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
-        PatientData patientData = this.loadPatientData(patient);
+        PatientData patientData = this.loadPatientData(patient, resourceTypes);
         return patientData;
       }).collect(Collectors.toList());
 
