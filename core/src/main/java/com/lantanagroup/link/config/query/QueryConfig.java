@@ -60,4 +60,6 @@ public class QueryConfig {
 
   private List<String> otherResourceTypes;
 
+  private int parallelPatients;
+
 }
