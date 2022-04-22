@@ -2,7 +2,7 @@ package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
@@ -32,21 +32,21 @@ public class PatientScoop extends Scoop {
   private ApplicationContext context;
 
   @Autowired
-  private USCoreConfig usCoreConfig;
+  private QueryConfig queryConfig;
 
-  public void execute(List<PatientOfInterestModel> pois) throws Exception {
+  public void execute(List<PatientOfInterestModel> pois, List<String> resourceTypes) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.patientData = this.loadPatientData(pois);
+    this.patientData = this.loadPatientData(pois, resourceTypes);
   }
 
-  private synchronized PatientData loadPatientData(Patient patient) {
+  private synchronized PatientData loadPatientData(Patient patient, List<String> resourceTypes) {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig);
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.queryConfig, resourceTypes);
       patientData.loadData();
       return patientData;
     } catch (Exception e) {
@@ -56,7 +56,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest) {
+  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -105,7 +105,7 @@ public class PatientScoop extends Scoop {
 
       List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
-        PatientData patientData = this.loadPatientData(patient);
+        PatientData patientData = this.loadPatientData(patient, resourceTypes);
         return patientData;
       })).get().collect(Collectors.toList());
       logger.info("Patient Data List count: " + patientDataList.size());

@@ -40,10 +40,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -137,7 +134,7 @@ public class ReportController extends BaseController {
       if (reportRemoteReportDefBundle == null) {
         logger.error(String.format("Error parsing report def bundle from %s", url));
       } else {
-        missingResourceTypes = FhirHelper.getQueryConfigurationMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), reportRemoteReportDefBundle);
+        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), reportRemoteReportDefBundle);
         if (!missingResourceTypes.equals("")) {
           logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
         }
@@ -257,7 +254,7 @@ public class ReportController extends BaseController {
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
-  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest) throws Exception {
+  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
 
@@ -268,7 +265,7 @@ public class ReportController extends BaseController {
         logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-        patientQueryResponses = query.execute(patientsOfInterest);
+        patientQueryResponses = query.execute(patientsOfInterest, resourceTypes);
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
       }
@@ -375,14 +372,14 @@ public class ReportController extends BaseController {
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
 
-
-      //Set reportDefBundleDataReqSet = FhirHelper.getDataRequirementTypes(context.getReportDefBundle());
+      // Get the resource types to query
+      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
-      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest));
+      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery));
 
 
-      //  this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
       // Generate the master report id
       String id = "";

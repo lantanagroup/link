@@ -22,7 +22,7 @@ public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public List<QueryResponse> execute(List<PatientOfInterestModel> patientsOfInterest) {
+  public List<QueryResponse> execute(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) {
     List<QueryResponse> result;
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
@@ -36,7 +36,7 @@ public class Query extends BaseQuery implements IQuery {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
-        scoop.execute(patientsOfInterest);
+        scoop.execute(patientsOfInterest, resourceTypes);
 
         List<PatientData> patientDatas = scoop.getPatientData();
 
