@@ -1,5 +1,6 @@
 package com.lantanagroup.link.config.api;
 
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,4 +22,9 @@ public class ApiReportDefsConfig {
    * <strong>api.report-defs.urls</strong><br>A list of the URLs for each report definition that should be supported by the system.
    */
   public List<String> urls;
+
+  /**
+   * <strong>api.report-defs.auth</strong><br>A list of authentication properties.
+   */
+  public LinkOAuthConfig auth;
 }

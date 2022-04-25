@@ -6,7 +6,9 @@ import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -54,9 +56,27 @@ public class ApiInit {
 
     this.config.getReportDefs().getUrls().parallelStream().forEach(measureDefUrl -> {
       logger.info(String.format("Getting the latest report definition from URL %s", measureDefUrl));
-      HttpRequest request = HttpRequest.newBuilder()
-              .uri(URI.create(measureDefUrl))
-              .build();
+
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+              .uri(URI.create(measureDefUrl));
+
+      //check if report-defs config has auth properties, if so generate token and add to request
+      LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
+      if(authConfig != null) {
+        try{
+          String token = OAuth2Helper.getToken(authConfig);
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        } catch(Exception ex) {
+          logger.error(String.format("Error generating authorization token: %s",  ex.getMessage()));
+          return;
+        }
+      }
+
+      HttpRequest request = requestBuilder.build();
+
+//      HttpRequest request = HttpRequest.newBuilder()
+//              .uri(URI.create(measureDefUrl))
+//              .build();
 
       if (queryConfig.isRequireHttps() && !measureDefUrl.contains("https")) {
         logger.error(String.format("https required for measure definition url: ", measureDefUrl));

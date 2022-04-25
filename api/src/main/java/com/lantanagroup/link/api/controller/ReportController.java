@@ -4,8 +4,10 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
@@ -122,6 +124,19 @@ public class ReportController extends BaseController {
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .setHeader("if-modified-since", lastUpdateDate);
+
+    //check if report-defs config has auth properties, if so generate token and add to request
+    LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
+    if(authConfig != null) {
+      try{
+        String token = OAuth2Helper.getToken(authConfig);
+        requestBuilder.setHeader("Authorization", "Bearer " + token);
+      } catch(Exception ex) {
+        logger.error(String.format("Error generating authorization token: %s",  ex.getMessage()));
+        return;
+      }
+    }
+
     HttpRequest request = requestBuilder.build();
 
     HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());

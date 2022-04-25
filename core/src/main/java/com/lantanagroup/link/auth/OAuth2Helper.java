@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.config.OAuthCredentialModes;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -26,6 +28,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.naming.AuthenticationException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +53,42 @@ public class OAuth2Helper {
     RSA256,
     HS256,
     EC
+  }
+
+  public static String getToken(LinkOAuthConfig config) throws Exception {
+
+    try{
+
+      //ensure authentication properties have been set
+      if(!config.hasCredentialProperties()) {
+        throw new AuthenticationException("Authentication credentials were not supplied.");
+      }
+
+      //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
+
+      //get token based on credential mode
+      switch(config.getCredentialMode()) {
+        case Client: {
+          return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+        }
+        case Password: {
+          return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
+        }
+        default:
+          throw new AuthenticationException("Invalid credential mode.");
+      }
+    } catch(AuthenticationException e) {
+      throw e; // rethrowing the exception
+    }
+    catch(Exception e){
+      throw e; // rethrowing the exception
+    }
+
+  }
+
+  public static String getPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String scope) {
+    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
   }
 
   public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
@@ -96,6 +135,11 @@ public class OAuth2Helper {
       logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
       return null;
     }
+  }
+
+  public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
+    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+    return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
   }
 
   public static String getClientCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
@@ -229,11 +273,6 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
-  }
-
   private static CernerClaimData getCernerClaimData(DecodedJWT jwt) {
     Claim cernerClaim = jwt.getClaim("urn:cerner:authorization:claims:version:1");
 
@@ -302,13 +341,12 @@ public class OAuth2Helper {
       //decode received token to verify against jwks, this should also validate a correctly formatted token was received
       DecodedJWT jwt = getValidationJWT(token);
 
-      String openIdConfigUrl = jwksUrl;
-      if(openIdConfigUrl == null || openIdConfigUrl.isEmpty()) {
+      if(jwksUrl == null || jwksUrl.isEmpty()) {
         throw new Exception("No URL was supplied to determine JWKS.");
       }
 
       //retrieve and validate web key store
-      url = new URL(openIdConfigUrl);
+      url = new URL(jwksUrl);
       List<Jwk> jwks = getAll();
       if(jwks == null || jwks.isEmpty()) {
         throw new JWTVerificationException("Failed to acquire public keys");
