@@ -41,7 +41,6 @@ public class ApiInit {
   @Autowired
   private QueryConfig queryConfig;
 
-
   @Autowired
   private FhirDataProvider provider;
 
@@ -58,6 +57,11 @@ public class ApiInit {
       HttpRequest request = HttpRequest.newBuilder()
               .uri(URI.create(measureDefUrl))
               .build();
+
+      if (queryConfig.isRequireHttps() && !measureDefUrl.contains("https")) {
+        logger.error(String.format("https required for measure definition url: ", measureDefUrl));
+        return;
+      }
 
       Integer retryCount = 0;
       String content = null;
