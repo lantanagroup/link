@@ -779,7 +779,7 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += PeriodStartParamName + "=le" + periodEndDate;
+          url += PeriodEndParamName + "=le" + periodEndDate;
           andCond = true;
         }
         if (docStatus != null) {
