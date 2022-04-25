@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Getter
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class PatientScoop extends Scoop {
   protected IGenericClient fhirQueryServer;
 
+  private int defaultThreshold = 10;
 
   @Autowired
   private ApplicationContext context;
@@ -96,15 +98,16 @@ public class PatientScoop extends Scoop {
     });
 
     try {
-      List<Patient> patients = new ArrayList<>(patientMap.values());
-
       // loop through the patient ids to retrieve the patientData using each patient.
-      List<PatientData> patientDataList = patients.parallelStream().map(patient -> {
+      List<Patient> patients = new ArrayList<>(patientMap.values());
+      int threshold = queryConfig.getParallelPatients() > 0?queryConfig.getParallelPatients():defaultThreshold ;
+      ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
+
+      List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
         PatientData patientData = this.loadPatientData(patient, resourceTypes);
         return patientData;
-      }).collect(Collectors.toList());
-
+      })).get().collect(Collectors.toList());
       logger.info("Patient Data List count: " + patientDataList.size());
       return patientDataList;
     } catch (Exception e) {
