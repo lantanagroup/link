@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import java.net.URLEncoder;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -49,6 +50,24 @@ public class Helper {
     c.setTime(date);
     c.add(Calendar.DATE, 1);  // number of days to add
     return c.getTime();
+  }
+
+  public static String getEndOfDayDate(String date) throws ParseException {
+    SimpleDateFormat sdf = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
+    return sdf.format(setEndOfDay(date));
+  }
+
+  public static Date setEndOfDay(String date) throws ParseException {
+
+    SimpleDateFormat sdf = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(sdf.parse(date));
+    calendar.set(Calendar.HOUR_OF_DAY, 23);
+    calendar.set(Calendar.MINUTE, 59);
+    calendar.set(Calendar.SECOND, 59);
+    calendar.set(Calendar.MILLISECOND, 999);
+    return calendar.getTime();
+
   }
 
   public static String URLEncode(String url) {

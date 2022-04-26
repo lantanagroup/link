@@ -40,6 +40,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -779,7 +780,7 @@ public class ReportController extends BaseController {
           if (andCond) {
             url += "&";
           }
-          url += PeriodEndParamName + "=le" + periodEndDate;
+          url += PeriodEndParamName + "=le" + Helper.getEndOfDayDate(periodEndDate);
           andCond = true;
         }
         if (docStatus != null) {
