@@ -48,6 +48,16 @@ public class MeasureEvaluator {
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
       parameters.addParameter().setName("subject").setValue(new StringType(patientId));
       parameters.addParameter().setName("additionalData").setResource(patientData.getBundle());
+      if(this.config.getEvaluationService() != this.config.getTerminologyService()) {
+        Endpoint terminologyEndpoint = new Endpoint();
+        terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
+        terminologyEndpoint.setConnectionType(new Coding());
+        terminologyEndpoint.getConnectionType().setSystem("http://terminology.hl7.org/CodeSystem/endpoint-connection-type");
+        terminologyEndpoint.getConnectionType().setCode("hl7-fhir-rest");
+        terminologyEndpoint.setAddress(this.config.getTerminologyService());
+        parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
+        logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
+      }
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       measureReport = fhirDataProvider.getMeasureReport(this.context.getMeasureId(), parameters);
