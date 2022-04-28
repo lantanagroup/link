@@ -1,4 +1,5 @@
 docs/
+web/.angular/cache/
 web/node_modules/
 web/src/main/angular/assets/local.json
 web/src/main/angular/assets/local-*.json

@@ -53,7 +53,8 @@ export class AuthService {
 
       try {
         if (loggedIn && this.oauthService.hasValidAccessToken()) {
-          this.user = await this.oauthService.loadUserProfile() as any;
+          let userProfile: any = await this.oauthService.loadUserProfile();
+          this.user = "info" in userProfile ? userProfile.info : userProfile;
         }
       } catch (ex) {
         console.log(`Error loading user profile: ${ex.message}`);

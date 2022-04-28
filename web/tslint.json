@@ -1,8 +1,15 @@
 {
   "extends": "tslint:recommended",
   "rules": {
+    "align": {
+      "options": [
+        "parameters",
+        "statements"
+      ]
+    },
     "array-type": false,
     "arrow-parens": false,
+    "arrow-return-shorthand": true,
     "deprecation": {
       "severity": "warning"
     },
@@ -25,7 +32,14 @@
       true,
       "rxjs/Rx"
     ],
+    "eofline": true,
     "interface-name": false,
+    "import-spacing": true,
+    "indent": {
+      "options": [
+        "spaces"
+      ]
+    },
     "max-classes-per-file": false,
     "max-line-length": false,
     "member-access": false,
@@ -78,11 +92,60 @@
     "no-output-native": true,
     "no-output-on-prefix": true,
     "no-output-rename": true,
+    "semicolon": {
+      "options": [
+        "always"
+      ]
+    },
+    "space-before-function-paren": {
+      "options": {
+        "anonymous": "never",
+        "asyncArrow": "always",
+        "constructor": "never",
+        "method": "never",
+        "named": "never"
+      }
+    },
     "no-outputs-metadata-property": true,
     "template-banana-in-box": true,
     "template-no-negated-async": true,
+    "typedef-whitespace": {
+      "options": [
+        {
+          "call-signature": "nospace",
+          "index-signature": "nospace",
+          "parameter": "nospace",
+          "property-declaration": "nospace",
+          "variable-declaration": "nospace"
+        },
+        {
+          "call-signature": "onespace",
+          "index-signature": "onespace",
+          "parameter": "onespace",
+          "property-declaration": "onespace",
+          "variable-declaration": "onespace"
+        }
+      ]
+    },
     "use-lifecycle-interface": true,
-    "use-pipe-transform-interface": true
+    "use-pipe-transform-interface": true,
+    "variable-name": {
+      "options": [
+        "ban-keywords",
+        "check-format",
+        "allow-pascal-case"
+      ]
+    },
+    "whitespace": {
+      "options": [
+        "check-branch",
+        "check-decl",
+        "check-operator",
+        "check-separator",
+        "check-type",
+        "check-typecast"
+      ]
+    }
   },
   "rulesDirectory": [
     "codelyzer"
