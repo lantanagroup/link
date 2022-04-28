@@ -55,8 +55,8 @@ public class FHIRSenderTests {
     FhirContext ctx = FhirContext.forR4();
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
-    when(mockSender.generateBundle(any(MeasureReport.class), any(FhirDataProvider.class), anyBoolean())).thenReturn(new Bundle());
-    when(mockSender.sendContent(anyString(), anyString())).thenReturn("www.testLocation.com");
+    when(mockSender.generateBundle(any(), any(), any(), any())).thenReturn(new Bundle());
+    when(mockSender.sendContent(any(), any(), any(), any())).thenReturn("www.testLocation.com");
     // Mock the FHIR server's operation for POST AuditEvent
     ICreate create = mock(ICreate.class);
     MethodOutcome createMethod = new MethodOutcome();
@@ -167,9 +167,9 @@ public class FHIRSenderTests {
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(201);
     Header locationHeader = mock(Header.class);
-    Header [] headers = new Header[] {locationHeader};
+    Header[] headers = new Header[]{locationHeader};
     HeaderElement headerElement = mock(HeaderElement.class);
-    HeaderElement [] headerElements = new HeaderElement[] {headerElement};
+    HeaderElement[] headerElements = new HeaderElement[]{headerElement};
     when(httpResponse.getHeaders("Location")).thenReturn(headers);
     when(headers[0].getElements()).thenReturn(headerElements);
     when(headerElement.getName()).thenReturn("www.testLocation.com/_history/");

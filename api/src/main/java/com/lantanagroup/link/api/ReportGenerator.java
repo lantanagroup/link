@@ -263,6 +263,8 @@ public class ReportGenerator {
 
       documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
 
+      documentReference.setContent(existingDocumentReference.getContent());
+
       updateBundle.addEntry()
               .setResource(documentReference)
               .setRequest(new Bundle.BundleEntryRequestComponent()

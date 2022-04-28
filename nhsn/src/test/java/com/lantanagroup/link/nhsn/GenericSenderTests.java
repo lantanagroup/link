@@ -69,7 +69,7 @@ public class GenericSenderTests {
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
     String xml = "<Bundle xmlns='http://hl7.org/fhir'><meta><tag><system value='https://nhsnlink.org'/><code value='report-bundle'/></tag></meta><type value='collection'/><entry><resource><MeasureReport xmlns='http://hl7.org/fhir'><evaluatedResource><reference value='Patient/testPatient1'/></evaluatedResource><evaluatedResource><reference value='Condition/testCondition1'/></evaluatedResource></MeasureReport></resource></entry></Bundle>";
 
-    String location = mockSender.sendContent(xml, "application/xml");
+    String location = mockSender.sendContent(any(), any(), any(), any());
     verify(mockHttpClient, times(2)).execute(any());
     Assert.assertEquals(location, "www.testLocation.com");
   }
@@ -112,7 +112,7 @@ public class GenericSenderTests {
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
-    doCallRealMethod().when(sender).sendContent(any(), any());
+    doCallRealMethod().when(sender).sendContent(any(), any(), any(), any());
     doCallRealMethod().when(sender).updateDocumentLocation(any(), any(), any());
     sender.setConfig(config);
 
