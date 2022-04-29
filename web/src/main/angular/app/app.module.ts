@@ -3,7 +3,7 @@ import {APP_INITIALIZER, NgModule} from '@angular/core';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
-import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule, HttpClientXsrfModule} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
 import {CookieService} from 'ngx-cookie-service';
 import {OAuthModule} from 'angular-oauth2-oidc';
@@ -60,6 +60,10 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         AppRoutingModule,
         NgbModule,
         HttpClientModule,
+        HttpClientXsrfModule.withOptions({
+            cookieName: 'XSRF-TOKEN',
+            headerName: 'X-XSRF-TOKEN'
+        }),
         FormsModule,
         OAuthModule.forRoot()
     ],
