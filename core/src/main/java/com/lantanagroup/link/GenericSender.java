@@ -10,9 +10,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -22,19 +25,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
-public class GenericSender {
+public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
 
   @Autowired
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle) {
+  public Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, String location) {
     logger.info("Building Bundle for MeasureReport to send...");
 
     FhirBundler bundler = new FhirBundler(fhirProvider);
-    return bundler.generateBundle(sendWholeBundle, masterMeasureReport);
+
+    Bundle bundle = bundler.generateBundle(sendWholeBundle, masterMeasureReport);
+
+    //String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider);
+
+    if (!location.equals("")) {
+      bundle.setId(location);
+    }
+    return bundle;
   }
 
   public HttpClient getHttpClient() {
@@ -72,7 +84,11 @@ public class GenericSender {
     return token;
   }
 
-  public String sendContent(String content, String mimeType) throws Exception {
+
+  public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
+
+
+  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType, boolean sendWholeBundle) throws Exception {
 
     String location = "";
 
@@ -85,16 +101,30 @@ public class GenericSender {
 
     for (FhirSenderUrlOAuthConfig authConfig : this.config.getSendUrls()) {
       logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
+
+      String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider, authConfig.getUrl());
+
+      Bundle bundle = generateBundle(masterMeasureReport, fhirProvider, sendWholeBundle, existingLocation);
+
+      String content = bundle(bundle, fhirProvider);
+
       String token = this.getToken(authConfig.getAuthConfig());
-      HttpPost sendRequest = new HttpPost(authConfig.getUrl());
+
+      // decide to do a POST or a PUT
+      HttpRequestBase sendRequest = null;
+      if (existingLocation.equals("")) {
+        sendRequest = new HttpPost(authConfig.getUrl());
+        ((HttpPost) sendRequest).setEntity(new StringEntity(content));
+      } else {
+        sendRequest = new HttpPut(existingLocation);
+        ((HttpPut) sendRequest).setEntity(new StringEntity(content));
+      }
       sendRequest.addHeader("Content-Type", mimeType);
 
       if (Strings.isNotEmpty(token)) {
         logger.debug("Adding auth token to submit request");
         sendRequest.addHeader("Authorization", "Bearer " + token);
       }
-
-      sendRequest.setEntity(new StringEntity(content));
 
       try {
         HttpClient httpClient = this.getHttpClient();
@@ -107,23 +137,22 @@ public class GenericSender {
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
-        if (response.getHeaders("Location") != null) {
+        if (response.getHeaders("Location") != null && response.getHeaders("Location").length > 0) {
           location = response.getHeaders("Location")[0].getElements()[0].getName();
           if (location.indexOf("/_history/") > 0) {
             location = location.substring(0, location.indexOf("/_history/"));
           }
           logger.debug("Response location is " + location);
-
-        } else {
-          logger.error("No Location header provided in response to submission");
+          // update the location on the DocumentReference
+          updateDocumentLocation(masterMeasureReport, fhirProvider, location);
         }
+
       } catch (IOException ex) {
         if (ex.getMessage().contains("403")) {
           logger.error("Error authorizing send: " + ex.getMessage());
         } else {
           logger.error("Error while sending MeasureReport bundle to URL", ex);
         }
-
         throw ex;
       }
     }
@@ -134,8 +163,24 @@ public class GenericSender {
     String reportID = masterMeasureReport.getIdElement().getIdPart();
     DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
-      documentReference.getContent().get(0).getAttachment().setUrl(location);
+      documentReference.getContent().add(new DocumentReference.DocumentReferenceContentComponent());
+      Attachment attachment = new Attachment();
+      attachment.setUrl(location);
+      documentReference.getContent().get(documentReference.getContent().size() - 1).setAttachment(attachment);
       fhirDataProvider.updateResource(documentReference);
     }
+  }
+
+  public String getDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String sendUrl) {
+    String reportID = masterMeasureReport.getIdElement().getIdPart();
+    String location = "";
+    DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
+    if (documentReference != null) {
+      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> content.getAttachment().getUrl().contains(sendUrl)).findFirst();
+      if (loc.isPresent()) {
+        location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
+      }
+    }
+    return location;
   }
 }

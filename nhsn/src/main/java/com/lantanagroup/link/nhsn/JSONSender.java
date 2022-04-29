@@ -20,18 +20,13 @@ public class JSONSender extends GenericSender implements IReportSender {
 
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
-    Bundle bundle = this.generateBundle(masterMeasureReport, fhirDataProvider, sendWholeBundle);
 
-    logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
-
-    String json = fhirDataProvider.bundleToJson(bundle);
-
-    String location = this.sendContent(json, "application/json");
-
-    if(!"".equals(location)) {
-      updateDocumentLocation(masterMeasureReport, fhirDataProvider, location);
-    }
+    this.sendContent(masterMeasureReport, fhirDataProvider, "application/json", sendWholeBundle);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
+  }
+
+  public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {
+    return fhirDataProvider.bundleToJson(bundle);
   }
 }
