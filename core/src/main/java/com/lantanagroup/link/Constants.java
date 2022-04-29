@@ -17,4 +17,6 @@ public class Constants {
   public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
   public static final String MeasureReportBundleProfileUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/measure-report-bundle";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
+  public static final String TerminologyEndpointCode = "hl7-fhir-rest";
+  public static final String TerminologyEndpointSystem = "http://terminology.hl7.org/CodeSystem/endpoint-connection-type";
 }

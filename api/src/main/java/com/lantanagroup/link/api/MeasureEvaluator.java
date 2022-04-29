@@ -34,6 +34,16 @@ public class MeasureEvaluator {
     return evaluator.generateMeasureReport();
   }
 
+  private static Endpoint getTerminologyEndpoint(ApiConfig config) {
+    Endpoint terminologyEndpoint = new Endpoint();
+    terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
+    terminologyEndpoint.setConnectionType(new Coding());
+    terminologyEndpoint.getConnectionType().setSystem(Constants.TerminologyEndpointSystem);
+    terminologyEndpoint.getConnectionType().setCode(Constants.TerminologyEndpointCode);
+    terminologyEndpoint.setAddress(config.getTerminologyService());
+    return terminologyEndpoint;
+  }
+
 
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
@@ -48,13 +58,8 @@ public class MeasureEvaluator {
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
       parameters.addParameter().setName("subject").setValue(new StringType(patientId));
       parameters.addParameter().setName("additionalData").setResource(patientData.getBundle());
-      if(this.config.getEvaluationService() != this.config.getTerminologyService()) {
-        Endpoint terminologyEndpoint = new Endpoint();
-        terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
-        terminologyEndpoint.setConnectionType(new Coding());
-        terminologyEndpoint.getConnectionType().setSystem("http://terminology.hl7.org/CodeSystem/endpoint-connection-type");
-        terminologyEndpoint.getConnectionType().setCode("hl7-fhir-rest");
-        terminologyEndpoint.setAddress(this.config.getTerminologyService());
+      if(!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
+        Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
         parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
         logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
       }
