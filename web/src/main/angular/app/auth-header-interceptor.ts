@@ -24,7 +24,10 @@ export class AddHeaderInterceptor implements HttpInterceptor {
               headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
               headers = headers.set('X-Requested-With', 'XMLHttpRequest');
 
-              // send request with credential options in order to be able to read cross-origin cookies
+              // Send request with credential options in order to be able to read cross-origin cookies
+              // If this is not set and a cross-origin request is made, then the XSRF token will be null
+              // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+              // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
               req = req.clone({ withCredentials: true });
 
               //Add CSRF Token if needed
