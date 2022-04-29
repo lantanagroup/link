@@ -7,6 +7,7 @@ import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDateToISO, getFhirDate} from '../helper';
 import {UserModel} from "../model/user-model";
 import {ToastService} from "../toast.service";
+import * as moment from "moment";
 
 @Component({
   selector: 'nandina-review',
@@ -115,7 +116,11 @@ export class ReviewComponent implements OnInit {
       }
       if (this.filter.period.endDate !== null) {
         let endDate = formatDateToISO(getFhirDate(this.filter.period.endDate));
-        filterCriteria += `periodEndDate=${endDate}&`
+        const periodEndDate = moment.utc(endDate);
+        periodEndDate.add(23, 'hours');
+        periodEndDate.add(59, 'minutes');
+        periodEndDate.add(59, 'seconds');
+        filterCriteria += `periodEndDate=${formatDateToISO(periodEndDate)}&`
       }
       if (this.filter.submittedDate !== null) {
         let submittedDate = formatDateToISO(getFhirDate(this.filter.submittedDate));
