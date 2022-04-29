@@ -176,7 +176,7 @@ public abstract class GenericSender {
     String location = "";
     DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
-      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> content.getAttachment().getUrl().contains(sendUrl)).findFirst();
+      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> !content.isEmpty() && content.hasAttachment() && content.getAttachment().hasUrl() && content.getAttachment().getUrl().contains(sendUrl)).findFirst();
       if (loc.isPresent()) {
         location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
       }
