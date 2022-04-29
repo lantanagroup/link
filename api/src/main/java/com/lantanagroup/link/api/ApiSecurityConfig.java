@@ -13,6 +13,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
@@ -37,7 +38,8 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
     authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAuthJwksUrl()));
     authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
     http
-            .csrf().disable()
+            .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .and()
             .cors()
             .and()
             .authorizeRequests()

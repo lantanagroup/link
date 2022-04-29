@@ -52,3 +52,11 @@ export function formatDateToISO(date) {
   return moment.utc(date).toISOString(false);
 }
 
+export function getEndOfDayDate(date) {
+  const endOfDay = moment.utc(date);
+  endOfDay.add(23, 'hours');
+  endOfDay.add(59, 'minutes');
+  endOfDay.add(59, 'seconds');
+
+  return formatDateToISO(endOfDay);
+}

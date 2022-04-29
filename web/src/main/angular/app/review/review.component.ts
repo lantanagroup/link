@@ -4,9 +4,10 @@ import {ReportService} from "../services/report.service";
 import {StoredReportDefinition} from "../model/stored-report-definition";
 import {Router} from '@angular/router';
 import {ReportDefinitionService} from '../services/report-definition.service';
-import {formatDateToISO, getFhirDate} from '../helper';
+import {formatDateToISO, getEndOfDayDate, getFhirDate} from '../helper';
 import {UserModel} from "../model/user-model";
 import {ToastService} from "../toast.service";
+import * as moment from "moment";
 
 @Component({
   selector: 'nandina-review',
@@ -115,7 +116,7 @@ export class ReviewComponent implements OnInit {
       }
       if (this.filter.period.endDate !== null) {
         let endDate = formatDateToISO(getFhirDate(this.filter.period.endDate));
-        filterCriteria += `periodEndDate=${endDate}&`
+        filterCriteria += `periodEndDate=${getEndOfDayDate(endDate)}&`
       }
       if (this.filter.submittedDate !== null) {
         let submittedDate = formatDateToISO(getFhirDate(this.filter.submittedDate));
