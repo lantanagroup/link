@@ -30,12 +30,18 @@ export class AddHeaderInterceptor implements HttpInterceptor {
               // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
               req = req.clone({ withCredentials: true });
 
+
               //Add CSRF Token if needed
               if(req.method != "GET" && req.method != "HEAD" && req.method != "OPTIONS") {
                 const csrfHeaderName = 'X-XSRF-TOKEN';
                 let csrfToken = this.csrfTokenExtractor.getToken() as string;
                 if (csrfToken !== null && !req.headers.has(csrfHeaderName)) {
                   headers = headers.set(csrfHeaderName, csrfToken);
+                }
+                else {
+                  //debug for CSRF token issues
+                  console.log(document.cookie.split(";"));
+                  console.log(`CSRF TOKEN VALUE: ${csrfToken}. Token not getting applied.`)
                 }
               }
             }
