@@ -40,7 +40,7 @@ public class QueryCommand extends BaseShellCommand {
 
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
       if(config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
-        logger.error("Error, requires https");
+        logger.error("Error, Query URL requires https");
         throw new HttpResponseException(500, "Internal Server Error");
       }
 

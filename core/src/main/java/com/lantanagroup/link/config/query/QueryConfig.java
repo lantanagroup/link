@@ -24,7 +24,7 @@ import java.util.List;
 public class QueryConfig {
 
   /**
-   * <strong>query.require-https</strong><br>Indicates if HTTPS is required.
+   * <strong>query.require-https</strong><br>Indicates if HTTPS is required for query url.
    */
   @Getter
   private boolean requireHttps;

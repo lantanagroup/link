@@ -19,7 +19,7 @@ public class AgentInit {
 
   private void init() {
     if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().contains("https")) {
-      logger.error("Error, requires https");
+      logger.error("Error, Query URL requires https");
       return;
     }  
   }
