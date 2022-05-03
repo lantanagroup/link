@@ -40,7 +40,7 @@ export class AddHeaderInterceptor implements HttpInterceptor {
                 }
                 else {
                   //debug for CSRF token issues
-                  console.log(document.cookie.split(";"));
+                  console.log(`Cookies available to the client: ${document.cookie.split(";")}`);
                   console.log(`CSRF TOKEN VALUE: ${csrfToken}. Token not getting applied.`)
                 }
               }
