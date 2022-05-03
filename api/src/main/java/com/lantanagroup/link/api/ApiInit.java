@@ -54,7 +54,7 @@ public class ApiInit {
 
     logger.info("Loading measures defined in configuration...");
 
-    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().contains("https")) {
+    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
       logger.error("Error, Query URL requires https");
       return;
     }
