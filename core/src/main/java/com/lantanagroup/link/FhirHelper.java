@@ -310,14 +310,14 @@ public class FhirHelper {
       dst.setFamily(jsonObject.get("family_name").toString());
     }
     if (jsonObject.has("given_name")) {
-      List<StringType> givenNames = new ArrayList();
+      ArrayList givenNames = new ArrayList();
       givenNames.add(new StringType(jsonObject.get("given_name").toString()));
       dst.setGiven(givenNames);
     }
     list.add(dst);
     practitioner.setName(list);
     if (jsonObject.has("email")) {
-      List<ContactPoint> contactPointList = new ArrayList();
+      ArrayList contactPointList = new ArrayList();
       ContactPoint email = new ContactPoint();
       email.setSystem(ContactPoint.ContactPointSystem.EMAIL);
       email.setValue(jsonObject.get("email").toString());
@@ -449,14 +449,14 @@ public class FhirHelper {
       txBundle.setType(Bundle.BundleType.BATCH);
       returnBundle.setType(bundle.getType());
       logger.info("Filtering the measure definition bundle");
-      bundle.getEntry().forEach(entry -> {
+      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
-                || entry.getResource().getResourceType().toString() == "CodeSystem") {
+                || entry.getResource().getResourceType().toString().equals("CodeSystem")) {
           txBundle.addEntry(entry);
         } else {
           returnBundle.addEntry(entry);
         }
-      });
+      }
       logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
       fhirDataProvider.transaction(txBundle);
       return returnBundle;
@@ -464,14 +464,14 @@ public class FhirHelper {
     return bundle;
   }
 
-  public static Set getDataRequirementTypes(Bundle reportRefBundle) {
+  protected static Set getDataRequirementTypes(Bundle reportRefBundle) {
     List<Library> libraryList = reportRefBundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Library)
             .map(e -> (Library) e.getResource()).collect(Collectors.toList());
 
-    Set dataRequirements = new HashSet();
-    libraryList.stream().forEach(library -> {
-      Set libTypes = library.getDataRequirement().stream().map(e -> e.getType()).collect(Collectors.toSet());
+    HashSet dataRequirements = new HashSet();
+    libraryList.forEach(library -> {
+      Set libTypes = library.getDataRequirement().stream().map(DataRequirement::getType).collect(Collectors.toSet());
       dataRequirements.addAll(libTypes);
 
     });
@@ -484,28 +484,46 @@ public class FhirHelper {
             .map(e -> (Library) e.getResource()).collect(Collectors.toList());
 
     List<Library> libraryEmptyList = libraryList.stream().filter(library -> library.getDataRequirement().isEmpty()).collect(Collectors.toList());
-    if (libraryEmptyList.isEmpty()) return true;
-    return false;
+    return libraryEmptyList.isEmpty();
   }
 
   public static String getQueryConfigurationDataReqMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
     // get data requirements
     Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
-    String missingResourceTypes = reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
-    return missingResourceTypes;
+    return reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
   }
 
   public static List<String> getQueryConfigurationDataReqCommonResourceTypes(List<String> properties, Bundle measureDefBundle) {
     // get data requirements
     Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
-    List<String> commonResourceTypes = reportDefBundleDataReqSet.stream().filter(e -> properties.contains(e)).collect(Collectors.toList());
-    return commonResourceTypes;
+    return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
   }
 
   public static List<String> getQueryConfigurationResourceTypes(QueryConfig queryConfig) {
     return Helper.concatenate(queryConfig.getPatientResourceTypes(), queryConfig.getOtherResourceTypes());
+  }
+
+  public static String getDocumentReferenceLocationByUrl(DocumentReference documentReference, String url) {
+    String location = "";
+    if (documentReference != null) {
+      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> !content.isEmpty() && content.hasAttachment() && content.getAttachment().hasUrl() && content.getAttachment().getUrl().contains(url)).findFirst();
+      if (loc.isPresent()) {
+        location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
+      }
+    }
+    return location;
+  }
+
+  public static String getFirstDocumentReferenceLocation(DocumentReference documentReference) {
+    String bundleLocation = "";
+    for (DocumentReference.DocumentReferenceContentComponent content : documentReference.getContent()) {
+      if (content.hasAttachment() && content.getAttachment().hasUrl()) {
+        bundleLocation = content.getAttachment().getUrl();
+      }
+    }
+    return bundleLocation;
   }
 
   public enum AuditEventTypes {
