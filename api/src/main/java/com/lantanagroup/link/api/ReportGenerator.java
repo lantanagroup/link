@@ -14,6 +14,7 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -254,7 +255,9 @@ public class ReportGenerator {
                     .setUrl("MeasureReport/" + context.getReportId()));
 
     DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, context.getReportId());
-
+    String id = criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart().substring(0, criteria.getPeriodStart().indexOf("T")) + "-" + criteria.getPeriodEnd().substring(0, criteria.getPeriodStart().indexOf("T")).hashCode();
+    UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
+    documentReference.setId(documentId.toString());
     if (existingDocumentReference != null) {
       documentReference.setId(existingDocumentReference.getId());
 
@@ -274,8 +277,8 @@ public class ReportGenerator {
       updateBundle.addEntry()
               .setResource(documentReference)
               .setRequest(new Bundle.BundleEntryRequestComponent()
-                      .setMethod(Bundle.HTTPVerb.POST)
-                      .setUrl("DocumentReference"));
+                      .setMethod(Bundle.HTTPVerb.PUT)
+                      .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
     }
 
     // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
