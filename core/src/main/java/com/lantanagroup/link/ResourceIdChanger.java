@@ -78,6 +78,11 @@ public class ResourceIdChanger {
     if (objectToScan instanceof String) {
       return;
     }
+    // LINK-805: avoid illegal reflective access
+    // consider adding checks for other types we don't want to recurse into
+    else if (objectToScan instanceof Enum) {
+      return;
+    }
     // basic support for popular java types to prevent scanning too much of java internals in most common cases, but might cause
     // side-effects in some cases
     else if (objectToScan instanceof Iterable) {
@@ -108,13 +113,13 @@ public class ResourceIdChanger {
           if (declaredField.getType().isPrimitive()) {
             return;
           }
-          if (!declaredField.trySetAccessible()) {
-            // either throw error, skip, or use more black magic like Unsafe class to make field accessible anyways.
-            continue; // I will just skip it, it's probably some internal one.
-          }
           try {
+            if (!declaredField.trySetAccessible()) {
+              // either throw error, skip, or use more black magic like Unsafe class to make field accessible anyways.
+              continue; // I will just skip it, it's probably some internal one.
+            }
             scanInstance(declaredField.get(objectToScan), lookingFor, scanned, results);
-          } catch (IllegalAccessException ignored) {
+          } catch (IllegalAccessException | SecurityException ignored) {
             continue;
           }
         }

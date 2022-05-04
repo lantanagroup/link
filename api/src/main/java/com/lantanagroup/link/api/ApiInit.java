@@ -54,6 +54,11 @@ public class ApiInit {
 
     logger.info("Loading measures defined in configuration...");
 
+    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
+      logger.error("Error, Query URL requires https");
+      return;
+    }
+
     this.config.getReportDefs().getUrls().parallelStream().forEach(measureDefUrl -> {
       logger.info(String.format("Getting the latest report definition from URL %s", measureDefUrl));
 
@@ -78,7 +83,7 @@ public class ApiInit {
 //              .uri(URI.create(measureDefUrl))
 //              .build();
 
-      if (queryConfig.isRequireHttps() && !measureDefUrl.contains("https")) {
+      if (this.config.isRequireHttps() && !measureDefUrl.contains("https")) {
         logger.error(String.format("https required for measure definition url: ", measureDefUrl));
         return;
       }

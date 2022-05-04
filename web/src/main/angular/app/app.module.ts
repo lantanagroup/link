@@ -60,10 +60,10 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         AppRoutingModule,
         NgbModule,
         HttpClientModule,
-        HttpClientXsrfModule.withOptions({
-            cookieName: 'XSRF-TOKEN',
-            headerName: 'X-XSRF-TOKEN'
-        }),
+        // HttpClientXsrfModule.withOptions({
+        //     cookieName: 'XSRF-TOKEN',
+        //     headerName: 'X-XSRF-TOKEN'
+        // }),
         FormsModule,
         OAuthModule.forRoot()
     ],

@@ -22,16 +22,17 @@ export class AddHeaderInterceptor implements HttpInterceptor {
 
             if (this.authService.getAuthToken()) {
               headers = headers.set('Authorization', 'Bearer ' + this.authService.token);
-              headers = headers.set('X-Requested-With', 'XMLHttpRequest');
+              //headers = headers.set('X-Requested-With', 'XMLHttpRequest');
 
               // Send request with credential options in order to be able to read cross-origin cookies
               // If this is not set and a cross-origin request is made, then the XSRF token will be null
               // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
               // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-              req = req.clone({ withCredentials: true });
+              //req = req.clone({ withCredentials: true });
 
 
               //Add CSRF Token if needed
+              /*
               if(req.method != "GET" && req.method != "HEAD" && req.method != "OPTIONS") {
                 const csrfHeaderName = 'X-XSRF-TOKEN';
                 let csrfToken = this.csrfTokenExtractor.getToken() as string;
@@ -40,10 +41,11 @@ export class AddHeaderInterceptor implements HttpInterceptor {
                 }
                 else {
                   //debug for CSRF token issues
-                  console.log(document.cookie.split(";"));
+                  console.log(`Cookies available to the client: ${document.cookie.split(";")}`);
                   console.log(`CSRF TOKEN VALUE: ${csrfToken}. Token not getting applied.`)
                 }
               }
+              */
             }
             if (this.authService.fhirBase) {
                 headers = headers.set('Cache-Control', 'no-cache');
