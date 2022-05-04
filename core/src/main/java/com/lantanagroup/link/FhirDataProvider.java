@@ -321,4 +321,14 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public void deleteResource(String resourceType, String id, boolean permanent) {
+    if(permanent) {
+      //module.[MODULE_ID].config.dao_config.delete_expunge_enabled = true;
+    }
+
+    this.client.delete()
+            .resource(this.getResourceByTypeAndId(resourceType, id))
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
 }
