@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
+import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -430,5 +431,36 @@ public class OAuth2Helper {
       return roles.toArray(new String[roles.size()]);
     }
     return noRoles;
+  }
+
+  public static String getToken(FHIRSenderOAuthConfig authConfig, HttpClient client) throws Exception {
+    String token = "";
+
+    if (authConfig != null && authConfig.hasCredentialProperties()) {
+      logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
+
+      switch (authConfig.getCredentialMode()) {
+        case Client:
+          token = OAuth2Helper.getClientCredentialsToken(
+                  client,
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getScope());
+          break;
+        case Password:
+          token = OAuth2Helper.getPasswordCredentialsToken(
+                  client,
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getClientId(),
+                  authConfig.getScope());
+      }
+    } else {
+      throw new Exception("Authentication is required to submit");
+    }
+
+    return token;
   }
 }

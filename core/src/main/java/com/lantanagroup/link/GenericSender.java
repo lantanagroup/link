@@ -2,7 +2,6 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
@@ -25,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
@@ -53,42 +51,12 @@ public abstract class GenericSender {
     return HttpClientBuilder.create().build();
   }
 
-  private String getToken(FHIRSenderOAuthConfig authConfig) throws Exception {
-    String token = "";
-
-    if (authConfig != null && authConfig.hasCredentialProperties()) {
-      logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
-
-      switch (authConfig.getCredentialMode()) {
-        case Client:
-          token = OAuth2Helper.getClientCredentialsToken(
-                  this.getHttpClient(),
-                  authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
-                  authConfig.getPassword(),
-                  authConfig.getScope());
-          break;
-        case Password:
-          token = OAuth2Helper.getPasswordCredentialsToken(
-                  this.getHttpClient(),
-                  authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
-                  authConfig.getPassword(),
-                  authConfig.getClientId(),
-                  authConfig.getScope());
-      }
-    } else {
-      throw new Exception("Authentication is required to submit");
-    }
-
-    return token;
-  }
-
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
 
-  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType, boolean sendWholeBundle) throws Exception {
+  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
+                            boolean sendWholeBundle) throws Exception {
 
     String location = "";
 
@@ -101,14 +69,14 @@ public abstract class GenericSender {
 
     for (FhirSenderUrlOAuthConfig authConfig : this.config.getSendUrls()) {
       logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
-
-      String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider, authConfig.getUrl());
+      DocumentReference documentReference = fhirProvider.findDocRefForReport(masterMeasureReport.getIdElement().getIdPart());
+      String existingLocation = FhirHelper.getDocumentReferenceLocationByUrl(documentReference, authConfig.getUrl());
 
       Bundle bundle = generateBundle(masterMeasureReport, fhirProvider, sendWholeBundle, existingLocation);
 
       String content = bundle(bundle, fhirProvider);
 
-      String token = this.getToken(authConfig.getAuthConfig());
+      String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
 
       // decide to do a POST or a PUT
       HttpRequestBase sendRequest = null;
@@ -125,7 +93,6 @@ public abstract class GenericSender {
         logger.debug("Adding auth token to submit request");
         sendRequest.addHeader("Authorization", "Bearer " + token);
       }
-
       try {
         HttpClient httpClient = this.getHttpClient();
 
@@ -159,7 +126,8 @@ public abstract class GenericSender {
     return location;
   }
 
-  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {
+  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String
+          location) {
     String reportID = masterMeasureReport.getIdElement().getIdPart();
     DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
@@ -171,16 +139,4 @@ public abstract class GenericSender {
     }
   }
 
-  public String getDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String sendUrl) {
-    String reportID = masterMeasureReport.getIdElement().getIdPart();
-    String location = "";
-    DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
-    if (documentReference != null) {
-      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> !content.isEmpty() && content.hasAttachment() && content.getAttachment().hasUrl() && content.getAttachment().getUrl().contains(sendUrl)).findFirst();
-      if (loc.isPresent()) {
-        location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
-      }
-    }
-    return location;
-  }
 }
