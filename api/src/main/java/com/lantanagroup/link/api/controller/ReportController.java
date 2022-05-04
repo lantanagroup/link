@@ -15,7 +15,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Setter;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
@@ -404,7 +403,8 @@ public class ReportController extends BaseController {
       // Generate the master report id
       String id = "";
       if (!regenerate || existingDocumentReference == null) {
-        id = RandomStringUtils.randomAlphanumeric(8);
+        //id = RandomStringUtils.randomAlphanumeric(8);
+        id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart().substring(0, criteria.getPeriodStart().indexOf("T")) + "-" + criteria.getPeriodEnd().substring(0, criteria.getPeriodStart().indexOf("T"))).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
       }
