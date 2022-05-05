@@ -517,6 +517,8 @@ public class ReportController extends BaseController {
 
     String bundleLocation = "";
     Bundle patientBundle = null;
+    PatientReportModel report = null;
+
     List<PatientReportModel> reports = new ArrayList();
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
     bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
@@ -545,12 +547,13 @@ public class ReportController extends BaseController {
       }
     }
     // in both cased add the patients info to patientreportmodel to be displayed in UI
-    for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
-      PatientReportModel report = new PatientReportModel();
-      if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
-        Patient patient = (Patient) entry.getResource();
-        report = FhirHelper.setPatientFields(patient, false);
-        reports.add(report);
+    if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
+      for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
+          Patient patient = (Patient) entry.getResource();
+          report = FhirHelper.setPatientFields(patient, false);
+          reports.add(report);
+        }
       }
     }
     return reports;
@@ -614,7 +617,9 @@ public class ReportController extends BaseController {
       data.setObservations(new ArrayList<>());
       data.setEncounters(new ArrayList<>());
       data.setServiceRequests(new ArrayList());
-
+      if (patientBundle == null || patientBundle.getEntry().isEmpty()) {
+        return data;
+      }
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
         if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Condition")) {
           Condition condition = (Condition) entry.getResource();
