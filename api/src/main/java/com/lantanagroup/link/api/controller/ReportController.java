@@ -403,8 +403,8 @@ public class ReportController extends BaseController {
       // Generate the master report id
       String id = "";
       if (!regenerate || existingDocumentReference == null) {
-        //id = RandomStringUtils.randomAlphanumeric(8);
-        id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart().substring(0, criteria.getPeriodStart().indexOf("T")) + "-" + criteria.getPeriodEnd().substring(0, criteria.getPeriodStart().indexOf("T"))).hashCode());
+        // generate master report id based on the report date range and the measure used in the report generation
+        id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
       }

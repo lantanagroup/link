@@ -255,9 +255,7 @@ public class ReportGenerator {
                     .setUrl("MeasureReport/" + context.getReportId()));
 
     DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, context.getReportId());
-    String id = criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart().substring(0, criteria.getPeriodStart().indexOf("T")) + "-" + criteria.getPeriodEnd().substring(0, criteria.getPeriodStart().indexOf("T")).hashCode();
-    UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
-    documentReference.setId(documentId.toString());
+
     if (existingDocumentReference != null) {
       documentReference.setId(existingDocumentReference.getId());
 
@@ -267,19 +265,17 @@ public class ReportGenerator {
       documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
 
       documentReference.setContent(existingDocumentReference.getContent());
-
-      updateBundle.addEntry()
-              .setResource(documentReference)
-              .setRequest(new Bundle.BundleEntryRequestComponent()
-                      .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
     } else {
-      updateBundle.addEntry()
-              .setResource(documentReference)
-              .setRequest(new Bundle.BundleEntryRequestComponent()
-                      .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
+      // generate document reference id based on the report date range and the measure used in the report generation
+      String id = criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd().hashCode();
+      UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
+      documentReference.setId(documentId.toString());
     }
+    updateBundle.addEntry()
+            .setResource(documentReference)
+            .setRequest(new Bundle.BundleEntryRequestComponent()
+                    .setMethod(Bundle.HTTPVerb.PUT)
+                    .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
 
     // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
     this.context
