@@ -10,11 +10,11 @@ import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.*;
+import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Setter;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
@@ -42,8 +42,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -63,6 +65,7 @@ public class ReportController extends BaseController {
 
   @Autowired
   private QueryConfig queryConfig;
+
 
   private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
@@ -128,12 +131,12 @@ public class ReportController extends BaseController {
 
     //check if report-defs config has auth properties, if so generate token and add to request
     LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-    if(authConfig != null) {
-      try{
+    if (authConfig != null) {
+      try {
         String token = OAuth2Helper.getToken(authConfig);
         requestBuilder.setHeader("Authorization", "Bearer " + token);
-      } catch(Exception ex) {
-        logger.error(String.format("Error generating authorization token: %s",  ex.getMessage()));
+      } catch (Exception ex) {
+        logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
         return;
       }
     }
@@ -400,7 +403,8 @@ public class ReportController extends BaseController {
       // Generate the master report id
       String id = "";
       if (!regenerate || existingDocumentReference == null) {
-        id = RandomStringUtils.randomAlphanumeric(8);
+        //id = RandomStringUtils.randomAlphanumeric(8);
+        id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart().substring(0, criteria.getPeriodStart().indexOf("T")) + "-" + criteria.getPeriodEnd().substring(0, criteria.getPeriodStart().indexOf("T"))).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
       }
@@ -509,57 +513,45 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/{id}/patient")
   public List<PatientReportModel> getReportPatients(
-          @PathVariable("id") String id) {
+          @PathVariable("id") String id) throws Exception {
+
+    String bundleLocation = "";
+    Bundle patientBundle = null;
+    PatientReportModel report = null;
 
     List<PatientReportModel> reports = new ArrayList();
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
-    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
-    Bundle patientRequest = new Bundle();
-    patientRequest.setType(Bundle.BundleType.BATCH);
-    // Get the references to the individual patient measure reports from the master
-    List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(measureReport);
-    // Retrieve the individual patient measure reports from the server
-    List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.getFhirDataProvider());
-    for (MeasureReport patientMeasureReport : patientReports) {
-      patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-      int index = patientRequest.getEntry().size() - 1;
-      patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
-      patientRequest.getEntry().get(index).getRequest().setUrl(patientMeasureReport.getSubject().getReference());
-
-      // TO-DO later
-//      for (Extension extension : measureReport.getExtension()) {
-//        if (extension.getUrl().contains("StructureDefinition/nhsnlink-excluded-patient")) {
-//          patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
-//          int index = patientRequest.getEntry().size() - 1;
-//          patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
-//          for (Extension ext : extension.getExtension()) {
-//            if (ext.getUrl().contains("patient")) {
-//              String patientUrl = (ext.getValue().getNamedProperty("reference")).getValues().get(0).toString() + "/_history";
-//              patientRequest.getEntry().get(index).getRequest().setUrl(patientUrl);
-//            }
-//          }
-//
-//        }
-//      }
+    bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+    // if document submitted and flag is to delete after submission then get the patients from the submitted bundle
+    if (!bundleLocation.equals("") && config.getDeleteAfterSubmission()) {
+      // get Patients from bundle
+      FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
+      String content = receiver.retrieveContent(bundleLocation);
+      patientBundle = this.ctx.newJsonParser().parseResource(Bundle.class, content);
+    } else { // otherwise get them as before
+      MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
+      Bundle patientRequest = new Bundle();
+      patientRequest.setType(Bundle.BundleType.BATCH);
+      // Get the references to the individual patient measure reports from the master
+      List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(measureReport);
+      // Retrieve the individual patient measure reports from the server
+      List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.getFhirDataProvider());
+      for (MeasureReport patientMeasureReport : patientReports) {
+        patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
+        int index = patientRequest.getEntry().size() - 1;
+        patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
+        patientRequest.getEntry().get(index).getRequest().setUrl(patientMeasureReport.getSubject().getReference());
+      }
+      if (patientRequest.hasEntry()) {
+        patientBundle = this.getFhirDataProvider().transaction(patientRequest);
+      }
     }
-    if (patientRequest.hasEntry()) {
-      Bundle patientBundle = this.getFhirDataProvider().transaction(patientRequest);
+    // in both cased add the patients info to patientreportmodel to be displayed in UI
+    if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
-        PatientReportModel report = new PatientReportModel();
-
-        if (entry.getResource() != null) {
-          if (entry.getResource().getResourceType().toString() == "Patient") {
-
-            Patient patient = (Patient) entry.getResource();
-            report = FhirHelper.setPatientFields(patient, false);
-          } else if (entry.getResource().getResourceType().toString() == "Bundle") {
-            //This assumes that the entry right after the DELETE event is the most recent version of the Patient
-            //immediately before the DELETE (entry indexed at 1)
-            Patient deletedPatient = ((Patient) ((Bundle) entry.getResource()).getEntry().get(1).getResource());
-
-            report = FhirHelper.setPatientFields(deletedPatient, true);
-
-          }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
+          Patient patient = (Patient) entry.getResource();
+          report = FhirHelper.setPatientFields(patient, false);
           reports.add(report);
         }
       }
@@ -609,114 +601,168 @@ public class ReportController extends BaseController {
           @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
 
+    String bundleLocation = "";
     PatientDataModel data = new PatientDataModel();
 
-    //Checks to make sure the DocumentReference exists
-    this.getFhirDataProvider().findDocRefForReport(reportId);
-    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId + "-" + patientId.hashCode());
-    List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+    bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+    if (!bundleLocation.equals("") && config.getDeleteAfterSubmission()) {
+      FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
+      String content = receiver.retrieveContent(bundleLocation);
+      Bundle patientBundle = this.ctx.newJsonParser().parseResource(Bundle.class, content);
+
+      data.setConditions(new ArrayList<>());
+      data.setMedicationRequests(new ArrayList<>());
+      data.setProcedures(new ArrayList<>());
+      data.setObservations(new ArrayList<>());
+      data.setEncounters(new ArrayList<>());
+      data.setServiceRequests(new ArrayList());
+      if (patientBundle == null || patientBundle.getEntry().isEmpty()) {
+        return data;
+      }
+      for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Condition")) {
+          Condition condition = (Condition) entry.getResource();
+          if (condition.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getConditions().add(condition);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("MedicationRequest")) {
+          MedicationRequest medicationRequest = (MedicationRequest) entry.getResource();
+          if (medicationRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getMedicationRequests().add(medicationRequest);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Observation")) {
+          Observation observation = (Observation) entry.getResource();
+          if (observation.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getObservations().add(observation);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Procedure")) {
+          Procedure procedure = (Procedure) entry.getResource();
+          if (procedure.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getProcedures().add(procedure);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Encounter")) {
+          Encounter encounter = (Encounter) entry.getResource();
+          if (encounter.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getEncounters().add(encounter);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("ServiceRequest")) {
+          ServiceRequest serviceRequest = (ServiceRequest) entry.getResource();
+          if (serviceRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getServiceRequests().add(serviceRequest);
+          }
+        }
+      }
+    } else {
+      MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId + "-" + patientId.hashCode());
+      List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
+
+      // Conditions
+      Bundle conditionBundle = this.getFhirDataProvider().getResources(Condition.SUBJECT.hasId(patientId), "Condition");
+      if (conditionBundle.hasEntry()) {
+        List<Condition> conditionList = conditionBundle.getEntry().stream()
+                .filter(e -> e.getResource() != null)
+                .map(e -> (Condition) e.getResource())
+                .collect(Collectors.toList());
+
+        conditionList = conditionList.stream()
+                .filter(c -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(c.getId()))))
+                .collect(Collectors.toList());
 
 
-    // Conditions
-    Bundle conditionBundle = this.getFhirDataProvider().getResources(Condition.SUBJECT.hasId(patientId), "Condition");
-    if (conditionBundle.hasEntry()) {
-      List<Condition> conditionList = conditionBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null)
-              .map(e -> (Condition) e.getResource())
-              .collect(Collectors.toList());
+        data.setConditions(conditionList);
+      }
 
-      conditionList = conditionList.stream()
-              .filter(c -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(c.getId()))))
-              .collect(Collectors.toList());
+      // Medications Requests
+      Bundle medRequestBundle = this.getFhirDataProvider().getResources(MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
+      if (medRequestBundle.hasEntry()) {
+        List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
+                .filter(e -> e.getResource() != null)
+                .map(e -> (MedicationRequest) e.getResource())
+                .collect(Collectors.toList());
 
+        medicationRequestList = medicationRequestList.stream()
+                .filter(m -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(m.getId()))))
+                .collect(Collectors.toList());
 
-      data.setConditions(conditionList);
-    }
+        data.setMedicationRequests(medicationRequestList);
+      }
 
-    // Medications Requests
-    Bundle medRequestBundle = this.getFhirDataProvider().getResources(MedicationRequest.SUBJECT.hasId(patientId), "MedicationRequest");
-    if (medRequestBundle.hasEntry()) {
-      List<MedicationRequest> medicationRequestList = medRequestBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null)
-              .map(e -> (MedicationRequest) e.getResource())
-              .collect(Collectors.toList());
+      // Observations
+      Bundle observationBundle = this.getFhirDataProvider().getResources(Observation.SUBJECT.hasId(patientId), "Observation");
+      if (observationBundle.hasEntry()) {
+        List<Observation> observationList = observationBundle.getEntry().stream()
+                .filter(e -> e.getResource() != null)
+                .map(e -> (Observation) e.getResource())
+                .collect(Collectors.toList());
 
-      medicationRequestList = medicationRequestList.stream()
-              .filter(m -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(m.getId()))))
-              .collect(Collectors.toList());
+        observationList = observationList.stream()
+                .filter(o -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(o.getId()))))
+                .collect(Collectors.toList());
 
-      data.setMedicationRequests(medicationRequestList);
-    }
+        data.setObservations(observationList);
+      }
 
-    // Observations
-    Bundle observationBundle = this.getFhirDataProvider().getResources(Observation.SUBJECT.hasId(patientId), "Observation");
-    if (observationBundle.hasEntry()) {
-      List<Observation> observationList = observationBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null)
-              .map(e -> (Observation) e.getResource())
-              .collect(Collectors.toList());
+      // Procedures
+      Bundle procedureBundle = this.getFhirDataProvider().getResources(Procedure.SUBJECT.hasId(patientId), "Procedure");
+      if (procedureBundle.hasEntry()) {
+        List<Procedure> procedureList = procedureBundle.getEntry().stream()
+                .filter(e -> e.getResource() != null)
+                .map(e -> (Procedure) e.getResource())
+                .collect(Collectors.toList());
 
-      observationList = observationList.stream()
-              .filter(o -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(o.getId()))))
-              .collect(Collectors.toList());
+        procedureList = procedureList.stream()
+                .filter(p -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(p.getId()))))
+                .collect(Collectors.toList());
 
-      data.setObservations(observationList);
-    }
+        data.setProcedures(procedureList);
+      }
 
-    // Procedures
-    Bundle procedureBundle = this.getFhirDataProvider().getResources(Procedure.SUBJECT.hasId(patientId), "Procedure");
-    if (procedureBundle.hasEntry()) {
-      List<Procedure> procedureList = procedureBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null)
-              .map(e -> (Procedure) e.getResource())
-              .collect(Collectors.toList());
+      // Encounters
+      Bundle encounterBundle = this.getFhirDataProvider().getResources(Encounter.SUBJECT.hasId(patientId), "Encounter");
+      if (encounterBundle.hasEntry()) {
+        List<Encounter> encounterList = encounterBundle.getEntry().stream()
+                .filter(e -> e.getResource() != null)
+                .map(e -> (Encounter) e.getResource())
+                .collect(Collectors.toList());
 
-      procedureList = procedureList.stream()
-              .filter(p -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(p.getId()))))
-              .collect(Collectors.toList());
+        encounterList = encounterList.stream()
+                .filter(eL -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(eL.getId()))))
+                .collect(Collectors.toList());
 
-      data.setProcedures(procedureList);
-    }
+        data.setEncounters(encounterList);
+      }
 
-    // Encounters
-    Bundle encounterBundle = this.getFhirDataProvider().getResources(Encounter.SUBJECT.hasId(patientId), "Encounter");
-    if (encounterBundle.hasEntry()) {
-      List<Encounter> encounterList = encounterBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null)
-              .map(e -> (Encounter) e.getResource())
-              .collect(Collectors.toList());
+      Bundle serviceRequestBundle = this.getFhirDataProvider().getResources(ServiceRequest.SUBJECT.hasId(patientId), "ServiceRequest");
+      if (serviceRequestBundle.hasEntry()) {
+        List<ServiceRequest> serviceRequestList = serviceRequestBundle.getEntry().stream()
+                .filter(sr -> sr.getResource() != null)
+                .map(sr -> (ServiceRequest) sr.getResource())
+                .collect(Collectors.toList());
 
-      encounterList = encounterList.stream()
-              .filter(eL -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(eL.getId()))))
-              .collect(Collectors.toList());
+        serviceRequestList = serviceRequestList.stream()
+                .filter(srL -> evaluatedResources.stream()
+                        .anyMatch(e ->
+                                e.getReference().equals(FhirHelper.getIdFromVersion(srL.getId()))))
+                .collect(Collectors.toList());
 
-      data.setEncounters(encounterList);
-    }
-
-    Bundle serviceRequestBundle = this.getFhirDataProvider().getResources(ServiceRequest.SUBJECT.hasId(patientId), "ServiceRequest");
-    if (serviceRequestBundle.hasEntry()) {
-      List<ServiceRequest> serviceRequestList = serviceRequestBundle.getEntry().stream()
-              .filter(sr -> sr.getResource() != null)
-              .map(sr -> (ServiceRequest) sr.getResource())
-              .collect(Collectors.toList());
-
-      serviceRequestList = serviceRequestList.stream()
-              .filter(srL -> evaluatedResources.stream()
-                      .anyMatch(e ->
-                              e.getReference().equals(FhirHelper.getIdFromVersion(srL.getId()))))
-              .collect(Collectors.toList());
-
-      data.setServiceRequests(serviceRequestList);
+        data.setServiceRequests(serviceRequestList);
+      }
     }
 
     return data;
