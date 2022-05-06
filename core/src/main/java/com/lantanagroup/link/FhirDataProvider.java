@@ -82,8 +82,8 @@ public class FhirDataProvider {
             .search()
             .forResource(DocumentReference.class)
             .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
-            .and(periodStartParam.afterOrEquals().second(periodStart))
-            .and(periodEndParam.beforeOrEquals().second(periodEnd))
+            .and(periodStartParam.exactly().second(periodStart))
+            .and(periodEndParam.exactly().second(periodEnd))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
