@@ -105,14 +105,6 @@ public class GenerateAndSubmitCommand {
         logger.error("The scope is required.");
         return;
       }
-      if (this.configInfo.getPeriodStart().getAdjustDay() % 24 != 0) {
-        logger.error("Period start date should be multiple of 24.");
-        return;
-      }
-      if (this.configInfo.getPeriodEnd().getAdjustDay() % 24 != 0) {
-        logger.error("Period start date should be multiple of 24.");
-        return;
-      }
       String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
       if (token == null) {
         logger.error("Authentication failed. Please contact the system administrator.");
