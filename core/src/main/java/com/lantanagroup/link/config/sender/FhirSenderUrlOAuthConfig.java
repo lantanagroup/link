@@ -13,5 +13,8 @@ public class FhirSenderUrlOAuthConfig {
    */
   private String url;
 
-
+  /**
+   * <strong>oauth.compress</strong><br>Whether to compress reports during submission
+   */
+  private boolean compress;
 }

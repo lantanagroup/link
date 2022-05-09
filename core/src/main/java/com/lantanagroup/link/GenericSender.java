@@ -5,12 +5,14 @@ import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
@@ -22,8 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPOutputStream;
 
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
@@ -79,15 +83,28 @@ public abstract class GenericSender {
       String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
 
       // decide to do a POST or a PUT
-      HttpRequestBase sendRequest = null;
+      HttpEntityEnclosingRequestBase sendRequest = null;
       if (existingLocation.equals("")) {
         sendRequest = new HttpPost(authConfig.getUrl());
-        ((HttpPost) sendRequest).setEntity(new StringEntity(content));
       } else {
         sendRequest = new HttpPut(existingLocation);
-        ((HttpPut) sendRequest).setEntity(new StringEntity(content));
       }
       sendRequest.addHeader("Content-Type", mimeType);
+
+      // set request entity with optional compression
+      HttpEntity entity = new StringEntity(content);
+      if (authConfig.isCompress()) {
+        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+          try (GZIPOutputStream compressedStream = new GZIPOutputStream(stream)) {
+            entity.writeTo(compressedStream);
+          }
+          HttpEntity compressedEntity = new ByteArrayEntity(stream.toByteArray());
+          sendRequest.setEntity(compressedEntity);
+          sendRequest.addHeader("Content-Encoding", "gzip");
+        }
+      } else {
+        sendRequest.setEntity(entity);
+      }
 
       if (Strings.isNotEmpty(token)) {
         logger.debug("Adding auth token to submit request");
