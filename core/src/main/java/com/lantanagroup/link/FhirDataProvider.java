@@ -330,7 +330,7 @@ public class FhirDataProvider {
 
   public void deleteResource(String resourceType, String id, boolean permanent) {
     try {
-      URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"/?_expunge=true":""));
+      URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"?_expunge=true":""));
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
       con.setRequestMethod("DELETE");
       con.getResponseMessage();
