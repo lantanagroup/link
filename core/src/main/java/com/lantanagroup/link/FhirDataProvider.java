@@ -9,12 +9,19 @@ import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
+import org.apache.catalina.connector.Request;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.util.List;
 
 
@@ -322,13 +329,14 @@ public class FhirDataProvider {
   }
 
   public void deleteResource(String resourceType, String id, boolean permanent) {
-    if(permanent) {
-      //module.[MODULE_ID].config.dao_config.delete_expunge_enabled = true;
+    try {
+      URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"/?_expunge=true":""));
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("DELETE");
+      con.getResponseMessage();
+      con.disconnect();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
-
-    this.client.delete()
-            .resource(this.getResourceByTypeAndId(resourceType, id))
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
   }
 }
