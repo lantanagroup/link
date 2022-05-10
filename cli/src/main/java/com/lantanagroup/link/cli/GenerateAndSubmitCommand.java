@@ -55,7 +55,7 @@ public class GenerateAndSubmitCommand {
     Calendar cal = new GregorianCalendar();
     cal.add(Calendar.HOUR, adjustDays);
     if(endOfDay) {
-      cal.set(Calendar.HOUR_OF_DAY, 23);
+      cal.set(Calendar.HOUR, 23);
       cal.set(Calendar.MINUTE, 59);
       cal.set(Calendar.SECOND, 59);
       cal.set(Calendar.MILLISECOND, 0);
@@ -103,14 +103,6 @@ public class GenerateAndSubmitCommand {
       }
       if (Strings.isBlank(configInfo.getAuth().getScope())) {
         logger.error("The scope is required.");
-        return;
-      }
-      if (this.configInfo.getPeriodStart().getAdjustDay() % 24 != 0) {
-        logger.error("Period start date should be multiple of 24.");
-        return;
-      }
-      if (this.configInfo.getPeriodEnd().getAdjustDay() % 24 != 0) {
-        logger.error("Period start date should be multiple of 24.");
         return;
       }
       String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
