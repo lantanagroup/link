@@ -15,6 +15,7 @@ api:
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   send-url:
+  delete-after-submission: true
   cors:
     allowed-origins: '*'
     allowed-headers: '*'

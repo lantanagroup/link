@@ -459,11 +459,86 @@ public class ReportController extends BaseController {
     sender.send(report, request, authentication, this.getFhirDataProvider(),
             this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true);
 
+
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
     logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
+
+    if (this.config.getDeleteAfterSubmission()) {
+      List<ListResource> census = getCensusList(report, documentReference);
+      if(census.size() > 0) {
+        String censusID = census.get(0).getId().contains("List/") && census.get(0).getId().contains("/_history")?
+                census.get(0).getId().substring("List/".length(), census.get(0).getId().indexOf("/_history")):census.get(0).getId();
+
+        for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
+          String patientRef = entry.getItem().getReference();
+          /*if(patientRef.contains("Patient/")) {
+          patientRef = patientID.substring("Patient/".length());
+          }*/
+          //String patientReportID = String.valueOf(patientRef.substring("Patient/".length()).hashCode());
+          //int x = 0;
+
+          /*try {
+            this.getFhirDataProvider().deleteResource("Bundle", patientRef, true);
+          } catch (Exception e) {
+            logger.error(e.getMessage());
+          }*/
+
+          /*try {
+            this.getFhirDataProvider().deleteResource("MeasureReport", reportId + "-" + patientReportID, true);
+          } catch (Exception e) {
+            logger.error(e.getMessage());
+          }*/
+        }
+
+        /*try {
+          this.getFhirDataProvider().deleteResource("List", censusID, true);
+        } catch (Exception e) {
+          logger.error(e.getMessage());
+        }*/
+
+        /*try {
+          this.getFhirDataProvider().deleteResource("MeasureReport", reportId, true);
+        } catch (Exception e) {
+          logger.error(e.getMessage());
+        }*/
+      }
+    }
+  }
+
+  /**
+   * Retrieves patient census list
+   *
+   * @param report
+   * @param documentReference
+   * @return patient census list
+   */
+  public List<ListResource> getCensusList(MeasureReport report, DocumentReference documentReference) {
+    SimpleDateFormat formatterMillis = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    ReportCriteria criteria = new ReportCriteria(documentReference.getIdentifier().get(0).getSystem() + "|" + documentReference.getIdentifier().get(0).getValue(),
+            formatterMillis.format(report.getPeriod().getStart()), formatterMillis.format(report.getPeriod().getEnd()));
+    ReportContext context = new ReportContext(this.getFhirDataProvider());
+    try {
+      this.resolveMeasure(criteria, context);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    try {
+      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
+    return context.getPatientCensusLists();
   }
 
   @GetMapping("/{reportId}/$download")
