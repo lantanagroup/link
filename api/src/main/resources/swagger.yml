@@ -1,5 +1,6 @@
 openapi: 3.0.1
 info:
+  version: '1.0'
   title: Link API
 servers:
   - url: /
@@ -14,6 +15,7 @@ paths:
     get:
       tags:
         - API Root
+      summary: The swagger spec document for this Link's API
       operationId: getDocs
       responses:
         '200':
@@ -32,7 +34,7 @@ paths:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 $ref: '#/components/schemas/ApiInfoModel'
   /api/poi/csv:
@@ -78,7 +80,7 @@ paths:
   /api/report/{reportId}/$send:
     get:
       tags:
-        - report-controller
+        - Report Management
       summary: Send/submit the specified report to the consumer/recipient
       operationId: send
       parameters:
@@ -94,7 +96,7 @@ paths:
   /api/report/$generate:
     post:
       tags:
-        - report-controller
+        - Report Management
       summary: Generate a report for given criteria
       description: Generates a report based on the specified measure and reporting period criteria. Report generation can take time to respond, as it involves querying the configured EHR for data related to the patients identified for the criteria.
       operationId: generateReport
@@ -120,7 +122,10 @@ paths:
             type: string
           example: YYYY-MM-DDTHH:MM:SS
         - name: regenerate
+          in: query
           description: True to re-generate a report that has already been generated for the specified criteria
+          schema:
+            type: boolean
       requestBody:
         content:
           application/json:
@@ -141,7 +146,7 @@ paths:
   /api/report/{reportId}:
     get:
       tags:
-        - report-controller
+        - Report Management
       summary: Retrieve the specified report
       operationId: getReport
       parameters:
@@ -161,7 +166,7 @@ paths:
   /api/report/{reportId}/$download:
     get:
       tags:
-        - report-controller
+        - Report Management
       summary: Download the specified report in XML format
       operationId: download
       parameters:
@@ -177,7 +182,7 @@ paths:
   /api/report/searchReports:
     get:
       tags:
-        - report-controller
+        - Report Management
       summary: Search for reports
       operationId: searchReports
       parameters:
@@ -235,7 +240,7 @@ paths:
   /api/report/{reportId}/patient/{patientId}:
     get:
       tags:
-        - report-controller
+        - Report Management
       operationId: getPatientData
       parameters:
         - name: reportId
@@ -258,7 +263,7 @@ paths:
   /api/report/{id}:
     put:
       tags:
-        - report-controller
+        - Report Management
       operationId: saveReport
       parameters:
         - name: id
@@ -276,7 +281,7 @@ paths:
           description: default response
     delete:
       tags:
-        - report-controller
+        - Report Management
       operationId: deleteReport
       parameters:
         - name: id
@@ -290,7 +295,7 @@ paths:
   /api/report/{reportId}/$exclude:
     post:
       tags:
-        - report-controller
+        - Report Management
       operationId: excludePatients
       parameters:
         - name: reportId
@@ -308,7 +313,7 @@ paths:
   /api/report/{id}/patient:
     get:
       tags:
-        - report-controller
+        - Report Management
       operationId: getReportPatients
       parameters:
         - name: id
@@ -328,7 +333,7 @@ paths:
   /api/fhir/{resourceType}/{resourceId}:
     put:
       tags:
-        - report-data-controller
+        - Report Data Submission
       operationId: updateReportData
       parameters:
         - name: resourceType
@@ -358,14 +363,14 @@ paths:
             '*/*':
               schema:
                 type: string
-  /api/fhir/api/data/csv?type=XXX:
+  /api/fhir/api/data/csv:
     post:
       tags:
-        - report-data-controller
+        - Report Data Submission
       operationId: retrieveCSVData
       parameters:
-        - name: XXX
-          in: path
+        - name: type
+          in: query
           required: true
           schema:
             type: string
@@ -380,7 +385,7 @@ paths:
   /api/fhir/{resourceType}:
     post:
       tags:
-        - report-data-controller
+        - Report Data Submission
       operationId: storeReportData
       parameters:
         - name: resourceType
@@ -392,30 +397,16 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                authentication:
-                  type: string
-                resource:
-                  type: string
+              type: string
       responses:
         '200':
           description: default response
-          content:
-            '*/*':
-              schema:
-                type: string
   /api/report-definition:
     get:
       tags:
-        - report-definition-controller
+        - Measure Management
+      summary: Gets a list of measures that have been loaded into the installation of Link
       operationId: getMeasures
-      parameters:
-        - name: authentication
-          in: query
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: default response
@@ -428,14 +419,9 @@ paths:
   /api/user:
     get:
       tags:
-        - user-controller
+        - User Management
+      summary: Retrieves a list of users who have accessed Link
       operationId: getUsers
-      parameters:
-        - name: authentication
-          in: query
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: default response
