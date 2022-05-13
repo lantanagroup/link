@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.model.StoredReportDefinition;

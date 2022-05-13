@@ -2,7 +2,9 @@ package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.model.ApiInfoModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+  @Autowired
+  private SwaggerConfig swaggerConfig;
+
   @GetMapping
   public ApiInfoModel getVersionInfo() {
     try {
@@ -42,6 +47,20 @@ public class ApiController {
             new InputStreamReader(inputStream, StandardCharsets.UTF_8))
             .lines()
             .collect(Collectors.joining("\n"));
+
+    content += "\n  securitySchemes:\n" +
+            "    oauth:\n" +
+            "      type: oauth2\n" +
+            "      flows:\n" +
+            "        implicit:\n" +
+            "          authorizationUrl: " + this.swaggerConfig.getAuthUrl() + "\n" +
+            "          tokenUrl: " + this.swaggerConfig.getTokenUrl() + "\n" +
+            "          scopes:\n";
+
+    for (String scope : this.swaggerConfig.getScope()) {
+      content += String.format("            %s: %s\n", scope, scope);
+    }
+
     return content;
   }
 }

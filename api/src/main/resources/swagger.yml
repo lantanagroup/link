@@ -24,6 +24,8 @@ paths:
             text/yaml:
               schema:
                 type: string
+      security:
+        - {}
   /api:
     get:
       tags:
@@ -37,6 +39,8 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApiInfoModel'
+      security:
+        - {}
   /api/poi/csv:
     post:
       tags:
@@ -126,21 +130,11 @@ paths:
           description: True to re-generate a report that has already been generated for the specified criteria
           schema:
             type: boolean
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user:
-                  $ref: '#/components/schemas/LinkCredentials'
-                regenerate:
-                  type: boolean
       responses:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 $ref: '#/components/schemas/GenerateResponse'
   /api/report/{reportId}:
@@ -183,7 +177,7 @@ paths:
     get:
       tags:
         - Report Management
-      summary: Search for reports
+      summary: Search for previously generated reports
       operationId: searchReports
       parameters:
         - name: bundleId
@@ -200,6 +194,7 @@ paths:
             type: string
         - name: page
           in: query
+          description: The page number to request. Should include bundleId (from previous response) if greater than 1
           required: false
           schema:
             type: integer
@@ -207,29 +202,40 @@ paths:
             default: 1
         - name: identifier
           in: query
+          description: Filter results by measure's identifier in the format of SYSTEM|VALUE
           required: false
           schema:
             type: string
         - name: periodStartDate
           in: query
+          description: Filter results to only include reports with a reporting period starting after this start date
           required: false
           schema:
             type: string
+            example: YYYY-MM-DD
         - name: periodEndDate
           in: query
+          description: Filter results to only include reports with a reporting period starting before this end date
           required: false
           schema:
             type: string
+            example: YYYY-MM-DD
         - name: docStatus
           in: query
+          description: Filter results to only include reports that have a specific status
           required: false
           schema:
             type: string
+            enum:
+              - preliminary
+              - final
         - name: submittedDate
           in: query
+          description: Filter results to only include reports submitted on the specified date
           required: false
           schema:
             type: string
+            example: YYYY-MM-DD
       responses:
         '200':
           description: default response
@@ -241,6 +247,7 @@ paths:
     get:
       tags:
         - Report Management
+      summary: Get data for the specified patient in the specified report
       operationId: getPatientData
       parameters:
         - name: reportId
@@ -264,6 +271,7 @@ paths:
     put:
       tags:
         - Report Management
+      summary: Update a report
       operationId: saveReport
       parameters:
         - name: id
@@ -282,6 +290,7 @@ paths:
     delete:
       tags:
         - Report Management
+      summary: Delete a report
       operationId: deleteReport
       parameters:
         - name: id
@@ -296,6 +305,7 @@ paths:
     post:
       tags:
         - Report Management
+      summary: Exclude one or more patients from a report
       operationId: excludePatients
       parameters:
         - name: reportId
@@ -303,17 +313,25 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExcludedPatientModel'
       responses:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 $ref: '#/components/schemas/ReportModel'
   /api/report/{id}/patient:
     get:
       tags:
         - Report Management
+      summary: Get a list of the patients in a report
       operationId: getReportPatients
       parameters:
         - name: id
@@ -325,15 +343,40 @@ paths:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientReportModel'
+  /api/fhir/api/data/csv:
+    post:
+      tags:
+        - Report Data Submission
+      summary: Submit inventory data in the form of a CSV to be included in future report generation
+      operationId: retrieveCSVData
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - bed
+              - ventilator
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
   /api/fhir/{resourceType}/{resourceId}:
     put:
       tags:
         - Report Data Submission
+      summary: Store a FHIR resource
+      deprecated: true
       operationId: updateReportData
       parameters:
         - name: resourceType
@@ -350,42 +393,20 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                authentication:
-                  type: string
-                resource:
-                  type: string
-      responses:
-        '200':
-          description: default response
-          content:
-            '*/*':
-              schema:
-                type: string
-  /api/fhir/api/data/csv:
-    post:
-      tags:
-        - Report Data Submission
-      operationId: retrieveCSVData
-      parameters:
-        - name: type
-          in: query
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
               type: string
       responses:
         '200':
           description: default response
+          content:
+            'application/json':
+              schema:
+                type: string
   /api/fhir/{resourceType}:
     post:
       tags:
         - Report Data Submission
+      summary: Store a FHIR resource
+      deprecated: true
       operationId: storeReportData
       parameters:
         - name: resourceType
@@ -411,7 +432,7 @@ paths:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: array
                 items:
@@ -426,7 +447,7 @@ paths:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 type: array
                 items:
@@ -439,13 +460,6 @@ components:
         build:
           type: string
         version:
-          type: string
-    LinkCredentials:
-      type: object
-      properties:
-        jwt:
-          type: string
-        practitioner:
           type: string
     GenerateResponse:
       type: object
@@ -567,13 +581,27 @@ components:
           type: string
         name:
           type: string
-  securitySchemes:
-    oauth:
-      type: oauth2
-      flows:
-        implicit:
-          authorizationUrl: https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/auth?nonce="1234testapi1234"
-          tokenUrl: https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/token
-          scopes:
-            openid: openid
-            profile: profile
+    ExcludedPatientModel:
+      type: object
+      properties:
+        patientId:
+          type: string
+        reason:
+          $ref: '#/components/schemas/CodeableConcept'
+    CodeableConcept:
+      type: object
+      properties:
+        text:
+          type: string
+        coding:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coding'
+    Coding:
+      properties:
+        code:
+          type: string
+        display:
+          type: string
+        system:
+          type: string
