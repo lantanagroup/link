@@ -49,7 +49,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()
-            .antMatchers("/config/**", "/api")
+            .antMatchers("/config/**", "/api", "/api/docs")
             .permitAll()
             .and()
             .antMatcher("/api/**")
