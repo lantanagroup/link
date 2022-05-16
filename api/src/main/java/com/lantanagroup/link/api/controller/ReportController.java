@@ -473,26 +473,23 @@ public class ReportController extends BaseController {
                 census.get(0).getId().substring("List/".length(), census.get(0).getId().indexOf("/_history")):census.get(0).getId();
 
         for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
-          String patientRef = entry.getItem().getReference();
-          /*if(patientRef.contains("Patient/")) {
-          patientRef = patientID.substring("Patient/".length());
-          }*/
-          //String patientReportID = String.valueOf(patientRef.substring("Patient/".length()).hashCode());
-          //int x = 0;
+          String patientRef = entry.getItem().getReference().contains("Patient/")?
+                  entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
+          String patientReportID = String.valueOf(patientRef.substring("Patient/".length()).hashCode());
 
-          /*try {
+          try {
             this.getFhirDataProvider().deleteResource("Bundle", patientRef, true);
           } catch (Exception e) {
             logger.error(e.getMessage());
-          }*/
+          }
 
-          /*try {
+          try {
             this.getFhirDataProvider().deleteResource("MeasureReport", reportId + "-" + patientReportID, true);
           } catch (Exception e) {
             logger.error(e.getMessage());
-          }*/
+          }
         }
-
+        int x = 0;
         /*try {
           this.getFhirDataProvider().deleteResource("List", censusID, true);
         } catch (Exception e) {
