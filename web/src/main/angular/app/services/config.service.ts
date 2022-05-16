@@ -33,6 +33,6 @@ export class ConfigService {
   }
 
   async getApiInfo() {
-    return await this.http.get<ApiInfoModel>(this.getApiUrl('/api')).toPromise();
+    return await this.http.get<ApiInfoModel>(this.config.apiUrl).toPromise();
   }
 }

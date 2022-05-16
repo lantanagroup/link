@@ -17,7 +17,7 @@ export class ReportService {
   }
 
   async generate(reportDefIdentifier: string, periodStart: string, periodEnd: string, regenerate = false) {
-    let url = '/api/report/$generate?';
+    let url = 'report/$generate?';
     url += `reportDefIdentifier=${encodeURIComponent(reportDefIdentifier)}&`;
     url += `periodStart=${encodeURIComponent(periodStart)}&`;
     url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
@@ -28,7 +28,7 @@ export class ReportService {
   }
 
   getReports(queryParams) {
-    let url = this.configService.getApiUrl('/api/report/searchReports?');
+    let url = this.configService.getApiUrl('report/searchReports?');
     if (queryParams != undefined && queryParams != "") {
       url += queryParams;
     }
@@ -36,17 +36,17 @@ export class ReportService {
   }
 
   getSubmitters() {
-    const url = this.configService.getApiUrl('/api/user');
+    const url = this.configService.getApiUrl('user');
     return this.http.get<UserModel[]>(url).toPromise();
   }
 
   async send(reportId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$send`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$send`);
     return this.http.get(url).toPromise();
   }
 
   async download(reportId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$download`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download`);
     const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
     const contentType = downloadResponse.headers.get('Content-Type');
 
@@ -67,7 +67,7 @@ export class ReportService {
   }
 
   async getReportPatients(reportId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/patient`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/patient`);
     return this.http.get<ReportPatient[]>(url)
         // map the array of objects from the response to new instances of ReportPatient
         .pipe(map(response => {
@@ -80,28 +80,28 @@ export class ReportService {
   }
 
   async getReport(reportId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}`);
     return await this.http.get<ReportModel>(url).toPromise();
   }
 
   async save(report: ReportSaveModel, id: string) {
-    const url = this.configService.getApiUrl(`/api/report/` + id);
+    const url = this.configService.getApiUrl(`report/` + id);
     return await this.http.put<ReportSaveModel>(url, report).toPromise();
   }
 
   async discard(reportId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}`);
     return await this.http.delete(url).toPromise();
   }
 
   async getPatientData(reportId: string, patientId: string) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/patient/${encodeURIComponent(patientId)}`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/patient/${encodeURIComponent(patientId)}`);
     return await this.http.get<PatientDataModel>(url).toPromise();
   }
 
 
   async excludePatients(reportId: string, excludedPatients: any) {
-    const url = this.configService.getApiUrl(`/api/report/${encodeURIComponent(reportId)}/$exclude`);
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$exclude`);
     return await this.http.post<void>(url, excludedPatients).toPromise();
   }
 
