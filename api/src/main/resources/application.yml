@@ -25,6 +25,9 @@ api:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
+  events:
+    before-patient-data-store:
+      - com.lantanagroup.link.nhsn.ApplyConceptMaps
   send-url:
   cors:
     allowed-origins: '*'

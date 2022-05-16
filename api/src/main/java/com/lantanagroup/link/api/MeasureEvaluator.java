@@ -2,7 +2,6 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
@@ -10,9 +9,6 @@ import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.ParseException;
-import java.util.Date;
 
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
@@ -50,6 +46,7 @@ public class MeasureEvaluator {
 
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
+
 
       QueryResponse patientData = context.getPatientData().stream().filter(e -> e.getPatientId() == patientId).findFirst().get();
 
