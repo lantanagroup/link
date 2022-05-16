@@ -213,26 +213,38 @@ public class ReportGenerator {
 
   /**
    * This method accepts a list of patients and generates an individual measure report for each patient. Then agregates all the individual reports into a master measure report.
-   * It also stores all individual reports and the master measure report on the Fhir Server. If is regenerating it is reusing the already generated Id-s for all document reference, master measure report and individual reports.
    *
    * @param criteria                  - the report criteria
    * @param context                   -  the report context
    * @param queryResponses            - the list of patient id-s and bundle-s to generate reports for
    * @param existingDocumentReference - the existing document reference
    */
-  public MeasureReport generateAndStore(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
-    if(this.config.getEvaluationService() == null) {
+  public List<MeasureReport> generate(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
+    if (this.config.getEvaluationService() == null) {
       throw new ConfigurationException("api.evaluation-service has not been configured");
     }
-
-    // Create a bundle to execute as a transaction to update multiple resources at once
-    Bundle updateBundle = new Bundle();
-    updateBundle.setType(Bundle.BundleType.TRANSACTION);
 
     // Generate a report for each patient
     List<MeasureReport> patientMeasureReports = queryResponses.stream().map(queryResponse -> {
       MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, queryResponse.getPatientId());
       patientMeasureReport.setId(context.getReportId() + "-" + queryResponse.getPatientId().hashCode());
+      return patientMeasureReport;
+    }).collect(Collectors.toList());
+    // Generate the master measure report
+    MeasureReport masterMeasureReport = generateMasterMeasureReport(criteria, context, patientMeasureReports);
+    context.setMeasureReport(masterMeasureReport);
+    return patientMeasureReports;
+  }
+
+  /**
+   * It also stores all individual reports and the master measure report on the Fhir Server. If is regenerating it is reusing the already generated Id-s for all document reference, master measure report and individual reports.
+   **/
+  public void store(List<MeasureReport> patientMeasureReports, ReportCriteria criteria, ReportContext context, DocumentReference existingDocumentReference) throws ParseException {
+
+    Bundle updateBundle = new Bundle();
+    updateBundle.setType(Bundle.BundleType.TRANSACTION);
+
+    patientMeasureReports.stream().map(patientMeasureReport -> {
 
       updateBundle.addEntry()
               .setResource(patientMeasureReport)
@@ -244,12 +256,9 @@ public class ReportGenerator {
     }).collect(Collectors.toList());
 
 
-    // Generate the master measure report
-    MeasureReport masterMeasureReport = generateMasterMeasureReport(criteria, context, patientMeasureReports);
-
     // Save measure report and documentReference
     updateBundle.addEntry()
-            .setResource(masterMeasureReport)
+            .setResource(context.getMeasureReport())
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
                     .setUrl("MeasureReport/" + context.getReportId()));
@@ -278,10 +287,7 @@ public class ReportGenerator {
                     .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
 
     // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-    this.context
-            .getFhirProvider()
-            .transaction(updateBundle);
+    this.context.getFhirProvider().transaction(updateBundle);
 
-    return masterMeasureReport;
   }
 }

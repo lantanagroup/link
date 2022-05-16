@@ -6,6 +6,7 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
@@ -13,6 +14,7 @@ import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -35,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -60,10 +63,15 @@ public class ReportController extends BaseController {
   private ApiConfig config;
 
   @Autowired
+  @Setter
+  private ApiConfigEvents apiConfigEvents;
+
+  @Autowired
   private ApplicationContext context;
 
   @Autowired
   private QueryConfig queryConfig;
+
 
   private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
@@ -238,18 +246,6 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void getConvertCode(ConceptMap map, Coding code) {
-    // TODO: Lookup ConceptMap.group based on code system
-    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
-      if (group.getSource().equals(code.getSystem())) {
-        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
-        // pick the last element from list
-        code.setSystem(group.getTarget());
-        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
-        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
-      }
-    });
-  }
 
   private List<ConceptMap> getConceptMaps() {
     List<ConceptMap> conceptMapsList = new ArrayList();
@@ -271,11 +267,9 @@ public class ReportController extends BaseController {
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
-  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) throws Exception {
+  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
-
-      List<ConceptMap> conceptMapsList = getConceptMaps();
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
@@ -287,13 +281,21 @@ public class ReportController extends BaseController {
         patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
       }
 
+      triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
+
       if (patientQueryResponses == null) {
         throw new Exception("patientDataBundle is null");
       }
 
+      context.setConceptMaps(getConceptMaps());
+
+      triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
+
+      // store patient data
       for (QueryResponse patientQueryResponse : patientQueryResponses) {
         // Make sure the bundle is a batch - it will load as much as it can
         patientQueryResponse.getBundle().setType(Bundle.BundleType.BATCH);
+
         patientQueryResponse.getBundle().getEntry().forEach(entry ->
                 entry.getRequest()
                         .setMethod(Bundle.HTTPVerb.PUT)
@@ -303,19 +305,6 @@ public class ReportController extends BaseController {
         // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
         // (note: this also fixes the references to resources within invalid ids)
         ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
-
-
-        // apply concept-maps for coding translation
-        if (!conceptMapsList.isEmpty()) {
-          List<Coding> codes = ResourceIdChanger.findCodings(patientQueryResponse);
-          conceptMapsList.stream().forEach(conceptMap -> {
-            codes.stream().forEach(code -> {
-              this.getConvertCode(conceptMap, code);
-            });
-          });
-        }
-        // For debugging purposes:
-        //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
         // Store the data
         logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
@@ -340,6 +329,7 @@ public class ReportController extends BaseController {
                 });
       }
 
+      triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
       return patientQueryResponses;
 
     } catch (Exception ex) {
@@ -349,9 +339,11 @@ public class ReportController extends BaseController {
     }
   }
 
+
   private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, boolean regenerate) throws Exception {
     return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
   }
+
 
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
@@ -367,8 +359,13 @@ public class ReportController extends BaseController {
     ReportContext context = new ReportContext(this.getFhirDataProvider());
 
     try {
+
+      triggerEvent(EventTypes.BeforeMeasureResolution, criteria, context);
+
       // Get the latest measure def and update it on the FHIR storage server
       this.resolveMeasure(criteria, context);
+
+      triggerEvent(EventTypes.AfterMeasureResolution, criteria, context);
 
       // Search the reference document by measure criteria nd reporting period
       DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
@@ -384,18 +381,6 @@ public class ReportController extends BaseController {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
       }
 
-      // Get the patient identifiers for the given date
-      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
-
-      // Get the resource types to query
-      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
-
-      // Scoop the data for the patients and store it
-      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery));
-
-
-      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
-
       // Generate the master report id
       String id = "";
       if (!regenerate || existingDocumentReference == null) {
@@ -403,13 +388,44 @@ public class ReportController extends BaseController {
         id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
+        triggerEvent(EventTypes.OnRegeneration, criteria, context);
       }
+
+      triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
+
+      // Get the patient identifiers for the given date
+      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
+
+
+      triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
+
+      // Get the resource types to query
+      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
+
+      // Scoop the data for the patients and store it
+      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
+
+
+      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+
 
       context.setReportId(id);
       response.setReportId(id);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
-      generator.generateAndStore(criteria, context, context.getPatientData(), existingDocumentReference);
+
+      triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
+
+      List<MeasureReport> reports = generator.generate(criteria, context, context.getPatientData(), existingDocumentReference);
+
+      triggerEvent(EventTypes.AfterMeasureEval, criteria, context);
+
+
+      triggerEvent(EventTypes.BeforeReportStore, criteria, context);
+
+      generator.store(reports, criteria, context, existingDocumentReference);
+
+      triggerEvent(EventTypes.AfterReportStore, criteria, context);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {
@@ -433,7 +449,7 @@ public class ReportController extends BaseController {
    */
   @GetMapping("/{reportId}/$send")
   public void send(
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           @PathVariable String reportId,
           HttpServletRequest request) throws Exception {
 
@@ -466,7 +482,7 @@ public class ReportController extends BaseController {
   public void download(
           @PathVariable String reportId,
           HttpServletResponse response,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getDownloader()))
@@ -559,7 +575,7 @@ public class ReportController extends BaseController {
   @PutMapping(value = "/{id}")
   public void saveReport(
           @PathVariable("id") String id,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request,
           @RequestBody ReportSaveModel data) throws Exception {
 
@@ -594,7 +610,7 @@ public class ReportController extends BaseController {
   public PatientDataModel getPatientData(
           @PathVariable("reportId") String reportId,
           @PathVariable("patientId") String patientId,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     String bundleLocation = "";
@@ -767,7 +783,7 @@ public class ReportController extends BaseController {
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
 
@@ -794,7 +810,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports(
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request,
           @RequestParam(required = false, defaultValue = "1") Integer page,
           @RequestParam(required = false) String bundleId,
@@ -904,17 +920,18 @@ public class ReportController extends BaseController {
    */
   @PostMapping("/{reportId}/$exclude")
   public ReportModel excludePatients(
-          Authentication authentication,
+          @Parameter(hidden = true) Authentication authentication,
           HttpServletRequest request,
-          @AuthenticationPrincipal LinkCredentials user,
+          @Parameter(hidden = true) @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
+          @Parameter(hidden = true) @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(reportId);
 
     if (reportDocRef == null) {
       throw new HttpResponseException(404, String.format("Report %s not found", reportId));
     }
+
 
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
     if (measureReport == null) {
@@ -1079,5 +1096,28 @@ public class ReportController extends BaseController {
 
     return report;
   }
+
+  private void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
+    try {
+      Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
+      List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
+      if (classes == null) {
+        logger.error(String.format("No class set-up for event %s", eventType.toString()));
+        return;
+      }
+      for (String className : classes) {
+        try {
+          Class<?> clazz = Class.forName(className);
+          Object myObject = clazz.newInstance();
+          ((IReportGenerationEvent) myObject).execute(criteria, context);
+        } catch (NoClassDefFoundError ex) {
+          logger.error(String.format("Error in triggerEvent for event %s and class %s: ", eventType.toString(), className) + ex.getMessage());
+        }
+      }
+    } catch (Exception ex) {
+      logger.error(String.format("Error in triggerEvent for event  %s: ", eventType.toString()) + ex.getMessage());
+    }
+  }
+
 }
 
