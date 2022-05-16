@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 public class ApplyConceptMaps implements IReportGenerationEvent {
 
-  private static final Logger logger = LoggerFactory.getLogger(SomeClass.class);
+  private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
 
 
   private void getConvertCode(ConceptMap map, Coding code) {
