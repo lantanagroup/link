@@ -447,16 +447,22 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
 
     if (this.config.getDeleteAfterSubmission()) {
-      List<ListResource> census = getCensusList(report, documentReference);
-      if(census.size() > 0) {
-        String censusID = census.get(0).getId().contains("List/") && census.get(0).getId().contains("/_history")?
-                census.get(0).getId().substring("List/".length(), census.get(0).getId().indexOf("/_history")):census.get(0).getId();
+      deleteSentData(documentReference);
+    }
+  }
 
-        for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
+  private void deleteSentData(DocumentReference documentReference) {
+    String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
+    if(documentReference.getContext().getRelated().size() > 0) {
+      String censusID = documentReference.getContext().getRelated().get(0).getReference().contains("List/")?
+              documentReference.getContext().getRelated().get(0).getReference().substring("List/".length()):documentReference.getContext().getRelated().get(0).getReference();
+
+      List<ListResource> census = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
+      for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
+        if(entry.getItem().getReference() != null) {
           String patientRef = entry.getItem().getReference().contains("Patient/")?
                   entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
           String patientReportID = String.valueOf(patientRef.hashCode());
-          int x = 0;
 
           try {
             this.getFhirDataProvider().deleteResource("Bundle", patientReportID, true);
@@ -465,57 +471,23 @@ public class ReportController extends BaseController {
           }
 
           try {
-            this.getFhirDataProvider().deleteResource("MeasureReport", reportId + "-" + patientReportID, true);
+            this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID + "-" + patientReportID, true);
           } catch (Exception e) {
             logger.error(e.getMessage());
           }
         }
-        /*try {
-          this.getFhirDataProvider().deleteResource("List", censusID, true);
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-        }*/
-
-        /*try {
-          this.getFhirDataProvider().deleteResource("MeasureReport", reportId, true);
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-        }*/
       }
+      /*try {
+        this.getFhirDataProvider().deleteResource("List", censusID, true);
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }*/
     }
-  }
-
-  /**
-   * Retrieves patient census list
-   *
-   * @param report
-   * @param documentReference
-   * @return patient census list
-   */
-  public List<ListResource> getCensusList(MeasureReport report, DocumentReference documentReference) {
-    SimpleDateFormat formatterMillis = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-    ReportCriteria criteria = new ReportCriteria(documentReference.getIdentifier().get(0).getSystem() + "|" + documentReference.getIdentifier().get(0).getValue(),
-            formatterMillis.format(report.getPeriod().getStart()), formatterMillis.format(report.getPeriod().getEnd()));
-    ReportContext context = new ReportContext(this.getFhirDataProvider());
-    try {
-      this.resolveMeasure(criteria, context);
+    /*try {
+      this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID, true);
     } catch (Exception e) {
-      e.printStackTrace();
-    }
-    try {
-      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    }
-    return context.getPatientCensusLists();
+      logger.error(e.getMessage());
+    }*/
   }
 
   @GetMapping("/{reportId}/$download")

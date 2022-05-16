@@ -74,32 +74,6 @@ public class FhirBundler {
     });
   }
 
-  private List<ListResource> getCensusLists(DocumentReference documentReference) {
-    if (documentReference != null && documentReference.getContext() != null) {
-      Bundle requestBundle = new Bundle();
-      requestBundle.setType(Bundle.BundleType.BATCH);
-
-      // Add each census list reference to the batch bundle as a GET
-      requestBundle.getEntry().addAll(documentReference.getContext().getRelated().stream().map(related -> {
-        Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-        newEntry.getRequest()
-                .setMethod(Bundle.HTTPVerb.GET)
-                .setUrl(related.getReference());
-        return newEntry;
-      }).collect(Collectors.toList()));
-
-      // Execute the batch/transaction to retrieve each census list
-      Bundle responseBundle = this.fhirDataProvider.transaction(requestBundle);
-
-      // Return a list of the census retrieved as part of the batch/transaction
-      return responseBundle.getEntry().stream()
-              .map(entry -> (ListResource) entry.getResource())
-              .collect(Collectors.toList());
-    }
-
-    return new ArrayList<>();
-  }
-
   /**
    * Generates a bundle of resources based on the master measure report. Gets all individual measure
    * reports from the master measure report, then gets all the evaluatedResources from the individual
@@ -125,7 +99,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport, this.fhirDataProvider.ctx));
 
     // Add census list(s) to the report bundle
-    List<ListResource> censusLists = this.getCensusLists(documentReference);
+    List<ListResource> censusLists = FhirHelper.getCensusLists(documentReference, this.fhirDataProvider);
     bundle.getEntry().addAll(censusLists.stream().map(censusList -> {
       Bundle.BundleEntryComponent newCensusListEntry = new Bundle.BundleEntryComponent();
       newCensusListEntry.setResource(censusList);

@@ -516,6 +516,32 @@ public class FhirHelper {
     return location;
   }
 
+  public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
+    if (documentReference != null && documentReference.getContext() != null) {
+      Bundle requestBundle = new Bundle();
+      requestBundle.setType(Bundle.BundleType.BATCH);
+
+      // Add each census list reference to the batch bundle as a GET
+      requestBundle.getEntry().addAll(documentReference.getContext().getRelated().stream().map(related -> {
+        Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
+        newEntry.getRequest()
+                .setMethod(Bundle.HTTPVerb.GET)
+                .setUrl(related.getReference());
+        return newEntry;
+      }).collect(Collectors.toList()));
+
+      // Execute the batch/transaction to retrieve each census list
+      Bundle responseBundle = fhirDataProvider.transaction(requestBundle);
+
+      // Return a list of the census retrieved as part of the batch/transaction
+      return responseBundle.getEntry().stream()
+              .map(entry -> (ListResource) entry.getResource())
+              .collect(Collectors.toList());
+    }
+
+    return new ArrayList<>();
+  }
+
   public static String getFirstDocumentReferenceLocation(DocumentReference documentReference) {
     String bundleLocation = "";
     for (DocumentReference.DocumentReferenceContentComponent content : documentReference.getContent()) {
