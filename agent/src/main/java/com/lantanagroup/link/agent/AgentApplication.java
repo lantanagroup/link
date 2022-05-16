@@ -1,10 +1,15 @@
 package com.lantanagroup.link.agent;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import com.lantanagroup.link.spring.FhirMessageConverter;
+import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -44,8 +49,10 @@ public class AgentApplication extends SpringBootServletInitializer implements In
    */
   @Bean
   public Module module() {
+    FhirContext fhirContext = FhirContext.forR4();
+    IParser jsonParser = fhirContext.newJsonParser();
     SimpleModule module = new SimpleModule();
-    module.addSerializer(new FhirJsonSerializer());
+    FhirHelper.initSerializers(module, jsonParser);
     return module;
   }
 }

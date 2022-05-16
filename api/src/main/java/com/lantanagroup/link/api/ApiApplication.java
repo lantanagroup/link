@@ -1,17 +1,17 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import com.lantanagroup.link.serialize.FhirJsonDeserializer;
-import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -136,9 +136,9 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean
   public Module module() {
+    FhirContext fhirContext = FhirContext.forR4();
     SimpleModule module = new SimpleModule();
-    module.addSerializer(new FhirJsonSerializer());
-    module.addDeserializer(Resource.class, new FhirJsonDeserializer());
+    FhirHelper.initSerializers(module, fhirContext.newJsonParser());
     return module;
   }
 }
