@@ -319,27 +319,11 @@ public class ReportController extends BaseController {
         // For debugging purposes:
         //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
 
+        patientQueryResponse.getBundle().setId(String.valueOf(patientQueryResponse.getPatientId().hashCode()));
+
         // Store the data
         logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-        Bundle response = this.getFhirDataProvider().transaction(patientQueryResponse.getBundle());
-
-        response.getEntry().stream()
-                .filter(e -> e.getResponse() != null && e.getResponse().getStatus() != null && !e.getResponse().getStatus().startsWith("20"))   // 200 or 201
-                .forEach(e -> {
-                  if (e.getResponse().getOutcome() != null) {
-                    OperationOutcome outcome = (OperationOutcome) e.getResponse().getOutcome();
-
-                    if (outcome.hasIssue()) {
-                      outcome.getIssue().forEach(i -> {
-                        logger.error(String.format("Entry in response from storing patient data has error: %s", i.getDiagnostics()));
-                      });
-                    } else if (outcome.getText() != null && outcome.getText().getDivAsString() != null) {
-                      logger.error(String.format("Entry in response from storing patient has issue: %s", outcome.getText().getDivAsString()));
-                    }
-                  } else {
-                    logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
-                  }
-                });
+        this.getFhirDataProvider().updateResource(patientQueryResponse.getBundle());
       }
 
       return patientQueryResponses;
@@ -475,10 +459,11 @@ public class ReportController extends BaseController {
         for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
           String patientRef = entry.getItem().getReference().contains("Patient/")?
                   entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
-          String patientReportID = String.valueOf(patientRef.substring("Patient/".length()).hashCode());
+          String patientReportID = String.valueOf(patientRef.hashCode());
+          int x = 0;
 
           try {
-            this.getFhirDataProvider().deleteResource("Bundle", patientRef, true);
+            this.getFhirDataProvider().deleteResource("Bundle", patientReportID, true);
           } catch (Exception e) {
             logger.error(e.getMessage());
           }
@@ -489,7 +474,6 @@ public class ReportController extends BaseController {
             logger.error(e.getMessage());
           }
         }
-        int x = 0;
         /*try {
           this.getFhirDataProvider().deleteResource("List", censusID, true);
         } catch (Exception e) {
