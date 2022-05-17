@@ -1,13 +1,11 @@
 package com.lantanagroup.link.agent.controller;
 
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import org.apache.http.client.HttpResponseException;
-import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

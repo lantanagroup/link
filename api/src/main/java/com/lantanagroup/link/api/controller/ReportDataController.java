@@ -1,13 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
-import com.lantanagroup.link.csv.CSVEntry;
-import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import com.opencsv.exceptions.CsvValidationException;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Enumeration;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,11 +11,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
-
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/fhir")

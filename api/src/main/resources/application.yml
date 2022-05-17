@@ -1,19 +1,33 @@
 springdoc:
   packages-to-scan: com.lantanagroup.link
   packages-to-exclude: org.hl7.fhir, org.hl7.fhir.r4.model
+  pre-loading-enabled: true
+  show-login-endpoint: true
   api-docs:
     enabled: true
     path: /api-docs
+    packages-to-exclude: com.lantanagroup.link
   swagger-ui:
+    disable-swagger-default-url: true
     enabled: true
-    config-url: /api-docs
+    url: /api/docs
     path: /api-docs.html
+    oauth2RedirectUrl: http://localhost:8082/swagger-ui/oauth2-redirect.html
+swagger:
+  auth-url:
+  token-url:
+  scope:
+    - openid
+    - profile
 api:
   fhir-server-store:
   auth-jwks-url:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
+  events:
+    before-patient-data-store:
+      - com.lantanagroup.link.nhsn.ApplyConceptMaps
   send-url:
   delete-after-submission: true
   cors:

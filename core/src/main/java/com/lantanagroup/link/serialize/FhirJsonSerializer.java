@@ -1,27 +1,33 @@
 package com.lantanagroup.link.serialize;
 
-import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.io.IOException;
 
-public class FhirJsonSerializer extends JsonSerializer<Resource> {
+public class FhirJsonSerializer<T extends IBaseResource> extends JsonSerializer<T> {
+  private IParser jsonParser;
+  private Class<T> theClass;
 
-  @Override
-  public Class<Resource> handledType() {
-    return Resource.class;
+  public FhirJsonSerializer(IParser jsonParser, Class<T> theClass) {
+    this.jsonParser = jsonParser;
+    this.theClass = theClass;
   }
 
   @Override
-  public void serialize(Resource resource, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+  public Class<T> handledType() {
+    return theClass;
+  }
+
+  @Override
+  public void serialize(T resource, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
     if (resource == null) {
       jsonGenerator.writeNull();
     } else {
-      FhirContext ctx = FhirContext.forR4();
-      jsonGenerator.writeRawValue(ctx.newJsonParser().encodeResourceToString(resource));
+      jsonGenerator.writeRawValue(this.jsonParser.encodeResourceToString(resource));
     }
   }
 }

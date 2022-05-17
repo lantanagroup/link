@@ -12,6 +12,7 @@
     </parent>
 
     <properties>
+        <spring.boot.core>5.3.7</spring.boot.core>
         <spring.boot.version>5.3.9.RELEASE</spring.boot.version>
         <spring.boot.starter.version>2.5.4</spring.boot.starter.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
@@ -33,9 +34,10 @@
         <module>cli</module>
         <module>query</module>
         <module>agent</module>
-        <module>nhsn</module>
         <module>consumer</module>
+        <module>measureeval</module>
         <module>thsa</module>
+        <module>nhsn</module>
     </modules>
 
     <dependencies>

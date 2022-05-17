@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cli</artifactId>
-    <name>Command Line Interface</name>
+    <name>Link Command Line Interface</name>
 
     <packaging>jar</packaging>
 

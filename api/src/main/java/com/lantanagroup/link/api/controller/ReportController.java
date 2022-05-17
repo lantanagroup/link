@@ -6,6 +6,7 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
@@ -36,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -59,6 +61,10 @@ public class ReportController extends BaseController {
   @Autowired
   @Setter
   private ApiConfig config;
+
+  @Autowired
+  @Setter
+  private ApiConfigEvents apiConfigEvents;
 
   @Autowired
   private ApplicationContext context;
@@ -240,18 +246,6 @@ public class ReportController extends BaseController {
     return null;
   }
 
-  private void getConvertCode(ConceptMap map, Coding code) {
-    // TODO: Lookup ConceptMap.group based on code system
-    map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
-      if (group.getSource().equals(code.getSystem())) {
-        List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
-        // pick the last element from list
-        code.setSystem(group.getTarget());
-        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
-        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
-      }
-    });
-  }
 
   private List<ConceptMap> getConceptMaps() {
     List<ConceptMap> conceptMapsList = new ArrayList();
@@ -273,10 +267,10 @@ public class ReportController extends BaseController {
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
-  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, String reportId) throws Exception {
+
+  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
-      List<ConceptMap> conceptMapsList = getConceptMaps();
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
@@ -288,13 +282,21 @@ public class ReportController extends BaseController {
         patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
       }
 
+      triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
+
       if (patientQueryResponses == null) {
         throw new Exception("patientDataBundle is null");
       }
 
+      context.setConceptMaps(getConceptMaps());
+
+      triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
+
+      // store patient data
       for (QueryResponse patientQueryResponse : patientQueryResponses) {
         // Make sure the bundle is a batch - it will load as much as it can
         patientQueryResponse.getBundle().setType(Bundle.BundleType.BATCH);
+
         patientQueryResponse.getBundle().getEntry().forEach(entry ->
                 entry.getRequest()
                         .setMethod(Bundle.HTTPVerb.PUT)
@@ -305,18 +307,6 @@ public class ReportController extends BaseController {
         // (note: this also fixes the references to resources within invalid ids)
         ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
 
-        // apply concept-maps for coding translation
-        if (!conceptMapsList.isEmpty()) {
-          List<Coding> codes = ResourceIdChanger.findCodings(patientQueryResponse);
-          conceptMapsList.stream().forEach(conceptMap -> {
-            codes.stream().forEach(code -> {
-              this.getConvertCode(conceptMap, code);
-            });
-          });
-        }
-        // For debugging purposes:
-        //String patientDataBundleXml = this.ctx.newXmlParser().encodeResourceToString(patientDataBundle);
-
         patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
 
         // Store the data
@@ -324,6 +314,7 @@ public class ReportController extends BaseController {
         this.getFhirDataProvider().updateResource(patientQueryResponse.getBundle());
       }
 
+      triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
       return patientQueryResponses;
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
@@ -343,15 +334,20 @@ public class ReportController extends BaseController {
           @RequestParam("reportDefIdentifier") String reportDefIdentifier,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
-          boolean regenerate) throws Exception {
+          boolean regenerate) {
 
     GenerateResponse response = new GenerateResponse();
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
     ReportContext context = new ReportContext(this.getFhirDataProvider());
 
     try {
+
+      triggerEvent(EventTypes.BeforeMeasureResolution, criteria, context);
+
       // Get the latest measure def and update it on the FHIR storage server
       this.resolveMeasure(criteria, context);
+
+      triggerEvent(EventTypes.AfterMeasureResolution, criteria, context);
 
       // Search the reference document by measure criteria nd reporting period
       DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
@@ -376,16 +372,21 @@ public class ReportController extends BaseController {
         id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
+        triggerEvent(EventTypes.OnRegeneration, criteria, context);
       }
+      triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
 
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
+
+
+      triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
 
       // Get the resource types to query
       List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
-      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, id));
+      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
@@ -393,7 +394,19 @@ public class ReportController extends BaseController {
       response.setReportId(id);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
-      generator.generateAndStore(criteria, context, context.getPatientData(), existingDocumentReference);
+
+      triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
+
+      List<MeasureReport> reports = generator.generate(criteria, context, context.getPatientData(), existingDocumentReference);
+
+      triggerEvent(EventTypes.AfterMeasureEval, criteria, context);
+
+
+      triggerEvent(EventTypes.BeforeReportStore, criteria, context);
+
+      generator.store(reports, criteria, context, existingDocumentReference);
+
+      triggerEvent(EventTypes.AfterReportStore, criteria, context);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {
@@ -955,6 +968,7 @@ public class ReportController extends BaseController {
       throw new HttpResponseException(404, String.format("Report %s not found", reportId));
     }
 
+
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
     if (measureReport == null) {
       throw new HttpResponseException(404, String.format("Report %s does not have a MeasureReport", reportId));
@@ -1118,5 +1132,28 @@ public class ReportController extends BaseController {
 
     return report;
   }
+
+  private void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
+    try {
+      Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
+      List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
+      if (classes == null) {
+        logger.error(String.format("No class set-up for event %s", eventType.toString()));
+        return;
+      }
+      for (String className : classes) {
+        try {
+          Class<?> clazz = Class.forName(className);
+          Object myObject = clazz.newInstance();
+          ((IReportGenerationEvent) myObject).execute(criteria, context);
+        } catch (NoClassDefFoundError ex) {
+          logger.error(String.format("Error in triggerEvent for event %s and class %s: ", eventType.toString(), className) + ex.getMessage());
+        }
+      }
+    } catch (Exception ex) {
+      logger.error(String.format("Error in triggerEvent for event  %s: ", eventType.toString()) + ex.getMessage());
+    }
+  }
+
 }
 

@@ -1,20 +1,17 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import com.lantanagroup.link.serialize.FhirJsonDeserializer;
-import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.Practitioner;
-import org.hl7.fhir.r4.model.Resource;
-import org.springdoc.core.SpringDocUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -34,7 +31,9 @@ import java.util.TimeZone;
  * Main REST API for NHSNLink. Entry point for SpringBoot. Initializes as a SpringBootApplication, which
  * hosts controllers defined within the project.
  */
-@OpenAPIDefinition(info = @Info(title = "Link API"))
+@OpenAPIDefinition(
+        info = @Info(title = "Link API"),
+        security = { @SecurityRequirement(name = "oauth") })
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.api",
         "com.lantanagroup.link.config",
@@ -121,7 +120,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
-    SpringDocHelper.ignoreFhirClasses();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
   }
@@ -138,9 +136,9 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean
   public Module module() {
+    FhirContext fhirContext = FhirContext.forR4();
     SimpleModule module = new SimpleModule();
-    module.addSerializer(new FhirJsonSerializer());
-    module.addDeserializer(Resource.class, new FhirJsonDeserializer());
+    FhirHelper.initSerializers(module, fhirContext.newJsonParser());
     return module;
   }
 }
