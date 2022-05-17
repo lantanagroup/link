@@ -54,7 +54,7 @@ public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
-
+  private static boolean reportSent = false;
 
   @Autowired
   @Setter
@@ -477,17 +477,13 @@ public class ReportController extends BaseController {
           }
         }
       }
-      /*try {
+      try {
         this.getFhirDataProvider().deleteResource("List", censusID, true);
       } catch (Exception e) {
         logger.error(e.getMessage());
-      }*/
+      }
     }
-    /*try {
-      this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID, true);
-    } catch (Exception e) {
-      logger.error(e.getMessage());
-    }*/
+    reportSent = true;
   }
 
   @GetMapping("/{reportId}/$download")
@@ -530,6 +526,15 @@ public class ReportController extends BaseController {
             documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
     report.setStatus(documentReference.getDocStatus().toString());
     report.setDate(documentReference.getDate());
+
+    if(reportSent) {
+      reportSent = false;
+      try {
+        this.getFhirDataProvider().deleteResource("MeasureReport", reportId, true);
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }
+    }
 
     return report;
   }
