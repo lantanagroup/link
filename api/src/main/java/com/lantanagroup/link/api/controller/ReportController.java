@@ -467,33 +467,35 @@ public class ReportController extends BaseController {
   private void deleteSentData(DocumentReference documentReference) {
     String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
     if(documentReference.getContext().getRelated().size() > 0) {
-      String censusID = documentReference.getContext().getRelated().get(0).getReference().contains("List/")?
-              documentReference.getContext().getRelated().get(0).getReference().substring("List/".length()):documentReference.getContext().getRelated().get(0).getReference();
+      List<ListResource> censusList = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
+      for(ListResource census : censusList) {
+        String censusID = census.getId().contains("List/") && census.getId().contains("/_history")?
+                census.getId().substring("List/".length(), census.getId().indexOf("/_history")):census.getId().contains("List/")?
+                census.getId().substring("List/".length()):census.getId();;
+        for(ListResource.ListEntryComponent entry: census.getEntry()) {
+          if(entry.getItem().getReference() != null) {
+            String patientRef = entry.getItem().getReference().contains("Patient/")?
+                    entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
+            String patientReportID = String.valueOf(patientRef.hashCode());
 
-      List<ListResource> census = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
-      for(ListResource.ListEntryComponent entry: census.get(0).getEntry()) {
-        if(entry.getItem().getReference() != null) {
-          String patientRef = entry.getItem().getReference().contains("Patient/")?
-                  entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
-          String patientReportID = String.valueOf(patientRef.hashCode());
+            try {
+              this.getFhirDataProvider().deleteResource("Bundle", masterMeasureReportID + "-" + patientReportID, true);
+            } catch (Exception e) {
+              logger.error(e.getMessage());
+            }
 
-          try {
-            this.getFhirDataProvider().deleteResource("Bundle", patientReportID, true);
-          } catch (Exception e) {
-            logger.error(e.getMessage());
-          }
-
-          try {
-            this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID + "-" + patientReportID, true);
-          } catch (Exception e) {
-            logger.error(e.getMessage());
+            try {
+              this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID + "-" + patientReportID, true);
+            } catch (Exception e) {
+              logger.error(e.getMessage());
+            }
           }
         }
-      }
-      try {
-        this.getFhirDataProvider().deleteResource("List", censusID, true);
-      } catch (Exception e) {
-        logger.error(e.getMessage());
+        try {
+          this.getFhirDataProvider().deleteResource("List", censusID, true);
+        } catch (Exception e) {
+          logger.error(e.getMessage());
+        }
       }
     }
     reportSent = true;
