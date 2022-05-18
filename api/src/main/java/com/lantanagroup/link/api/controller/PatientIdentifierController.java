@@ -8,7 +8,6 @@ import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/poi")
-@Tag(name = "Patient Identification")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
   private final FhirContext ctx = FhirContext.forR4();

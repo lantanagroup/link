@@ -1,16 +1,12 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +27,6 @@ import java.util.TimeZone;
  * Main REST API for NHSNLink. Entry point for SpringBoot. Initializes as a SpringBootApplication, which
  * hosts controllers defined within the project.
  */
-@OpenAPIDefinition(
-        info = @Info(title = "Link API"),
-        security = { @SecurityRequirement(name = "oauth") })
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.api",
         "com.lantanagroup.link.config",

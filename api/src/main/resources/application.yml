@@ -1,18 +1,3 @@
-springdoc:
-  packages-to-scan: com.lantanagroup.link
-  packages-to-exclude: org.hl7.fhir, org.hl7.fhir.r4.model
-  pre-loading-enabled: true
-  show-login-endpoint: true
-  api-docs:
-    enabled: true
-    path: /api-docs
-    packages-to-exclude: com.lantanagroup.link
-  swagger-ui:
-    disable-swagger-default-url: true
-    enabled: true
-    url: /api/docs
-    path: /api-docs.html
-    oauth2RedirectUrl: http://localhost:8082/swagger-ui/oauth2-redirect.html
 swagger:
   auth-url:
   token-url:

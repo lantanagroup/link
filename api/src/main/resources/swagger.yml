@@ -3,7 +3,7 @@ info:
   version: '1.0'
   title: Link API
 servers:
-  - url: /
+  - url: {{server-base-url}}
     description: This server
 security:
   - oauth: []

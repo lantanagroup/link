@@ -14,7 +14,6 @@ import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -430,7 +429,7 @@ public class ReportController extends BaseController {
    */
   @GetMapping("/{reportId}/$send")
   public void send(
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           @PathVariable String reportId,
           HttpServletRequest request) throws Exception {
 
@@ -505,7 +504,7 @@ public class ReportController extends BaseController {
   public void download(
           @PathVariable String reportId,
           HttpServletResponse response,
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getDownloader()))
@@ -613,7 +612,7 @@ public class ReportController extends BaseController {
   @PutMapping(value = "/{id}")
   public void saveReport(
           @PathVariable("id") String id,
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request,
           @RequestBody ReportSaveModel data) throws Exception {
 
@@ -648,7 +647,7 @@ public class ReportController extends BaseController {
   public PatientDataModel getPatientData(
           @PathVariable("reportId") String reportId,
           @PathVariable("patientId") String patientId,
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request) throws Exception {
 
     String bundleLocation = "";
@@ -821,7 +820,7 @@ public class ReportController extends BaseController {
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
 
@@ -848,7 +847,7 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports(
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request,
           @RequestParam(required = false, defaultValue = "1") Integer page,
           @RequestParam(required = false) String bundleId,
@@ -958,11 +957,11 @@ public class ReportController extends BaseController {
    */
   @PostMapping("/{reportId}/$exclude")
   public ReportModel excludePatients(
-          @Parameter(hidden = true) Authentication authentication,
+          Authentication authentication,
           HttpServletRequest request,
-          @Parameter(hidden = true) @AuthenticationPrincipal LinkCredentials user,
+          @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @Parameter(hidden = true) @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
+          @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(reportId);
 

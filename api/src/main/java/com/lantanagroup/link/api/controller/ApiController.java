@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +41,7 @@ public class ApiController {
   }
 
   @GetMapping(value = "/docs", produces = "text/yaml")
-  public String getDocs() throws IOException {
+  public String getDocs(HttpServletRequest request) throws IOException {
     ClassPathResource resource = new ClassPathResource("swagger.yml");
     InputStream inputStream = resource.getInputStream();
     String content = new BufferedReader(
@@ -60,6 +61,8 @@ public class ApiController {
     for (String scope : this.swaggerConfig.getScope()) {
       content += String.format("            %s: %s\n", scope, scope);
     }
+
+    content = content.replace("{{server-base-url}}", request.getRequestURL().toString().replace("/api/docs", "/"));
 
     return content;
   }
