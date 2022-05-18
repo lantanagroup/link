@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.base.Strings;
 import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +64,9 @@ public class ApiController {
     }
 
     content = content.replace("{{server-base-url}}", request.getRequestURL().toString().replace("/api/docs", "/"));
+
+    ApiInfoModel apiInfoModel = this.getVersionInfo();
+    content = content.replace("{{version}}", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
 
     return content;
   }
