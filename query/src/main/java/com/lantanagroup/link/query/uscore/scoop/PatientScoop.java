@@ -101,6 +101,7 @@ public class PatientScoop extends Scoop {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
       int threshold = queryConfig.getParallelPatients() > 0?queryConfig.getParallelPatients():defaultThreshold ;
+      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
       ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
 
       List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
