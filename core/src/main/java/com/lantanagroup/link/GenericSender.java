@@ -36,12 +36,12 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, String location) {
+  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, String location) {
     logger.info("Building Bundle for MeasureReport to send...");
 
     FhirBundler bundler = new FhirBundler(fhirProvider);
 
-    Bundle bundle = bundler.generateBundle(sendWholeBundle, masterMeasureReport);
+    Bundle bundle = bundler.generateBundle(sendWholeBundle, masterMeasureReport, documentReference);
 
     //String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider);
 
@@ -58,7 +58,6 @@ public abstract class GenericSender {
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
-
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
                             boolean sendWholeBundle) throws Exception {
 
@@ -70,13 +69,12 @@ public abstract class GenericSender {
 
     logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
 
-
     for (FhirSenderUrlOAuthConfig authConfig : this.config.getSendUrls()) {
       logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
       DocumentReference documentReference = fhirProvider.findDocRefForReport(masterMeasureReport.getIdElement().getIdPart());
       String existingLocation = FhirHelper.getDocumentReferenceLocationByUrl(documentReference, authConfig.getUrl());
 
-      Bundle bundle = generateBundle(masterMeasureReport, fhirProvider, sendWholeBundle, existingLocation);
+      Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, existingLocation);
 
       String content = bundle(bundle, fhirProvider);
 
@@ -126,11 +124,12 @@ public abstract class GenericSender {
           if (location.indexOf("/_history/") > 0) {
             location = location.substring(0, location.indexOf("/_history/"));
           }
-          logger.debug("Response location is " + location);
-          // update the location on the DocumentReference
-          updateDocumentLocation(masterMeasureReport, fhirProvider, location);
-        }
 
+          logger.debug("Response location is " + location);
+
+          // update the location on the DocumentReference
+          this.updateDocumentLocation(masterMeasureReport, fhirProvider, location);
+        }
       } catch (IOException ex) {
         if (ex.getMessage().contains("403")) {
           logger.error("Error authorizing send: " + ex.getMessage());

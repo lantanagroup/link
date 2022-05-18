@@ -21,7 +21,6 @@ public class FHIRSender extends GenericSender implements IReportSender {
 
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
-
     sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");

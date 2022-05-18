@@ -56,7 +56,7 @@ public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
-
+  private static boolean reportSent = false;
 
   @Autowired
   @Setter
@@ -267,6 +267,7 @@ public class ReportController extends BaseController {
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
+
   private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
@@ -306,32 +307,15 @@ public class ReportController extends BaseController {
         // (note: this also fixes the references to resources within invalid ids)
         ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
 
+        patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
+
         // Store the data
-        logger.info("Storing data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-        Bundle response = this.getFhirDataProvider().transaction(patientQueryResponse.getBundle());
-
-        response.getEntry().stream()
-                .filter(e -> e.getResponse() != null && e.getResponse().getStatus() != null && !e.getResponse().getStatus().startsWith("20"))   // 200 or 201
-                .forEach(e -> {
-                  if (e.getResponse().getOutcome() != null) {
-                    OperationOutcome outcome = (OperationOutcome) e.getResponse().getOutcome();
-
-                    if (outcome.hasIssue()) {
-                      outcome.getIssue().forEach(i -> {
-                        logger.error(String.format("Entry in response from storing patient data has error: %s", i.getDiagnostics()));
-                      });
-                    } else if (outcome.getText() != null && outcome.getText().getDivAsString() != null) {
-                      logger.error(String.format("Entry in response from storing patient has issue: %s", outcome.getText().getDivAsString()));
-                    }
-                  } else {
-                    logger.error(String.format("An entry in the patient data storage transaction/batch failed without an outcome: %s", e.getResponse().getStatus()));
-                  }
-                });
+        logger.info("Storing patient data bundle Bundle/" + patientQueryResponse.getBundle().getId());
+        this.getFhirDataProvider().updateResource(patientQueryResponse.getBundle());
       }
 
       triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
       return patientQueryResponses;
-
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
       logger.error(msg);
@@ -339,11 +323,9 @@ public class ReportController extends BaseController {
     }
   }
 
-
   private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, boolean regenerate) throws Exception {
     return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
   }
-
 
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
@@ -379,6 +361,8 @@ public class ReportController extends BaseController {
 
       if (existingDocumentReference != null) {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+
+        // TODO: if already submitted, get census lists from patient bundle that has been submitted
       }
 
       // Generate the master report id
@@ -390,7 +374,6 @@ public class ReportController extends BaseController {
         id = existingDocumentReference.getMasterIdentifier().getValue();
         triggerEvent(EventTypes.OnRegeneration, criteria, context);
       }
-
       triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
 
       // Get the patient identifiers for the given date
@@ -405,9 +388,7 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
 
-
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
-
 
       context.setReportId(id);
       response.setReportId(id);
@@ -471,11 +452,53 @@ public class ReportController extends BaseController {
     sender.send(report, request, authentication, this.getFhirDataProvider(),
             this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true);
 
+
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
     logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
+
+    if (this.config.getDeleteAfterSubmission()) {
+      deleteSentData(documentReference);
+    }
+  }
+
+  private void deleteSentData(DocumentReference documentReference) {
+    String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
+    if(documentReference.getContext().getRelated().size() > 0) {
+      List<ListResource> censusList = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
+      for(ListResource census : censusList) {
+        String censusID = census.getId().contains("List/") && census.getId().contains("/_history")?
+                census.getId().substring("List/".length(), census.getId().indexOf("/_history")):census.getId().contains("List/")?
+                census.getId().substring("List/".length()):census.getId();;
+        for(ListResource.ListEntryComponent entry: census.getEntry()) {
+          if(entry.getItem().getReference() != null) {
+            String patientRef = entry.getItem().getReference().contains("Patient/")?
+                    entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
+            String patientReportID = String.valueOf(patientRef.hashCode());
+
+            try {
+              this.getFhirDataProvider().deleteResource("Bundle", masterMeasureReportID + "-" + patientReportID, true);
+            } catch (Exception e) {
+              logger.error(e.getMessage());
+            }
+
+            try {
+              this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID + "-" + patientReportID, true);
+            } catch (Exception e) {
+              logger.error(e.getMessage());
+            }
+          }
+        }
+        try {
+          this.getFhirDataProvider().deleteResource("List", censusID, true);
+        } catch (Exception e) {
+          logger.error(e.getMessage());
+        }
+      }
+    }
+    reportSent = true;
   }
 
   @GetMapping("/{reportId}/$download")
@@ -519,21 +542,30 @@ public class ReportController extends BaseController {
     report.setStatus(documentReference.getDocStatus().toString());
     report.setDate(documentReference.getDate());
 
+    if(reportSent) {
+      reportSent = false;
+      try {
+        this.getFhirDataProvider().deleteResource("MeasureReport", reportId, true);
+      } catch (Exception e) {
+        logger.error(e.getMessage());
+      }
+    }
+
     return report;
   }
 
-
-  @GetMapping(value = "/{id}/patient")
+  @GetMapping(value = "/{reportId}/patient")
   public List<PatientReportModel> getReportPatients(
-          @PathVariable("id") String id) throws Exception {
+          @PathVariable("reportId") String reportId) throws Exception {
 
     String bundleLocation = "";
     Bundle patientBundle = null;
     PatientReportModel report = null;
 
     List<PatientReportModel> reports = new ArrayList();
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+
     // if document submitted and flag is to delete after submission then get the patients from the submitted bundle
     if (!bundleLocation.equals("") && config.getDeleteAfterSubmission()) {
       // get Patients from bundle
@@ -546,9 +578,14 @@ public class ReportController extends BaseController {
       patientRequest.setType(Bundle.BundleType.BATCH);
       // Get the references to the individual patient measure reports from the master
       List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(measureReport);
+
+
+      // TODO: Refactor this to grab census, get each patient in the census
+
       // Retrieve the individual patient measure reports from the server
       List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.getFhirDataProvider());
       for (MeasureReport patientMeasureReport : patientReports) {
+
         patientRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());
         int index = patientRequest.getEntry().size() - 1;
         patientRequest.getEntry().get(index).getRequest().setMethod(Bundle.HTTPVerb.GET);
@@ -558,7 +595,8 @@ public class ReportController extends BaseController {
         patientBundle = this.getFhirDataProvider().transaction(patientRequest);
       }
     }
-    // in both cased add the patients info to patientreportmodel to be displayed in UI
+
+    // in both cases add the patients info to patientreportmodel to be displayed in UI
     if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
         if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {

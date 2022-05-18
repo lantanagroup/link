@@ -37,7 +37,6 @@ public class ReportGenerator {
     this.config = config;
   }
 
-
   private static MeasureReport.MeasureReportGroupPopulationComponent getOrCreateGroupAndPopulation(MeasureReport masterReport, MeasureReport.MeasureReportGroupPopulationComponent reportPopulation, MeasureReport.MeasureReportGroupComponent reportGroup) {
 
     String populationCode = reportPopulation.getCode().getCoding().size() > 0 ? reportPopulation.getCode().getCoding().get(0).getCode() : "";
@@ -255,6 +254,8 @@ public class ReportGenerator {
       return patientMeasureReport;
     }).collect(Collectors.toList());
 
+    // Generate the master measure report
+    MeasureReport masterMeasureReport = generateMasterMeasureReport(criteria, context, patientMeasureReports);
 
     // Save measure report and documentReference
     updateBundle.addEntry()
@@ -280,6 +281,12 @@ public class ReportGenerator {
       UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
       documentReference.setId(documentId.toString());
     }
+
+    // Add the patient census list(s) to the document reference
+    documentReference.getContext().getRelated().clear();
+    documentReference.getContext().getRelated().addAll(this.context.getPatientCensusLists().stream().map(censusList -> new Reference()
+              .setReference("List/" + censusList.getIdElement().getIdPart())).collect(Collectors.toList()));
+
     updateBundle.addEntry()
             .setResource(documentReference)
             .setRequest(new Bundle.BundleEntryRequestComponent()

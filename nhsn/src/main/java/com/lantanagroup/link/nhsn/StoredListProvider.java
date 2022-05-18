@@ -45,9 +45,10 @@ public class StoredListProvider implements IPatientIdProvider {
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
-      // ListResource censusList = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
+      //ListResource censusList = (ListResource) ctx.newJsonParser().parseResource(ctx.newJsonParser().setPrettyPrint(false).encodeResourceToString(bundleResource));
 
       List<PatientOfInterestModel> patientResourceIds = ((ListResource) bundleResource).getEntry().stream().map((patient) -> {
+
         PatientOfInterestModel poi = new PatientOfInterestModel();
         if (patient.getItem().getIdentifier() != null) {
           poi.setIdentifier(patient.getItem().getIdentifier().getSystem() + "|" + patient.getItem().getIdentifier().getValue());

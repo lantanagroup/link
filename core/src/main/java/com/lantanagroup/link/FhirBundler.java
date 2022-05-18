@@ -4,10 +4,7 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class FhirBundler {
@@ -85,7 +82,7 @@ public class FhirBundler {
    * @param masterMeasureReport
    * @return
    */
-  public Bundle generateBundle(boolean allResources, MeasureReport masterMeasureReport) {
+  public Bundle generateBundle(boolean allResources, MeasureReport masterMeasureReport, DocumentReference documentReference) {
     Meta meta = new Meta();
     meta.addProfile(Constants.MeasureReportBundleProfileUrl);
 
@@ -101,6 +98,15 @@ public class FhirBundler {
     // Add the master measure report to the bundle
     bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport, this.fhirDataProvider.ctx));
 
+    // Add census list(s) to the report bundle
+    List<ListResource> censusLists = FhirHelper.getCensusLists(documentReference, this.fhirDataProvider);
+    bundle.getEntry().addAll(censusLists.stream().map(censusList -> {
+      Bundle.BundleEntryComponent newCensusListEntry = new Bundle.BundleEntryComponent();
+      newCensusListEntry.setResource(censusList);
+      return newCensusListEntry;
+    }).collect(Collectors.toList()));
+
+    // If configured to include all resources...
     if (allResources) {
       // Get the references to the individual patient measure reports from the master
       List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(masterMeasureReport);

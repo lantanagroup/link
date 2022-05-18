@@ -15,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
 
@@ -321,4 +324,15 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public void deleteResource(String resourceType, String id, boolean permanent) {
+    try {
+      URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"?_expunge=true":""));
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("DELETE");
+      con.getResponseMessage();
+      con.disconnect();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
 }

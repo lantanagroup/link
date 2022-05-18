@@ -29,6 +29,7 @@ api:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
   send-url:
+  delete-after-submission: true
   cors:
     allowed-origins: '*'
     allowed-headers: '*'
