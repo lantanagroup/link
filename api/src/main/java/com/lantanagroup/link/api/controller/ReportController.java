@@ -397,7 +397,7 @@ public class ReportController extends BaseController {
 
       triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
 
-      List<MeasureReport> reports = generator.generate(criteria, context, context.getPatientData(), existingDocumentReference);
+      List<MeasureReport> reports = generator.generate(criteria, context, context.getPatientData());
 
       triggerEvent(EventTypes.AfterMeasureEval, criteria, context);
 
@@ -1135,7 +1135,7 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
+  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
     try {
       Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
       List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
