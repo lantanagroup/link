@@ -66,7 +66,7 @@ public class FHIRSenderTests {
 
     Bundle bundle = getBundle();
     when(mockFhirDataProvider.transaction(any(Bundle.class))).thenReturn(bundle);
-    mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true);
+    mockSender.send(measureReport, request, authMockInfo.getAuthentication(), mockFhirDataProvider, true, true);
 
     verify(mockSender, times(0)).updateDocumentLocation(any(), any(), any());
   }
@@ -85,7 +85,7 @@ public class FHIRSenderTests {
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
-    doCallRealMethod().when(sender).send(any(), any(), any(), any(), anyBoolean());
+    doCallRealMethod().when(sender).send(any(), any(), any(), any(), anyBoolean(), anyBoolean());
 
     sender.setConfig(config);
 

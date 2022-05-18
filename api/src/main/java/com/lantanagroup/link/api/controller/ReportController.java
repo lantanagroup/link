@@ -457,7 +457,8 @@ public class ReportController extends BaseController {
     // save the DocumentReference before sending report
     this.getFhirDataProvider().updateResource(documentReference);
     sender.send(report, request, authentication, this.getFhirDataProvider(),
-            this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true);
+            this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true,
+            this.config.isRemoveGeneratedObservations());
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 

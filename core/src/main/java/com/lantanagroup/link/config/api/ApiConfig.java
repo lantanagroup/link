@@ -83,6 +83,11 @@ public class ApiConfig {
     private Boolean sendWholeBundle;
 
     /**
+     * <strong>api.remove-generated-observations</strong><br>Whether to remove contained evaluated resources from patient measure reports
+     */
+    private boolean removeGeneratedObservations = true;
+
+    /**
      * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
      */
     private String patientIdResolver;
