@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
 import com.lantanagroup.link.config.SwaggerConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -23,6 +24,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+  @Autowired
+  private ApiConfig apiConfig;
+
   @Autowired
   private SwaggerConfig swaggerConfig;
 
@@ -63,11 +67,28 @@ public class ApiController {
       content += String.format("            %s: %s\n", scope, scope);
     }
 
-    content = content.replace("{{server-base-url}}", request.getRequestURL().toString().replace("/api/docs", "/"));
+    String publicAddress = this.getPublicAddress();
+
+    content = content.replace("{{server-base-url}}",
+            !Strings.isNullOrEmpty(publicAddress) ?
+                    publicAddress + "/docs" :
+                    request.getRequestURL().toString().replace("/api/docs", "/"));
 
     ApiInfoModel apiInfoModel = this.getVersionInfo();
     content = content.replace("{{version}}", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
 
     return content;
+  }
+
+  private String getPublicAddress() {
+    if (Strings.isNullOrEmpty(this.apiConfig.getPublicAddress())) {
+      return null;
+    }
+
+    if (this.apiConfig.getPublicAddress().endsWith("/")) {
+      return this.apiConfig.getPublicAddress().substring(0, this.apiConfig.getPublicAddress().length() - 1);
+    }
+
+    return this.apiConfig.getPublicAddress();
   }
 }

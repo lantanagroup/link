@@ -19,7 +19,13 @@ import java.util.List;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
     /**
-     * <strong>query.require-https</strong><br>Indicates if HTTPS is required for submission urls.
+     * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
+     */
+    @Getter
+    private String publicAddress;
+
+    /**
+     * <strong>api.require-https</strong><br>Indicates if HTTPS is required for submission urls.
      */
     @Getter
     private boolean requireHttps;
