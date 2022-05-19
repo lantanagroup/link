@@ -36,12 +36,12 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, String location) {
+  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeGeneratedObservations, String location) {
     logger.info("Building Bundle for MeasureReport to send...");
 
     FhirBundler bundler = new FhirBundler(fhirProvider);
 
-    Bundle bundle = bundler.generateBundle(sendWholeBundle, masterMeasureReport, documentReference);
+    Bundle bundle = bundler.generateBundle(sendWholeBundle, removeGeneratedObservations, masterMeasureReport, documentReference);
 
     //String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider);
 
@@ -59,7 +59,7 @@ public abstract class GenericSender {
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
-                            boolean sendWholeBundle) throws Exception {
+                            boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
     String location = "";
 
@@ -74,7 +74,7 @@ public abstract class GenericSender {
       DocumentReference documentReference = fhirProvider.findDocRefForReport(masterMeasureReport.getIdElement().getIdPart());
       String existingLocation = FhirHelper.getDocumentReferenceLocationByUrl(documentReference, authConfig.getUrl());
 
-      Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, existingLocation);
+      Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, removeGeneratedObservations, existingLocation);
 
       String content = bundle(bundle, fhirProvider);
 

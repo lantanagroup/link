@@ -19,7 +19,13 @@ import java.util.List;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
     /**
-     * <strong>query.require-https</strong><br>Indicates if HTTPS is required for submission urls.
+     * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
+     */
+    @Getter
+    private String publicAddress;
+
+    /**
+     * <strong>api.require-https</strong><br>Indicates if HTTPS is required for submission urls.
      */
     @Getter
     private boolean requireHttps;
@@ -81,6 +87,11 @@ public class ApiConfig {
      * <strong>api.send-whole-bundle</strong><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
      */
     private Boolean sendWholeBundle;
+
+    /**
+     * <strong>api.remove-generated-observations</strong><br>Whether to remove contained evaluated resources from patient measure reports
+     */
+    private boolean removeGeneratedObservations = true;
 
     /**
      * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for

@@ -44,7 +44,7 @@ public class MeasureReportDownloader implements IReportDownloader {
     //Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider, config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true);
 
     FhirBundler bundler = new FhirBundler(fhirDataProvider);
-    Bundle bundle = bundler.generateBundle(config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true, measureReport, docRefBundle);
+    Bundle bundle = bundler.generateBundle(config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true, config.isRemoveGeneratedObservations(), measureReport, docRefBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
 

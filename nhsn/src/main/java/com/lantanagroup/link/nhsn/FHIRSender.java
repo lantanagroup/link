@@ -20,8 +20,9 @@ public class FHIRSender extends GenericSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
 
   @Override
-  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
-    sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle);
+  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
+
+    sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }

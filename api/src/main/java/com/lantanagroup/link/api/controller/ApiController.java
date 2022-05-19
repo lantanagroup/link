@@ -2,7 +2,9 @@ package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.base.Strings;
 import com.lantanagroup.link.config.SwaggerConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +24,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+  @Autowired
+  private ApiConfig apiConfig;
+
   @Autowired
   private SwaggerConfig swaggerConfig;
 
@@ -40,7 +46,7 @@ public class ApiController {
   }
 
   @GetMapping(value = "/docs", produces = "text/yaml")
-  public String getDocs() throws IOException {
+  public String getDocs(HttpServletRequest request) throws IOException {
     ClassPathResource resource = new ClassPathResource("swagger.yml");
     InputStream inputStream = resource.getInputStream();
     String content = new BufferedReader(
@@ -61,6 +67,28 @@ public class ApiController {
       content += String.format("            %s: %s\n", scope, scope);
     }
 
+    String publicAddress = this.getPublicAddress();
+
+    content = content.replace("{{server-base-url}}",
+            !Strings.isNullOrEmpty(publicAddress) ?
+                    publicAddress.replace("/api", "") :
+                    request.getRequestURL().toString().replace("/api/docs", "/"));
+
+    ApiInfoModel apiInfoModel = this.getVersionInfo();
+    content = content.replace("{{version}}", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
+
     return content;
+  }
+
+  private String getPublicAddress() {
+    if (Strings.isNullOrEmpty(this.apiConfig.getPublicAddress())) {
+      return null;
+    }
+
+    if (this.apiConfig.getPublicAddress().endsWith("/")) {
+      return this.apiConfig.getPublicAddress().substring(0, this.apiConfig.getPublicAddress().length() - 1);
+    }
+
+    return this.apiConfig.getPublicAddress();
   }
 }

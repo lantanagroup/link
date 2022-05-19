@@ -17,13 +17,13 @@ public class CSVSender extends GenericSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(CSVSender.class);
 
   @Override
-  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle) throws Exception {
+  public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
     // TODO: Use Keith's CSV conversion code to convert Bundle to CSV
 
     String csv = "";
 
-    this.sendContent(masterMeasureReport, fhirDataProvider, "text/csv", sendWholeBundle);
+    this.sendContent(masterMeasureReport, fhirDataProvider, "text/csv", sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }

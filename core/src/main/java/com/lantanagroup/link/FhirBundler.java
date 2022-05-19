@@ -78,11 +78,16 @@ public class FhirBundler {
    * Generates a bundle of resources based on the master measure report. Gets all individual measure
    * reports from the master measure report, then gets all the evaluatedResources from the individual
    * measure reports, and bundles them all together.
-   * @param allResources
+   * @param includePopulationSubjectResults
+   * @param removeContainedEvaluatedResources
    * @param masterMeasureReport
    * @return
    */
-  public Bundle generateBundle(boolean allResources, MeasureReport masterMeasureReport, DocumentReference documentReference) {
+  public Bundle generateBundle(
+          boolean includePopulationSubjectResults,
+          boolean removeContainedEvaluatedResources,
+          MeasureReport masterMeasureReport,
+          DocumentReference documentReference) {
     Meta meta = new Meta();
     meta.addProfile(Constants.MeasureReportBundleProfileUrl);
 
@@ -107,7 +112,7 @@ public class FhirBundler {
     }).collect(Collectors.toList()));
 
     // If configured to include all resources...
-    if (allResources) {
+    if (includePopulationSubjectResults) {
       // Get the references to the individual patient measure reports from the master
       List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(masterMeasureReport);
 
@@ -117,7 +122,9 @@ public class FhirBundler {
       for (MeasureReport patientMeasureReport : patientReports) {
         MeasureReport clonedPatientMeasureReport = (MeasureReport) FhirHelper.cleanResource(patientMeasureReport, this.fhirDataProvider.ctx);
 
-        this.removeContainedEvaluatedResource(clonedPatientMeasureReport);
+        if (removeContainedEvaluatedResources) {
+          this.removeContainedEvaluatedResource(clonedPatientMeasureReport);
+        }
 
         // Add the individual patient measure report to the bundle
         bundle.addEntry().setResource(clonedPatientMeasureReport);
