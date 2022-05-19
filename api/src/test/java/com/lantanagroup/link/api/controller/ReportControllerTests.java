@@ -9,7 +9,6 @@ import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.mock.AuthMockInfo;
 import com.lantanagroup.link.mock.MockHelper;
 import com.lantanagroup.link.model.*;
-import com.lantanagroup.link.nhsn.ApplyConceptMaps;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
@@ -271,7 +270,6 @@ public class ReportControllerTests {
     Method mockMethod = ApiConfigEvents.class.getMethod("getBeforePatientDataStore");
     List<String> classes = new ArrayList();
     classes.add("com.lantanagroup.link.nhsn.ApplyConceptMaps");
-    ApplyConceptMaps ac = spy(new ApplyConceptMaps());
     apiConfigEvents.setBeforeReportStore(classes);
     when(apiConfigEvents.getBeforePatientDataStore()).thenCallRealMethod();
     ReflectionTestUtils.setField(apiConfigEvents, "BeforePatientDataStore", classes);
