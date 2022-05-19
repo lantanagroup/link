@@ -71,7 +71,7 @@ public class ApiController {
 
     content = content.replace("{{server-base-url}}",
             !Strings.isNullOrEmpty(publicAddress) ?
-                    publicAddress + "/docs" :
+                    publicAddress :
                     request.getRequestURL().toString().replace("/api/docs", "/"));
 
     ApiInfoModel apiInfoModel = this.getVersionInfo();
