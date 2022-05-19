@@ -56,8 +56,8 @@ public class ReportGeneratorTests {
     List patientIds = new ArrayList();
     patientIds.add("73742177-JAN21");
     ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user);
-    //  MeasureReport masterReport = generator.generate(criteria, context, patientIds, null);
-    //Assert.assertEquals(masterReport.getGroup().get(0).getPopulation().size(), 3);
+    List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
+    generator.store(measureReports, criteria, context, null);
   }
 
   @Test
@@ -81,8 +81,8 @@ public class ReportGeneratorTests {
     context.setReportDefBundle(bundle);
     List patientIds = new ArrayList();
     ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user);
-    //  MeasureReport masterReport = generator.generateAndStore(criteria, context, patientIds, null);
-    //  Assert.assertEquals(masterReport.getGroup().get(0).getPopulation().size(), 3);
+    // List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
+    // generator.store(measureReports, criteria, context, null);
   }
 
 

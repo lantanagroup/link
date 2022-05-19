@@ -213,12 +213,11 @@ public class ReportGenerator {
   /**
    * This method accepts a list of patients and generates an individual measure report for each patient. Then agregates all the individual reports into a master measure report.
    *
-   * @param criteria                  - the report criteria
-   * @param context                   -  the report context
-   * @param queryResponses            - the list of patient id-s and bundle-s to generate reports for
-   * @param existingDocumentReference - the existing document reference
+   * @param criteria       - the report criteria
+   * @param context        -  the report context
+   * @param queryResponses - the list of patient id-s and bundle-s to generate reports for
    */
-  public List<MeasureReport> generate(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses, DocumentReference existingDocumentReference) throws ParseException {
+  public List<MeasureReport> generate(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses) throws ParseException {
     if (this.config.getEvaluationService() == null) {
       throw new ConfigurationException("api.evaluation-service has not been configured");
     }
@@ -237,6 +236,7 @@ public class ReportGenerator {
 
   /**
    * It also stores all individual reports and the master measure report on the Fhir Server. If is regenerating it is reusing the already generated Id-s for all document reference, master measure report and individual reports.
+   * @param existingDocumentReference - the existing document reference
    **/
   public void store(List<MeasureReport> patientMeasureReports, ReportCriteria criteria, ReportContext context, DocumentReference existingDocumentReference) throws ParseException {
 
