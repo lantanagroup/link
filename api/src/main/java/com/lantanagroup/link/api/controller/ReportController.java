@@ -303,10 +303,6 @@ public class ReportController extends BaseController {
                         .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
         );
 
-        // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
-        // (note: this also fixes the references to resources within invalid ids)
-        ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
-
         patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
 
         // Store the data
@@ -391,6 +387,7 @@ public class ReportController extends BaseController {
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
       context.setReportId(id);
+
       response.setReportId(id);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
