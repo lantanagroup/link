@@ -824,6 +824,12 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
 
+    Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
+    Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
+    if(existingVersion >= 1.0f) {
+      throw new HttpResponseException(400, "Bad Request, report version is greater than or equal to 1.0");
+    }
+
     // Make sure the bundle is a transaction
     deleteRequest.setType(Bundle.BundleType.TRANSACTION);
     deleteRequest.addEntry().setRequest(new Bundle.BundleEntryRequestComponent());

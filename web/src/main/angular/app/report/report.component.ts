@@ -33,6 +33,10 @@ export class ReportComponent implements OnInit, OnDestroy {
       private router: Router) {
   }
 
+  get repVersionNumber() {
+    return Number(this.report.version);
+  }
+
   get isSubmitted() {
     if (!this.report) return false;
     return this.report.status === 'FINAL';
