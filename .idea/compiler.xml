@@ -7,7 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="nandina-web" />
+        <module name="web" />
       </profile>
       <profile name="Annotation profile for link" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -20,6 +20,7 @@
         <module name="core" />
         <module name="agent" />
         <module name="thsa" />
+        <module name="measureeval" />
         <module name="nhsn" />
         <module name="query" />
         <module name="api" />
@@ -33,6 +34,7 @@
       <module name="consumer" target="11" />
       <module name="core" target="11" />
       <module name="link" target="1.8" />
+      <module name="measureeval" target="11" />
       <module name="nhsn" target="11" />
       <module name="query" target="11" />
       <module name="thsa" target="11" />
@@ -46,10 +48,11 @@
       <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
       <module name="link" options="" />
-      <module name="nandina-web" options="-parameters" />
+      <module name="measureeval" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
       <module name="thsa" options="-parameters" />
+      <module name="web" options="-parameters" />
     </option>
   </component>
 </project>

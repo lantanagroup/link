@@ -1,0 +1,607 @@
+openapi: 3.0.1
+info:
+  version: '{{version}}'
+  title: Link API
+servers:
+  - url: {{server-base-url}}
+    description: This server
+security:
+  - oauth: []
+tags:
+  - name: API Root
+    description: The root endpoint of the API
+paths:
+  /api/docs:
+    get:
+      tags:
+        - API Root
+      summary: The swagger spec document for this Link's API
+      operationId: getDocs
+      responses:
+        '200':
+          description: default response
+          content:
+            text/yaml:
+              schema:
+                type: string
+      security:
+        - {}
+  /api:
+    get:
+      tags:
+        - API Root
+      summary: Gets version information about this installation of Link's API
+      operationId: getVersionInfo
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiInfoModel'
+      security:
+        - {}
+  /api/poi/csv:
+    post:
+      tags:
+        - Patient Identification
+      summary: Submit a CSV of patients to be included in report generation
+      description: Extracts the patients id/identifier, date and report type, creates a List and persists the List resource in the internal FHIR server to be found/used in report generation
+      operationId: storeCSV
+      parameters:
+        - name: reportTypeId
+          in: query
+          description: The id of the report type (measure) that these patients should be considered for
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
+  /api/poi/fhir/List:
+    post:
+      tags:
+        - Patient Identification
+      summary: Submit a FHIR List of patients to be included in report generation
+      description: Uses the List date and identifier (which indicates the report-type) to find an already-existing List for the date/report-type. If none exists, this List is persisted as-is. Otherwise, updates the existing List to include the patient id/identifier if the patient isn't already part of the List.
+      operationId: getPatientIdentifierListJSON_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          application/xml:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
+  /api/report/{reportId}/$send:
+    get:
+      tags:
+        - Report Management
+      summary: Send/submit the specified report to the consumer/recipient
+      operationId: send
+      parameters:
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+  /api/report/$generate:
+    post:
+      tags:
+        - Report Management
+      summary: Generate a report for given criteria
+      description: Generates a report based on the specified measure and reporting period criteria. Report generation can take time to respond, as it involves querying the configured EHR for data related to the patients identified for the criteria.
+      operationId: generateReport
+      parameters:
+        - name: reportDefIdentifier
+          in: query
+          description: Measure identifier in SYSTEM|CODE format
+          required: true
+          schema:
+            type: string
+        - name: periodStart
+          in: query
+          description: The start date for the reporting period
+          required: true
+          schema:
+            type: string
+          example: YYYY-MM-DDTHH:MM:SS
+        - name: periodEnd
+          in: query
+          description: The end date for the reporting period
+          required: true
+          schema:
+            type: string
+          example: YYYY-MM-DDTHH:MM:SS
+        - name: regenerate
+          in: query
+          description: True to re-generate a report that has already been generated for the specified criteria
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/GenerateResponse'
+  /api/report/{reportId}:
+    get:
+      tags:
+        - Report Management
+      summary: Retrieve the specified report
+      operationId: getReport
+      parameters:
+        - name: reportId
+          in: path
+          description: The logical id of the report to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ReportModel'
+  /api/report/{reportId}/$download:
+    get:
+      tags:
+        - Report Management
+      summary: Download the specified report in XML format
+      operationId: download
+      parameters:
+        - name: reportId
+          in: path
+          description: The logical id of the report to download
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+  /api/report/searchReports:
+    get:
+      tags:
+        - Report Management
+      summary: Search for previously generated reports
+      operationId: searchReports
+      parameters:
+        - name: bundleId
+          in: query
+          description: The paged search identifier
+          required: false
+          schema:
+            type: string
+        - name: author
+          in: query
+          description: The practitioner id of the author
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number to request. Should include bundleId (from previous response) if greater than 1
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: identifier
+          in: query
+          description: Filter results by measure's identifier in the format of SYSTEM|VALUE
+          required: false
+          schema:
+            type: string
+        - name: periodStartDate
+          in: query
+          description: Filter results to only include reports with a reporting period starting after this start date
+          required: false
+          schema:
+            type: string
+            example: YYYY-MM-DD
+        - name: periodEndDate
+          in: query
+          description: Filter results to only include reports with a reporting period starting before this end date
+          required: false
+          schema:
+            type: string
+            example: YYYY-MM-DD
+        - name: docStatus
+          in: query
+          description: Filter results to only include reports that have a specific status
+          required: false
+          schema:
+            type: string
+            enum:
+              - preliminary
+              - final
+        - name: submittedDate
+          in: query
+          description: Filter results to only include reports submitted on the specified date
+          required: false
+          schema:
+            type: string
+            example: YYYY-MM-DD
+      responses:
+        '200':
+          description: default response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportBundle'
+  /api/report/{reportId}/patient/{patientId}:
+    get:
+      tags:
+        - Report Management
+      summary: Get data for the specified patient in the specified report
+      operationId: getPatientData
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PatientDataModel'
+  /api/report/{id}:
+    put:
+      tags:
+        - Report Management
+      summary: Update a report
+      operationId: saveReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportSaveModel'
+      responses:
+        '200':
+          description: default response
+    delete:
+      tags:
+        - Report Management
+      summary: Delete a report
+      operationId: deleteReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+  /api/report/{reportId}/$exclude:
+    post:
+      tags:
+        - Report Management
+      summary: Exclude one or more patients from a report
+      operationId: excludePatients
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExcludedPatientModel'
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ReportModel'
+  /api/report/{id}/patient:
+    get:
+      tags:
+        - Report Management
+      summary: Get a list of the patients in a report
+      operationId: getReportPatients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientReportModel'
+  /api/fhir/api/data/csv:
+    post:
+      tags:
+        - Report Data Submission
+      summary: Submit inventory data in the form of a CSV to be included in future report generation
+      operationId: retrieveCSVData
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - bed
+              - ventilator
+      requestBody:
+        content:
+          text/csv:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
+  /api/fhir/{resourceType}/{resourceId}:
+    put:
+      tags:
+        - Report Data Submission
+      summary: Store a FHIR resource
+      deprecated: true
+      operationId: updateReportData
+      parameters:
+        - name: resourceType
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                type: string
+  /api/fhir/{resourceType}:
+    post:
+      tags:
+        - Report Data Submission
+      summary: Store a FHIR resource
+      deprecated: true
+      operationId: storeReportData
+      parameters:
+        - name: resourceType
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: default response
+  /api/report-definition:
+    get:
+      tags:
+        - Measure Management
+      summary: Gets a list of measures that have been loaded into the installation of Link
+      operationId: getMeasures
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StoredReportDefinition'
+  /api/user:
+    get:
+      tags:
+        - User Management
+      summary: Retrieves a list of users who have accessed Link
+      operationId: getUsers
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserModel'
+components:
+  schemas:
+    ApiInfoModel:
+      type: object
+      properties:
+        build:
+          type: string
+        version:
+          type: string
+    GenerateResponse:
+      type: object
+      properties:
+        reportId:
+          type: string
+    ReportModel:
+      type: object
+      properties:
+        identifier:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+        date:
+          type: string
+          format: date-time
+        measure:
+          type: string
+        measureReport:
+          type: string
+    Report:
+      type: object
+      properties:
+        id:
+          type: string
+        measureIdentifier:
+          type: string
+        status:
+          type: string
+        docStatus:
+          type: string
+        author:
+          type: string
+        periodStartDate:
+          type: string
+        periodEndDate:
+          type: string
+        creationDate:
+          type: string
+          format: date-time
+        submittedDate:
+          type: string
+        note:
+          type: string
+    ReportBundle:
+      type: object
+      properties:
+        reportTypeId:
+          type: string
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/Report'
+        totalSize:
+          type: integer
+          format: int32
+    PatientDataModel:
+      type: object
+      properties:
+        conditions:
+          type: array
+          items:
+            type: string
+        medicationRequests:
+          type: array
+          items:
+            type: string
+        procedures:
+          type: array
+          items:
+            type: string
+        encounters:
+          type: array
+          items:
+            type: string
+        observations:
+          type: array
+          items:
+            type: string
+        serviceRequests:
+          type: array
+          items:
+            type: string
+    PatientReportModel:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sex:
+          type: string
+        dateOfBirth:
+          type: string
+        excluded:
+          type: boolean
+    ReportSaveModel:
+      type: object
+      properties:
+        measureReport:
+          type: string
+    StoredReportDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        system:
+          type: string
+        value:
+          type: string
+    UserModel:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    ExcludedPatientModel:
+      type: object
+      properties:
+        patientId:
+          type: string
+        reason:
+          $ref: '#/components/schemas/CodeableConcept'
+    CodeableConcept:
+      type: object
+      properties:
+        text:
+          type: string
+        coding:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coding'
+    Coding:
+      properties:
+        code:
+          type: string
+        display:
+          type: string
+        system:
+          type: string

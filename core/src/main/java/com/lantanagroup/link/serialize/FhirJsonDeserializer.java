@@ -1,20 +1,23 @@
 package com.lantanagroup.link.serialize;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import org.hl7.fhir.r4.model.Resource;
 
 import java.io.IOException;
 
-public class FhirJsonDeserializer extends JsonDeserializer<Resource> {
+public class FhirJsonDeserializer<T> extends JsonDeserializer<T> {
+  private IParser jsonParser;
+
+  public FhirJsonDeserializer(IParser jsonParser) {
+    this.jsonParser = jsonParser;
+  }
 
   @Override
-  public Resource deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+  public T deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
     String jsonContent = jsonParser.readValueAsTree().toString();
-    FhirContext context = FhirContext.forR4();
-    return (Resource) context.newJsonParser().parseResource(jsonContent);
+    return (T) this.jsonParser.parseResource(jsonContent);
   }
 }

@@ -11,7 +11,7 @@
     <root id="root">
       <element id="directory" name="WEB-INF">
         <element id="directory" name="classes">
-          <element id="module-output" name="nandina-web" />
+          <element id="module-output" name="web" />
         </element>
         <element id="directory" name="lib">
           <element id="archive" name="nandina-core-1.0.0-SNAPSHOT.jar">

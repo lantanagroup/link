@@ -1,7 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.Helper;
@@ -9,8 +8,6 @@ import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +22,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +33,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
-  public static final String REPORT_TYPE_PARAM_DESC = "The id of the report type (measure) that these patients should be considered for";
   private final FhirContext ctx = FhirContext.forR4();
 
   /**
@@ -45,13 +40,10 @@ public class PatientIdentifierController extends BaseController {
    * @param csvContent The content of the CSV
    * @param reportTypeId - the type of the report (ex covid-min) and the format should be system|value
    */
-  @Operation(
-          summary = "Submit a CSV of patients to be included in report generation",
-          description = "Extracts the patients id/identifier, date and report type, creates a List and persists the List resource in the internal FHIR server to be found/used in report generation")
   @PostMapping(value = "/csv", consumes = "text/csv")
   public void storeCSV(
           @RequestBody() String csvContent,
-          @Parameter(description = REPORT_TYPE_PARAM_DESC) @RequestParam String reportTypeId) throws Exception {
+          @RequestParam String reportTypeId) throws Exception {
     logger.debug("Receiving RR FHIR CSV. Parsing...");
     try {
       if (reportTypeId == null || reportTypeId.isBlank()) {
@@ -75,9 +67,6 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
-  @Operation(
-          summary = "Submit a FHIR List of patients to be included in report generation",
-          description = "Uses the List date and identifier (which indicates the report-type) to find an already-existing List for the date/report-type. If none exists, this List is persisted as-is. Otherwise, updates the existing List to include the patient id/identifier if the patient isn't already part of the List.")
   @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
   public void getPatientIdentifierListXML(
           @RequestBody() String body) throws Exception {

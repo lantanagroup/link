@@ -4,12 +4,14 @@
     <file type="web" url="file://$PROJECT_DIR$/agent" />
     <file type="web" url="file://$PROJECT_DIR$/api" />
     <file type="web" url="file://$PROJECT_DIR$/consumer" />
+    <file type="web" url="file://$PROJECT_DIR$/measureeval" />
     <file type="web" url="file://$PROJECT_DIR$/web" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/measureeval/pom.xml" />
       </list>
     </option>
   </component>
