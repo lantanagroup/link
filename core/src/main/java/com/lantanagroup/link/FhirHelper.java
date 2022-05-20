@@ -455,6 +455,7 @@ public class FhirHelper {
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         if (entry.getResource().getResourceType().toString() == "ValueSet"
                 || entry.getResource().getResourceType().toString().equals("CodeSystem")) {
+          entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
           txBundle.addEntry(entry);
         } else {
           returnBundle.addEntry(entry);
