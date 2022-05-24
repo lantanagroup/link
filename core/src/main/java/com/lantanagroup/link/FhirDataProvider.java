@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -322,6 +323,33 @@ public class FhirDataProvider {
             .withTag(system, value)
             .returnBundle(Bundle.class)
             .execute();
+  }
+
+  public void submitAsFhir(String ServerBase, String resourceType, String id) {
+    try {
+      URL url = new URL(ServerBase + "/" + resourceType + "/" + id);
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("PUT");
+      con.getResponseMessage();
+      con.disconnect();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public Resource retrieveAsFhir(String ServerBase, String resourceType, String id) {
+    try {
+      URL url = new URL(ServerBase + "/" + resourceType + "/" + id);
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod("GET");
+      con.getResponseMessage();
+      con.disconnect();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    Resource placeHolder = new Medication();
+    return placeHolder;
   }
 
   public void deleteResource(String resourceType, String id, boolean permanent) {
