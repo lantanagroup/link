@@ -12,8 +12,10 @@ public class FixResourceId implements IReportGenerationEvent {
 
     // Fix resource IDs in the patient data bundle that are invalid (longer than 64 characters)
     // (note: this also fixes the references to resources within invalid ids)
-    for (QueryResponse patientQueryResponse : context.getPatientData())
-      ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
+    if (!context.getPatientData().isEmpty()) {
+      for (QueryResponse patientQueryResponse : context.getPatientData())
+        ResourceIdChanger.changeIds(patientQueryResponse.getBundle());
+    }
   }
 }
 
