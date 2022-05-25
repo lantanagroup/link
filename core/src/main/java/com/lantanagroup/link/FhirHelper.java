@@ -109,17 +109,7 @@ public class FhirHelper {
     }
 
     String remoteAddress;
-    if (request.getHeader("X-FORWARED-FOR") != null) {
-      logger.debug("X-FORWARED-FOR IP is: " + request.getHeader("X-FORWARED-FOR"));
-    }
-
-    if (request.getHeader("X-REAL-IP") != null) {
-      logger.debug("X-REAL-IP is: " + request.getHeader("X-REAL-IP") + " and is being used for remoteAddress");
-      remoteAddress = request.getHeader("X-REAL-IP");
-    } else {
-      logger.debug("X-REAL-IP IP is not found.");
-      remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
-    }
+    remoteAddress = getRemoteAddress(request);
 
     if (remoteAddress != null) {
       agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
@@ -134,6 +124,22 @@ public class FhirHelper {
     auditEvent.setAgent(agentList);
 
     return auditEvent;
+  }
+
+  public static String getRemoteAddress(HttpServletRequest request) {
+    String remoteAddress;
+    if (request.getHeader("X-FORWARED-FOR") != null) {
+      logger.debug("X-FORWARED-FOR IP is: " + request.getHeader("X-FORWARED-FOR"));
+    }
+
+    if (request.getHeader("X-REAL-IP") != null) {
+      logger.debug("X-REAL-IP is: " + request.getHeader("X-REAL-IP") + " and is being used for remoteAddress");
+      remoteAddress = request.getHeader("X-REAL-IP");
+    } else {
+      logger.debug("X-REAL-IP IP is not found.");
+      remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
+    }
+    return remoteAddress;
   }
 
   /**
@@ -453,6 +459,7 @@ public class FhirHelper {
       returnBundle.setType(bundle.getType());
       logger.info("Filtering the measure definition bundle");
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+        entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
         if (entry.getResource().getResourceType().toString() == "ValueSet"
                 || entry.getResource().getResourceType().toString().equals("CodeSystem")) {
           txBundle.addEntry(entry);
