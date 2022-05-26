@@ -26,14 +26,17 @@ api:
       - DELETE
       - PUT
       - OPTIONS
-  terminology:
-    covid-codes-value-set: classpath:2.16.840.1.113762.1.4.1146.1124.xml
-    ventilator-codes-value-set: classpath:mechanical-ventilators.xml
-    intubation-procedure-codes-value-set: classpath:intubation-procedures.xml
   document-reference-system: urn:ietf:rfc:3986
   user:
     timezone: UTC
+  report-defs:
+    max-retry: 5
+    retry-wait: 5000
+  query:
+    mode: Local
 query:
+  require-https: true
+  parallel-patients: 10
   query-class: com.lantanagroup.link.query.uscore.Query
   uscore:
     queries:
