@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 public abstract class GenericSender {
@@ -57,6 +58,10 @@ public abstract class GenericSender {
 
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
+
+  public List<FhirSenderUrlOAuthConfig> getSendLocations() {
+    return this.config.getSendUrls();
+  }
 
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
                             boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {

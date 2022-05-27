@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -358,6 +359,15 @@ public class ReportController extends BaseController {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
 
         // TODO: if already submitted, get census lists from patient bundle that has been submitted
+
+        Class<?> senderClazz = Class.forName(this.config.getSender());
+        IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+
+        Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
+
+        // TODO: Find List(s) with measure identifier (representing the census) in bundle
+
+        // TODO: Assign census list to report context
       }
 
       // Generate the master report id
