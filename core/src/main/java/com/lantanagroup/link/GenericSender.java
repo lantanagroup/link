@@ -124,8 +124,8 @@ public abstract class GenericSender {
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
-        if (response.getHeaders("Location") != null && response.getHeaders("Location").length > 0) {
-          location = response.getHeaders("Location")[0].getElements()[0].getName();
+        if (response.getHeaders("Content-Location") != null && response.getHeaders("Content-Location").length > 0) {
+          location = response.getHeaders("Content-Location")[0].getElements()[0].getName();
           if (location.indexOf("/_history/") > 0) {
             location = location.substring(0, location.indexOf("/_history/"));
           }
