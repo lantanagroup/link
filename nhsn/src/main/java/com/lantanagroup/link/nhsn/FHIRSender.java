@@ -19,8 +19,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 
 
@@ -38,11 +41,11 @@ public class FHIRSender extends GenericSender implements IReportSender {
 
   @Override
   public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
-    String submittedUrl = existingDocumentReference.getContent().get(0).getAttachment().getUrl();
-    if(submittedUrl != null) {
+    HttpClient client = HttpClient.newHttpClient();
+    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
+    if(bundleLocation != null) {
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-              .uri(URI.create(submittedUrl));
-      //.setHeader("if-modified-since", lastUpdateDate);
+              .uri(URI.create(bundleLocation));
 
       LinkOAuthConfig authConfig = apiConfig.getReportDefs().getAuth();
       if (authConfig != null) {
@@ -54,24 +57,24 @@ public class FHIRSender extends GenericSender implements IReportSender {
           return null;
         }
       }
-
+      requestBuilder.GET();
       HttpRequest submissionReq = requestBuilder.build();
-      // TODO: Authenticate based on configuration
-      // TODO: Attach authentication token to submissionReq
-      //HttpResponse submissionRes = submissionReq.getResponse();
-      // TODO: Read response
-    /*FHIRReceiver receiver = new FHIRReceiver();
-    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
-    String content = null;
-    try {
-      content = receiver.retrieveContent(bundleLocation);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }*/
-    }
 
-    //return (Bundle) fhirContext.newJsonParser().parseResource(content);
-    return new Bundle();
+      HttpResponse<String> response = null;
+      try {
+        response = client
+                .send(submissionReq, HttpResponse.BodyHandlers.ofString());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if(response != null) {
+        return (Bundle) fhirContext.newJsonParser().parseResource(response.body());
+      }
+    }
+    return null;
   }
 
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {
