@@ -43,7 +43,7 @@ public class FHIRSender extends GenericSender implements IReportSender {
   public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
     HttpClient client = HttpClient.newHttpClient();
     String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
-    if(bundleLocation != null) {
+    if(bundleLocation != null && !bundleLocation.equals("")) {
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
               .uri(URI.create(bundleLocation));
 

@@ -189,7 +189,7 @@ public class ReportController extends BaseController {
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-    if (context.getPatientCensusLists() != null) {
+    if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
       List<PatientOfInterestModel> patientOfInterestModelList = new ArrayList<>();
       for(ListResource censusList : context.getPatientCensusLists()) {
         for(ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
@@ -376,15 +376,17 @@ public class ReportController extends BaseController {
         IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
         Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-        List<ListResource> censusList = new ArrayList<>();
-        for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
-          if(entry.getResource().getResourceType() == ResourceType.List) {
-            censusList.add((ListResource)entry.getResource());
+        if(submitted != null) {
+          List<ListResource> censusList = new ArrayList<>();
+          for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
+            if(entry.getResource().getResourceType() == ResourceType.List) {
+              censusList.add((ListResource)entry.getResource());
+            }
           }
-        }
 
-        if(censusList.size() > 0) {
-          context.setPatientCensusLists(censusList);
+          if(censusList.size() > 0) {
+            context.setPatientCensusLists(censusList);
+          }
         }
       }
 
