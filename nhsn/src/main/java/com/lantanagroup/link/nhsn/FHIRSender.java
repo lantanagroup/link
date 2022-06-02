@@ -41,40 +41,7 @@ public class FHIRSender extends GenericSender implements IReportSender {
 
   @Override
   public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
-    HttpClient client = HttpClient.newHttpClient();
-    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
-    if(bundleLocation != null && !bundleLocation.equals("")) {
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-              .uri(URI.create(bundleLocation));
-
-      LinkOAuthConfig authConfig = apiConfig.getReportDefs().getAuth();
-      if (authConfig != null) {
-        try {
-          String token = OAuth2Helper.getToken(authConfig);
-          requestBuilder.setHeader("Authorization", "Bearer " + token);
-        } catch (Exception ex) {
-          logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
-          return null;
-        }
-      }
-      requestBuilder.GET();
-      HttpRequest submissionReq = requestBuilder.build();
-
-      HttpResponse<String> response = null;
-      try {
-        response = client
-                .send(submissionReq, HttpResponse.BodyHandlers.ofString());
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-
-      if(response != null) {
-        return (Bundle) fhirContext.newJsonParser().parseResource(response.body());
-      }
-    }
-    return null;
+    return retrieveContent(apiConfig, fhirContext, existingDocumentReference);
   }
 
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {

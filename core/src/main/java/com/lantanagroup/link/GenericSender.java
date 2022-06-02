@@ -1,6 +1,9 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
@@ -26,6 +29,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -145,6 +150,43 @@ public abstract class GenericSender {
       }
     }
     return location;
+  }
+
+  public Bundle retrieveContent(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
+    java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
+    if(bundleLocation != null && !bundleLocation.equals("")) {
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+              .uri(URI.create(bundleLocation));
+
+      LinkOAuthConfig authConfig = apiConfig.getReportDefs().getAuth();
+      if (authConfig != null) {
+        try {
+          String token = OAuth2Helper.getToken(authConfig);
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        } catch (Exception ex) {
+          logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
+          return null;
+        }
+      }
+      requestBuilder.GET();
+      HttpRequest submissionReq = requestBuilder.build();
+
+      java.net.http.HttpResponse<String> response = null;
+      try {
+        response = client
+                .send(submissionReq, java.net.http.HttpResponse.BodyHandlers.ofString());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if(response != null) {
+        return (Bundle) fhirContext.newJsonParser().parseResource(response.body());
+      }
+    }
+    return new Bundle();
   }
 
   public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {

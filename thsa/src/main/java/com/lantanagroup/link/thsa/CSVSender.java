@@ -32,8 +32,8 @@ public class CSVSender extends GenericSender implements IReportSender {
   }
 
   @Override
-  public Bundle retrieve(ApiConfig config, FhirContext fhirContext, DocumentReference existingDocumentReference) {
-    return null;
+  public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
+    return retrieveContent(apiConfig, fhirContext, existingDocumentReference);
   }
 
 

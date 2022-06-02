@@ -376,7 +376,7 @@ public class ReportController extends BaseController {
         IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
         Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-        if(submitted != null) {
+        if(submitted != null && submitted.getEntry().size() > 0) {
           List<ListResource> censusList = new ArrayList<>();
           for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
             if(entry.getResource().getResourceType() == ResourceType.List) {
