@@ -33,7 +33,7 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     String authHeader = ((HttpServletRequest) request).getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       DecodedJWT jwt = JWT.decode(authHeader.substring(7));
-      if (!"0:0:0:0:0:0:0:1(0:0:0:0:0:0:0:1)".equals(ipAddress) && !jwt.getClaim("ip").asString().equals(ipAddress)) {
+      if (!jwt.getClaim("ip").isNull() && !"0:0:0:0:0:0:0:1(0:0:0:0:0:0:0:1)".equals(ipAddress) && !jwt.getClaim("ip").asString().equals(ipAddress)) {
         throw new JWTVerificationException("IP Address does not match.");
       }
     }
