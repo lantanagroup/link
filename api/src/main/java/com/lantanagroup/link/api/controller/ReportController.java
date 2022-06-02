@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -188,11 +189,25 @@ public class ReportController extends BaseController {
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-    IPatientIdProvider provider;
-    Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
-    Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
-    provider = (IPatientIdProvider) patientIdentifierConstructor.newInstance();
-    return provider.getPatientsOfInterest(criteria, context, this.config);
+    if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
+      List<PatientOfInterestModel> patientOfInterestModelList = new ArrayList<>();
+      for(ListResource censusList : context.getPatientCensusLists()) {
+        for(ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
+          PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
+                  censusPatient.getItem().getIdentifier().getSystem() + "|" + censusPatient.getItem().getIdentifier().getValue());
+          patientOfInterestModelList.add(patient);
+        }
+      }
+      context.setPatientsOfInterest(patientOfInterestModelList);
+      return patientOfInterestModelList;
+    }
+    else {
+      IPatientIdProvider provider;
+      Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
+      Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
+      provider = (IPatientIdProvider) patientIdentifierConstructor.newInstance();
+      return provider.getPatientsOfInterest(criteria, context, this.config);
+    }
   }
 
   private List<QueryResponse> getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
@@ -357,7 +372,20 @@ public class ReportController extends BaseController {
       if (existingDocumentReference != null) {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
 
-        // TODO: if already submitted, get census lists from patient bundle that has been submitted
+        Class<?> senderClazz = Class.forName(this.config.getSender());
+        IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+
+        Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
+        if(submitted != null && submitted.getEntry().size() > 0) {
+          List<ListResource> censusList = new ArrayList<>();
+          for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
+            if(entry.getResource().getResourceType() == ResourceType.List) {
+              censusList.add((ListResource)entry.getResource());
+              this.getFhirDataProvider().updateResource(entry.getResource());
+            }
+          }
+          context.setPatientCensusLists(censusList);
+        }
       }
 
       // Generate the master report id

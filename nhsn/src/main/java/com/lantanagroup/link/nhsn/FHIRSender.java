@@ -1,11 +1,17 @@
 package com.lantanagroup.link.nhsn;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
+import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +19,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.List;
 
 
 @Component
@@ -25,6 +37,11 @@ public class FHIRSender extends GenericSender implements IReportSender {
     sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
+  }
+
+  @Override
+  public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
+    return retrieveContent(apiConfig, fhirContext, existingDocumentReference);
   }
 
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {

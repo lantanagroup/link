@@ -1,6 +1,9 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
@@ -26,7 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 public abstract class GenericSender {
@@ -57,6 +63,10 @@ public abstract class GenericSender {
 
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
+
+  public List<FhirSenderUrlOAuthConfig> getSendLocations() {
+    return this.config.getSendUrls();
+  }
 
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
                             boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
@@ -119,8 +129,8 @@ public abstract class GenericSender {
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
-        if (response.getHeaders("Location") != null && response.getHeaders("Location").length > 0) {
-          location = response.getHeaders("Location")[0].getElements()[0].getName();
+        if (response.getHeaders("Content-Location") != null && response.getHeaders("Content-Location").length > 0) {
+          location = response.getHeaders("Content-Location")[0].getElements()[0].getName();
           if (location.indexOf("/_history/") > 0) {
             location = location.substring(0, location.indexOf("/_history/"));
           }
@@ -142,11 +152,55 @@ public abstract class GenericSender {
     return location;
   }
 
-  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String
-          location) {
+  public Bundle retrieveContent(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
+    java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
+    if(bundleLocation != null && !bundleLocation.equals("")) {
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+              .uri(URI.create(bundleLocation));
+
+      LinkOAuthConfig authConfig = apiConfig.getReportDefs().getAuth();
+      if (authConfig != null) {
+        try {
+          String token = OAuth2Helper.getToken(authConfig);
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        } catch (Exception ex) {
+          logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
+          return null;
+        }
+      }
+      requestBuilder.GET();
+      HttpRequest submissionReq = requestBuilder.build();
+
+      java.net.http.HttpResponse<String> response = null;
+      try {
+        response = client
+                .send(submissionReq, java.net.http.HttpResponse.BodyHandlers.ofString());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+
+      if(response != null) {
+        return (Bundle) fhirContext.newJsonParser().parseResource(response.body());
+      }
+    }
+    return new Bundle();
+  }
+
+  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {
     String reportID = masterMeasureReport.getIdElement().getIdPart();
     DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
+      String previousLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+      if(previousLocation != null && !previousLocation.equals("")) {
+        for (int index = documentReference.getContent().size() - 1; index > -1; index--) {
+          if (documentReference.getContent().get(index).hasAttachment() && documentReference.getContent().get(index).getAttachment().hasUrl()) {
+            documentReference.getContent().remove(index);
+          }
+        }
+      }
       documentReference.getContent().add(new DocumentReference.DocumentReferenceContentComponent());
       Attachment attachment = new Attachment();
       attachment.setUrl(location);
