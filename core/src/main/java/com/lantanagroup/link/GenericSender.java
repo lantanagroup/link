@@ -147,11 +147,18 @@ public abstract class GenericSender {
     return location;
   }
 
-  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String
-          location) {
+  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {
     String reportID = masterMeasureReport.getIdElement().getIdPart();
     DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
+      String previousLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+      if(previousLocation != null && !previousLocation.equals("")) {
+        for (int index = documentReference.getContent().size() - 1; index > -1; index--) {
+          if (documentReference.getContent().get(index).hasAttachment() && documentReference.getContent().get(index).getAttachment().hasUrl()) {
+            documentReference.getContent().remove(index);
+          }
+        }
+      }
       documentReference.getContent().add(new DocumentReference.DocumentReferenceContentComponent());
       Attachment attachment = new Attachment();
       attachment.setUrl(location);

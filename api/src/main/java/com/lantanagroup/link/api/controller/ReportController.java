@@ -381,12 +381,10 @@ public class ReportController extends BaseController {
           for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
             if(entry.getResource().getResourceType() == ResourceType.List) {
               censusList.add((ListResource)entry.getResource());
+              this.getFhirDataProvider().updateResource(entry.getResource());
             }
           }
-
-          if(censusList.size() > 0) {
-            context.setPatientCensusLists(censusList);
-          }
+          context.setPatientCensusLists(censusList);
         }
       }
 
