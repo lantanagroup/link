@@ -849,7 +849,7 @@ public class ReportController extends BaseController {
                     documentReferenceId + " and MeasureReport " + documentReference.getMasterIdentifier().getValue());
   }
 
-  @GetMapping(value = "/searchReports", produces = {MediaType.APPLICATION_JSON_VALUE})
+  @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE})
   public ReportBundle searchReports(
           Authentication authentication,
           HttpServletRequest request,
