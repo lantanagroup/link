@@ -304,7 +304,6 @@ public class ReportController extends BaseController {
 
       context.setConceptMaps(getConceptMaps());
 
-      triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
 
       // store patient data
       for (QueryResponse patientQueryResponse : patientQueryResponses) {
@@ -410,6 +409,8 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
+
+      triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
