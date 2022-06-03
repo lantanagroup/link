@@ -173,7 +173,7 @@ paths:
       responses:
         '200':
           description: default response
-  /api/report/searchReports:
+  /api/report:
     get:
       tags:
         - Report Management
