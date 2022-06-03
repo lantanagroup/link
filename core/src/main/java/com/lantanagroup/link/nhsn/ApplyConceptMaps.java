@@ -1,6 +1,5 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.model.QueryResponse;
@@ -27,8 +26,8 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
         List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
         // preserve original code
         Extension originalCode = new Extension();
-        originalCode.setUrl(Constants.ConceptMappingExtension);
-        originalCode.setValue(code.copy());
+        originalCode.setUrl("https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept");
+        originalCode.setValue(code);
         code.getExtension().add(originalCode);
         // pick the last element from list
         code.setSystem(group.getTarget());

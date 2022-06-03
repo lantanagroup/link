@@ -19,5 +19,4 @@ public class Constants {
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";
   public static final String TerminologyEndpointSystem = "http://terminology.hl7.org/CodeSystem/endpoint-connection-type";
-  public static final String ConceptMappingExtension = "https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept";
 }
