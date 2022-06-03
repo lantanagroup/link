@@ -371,57 +371,6 @@ paths:
       responses:
         '200':
           description: default response
-  /api/fhir/{resourceType}/{resourceId}:
-    put:
-      tags:
-        - Report Data Submission
-      summary: Store a FHIR resource
-      deprecated: true
-      operationId: updateReportData
-      parameters:
-        - name: resourceType
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: resourceId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-      responses:
-        '200':
-          description: default response
-          content:
-            'application/json':
-              schema:
-                type: string
-  /api/fhir/{resourceType}:
-    post:
-      tags:
-        - Report Data Submission
-      summary: Store a FHIR resource
-      deprecated: true
-      operationId: storeReportData
-      parameters:
-        - name: resourceType
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
-      responses:
-        '200':
-          description: default response
   /api/report-definition:
     get:
       tags:
