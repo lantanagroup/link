@@ -16,7 +16,7 @@
         <spring.boot.version>5.3.9.RELEASE</spring.boot.version>
         <spring.boot.starter.version>2.5.4</spring.boot.starter.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
-        <lombok.version>1.18.16</lombok.version>
+        <lombok.version>1.18.22</lombok.version>
         <mockito.version>3.12.4</mockito.version>
         <hapi.lib.version>4.2.0</hapi.lib.version>
         <saxon.version>9.9.1-5</saxon.version>
@@ -105,7 +105,7 @@
             <plugin>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok-maven-plugin</artifactId>
-                <version>1.18.16.0</version>
+                <version>1.18.20.0</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
