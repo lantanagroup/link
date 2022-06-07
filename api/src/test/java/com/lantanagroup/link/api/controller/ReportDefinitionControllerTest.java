@@ -6,7 +6,7 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.mock.AuthMockInfo;
 import com.lantanagroup.link.mock.MockHelper;
-import com.lantanagroup.link.model.StoredReportDefinition;
+import com.lantanagroup.link.model.StoredMeasure;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.junit.Assert;
@@ -59,7 +59,7 @@ public class ReportDefinitionControllerTest {
 
     when(fhirDataProvider.searchBundleByTag(Constants.MainSystem, Constants.ReportDefinitionTag)).thenReturn(responseBundleTest);
 
-    List<StoredReportDefinition> measures = reportDefinitionControllerTest.getMeasures(authMock.getAuthentication(), request);
+    List<StoredMeasure> measures = reportDefinitionControllerTest.getMeasures(authMock.getAuthentication(), request);
     Assert.assertEquals( 1, measures.size());
     Assert.assertEquals("testMeasureTitle", measures.get(0).getName());
   }
