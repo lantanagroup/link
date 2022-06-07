@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
+import org.checkerframework.checker.units.qual.A;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -1165,6 +1166,43 @@ public class ReportController extends BaseController {
     report.setDate(reportDocRef.getDate());
 
     return report;
+  }
+
+  private List<Bundle> getPatientBundles(DocumentReference docRef, String reportId, String patientId) {
+    List<Bundle> patientBundles = new ArrayList<>();
+
+    Class<?> senderClazz = null;
+    try {
+      senderClazz = Class.forName(this.config.getSender());
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+    Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
+    if(submitted != null && submitted.getEntry().size() > 0) {
+      for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
+        if(patientId == null && patientId.equals("")) {
+          if (Entry.hasFullUrl() && Entry.getFullUrl().contains("MeasureReport")) {
+            Bundle patientBundle = new Bundle();
+            //ResourceIdChanger.findReferences();
+            patientBundles.add(patientBundle);
+          }
+        }
+        else {
+          List<Reference> ref = ResourceIdChanger.findReferences(patientId);
+        }
+      }
+    }
+    else
+    {
+      MeasureReport report = this.getFhirDataProvider().getMeasureReportById(docRef.getMasterIdentifier().getValue());
+      for(MeasureReport.MeasureReportGroupComponent component : report.getGroup()) {
+
+      }
+    }
+
+
+    return patientBundles;
   }
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
