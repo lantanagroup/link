@@ -6,12 +6,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.r4.model.Resource;
 
 import java.io.IOException;
 
 public class ReportSaveModelDeserializer extends JsonDeserializer<Resource>{
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
 
     @Override
     public Resource deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException{

@@ -3,6 +3,7 @@ package com.lantanagroup.link.query;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import lombok.Getter;
@@ -29,7 +30,7 @@ public class BaseQuery {
       return this.fhirContext;
     }
 
-    this.fhirContext = FhirContext.forR4();
+    this.fhirContext = FhirContextProvider.getFhirContext();
     return this.fhirContext;
   }
 

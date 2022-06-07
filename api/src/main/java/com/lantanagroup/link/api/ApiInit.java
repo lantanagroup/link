@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.OAuth2Helper;
@@ -229,7 +230,7 @@ public class ApiInit {
 
   private void loadSearchParameters() {
     try {
-      FhirContext ctx = FhirContext.forR4();
+      FhirContext ctx = FhirContextProvider.getFhirContext();
       IParser xmlParser = ctx.newXmlParser();
       for (final Resource res : resources) {
         IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());

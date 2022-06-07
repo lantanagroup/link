@@ -3,6 +3,7 @@ package com.lantanagroup.link.measureeval;
 import ca.uhn.fhir.context.FhirContext;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +22,7 @@ public class MeasureEvalApplication extends SpringBootServletInitializer {
 
   @Bean
   public FhirContext ctx() {
-    return FhirContext.forR4();
+    return FhirContextProvider.getFhirContext();
   }
 
   /**

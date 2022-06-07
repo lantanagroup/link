@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -89,14 +90,14 @@ public class ReportGeneratorTests {
   private Measure getMeasure() throws IOException {
     File measure = resourceLoader.getResource("classpath:report-generator-measure.json").getFile();
     String measureJson = FileUtils.readFileToString(measure, StandardCharsets.UTF_8);
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(Measure.class, measureJson);
   }
 
   private MeasureReport getMeasureReport() throws IOException {
     File measureReport = resourceLoader.getResource("classpath:report-generator-measure-report.json").getFile();
     String measureReportJson = FileUtils.readFileToString(measureReport, StandardCharsets.UTF_8);
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson.toString());
   }
 }

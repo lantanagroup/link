@@ -18,7 +18,7 @@ import java.util.*;
 
 public class TerminologyHelper {
   protected static final Logger logger = LoggerFactory.getLogger(TerminologyHelper.class);
-  private FhirContext ctx = FhirContext.forR4();
+  private FhirContext ctx = FhirContextProvider.getFhirContext();
   private IParser xmlParser = ctx.newXmlParser();
   private Map<String, Set<String>> codeSets = new HashMap<String, Set<String>>();
 
