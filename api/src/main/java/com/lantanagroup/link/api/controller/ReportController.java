@@ -1168,39 +1168,62 @@ public class ReportController extends BaseController {
     return report;
   }
 
+  private Bundle getPatientBundle(Object obj) {
+    Bundle patientBundle = new Bundle();
+    List<Reference> refs = ResourceIdChanger.findReferences(obj);
+    for(Reference ref : refs) {
+      String[] refParts = ref.getReference().split("/");
+      if(refParts.length > 1) {
+        Resource resource = (Resource)this.getFhirDataProvider().getResource(refParts[0], refParts[1]);
+        Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
+        patientBundle.addEntry(component);
+      }
+    }
+    return patientBundle;
+  }
+
   private List<Bundle> getPatientBundles(DocumentReference docRef, String reportId, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
 
-    Class<?> senderClazz = null;
-    try {
-      senderClazz = Class.forName(this.config.getSender());
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+    if(patientId != null && !patientId.equals("")) {
+      Bundle patientBundle = getPatientBundle(patientId);
+      patientBundles.add(patientBundle);
     }
-    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-    Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
-    if(submitted != null && submitted.getEntry().size() > 0) {
-      for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
-        if(patientId == null && patientId.equals("")) {
+    else {
+
+      Class<?> senderClazz = null;
+      try {
+        senderClazz = Class.forName(this.config.getSender());
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+      IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+      Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
+
+      if(submitted != null && submitted.getEntry().size() > 0) {
+        for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
           if (Entry.hasFullUrl() && Entry.getFullUrl().contains("MeasureReport")) {
-            Bundle patientBundle = new Bundle();
-            //ResourceIdChanger.findReferences();
+            String[] refParts = Entry.getFullUrl().split("/");
+            Bundle patientBundle = getPatientBundle(refParts[refParts.length-1]);
             patientBundles.add(patientBundle);
           }
         }
-        else {
-          List<Reference> ref = ResourceIdChanger.findReferences(patientId);
+      }
+      else
+      {
+        MeasureReport report = this.getFhirDataProvider().getMeasureReportById(docRef.getMasterIdentifier().getValue());
+        for(MeasureReport.MeasureReportGroupComponent component : report.getGroup()) {
+          for(MeasureReport.MeasureReportGroupPopulationComponent population : component.getPopulation()) {
+            ListResource listResource = (ListResource)population.getSubjectResults().getResource();
+            for(ListResource.ListEntryComponent patient : listResource.getEntry()) {
+              String[] refParts = patient.getItem().getReference().split("/");
+              Bundle patientBundle = getPatientBundle(refParts[refParts.length-1]);
+              patientBundles.add(patientBundle);
+            }
+          }
         }
       }
     }
-    else
-    {
-      MeasureReport report = this.getFhirDataProvider().getMeasureReportById(docRef.getMasterIdentifier().getValue());
-      for(MeasureReport.MeasureReportGroupComponent component : report.getGroup()) {
-
-      }
-    }
-
 
     return patientBundles;
   }
