@@ -60,7 +60,7 @@ public class ApiInit {
     }
 
     this.config.getReportDefs().getUrls().parallelStream().forEach(measureDefUrl -> {
-      logger.info(String.format("Getting the latest report definition from URL %s", measureDefUrl));
+      logger.info(String.format("Getting the latest measure from URL %s", measureDefUrl));
 
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
               .uri(URI.create(measureDefUrl));
@@ -98,14 +98,14 @@ public class ApiInit {
         } catch (ConnectException ex) {
           retryCount++;
 
-          logger.error(String.format("Error loading report definition from URL %s due to a connection issue", measureDefUrl));
+          logger.error(String.format("Error loading measure from URL %s due to a connection issue", measureDefUrl));
           if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
-            logger.info(String.format("Retrying to retrieve report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+            logger.info(String.format("Retrying to retrieve measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
           } else if (this.config.getReportDefs().getRetryWait() <= 0) {
             logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
             return;
           } else {
-            logger.error(String.format("Reached maximum retry attempts for report definition %s", measureDefUrl));
+            logger.error(String.format("Reached maximum retry attempts for measure %s", measureDefUrl));
             return;
           }
 
@@ -121,7 +121,7 @@ public class ApiInit {
       }
 
       if (Strings.isEmpty(content)) {
-        logger.error(String.format("Could not retrieve report definition at %s", measureDefUrl));
+        logger.error(String.format("Could not retrieve measure at %s", measureDefUrl));
         return;
       }
 
@@ -185,14 +185,14 @@ public class ApiInit {
         } catch (FhirClientConnectionException fcce) {
           retryCount++;
 
-          logger.error(String.format("Error storing report definition from URL %s in internal FHIR store due to a connection issue", measureDefUrl));
+          logger.error(String.format("Error storing measure from URL %s in internal FHIR store due to a connection issue", measureDefUrl));
           if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
-            logger.info(String.format("Retrying to store report definition in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+            logger.info(String.format("Retrying to store measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
           } else if (this.config.getReportDefs().getRetryWait() <= 0) {
             logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
             return;
           } else {
-            logger.error(String.format("Reached maximum retry attempts to store report definition %s", measureDefUrl));
+            logger.error(String.format("Reached maximum retry attempts to store measure %s", measureDefUrl));
             return;
           }
 
