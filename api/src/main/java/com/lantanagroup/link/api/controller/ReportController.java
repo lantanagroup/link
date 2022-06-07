@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -119,14 +118,14 @@ public class ReportController extends BaseController {
             criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
             criteria.getReportDefIdentifier();
 
-    // Find the report definition bundle for the given ID
+    // Find the measure bundle for the given ID
     Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
 
     if (reportDefBundle == null) {
-      throw new Exception("Did not find report definition with ID " + criteria.getReportDefId());
+      throw new Exception("Did not find measure with ID " + criteria.getReportDefId());
     }
 
-    // check if the remote report definition build is newer
+    // check if the remote measure build is newer
     SimpleDateFormat formatter = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
     String lastUpdateDate = formatter.format(reportDefBundle.getMeta().getLastUpdated());
 
@@ -178,13 +177,13 @@ public class ReportController extends BaseController {
     }
 
     try {
-      // Store the resources in the report definition bundle on the internal FHIR server
-      logger.info("Storing the resources for the report definition " + criteria.getReportDefId());
+      // Store the resources in the measure bundle on the internal FHIR server
+      logger.info("Storing the resources for the measure " + criteria.getReportDefId());
       this.storeReportBundleResources(reportDefBundle, context);
       context.setReportDefBundle(reportDefBundle);
     } catch (Exception ex) {
-      logger.error("Error storing resources for the report definition " + criteria.getReportDefId() + ": " + ex.getMessage());
-      throw new Exception("Error storing resources for the report definition: " + ex.getMessage(), ex);
+      logger.error("Error storing resources for the measure " + criteria.getReportDefId() + ": " + ex.getMessage());
+      throw new Exception("Error storing resources for the measure: " + ex.getMessage(), ex);
     }
   }
 

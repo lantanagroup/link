@@ -110,7 +110,7 @@ public class ApiConfig {
     private ApiCorsConfig cors;
 
     /**
-     * <strong>api.report-defs</strong><br>Configuration for report definitions supported by the system
+     * <strong>api.report-defs</strong><br>Configuration for measures supported by the system
      */
     @Getter
     private ApiReportDefsConfig reportDefs;

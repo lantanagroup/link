@@ -371,7 +371,7 @@ paths:
       responses:
         '200':
           description: default response
-  /api/report-definition:
+  /api/measure:
     get:
       tags:
         - Measure Management
@@ -385,7 +385,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/StoredReportDefinition'
+                  $ref: '#/components/schemas/StoredMeasure'
   /api/user:
     get:
       tags:
@@ -512,7 +512,7 @@ components:
       properties:
         measureReport:
           type: string
-    StoredReportDefinition:
+    StoredMeasure:
       type: object
       properties:
         id:
