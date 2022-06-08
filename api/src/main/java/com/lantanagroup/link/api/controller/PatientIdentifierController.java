@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
-  private final FhirContext ctx = FhirContext.forR4();
 
   /**
    * Posts a csv file with Patient Identifiers and Dates to the Fhir server.

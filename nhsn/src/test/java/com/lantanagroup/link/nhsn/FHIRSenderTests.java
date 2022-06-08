@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICreate;
 import ca.uhn.fhir.rest.gclient.ITransaction;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
@@ -52,7 +53,7 @@ public class FHIRSenderTests {
     when(mockFhirDataProvider.getClient()).thenReturn(mockFhirStoreClient);
     String xml = "<Bundle xmlns='http://hl7.org/fhir'><meta><tag><system value='https://nhsnlink.org'/><code value='report-bundle'/></tag></meta><type value='collection'/><entry><resource><MeasureReport xmlns='http://hl7.org/fhir'><evaluatedResource><reference value='Patient/testPatient1'/></evaluatedResource><evaluatedResource><reference value='Condition/testCondition1'/></evaluatedResource></MeasureReport></resource></entry></Bundle>";
     when(mockFhirDataProvider.bundleToXml(any(Bundle.class))).thenReturn(xml);
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
     //when(mockSender.generateBundle(any(), any(), any(), any())).thenReturn(new Bundle());
@@ -94,13 +95,13 @@ public class FHIRSenderTests {
 
   private MeasureReport getMasterMeasureReport() throws IOException {
     String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }
 
   private MeasureReport getMeasureReport() throws IOException {
     String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-measure-report.json"));
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }
 
@@ -142,7 +143,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Bundle requestBundle = (Bundle) FhirContext.forR4().newXmlParser().parseResource(content);
+        Bundle requestBundle = (Bundle) FhirContextProvider.getFhirContext().newXmlParser().parseResource(content);
         Assert.assertNotNull(requestBundle);
         Assert.assertEquals(httpEntityEnclosingRequest.getHeaders("Authorization").length, 0);
         return true;
@@ -223,7 +224,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Bundle requestBundle = (Bundle) FhirContext.forR4().newXmlParser().parseResource(content);
+        Bundle requestBundle = (Bundle) FhirContextProvider.getFhirContext().newXmlParser().parseResource(content);
         Assert.assertNotNull(requestBundle);
         Header[] headers = httpEntityEnclosingRequest.getHeaders("Authorization");
         Assert.assertEquals(headers.length, 1);

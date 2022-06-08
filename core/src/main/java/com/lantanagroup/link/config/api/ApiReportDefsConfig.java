@@ -9,7 +9,7 @@ import java.util.List;
 @Getter @Setter
 public class ApiReportDefsConfig {
   /**
-   * <strong>api.report-defs.max-retry</strong><br>The number of times the API should try to retrieve and store the report definitions.
+   * <strong>api.report-defs.max-retry</strong><br>The number of times the API should try to retrieve and store the measures.
    */
   public Integer maxRetry = 5;
 
@@ -19,7 +19,7 @@ public class ApiReportDefsConfig {
   public Integer retryWait = 5000;
 
   /**
-   * <strong>api.report-defs.urls</strong><br>A list of the URLs for each report definition that should be supported by the system.
+   * <strong>api.report-defs.urls</strong><br>A list of the URLs for each measure that should be supported by the system.
    */
   public List<String> urls;
 

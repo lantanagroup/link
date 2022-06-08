@@ -9,7 +9,7 @@ export class ReportDefinitionService {
   }
 
   getReportDefinitions() {
-    const url = this.configService.getApiUrl('report-definition');
+    const url = this.configService.getApiUrl('measure');
     return this.http.get<StoredReportDefinition[]>(url).toPromise();
   }
 }

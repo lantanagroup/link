@@ -26,7 +26,7 @@ public class FhirDataProvider {
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
   private static final String ReportDocRefSystem = "urn:ietf:rfc:3986";
-  protected FhirContext ctx = FhirContext.forR4();
+  protected FhirContext ctx = FhirContextProvider.getFhirContext();
 
   @Getter
   private IGenericClient client;

@@ -1,6 +1,7 @@
 package com.lantanagroup.link.spring;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.springframework.http.HttpInputMessage;
@@ -47,7 +48,7 @@ public class FhirMessageConverter implements HttpMessageConverter {
 
   @Override
   public void write(Object o, MediaType mediaType, HttpOutputMessage httpOutputMessage) throws IOException, HttpMessageNotWritableException {
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     OutputStreamWriter writer = new OutputStreamWriter(httpOutputMessage.getBody());
 
     if (mediaType.equals(MediaType.APPLICATION_JSON) || mediaType.equals(MediaType.valueOf("application/fhir+json"))) {

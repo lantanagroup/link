@@ -1,6 +1,7 @@
 package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
@@ -68,7 +69,7 @@ public class QueryCommand extends BaseShellCommand {
       if (queryResponses != null) {
         for (int i = 0; i < queryResponses.size(); i++) {
           QueryResponse queryResponse = queryResponses.get(i);
-          String patientDataXml = FhirContext.forR4().newXmlParser().encodeResourceToString(queryResponse.getBundle());
+          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(queryResponse.getBundle());
 
           if (Strings.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";

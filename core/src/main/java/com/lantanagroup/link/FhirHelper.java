@@ -337,7 +337,7 @@ public class FhirHelper {
   }
 
   public static Bundle getBundle(String content) {
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     IParser jsonParser = ctx.newJsonParser();
     IParser xmlParser = ctx.newXmlParser();
     Bundle reportDefBundle;

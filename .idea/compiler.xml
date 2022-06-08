@@ -14,10 +14,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.16/lombok-1.18.16.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar" />
         </processorPath>
-        <module name="cli" />
         <module name="core" />
+        <module name="cli" />
         <module name="agent" />
         <module name="thsa" />
         <module name="measureeval" />
