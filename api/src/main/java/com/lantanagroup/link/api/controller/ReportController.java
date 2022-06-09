@@ -1221,7 +1221,7 @@ public class ReportController extends BaseController {
               }
             }
             else {
-              logger.info("Searching for patient report " + Entry.getResource().getId());
+              logger.info("Searching for patient report " + Entry.getResource().getId() + " out of all patients previously sent");
               String[] refParts = Entry.getResource().getId().split("/");
               if(refParts.length > 1) {
                 String patientReportID = refParts[refParts.length-1];
@@ -1245,10 +1245,37 @@ public class ReportController extends BaseController {
       for(ListResource.ListEntryComponent ref : refs.getEntry()) {
         String[] refParts = ref.getItem().getReference().split("/");
         if(refParts.length > 1) {
-          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
-          List<Reference> patientRefs = patientReport.getEvaluatedResource();
-          Bundle patientBundle = getPatientBundleByReferences(patientRefs);
-          patientBundles.add(patientBundle);
+          if(patientId != null && !patientId.equals("")) {
+            logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length-1]);
+            if(refParts[refParts.length-1].contains(String.valueOf(patientId.hashCode()))) {
+              logger.info("Searching for specified patient " + patientId);
+              MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
+              List<Reference> patientRefs = patientReport.getEvaluatedResource();
+              Bundle patientBundle = getPatientBundleByReferences(patientRefs);
+              patientBundles.add(patientBundle);
+              break;
+            }
+          }
+          else {
+            if(reportId != null && !reportId.equals("")) {
+              logger.info("Searching for specified report " + reportId + " checking if part of " + refParts[refParts.length-1]);
+              if(refParts[refParts.length-1].contains(reportId)) {
+                logger.info("Searching for specified report " + reportId);
+                MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
+                List<Reference> patientRefs = patientReport.getEvaluatedResource();
+                Bundle patientBundle = getPatientBundleByReferences(patientRefs);
+                patientBundles.add(patientBundle);
+                break;
+              }
+            }
+            else {
+              logger.info("Searching for patient report " + refParts[refParts.length-1] + " out of all patients in master measure report");
+              MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
+              List<Reference> patientRefs = patientReport.getEvaluatedResource();
+              Bundle patientBundle = getPatientBundleByReferences(patientRefs);
+              patientBundles.add(patientBundle);
+            }
+          }
         }
       }
     }
