@@ -598,7 +598,8 @@ public class ReportController extends BaseController {
       FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
       String content = receiver.retrieveContent(bundleLocation);
       patientBundle = this.ctx.newJsonParser().parseResource(Bundle.class, content);
-    } else { // otherwise get them as before
+    }
+    else { // otherwise get them as before
       MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
       Bundle patientRequest = new Bundle();
       patientRequest.setType(Bundle.BundleType.BATCH);
@@ -734,7 +735,8 @@ public class ReportController extends BaseController {
           }
         }
       }
-    } else {
+    }
+    else {
       MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId + "-" + patientId.hashCode());
       List<Reference> evaluatedResources = measureReport.getEvaluatedResource();
 
@@ -1167,20 +1169,17 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private Bundle getPatientBundleByReferences(List<Reference> refs) {
-    Bundle patientBundle = new Bundle();
-    for(Reference ref : refs) {
-      String[] refParts = ref.getReference().split("/");
-      if(refParts.length == 2) {
-        Resource resource = (Resource)this.getFhirDataProvider().getResource(refParts[0], refParts[1]);
-        Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
-        patientBundle.addEntry(component);
-      }
-    }
-    return patientBundle;
-  }
-
-  private List<Bundle> getPatientBundles(DocumentReference docRef, String reportId, String patientId) {
+  /**
+   * Retrieves patient data bundles either from a submission bundle if its report had been sent
+   * or from the master measure report if it had not.
+   * Can also search for specific patient data bundles by patientId or patientReportId
+   *
+   * @param reportId if searching for a specific patient's data by patient's reportId
+   * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
+   * @param patientId if searching for a specific patient's data by patientId
+   * @return a list of bundles containing data for each patient
+   */
+  private List<Bundle> getPatientBundles(String reportId, DocumentReference docRef, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
     String masterReportId = docRef.getMasterIdentifier().getValue();
 
@@ -1280,6 +1279,31 @@ public class ReportController extends BaseController {
       }
     }
     return patientBundles;
+  }
+
+  private List<Bundle> getPatientBundles(DocumentReference docRef, String patientId) {
+    return getPatientBundles("", docRef, patientId);
+  }
+
+  private List<Bundle> getPatientBundles( String reportId, DocumentReference docRef) {
+    return getPatientBundles(reportId, docRef, "");
+  }
+
+  private List<Bundle> getPatientBundles(DocumentReference docRef) {
+    return getPatientBundles("", docRef, "");
+  }
+
+  private Bundle getPatientBundleByReferences(List<Reference> refs) {
+    Bundle patientBundle = new Bundle();
+    for(Reference ref : refs) {
+      String[] refParts = ref.getReference().split("/");
+      if(refParts.length == 2) {
+        Resource resource = (Resource)this.getFhirDataProvider().getResource(refParts[0], refParts[1]);
+        Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
+        patientBundle.addEntry(component);
+      }
+    }
+    return patientBundle;
   }
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
