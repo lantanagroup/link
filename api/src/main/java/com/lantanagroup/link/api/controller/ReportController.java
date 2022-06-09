@@ -1167,12 +1167,11 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private Bundle getPatientBundle(Object obj) {
+  private Bundle getPatientBundleByReferences(List<Reference> refs) {
     Bundle patientBundle = new Bundle();
-    List<Reference> refs = ResourceIdChanger.findReferences(obj);
     for(Reference ref : refs) {
       String[] refParts = ref.getReference().split("/");
-      if(refParts.length > 1) {
+      if(refParts.length == 2) {
         Resource resource = (Resource)this.getFhirDataProvider().getResource(refParts[0], refParts[1]);
         Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
         patientBundle.addEntry(component);
@@ -1183,47 +1182,76 @@ public class ReportController extends BaseController {
 
   private List<Bundle> getPatientBundles(DocumentReference docRef, String reportId, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
+    String masterReportId = docRef.getMasterIdentifier().getValue();
 
-    if(patientId != null && !patientId.equals("")) {
-      Bundle patientBundle = getPatientBundle(patientId);
-      patientBundles.add(patientBundle);
+    Class<?> senderClazz = null;
+    try {
+      senderClazz = Class.forName(this.config.getSender());
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
     }
-    else {
+    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+    Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
 
-      Class<?> senderClazz = null;
-      try {
-        senderClazz = Class.forName(this.config.getSender());
-      } catch (ClassNotFoundException e) {
-        e.printStackTrace();
-      }
-      IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-      Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
-
-      if(submitted != null && submitted.getEntry().size() > 0) {
-        for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
-          if (Entry.hasFullUrl() && Entry.getFullUrl().contains("MeasureReport")) {
-            String[] refParts = Entry.getFullUrl().split("/");
-            Bundle patientBundle = getPatientBundle(refParts[refParts.length-1]);
-            patientBundles.add(patientBundle);
-          }
-        }
-      }
-      else
-      {
-        MeasureReport report = this.getFhirDataProvider().getMeasureReportById(docRef.getMasterIdentifier().getValue());
-        for(MeasureReport.MeasureReportGroupComponent component : report.getGroup()) {
-          for(MeasureReport.MeasureReportGroupPopulationComponent population : component.getPopulation()) {
-            ListResource listResource = (ListResource)population.getSubjectResults().getResource();
-            for(ListResource.ListEntryComponent patient : listResource.getEntry()) {
-              String[] refParts = patient.getItem().getReference().split("/");
-              Bundle patientBundle = getPatientBundle(refParts[refParts.length-1]);
+    if(submitted != null && submitted.getEntry().size() > 0) {
+      logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
+      for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
+        if (Entry.getResource().getId() != null && Entry.getResource().getId().contains("MeasureReport")) {
+          if(patientId != null && !patientId.equals("")) {
+            logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + Entry.getResource().getId());
+            if(Entry.getResource().getId().contains(String.valueOf(patientId.hashCode()))) {
+              logger.info("Searching for specified patient " + patientId);
+              MeasureReport measureReport = (MeasureReport)Entry.getResource();
+              List<Reference> refs = measureReport.getEvaluatedResource();
+              Bundle patientBundle = getPatientBundleByReferences(refs);
               patientBundles.add(patientBundle);
+              break;
+            }
+          }
+          else {
+            if(reportId != null && !reportId.equals("")) {
+              logger.info("Searching for specified report " + reportId + " checking if part of " + Entry.getResource().getId());
+              if(Entry.getResource().getId().contains(reportId)) {
+                logger.info("Searching for specified report " + reportId);
+                MeasureReport measureReport = (MeasureReport)Entry.getResource();
+                List<Reference> refs = measureReport.getEvaluatedResource();
+                Bundle patientBundle = getPatientBundleByReferences(refs);
+                patientBundles.add(patientBundle);
+                break;
+              }
+            }
+            else {
+              logger.info("Searching for patient report " + Entry.getResource().getId());
+              String[] refParts = Entry.getResource().getId().split("/");
+              if(refParts.length > 1) {
+                String patientReportID = refParts[refParts.length-1];
+                if(!patientReportID.equals(masterReportId)) {
+                  MeasureReport measureReport = (MeasureReport)Entry.getResource();
+                  List<Reference> refs = measureReport.getEvaluatedResource();
+                  Bundle patientBundle = getPatientBundleByReferences(refs);
+                  patientBundles.add(patientBundle);
+                }
+              }
             }
           }
         }
       }
     }
-
+    else
+    {
+      logger.info("Report not sent: Searching for patient data from master measure report");
+      MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
+      ListResource refs = (ListResource)masterReport.getContained();
+      for(ListResource.ListEntryComponent ref : refs.getEntry()) {
+        String[] refParts = ref.getItem().getReference().split("/");
+        if(refParts.length > 1) {
+          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
+          List<Reference> patientRefs = patientReport.getEvaluatedResource();
+          Bundle patientBundle = getPatientBundleByReferences(patientRefs);
+          patientBundles.add(patientBundle);
+        }
+      }
+    }
     return patientBundles;
   }
 
