@@ -164,6 +164,8 @@ public class ReportControllerTests {
     ListResource.ListEntryComponent ref2 = new ListResource.ListEntryComponent();
     ref1.getItem().setReference("MeasureReport/" + patient1Hash);
     ref2.getItem().setReference("MeasureReport/" + patient2Hash);
+    ref1.getItem().setResource(measureReport1);
+    ref2.getItem().setResource(measureReport2);
     refs.addEntry(ref1);
     refs.addEntry(ref2);
     MeasureReport MasterMeasureReport = new MeasureReport();
@@ -236,6 +238,8 @@ public class ReportControllerTests {
     ListResource.ListEntryComponent ref2 = new ListResource.ListEntryComponent();
     ref1.getItem().setReference("MeasureReport/" + patient1Hash);
     ref2.getItem().setReference("MeasureReport/" + patient2Hash);
+    ref1.getItem().setResource(measureReport1);
+    ref2.getItem().setResource(measureReport2);
     refs.addEntry(ref1);
     refs.addEntry(ref2);
     MeasureReport MasterMeasureReport = new MeasureReport();

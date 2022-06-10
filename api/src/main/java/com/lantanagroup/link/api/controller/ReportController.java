@@ -1093,7 +1093,8 @@ public class ReportController extends BaseController {
         String[] refParts = Entry.getResource().getId().split("/");
         if (refParts.length > 1 && refParts[refParts.length -2].equals("MeasureReport") && refParts[refParts.length -1].equals(masterReportId)) {
           logger.info("Master measure report found from submission bundle");
-          patientBundles = getPatientBundleByMasterReport(refParts[refParts.length -1], patientReportId, patientId);
+          MeasureReport masterReport = (MeasureReport)Entry.getResource();
+          patientBundles = getPatientBundleByMasterReport(masterReport, patientReportId, patientId);
           break;
         }
       }
@@ -1101,14 +1102,14 @@ public class ReportController extends BaseController {
     else
     {
       logger.info("Report not sent: Searching for patient data from master measure report");
-      patientBundles = getPatientBundleByMasterReport(masterReportId, patientReportId, patientId);
+      MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
+      patientBundles = getPatientBundleByMasterReport(masterReport, patientReportId, patientId);
     }
     return patientBundles;
   }
 
-  private List<Bundle>  getPatientBundleByMasterReport(String masterReportId, String patientReportId, String patientId) {
+  private List<Bundle>  getPatientBundleByMasterReport(MeasureReport masterReport, String patientReportId, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
-    MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
     List contained = masterReport.getContained();
     for (Object list : contained) {
       ListResource refs = (ListResource)list;
@@ -1119,7 +1120,7 @@ public class ReportController extends BaseController {
             logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length-1]);
             if(refParts[refParts.length-1].contains(String.valueOf(patientId.hashCode()))) {
               logger.info("Searching for specified patient " + patientId);
-              Bundle patientBundle = getPatientBundleByReportId(refParts[refParts.length-1]);
+              Bundle patientBundle = getPatientBundleByReportId((MeasureReport)ref.getItem().getResource());
               patientBundles.add(patientBundle);
               break;
             }
@@ -1129,14 +1130,14 @@ public class ReportController extends BaseController {
               logger.info("Searching for specified report " + patientReportId + " checking if part of " + refParts[refParts.length-1]);
               if(refParts[refParts.length-1].contains(patientReportId)) {
                 logger.info("Searching for specified report " + patientReportId);
-                Bundle patientBundle = getPatientBundleByReportId(refParts[refParts.length-1]);
+                Bundle patientBundle = getPatientBundleByReportId((MeasureReport)ref.getItem().getResource());
                 patientBundles.add(patientBundle);
                 break;
               }
             }
             else {
               logger.info("Searching for patient report " + refParts[refParts.length-1] + " out of all patients in master measure report");
-              Bundle patientBundle = getPatientBundleByReportId(refParts[refParts.length-1]);
+              Bundle patientBundle = getPatientBundleByReportId((MeasureReport)ref.getItem().getResource());
               patientBundles.add(patientBundle);
             }
           }
@@ -1146,9 +1147,8 @@ public class ReportController extends BaseController {
     return patientBundles;
   }
 
-  private Bundle getPatientBundleByReportId(String reportId) {
+  private Bundle getPatientBundleByReportId(MeasureReport patientReport) {
     Bundle patientBundle = new Bundle();
-    MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(reportId);
     List<Reference> refs = patientReport.getEvaluatedResource();
     for(Reference ref : refs) {
       String[] refParts = ref.getReference().split("/");
