@@ -1093,8 +1093,7 @@ public class ReportController extends BaseController {
         String[] refParts = Entry.getResource().getId().split("/");
         if (refParts.length > 1 && refParts[refParts.length -2].equals("MeasureReport") && refParts[refParts.length -1].equals(masterReportId)) {
           logger.info("Master measure report found from submission bundle");
-          MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length -1]);
-          patientBundles = getPatientBundleByReport(masterReport, patientReportId, patientId);
+          patientBundles = getPatientBundleByMasterReport(refParts[refParts.length -1], patientReportId, patientId);
           break;
         }
       }
@@ -1102,14 +1101,14 @@ public class ReportController extends BaseController {
     else
     {
       logger.info("Report not sent: Searching for patient data from master measure report");
-      MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
-      patientBundles = getPatientBundleByReport(masterReport, patientReportId, patientId);
+      patientBundles = getPatientBundleByMasterReport(masterReportId, patientReportId, patientId);
     }
     return patientBundles;
   }
 
-  private List<Bundle>  getPatientBundleByReport(MeasureReport masterReport, String patientReportId, String patientId) {
+  private List<Bundle>  getPatientBundleByMasterReport(String masterReportId, String patientReportId, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
+    MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
     List contained = masterReport.getContained();
     for (Object list : contained) {
       ListResource refs = (ListResource)list;
