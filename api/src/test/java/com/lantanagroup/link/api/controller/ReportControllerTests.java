@@ -4,11 +4,14 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import com.lantanagroup.link.EventTypes;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
+import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.mock.AuthMockInfo;
 import com.lantanagroup.link.mock.MockHelper;
 import com.lantanagroup.link.model.*;
+import com.lantanagroup.link.nhsn.FHIRSender;
 import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
@@ -16,6 +19,8 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.internal.matchers.Any;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -112,38 +117,68 @@ public class ReportControllerTests {
     return observation;
   }
 
-  @Ignore
+  @Test
   public void getSubjectReportsTest() throws Exception {
-    //3 Conditions
-    Condition condition1 = createCondition("http://dev-fhir/fhir/Condition/condition1/_history/1", new Reference("Patient/patient1"));
-    Condition condition2 = createCondition("http://dev-fhir/fhir/Condition/condition2/_history/1", new Reference("Patient/patient1"));
-    Condition condition3 = createCondition("http://dev-fhir/fhir/Condition/condition3/_history/1", new Reference("Patient/patient3"));
+    //1 MedicationRequest and 1 Encounter
+    String senderId = "com.lantanagroup.link.nhsn.FHIRSender";
+    DocumentReference docRef = new DocumentReference();
+    Identifier identifier = new Identifier();
+    identifier.setValue("report1");
+    docRef.setMasterIdentifier(identifier);
+    FHIRSenderConfig senderConfig = new FHIRSenderConfig();
+    MedicationRequest medicationRequest1 = new MedicationRequest();
+    MedicationRequest medicationRequest2 = new MedicationRequest();
+    Encounter encounter1 = new Encounter();
+    Patient patient1 = new Patient();
+    Patient patient2 = new Patient();
+    medicationRequest1.getSubject().setReference("Patient/patient1");
+    medicationRequest2.getSubject().setReference("Patient/patient2");
+    encounter1.getSubject().setReference("Patient/patient1");
+    MeasureReport measureReport1 = new MeasureReport();
+    MeasureReport measureReport2 = new MeasureReport();
+    int patient1Hash = "patient1".hashCode();
+    int patient2Hash = "patient2".hashCode();
+    measureReport1.setId("MeasureReport/" + patient1Hash);
+    measureReport2.setId("MeasureReport/" + patient2Hash);
+    measureReport1.addEvaluatedResource(new Reference("Patient/patient1"));
+    measureReport1.addEvaluatedResource(new Reference("MedicationRequest/patient1"));
+    measureReport1.addEvaluatedResource(new Reference("Encounter/patient1"));
+    measureReport2.addEvaluatedResource(new Reference("Patient/patient2"));
+    measureReport2.addEvaluatedResource(new Reference("MedicationRequest/patient2"));
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
+    FHIRSender sender = mock(FHIRSender.class);
+    doCallRealMethod().when(sender).setConfig(any());
+    sender.setConfig(senderConfig);
     Authentication authentication = mock(Authentication.class);
     HttpServletRequest request = mock(HttpServletRequest.class);
+    ApplicationContext context = mock(ApplicationContext.class);
     ReportController controller = new ReportController();
+    controller.setContext(context);
     controller.setFhirStoreProvider(fhirDataProvider);
+    ApiConfig config = new ApiConfig();
+    config.setSender(senderId);
+    controller.setConfig(config);
     when(fhirDataProvider.findDocRefForReport("report1")).thenReturn(new DocumentReference());
-    MeasureReport measureReport = new MeasureReport();
-    measureReport.addEvaluatedResource().setReference("Condition/condition1");
-    measureReport.addEvaluatedResource().setReference("Condition/condition2");
-    measureReport.addEvaluatedResource().setReference("Patient/patient1");
-    when(fhirDataProvider.getMeasureReportById(any())).thenReturn(measureReport);
+    MeasureReport MasterMeasureReport = new MeasureReport();
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient1Hash));;
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient2Hash));
+    when(fhirDataProvider.getMeasureReportById("report1")).thenReturn(MasterMeasureReport);
     Bundle bundle = new Bundle();
-    bundle.addEntry().setResource(condition1);
-    bundle.addEntry().setResource(condition2);
-    bundle.addEntry().setResource(condition3);
-    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Condition"))).thenReturn(bundle);
-    when(fhirDataProvider.getResources(any(ICriterion.class), eq("MedicationRequest"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Procedure"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Encounter"))).thenReturn(new Bundle());
-    when(fhirDataProvider.getResources(any(ICriterion.class), eq("Observation"))).thenReturn(new Bundle());
+    bundle.addEntry().setResource(measureReport1);
+    bundle.addEntry().setResource(measureReport2);
+    when((IReportSender) context.getBean((Class<?>) any())).thenReturn(sender);
+    when(sender.retrieve(any(), any(), any())).thenReturn(bundle);
+    when(fhirDataProvider.getResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
+    when(fhirDataProvider.getResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
+    when(fhirDataProvider.getResource("Patient", "patient1")).thenReturn(patient1);
+    when(fhirDataProvider.getResource("Patient", "patient2")).thenReturn(patient2);
+    when(fhirDataProvider.getResource("Encounter", "patient1")).thenReturn(encounter1);
     PatientDataModel response = controller.getPatientData("report1", "patient1", authentication, request);
-    Assert.assertNotNull(response.getConditions());
-    Assert.assertNull(response.getEncounters());
-    Assert.assertNull(response.getProcedures());
-    Assert.assertNull(response.getMedicationRequests());
-    Assert.assertNull(response.getObservations());
+    Assert.assertEquals(response.getConditions().size(), 0);
+    Assert.assertEquals(response.getEncounters().size(), 1);
+    Assert.assertEquals(response.getProcedures().size(), 0);
+    Assert.assertEquals(response.getMedicationRequests().size(), 1);
+    Assert.assertEquals(response.getObservations().size(), 0);
   }
 
   @Ignore

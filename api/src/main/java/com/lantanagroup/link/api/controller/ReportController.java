@@ -14,6 +14,7 @@ import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
@@ -67,6 +68,7 @@ public class ReportController extends BaseController {
   private ApiConfigEvents apiConfigEvents;
 
   @Autowired
+  @Setter
   private ApplicationContext context;
 
   @Autowired
@@ -584,20 +586,19 @@ public class ReportController extends BaseController {
   public List<PatientReportModel> getReportPatients(
           @PathVariable("reportId") String reportId) throws Exception {
 
-    String bundleLocation = "";
-    Bundle patientBundle = null;
-    PatientReportModel report = null;
-
     List<PatientReportModel> reports = new ArrayList();
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
-    bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
 
+    List<Bundle> patientBundles = getPatientBundles(documentReference);
+
+    /* String bundleLocation = "";
+    bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
     // if document submitted and flag is to delete after submission then get the patients from the submitted bundle
     if (!bundleLocation.equals("") && config.getDeleteAfterSubmission()) {
       // get Patients from bundle
       FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
       String content = receiver.retrieveContent(bundleLocation);
-      patientBundle = this.ctx.newJsonParser().parseResource(Bundle.class, content);
+      patientBundles.add(this.ctx.newJsonParser().parseResource(Bundle.class, content));
     }
     else { // otherwise get them as before
       MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue());
@@ -619,20 +620,24 @@ public class ReportController extends BaseController {
         patientRequest.getEntry().get(index).getRequest().setUrl(patientMeasureReport.getSubject().getReference());
       }
       if (patientRequest.hasEntry()) {
-        patientBundle = this.getFhirDataProvider().transaction(patientRequest);
+        patientBundles.add(this.getFhirDataProvider().transaction(patientRequest));
       }
-    }
+    } */
 
-    // in both cases add the patients info to patientreportmodel to be displayed in UI
-    if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
-      for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
-        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
-          Patient patient = (Patient) entry.getResource();
-          report = FhirHelper.setPatientFields(patient, false);
-          reports.add(report);
+    PatientReportModel report = null;
+    for(Bundle patientBundle : patientBundles) {
+      // in both cases add the patients info to patientreportmodel to be displayed in UI
+      if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
+        for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+          if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
+            Patient patient = (Patient) entry.getResource();
+            report = FhirHelper.setPatientFields(patient, false);
+            reports.add(report);
+          }
         }
       }
     }
+
     return reports;
   }
 
@@ -678,10 +683,21 @@ public class ReportController extends BaseController {
           Authentication authentication,
           HttpServletRequest request) throws Exception {
 
-    String bundleLocation = "";
     PatientDataModel data = new PatientDataModel();
+    data.setConditions(new ArrayList<>());
+    data.setMedicationRequests(new ArrayList<>());
+    data.setProcedures(new ArrayList<>());
+    data.setObservations(new ArrayList<>());
+    data.setEncounters(new ArrayList<>());
+    data.setServiceRequests(new ArrayList());
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+    List<Bundle> patientBundles = getPatientBundles(documentReference, patientId);
+    if (patientBundles == null || patientBundles.size() < 1) {
+      return data;
+    }
+
+    /*String bundleLocation = "";
     bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
     if (!bundleLocation.equals("") && config.getDeleteAfterSubmission()) {
       FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
@@ -840,6 +856,47 @@ public class ReportController extends BaseController {
                 .collect(Collectors.toList());
 
         data.setServiceRequests(serviceRequestList);
+      }
+    } */
+
+    for(Bundle patientBundle : patientBundles) {
+      for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Condition")) {
+          Condition condition = (Condition) entry.getResource();
+          if (condition.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getConditions().add(condition);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("MedicationRequest")) {
+          MedicationRequest medicationRequest = (MedicationRequest) entry.getResource();
+          if (medicationRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getMedicationRequests().add(medicationRequest);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Observation")) {
+          Observation observation = (Observation) entry.getResource();
+          if (observation.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getObservations().add(observation);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Procedure")) {
+          Procedure procedure = (Procedure) entry.getResource();
+          if (procedure.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getProcedures().add(procedure);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Encounter")) {
+          Encounter encounter = (Encounter) entry.getResource();
+          if (encounter.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getEncounters().add(encounter);
+          }
+        }
+        if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("ServiceRequest")) {
+          ServiceRequest serviceRequest = (ServiceRequest) entry.getResource();
+          if (serviceRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            data.getServiceRequests().add(serviceRequest);
+          }
+        }
       }
     }
 
@@ -1174,14 +1231,17 @@ public class ReportController extends BaseController {
    * or from the master measure report if it had not.
    * Can also search for specific patient data bundles by patientId or patientReportId
    *
-   * @param reportId if searching for a specific patient's data by patient's reportId
+   * @param patientReportId if searching for a specific patient's data by patient's reportId
    * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
    * @param patientId if searching for a specific patient's data by patientId
    * @return a list of bundles containing data for each patient
    */
-  private List<Bundle> getPatientBundles(String reportId, DocumentReference docRef, String patientId) {
+  private List<Bundle> getPatientBundles(String patientReportId, DocumentReference docRef, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
     String masterReportId = docRef.getMasterIdentifier().getValue();
+    boolean patientReportIdExistsAndIsNotMaster = patientReportId != null
+            && !patientReportId.equals("")
+            && !patientReportId.equals(masterReportId);
 
     Class<?> senderClazz = null;
     try {
@@ -1208,10 +1268,10 @@ public class ReportController extends BaseController {
             }
           }
           else {
-            if(reportId != null && !reportId.equals("")) {
-              logger.info("Searching for specified report " + reportId + " checking if part of " + Entry.getResource().getId());
-              if(Entry.getResource().getId().contains(reportId)) {
-                logger.info("Searching for specified report " + reportId);
+            if(patientReportIdExistsAndIsNotMaster) {
+              logger.info("Searching for specified report " + patientReportId + " checking if part of " + Entry.getResource().getId());
+              if(Entry.getResource().getId().contains(patientReportId)) {
+                logger.info("Searching for specified report " + patientReportId);
                 MeasureReport measureReport = (MeasureReport)Entry.getResource();
                 List<Reference> refs = measureReport.getEvaluatedResource();
                 Bundle patientBundle = getPatientBundleByReferences(refs);
@@ -1256,10 +1316,10 @@ public class ReportController extends BaseController {
             }
           }
           else {
-            if(reportId != null && !reportId.equals("")) {
-              logger.info("Searching for specified report " + reportId + " checking if part of " + refParts[refParts.length-1]);
-              if(refParts[refParts.length-1].contains(reportId)) {
-                logger.info("Searching for specified report " + reportId);
+            if(patientReportIdExistsAndIsNotMaster) {
+              logger.info("Searching for specified report " + patientReportId + " checking if part of " + refParts[refParts.length-1]);
+              if(refParts[refParts.length-1].contains(patientReportId)) {
+                logger.info("Searching for specified report " + patientReportId);
                 MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]);
                 List<Reference> patientRefs = patientReport.getEvaluatedResource();
                 Bundle patientBundle = getPatientBundleByReferences(patientRefs);
@@ -1281,14 +1341,34 @@ public class ReportController extends BaseController {
     return patientBundles;
   }
 
+  /**
+   * calls getPatientBundles without having to provide a specified patientReportId
+   *
+   * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
+   * @param patientId if searching for a specific patient's data by patientId
+   * @return a list of bundles containing data for each patient
+   */
   private List<Bundle> getPatientBundles(DocumentReference docRef, String patientId) {
     return getPatientBundles("", docRef, patientId);
   }
 
-  private List<Bundle> getPatientBundles( String reportId, DocumentReference docRef) {
-    return getPatientBundles(reportId, docRef, "");
+  /**
+   * calls getPatientBundles without having to provide a specified patientId
+   *
+   * @param patientReportId if searching for a specific patient's data by patientId
+   * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
+   * @return a list of bundles containing data for each patient
+   */
+  private List<Bundle> getPatientBundles( String patientReportId, DocumentReference docRef) {
+    return getPatientBundles(patientReportId, docRef, "");
   }
 
+  /**
+   * calls getPatientBundles without having to provide a specified patientReportId or patientId
+   *
+   * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
+   * @return a list of bundles containing data for each patient
+   */
   private List<Bundle> getPatientBundles(DocumentReference docRef) {
     return getPatientBundles("", docRef, "");
   }
