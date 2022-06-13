@@ -193,8 +193,8 @@ public class ReportController extends BaseController {
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
       List<PatientOfInterestModel> patientOfInterestModelList = new ArrayList<>();
-      for(ListResource censusList : context.getPatientCensusLists()) {
-        for(ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
+      for (ListResource censusList : context.getPatientCensusLists()) {
+        for (ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
           PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
                   censusPatient.getItem().getIdentifier().getSystem() + "|" + censusPatient.getItem().getIdentifier().getValue());
           patientOfInterestModelList.add(patient);
@@ -202,8 +202,7 @@ public class ReportController extends BaseController {
       }
       context.setPatientsOfInterest(patientOfInterestModelList);
       return patientOfInterestModelList;
-    }
-    else {
+    } else {
       IPatientIdProvider provider;
       Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
       Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
@@ -377,11 +376,11 @@ public class ReportController extends BaseController {
         IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
         Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-        if(submitted != null && submitted.getEntry().size() > 0) {
+        if (submitted != null && submitted.getEntry().size() > 0) {
           List<ListResource> censusList = new ArrayList<>();
-          for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
-            if(entry.getResource().getResourceType() == ResourceType.List) {
-              censusList.add((ListResource)entry.getResource());
+          for (Bundle.BundleEntryComponent entry : submitted.getEntry()) {
+            if (entry.getResource().getResourceType() == ResourceType.List) {
+              censusList.add((ListResource) entry.getResource());
               this.getFhirDataProvider().updateResource(entry.getResource());
             }
           }
@@ -420,7 +419,16 @@ public class ReportController extends BaseController {
 
       response.setReportId(id);
 
-      ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
+      // Generate the master measure report
+      Class<?> reportAggregatorClass = null;
+      try {
+        reportAggregatorClass = Class.forName(this.config.getReportAggregator());
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+      IReportAggregator reportAggregator = (IReportAggregator) this.context.getBean(reportAggregatorClass);
+
+      ReportGenerator generator = new ReportGenerator(context, criteria, config, user, reportAggregator);
 
       triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
 
@@ -494,16 +502,17 @@ public class ReportController extends BaseController {
 
   private void deleteSentData(DocumentReference documentReference) {
     String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
-    if(documentReference.getContext().getRelated().size() > 0) {
+    if (documentReference.getContext().getRelated().size() > 0) {
       List<ListResource> censusList = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
-      for(ListResource census : censusList) {
-        String censusID = census.getId().contains("List/") && census.getId().contains("/_history")?
-                census.getId().substring("List/".length(), census.getId().indexOf("/_history")):census.getId().contains("List/")?
-                census.getId().substring("List/".length()):census.getId();;
-        for(ListResource.ListEntryComponent entry: census.getEntry()) {
-          if(entry.getItem().getReference() != null) {
-            String patientRef = entry.getItem().getReference().contains("Patient/")?
-                    entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
+      for (ListResource census : censusList) {
+        String censusID = census.getId().contains("List/") && census.getId().contains("/_history") ?
+                census.getId().substring("List/".length(), census.getId().indexOf("/_history")) : census.getId().contains("List/") ?
+                census.getId().substring("List/".length()) : census.getId();
+
+        for (ListResource.ListEntryComponent entry : census.getEntry()) {
+          if (entry.getItem().getReference() != null) {
+            String patientRef = entry.getItem().getReference().contains("Patient/") ?
+                    entry.getItem().getReference().substring("Patient/".length()) : entry.getItem().getReference();
             String patientReportID = String.valueOf(patientRef.hashCode());
 
             try {
@@ -570,7 +579,7 @@ public class ReportController extends BaseController {
     report.setStatus(documentReference.getDocStatus().toString());
     report.setDate(documentReference.getDate());
 
-    if(reportSent) {
+    if (reportSent) {
       reportSent = false;
       try {
         this.getFhirDataProvider().deleteResource("MeasureReport", reportId, true);
@@ -719,7 +728,7 @@ public class ReportController extends BaseController {
 
     Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
     Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
-    if(existingVersion >= 1.0f) {
+    if (existingVersion >= 1.0f) {
       throw new HttpResponseException(400, "Bad Request, report version is greater than or equal to 1.0");
     }
 
@@ -836,6 +845,7 @@ public class ReportController extends BaseController {
 
     return reportBundle;
   }
+
 
   /**
    * Retrieves the DocumentReference and MeasureReport, ensures that each of the excluded Patients in the request

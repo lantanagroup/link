@@ -6,7 +6,8 @@ import lombok.Setter;
 /**
  * Represents a
  */
-@Getter @Setter
+@Getter
+@Setter
 public class StoredReportDefinition {
   private String id;
   private String name;
