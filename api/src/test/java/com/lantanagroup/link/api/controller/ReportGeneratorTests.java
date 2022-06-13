@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.controller;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -38,7 +37,6 @@ public class ReportGeneratorTests {
 
   @Ignore
   public void testGenerateAnStore() throws ParseException, IOException {
-    IReportAggregator reportAggregator = mock(IReportAggregator.class);
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     LinkCredentials user = mock(LinkCredentials.class);
     Practitioner practitioner = new Practitioner();
@@ -58,14 +56,13 @@ public class ReportGeneratorTests {
     context.setReportDefBundle(bundle);
     List patientIds = new ArrayList();
     patientIds.add("73742177-JAN21");
-    ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user, reportAggregator);
+    ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user);
     List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
     generator.store(measureReports, criteria, context, null);
   }
 
   @Test
   public void testGenerateAnStoreWithNoIndividualReports() throws ParseException, IOException {
-    IReportAggregator reportAggregator = mock(IReportAggregator.class);
     FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
     LinkCredentials user = mock(LinkCredentials.class);
     Practitioner practitioner = new Practitioner();
@@ -84,7 +81,7 @@ public class ReportGeneratorTests {
     bundle.addEntry(entry);
     context.setReportDefBundle(bundle);
     List patientIds = new ArrayList();
-    ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user, reportAggregator);
+    ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user);
     // List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
     // generator.store(measureReports, criteria, context, null);
   }

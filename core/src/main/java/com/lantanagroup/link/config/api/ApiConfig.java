@@ -137,7 +137,4 @@ public class ApiConfig {
 
     @Getter
     private Boolean deleteAfterSubmission;
-
-    @Getter
-    private String reportAggregator;
 }
