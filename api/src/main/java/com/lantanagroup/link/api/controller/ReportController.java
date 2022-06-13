@@ -1,5 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.parser.JsonParser;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -60,7 +62,6 @@ public class ReportController extends BaseController {
   private static boolean reportSent = false;
 
   @Autowired
-  @Setter
   private ApiConfig config;
 
   @Autowired
@@ -1044,14 +1045,16 @@ public class ReportController extends BaseController {
     List<Bundle> patientBundles = new ArrayList<>();
     String masterReportId = docRef.getMasterIdentifier().getValue();
 
-    Class<?> senderClazz = null;
+
+    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(docRef);
+    FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
+    String content = null;
     try {
-      senderClazz = Class.forName(this.config.getSender());
-    } catch (ClassNotFoundException e) {
+      content = receiver.retrieveContent(bundleLocation);
+    } catch (Exception e) {
       e.printStackTrace();
     }
-    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-    Bundle submitted = sender.retrieve(this.config, this.ctx, docRef);
+    Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
 
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
