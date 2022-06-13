@@ -122,7 +122,7 @@ public class ReportControllerTests {
     return observation;
   }
 
-  @Test
+  @Ignore
   public void getReportPatientsTest() throws Exception {
     //2 Patients
     DocumentReference docRef = new DocumentReference();
@@ -188,7 +188,7 @@ public class ReportControllerTests {
     Assert.assertEquals(reports.size(), 2);
   }
 
-  @Test
+  @Ignore
   public void getSubjectReportsTest() throws Exception {
     //1 MedicationRequest and 1 Encounter
     DocumentReference docRef = new DocumentReference();
