@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -46,5 +47,7 @@ public class ReportDataController extends BaseController{
         // TODO
         break;
     }
-  }
+
+    IDataProcessor.process(csvContent.getBytes(), getFhirDataProvider());
+  }IDataProcessor
 }
