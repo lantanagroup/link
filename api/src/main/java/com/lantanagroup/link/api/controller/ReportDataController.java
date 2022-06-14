@@ -49,5 +49,5 @@ public class ReportDataController extends BaseController{
     }
 
     IDataProcessor.process(csvContent.getBytes(), getFhirDataProvider());
-  }IDataProcessor
+  }
 }
