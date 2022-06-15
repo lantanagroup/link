@@ -1182,10 +1182,12 @@ public class ReportController extends BaseController {
       Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
       List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
       if (classes == null) {
-        logger.error(String.format("No class set-up for event %s", eventType.toString()));
+        logger.debug(String.format("No class set-up for event %s", eventType.toString()));
         return;
       }
       for (String className : classes) {
+        logger.info(String.format("Executing class %s for event %s", className, eventType.toString()));
+
         try {
           Class<?> clazz = Class.forName(className);
           Object myObject = clazz.newInstance();
