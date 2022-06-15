@@ -1147,36 +1147,31 @@ public class ReportController extends BaseController {
   }
 
   private Bundle getPatientBundleBySubmissionBundle(MeasureReport patientReport) {
+// Gets the patientId and uses it to create a list of Patients of interest to reuse the query code
+    List<PatientOfInterestModel> patientList = new ArrayList<>();
+    PatientOfInterestModel poi = new PatientOfInterestModel();
+    poi.setReference(patientReport.getSubject().getReference() != null && !patientReport.getSubject().getReference().equals("")?
+            patientReport.getSubject().getReference():"null");
+    poi.setIdentifier(patientReport.getIdentifier() != null && patientReport.getIdentifier().size() > 1?
+            patientReport.getIdentifier().get(0).getSystem() + "|" + patientReport.getIdentifier().get(0).getId():"null|null");
+    patientList.add(poi);
+
+    // Creates a list of resources of the patient to find for this current patient
     List<String> resourceTypesToQuery = new ArrayList<>();
     List<Reference> refs = patientReport.getEvaluatedResource();
     for(Reference ref : refs) {
       String[] refParts = ref.getReference().split("/");
       if(refParts.length == 2 && !resourceTypesToQuery.contains(refParts[0])) {
-
         resourceTypesToQuery.add(refParts[0]);
       }
     }
 
-    List<QueryResponse> patientQueryResponses = new ArrayList<>();
-    List<PatientOfInterestModel> patientList = new ArrayList<>();
-    PatientOfInterestModel poi = new PatientOfInterestModel();
-    if(patientReport.getSubject().getReference() != null && !patientReport.getSubject().getReference().equals("")) {
-      poi.setReference(patientReport.getSubject().getReference());
-      poi.setIdentifier("null|null");
-    }
-    else if(patientReport.getIdentifier() != null) {
-      String id = patientReport.getIdentifier().get(0).getSystem() + "|" + patientReport.getIdentifier().get(0).getId();
-      poi.setIdentifier(id);
-      poi.setReference("null");
-    }
-    patientList.add(poi);
-
-    if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-      patientQueryResponses = this.getRemotePatientData(patientList);
-      return patientQueryResponses.get(0).getBundle();
+    // Query for resources of each patient the same way as it does when generating reports
+    if(this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
+      List<QueryResponse> queryResponses = this.getRemotePatientData(patientList);
+      return queryResponses.get(0).getBundle();
     }
     else if(this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = null;
       try {
@@ -1184,10 +1179,11 @@ public class ReportController extends BaseController {
       } catch (Exception e) {
         e.printStackTrace();
       }
-      patientQueryResponses = query.execute(patientList, resourceTypesToQuery);
-
-      return patientQueryResponses.get(0).getBundle();
+      List<QueryResponse> queryResponses = query.execute(patientList, resourceTypesToQuery);
+      return queryResponses.get(0).getBundle();
     }
+
+    // If all else fails return an empty bundle
     return new Bundle();
   }
 
