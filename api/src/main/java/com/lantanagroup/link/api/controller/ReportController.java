@@ -300,8 +300,8 @@ public class ReportController extends BaseController {
         throw new Exception("patientDataBundle is null");
       }
 
+      // TODO: Should this be here? Or should this be in the ApplyConceptMaps class?
       context.setConceptMaps(getConceptMaps());
-
 
       // store patient data
       for (QueryResponse patientQueryResponse : patientQueryResponses) {
@@ -314,7 +314,11 @@ public class ReportController extends BaseController {
                         .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
         );
 
+        // Make sure the patient bundle returned by query component has an ID in the correct format
         patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
+
+        // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
+        patientQueryResponse.getBundle().getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
         // Store the data
         logger.info("Storing patient data bundle Bundle/" + patientQueryResponse.getBundle().getId());
@@ -398,7 +402,6 @@ public class ReportController extends BaseController {
 
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
-
 
       triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
 
@@ -1079,7 +1082,7 @@ public class ReportController extends BaseController {
 
       try {
         // Try to GET the patient to see if it has already been deleted or not
-        this.getFhirDataProvider().getResource("Patient", excludedPatient.getPatientId());
+        this.getFhirDataProvider().tryGetResource("Patient", excludedPatient.getPatientId());
         logger.debug(String.format("Adding patient %s to list of patients to delete", excludedPatient.getPatientId()));
 
         // Add a "DELETE" request to the bundle, since it hasn't been deleted

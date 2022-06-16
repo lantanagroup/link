@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,39 +17,56 @@ public class FhirBundler {
     this.fhirDataProvider = fhirDataProvider;
   }
 
-  private List<DomainResource> getPatientResources(MeasureReport patientMeasureReport) {
-    Bundle retrievePatientData = new Bundle();
-    retrievePatientData.setType(Bundle.BundleType.BATCH);
+  private List<DomainResource> getPatientResources(String reportId, MeasureReport patientMeasureReport) {
+    String patientId = patientMeasureReport.getSubject().getReference().replace("Patient/", "");
+    Bundle patientDataBundle = (Bundle) this.fhirDataProvider.getResourceByTypeAndId("Bundle", reportId + "-" + patientId.hashCode());
 
-    // Add all references to evaluated resources to the bundle as entries with a request method & url
-    retrievePatientData.getEntry().addAll(patientMeasureReport.getEvaluatedResource().stream().map(er -> {
-      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-      newEntry.getRequest()
-              .setMethod(Bundle.HTTPVerb.GET)
-              .setUrl(er.getReference());
-      return newEntry;
-    }).collect(Collectors.toList()));
-
-    // Execute the patient data transaction bundle to retrieve all the patient data
-    Bundle patientDataBundle = this.fhirDataProvider.transaction(retrievePatientData);
-
-    // Look for and log issues with retrieving patient data
-    List<String> issues = patientDataBundle.getEntry().stream()
-            .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.OperationOutcome)
-            .map(e -> {
-              OperationOutcome oo = (OperationOutcome) e.getResource();
-              return String.join("\n", oo.getIssue().stream().map(i -> i.getDiagnostics()).collect(Collectors.toList()));
-            }).collect(Collectors.toList());
-
-    if (issues.size() > 0) {
-      logger.error(String.format("Error retrieving patient data due to:\n%s", String.join("\n", issues)));
+    if (patientDataBundle == null) {
+      logger.error(String.format("Did not find patient data bundle Bundle/%s-%s", reportId, patientId.hashCode()));
+      return new ArrayList<>();
     }
 
-    // Return a list of all the resources that are not OperationOutcomes (issues)
-    return patientDataBundle.getEntry().stream()
-            .filter(e -> e.getResource() != null && e.getResource().getResourceType() != ResourceType.OperationOutcome)
-            .map(e -> FhirHelper.cleanResource((DomainResource) e.getResource(), this.fhirDataProvider.ctx))
-            .collect(Collectors.toList());
+    // Add all references to evaluated resources to the bundle as entries with a request method & url
+    List<String> patientDataReferences = patientMeasureReport.getEvaluatedResource().stream()
+            .filter(er -> {
+              if (er.getReference() == null || er.getReference().isEmpty()) {
+                return false;
+              }
+
+              // Evaluated resources that don't have the populationReference extension did fully satisfy
+              // the criteria of at least one CQL definition
+              if (er.getExtensionsByUrl(Constants.ExtensionPopulationReference).isEmpty()) {
+                return false;
+              }
+
+              // Ignore contained references
+              if (er.getReference() != null && er.getReference().startsWith("#")) {
+                return false;
+              }
+
+              return true;
+            })
+            .map(er -> {
+              return er.getReference();
+            }).collect(Collectors.toList());
+
+    // Return a list of all the resources identified by evaluated resources
+    List<DomainResource> patientResources = new ArrayList<>();
+
+    for (String patientDataReference : patientDataReferences) {
+      Optional<Bundle.BundleEntryComponent> found = patientDataBundle.getEntry().stream().filter(e -> {
+        String thisReference = e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart();
+        return thisReference.equals(patientDataReference);
+      }).findFirst();
+
+      if (found.isPresent()) {
+        patientResources.add(FhirHelper.cleanResource((DomainResource) found.get().getResource(), this.fhirDataProvider.ctx));
+      } else {
+        logger.error(String.format("Could not find resource %s for in bundle %s", patientDataReference, patientDataBundle.getId()));
+      }
+    }
+
+    return patientResources;
   }
 
   /**
@@ -130,7 +148,7 @@ public class FhirBundler {
         bundle.addEntry().setResource(clonedPatientMeasureReport);
 
         // Get all the evaluated resources in the individual patient measure reports and add them to the bundle
-        List<DomainResource> patientResources = this.getPatientResources(patientMeasureReport);
+        List<DomainResource> patientResources = this.getPatientResources(masterMeasureReport.getIdElement().getIdPart(), patientMeasureReport);
 
         for (DomainResource patientResource : patientResources) {
           bundle.addEntry().setResource(patientResource);

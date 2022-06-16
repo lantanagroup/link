@@ -233,7 +233,13 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource getResource(String resourceType, String resourceId) {
+  /**
+   * Gets a resource by type and ID only including the id property to check if the resource exists
+   * @param resourceType
+   * @param resourceId
+   * @return
+   */
+  public IBaseResource tryGetResource(String resourceType, String resourceId) {
     return this.client
             .read()
             .resource(resourceType)
@@ -243,6 +249,12 @@ public class FhirDataProvider {
             .execute();
   }
 
+  /**
+   * Gets a complete resource by retrieving it based on type and id
+   * @param resourceType
+   * @param resourceId
+   * @return
+   */
   public IBaseResource getResourceByTypeAndId(String resourceType, String resourceId) {
     return this.client
             .read()
