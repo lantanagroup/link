@@ -24,6 +24,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   dirty = false;
   regenerateReportButtonText: String = 'Re-generate';
   submitInProgress = false;
+  downloading = false;
 
   constructor(
       private route: ActivatedRoute,
@@ -110,10 +111,13 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async download() {
     try {
+      this.downloading = true;
       await this.reportService.download(this.reportId);
       this.toastService.showInfo('Report downloaded!');
     } catch (ex) {
       this.toastService.showException('Error downloading report: ' + this.reportId, ex);
+    } finally {
+      this.downloading = false;
     }
   }
 

@@ -86,7 +86,7 @@
         <button (click)="regenerate()" *ngIf="isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
             {{regenerateReportButtonText}}
         </button>
-        <button (click)="download()" class="btn btn-primary">Download</button>
+        <button (click)="download()" class="btn btn-primary" [disabled]="downloading">{{!downloading ? 'Download' : 'Downloading...'}}</button>
     </div>
 </div>
 
