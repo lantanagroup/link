@@ -10,7 +10,7 @@ public class GenericCSVProcessor implements IDataProcessor {
   @Autowired
   private THSAConfig thsaConfig;
 
-  @Override  
+  @Override
   public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) {
 
   }
