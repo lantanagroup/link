@@ -139,7 +139,6 @@ public class ApiConfig {
     @Getter
     private Boolean deleteAfterSubmission;
 
-
     /**
      * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.
      */
@@ -154,5 +153,4 @@ public class ApiConfig {
 
     @Getter
     private String reportAggregator;
-
 }

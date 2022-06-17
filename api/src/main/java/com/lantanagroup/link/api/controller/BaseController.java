@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
+import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.DomainResource;
 import org.hl7.fhir.r4.model.Resource;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class BaseController {
   private static final Logger logger = LoggerFactory.getLogger(BaseController.class);
+
+  @Setter
   protected FhirContext ctx = FhirContextProvider.getFhirContext();
 
   @Setter
