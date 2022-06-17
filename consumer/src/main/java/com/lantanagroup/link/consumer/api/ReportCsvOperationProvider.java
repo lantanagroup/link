@@ -21,14 +21,14 @@ import java.util.UUID;
 import static com.lantanagroup.link.Constants.MeasureReportBundleProfileUrl;
 
 @Component
-public class ReportCsvProvider {
-  private static final Logger logger = LoggerFactory.getLogger(ReportCsvProvider.class);
+public class ReportCsvOperationProvider {
+  private static final Logger logger = LoggerFactory.getLogger(ReportCsvOperationProvider.class);
 
   @Autowired
   private IFhirResourceDao<Measure> measureDao;
 
   @Operation(type = Measure.class, name = "$report-csv")
-  public Bundle reportCsv(
+  public Bundle execute(
           @IdParam IdType measureId,
           @OperationParam(name = "input", min = 1) Binary input,
           @OperationParam(name = "map") StringOrListParam map,
