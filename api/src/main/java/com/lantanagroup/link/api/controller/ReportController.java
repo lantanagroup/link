@@ -1072,28 +1072,23 @@ public class ReportController extends BaseController {
 
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
-      for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
-        if (Entry.getResource().getId() != null && Entry.getResource().getId().contains("MeasureReport")) {
-          if(patientId != null && !patientId.equals("")) {
-            logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + Entry.getResource().getId());
-            if(Entry.getResource().getId().contains(String.valueOf(patientId.hashCode()))) {
-              logger.info("Searching for specified patient " + patientId);
-              Bundle patientBundle = getPatientBundleBySubmissionBundle((MeasureReport)Entry.getResource());
-              patientBundles.add(patientBundle);
-              break;
-            }
-          }
-          else {
-            logger.info("Searching for patient report " + Entry.getResource().getId() + " out of all patients previously sent");
+      if(patientId != null && !patientId.equals("")) {
+        logger.info("Searching for resources of specified patient " + patientId);
+        Bundle patientBundle = getPatientResourcesById(patientId, submitted);
+        patientBundles.add(patientBundle);
+      }
+      else {
+        // Get ids of all patients in the submission bundle
+        List<String> patientIds = new ArrayList();
+        for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
+          if (Entry.getResource().getId() != null && Entry.getResource().getId().contains("Patient")) {
             String[] refParts = Entry.getResource().getId().split("/");
-            if(refParts.length > 1) {
-              String patientReportID = refParts[refParts.length-1];
-              if(!patientReportID.equals(masterReportId)) {
-                Bundle patientBundle = getPatientBundleBySubmissionBundle((MeasureReport)Entry.getResource());
-                patientBundles.add(patientBundle);
-              }
-            }
+            patientIds.add(refParts[refParts.length -1].contains("history")?refParts[refParts.length -2]:refParts[refParts.length -1]);
           }
+        }
+        for(String currentPatient : patientIds) {
+          Bundle patientBundle = getPatientResourcesById(currentPatient, submitted);
+          patientBundles.add(patientBundle);
         }
       }
     }
@@ -1135,6 +1130,55 @@ public class ReportController extends BaseController {
     return getPatientBundles(docRef, "");
   }
 
+  private Bundle getPatientResourcesById(String patientId, Bundle ResourceBundle) {
+    Bundle patientResourceBundle = new Bundle();
+    for(Bundle.BundleEntryComponent entry : ResourceBundle.getEntry()) {
+      if(entry.getResource().getId().contains(patientId)) {
+        patientResourceBundle.addEntry(entry);
+      }
+      else {
+        String type = entry.getResource().getResourceType().toString();
+        if (type.equals("Condition")) {
+          Condition condition = (Condition) entry.getResource();
+          if (condition.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+        if (type.equals("MedicationRequest")) {
+          MedicationRequest medicationRequest = (MedicationRequest) entry.getResource();
+          if (medicationRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+        if (type.equals("Observation")) {
+          Observation observation = (Observation) entry.getResource();
+          if (observation.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+        if (type.equals("Procedure")) {
+          Procedure procedure = (Procedure) entry.getResource();
+          if (procedure.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+        if (type.equals("Encounter")) {
+          Encounter encounter = (Encounter) entry.getResource();
+          if (encounter.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+        if (type.equals("ServiceRequest")) {
+          ServiceRequest serviceRequest = (ServiceRequest) entry.getResource();
+          if (serviceRequest.getSubject().getReference().equals("Patient/" + patientId)) {
+            patientResourceBundle.addEntry(entry);
+          }
+        }
+      }
+    }
+    return patientResourceBundle;
+  }
+
   private Bundle getPatientBundleByReport(MeasureReport patientReport) {
     Bundle patientBundle = new Bundle();
     List<Reference> refs = patientReport.getEvaluatedResource();
@@ -1147,47 +1191,6 @@ public class ReportController extends BaseController {
       }
     }
     return patientBundle;
-  }
-
-  private Bundle getPatientBundleBySubmissionBundle(MeasureReport patientReport) {
-// Gets the patientId and uses it to create a list of Patients of interest to reuse the query code
-    List<PatientOfInterestModel> patientList = new ArrayList<>();
-    PatientOfInterestModel poi = new PatientOfInterestModel();
-    poi.setReference(patientReport.getSubject().getReference() != null && !patientReport.getSubject().getReference().equals("")?
-            patientReport.getSubject().getReference():"null");
-    poi.setIdentifier(patientReport.getIdentifier() != null && patientReport.getIdentifier().size() > 1?
-            patientReport.getIdentifier().get(0).getSystem() + "|" + patientReport.getIdentifier().get(0).getId():"null|null");
-    patientList.add(poi);
-
-    // Creates a list of resources of the patient to find for this current patient
-    List<String> resourceTypesToQuery = new ArrayList<>();
-    List<Reference> refs = patientReport.getEvaluatedResource();
-    for(Reference ref : refs) {
-      String[] refParts = ref.getReference().split("/");
-      if(refParts.length == 2 && !resourceTypesToQuery.contains(refParts[0])) {
-        resourceTypesToQuery.add(refParts[0]);
-      }
-    }
-
-    // Query for resources of each patient the same way as it does when generating reports
-    if(this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-      List<QueryResponse> queryResponses = this.getRemotePatientData(patientList);
-      return queryResponses.get(0).getBundle();
-    }
-    else if(this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      IQuery query = null;
-      try {
-        query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-      List<QueryResponse> queryResponses = query.execute(patientList, resourceTypesToQuery);
-      return queryResponses.get(0).getBundle();
-    }
-
-    // If all else fails return an empty bundle
-    return new Bundle();
   }
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
