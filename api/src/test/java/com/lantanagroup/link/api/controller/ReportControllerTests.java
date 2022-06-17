@@ -179,11 +179,11 @@ public class ReportControllerTests {
     when(receiver.retrieveContent(anyString())).thenReturn(content);
     when(cxt.newJsonParser()).thenReturn(jsonParser);
     when(jsonParser.parseResource(anyObject(), anyString())).thenReturn(bundle);
-    when(fhirDataProvider.getResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
-    when(fhirDataProvider.getResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
-    when(fhirDataProvider.getResource("Patient", "patient1")).thenReturn(patient1);
-    when(fhirDataProvider.getResource("Patient", "patient2")).thenReturn(patient2);
-    when(fhirDataProvider.getResource("Encounter", "patient1")).thenReturn(encounter1);
+    when(fhirDataProvider.tryGetResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
+    when(fhirDataProvider.tryGetResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
+    when(fhirDataProvider.tryGetResource("Patient", "patient1")).thenReturn(patient1);
+    when(fhirDataProvider.tryGetResource("Patient", "patient2")).thenReturn(patient2);
+    when(fhirDataProvider.tryGetResource("Encounter", "patient1")).thenReturn(encounter1);
     List<PatientReportModel> reports = controller.getReportPatients("report1");
     Assert.assertEquals(reports.size(), 2);
   }
@@ -247,11 +247,11 @@ public class ReportControllerTests {
     when(receiver.retrieveContent(anyString())).thenReturn(content);
     when(cxt.newJsonParser()).thenReturn(jsonParser);
     when(jsonParser.parseResource(anyObject(), anyString())).thenReturn(bundle);
-    when(fhirDataProvider.getResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
-    when(fhirDataProvider.getResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
-    when(fhirDataProvider.getResource("Patient", "patient1")).thenReturn(patient1);
-    when(fhirDataProvider.getResource("Patient", "patient2")).thenReturn(patient2);
-    when(fhirDataProvider.getResource("Encounter", "patient1")).thenReturn(encounter1);
+    when(fhirDataProvider.tryGetResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
+    when(fhirDataProvider.tryGetResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
+    when(fhirDataProvider.tryGetResource("Patient", "patient1")).thenReturn(patient1);
+    when(fhirDataProvider.tryGetResource("Patient", "patient2")).thenReturn(patient2);
+    when(fhirDataProvider.tryGetResource("Encounter", "patient1")).thenReturn(encounter1);
     PatientDataModel response = controller.getPatientData("report1", "patient1", authentication, request);
     Assert.assertEquals(response.getConditions().size(), 0);
     Assert.assertEquals(response.getEncounters().size(), 1);

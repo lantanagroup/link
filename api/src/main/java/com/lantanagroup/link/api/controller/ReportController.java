@@ -305,8 +305,8 @@ public class ReportController extends BaseController {
         throw new Exception("patientDataBundle is null");
       }
 
+      // TODO: Should this be here? Or should this be in the ApplyConceptMaps class?
       context.setConceptMaps(getConceptMaps());
-
 
       // store patient data
       for (QueryResponse patientQueryResponse : patientQueryResponses) {
@@ -319,7 +319,11 @@ public class ReportController extends BaseController {
                         .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
         );
 
+        // Make sure the patient bundle returned by query component has an ID in the correct format
         patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
+
+        // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
+        patientQueryResponse.getBundle().getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
         // Store the data
         logger.info("Storing patient data bundle Bundle/" + patientQueryResponse.getBundle().getId());
@@ -414,7 +418,6 @@ public class ReportController extends BaseController {
 
       // Get the patient identifiers for the given date
       List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
-
 
       triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
 
@@ -945,7 +948,7 @@ public class ReportController extends BaseController {
 
       try {
         // Try to GET the patient to see if it has already been deleted or not
-        this.getFhirDataProvider().getResource("Patient", excludedPatient.getPatientId());
+        this.getFhirDataProvider().tryGetResource("Patient", excludedPatient.getPatientId());
         logger.debug(String.format("Adding patient %s to list of patients to delete", excludedPatient.getPatientId()));
 
         // Add a "DELETE" request to the bundle, since it hasn't been deleted
@@ -1138,7 +1141,7 @@ public class ReportController extends BaseController {
     for(Reference ref : refs) {
       String[] refParts = ref.getReference().split("/");
       if(refParts.length == 2) {
-        Resource resource = (Resource)this.getFhirDataProvider().getResource(refParts[0], refParts[1]);
+        Resource resource = (Resource)this.getFhirDataProvider().tryGetResource(refParts[0], refParts[1]);
         Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
         patientBundle.addEntry(component);
       }
@@ -1192,10 +1195,12 @@ public class ReportController extends BaseController {
       Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
       List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
       if (classes == null) {
-        logger.error(String.format("No class set-up for event %s", eventType.toString()));
+        logger.debug(String.format("No class set-up for event %s", eventType.toString()));
         return;
       }
       for (String className : classes) {
+        logger.info(String.format("Executing class %s for event %s", className, eventType.toString()));
+
         try {
           Class<?> clazz = Class.forName(className);
           Object myObject = clazz.newInstance();

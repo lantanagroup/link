@@ -9,6 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -137,4 +138,19 @@ public class ApiConfig {
 
     @Getter
     private Boolean deleteAfterSubmission;
+
+    /**
+     * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.
+     */
+    @Getter
+    private HashMap<String, String> dataProcessor;
+
+    /**
+     * The string represents the data measure report id that gets continuously updated.
+     */
+    @Getter
+    private String dataMeasureReportId;
+
+    @Getter
+    private String reportAggregator;
 }
