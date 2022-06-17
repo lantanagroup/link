@@ -1079,16 +1079,12 @@ public class ReportController extends BaseController {
       }
       else {
         // Get ids of all patients in the submission bundle
-        List<String> patientIds = new ArrayList();
-        for (Bundle.BundleEntryComponent Entry : submitted.getEntry()) {
-          if (Entry.getResource().getId() != null && Entry.getResource().getId().contains("Patient")) {
-            String[] refParts = Entry.getResource().getId().split("/");
-            patientIds.add(refParts[refParts.length -1].contains("history")?refParts[refParts.length -2]:refParts[refParts.length -1]);
+        for (Bundle.BundleEntryComponent entry : submitted.getEntry()) {
+          if (entry.getResource().getId() != null && entry.getResource().getId().contains("Patient")) {
+            String[] refParts = entry.getResource().getId().split("/");
+            Bundle patientBundle = getPatientResourcesById(refParts[refParts.length -1].contains("history")?refParts[refParts.length -2]:refParts[refParts.length -1], submitted);
+            patientBundles.add(patientBundle);
           }
-        }
-        for(String currentPatient : patientIds) {
-          Bundle patientBundle = getPatientResourcesById(currentPatient, submitted);
-          patientBundles.add(patientBundle);
         }
       }
     }
