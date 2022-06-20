@@ -1,6 +1,7 @@
 package com.lantanagroup.link.consumer.api;
 
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.annotation.IdParam;
 import ca.uhn.fhir.rest.annotation.Operation;
 import ca.uhn.fhir.rest.annotation.OperationParam;
@@ -29,7 +30,6 @@ import static com.lantanagroup.link.Constants.MeasureReportBundleProfileUrl;
 
 @Component
 public class ReportCsvOperationProvider {
-  public static final String OPERATION_NAME = "$report-csv";
   private static final Logger logger = LoggerFactory.getLogger(ReportCsvOperationProvider.class);
 
   @Autowired
@@ -37,6 +37,35 @@ public class ReportCsvOperationProvider {
 
   @Autowired
   private IFhirResourceDao<Bundle> bundleDao;
+
+  private void validateInput(Binary input) {
+    if (input == null) {
+      throw new InvalidRequestException("input must not be null");
+    }
+    if (input.getData() == null) {
+      throw new InvalidRequestException("input.data must not be null");
+    }
+  }
+
+  private void validateDate(DateParam value, String parameterName) {
+    if (value == null) {
+      throw new InvalidRequestException(String.format("%s must not be null", parameterName));
+    }
+    if (value.getPrefix() != null) {
+      throw new InvalidRequestException(String.format("%s must not have a prefix", parameterName));
+    }
+    if (value.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
+      throw new InvalidRequestException(String.format("%s must not be more precise than date", parameterName));
+    }
+  }
+
+  private void validateDates(DateParam periodStart, DateParam periodEnd) {
+    validateDate(periodStart, "period-start");
+    validateDate(periodEnd, "period-end");
+    if (periodEnd.getValue().before(periodStart.getValue())) {
+      throw new InvalidRequestException("period-end must not be earlier than period-start");
+    }
+  }
 
   private Measure getMeasure(IdType measureId, RequestDetails requestDetails) {
     try {
@@ -63,7 +92,12 @@ public class ReportCsvOperationProvider {
   private Charset getCharset(Binary input) {
     final String EXPECTED_MIME_TYPE = "text/csv";
     if (input.hasContentType()) {
-      ContentType contentType = ContentType.parse(input.getContentType());
+      ContentType contentType;
+      try {
+        contentType = ContentType.parse(input.getContentType());
+      } catch (Exception e) {
+        throw new InvalidRequestException("Failed to parse input content type", e);
+      }
       if (!contentType.getMimeType().equalsIgnoreCase(EXPECTED_MIME_TYPE)) {
         throw new InvalidRequestException(String.format(
                 "Unexpected input MIME type (expected '%s', got '%s')",
@@ -97,18 +131,19 @@ public class ReportCsvOperationProvider {
           Measure measure,
           Binary input,
           StringOrListParam map,
-          ReferenceParam subject)
-          throws IOException {
+          ReferenceParam subject) {
     logger.debug("Converting input data to measure report");
     try (InputStream stream = new ByteArrayInputStream(input.getData());
          Reader reader = new InputStreamReader(stream, getCharset(input))) {
       CsvToReportConverter converter =
               new CsvToReportConverter(measure, new Reference(subject.getValue()), getHeadersByCode(map));
       return converter.convert(reader);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Failed to convert input data to measure report", e);
     }
   }
 
-  @Operation(type = Measure.class, name = OPERATION_NAME)
+  @Operation(type = Measure.class, name = "$report-csv")
   public Bundle execute(
           @IdParam IdType measureId,
           @OperationParam(name = "input", min = 1) Binary input,
@@ -117,14 +152,16 @@ public class ReportCsvOperationProvider {
           @OperationParam(name = "period-start", min = 1) DateParam periodStart,
           @OperationParam(name = "reporter") ReferenceParam reporter,
           @OperationParam(name = "subject") ReferenceParam subject,
-          RequestDetails requestDetails) throws IOException {
-    logger.info("Executing {}", OPERATION_NAME);
+          RequestDetails requestDetails) {
+    logger.info("Executing $report-csv");
+    validateInput(input);
+    validateDates(periodStart, periodEnd);
     Measure measure = getMeasure(measureId, requestDetails);
     MeasureReport measureReport = getMeasureReport(measure, input, map, subject);
     measureReport.setReporter(new Reference(reporter.getValue()));
     measureReport.getPeriod()
-            .setStart(periodStart.getValue())
-            .setEnd(periodEnd.getValue());
+            .setStart(periodStart.getValue(), periodStart.getPrecision())
+            .setEnd(periodEnd.getValue(), periodEnd.getPrecision());
     Bundle bundle = new Bundle();
     bundle.getMeta().addProfile(MeasureReportBundleProfileUrl);
     bundle.getIdentifier()
