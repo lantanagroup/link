@@ -42,9 +42,10 @@ public class SingleCommandShellRunner implements ApplicationRunner {
       }
     }
 
+    commandAndArgs.add("exit");
+
     InteractiveShellApplicationRunner.disable(this.environment);
     String[] commands = new String[commandAndArgs.size()];
     shell.run(new ShellInputProvider(commandAndArgs.toArray(commands)));
-    shell.run(new ShellInputProvider(new String[]{"exit"}));
   }
 }
