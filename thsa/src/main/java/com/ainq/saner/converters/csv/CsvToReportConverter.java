@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -80,6 +81,16 @@ public class CsvToReportConverter extends AbstractConverter {
             return String.format("%s#%s:%s", code.hasSystem() ? code.getSystem() : "", code.getCode(), component);
         }
     }
+
+    private static boolean hasCoding(CodeableConcept concept, String system, String code) {
+        for (Coding conceptCoding : concept.getCoding()) {
+            if (Objects.equals(system, conceptCoding.getSystem()) && code.equals(conceptCoding.getCode())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** The measure being produced */
     private MeasureReport measureReport;
 
@@ -299,7 +310,7 @@ public class CsvToReportConverter extends AbstractConverter {
 
     private MeasureReportGroupComponent getGroup(Coding code) {
         for (MeasureReportGroupComponent group: measureReport.getGroup()) {
-            if (group.hasCode() && group.getCode().hasCoding(code.getSystem(), code.getCode())) {
+            if (group.hasCode() && hasCoding(group.getCode(), code.getSystem(), code.getCode())) {
                 return group;
             }
         }
@@ -312,7 +323,7 @@ public class CsvToReportConverter extends AbstractConverter {
         MeasureReportGroupComponent group = getGroupForPopulation(code);
 
         for (MeasureReportGroupPopulationComponent pop: group.getPopulation()) {
-            if (pop.hasCode() && pop.getCode().hasCoding(code.getSystem(), code.getCode())) {
+            if (pop.hasCode() && hasCoding(pop.getCode(), code.getSystem(), code.getCode())) {
                 return pop;
             }
         }

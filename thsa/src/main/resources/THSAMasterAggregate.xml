@@ -10,7 +10,6 @@
     <group>
         <code>
             <coding>
-                <system value="TODO"/>
                 <code value="beds"/>
             </coding>
         </code>
@@ -57,7 +56,6 @@
     <group>
         <code>
             <coding>
-                <system value="TODO"/>
                 <code value="icu-beds"/>
             </coding>
         </code>
@@ -104,7 +102,6 @@
     <group>
         <code>
             <coding>
-                <system value="TODO"/>
                 <code value="vents"/>
             </coding>
         </code>

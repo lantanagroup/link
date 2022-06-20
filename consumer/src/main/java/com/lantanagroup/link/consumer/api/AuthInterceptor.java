@@ -8,6 +8,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import com.lantanagroup.link.config.consumer.Permission;
 import com.lantanagroup.link.config.consumer.Role;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ public class AuthInterceptor extends AuthorizationInterceptor {
       Role appliedRole = null;
       try {
         // validate Fhir resource type
-        Class.forName(Constants.FhirResourcesPackageName + resourceType);
+        Class<? extends IBaseResource> resourceClass = Class.forName(Constants.FhirResourcesPackageName + resourceType).asSubclass(IBaseResource.class);
         if (permission.getRoles() != null) {
           Optional<Role> userRole = Arrays.stream(permission.getRoles()).filter(role -> !defaultRole.equals(role.getName()) && userRoleSet.contains(role.getName())).collect(Collectors.toList()).stream().findFirst();
           if (userRole.isPresent()) {
@@ -65,6 +66,11 @@ public class AuthInterceptor extends AuthorizationInterceptor {
           // get all the permissions for each role
           if (appliedRole != null) {
             for (String perm : appliedRole.getPermission()) {
+              if (perm.startsWith("$")) {
+                ruleBuilder.allow().operation().named(perm).onType(resourceClass).andAllowAllResponses().andThen();
+                ruleBuilder.allow().operation().named(perm).onInstancesOfType(resourceClass).andAllowAllResponses().andThen();
+                continue;
+              }
               switch (perm.toLowerCase()) {
                 case "read":
                   ruleBuilder.allow().read().resourcesOfType(resourceType).withAnyId().andThen();
