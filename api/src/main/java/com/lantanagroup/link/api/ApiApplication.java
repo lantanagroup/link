@@ -34,7 +34,8 @@ import java.util.TimeZone;
         "com.lantanagroup.link.config.api",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.auth",
-        "com.lantanagroup.link.nhsn"})
+        "com.lantanagroup.link.nhsn",
+        "com.lantanagroup.link.thsa"})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;

@@ -2,6 +2,8 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.thsa.THSAConfig;
+import com.lantanagroup.link.thsa.GenericCSVProcessor;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import lombok.Setter;
@@ -27,15 +29,21 @@ public class ReportDataController extends BaseController{
   @Setter
   private ApiConfig config;
 
-  @PostMapping(value = "/api/data/csv?type=XXX")
-  public void retrieveCSVData(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
+  @Autowired
+  private THSAConfig thsaConfig;
 
-    if(config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
+  @PostMapping(value = "/api/data/csv")
+  public void retrieveCSVData(@RequestBody() String csvContent) throws Exception {
+
+    if(config.getDataProcessor() == null || config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
       throw new HttpResponseException(400, "Bad Request, cannot find data processor.");
     }
 
     logger.debug("Receiving CSV. Parsing...");
-    InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
+    GenericCSVProcessor genericCSVProcessor = new GenericCSVProcessor();
+    genericCSVProcessor.process(csvContent.getBytes(), getFhirDataProvider(), thsaConfig);
+
+    /*InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
     CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
     List<String[]> csvData = csvReader.readAll();
@@ -46,8 +54,6 @@ public class ReportDataController extends BaseController{
       case "ventilator":
         // TODO
         break;
-    }
-
-    //IDataProcessor.process(csvContent.getBytes(), getFhirDataProvider());
+    }*/
   }
 }
