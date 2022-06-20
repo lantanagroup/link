@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.thsa.GenericCSVProcessor;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -28,6 +29,9 @@ public class ReportDataController extends BaseController{
   @Setter
   private ApiConfig config;
 
+  @Autowired
+  private THSAConfig thsaConfig;
+
   @PostMapping(value = "/api/data/csv")
   public void retrieveCSVData(@RequestBody() String csvContent) throws Exception {
 
@@ -37,7 +41,7 @@ public class ReportDataController extends BaseController{
 
     logger.debug("Receiving CSV. Parsing...");
     GenericCSVProcessor genericCSVProcessor = new GenericCSVProcessor();
-    genericCSVProcessor.process(csvContent.getBytes(), getFhirDataProvider());
+    genericCSVProcessor.process(csvContent.getBytes(), getFhirDataProvider(), thsaConfig);
 
     /*InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));

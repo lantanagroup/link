@@ -10,19 +10,15 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 
+@Component
 public class GenericCSVProcessor implements IDataProcessor {
 
-  @Autowired
-  private ApiConfig config;
-
-  @Autowired
-  private THSAConfig thsaConfig;
-
   @Override
-  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) {
+  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider, THSAConfig thsaConfig) {
 
     MeasureReport measureReport = new MeasureReport();
 
@@ -39,8 +35,7 @@ public class GenericCSVProcessor implements IDataProcessor {
       e.printStackTrace();
     }
 
-    thsaConfig.setDataMeasureReportId(config.getDataMeasureReportId());
-    measureReport.setId(config.getDataMeasureReportId());
+    measureReport.setId(thsaConfig.getDataMeasureReportId());
 
     // Store report
     Bundle updateBundle = new Bundle();
