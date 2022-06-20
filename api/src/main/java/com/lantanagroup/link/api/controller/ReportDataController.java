@@ -34,11 +34,11 @@ public class ReportDataController extends BaseController{
     if(config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
       throw new HttpResponseException(400, "Bad Request, cannot find data processor.");
     }
-    
+
+    logger.debug("Receiving CSV. Parsing...");
     GenericCSVProcessor genericCSVProcessor = new GenericCSVProcessor();
     genericCSVProcessor.process(csvContent.getBytes(), getFhirDataProvider());
 
-    logger.debug("Receiving CSV. Parsing...");
     InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
     CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
