@@ -55,7 +55,7 @@ public class ReportCsvOperationProvider {
       throw new InvalidRequestException(String.format("%s must not have a prefix", parameterName));
     }
     if (value.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
-      throw new InvalidRequestException(String.format("%s must not be more precise than date", parameterName));
+      throw new InvalidRequestException(String.format("%s must not have a time component", parameterName));
     }
   }
 
@@ -67,12 +67,17 @@ public class ReportCsvOperationProvider {
     }
   }
 
+  /**
+   * Returns the measure identified by the specified ID.
+   * First, attempts to read the measure from this server.
+   * If that fails, attempts to parse a Java resource from <code>consumer</code> or <code>thsa</code>.
+   */
   private Measure getMeasure(IdType measureId, RequestDetails requestDetails) {
     try {
-      logger.debug("Requesting measure from database");
+      logger.debug("Requesting measure from server");
       return measureDao.read(measureId, requestDetails);
     } catch (ResourceNotFoundException | ResourceGoneException restException) {
-      logger.debug("Failed with status {}; reading measure from resources", restException.getStatusCode());
+      logger.debug("Failed with status {}; reading measure from Java resources", restException.getStatusCode());
       for (Class<?> clazz : List.of(ReportCsvOperationProvider.class, CsvToReportConverter.class)) {
         Module module = clazz.getModule();
         String resourceName = String.format("/%s.xml", measureId.getIdPart());
@@ -89,6 +94,10 @@ public class ReportCsvOperationProvider {
     }
   }
 
+  /**
+   * Returns the charset of the specified input.
+   * If no charset is specified, returns the default charset of this Java virtual machine.
+   */
   private Charset getCharset(Binary input) {
     final String EXPECTED_MIME_TYPE = "text/csv";
     if (input.hasContentType()) {
@@ -111,6 +120,11 @@ public class ReportCsvOperationProvider {
     return Charset.defaultCharset();
   }
 
+  /**
+   * Converts the specified OR list to a <code>Map</code>.
+   * Each list element should be a composite parameter (e.g., <code>key$value</code>).
+   * Keys represent measure report group/population codes; values represent CSV headers.
+   */
   private Map<String, String> getHeadersByCode(StringOrListParam map) {
     if (map == null) {
       return null;
@@ -127,6 +141,9 @@ public class ReportCsvOperationProvider {
     return headersByCode;
   }
 
+  /**
+   * Converts the specified input data to a measure report.
+   */
   private MeasureReport getMeasureReport(
           Measure measure,
           Binary input,
@@ -154,14 +171,20 @@ public class ReportCsvOperationProvider {
           @OperationParam(name = "subject") ReferenceParam subject,
           RequestDetails requestDetails) {
     logger.info("Executing $report-csv");
+
+    // Validate arguments
     validateInput(input);
     validateDates(periodStart, periodEnd);
+
+    // Create measure report
     Measure measure = getMeasure(measureId, requestDetails);
     MeasureReport measureReport = getMeasureReport(measure, input, map, subject);
     measureReport.setReporter(new Reference(reporter.getValue()));
     measureReport.getPeriod()
             .setStart(periodStart.getValue(), periodStart.getPrecision())
             .setEnd(periodEnd.getValue(), periodEnd.getPrecision());
+
+    // Create and store bundle
     Bundle bundle = new Bundle();
     bundle.getMeta().addProfile(MeasureReportBundleProfileUrl);
     bundle.getIdentifier()
@@ -171,6 +194,7 @@ public class ReportCsvOperationProvider {
     bundle.setTimestamp(new Date());
     bundle.addEntry().setResource(measureReport);
     bundleDao.create(bundle, requestDetails);
+
     return bundle;
   }
 }
