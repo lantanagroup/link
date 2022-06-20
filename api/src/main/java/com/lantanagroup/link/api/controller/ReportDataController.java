@@ -28,10 +28,10 @@ public class ReportDataController extends BaseController{
   @Setter
   private ApiConfig config;
 
-  @PostMapping(value = "/api/data/csv?type=XXX")
-  public void retrieveCSVData(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
+  @PostMapping(value = "/api/data/csv")
+  public void retrieveCSVData(@RequestBody() String csvContent) throws Exception {
 
-    if(config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
+    if(config.getDataProcessor() == null || config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
       throw new HttpResponseException(400, "Bad Request, cannot find data processor.");
     }
 
@@ -39,7 +39,7 @@ public class ReportDataController extends BaseController{
     GenericCSVProcessor genericCSVProcessor = new GenericCSVProcessor();
     genericCSVProcessor.process(csvContent.getBytes(), getFhirDataProvider());
 
-    InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
+    /*InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
     CSVReader csvReader = new CSVReaderBuilder(bufferedReader).withSkipLines(1).build();
     List<String[]> csvData = csvReader.readAll();
@@ -50,6 +50,6 @@ public class ReportDataController extends BaseController{
       case "ventilator":
         // TODO
         break;
-    }
+    }*/
   }
 }

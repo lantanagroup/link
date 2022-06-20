@@ -38,8 +38,9 @@ public class GenericCSVProcessor implements IDataProcessor {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    config.setDataMeasureReportId(measureReport.getId());
-    thsaConfig.setDataMeasureReportId(measureReport.getId());
+
+    thsaConfig.setDataMeasureReportId(config.getDataMeasureReportId());
+    measureReport.setId(config.getDataMeasureReportId());
 
     // Store report
     Bundle updateBundle = new Bundle();
@@ -48,7 +49,7 @@ public class GenericCSVProcessor implements IDataProcessor {
             .setResource(measureReport)
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + config.getDataMeasureReportId()));
-    fhirDataProvider.transaction(updateBundle);
+                    .setUrl("MeasureReport/" + thsaConfig.getDataMeasureReportId()));
+    Bundle response = fhirDataProvider.transaction(updateBundle);
   }
 }
