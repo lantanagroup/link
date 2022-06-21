@@ -1,7 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.parser.JsonParser;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -12,17 +10,16 @@ import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.checkerframework.checker.units.qual.A;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -63,6 +60,11 @@ public class ReportController extends BaseController {
 
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  @Setter
+  private THSAConfig thsaConfig;
+
 
   @Autowired
   @Setter
@@ -389,19 +391,21 @@ public class ReportController extends BaseController {
         } catch (Exception e) {
           e.printStackTrace();
         }
-        Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
+        if (content != null && !content.equals("")) {
+          Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
 
 
-        //Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-        if(submitted != null && submitted.getEntry().size() > 0) {
-          List<ListResource> censusList = new ArrayList<>();
-          for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
-            if(entry.getResource().getResourceType() == ResourceType.List) {
-              censusList.add((ListResource)entry.getResource());
-              this.getFhirDataProvider().updateResource(entry.getResource());
+          //Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
+          if (submitted != null && submitted.getEntry().size() > 0) {
+            List<ListResource> censusList = new ArrayList<>();
+            for (Bundle.BundleEntryComponent entry : submitted.getEntry()) {
+              if (entry.getResource().getResourceType() == ResourceType.List) {
+                censusList.add((ListResource) entry.getResource());
+                this.getFhirDataProvider().updateResource(entry.getResource());
+              }
             }
+            context.setPatientCensusLists(censusList);
           }
-          context.setPatientCensusLists(censusList);
         }
       }
 
@@ -433,9 +437,20 @@ public class ReportController extends BaseController {
 
       context.setReportId(id);
 
+      context.setInventoryId(thsaConfig.getDataMeasureReportId());
+
       response.setReportId(id);
 
-      ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
+      // Generate the master measure report
+      Class<?> reportAggregatorClass = null;
+      try {
+        reportAggregatorClass = Class.forName(this.config.getReportAggregator());
+      } catch (ClassNotFoundException e) {
+        logger.error(String.format("Error generating report: %s", e));
+      }
+      IReportAggregator reportAggregator = (IReportAggregator) this.context.getBean(reportAggregatorClass);
+
+      ReportGenerator generator = new ReportGenerator(context, criteria, config, user, reportAggregator);
 
       triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
 
