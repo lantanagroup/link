@@ -17,3 +17,17 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'postgres-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    arguments:
+      -SERVERNAME nhsnlink-db.postgres.database.azure.com `
+      -DBNAME test_fhir2 `
+      -DBUSER it@nhsnlink-db
+      -DBPASSWORD .password@123
+    inlineScript: |
+      az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db.postgres.database.azure.com -y test_fhir2
+      
+    
