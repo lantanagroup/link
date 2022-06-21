@@ -92,6 +92,7 @@ public class JpaRestfulServer extends RestfulServer {
     this.registerInterceptor(new UserInterceptor(consumerConfig.getIssuer(), consumerConfig.getAuthJwksUrl()));
     this.registerInterceptor(new AuthInterceptor(consumerConfig));
 
+    reportCsvOperationProvider.initialize();
     this.registerProvider(reportCsvOperationProvider);
   }
 

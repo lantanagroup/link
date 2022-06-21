@@ -11,8 +11,6 @@ import ca.uhn.fhir.rest.param.ReferenceParam;
 import ca.uhn.fhir.rest.param.StringOrListParam;
 import ca.uhn.fhir.rest.param.StringParam;
 import ca.uhn.fhir.rest.server.exceptions.InvalidRequestException;
-import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.ainq.saner.converters.csv.CsvToReportConverter;
 import com.lantanagroup.link.FhirContextProvider;
 import org.apache.http.entity.ContentType;
@@ -37,6 +35,18 @@ public class ReportCsvOperationProvider {
 
   @Autowired
   private IFhirResourceDao<Bundle> bundleDao;
+
+  /**
+   * Preloads the THSA summary measure.
+   */
+  public void initialize() {
+    try (InputStream stream = CsvToReportConverter.class.getResourceAsStream("/THSAMasterAggregate.xml")) {
+      Measure measure = FhirContextProvider.getFhirContext().newXmlParser().parseResource(Measure.class, stream);
+      measureDao.update(measure);
+    } catch (IOException e) {
+      logger.warn("Failed to read the THSA summary measure", e);
+    }
+  }
 
   private void validateInput(Binary input) {
     if (input == null) {
@@ -64,33 +74,6 @@ public class ReportCsvOperationProvider {
     validateDate(periodEnd, "period-end");
     if (periodEnd.getValue().before(periodStart.getValue())) {
       throw new InvalidRequestException("period-end must not be earlier than period-start");
-    }
-  }
-
-  /**
-   * Returns the measure identified by the specified ID.
-   * First, attempts to read the measure from this server.
-   * If that fails, attempts to parse a Java resource from <code>consumer</code> or <code>thsa</code>.
-   */
-  private Measure getMeasure(IdType measureId, RequestDetails requestDetails) {
-    try {
-      logger.debug("Requesting measure from server");
-      return measureDao.read(measureId, requestDetails);
-    } catch (ResourceNotFoundException | ResourceGoneException restException) {
-      logger.debug("Failed with status {}; reading measure from Java resources", restException.getStatusCode());
-      for (Class<?> clazz : List.of(ReportCsvOperationProvider.class, CsvToReportConverter.class)) {
-        Module module = clazz.getModule();
-        String resourceName = String.format("/%s.xml", measureId.getIdPart());
-        try (InputStream stream = module.getResourceAsStream(resourceName)) {
-          if (stream == null) {
-            continue;
-          }
-          return FhirContextProvider.getFhirContext().newXmlParser().parseResource(Measure.class, stream);
-        } catch (IOException ioException) {
-          logger.warn(String.format("Failed to read resource '%s' from %s", resourceName, module), ioException);
-        }
-      }
-      throw restException;
     }
   }
 
@@ -177,7 +160,7 @@ public class ReportCsvOperationProvider {
     validateDates(periodStart, periodEnd);
 
     // Create measure report
-    Measure measure = getMeasure(measureId, requestDetails);
+    Measure measure = measureDao.read(measureId, requestDetails);
     MeasureReport measureReport = getMeasureReport(measure, input, map, subject);
     measureReport.setReporter(new Reference(reporter.getValue()));
     measureReport.getPeriod()
