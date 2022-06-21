@@ -28,6 +28,6 @@ steps:
       -DBUSER it@nhsnlink-db
       -DBPASSWORD .password@123
     inlineScript: |
-      az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db.postgres.database.azure.com -y test_fhir2
+      az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db.postgres.database.azure.com -y -n test_fhir2
       
     
