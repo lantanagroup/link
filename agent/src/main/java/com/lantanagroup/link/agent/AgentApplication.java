@@ -21,9 +21,10 @@ import org.springframework.http.converter.HttpMessageConverter;
 
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.agent",
-        "com.lantanagroup.link.query",
+        "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config.query",
-        "com.lantanagroup.link.auth"
+        "com.lantanagroup.link.query",
+        "com.lantanagroup.link.spring"
 })
 public class AgentApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired

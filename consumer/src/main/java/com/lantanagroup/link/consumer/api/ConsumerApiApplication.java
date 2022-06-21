@@ -19,7 +19,11 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication(scanBasePackages = {"com.lantanagroup.link.consumer", "com.lantanagroup.link.config.consumer"})
+@SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link.config.consumer",
+        "com.lantanagroup.link.consumer",
+        "com.lantanagroup.link.spring"
+})
 @ServletComponentScan(basePackageClasses = {JpaRestfulServer.class})
 public class ConsumerApiApplication extends SpringBootServletInitializer {
   @Autowired
