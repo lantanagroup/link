@@ -19,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 
 
 @Component
-public class FHIRSender extends GenericSender implements IReportSender {
-  protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
+public class XMLSender extends GenericSender implements IReportSender {
+  protected static final Logger logger = LoggerFactory.getLogger(XMLSender.class);
 
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
