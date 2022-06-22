@@ -14,11 +14,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fhir")
+@RequestMapping("/api")
 public class ReportDataController extends BaseController{
   private static final Logger logger = LoggerFactory.getLogger(ReportDataController.class);
 
-  @PostMapping(value = "/api/data/csv?type=XXX")
+  @PostMapping(value = "/data/csv?type=XXX")
   public void retrieveCSVData(@PathVariable("XXX") String type, @RequestBody() String csvContent) throws Exception {
 
     logger.debug("Receiving CSV. Parsing...");
