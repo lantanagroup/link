@@ -11,6 +11,7 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -43,6 +44,9 @@ public class ApiInit {
 
   @Autowired
   private QueryConfig queryConfig;
+
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   @Autowired
   private FhirDataProvider provider;
@@ -150,7 +154,7 @@ public class ApiInit {
         return;
       }
 
-      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
+      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), measureDefBundle);
       if (!missingResourceTypes.equals("")) {
         logger.error(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
        // return;

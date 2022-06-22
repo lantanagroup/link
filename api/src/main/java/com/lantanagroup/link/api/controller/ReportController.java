@@ -10,6 +10,7 @@ import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
@@ -65,6 +66,8 @@ public class ReportController extends BaseController {
   @Setter
   private THSAConfig thsaConfig;
 
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   @Autowired
   @Setter
@@ -164,7 +167,7 @@ public class ReportController extends BaseController {
       if (reportRemoteReportDefBundle == null) {
         logger.error(String.format("Error parsing report def bundle from %s", url));
       } else {
-        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), reportRemoteReportDefBundle);
+        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), reportRemoteReportDefBundle);
         if (!missingResourceTypes.equals("")) {
           logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
         }
@@ -426,7 +429,7 @@ public class ReportController extends BaseController {
       triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
 
       // Get the resource types to query
-      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
+      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));

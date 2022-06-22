@@ -3,6 +3,7 @@ package com.lantanagroup.link.query.uscore.scoop;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class PatientScoop extends Scoop {
   @Autowired
   private QueryConfig queryConfig;
 
+  @Autowired
+  private USCoreConfig usCoreConfig;
+
   public void execute(List<PatientOfInterestModel> pois, List<String> resourceTypes) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
@@ -44,7 +48,7 @@ public class PatientScoop extends Scoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.queryConfig, resourceTypes);
+      PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig, resourceTypes);
       patientData.loadData();
       return patientData;
     } catch (Exception e) {
@@ -98,7 +102,7 @@ public class PatientScoop extends Scoop {
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
-      int threshold = queryConfig.getParallelPatients();
+      int threshold = usCoreConfig.getParallelPatients();
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
       ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
 
