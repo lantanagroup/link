@@ -1,11 +1,7 @@
 package com.lantanagroup.link.api.controller;
-
-import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.thsa.GenericCSVProcessor;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import lombok.Setter;
 import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
@@ -13,15 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/fhir")
+@RequestMapping("/api")
 public class ReportDataController extends BaseController{
   private static final Logger logger = LoggerFactory.getLogger(ReportDataController.class);
 
@@ -32,7 +21,7 @@ public class ReportDataController extends BaseController{
   @Autowired
   private THSAConfig thsaConfig;
 
-  @PostMapping(value = "/api/data/csv")
+  @PostMapping(value = "/data/csv")
   public void retrieveCSVData(@RequestBody() String csvContent) throws Exception {
 
     if(config.getDataProcessor() == null || config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
