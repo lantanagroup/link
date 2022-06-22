@@ -41,6 +41,7 @@ public class QueryTests {
     usCoreConfig.getOtherResourceTypes();
 
     PatientScoop patientScoop = new PatientScoop();
+    patientScoop.setUsCoreConfig(usCoreConfig);
     patientScoop.setQueryConfig(queryConfig);
     patientScoop.setFhirQueryServer(fhirQueryClient);
 
