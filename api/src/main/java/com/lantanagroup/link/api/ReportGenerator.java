@@ -11,7 +11,6 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.nhsn.ReportAggregator;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
  */
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
-
 
   private ReportContext context;
   private ReportCriteria criteria;
@@ -143,7 +141,7 @@ public class ReportGenerator {
     }).collect(Collectors.toList());
 
     // Generate the master measure report
-    MeasureReport masterMeasureReport = new ReportAggregator().generate(criteria, context, patientMeasureReports);
+    reportAggregator.generate(criteria, context, patientMeasureReports);
 
     // Save measure report and documentReference
     updateBundle.addEntry()

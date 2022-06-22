@@ -1,0 +1,36 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'postgres-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    db: $(DATABASE)
+    arguments:
+      -SERVERNAME nhsnlink-db.postgres.database.azure.com `
+      -DBNAME test_fhir2 `
+      -DBUSER it@nhsnlink-db
+      -DBPASSWORD .password@123
+    inlineScript: |
+      export PGPASSWORD=.password@123
+      psql --host=nhsnlink-db.postgres.database.azure.com --username=it@nhsnlink-db --no-password --dbname=$(db) --list
+      #az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db -y -n test_me
+      
+    

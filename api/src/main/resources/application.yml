@@ -7,10 +7,12 @@ swagger:
 api:
   fhir-server-store:
   auth-jwks-url:
+  Data-Processor:
+    csv: GenericCSVProcessor
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
-  report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
+  report-aggregator: com.lantanagroup.link.thsa.THSAAggregator
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
@@ -35,6 +37,8 @@ api:
     retry-wait: 5000
   query:
     mode: Local
+thsa:
+  dataMeasureReportId: inventorydata
 query:
   require-https: true
   parallel-patients: 10
