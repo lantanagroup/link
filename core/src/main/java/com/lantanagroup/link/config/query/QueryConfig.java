@@ -62,19 +62,4 @@ public class QueryConfig {
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
    */
   private String authClass;
-
-  /**
-   * <strong>query.patient-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are specific to a patient (support the 'patient' search parameter)
-   */
-  private List<String> patientResourceTypes;
-
-  /**
-   * <strong>query.other-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are NOT specific to a patient. These are queried via references from patient resources.
-   */
-  private List<String> otherResourceTypes;
-
-  /**
-   * <strong>query.parallel-patients</strong><br>The number of patients to query for at a single time.
-   */
-  private int parallelPatients = 10;
 }
