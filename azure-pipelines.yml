@@ -30,7 +30,7 @@ steps:
       -DBPASSWORD .password@123
     inlineScript: |
       export PGPASSWORD=.password@123
-      psql --host=nhsnlink-db.postgres.database.azure.com --username=it@nhsnlink-db --no-password --dbname=postgres --list
+      psql --host=nhsnlink-db.postgres.database.azure.com --username=it@nhsnlink-db --no-password --dbname=$(db) --list
       #az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db -y -n test_me
       
     
