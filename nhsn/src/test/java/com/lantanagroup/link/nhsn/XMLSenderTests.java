@@ -36,10 +36,10 @@ import java.util.Arrays;
 import static org.mockito.Mockito.*;
 
 
-public class FHIRSenderTests {
+public class XMLSenderTests {
 
 
-  private void runTest(FHIRSender mockSender, IGenericClient mockFhirStoreClient, HttpClient mockHttpClient, MeasureReport measureReport, ArgumentMatcher<HttpUriRequest> httpArgMatcher) throws Exception {
+  private void runTest(XMLSender mockSender, IGenericClient mockFhirStoreClient, HttpClient mockHttpClient, MeasureReport measureReport, ArgumentMatcher<HttpUriRequest> httpArgMatcher) throws Exception {
     HttpServletRequest request = mock(HttpServletRequest.class);
     AuthMockInfo authMockInfo = MockHelper.mockAuth(mockFhirStoreClient);
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
@@ -81,8 +81,8 @@ public class FHIRSenderTests {
     return bundle;
   }
 
-  private FHIRSender getMockSender(FHIRSenderConfig config) throws Exception {
-    FHIRSender sender = mock(FHIRSender.class);
+  private XMLSender getMockSender(FHIRSenderConfig config) throws Exception {
+    XMLSender sender = mock(XMLSender.class);
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
@@ -126,7 +126,7 @@ public class FHIRSenderTests {
 
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
     MeasureReport measureReport = getMasterMeasureReport();
@@ -203,7 +203,7 @@ public class FHIRSenderTests {
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
     MeasureReport measureReport = getMasterMeasureReport();
