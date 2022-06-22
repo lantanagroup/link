@@ -9,10 +9,6 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-# Setup variables
-variables:
-  db: test_me
-
 steps:
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
@@ -26,7 +22,7 @@ steps:
     azureSubscription: 'postgres-connection'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
-    db: $(db)
+    db: $(DATABASE)
     arguments:
       -SERVERNAME nhsnlink-db.postgres.database.azure.com `
       -DBNAME test_fhir2 `
