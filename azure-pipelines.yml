@@ -29,8 +29,8 @@ steps:
 
     inlineScript: |
       export PGPASSWORD=$(db_pass)
-      psql --host=nhsnlink-db.postgres.database.azure.com 
-        --username=$(db_user) --no-password --dbname=$(db) --list
+      psql --host=nhsnlink-db.postgres.database.azure.com `
+        --username=$(db_user) --no-password --dbname=$(db) --list `
         --command "drop database IF EXISTS $(db)"
       #az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db -y -n test_me
       
