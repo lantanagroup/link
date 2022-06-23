@@ -382,34 +382,6 @@ public class ReportController extends BaseController {
 
       if (existingDocumentReference != null) {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
-
-        //Class<?> senderClazz = Class.forName(this.config.getSender());
-        //IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-
-        String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
-        FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
-        String content = null;
-        try {
-          content = receiver.retrieveContent(bundleLocation);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        if (content != null && !content.equals("")) {
-          Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
-
-
-          //Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-          if (submitted != null && submitted.getEntry().size() > 0) {
-            List<ListResource> censusList = new ArrayList<>();
-            for (Bundle.BundleEntryComponent entry : submitted.getEntry()) {
-              if (entry.getResource().getResourceType() == ResourceType.List) {
-                censusList.add((ListResource) entry.getResource());
-                this.getFhirDataProvider().updateResource(entry.getResource());
-              }
-            }
-            context.setPatientCensusLists(censusList);
-          }
-        }
       }
 
       // Generate the master report id
