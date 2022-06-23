@@ -3,14 +3,15 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-trigger:
-- master
+trigger: none
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
   db: $(DATABASE)
+  db_user: $(DATABASE_USER)
+  db_pass: $(DATABASE_PASS)
 
 steps:
 - script: echo Hello, world!
@@ -29,11 +30,10 @@ steps:
     arguments:
       -SERVERNAME nhsnlink-db.postgres.database.azure.com `
       -DBNAME test_fhir2 `
-      -DBUSER it@nhsnlink-db
-      -DBPASSWORD .password@123
+
     inlineScript: |
       export PGPASSWORD=.password@123
-      psql --host=nhsnlink-db.postgres.database.azure.com --username=it@nhsnlink-db --no-password --dbname=$(db) --list
+      psql --host=nhsnlink-db.postgres.database.azure.com --username=$(db_user) --no-password --dbname=$(db) --list
       #az postgres db delete -g MC_nhsnlink-rg_nhsnlink-aks_southcentralus -s nhsnlink-db -y -n test_me
       
     
