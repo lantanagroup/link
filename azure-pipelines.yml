@@ -12,7 +12,7 @@ variables:
   db: $(DATABASE)
   db_user: $(DATABASE_USER)
   db_pass: $(DATABASE_PASS)
-  namespace: $(NAMESPACE)
+  ns: $(NAMESPACE)
   deploy_api: $(DEPLOYMENT_API)
   deploy_fhir: $(DEPLOYMENT_FHIR)
 
@@ -31,7 +31,7 @@ steps:
     kubernetesServiceEndpoint: 'LINK Default'
     namespace: 'demo'
     command: 'scale'
-    arguments: 'deployment $(deploy_api) --replicas=0 -n $(namespace)'
+    arguments: 'deployment $(deploy_api) --replicas=0 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
@@ -41,7 +41,7 @@ steps:
     kubernetesServiceEndpoint: 'LINK Default'
     namespace: 'demo'
     command: 'scale'
-    arguments: 'deployment $(deploy_fhir) --replicas=0 -n $(namespace)'
+    arguments: 'deployment $(deploy_fhir) --replicas=0 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
@@ -67,7 +67,7 @@ steps:
     kubernetesServiceEndpoint: 'LINK Default'
     namespace: 'demo'
     command: 'scale'
-    arguments: 'deployment $(deploy_api) --replicas=1 -n $(namespace)'
+    arguments: 'deployment $(deploy_api) --replicas=1 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
@@ -77,6 +77,6 @@ steps:
     kubernetesServiceEndpoint: 'LINK Default'
     namespace: 'demo'
     command: 'scale'
-    arguments: 'deployment $(deploy_fhir) --replicas=1 -n $(namespace)'
+    arguments: 'deployment $(deploy_fhir) --replicas=1 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
