@@ -6,9 +6,7 @@ import com.lantanagroup.link.GenericAggregator;
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.r4.model.CodeableConcept;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -160,6 +158,35 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       masterReportGroupValue.addPopulation(masteReportGroupPopulationValue);
     }
     return masteReportGroupPopulationValue;
+  }
+
+  @Override
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+    // if there are no groups generated then gets them from the measure
+    if (masterMeasureReport.getGroup().size() == 0) {
+      Bundle bundle = context.getReportDefBundle();
+      Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
+              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
+              .findFirst();
+
+      if (measureEntry.isPresent()) {
+        Measure measure = (Measure) measureEntry.get().getResource();
+        measure.getGroup().forEach(group -> {
+          MeasureReport.MeasureReportGroupComponent groupComponent = new MeasureReport.MeasureReportGroupComponent();
+          groupComponent.setCode(group.getCode());
+          group.getPopulation().forEach(population -> {
+            MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
+            if (!population.getCode().equals("numerator")) {
+              populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
+              populationComponent.setCount(0);
+              groupComponent.addPopulation(populationComponent);
+            }
+
+          });
+          masterMeasureReport.addGroup(groupComponent);
+        });
+      }
+    }
   }
 
   @Override

@@ -12,7 +12,7 @@ api:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.XMLSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
-  report-aggregator: com.lantanagroup.link.thsa.THSAAggregator
+  report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
@@ -30,6 +30,7 @@ api:
       - PUT
       - OPTIONS
   document-reference-system: urn:ietf:rfc:3986
+  socket-timeout: 30000
   user:
     timezone: UTC
   report-defs:

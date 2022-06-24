@@ -2,7 +2,8 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Period;
 
 import java.text.ParseException;
 import java.util.List;
@@ -65,28 +66,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     return masteReportGroupPopulationValue;
   }
 
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
-    // if there are no groups generated then gets them from the measure
-    if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
-      Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
-              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
-              .findFirst();
+  protected abstract void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context);
 
-      if (measureEntry.isPresent()) {
-        Measure measure = (Measure) measureEntry.get().getResource();
-        measure.getGroup().forEach(group -> {
-          MeasureReport.MeasureReportGroupComponent groupComponent = new MeasureReport.MeasureReportGroupComponent();
-          groupComponent.setCode(group.getCode());
-          group.getPopulation().forEach(population -> {
-            MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
-            populationComponent.setCode(population.getCode());
-            populationComponent.setCount(0);
-            groupComponent.addPopulation(populationComponent);
-          });
-          masterMeasureReport.addGroup(groupComponent);
-        });
-      }
-    }
-  }
+
 }
