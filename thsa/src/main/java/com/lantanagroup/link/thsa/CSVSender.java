@@ -31,12 +31,6 @@ public class CSVSender extends GenericSender implements IReportSender {
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 
-  @Override
-  public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
-    return retrieveContent(apiConfig, fhirContext, existingDocumentReference);
-  }
-
-
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {
     return "";
   }
