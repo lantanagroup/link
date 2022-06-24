@@ -12,6 +12,9 @@ variables:
   db: $(DATABASE)
   db_user: $(DATABASE_USER)
   db_pass: $(DATABASE_PASS)
+  namespace: $(NAMESPACE)
+  deployment_api: $(DEPLOYMENT_API)
+  deployment_fhir: $(DEPLOYMENT_FHIR)
 
 steps:
 - script: echo Hello, world!
@@ -21,6 +24,27 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'LINK Default'
+    namespace: 'demo'
+    command: 'scale'
+    arguments: 'deployment $(deployment_api) --replicas=0 -n $(namespace)'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
+
+- task: Kubernetes@2
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'LINK Default'
+    namespace: 'demo'
+    command: 'scale'
+    arguments: 'deployment $(deployment_fhir) --replicas=0 -n $(namespace)'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
+
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'postgres-connection'
@@ -36,3 +60,23 @@ steps:
       GRANT ALL ON SCHEMA public TO public;
       COMMENT ON SCHEMA public IS 'standard public schema created by script';
       EOF
+
+- task: Kubernetes@3
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'LINK Default'
+    namespace: 'demo'
+    command: 'scale'
+    arguments: 'deployment $(deployment_api) --replicas=1 -n $(namespace)'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
+
+- task: Kubernetes@4
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'LINK Default'
+    namespace: 'demo'
+    command: 'scale'
+    arguments: 'deployment $(deployment_fhir) --replicas=1 -n $(namespace)'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
