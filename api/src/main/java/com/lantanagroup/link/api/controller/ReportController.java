@@ -406,6 +406,11 @@ public class ReportController extends BaseController {
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
 
+      if(context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
+        logger.error(String.format("Census list not found."));
+        throw new HttpResponseException(500, "Internal Server Error");
+      }
+
       triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
