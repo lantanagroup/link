@@ -35,7 +35,7 @@ steps:
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
-- task: Kubernetes@2
+- task: Kubernetes@1
   inputs:
     connectionType: 'Kubernetes Service Connection'
     kubernetesServiceEndpoint: 'LINK Default'
@@ -61,7 +61,7 @@ steps:
       COMMENT ON SCHEMA public IS 'standard public schema created by script';
       EOF
 
-- task: Kubernetes@3
+- task: Kubernetes@1
   inputs:
     connectionType: 'Kubernetes Service Connection'
     kubernetesServiceEndpoint: 'LINK Default'
@@ -71,7 +71,7 @@ steps:
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
-- task: Kubernetes@4
+- task: Kubernetes@1
   inputs:
     connectionType: 'Kubernetes Service Connection'
     kubernetesServiceEndpoint: 'LINK Default'
