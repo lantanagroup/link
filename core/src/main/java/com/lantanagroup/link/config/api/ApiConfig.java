@@ -145,12 +145,15 @@ public class ApiConfig {
     @Getter
     private HashMap<String, String> dataProcessor;
 
-    /**
-     * The string represents the data measure report id that gets continuously updated.
-     */
-    @Getter
-    private String dataMeasureReportId;
+  /**
+   * The string represents the data measure report id that gets continuously updated.
+   */
+  @Getter
+  private String dataMeasureReportId;
 
-    @Getter
-    private String reportAggregator;
+  @Getter
+  private String reportAggregator;
+
+  @Getter
+  private String socketTimeout;
 }

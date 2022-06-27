@@ -14,7 +14,7 @@ public class ShellApplication {
 
   public static void main(String[] args) {
     System.getProperties().put("server.port", 8090);
-    SpringApplication.run(ShellApplication.class, args);
+    SpringApplication.run(ShellApplication.class, args).close();
   }
 
   @Bean

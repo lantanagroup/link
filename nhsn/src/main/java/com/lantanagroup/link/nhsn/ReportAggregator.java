@@ -2,10 +2,8 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.GenericAggregator;
 import com.lantanagroup.link.IReportAggregator;
-import org.hl7.fhir.r4.model.ListResource;
-import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.Reference;
-import org.hl7.fhir.r4.model.Resource;
+import com.lantanagroup.link.model.ReportContext;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -62,6 +60,32 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
             addMeasureReportReferences(patientMeasureReport, listResource);
           }
         }
+      }
+    }
+  }
+
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+    // if there are no groups generated then gets them from the measure
+    if (masterMeasureReport.getGroup().size() == 0) {
+      Bundle bundle = context.getReportDefBundle();
+      Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
+              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
+              .findFirst();
+
+      if (measureEntry.isPresent()) {
+        Measure measure = (Measure) measureEntry.get().getResource();
+        measure.getGroup().forEach(group -> {
+          MeasureReport.MeasureReportGroupComponent groupComponent = new MeasureReport.MeasureReportGroupComponent();
+          groupComponent.setCode(group.getCode());
+          group.getPopulation().forEach(population -> {
+            MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
+            populationComponent.setCode(population.getCode());
+            populationComponent.setCount(0);
+            groupComponent.addPopulation(populationComponent);
+
+          });
+          masterMeasureReport.addGroup(groupComponent);
+        });
       }
     }
   }
