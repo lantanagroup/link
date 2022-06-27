@@ -27,7 +27,7 @@ export class AuthService {
   async initLocal(config: IOAuthConfig) {
     if (this.initialized) return;
 
-    this.oauthService.setStorage(localStorage);
+    this.oauthService.setStorage(sessionStorage);
     this.oauthService.configure({
       issuer: config.issuer,
       redirectUri: window.location.origin + '/',

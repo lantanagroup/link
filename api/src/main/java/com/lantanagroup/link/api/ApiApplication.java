@@ -3,6 +3,7 @@ package com.lantanagroup.link.api;
 import ca.uhn.fhir.context.FhirContext;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -33,7 +34,8 @@ import java.util.TimeZone;
         "com.lantanagroup.link.config.api",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.auth",
-        "com.lantanagroup.link.nhsn"})
+        "com.lantanagroup.link.nhsn",
+        "com.lantanagroup.link.thsa"})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
@@ -129,7 +131,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean
   public Module module() {
-    FhirContext fhirContext = FhirContext.forR4();
+    FhirContext fhirContext = FhirContextProvider.getFhirContext();
     SimpleModule module = new SimpleModule();
     FhirHelper.initSerializers(module, fhirContext.newJsonParser());
     return module;

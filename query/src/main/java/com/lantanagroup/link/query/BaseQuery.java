@@ -2,10 +2,9 @@ package com.lantanagroup.link.query;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
-import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ public class BaseQuery {
       return this.fhirContext;
     }
 
-    this.fhirContext = FhirContext.forR4();
+    this.fhirContext = FhirContextProvider.getFhirContext();
     return this.fhirContext;
   }
 
@@ -38,7 +37,7 @@ public class BaseQuery {
       return this.fhirQueryClient;
     }
 
-    this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
+    //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
     IGenericClient fhirQueryClient = this.getFhirContext().newRestfulGenericClient(this.queryConfig.getFhirServerBase());
 
     /*

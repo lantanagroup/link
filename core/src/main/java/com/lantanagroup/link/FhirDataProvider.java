@@ -27,7 +27,7 @@ public class FhirDataProvider {
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
   private static final String ReportDocRefSystem = "urn:ietf:rfc:3986";
-  protected FhirContext ctx = FhirContext.forR4();
+  protected FhirContext ctx = FhirContextProvider.getFhirContext();
 
   @Getter
   private IGenericClient client;
@@ -234,7 +234,13 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource getResource(String resourceType, String resourceId) {
+  /**
+   * Gets a resource by type and ID only including the id property to check if the resource exists
+   * @param resourceType
+   * @param resourceId
+   * @return
+   */
+  public IBaseResource tryGetResource(String resourceType, String resourceId) {
     return this.client
             .read()
             .resource(resourceType)
@@ -244,6 +250,12 @@ public class FhirDataProvider {
             .execute();
   }
 
+  /**
+   * Gets a complete resource by retrieving it based on type and id
+   * @param resourceType
+   * @param resourceId
+   * @return
+   */
   public IBaseResource getResourceByTypeAndId(String resourceType, String resourceId) {
     return this.client
             .read()

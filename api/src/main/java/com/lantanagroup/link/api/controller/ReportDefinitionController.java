@@ -2,7 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.model.StoredReportDefinition;
+import com.lantanagroup.link.model.StoredMeasure;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
@@ -17,28 +17,29 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/report-definition")
+@RequestMapping("/api/measure")
 public class ReportDefinitionController extends BaseController {
 
   /**
    * Responds with a list of the measures stored in the system
+   *
    * @param authentication Who the user is authenticated as
-   * @param request The REST request
+   * @param request        The REST request
    * @return A list of stored measures
    * @throws Exception
    */
   @GetMapping
-  public List<StoredReportDefinition> getMeasures(Authentication authentication, HttpServletRequest request) throws Exception {
+  public List<StoredMeasure> getMeasures(Authentication authentication, HttpServletRequest request) throws Exception {
     FhirDataProvider fhirClient = this.getFhirDataProvider();
 
-    // Find all Bundles with the report definition tag
+    // Find all Bundles with the measure tag
     Bundle searchResults = fhirClient.searchBundleByTag(Constants.MainSystem, Constants.ReportDefinitionTag);
 
     return searchResults.getEntry().stream().map(e -> {
       Bundle reportDefinitionBundle = (Bundle) e.getResource();
-      StoredReportDefinition storedMeasure = new StoredReportDefinition();
+      StoredMeasure storedMeasure = new StoredMeasure();
 
-      // Determine the name of the report based on the measure within the report definition bundle
+      // Determine the name of the report based on the measure within the measure bundle
       Optional<Measure> foundMeasure = reportDefinitionBundle.getEntry().stream()
               .filter(e2 -> e2.getResource() instanceof Measure)
               .map(e2 -> (Measure) e2.getResource())

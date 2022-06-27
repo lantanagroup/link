@@ -2,6 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
@@ -46,7 +47,7 @@ public class GenericSenderTests {
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     FhirSenderUrlOAuthConfig urlAuth = new FhirSenderUrlOAuthConfig();
     config.setSendUrls(List.of(urlAuth));
@@ -86,7 +87,7 @@ public class GenericSenderTests {
     config.getSendUrls().get(0).getAuthConfig().setPassword("some-pass");
     config.getSendUrls().get(0).getAuthConfig().setScope("scope1 scope2 scope3");
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     DocumentReference documentReference = new DocumentReference();
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
@@ -104,8 +105,8 @@ public class GenericSenderTests {
   }
 
 
-  private FHIRSender getMockSender(FHIRSenderConfig config) throws Exception {
-    FHIRSender sender = mock(FHIRSender.class);
+  private XMLSender getMockSender(FHIRSenderConfig config) throws Exception {
+    XMLSender sender = mock(XMLSender.class);
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
@@ -118,7 +119,7 @@ public class GenericSenderTests {
 
   private MeasureReport getMasterMeasureReport() throws IOException {
     String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }
 

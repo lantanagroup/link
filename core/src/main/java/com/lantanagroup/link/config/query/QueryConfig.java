@@ -62,11 +62,4 @@ public class QueryConfig {
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
    */
   private String authClass;
-
-  private List<String> patientResourceTypes;
-
-  private List<String> otherResourceTypes;
-
-  private int parallelPatients;
-
 }

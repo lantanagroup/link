@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.ICreate;
 import ca.uhn.fhir.rest.gclient.ITransaction;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
@@ -35,10 +36,10 @@ import java.util.Arrays;
 import static org.mockito.Mockito.*;
 
 
-public class FHIRSenderTests {
+public class XMLSenderTests {
 
 
-  private void runTest(FHIRSender mockSender, IGenericClient mockFhirStoreClient, HttpClient mockHttpClient, MeasureReport measureReport, ArgumentMatcher<HttpUriRequest> httpArgMatcher) throws Exception {
+  private void runTest(XMLSender mockSender, IGenericClient mockFhirStoreClient, HttpClient mockHttpClient, MeasureReport measureReport, ArgumentMatcher<HttpUriRequest> httpArgMatcher) throws Exception {
     HttpServletRequest request = mock(HttpServletRequest.class);
     AuthMockInfo authMockInfo = MockHelper.mockAuth(mockFhirStoreClient);
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
@@ -52,7 +53,7 @@ public class FHIRSenderTests {
     when(mockFhirDataProvider.getClient()).thenReturn(mockFhirStoreClient);
     String xml = "<Bundle xmlns='http://hl7.org/fhir'><meta><tag><system value='https://nhsnlink.org'/><code value='report-bundle'/></tag></meta><type value='collection'/><entry><resource><MeasureReport xmlns='http://hl7.org/fhir'><evaluatedResource><reference value='Patient/testPatient1'/></evaluatedResource><evaluatedResource><reference value='Condition/testCondition1'/></evaluatedResource></MeasureReport></resource></entry></Bundle>";
     when(mockFhirDataProvider.bundleToXml(any(Bundle.class))).thenReturn(xml);
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     when(mockFhirStoreClient.getFhirContext()).thenReturn(ctx);
     when(mockSender.getHttpClient()).thenReturn(mockHttpClient);
     //when(mockSender.generateBundle(any(), any(), any(), any())).thenReturn(new Bundle());
@@ -80,8 +81,8 @@ public class FHIRSenderTests {
     return bundle;
   }
 
-  private FHIRSender getMockSender(FHIRSenderConfig config) throws Exception {
-    FHIRSender sender = mock(FHIRSender.class);
+  private XMLSender getMockSender(FHIRSenderConfig config) throws Exception {
+    XMLSender sender = mock(XMLSender.class);
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());
@@ -94,13 +95,13 @@ public class FHIRSenderTests {
 
   private MeasureReport getMasterMeasureReport() throws IOException {
     String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }
 
   private MeasureReport getMeasureReport() throws IOException {
     String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-measure-report.json"));
-    FhirContext ctx = FhirContext.forR4();
+    FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }
 
@@ -125,7 +126,7 @@ public class FHIRSenderTests {
 
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
     MeasureReport measureReport = getMasterMeasureReport();
@@ -142,7 +143,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Bundle requestBundle = (Bundle) FhirContext.forR4().newXmlParser().parseResource(content);
+        Bundle requestBundle = (Bundle) FhirContextProvider.getFhirContext().newXmlParser().parseResource(content);
         Assert.assertNotNull(requestBundle);
         Assert.assertEquals(httpEntityEnclosingRequest.getHeaders("Authorization").length, 0);
         return true;
@@ -202,7 +203,7 @@ public class FHIRSenderTests {
 
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
-    FHIRSender mockSender = this.getMockSender(config);
+    XMLSender mockSender = this.getMockSender(config);
 
     // Create a MeasureReport for our test
     MeasureReport measureReport = getMasterMeasureReport();
@@ -223,7 +224,7 @@ public class FHIRSenderTests {
         Assert.assertNotNull(httpEntityEnclosingRequest.getEntity());
         Assert.assertTrue(httpEntityEnclosingRequest.getEntity() instanceof StringEntity);
         String content = new String(httpEntityEnclosingRequest.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Bundle requestBundle = (Bundle) FhirContext.forR4().newXmlParser().parseResource(content);
+        Bundle requestBundle = (Bundle) FhirContextProvider.getFhirContext().newXmlParser().parseResource(content);
         Assert.assertNotNull(requestBundle);
         Header[] headers = httpEntityEnclosingRequest.getHeaders("Authorization");
         Assert.assertEquals(headers.length, 1);

@@ -1,11 +1,14 @@
 package com.lantanagroup.link.nhsn;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 
 
 @Component
-public class FHIRSender extends GenericSender implements IReportSender {
-  protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
+public class XMLSender extends GenericSender implements IReportSender {
+  protected static final Logger logger = LoggerFactory.getLogger(XMLSender.class);
 
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {

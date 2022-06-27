@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.gclient.IUntypedQuery;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.mock.AuthMockInfo;
@@ -92,7 +93,7 @@ public class UserControllerTest extends BaseController{
     practitionerID1 = "_Practitioner:a2927697-0f9d-4240-a551-c16e4b9f5178_history1";
     practitionerTest = createPractitioner(practitionerID1, Name1);
 
-    ctxTest = FhirContext.forR4();
+    ctxTest = FhirContextProvider.getFhirContext();
 
     clientTest = mock(IGenericClient.class);
     untypedQueryTest = mock(IUntypedQuery.class);

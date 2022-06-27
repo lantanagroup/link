@@ -14,6 +14,7 @@ import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
@@ -55,6 +56,9 @@ public class JpaRestfulServer extends RestfulServer {
   @Autowired
   ResourceProviderFactory resourceProviders;
 
+  @Autowired
+  ReportCsvOperationProvider reportCsvOperationProvider;
+
   private FhirContext fhirContext;
   private SearchParamRegistryImpl searchParamRegistry = new SearchParamRegistryImpl();
   private ResourceChangeListenerRegistryImpl resourceChangeListenerRegistry = new ResourceChangeListenerRegistryImpl();
@@ -67,7 +71,7 @@ public class JpaRestfulServer extends RestfulServer {
   protected void initialize() throws ServletException {
     super.initialize();
 
-    this.fhirContext = FhirContext.forR4();
+    this.fhirContext = FhirContextProvider.getFhirContext();
     this.setFhirContext(this.fhirContext);
 
     this.resourceChangeListenerRegistry.setFhirContext(this.fhirContext);
@@ -87,6 +91,8 @@ public class JpaRestfulServer extends RestfulServer {
 
     this.registerInterceptor(new UserInterceptor(consumerConfig.getIssuer(), consumerConfig.getAuthJwksUrl()));
     this.registerInterceptor(new AuthInterceptor(consumerConfig));
+
+    this.registerProvider(reportCsvOperationProvider);
   }
 
   @Bean

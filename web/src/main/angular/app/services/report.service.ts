@@ -28,7 +28,7 @@ export class ReportService {
   }
 
   getReports(queryParams) {
-    let url = this.configService.getApiUrl('report/searchReports?');
+    let url = this.configService.getApiUrl('report?');
     if (queryParams != undefined && queryParams != "") {
       url += queryParams;
     }

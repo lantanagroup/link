@@ -81,7 +81,7 @@ public class FhirHelperTests {
   public void getAllPagesTest(){
 
     fhirDataProviderTest = mock(FhirDataProvider.class);
-    ctxTest = FhirContext.forR4();
+    ctxTest = FhirContextProvider.getFhirContext();
     bundleTest = new Bundle();
 
     Resource resourceTest = mock(Resource.class);

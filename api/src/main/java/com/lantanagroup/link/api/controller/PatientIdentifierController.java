@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
-  private final FhirContext ctx = FhirContext.forR4();
 
   /**
    * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
@@ -148,6 +147,7 @@ public class PatientIdentifierController extends BaseController {
 
     if (resource instanceof ListResource) {
       ListResource list = (ListResource) resource;
+
       List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
 
       if (identifierList.isEmpty()) {
@@ -174,6 +174,7 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have end");
       }
 
+      //system and value represents the measure intended for this patient id list
       String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
       String value = ((ListResource) resource).getIdentifier().get(0).getValue();
       DateTimeType startDate = applicablePeriod.getStartElement();
@@ -191,10 +192,22 @@ public class PatientIdentifierController extends BaseController {
         // filter out duplicates
         List<ListResource.ListEntryComponent> uniqueEntries = ((ListResource) resource).getEntry().parallelStream()
                 .filter(e -> {
-                  String systemA = e.getItem().getIdentifier().getSystem();
-                  String valueA = e.getItem().getIdentifier().getValue();
 
-                  return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
+                  //check if reference or identifier exists, give priority to reference
+                  String reference = e.getItem().getReference();
+                  if(reference != null && !reference.isEmpty() && !reference.isBlank()) {
+                    return !existingList.getEntry().stream().anyMatch(s -> reference.equals(s.getItem().getReference()));
+                  }
+                  else if(e.getItem().getIdentifier() != null) {
+                    String systemA = e.getItem().getIdentifier().getSystem();
+                    String valueA = e.getItem().getIdentifier().getValue();
+                    return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
+                  }
+                  else {
+                    //log that no reference or id for patient
+                    logger.info("No reference or identifier present for patient in provided resource.");
+                    return false;
+                  }
                 }).collect(Collectors.toList());
 
         // merge lists into existingList

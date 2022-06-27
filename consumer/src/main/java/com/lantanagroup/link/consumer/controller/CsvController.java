@@ -2,6 +2,7 @@ package com.lantanagroup.link.consumer.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.FhirContextProvider;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -59,10 +60,10 @@ public class CsvController {
     //TODO: Replace with CSV->Bundle conversion logic
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);
-    String content = FhirContext.forR4().newXmlParser().encodeResourceToString(bundle);
+    String content = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(bundle);
     sendRequest(user, sendUrl, content);
 
-    // IGenericClient client = FhirContext.forR4().newRestfulGenericClient(fhirUrl);
+    // IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(fhirUrl);
 //    MethodOutcome resourceCreated = client.create().resource(content).execute();
 //    logger.info("Bundle created: " + resourceCreated.getId());
 

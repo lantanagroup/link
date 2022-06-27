@@ -7,9 +7,12 @@ swagger:
 api:
   fhir-server-store:
   auth-jwks-url:
+  Data-Processor:
+    csv: GenericCSVProcessor
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
-  sender: com.lantanagroup.link.nhsn.FHIRSender
+  sender: com.lantanagroup.link.nhsn.XMLSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
+  report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
@@ -26,24 +29,39 @@ api:
       - DELETE
       - PUT
       - OPTIONS
-  terminology:
-    covid-codes-value-set: classpath:2.16.840.1.113762.1.4.1146.1124.xml
-    ventilator-codes-value-set: classpath:mechanical-ventilators.xml
-    intubation-procedure-codes-value-set: classpath:intubation-procedures.xml
   document-reference-system: urn:ietf:rfc:3986
+  socket-timeout: 30000
   user:
     timezone: UTC
+  report-defs:
+    max-retry: 5
+    retry-wait: 5000
+  query:
+    mode: Local
+thsa:
+  dataMeasureReportId: inventorydata
 query:
+  require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
-  uscore:
-    queries:
-      - Encounter?patient=Patient/{{patientId}}
-      - Condition?patient=Patient/{{patientId}}
-      - MedicationRequest?patient=Patient/{{patientId}}
-      - Observation?category=laboratory&patient=Patient/{{patientId}}
-      - Procedure?patient=Patient/{{patientId}}
-      - ServiceRequest?patient=Patient/{{patientId}}
-      - Coverage?patient=Patient/{{patientId}}
-    additional-resources:
-      - Location/{{locationId}}
-      - Medication/{{medicationId}}
+  fhir-server-base: https://ehr-test.nhsnlink.org/fhir
+  proxy-address: 23i90u4akdjsf
+  allowed-remote:
+    - testbadip
+    - 0:0:0:0:0:0:0:1
+    - 127.0.0.1
+    - dev-api.nhsnlink.org
+    - test-api.nhsnlink.org
+  api-key: 89a83764-9530-4340-9a14-1058b9e84f84c977f983-46e3-4e49-9c3b-869bb2b0f5328ba571b9-e785-4a0b-9fdd-5ff34b8125c47859d241-4ccc-406a-96b6-6fdc918a05e6f3288ebd-927c-4db5
+uscore:
+  patient-resource-types:
+    - Encounter?patient=Patient/{{patientId}}
+    - Condition?patient=Patient/{{patientId}}
+    - MedicationRequest?patient=Patient/{{patientId}}
+    - Observation?category=laboratory&patient=Patient/{{patientId}}
+    - Procedure?patient=Patient/{{patientId}}
+    - ServiceRequest?patient=Patient/{{patientId}}
+    - Coverage?patient=Patient/{{patientId}}
+  additional-resources:
+    - Location/{{locationId}}
+    - Medication/{{medicationId}}
+  parallel-patients: 10
