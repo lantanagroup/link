@@ -6,21 +6,21 @@ import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/fhir")
+@RequestMapping("/api")
 public class ReportDataController extends BaseController{
   private static final Logger logger = LoggerFactory.getLogger(ReportDataController.class);
-
 
   @Autowired
   private THSAConfig thsaConfig;
 
-  @PostMapping(value = "/api/data/csv")
+  @PostMapping(value = "/data/csv")
   public void retrieveCSVData(@RequestBody() String csvContent) throws Exception {
 
     if(config.getDataProcessor() == null || config.getDataProcessor().get("csv") == null || config.getDataProcessor().get("csv").equals("")) {
