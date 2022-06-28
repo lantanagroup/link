@@ -337,7 +337,7 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submit(String serverBase, Resource resource) {
+  public void submitToServer(String serverBase, Resource resource) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
     submissionClient
             .update()
@@ -345,9 +345,9 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource retrieveFromSubmissionServer(String serverBase, String resourceType, String resourceId) {
+  public IBaseResource retrieveFromServer(String serverBase, String resourceType, String resourceId) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    return this.client
+    return submissionClient
             .read()
             .resource(resourceType)
             .withId(resourceId)
