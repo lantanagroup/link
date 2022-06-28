@@ -337,31 +337,23 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submitAsFhir(String ServerBase, String resourceType, String id) {
-    try {
-      URL url = new URL(ServerBase + "/" + resourceType + "/" + id);
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("PUT");
-      con.getResponseMessage();
-      con.disconnect();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+  public void submit(String serverBase, Resource resource) {
+    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
+    submissionClient
+            .update()
+            .resource(resource)
+            .execute();
   }
 
-  public Resource retrieveAsFhir(String ServerBase, String resourceType, String id) {
-    try {
-      URL url = new URL(ServerBase + "/" + resourceType + "/" + id);
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("GET");
-      con.getResponseMessage();
-      con.disconnect();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    Resource placeHolder = new Medication();
-    return placeHolder;
+  public IBaseResource retrieveFromSubmissionServer(String serverBase, String resourceType, String resourceId) {
+    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
+    return this.client
+            .read()
+            .resource(resourceType)
+            .withId(resourceId)
+            .elementsSubset("id")
+            .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
   }
 
   public void deleteResource(String resourceType, String id, boolean permanent) {
