@@ -1,28 +1,25 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.parser.JsonParser;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
-import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.checkerframework.checker.units.qual.A;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -62,7 +59,11 @@ public class ReportController extends BaseController {
   private static boolean reportSent = false;
 
   @Autowired
-  private ApiConfig config;
+  @Setter
+  private THSAConfig thsaConfig;
+
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   @Autowired
   @Setter
@@ -162,7 +163,7 @@ public class ReportController extends BaseController {
       if (reportRemoteReportDefBundle == null) {
         logger.error(String.format("Error parsing report def bundle from %s", url));
       } else {
-        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), reportRemoteReportDefBundle);
+        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), reportRemoteReportDefBundle);
         if (!missingResourceTypes.equals("")) {
           logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
         }
@@ -377,32 +378,6 @@ public class ReportController extends BaseController {
 
       if (existingDocumentReference != null) {
         existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
-
-        //Class<?> senderClazz = Class.forName(this.config.getSender());
-        //IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
-
-        String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(existingDocumentReference);
-        FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
-        String content = null;
-        try {
-          content = receiver.retrieveContent(bundleLocation);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
-
-
-        //Bundle submitted = sender.retrieve(config, this.ctx, existingDocumentReference);
-        if(submitted != null && submitted.getEntry().size() > 0) {
-          List<ListResource> censusList = new ArrayList<>();
-          for(Bundle.BundleEntryComponent entry: submitted.getEntry()) {
-            if(entry.getResource().getResourceType() == ResourceType.List) {
-              censusList.add((ListResource)entry.getResource());
-              this.getFhirDataProvider().updateResource(entry.getResource());
-            }
-          }
-          context.setPatientCensusLists(censusList);
-        }
       }
 
       // Generate the master report id
@@ -422,10 +397,15 @@ public class ReportController extends BaseController {
       triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
 
       // Get the resource types to query
-      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(queryConfig.getPatientResourceTypes(), context.getReportDefBundle());
+      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
       context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
+
+      if(context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
+        logger.error(String.format("Census list not found."));
+        throw new HttpResponseException(500, "Internal Server Error");
+      }
 
       triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
 
@@ -433,9 +413,20 @@ public class ReportController extends BaseController {
 
       context.setReportId(id);
 
+      context.setInventoryId(thsaConfig.getDataMeasureReportId());
+
       response.setReportId(id);
 
-      ReportGenerator generator = new ReportGenerator(context, criteria, config, user);
+      // Generate the master measure report
+      Class<?> reportAggregatorClass = null;
+      try {
+        reportAggregatorClass = Class.forName(this.config.getReportAggregator());
+      } catch (ClassNotFoundException e) {
+        logger.error(String.format("Error generating report: %s", e));
+      }
+      IReportAggregator reportAggregator = (IReportAggregator) this.context.getBean(reportAggregatorClass);
+
+      ReportGenerator generator = new ReportGenerator(context, criteria, config, user, reportAggregator);
 
       triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
 

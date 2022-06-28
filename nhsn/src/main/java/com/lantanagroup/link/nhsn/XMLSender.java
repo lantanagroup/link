@@ -19,8 +19,8 @@ import javax.servlet.http.HttpServletRequest;
 
 
 @Component
-public class FHIRSender extends GenericSender implements IReportSender {
-  protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
+public class XMLSender extends GenericSender implements IReportSender {
+  protected static final Logger logger = LoggerFactory.getLogger(XMLSender.class);
 
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
@@ -28,11 +28,6 @@ public class FHIRSender extends GenericSender implements IReportSender {
     sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
-  }
-
-  @Override
-  public Bundle retrieve(ApiConfig apiConfig, FhirContext fhirContext, DocumentReference existingDocumentReference) {
-    return retrieveContent(apiConfig, fhirContext, existingDocumentReference);
   }
 
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider) {

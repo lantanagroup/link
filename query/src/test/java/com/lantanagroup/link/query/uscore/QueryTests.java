@@ -3,6 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
@@ -30,15 +31,17 @@ public class QueryTests {
     queries.add("Encounter");
     queries.add("MedicationRequest");
     QueryConfig queryConfig = new QueryConfig();
-    queryConfig.setPatientResourceTypes(queries);
-    queryConfig.getPatientResourceTypes();
+    USCoreConfig usCoreConfig = new USCoreConfig();
+    usCoreConfig.setPatientResourceTypes(queries);
+    usCoreConfig.getPatientResourceTypes();
     List<String> extraResources = new ArrayList<>();
     extraResources.add("Location");
     extraResources.add("Medication");
-    queryConfig.setOtherResourceTypes(extraResources);
-    queryConfig.getOtherResourceTypes();
+    usCoreConfig.setOtherResourceTypes(extraResources);
+    usCoreConfig.getOtherResourceTypes();
 
     PatientScoop patientScoop = new PatientScoop();
+    patientScoop.setUsCoreConfig(usCoreConfig);
     patientScoop.setQueryConfig(queryConfig);
     patientScoop.setFhirQueryServer(fhirQueryClient);
 

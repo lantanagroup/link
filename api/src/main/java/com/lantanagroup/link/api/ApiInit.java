@@ -11,6 +11,8 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
+import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -36,13 +38,15 @@ import java.util.stream.Collectors;
 
 public class ApiInit {
   private static final Logger logger = LoggerFactory.getLogger(ApiInit.class);
-
-
+  @Setter
+  protected FhirContext ctx = FhirContextProvider.getFhirContext();
   @Autowired
   private ApiConfig config;
-
   @Autowired
   private QueryConfig queryConfig;
+
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   @Autowired
   private FhirDataProvider provider;
@@ -68,12 +72,12 @@ public class ApiInit {
 
       //check if report-defs config has auth properties, if so generate token and add to request
       LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-      if(authConfig != null) {
-        try{
+      if (authConfig != null) {
+        try {
           String token = OAuth2Helper.getToken(authConfig);
           requestBuilder.setHeader("Authorization", "Bearer " + token);
-        } catch(Exception ex) {
-          logger.error(String.format("Error generating authorization token: %s",  ex.getMessage()));
+        } catch (Exception ex) {
+          logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
           return;
         }
       }
@@ -150,10 +154,10 @@ public class ApiInit {
         return;
       }
 
-      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(queryConfig), measureDefBundle);
+      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), measureDefBundle);
       if (!missingResourceTypes.equals("")) {
         logger.error(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
-       // return;
+        // return;
       }
 
       Measure measure = foundMeasure.get();
@@ -246,13 +250,26 @@ public class ApiInit {
     return xmlParser.parseResource(resourceString);
   }
 
+  private int getSocketTimout() {
+    int socketTimeout = 30 * 1000; // 30 sec // 200 * 5000
+    if (config.getSocketTimeout() != null) {
+      try {
+        socketTimeout = Integer.parseInt(config.getSocketTimeout());
+      } catch (Exception ex) {
+        logger.error(String.format("Error % in socket-timeout %s ", ex.getMessage(), config.getSocketTimeout()));
+      }
+    }
+    return socketTimeout;
+  }
+
   public void init() {
     if (this.config.getSkipInit()) {
       logger.info("Skipping API initialization processes");
       return;
     }
-
+    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
     this.loadMeasureDefinitions();
     this.loadSearchParameters();
   }
+
 }

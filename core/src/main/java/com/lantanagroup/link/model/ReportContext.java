@@ -21,6 +21,7 @@ public class ReportContext {
   private String measureId;
   private Bundle reportDefBundle;
   private String reportId;
+  private String inventoryId;
   private MeasureReport measureReport;
   private HashMap<String, Object> additional = new HashMap<>();
   private List<QueryResponse> patientData = new ArrayList<>();

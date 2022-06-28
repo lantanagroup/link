@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
@@ -512,8 +513,8 @@ public class FhirHelper {
     return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
   }
 
-  public static List<String> getQueryConfigurationResourceTypes(QueryConfig queryConfig) {
-    return Helper.concatenate(queryConfig.getPatientResourceTypes(), queryConfig.getOtherResourceTypes());
+  public static List<String> getQueryConfigurationResourceTypes(USCoreConfig usCoreConfig) {
+    return Helper.concatenate(usCoreConfig.getPatientResourceTypes(), usCoreConfig.getOtherResourceTypes());
   }
 
   public static String getDocumentReferenceLocationByUrl(DocumentReference documentReference, String url) {
