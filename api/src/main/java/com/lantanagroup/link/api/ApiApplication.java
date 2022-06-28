@@ -30,12 +30,14 @@ import java.util.TimeZone;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.api",
+        "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
         "com.lantanagroup.link.config.api",
-        "com.lantanagroup.link.query",
-        "com.lantanagroup.link.auth",
         "com.lantanagroup.link.nhsn",
-        "com.lantanagroup.link.thsa"})
+        "com.lantanagroup.link.query",
+        "com.lantanagroup.link.spring",
+        "com.lantanagroup.link.thsa"
+})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
