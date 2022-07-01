@@ -4,11 +4,16 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
+import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
+import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.config.sender.FHIRSenderConfig;
+import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -337,16 +342,22 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submitToServer(String serverBase, Resource resource) {
+  public void submitToServer(String serverBase, FHIRSenderOAuthConfig senderConfig, Resource resource) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
+    submissionClient.registerInterceptor(new GZipContentInterceptor());
+    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
+    submissionClient.registerInterceptor(authInterceptor);
     submissionClient
             .update()
             .resource(resource)
             .execute();
   }
 
-  public IBaseResource retrieveFromServer(String serverBase, String resourceType, String resourceId) {
+  public IBaseResource retrieveFromServer(String serverBase, FHIRSenderOAuthConfig senderConfig, String resourceType, String resourceId) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
+    submissionClient.registerInterceptor(new GZipContentInterceptor());
+    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
+    submissionClient.registerInterceptor(authInterceptor);
     return submissionClient
             .read()
             .resource(resourceType)
