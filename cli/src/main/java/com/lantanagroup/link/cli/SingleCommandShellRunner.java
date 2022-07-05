@@ -15,7 +15,10 @@ import java.util.Optional;
 public class SingleCommandShellRunner implements ApplicationRunner {
   private final ConfigurableEnvironment environment;
   private final Shell shell;
-  private final List<String> commands = List.of("query", "generate-and-submit");
+  private final List<String> commands = List.of(
+          "query",
+          "generate-and-submit",
+          "refresh-patient-list");
 
   public SingleCommandShellRunner(Shell shell, ConfigurableEnvironment environment) {
     this.shell = shell;

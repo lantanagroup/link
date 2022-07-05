@@ -8,7 +8,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.shell.Shell;
 
 @SpringBootApplication(scanBasePackages = {
-        "com.lantanagroup.link.cli"
+        "com.lantanagroup.link.cli",
+        "com.lantanagroup.link.config"
 })
 public class ShellApplication {
 
