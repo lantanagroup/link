@@ -19,9 +19,9 @@ public class ApiReportDefsConfig {
   public Integer retryWait = 5000;
 
   /**
-   * <strong>api.report-defs.urls</strong><br>A list of the URLs for each measure that should be supported by the system.
+   * <strong>api.report-defs.urls</strong><br>A list of report definitions for each measure that should be supported by the system.
    */
-  public List<String> urls;
+  public List<ApiReportDefsUrlsConfig> urls;
 
   /**
    * <strong>api.report-defs.auth</strong><br>A list of authentication properties.

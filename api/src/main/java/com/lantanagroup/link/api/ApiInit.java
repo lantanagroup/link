@@ -64,7 +64,8 @@ public class ApiInit {
       return;
     }
 
-    this.config.getReportDefs().getUrls().parallelStream().forEach(measureDefUrl -> {
+    this.config.getReportDefs().getUrls().parallelStream().forEach(measureDef -> {
+      String measureDefUrl = measureDef.getUrl();
       logger.info(String.format("Getting the latest measure from URL %s", measureDefUrl));
 
       HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
