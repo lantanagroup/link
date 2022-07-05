@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ApiReportDefsUrlsConfig {
+public class ApiReportDefsUrlConfig {
   /**
    * <string>api.report-defs.urls.url</string><br>URL used to retrieve the measure definition bundle.
    */
