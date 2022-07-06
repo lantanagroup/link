@@ -8,13 +8,16 @@ import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Getter;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -345,7 +348,12 @@ public class FhirDataProvider {
   public void submitToServer(String serverBase, FHIRSenderOAuthConfig senderConfig, Resource resource) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
     submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
+    BearerTokenAuthInterceptor authInterceptor = null;
+    try {
+      authInterceptor = new BearerTokenAuthInterceptor(OAuth2Helper.getToken(senderConfig, HttpClientBuilder.create().build()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     submissionClient.registerInterceptor(authInterceptor);
     submissionClient
             .update()
@@ -356,7 +364,12 @@ public class FhirDataProvider {
   public IBaseResource retrieveFromServer(String serverBase, FHIRSenderOAuthConfig senderConfig, String resourceType, String resourceId) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
     submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
+    BearerTokenAuthInterceptor authInterceptor = null;
+    try {
+      authInterceptor = new BearerTokenAuthInterceptor(OAuth2Helper.getToken(senderConfig, HttpClientBuilder.create().build()));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     submissionClient.registerInterceptor(authInterceptor);
     return submissionClient
             .read()
