@@ -60,9 +60,9 @@ public class RefreshPatientListCommand {
     if (urlConfig.getCensusIdentifier() == null) {
       throw new IllegalArgumentException("census-identifier may not be null");
     }
-    ListResource source = getList();
+    ListResource source = readList();
     ListResource target = transformList(source, urlConfig.getCensusIdentifier());
-    postList(target);
+    updateList(target);
   }
 
   private ApiReportDefsUrlConfig getUrlConfig() {
@@ -74,7 +74,7 @@ public class RefreshPatientListCommand {
     throw new IllegalArgumentException("patient-list-id not found");
   }
 
-  private ListResource getList() throws ClassNotFoundException {
+  private ListResource readList() throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = fhirContext.newRestfulGenericClient(queryConfig.getFhirServerBase());
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
@@ -116,7 +116,7 @@ public class RefreshPatientListCommand {
     return target;
   }
 
-  private void postList(ListResource target) throws IOException {
+  private void updateList(ListResource target) throws IOException {
     HttpPost request = new HttpPost(String.format("%s/poi/fhir/List", config.getApiUrl()));
     if (config.getAuth() != null) {
       String token = OAuth2Helper.getPasswordCredentialsToken(
