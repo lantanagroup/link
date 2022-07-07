@@ -26,6 +26,8 @@ import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @ShellComponent
 public class RefreshPatientListCommand {
@@ -84,7 +86,7 @@ public class RefreshPatientListCommand {
             URLEncodedUtils.formatSegments("STU3", "List", config.getPatientListId()));
   }
 
-  private ListResource transformList(ListResource source, String censusIdentifier) {
+  private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
     ListResource target = new ListResource();
     Period period = new Period()
             .setStart(Helper.getStartOfMonth(source.getDate()))
@@ -98,7 +100,22 @@ public class RefreshPatientListCommand {
     target.setTitle(String.format("Census List for %s", censusIdentifier));
     target.setCode(source.getCode());
     target.setDate(source.getDate());
-    target.setEntry(source.getEntry());
+    URI baseUrl = new URI(queryConfig.getFhirServerBase());
+    for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
+      target.addEntry(transformListEntry(sourceEntry, baseUrl));
+    }
+    return target;
+  }
+
+  private ListResource.ListEntryComponent transformListEntry(ListResource.ListEntryComponent source, URI baseUrl)
+          throws URISyntaxException {
+    ListResource.ListEntryComponent target = source.copy();
+    if (target.getItem().hasReference()) {
+      URI referenceUrl = new URI(target.getItem().getReference());
+      if (referenceUrl.isAbsolute()) {
+        target.getItem().setReference(baseUrl.relativize(referenceUrl).toString());
+      }
+    }
     return target;
   }
 
