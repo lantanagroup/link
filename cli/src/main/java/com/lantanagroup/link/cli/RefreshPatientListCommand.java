@@ -53,9 +53,6 @@ public class RefreshPatientListCommand {
       throw new IllegalArgumentException("patient-list-id may not be null");
     }
     ApiReportDefsUrlConfig urlConfig = getUrlConfig();
-    if (urlConfig == null) {
-      throw new IllegalArgumentException("patient-list-id not found");
-    }
     if (urlConfig.getCensusIdentifier() == null) {
       throw new IllegalArgumentException("census-identifier may not be null");
     }
@@ -70,7 +67,7 @@ public class RefreshPatientListCommand {
         return urlConfig;
       }
     }
-    return null;
+    throw new IllegalArgumentException("patient-list-id not found");
   }
 
   private ListResource getList() throws IOException {
