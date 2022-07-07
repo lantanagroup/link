@@ -1,1 +1,10 @@
-
+api:
+  downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
+  sender: com.lantanagroup.link.nhsn.XMLSender
+  fhir-server-store:
+  terminology-service:
+  evaluation-service:
+  query:
+    mode: Local
+query:
+  query-class: com.lantanagroup.link.query.uscore.Query
