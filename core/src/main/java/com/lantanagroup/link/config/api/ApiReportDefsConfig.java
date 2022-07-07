@@ -21,7 +21,7 @@ public class ApiReportDefsConfig {
   /**
    * <strong>api.report-defs.urls</strong><br>A list of report definitions for each measure that should be supported by the system.
    */
-  public List<ApiReportDefsUrlsConfig> urls;
+  public List<ApiReportDefsUrlConfig> urls;
 
   /**
    * <strong>api.report-defs.auth</strong><br>A list of authentication properties.
