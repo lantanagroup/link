@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
@@ -23,8 +24,6 @@ import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
 
 @ShellComponent
 public class RefreshPatientListCommand {
@@ -86,8 +85,8 @@ public class RefreshPatientListCommand {
   private ListResource transformList(ListResource source, String censusIdentifier) {
     ListResource target = new ListResource();
     Period period = new Period()
-            .setStart(getStartOfMonth(source.getDate()))
-            .setEnd(getEndOfMonth(source.getDate()));
+            .setStart(Helper.getStartOfMonth(source.getDate()))
+            .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
     target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
     target.addIdentifier()
             .setSystem(Constants.MainSystem)
@@ -99,28 +98,6 @@ public class RefreshPatientListCommand {
     target.setDate(source.getDate());
     target.setEntry(source.getEntry());
     return target;
-  }
-
-  private Date getStartOfMonth(Date date) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(date);
-    calendar.set(Calendar.DAY_OF_MONTH, 1);
-    calendar.set(Calendar.HOUR_OF_DAY, 0);
-    calendar.set(Calendar.MINUTE, 0);
-    calendar.set(Calendar.SECOND, 0);
-    calendar.set(Calendar.MILLISECOND, 0);
-    return calendar.getTime();
-  }
-
-  private Date getEndOfMonth(Date date) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(date);
-    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-    calendar.set(Calendar.HOUR_OF_DAY, 23);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    return calendar.getTime();
   }
 
   private void postList(ListResource list) throws IOException {
