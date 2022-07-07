@@ -39,8 +39,10 @@ public class RefreshPatientListCommand {
   private final HttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
 
-  @ShellMethod("refresh-patient-list")
-  public void refreshPatientList() throws IOException {
+  @ShellMethod(
+          key = "refresh-patient-list",
+          value = "Read an Epic patient list and update the corresponding census in Link.")
+  public void execute() throws Exception {
     if (config.getApiUrl() == null) {
       throw new IllegalArgumentException("api-url may not be null");
     }
