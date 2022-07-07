@@ -9,7 +9,8 @@ import org.springframework.shell.Shell;
 
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link.cli",
-        "com.lantanagroup.link.config"
+        "com.lantanagroup.link.config",
+        "com.lantanagroup.link.query.auth"
 })
 public class ShellApplication {
 

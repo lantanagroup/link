@@ -1,6 +1,8 @@
 package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
@@ -8,18 +10,18 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
@@ -27,6 +29,9 @@ import java.io.IOException;
 
 @ShellComponent
 public class RefreshPatientListCommand {
+  @Autowired
+  private ApplicationContext applicationContext;
+
   @Autowired
   private RefreshPatientListConfig config;
 
@@ -70,15 +75,13 @@ public class RefreshPatientListCommand {
     throw new IllegalArgumentException("patient-list-id not found");
   }
 
-  private ListResource getList() throws IOException {
-    String path = URLEncodedUtils.formatSegments("api", "FHIR", "STU3", "List", config.getPatientListId());
-    String url = String.format("%s/%s", queryConfig.getFhirServerBase(), path);
-    HttpGet request = new HttpGet(url);
-    request.addHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.toString());
-    return httpClient.execute(request, response -> {
-      String entity = EntityUtils.toString(response.getEntity());
-      return fhirContext.newJsonParser().parseResource(ListResource.class, entity);
-    });
+  private ListResource getList() throws ClassNotFoundException {
+    fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+    IGenericClient client = fhirContext.newRestfulGenericClient(queryConfig.getFhirServerBase());
+    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
+    return client.fetchResourceFromUrl(
+            ListResource.class,
+            URLEncodedUtils.formatSegments("STU3", "List", config.getPatientListId()));
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) {
