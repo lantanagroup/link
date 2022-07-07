@@ -14,6 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class RefreshPatientListConfig {
   private String apiUrl;
-  private String patientListId;
   private AuthConfig auth;
+  private String patientListId;
 }

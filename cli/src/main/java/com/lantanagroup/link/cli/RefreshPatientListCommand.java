@@ -53,9 +53,6 @@ public class RefreshPatientListCommand {
     if (config.getApiUrl() == null) {
       throw new IllegalArgumentException("api-url may not be null");
     }
-    if (config.getAuth() == null) {
-      throw new IllegalArgumentException("auth may not be null");
-    }
     if (config.getPatientListId() == null) {
       throw new IllegalArgumentException("patient-list-id may not be null");
     }
@@ -119,25 +116,23 @@ public class RefreshPatientListCommand {
     return target;
   }
 
-  private void postList(ListResource list) throws IOException {
-    AuthConfig authConfig = config.getAuth();
-    String token = OAuth2Helper.getPasswordCredentialsToken(
-            httpClient,
-            authConfig.getTokenUrl(),
-            authConfig.getUser(),
-            authConfig.getPass(),
-            "nhsnlink-app",
-            authConfig.getScope());
-    if (token == null) {
-      throw new IOException("Authentication failed");
+  private void postList(ListResource target) throws IOException {
+    HttpPost request = new HttpPost(String.format("%s/poi/fhir/List", config.getApiUrl()));
+    if (config.getAuth() != null) {
+      String token = OAuth2Helper.getPasswordCredentialsToken(
+              httpClient,
+              config.getAuth().getTokenUrl(),
+              config.getAuth().getUser(),
+              config.getAuth().getPass(),
+              "nhsnlink-app",
+              config.getAuth().getScope());
+      if (token == null) {
+        throw new IOException("Authorization failed");
+      }
+      request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
     }
-    String path = URLEncodedUtils.formatSegments("poi", "fhir", "List");
-    String url = String.format("%s/%s", config.getApiUrl(), path);
-    HttpPost request = new HttpPost(url);
-    request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-    String entity = fhirContext.newJsonParser().encodeResourceToString(list);
-    request.setEntity(new StringEntity(entity));
+    request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
     httpClient.execute(request, response -> {
       System.out.println(response);
       return null;
