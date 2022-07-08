@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,17 +76,33 @@ public class PatientData {
 
   private void getAdditionalResources(Bundle bundle, List<Reference> resourceReferences){
     if (this.usCoreConfig.getOtherResourceTypes() != null) {
+      HashMap<String, List<String>> resourcesToGet = new HashMap<>();
+
       for (Reference reference : resourceReferences) {
         String[] refParts = reference.getReference().split("/");
         List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes();
         if (otherResourceTypes.contains(refParts[0])) {
-          Resource resource = (Resource) this.fhirQueryServer.read()
-                  .resource(refParts[0])
-                  .withId(refParts[1])
-                  .execute();
-          bundle.addEntry().setResource(resource);
+          if (!resourcesToGet.containsKey(refParts[0])) {
+            resourcesToGet.put(refParts[0], new ArrayList<>());
+          }
+
+          List<String> resourceIds = resourcesToGet.get(refParts[0]);
+
+          if (!resourceIds.contains(refParts[1])) {
+            resourceIds.add(refParts[1]);
+          }
         }
       }
+
+      resourcesToGet.keySet().stream().forEach(resourceType -> {
+        resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
+          Resource resource = (Resource) this.fhirQueryServer.read()
+                  .resource(resourceType)
+                  .withId(resourceId)
+                  .execute();
+          bundle.addEntry().setResource(resource);
+        });
+      });
     }
   }
 }
