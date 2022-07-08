@@ -154,6 +154,8 @@ public class PatientIdentifierController extends BaseController {
         throw new Exception("Identifier is not present.");
       }
 
+      // TODO: Check that the identifier matches a measure loaded in the system
+
       Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
 
       if (applicablePeriodExt == null) {
