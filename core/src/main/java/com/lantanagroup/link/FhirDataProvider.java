@@ -345,12 +345,12 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submitToServer(String serverBase, FHIRSenderOAuthConfig senderConfig, Resource resource) {
+  public void submitToServer(String serverBase, String token, Resource resource) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
     submissionClient.registerInterceptor(new GZipContentInterceptor());
     BearerTokenAuthInterceptor authInterceptor = null;
     try {
-      authInterceptor = new BearerTokenAuthInterceptor(OAuth2Helper.getToken(senderConfig, HttpClientBuilder.create().build()));
+      authInterceptor = new BearerTokenAuthInterceptor(token);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -361,17 +361,16 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource retrieveFromServer(String serverBase, FHIRSenderOAuthConfig senderConfig, String resourceType, String resourceId) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
+  public IBaseResource retrieveFromServer(String token, String resourceType, String resourceId) {
+    client.registerInterceptor(new GZipContentInterceptor());
     BearerTokenAuthInterceptor authInterceptor = null;
     try {
-      authInterceptor = new BearerTokenAuthInterceptor(OAuth2Helper.getToken(senderConfig, HttpClientBuilder.create().build()));
+      authInterceptor = new BearerTokenAuthInterceptor(token);
     } catch (Exception e) {
       e.printStackTrace();
     }
-    submissionClient.registerInterceptor(authInterceptor);
-    return submissionClient
+    client.registerInterceptor(authInterceptor);
+    return client
             .read()
             .resource(resourceType)
             .withId(resourceId)

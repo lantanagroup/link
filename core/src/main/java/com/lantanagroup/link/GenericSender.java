@@ -19,10 +19,7 @@ import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.r4.model.Attachment;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DocumentReference;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,10 +61,6 @@ public abstract class GenericSender {
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
-  public List<FhirSenderUrlOAuthConfig> getSendLocations() {
-    return this.config.getSendUrls();
-  }
-
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
                             boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
@@ -86,18 +79,22 @@ public abstract class GenericSender {
 
       Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, removeGeneratedObservations, existingLocation);
 
-      String content = bundle(bundle, fhirProvider);
+      //String content = bundle(bundle, fhirProvider);
 
       String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
 
       // decide to do a POST or a PUT
       HttpEntityEnclosingRequestBase sendRequest = null;
       if (existingLocation.equals("")) {
-        sendRequest = new HttpPost(authConfig.getUrl());
+        //sendRequest = new HttpPost(authConfig.getUrl());
+        fhirProvider.submitToServer(authConfig.getUrl(), token, bundle);
+        location = authConfig.getUrl();
       } else {
-        sendRequest = new HttpPut(existingLocation);
+        //sendRequest = new HttpPut(existingLocation);
+        fhirProvider.submitToServer(existingLocation, token, bundle);
+        location = existingLocation;
       }
-      sendRequest.addHeader("Content-Type", mimeType);
+      /*sendRequest.addHeader("Content-Type", mimeType);
 
       // set request entity with optional compression
       HttpEntity entity = new StringEntity(content);
@@ -147,7 +144,7 @@ public abstract class GenericSender {
           logger.error("Error while sending MeasureReport bundle to URL", ex);
         }
         throw ex;
-      }
+      }*/
     }
     return location;
   }

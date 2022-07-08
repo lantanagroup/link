@@ -1,5 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
@@ -12,6 +13,7 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,11 @@ public class FHIRReceiver {
     if (foundOauth.isPresent()) {
       FHIRSenderOAuthConfig oAuthConfig = foundOauth.get().getAuthConfig();
       String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
+
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(url);
+
+      //Bundle bundle = (Bundle)fhirDataProvider.retrieveFromServer(token, "Bundle", "application/json");
+
       HttpGet getRequest = new HttpGet(url);
       getRequest.addHeader("Content-Type", "application/json");
       if (Strings.isNotEmpty(token)) {
