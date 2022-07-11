@@ -47,7 +47,7 @@ public class GenericSenderTests {
     // Create a config that has one URL in it to send to
     FHIRSenderConfig config = new FHIRSenderConfig();
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    XMLSender mockSender = this.getMockSender(config);
+    FHIRSender mockSender = this.getMockSender(config);
 
     FhirSenderUrlOAuthConfig urlAuth = new FhirSenderUrlOAuthConfig();
     config.setSendUrls(List.of(urlAuth));
@@ -87,7 +87,7 @@ public class GenericSenderTests {
     config.getSendUrls().get(0).getAuthConfig().setPassword("some-pass");
     config.getSendUrls().get(0).getAuthConfig().setScope("scope1 scope2 scope3");
     IGenericClient mockFhirStoreClient = mock(IGenericClient.class);
-    XMLSender mockSender = this.getMockSender(config);
+    FHIRSender mockSender = this.getMockSender(config);
 
     DocumentReference documentReference = new DocumentReference();
     FhirDataProvider mockFhirDataProvider = mock(FhirDataProvider.class);
@@ -105,8 +105,8 @@ public class GenericSenderTests {
   }
 
 
-  private XMLSender getMockSender(FHIRSenderConfig config) throws Exception {
-    XMLSender sender = mock(XMLSender.class);
+  private FHIRSender getMockSender(FHIRSenderConfig config) throws Exception {
+    FHIRSender sender = mock(FHIRSender.class);
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
     doCallRealMethod().when(sender).setConfig(any());

@@ -38,7 +38,7 @@ public abstract class GenericSender {
   }
 
 
-  public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
+  public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider, String type);
 
   public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider,
                             boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
