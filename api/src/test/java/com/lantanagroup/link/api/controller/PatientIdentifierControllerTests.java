@@ -195,7 +195,7 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
@@ -214,7 +214,7 @@ public class PatientIdentifierControllerTests {
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
 
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
     verify(fhirDataProvider, times(1)).createResource(any());
   }
@@ -231,7 +231,7 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000-04:00", "2021-11-02T20:00:00.000-04:00")).thenReturn(bundle);
+    when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
     // Resource mockResource = mock(Resource.class);
     verify(fhirDataProvider, times(1)).updateResource(any());
