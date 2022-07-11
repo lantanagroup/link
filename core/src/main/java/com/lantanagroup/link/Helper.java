@@ -1,8 +1,12 @@
 package com.lantanagroup.link;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -11,6 +15,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Helper {
@@ -110,4 +115,87 @@ public class Helper {
     list.addAll(list2);
     return list;
   }
+
+  public static boolean validateLoggerValue(String logValue) {
+    String allowedLogCharacters = "^[\\w,\\s\\.-]+$";
+    return Pattern.matches(allowedLogCharacters, logValue);
+  }
+
+  public static boolean validateHeaderValue(String headerValue) {
+    String allowedHeaderCharacters = "^[\\w,\\h\\.-]+$";
+    return Pattern.matches(allowedHeaderCharacters, headerValue);
+  }
+
+  public static boolean validateApiKey(String apiKey) {
+    String allowedKeyCharacters = "^[\\S]+$";
+    return Pattern.matches(allowedKeyCharacters, apiKey);
+  }
+
+  public static boolean validateBearerToken(String token) {
+    String bearer = "[A-Za-z0-9\\-\\._~\\+\\/]+=*";
+    return Pattern.matches(bearer, token);
+  }
+
+  public static String validateReportId(String reportId) throws Exception {
+    String safeString = "(?u)^[.\\\\w\\\\s*,()&+-]{0,1024}$";
+    reportId = reportId.replace( '\n' ,  '_' )
+            .replace( '\r' , '_' )
+            .replace( '\t' , '_' )
+            .replace('<', '_')
+            .replace('>', '_');
+
+    if(Pattern.matches(safeString, reportId)) {
+      return StringEscapeUtils.escapeHtml4(reportId);
+    }
+    else {
+      throw new Exception("Invalid Report Id");
+    }
+  }
+
+  public static String cleanHeaderManipulationChars(String val) {
+    String whiteList = "[^A-Za-z0-9\\-\\._~\\+\\/]";
+    val = val.replaceAll(whiteList, "");
+
+    //testing fortify logic
+//    val = val.replace('\r', '_')
+//            .replace('\n', '_')
+//            .replace('\t', '_')
+//            .replace('=', '_')
+//            .replace(':', '_')
+//            .replace('<', '_')
+//            .replace('>', '_');
+
+    return val;
+
+  }
+
+  public static String encodeLogging(String message) {
+    message = message.replace( '\n' ,  '_' ).replace( '\r' , '_' )
+            .replace( '\t' , '_' );
+
+    message = quoteApostrophe(message);
+    message = StringEscapeUtils.escapeHtml4(message);
+    return message;
+  }
+
+  public static String encodeForUrl(String val) throws UnsupportedEncodingException, URISyntaxException {
+    val = val.replace( '\n' ,  '_' ).replace( '\r' , '_' )
+            .replace( '\t' , '_' );
+
+//    URI requestURI = new URI(val);
+//    String scheme = requestURI.getScheme();
+//    String host = requestURI.getHost();
+//    String path = requestURI.getPath();
+//    String query = requestURI.getRawQuery();
+//
+//    val = scheme + "://" + host + path + URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
+    return val;
+  }
+  public static String quoteApostrophe(String input) {
+    if (input != null)
+      return input.replaceAll("[\']", "&rsquo;");
+    else
+      return null;
+  }
+
 }
