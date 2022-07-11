@@ -266,7 +266,7 @@ public class QueryTests {
 
     // Make sure the patient data bundle has the expected resources in it
     Assert.assertNotNull(patientQueryResponses);
-    Assert.assertEquals(20, entryCount);
+    Assert.assertEquals(19, entryCount);      // 19 instead of 20 because one medication is referenced twice
 
     // Make sure the patients, encounters and conditions are in the resulting bundle
     Optional<Bundle.BundleEntryComponent> foundPatient1 = patientQueryResponses.get(0).getBundle().getEntry().stream()

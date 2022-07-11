@@ -17,8 +17,11 @@ import java.io.*;
 @Component
 public class GenericCSVProcessor implements IDataProcessor {
 
+  @Autowired
+  private THSAConfig thsaConfig;
+
   @Override
-  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider, THSAConfig thsaConfig) {
+  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) {
 
     MeasureReport measureReport = new MeasureReport();
 
@@ -35,7 +38,7 @@ public class GenericCSVProcessor implements IDataProcessor {
       e.printStackTrace();
     }
 
-    measureReport.setId(thsaConfig.getDataMeasureReportId());
+    measureReport.setId(this.thsaConfig.getDataMeasureReportId());
 
     // Store report
     Bundle updateBundle = new Bundle();
@@ -44,7 +47,7 @@ public class GenericCSVProcessor implements IDataProcessor {
             .setResource(measureReport)
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + thsaConfig.getDataMeasureReportId()));
+                    .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
     Bundle response = fhirDataProvider.transaction(updateBundle);
   }
 }

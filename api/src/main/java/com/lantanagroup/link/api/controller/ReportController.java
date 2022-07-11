@@ -193,8 +193,10 @@ public class ReportController extends BaseController {
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    List<PatientOfInterestModel> patientOfInterestModelList;
+
     if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
-      List<PatientOfInterestModel> patientOfInterestModelList = new ArrayList<>();
+      patientOfInterestModelList = new ArrayList<>();
       for(ListResource censusList : context.getPatientCensusLists()) {
         for(ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
           PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
@@ -202,16 +204,24 @@ public class ReportController extends BaseController {
           patientOfInterestModelList.add(patient);
         }
       }
-      context.setPatientsOfInterest(patientOfInterestModelList);
-      return patientOfInterestModelList;
-    }
-    else {
+    } else {
       IPatientIdProvider provider;
       Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
       Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
       provider = (IPatientIdProvider) patientIdentifierConstructor.newInstance();
-      return provider.getPatientsOfInterest(criteria, context, this.config);
+      patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context, this.config);
     }
+
+    // de-duplicate any patients from the census
+    patientOfInterestModelList = patientOfInterestModelList.stream()
+            .collect(Collectors.groupingBy(poi -> poi.toString()))
+            .values().stream()
+            .map(poi -> poi.get(0))
+            .collect(Collectors.toList());
+
+    context.setPatientsOfInterest(patientOfInterestModelList);
+
+    return patientOfInterestModelList;
   }
 
   private List<QueryResponse> getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
@@ -298,6 +308,15 @@ public class ReportController extends BaseController {
         patientQueryResponses = query.execute(patientsOfInterest, resourceTypes);
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
+      }
+
+      // De-duplicate patients now that we know all of their logical ids
+      for (int i = patientQueryResponses.size() - 1; i >= 0; i--) {
+        QueryResponse current = patientQueryResponses.get(i);
+        if (patientQueryResponses.stream().anyMatch(p -> p != current && p.getPatientId().equals(current.getPatientId()))) {
+          logger.info(String.format("Patient %s queried multiple times, removing duplicate patient", current.getPatientId()));
+          patientQueryResponses.remove(current);
+        }
       }
 
       triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);

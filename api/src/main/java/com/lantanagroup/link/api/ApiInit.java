@@ -164,7 +164,7 @@ public class ApiInit {
       Measure measure = foundMeasure.get();
 
       Identifier defaultIdentifier = new Identifier()
-              .setSystem("https://nhsnlink.org")
+              .setSystem(Constants.MainSystem)
               .setValue(measureDefBundle.getIdElement().getIdPart());
 
       if (measure.getIdentifier().size() == 0) {

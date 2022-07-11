@@ -116,7 +116,7 @@ public class MeasureEvaluator {
         this.context.setMeasureReport(measureReport);
       }
     } catch (Exception e) {
-      logger.error("Error generating Measure Report: " + e.getMessage());
+      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId, e.getMessage()));
       throw e;
     }
 

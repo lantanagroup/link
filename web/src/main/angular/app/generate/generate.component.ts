@@ -93,7 +93,7 @@ export class GenerateComponent implements OnInit {
         await this.router.navigate(['review', generateResponse.reportId]);
       } catch (ex) {
         if (ex.status === 409) {
-          if (confirm(ex.error.message)) {
+          if (confirm('A report already exists for the selected criteria. Would you like to re-generate the report?')) {
             try {
               const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
               const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
