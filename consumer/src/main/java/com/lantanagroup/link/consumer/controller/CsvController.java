@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +37,13 @@ public class CsvController {
     return HttpClientBuilder.create().build();
   }
 
+  // Disallow binding of sensitive attributes
+  // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
+  final String[] DISALLOWED_FIELDS = new String[]{};
+  @InitBinder
+  public void initBinder(WebDataBinder binder) {
+    binder.setDisallowedFields(DISALLOWED_FIELDS);
+  }
 
   /**
    * Receives a CVS representing a Bundle with a MeasureReport

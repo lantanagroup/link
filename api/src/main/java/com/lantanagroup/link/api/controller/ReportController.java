@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -76,6 +77,13 @@ public class ReportController extends BaseController {
   @Autowired
   private QueryConfig queryConfig;
 
+  // Disallow binding of sensitive attributes
+  // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
+  final String[] DISALLOWED_FIELDS = new String[]{};
+  @InitBinder
+  public void initBinder(WebDataBinder binder) {
+    binder.setDisallowedFields(DISALLOWED_FIELDS);
+  }
 
   private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
