@@ -372,11 +372,6 @@ public class FhirDataProvider {
     }
     client.registerInterceptor(authInterceptor);
 
-    // Register an additional headers interceptor and add one header to it
-    AdditionalRequestHeadersInterceptor contentInterceptor = new AdditionalRequestHeadersInterceptor();
-    contentInterceptor.addHeaderValue("Content-Type", "application/fhir+json;charset=UTF-8");
-    client.registerInterceptor(contentInterceptor);
-
     return (Bundle)client
             .read()
             .resource(resourceType)

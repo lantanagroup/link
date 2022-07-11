@@ -25,7 +25,7 @@ public class XMLSender extends GenericSender implements IReportSender {
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
-    sendContent(masterMeasureReport, fhirDataProvider, "application/xml", sendWholeBundle, removeGeneratedObservations);
+    sendContent(masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }

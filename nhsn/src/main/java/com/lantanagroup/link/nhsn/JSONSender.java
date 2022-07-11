@@ -24,7 +24,7 @@ public class JSONSender extends GenericSender implements IReportSender {
   @Override
   public void send(MeasureReport masterMeasureReport, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
-    this.sendContent(masterMeasureReport, fhirDataProvider, "application/json", sendWholeBundle, removeGeneratedObservations);
+    this.sendContent(masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }

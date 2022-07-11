@@ -1,36 +1,15 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpRequest;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
@@ -61,7 +40,7 @@ public abstract class GenericSender {
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
-  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, String mimeType,
+  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider,
                             boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
 
     String location = "";

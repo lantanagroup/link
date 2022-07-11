@@ -26,7 +26,7 @@ public class CSVSender extends GenericSender implements IReportSender {
 
     String csv = "";
 
-    this.sendContent(masterMeasureReport, fhirDataProvider, "text/csv", sendWholeBundle, removeGeneratedObservations);
+    this.sendContent(masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
 
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
