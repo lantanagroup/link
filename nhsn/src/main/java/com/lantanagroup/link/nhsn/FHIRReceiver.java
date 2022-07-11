@@ -38,45 +38,18 @@ public class FHIRReceiver {
     return HttpClientBuilder.create().build();
   }
 
-  public String retrieveContent(String url) throws Exception {
-
-    String content = "";
+  public Bundle retrieveContent(String url) throws Exception {
 
     Optional<FhirSenderUrlOAuthConfig> foundOauth = this.config.getSendUrls().stream().filter(authConfig -> url.contains(authConfig.getUrl())).findFirst();
-
+    Bundle bundle = null;
     if (foundOauth.isPresent()) {
       FHIRSenderOAuthConfig oAuthConfig = foundOauth.get().getAuthConfig();
       String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
 
       String[] urlParts = url.split("/");
       FhirDataProvider fhirDataProvider = new FhirDataProvider(urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url);
-      Bundle bundle = fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
-
-      HttpGet getRequest = new HttpGet(url);
-      getRequest.addHeader("Content-Type", "application/json");
-      if (Strings.isNotEmpty(token)) {
-        logger.debug("Adding auth token to submit request");
-        getRequest.addHeader("Authorization", "Bearer " + token);
-      }
-      try {
-        HttpClient httpClient = this.getHttpClient();
-        HttpResponse response = httpClient.execute(getRequest);
-        if (response.getStatusLine().getStatusCode() >= 300) {
-          String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
-          logger.error(String.format("Error (%s) getting report to %s: %s", response.getStatusLine().getStatusCode(), url, responseContent));
-          throw new HttpResponseException(500, "Internal Server Error");
-        }
-        content = new BufferedReader(new InputStreamReader(response.getEntity().getContent())).lines().collect(Collectors.joining("\n"));
-      } catch (IOException ex) {
-        if (ex.getMessage().contains("403")) {
-          logger.error("Error authorizing receive: " + ex.getMessage());
-        } else {
-          logger.error("Error while receiving MeasureReport bundle from URL", ex);
-        }
-        throw ex;
-      }
+      bundle = fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
     }
-    return content;
+    return bundle;
   }
-
 }

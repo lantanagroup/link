@@ -1072,13 +1072,12 @@ public class ReportController extends BaseController {
 
     String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(docRef);
     FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
-    String content = null;
+    Bundle submitted = null;
     try {
-      content = receiver.retrieveContent(bundleLocation);
+      submitted = receiver.retrieveContent(bundleLocation);
     } catch (Exception e) {
       e.printStackTrace();
     }
-    Bundle submitted = this.ctx.newJsonParser().parseResource(Bundle.class, content);
 
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
