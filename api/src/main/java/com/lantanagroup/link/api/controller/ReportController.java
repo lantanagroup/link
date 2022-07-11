@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -152,7 +153,13 @@ public class ReportController extends BaseController {
     if (authConfig != null) {
       try {
         String token = OAuth2Helper.getToken(authConfig);
-        requestBuilder.setHeader("Authorization", "Bearer " + token);
+        //token = Helper.cleanHeaderManipulationChars(token);
+        if(OAuth2Helper.validateHeaderJwtToken(token)) {
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        }
+        else {
+          throw new JWTVerificationException("Invalid token format");
+        }
       } catch (Exception ex) {
         logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
         return;
@@ -516,7 +523,7 @@ public class ReportController extends BaseController {
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
-    logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
+    logger.info("MeasureReport with ID " + reportId + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
 
@@ -587,6 +594,14 @@ public class ReportController extends BaseController {
           @PathVariable("reportId") String reportId) {
 
     ReportModel report = new ReportModel();
+
+    //prevent injection from reportId parameter
+    try {
+      reportId = Helper.encodeForUrl(reportId);
+    }
+    catch(Exception ex) {
+      logger.error(ex.getMessage());
+    }
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue()));

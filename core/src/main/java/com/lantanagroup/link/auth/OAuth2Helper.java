@@ -39,6 +39,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
@@ -54,6 +55,13 @@ public class OAuth2Helper {
     RSA256,
     HS256,
     EC
+  }
+
+  public static Boolean validateHeaderJwtToken(String jwtToken) {
+    //validate token
+    //https://www.regextester.com/105777
+    String allowedHeaderCharacters = "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$";
+    return Pattern.matches(allowedHeaderCharacters, jwtToken);
   }
 
   public static String getToken(LinkOAuthConfig config) throws Exception {

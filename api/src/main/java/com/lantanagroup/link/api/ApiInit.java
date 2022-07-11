@@ -3,6 +3,7 @@ package com.lantanagroup.link.api;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
@@ -76,7 +77,12 @@ public class ApiInit {
       if (authConfig != null) {
         try {
           String token = OAuth2Helper.getToken(authConfig);
-          requestBuilder.setHeader("Authorization", "Bearer " + token);
+          if(OAuth2Helper.validateHeaderJwtToken(token)) {
+            requestBuilder.setHeader("Authorization", "Bearer " + token);
+          }
+          else {
+            throw new JWTVerificationException("Invalid token format");
+          }
         } catch (Exception ex) {
           logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
           return;

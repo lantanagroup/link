@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
@@ -17,6 +18,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.r4.model.Attachment;
@@ -61,6 +63,7 @@ public abstract class GenericSender {
     return HttpClientBuilder.create().build();
   }
 
+  public CloseableHttpClient getCloseableHttpClient() { return HttpClientBuilder.create().build();  }
 
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider);
 
@@ -88,7 +91,10 @@ public abstract class GenericSender {
 
       String content = bundle(bundle, fhirProvider);
 
-      String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
+      String token = "";
+      try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+        token = OAuth2Helper.getToken(authConfig.getAuthConfig(), httpClient);
+      }
 
       // decide to do a POST or a PUT
       HttpEntityEnclosingRequestBase sendRequest = null;
@@ -116,16 +122,24 @@ public abstract class GenericSender {
 
       if (Strings.isNotEmpty(token)) {
         logger.debug("Adding auth token to submit request");
-        sendRequest.addHeader("Authorization", "Bearer " + token);
+        token = Helper.cleanHeaderManipulationChars(token);
+        if(OAuth2Helper.validateHeaderJwtToken(token)) {
+          sendRequest.addHeader("Authorization", "Bearer " +token);
+        }
+        else {
+          throw new JWTVerificationException("Invalid token format");
+        }
       }
-      try {
-        HttpClient httpClient = this.getHttpClient();
+      try(CloseableHttpClient httpClient = this.getCloseableHttpClient();) {
 
         HttpResponse response = httpClient.execute(sendRequest);
 
         if (response.getStatusLine().getStatusCode() >= 300) {
           String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
-          logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), authConfig.getUrl(), responseContent));
+          logger.error(String.format("Error (%s) submitting report to %s: %s",
+                  Helper.encodeLogging(String.valueOf(response.getStatusLine().getStatusCode())),
+                  Helper.encodeLogging(authConfig.getUrl()),
+                  Helper.encodeLogging(responseContent)));
           throw new HttpResponseException(500, "Internal Server Error");
         }
 
