@@ -15,6 +15,8 @@ import java.util.Base64;
 
 public class EpicAuthTests {
   private static KeyPair getKeyPair() throws NoSuchAlgorithmException {
+    //https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#KeyPairGenerator
+    //KeyPairGenerator only accepts (DSA, RSA, and EC
     KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
     keyPairGenerator.initialize(1024);
     return keyPairGenerator.generateKeyPair();
