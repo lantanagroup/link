@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.AdditionalRequestHeadersInterceptor;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
@@ -361,7 +362,7 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource retrieveFromServer(String token, String resourceType, String resourceId) {
+  public Bundle retrieveFromServer(String token, String resourceType, String resourceId) {
     client.registerInterceptor(new GZipContentInterceptor());
     BearerTokenAuthInterceptor authInterceptor = null;
     try {
@@ -370,11 +371,16 @@ public class FhirDataProvider {
       e.printStackTrace();
     }
     client.registerInterceptor(authInterceptor);
-    return client
+
+    // Register an additional headers interceptor and add one header to it
+    AdditionalRequestHeadersInterceptor contentInterceptor = new AdditionalRequestHeadersInterceptor();
+    contentInterceptor.addHeaderValue("Content-Type", "application/fhir+json;charset=UTF-8");
+    client.registerInterceptor(contentInterceptor);
+
+    return (Bundle)client
             .read()
             .resource(resourceType)
             .withId(resourceId)
-            .elementsSubset("id")
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
   }

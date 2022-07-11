@@ -48,9 +48,9 @@ public class FHIRReceiver {
       FHIRSenderOAuthConfig oAuthConfig = foundOauth.get().getAuthConfig();
       String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
 
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(url);
-
-      //Bundle bundle = (Bundle)fhirDataProvider.retrieveFromServer(token, "Bundle", "application/json");
+      String[] urlParts = url.split("/");
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url);
+      Bundle bundle = fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
 
       HttpGet getRequest = new HttpGet(url);
       getRequest.addHeader("Content-Type", "application/json");
