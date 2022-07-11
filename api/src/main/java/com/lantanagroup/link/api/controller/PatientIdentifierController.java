@@ -151,7 +151,7 @@ public class PatientIdentifierController extends BaseController {
       List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
 
       if (identifierList.isEmpty()) {
-        throw new Exception("Identifier is not present.");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Identifier is not present.");
       }
 
       // TODO: Check that the identifier matches a measure loaded in the system

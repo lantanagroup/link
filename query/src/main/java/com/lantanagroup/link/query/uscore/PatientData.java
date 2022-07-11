@@ -79,6 +79,10 @@ public class PatientData {
       HashMap<String, List<String>> resourcesToGet = new HashMap<>();
 
       for (Reference reference : resourceReferences) {
+        if (!reference.hasReference()) {
+          continue;
+        }
+
         String[] refParts = reference.getReference().split("/");
         List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes();
         if (otherResourceTypes.contains(refParts[0])) {

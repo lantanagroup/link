@@ -503,7 +503,7 @@ public class FhirHelper {
     // get data requirements
     Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
-    return reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
+    return reportDefBundleDataReqSet.stream().filter(e -> !e.equals("Patient") && !properties.contains(e)).collect(Collectors.joining(","));
   }
 
   public static List<String> getQueryConfigurationDataReqCommonResourceTypes(List<String> properties, Bundle measureDefBundle) {
