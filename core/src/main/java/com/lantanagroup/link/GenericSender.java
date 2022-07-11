@@ -76,77 +76,28 @@ public abstract class GenericSender {
       logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
       DocumentReference documentReference = fhirProvider.findDocRefForReport(masterMeasureReport.getIdElement().getIdPart());
       String existingLocation = FhirHelper.getDocumentReferenceLocationByUrl(documentReference, authConfig.getUrl());
-
+      String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
       Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, removeGeneratedObservations, existingLocation);
 
-      //String content = bundle(bundle, fhirProvider);
-
-      String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
-
-      // decide to do a POST or a PUT
-      HttpEntityEnclosingRequestBase sendRequest = null;
-      if (existingLocation.equals("")) {
-        //sendRequest = new HttpPost(authConfig.getUrl());
-        fhirProvider.submitToServer(authConfig.getUrl(), token, bundle);
+      boolean hasBeenSent;
+      if(existingLocation.equals("")) {
+        hasBeenSent = false;
         location = authConfig.getUrl();
-      } else {
-        //sendRequest = new HttpPut(existingLocation);
-        fhirProvider.submitToServer(existingLocation, token, bundle);
+      }
+      else {
+        hasBeenSent = true;
         location = existingLocation;
       }
-      /*sendRequest.addHeader("Content-Type", mimeType);
-
-      // set request entity with optional compression
-      HttpEntity entity = new StringEntity(content);
-      if (authConfig.isCompress()) {
-        try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
-          try (GZIPOutputStream compressedStream = new GZIPOutputStream(stream)) {
-            entity.writeTo(compressedStream);
-          }
-          HttpEntity compressedEntity = new ByteArrayEntity(stream.toByteArray());
-          sendRequest.setEntity(compressedEntity);
-          sendRequest.addHeader("Content-Encoding", "gzip");
-        }
-      } else {
-        sendRequest.setEntity(entity);
-      }
-
-      if (Strings.isNotEmpty(token)) {
-        logger.debug("Adding auth token to submit request");
-        sendRequest.addHeader("Authorization", "Bearer " + token);
-      }
-      try {
-        HttpClient httpClient = this.getHttpClient();
-
-        HttpResponse response = httpClient.execute(sendRequest);
-
-        if (response.getStatusLine().getStatusCode() >= 300) {
-          String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
-          logger.error(String.format("Error (%s) submitting report to %s: %s", response.getStatusLine().getStatusCode(), authConfig.getUrl(), responseContent));
-          throw new HttpResponseException(500, "Internal Server Error");
-        }
-
-        if (response.getHeaders("Content-Location") != null && response.getHeaders("Content-Location").length > 0) {
-          location = response.getHeaders("Content-Location")[0].getElements()[0].getName();
-          if (location.indexOf("/_history/") > 0) {
-            location = location.substring(0, location.indexOf("/_history/"));
-          }
-
-          logger.debug("Response location is " + location);
-
-          // update the location on the DocumentReference
-          this.updateDocumentLocation(masterMeasureReport, fhirProvider, location);
-        }
-      } catch (IOException ex) {
-        if (ex.getMessage().contains("403")) {
-          logger.error("Error authorizing send: " + ex.getMessage());
-        } else {
-          logger.error("Error while sending MeasureReport bundle to URL", ex);
-        }
-        throw ex;
-      }*/
+      fhirProvider.submitToServer(locationCleaner(location, hasBeenSent), token, bundle);
     }
     return location;
+  }
+
+  private String locationCleaner(String location, boolean hasBeenSent) {
+    String cleanLocation = location.contains("/history")?location.substring(0, location.indexOf("/history")):location;
+    String[] locationParts = cleanLocation.split("/");
+    int idTrim = hasBeenSent?2:1;
+    return locationParts.length > idTrim?location.substring(0, location.indexOf(locationParts[locationParts.length - idTrim])):location;
   }
 
   public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {
