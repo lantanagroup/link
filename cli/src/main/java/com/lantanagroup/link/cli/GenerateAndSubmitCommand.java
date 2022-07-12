@@ -1,6 +1,7 @@
 package com.lantanagroup.link.cli;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
@@ -10,6 +11,7 @@ import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import org.springframework.shell.standard.ShellMethod;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
@@ -64,9 +67,9 @@ public class GenerateAndSubmitCommand {
   }
 
   @ShellMethod("generate-and-submit")
-  public void generateAndSubmit() {
+  public void generateAndSubmit() throws IOException {
+    CloseableHttpClient client = HttpClientBuilder.create().build();
     try {
-      HttpClient client = HttpClientBuilder.create().build();
       RestTemplate restTemplate = new RestTemplate();
 
       if (Strings.isBlank(configInfo.getApiUrl())) {
@@ -107,6 +110,7 @@ public class GenerateAndSubmitCommand {
       }
       String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
       if (token == null) {
+        client.close();
         logger.error("Authentication failed. Please contact the system administrator.");
         System.exit(1);
       }
@@ -135,7 +139,15 @@ public class GenerateAndSubmitCommand {
       // set `content-type` header
       headers.setContentType(MediaType.APPLICATION_JSON);
 
-      headers.setBearerAuth(token);
+      //bearer token header
+      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+        headers.setBearerAuth(token);
+      }
+      else {
+        client.close();
+        throw new JWTVerificationException("Invalid token format");
+      }
+
       // set `accept` header
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
@@ -148,6 +160,7 @@ public class GenerateAndSubmitCommand {
       String reportId = response.getBody() != null ? response.getBody().getReportId() : null;
       if (reportId == null) {
         logger.error("Error generating report. Please contact the system administrator.");
+        client.close();
         System.exit(1);
       }
 
@@ -161,11 +174,17 @@ public class GenerateAndSubmitCommand {
       // send the report
       restTemplate.exchange(urlWithParameters1, HttpMethod.GET, entity, String.class);
       logger.info("Report successfully generated and submitted.");
+      client.close();
       System.exit(0);
     } catch (Exception ex) {
+      client.close();
       logger.error(String.format("Error generating and submitting report: %s", ex.getMessage()), ex);
       System.exit(1);
-
+    }
+    finally {
+      if(client != null) {
+        client.close();
+      }
     }
   }
 }

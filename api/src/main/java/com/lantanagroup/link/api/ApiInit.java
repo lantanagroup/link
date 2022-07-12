@@ -100,13 +100,18 @@ public class ApiInit {
         return;
       }
 
+
+      boolean keepSearching = true;
       Integer retryCount = 0;
       String content = null;
 
-      while (Strings.isEmpty(content) && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+      while (keepSearching && retryCount <= this.config.getReportDefs().getMaxRetry()) {
         try {
           HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
           content = response.body();
+          if(Strings.isEmpty(content)) {
+            keepSearching = false;
+          }
         } catch (ConnectException ex) {
           retryCount++;
 

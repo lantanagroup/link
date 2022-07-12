@@ -100,7 +100,7 @@ public class OAuth2Helper {
     return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
   }
 
-  public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
+  public static String getPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     request.addHeader("Accept", "application/json");
@@ -130,7 +130,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service: \n" + content);
+        logger.error("Error retrieving OAuth2 password token from auth service");
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -151,7 +151,7 @@ public class OAuth2Helper {
     return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
   }
 
-  public static String getClientCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
+  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     String userPassCombo = username + ":" + password;
@@ -183,7 +183,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 client credentials token from auth service: \n" + content);
+        logger.error("Error retrieving OAuth2 client credentials token from auth service");
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -441,7 +441,7 @@ public class OAuth2Helper {
     return noRoles;
   }
 
-  public static String getToken(FHIRSenderOAuthConfig authConfig, HttpClient client) throws Exception {
+  public static String getToken(FHIRSenderOAuthConfig authConfig, CloseableHttpClient client) throws Exception {
     String token = "";
 
     if (authConfig != null && authConfig.hasCredentialProperties()) {

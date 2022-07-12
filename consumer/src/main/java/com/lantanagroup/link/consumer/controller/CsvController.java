@@ -117,7 +117,7 @@ public class CsvController {
         logger.error(String.format("Error (%s) submitting request to %s: %s", Helper.encodeLogging(String.valueOf(response.getStatusLine().getStatusCode())), Helper.encodeLogging(url), Helper.encodeLogging(responseContent)));
         throw new HttpResponseException(500, "Internal Server Error");
       } else {
-        logger.info("Response is: " + response.getStatusLine());
+        logger.info("Response is: " + Helper.encodeLogging(response.getStatusLine().getReasonPhrase()));
       }
     } catch (Exception ex) {
       logger.error(String.format("Error (%s) submitting request", ex.getMessage()));

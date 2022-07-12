@@ -314,6 +314,7 @@ public class ReportController extends BaseController {
   private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
+      //List<QueryResponse> patientQueryResponses = new ArrayList<>();
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
@@ -523,7 +524,7 @@ public class ReportController extends BaseController {
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
-    logger.info("MeasureReport with ID " + reportId + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
+    logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
 
@@ -1106,7 +1107,7 @@ public class ReportController extends BaseController {
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
       if(patientId != null && !patientId.equals("")) {
-        logger.info("Searching for resources of specified patient " + patientId);
+        logger.info("Searching for resources of specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
         Bundle patientBundle = getPatientResourcesById(patientId, submitted);
         patientBundles.add(patientBundle);
       }
@@ -1132,7 +1133,7 @@ public class ReportController extends BaseController {
           if(patientId != null && !patientId.equals("")) {
             logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length-1]);
             if(refParts[refParts.length-1].contains(String.valueOf(patientId.hashCode()))) {
-              logger.info("Searching for specified patient " + patientId);
+              logger.info("Searching for specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
               Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]));
               patientBundles.add(patientBundle);
               break;

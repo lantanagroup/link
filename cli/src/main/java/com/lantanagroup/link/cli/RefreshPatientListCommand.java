@@ -17,6 +17,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
@@ -43,7 +44,7 @@ public class RefreshPatientListCommand {
   @Autowired
   private ApiConfig apiConfig;
 
-  private final HttpClient httpClient = HttpClients.createDefault();
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
 
   @ShellMethod(
