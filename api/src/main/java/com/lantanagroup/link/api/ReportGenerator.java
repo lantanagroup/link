@@ -32,7 +32,6 @@ public class ReportGenerator {
   private ApiConfig config;
   private IReportAggregator reportAggregator;
 
-
   public ReportGenerator(ReportContext context, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
     this.context = context;
     this.criteria = criteria;
@@ -40,7 +39,6 @@ public class ReportGenerator {
     this.config = config;
     this.reportAggregator = reportAggregator;
   }
-
 
   private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
     DocumentReference documentReference = new DocumentReference();

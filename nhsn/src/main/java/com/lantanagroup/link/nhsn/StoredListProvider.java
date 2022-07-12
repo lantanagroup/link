@@ -36,7 +36,7 @@ public class StoredListProvider implements IPatientIdProvider {
     Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
 
     if (bundle.getEntry().size() == 0) {
-      logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
+      logger.warn("No patient identifier lists found matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
       return patientsOfInterest;
     } else {
       logger.info("Found patient identifier lists  matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());

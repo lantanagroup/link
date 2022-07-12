@@ -54,7 +54,7 @@ public class FhirDataProvider {
     if (!outcome.getCreated() || outcome.getResource() == null) {
       logger.error("Failed to store/create FHIR resource");
     } else {
-      logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
+      logger.debug("Stored FHIR resource with new " + outcome.getId().toString());
     }
 
     return (Resource) outcome.getResource();

@@ -443,6 +443,7 @@ public class ReportController extends BaseController {
       } catch (ClassNotFoundException e) {
         logger.error(String.format("Error generating report: %s", e));
       }
+
       IReportAggregator reportAggregator = (IReportAggregator) this.context.getBean(reportAggregatorClass);
 
       ReportGenerator generator = new ReportGenerator(context, criteria, config, user, reportAggregator);
