@@ -15,6 +15,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.regex.*;
 
 public class AgentAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
@@ -111,7 +112,7 @@ public class AgentAuthFilter extends AbstractPreAuthenticatedProcessingFilter {
     AgentAuthModel authModel = new AgentAuthModel();
     String authorization = request.getHeader("Authorization");
 
-    if (authorization != null && authorization.toLowerCase().startsWith("key ")) {
+    if (authorization != null && authorization.toLowerCase(Locale.ENGLISH).startsWith("key ")) {
       authModel.setAuthorization(authorization.substring(4));
     }
 

@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -361,7 +362,7 @@ public class YamlUtils {
     }
 
     private static IParser getParser(String ext, FhirContext r4) {
-        switch (ext.toLowerCase()) {
+        switch (ext.toLowerCase(Locale.ENGLISH)) {
         case "yaml":
             return newYamlParser(r4);
         case "xml":

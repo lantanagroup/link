@@ -1,10 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.FhirBundler;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.IReportDownloader;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -50,7 +47,12 @@ public class MeasureReportDownloader implements IReportDownloader {
 
     String responseBody = ctx.newXmlParser().encodeResourceToString(bundle);
     response.setContentType("application/xml");
-    response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
+    if(Helper.validateHeaderValue(reportId)) {
+      response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
+    }
+    else {
+      throw new IllegalArgumentException("Invalid report Id");
+    }
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
     IOUtils.copy(is, response.getOutputStream());

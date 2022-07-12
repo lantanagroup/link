@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -76,6 +78,13 @@ public class ReportController extends BaseController {
   @Autowired
   private QueryConfig queryConfig;
 
+  // Disallow binding of sensitive attributes
+  // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
+  final String[] DISALLOWED_FIELDS = new String[]{};
+  @InitBinder
+  public void initBinder(WebDataBinder binder) {
+    binder.setDisallowedFields(DISALLOWED_FIELDS);
+  }
 
   private void storeReportBundleResources(Bundle bundle, ReportContext context) {
     Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
@@ -144,7 +153,13 @@ public class ReportController extends BaseController {
     if (authConfig != null) {
       try {
         String token = OAuth2Helper.getToken(authConfig);
-        requestBuilder.setHeader("Authorization", "Bearer " + token);
+        //token = Helper.cleanHeaderManipulationChars(token);
+        if(OAuth2Helper.validateHeaderJwtToken(token)) {
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        }
+        else {
+          throw new JWTVerificationException("Invalid token format");
+        }
       } catch (Exception ex) {
         logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
         return;
@@ -299,6 +314,7 @@ public class ReportController extends BaseController {
   private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
+      //List<QueryResponse> patientQueryResponses = new ArrayList<>();
 
       // Get the data
       if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
@@ -508,7 +524,7 @@ public class ReportController extends BaseController {
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
-    logger.info("MeasureReport with ID " + reportId + " submitted by " + submitterName + " on " + new Date());
+    logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
 
@@ -579,6 +595,14 @@ public class ReportController extends BaseController {
           @PathVariable("reportId") String reportId) {
 
     ReportModel report = new ReportModel();
+
+    //prevent injection from reportId parameter
+    try {
+      reportId = Helper.encodeForUrl(reportId);
+    }
+    catch(Exception ex) {
+      logger.error(ex.getMessage());
+    }
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue()));
@@ -1083,7 +1107,7 @@ public class ReportController extends BaseController {
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
       if(patientId != null && !patientId.equals("")) {
-        logger.info("Searching for resources of specified patient " + patientId);
+        logger.info("Searching for resources of specified patient " + Helper.encodeLogging((Helper.validateLoggerValue(patientId) ? patientId : "")));
         Bundle patientBundle = getPatientResourcesById(patientId, submitted);
         patientBundles.add(patientBundle);
       }
@@ -1109,7 +1133,7 @@ public class ReportController extends BaseController {
           if(patientId != null && !patientId.equals("")) {
             logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length-1]);
             if(refParts[refParts.length-1].contains(String.valueOf(patientId.hashCode()))) {
-              logger.info("Searching for specified patient " + patientId);
+              logger.info("Searching for specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
               Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]));
               patientBundles.add(patientBundle);
               break;

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
@@ -19,6 +20,14 @@ public class ReportDataController extends BaseController {
   @Autowired
   @Setter
   private ApplicationContext context;
+
+  // Disallow binding of sensitive attributes
+  // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
+  final String[] DISALLOWED_FIELDS = new String[]{};
+  @InitBinder
+  public void initBinder(WebDataBinder binder) {
+    binder.setDisallowedFields(DISALLOWED_FIELDS);
+  }
 
   @PostMapping(value = "/data/{type}")
   public void retrieveData(@RequestBody() String csvContent, @PathVariable("type") String type) throws Exception {
