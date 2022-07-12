@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.IQuery;
@@ -30,7 +31,17 @@ public class QueryCommand extends BaseShellCommand {
 
   @Override
   protected List<Class> getBeanClasses() {
-    return List.of(QueryConfig.class, Query.class, PatientScoop.class, EpicAuth.class, EpicAuthConfig.class, CernerAuth.class, CernerAuthConfig.class, BasicAuth.class, BasicAuthConfig.class);
+    return List.of(
+            Query.class,
+            QueryConfig.class,
+            USCoreConfig.class,
+            PatientScoop.class,
+            EpicAuth.class,
+            EpicAuthConfig.class,
+            CernerAuth.class,
+            CernerAuthConfig.class,
+            BasicAuth.class,
+            BasicAuthConfig.class);
   }
 
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
