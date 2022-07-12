@@ -96,8 +96,13 @@ public class OAuth2Helper {
   }
 
   public static String getPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String scope) {
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
   }
 
   public static String getPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
@@ -147,8 +152,13 @@ public class OAuth2Helper {
   }
 
   public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
   }
 
   public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String scope) {
@@ -306,13 +316,16 @@ public class OAuth2Helper {
       conn.setRequestMethod("GET");
       int status = conn.getResponseCode();
 
-      BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-      String inputLine;
       StringBuffer content = new StringBuffer();
-      while ((inputLine = in.readLine()) != null) {
-        content.append(inputLine);
+      try(InputStreamReader streamReader = new InputStreamReader(conn.getInputStream())) {
+
+        BufferedReader in = new BufferedReader(streamReader);
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+          content.append(inputLine);
+        }
+        in.close();
       }
-      in.close();
 
       JSONObject openIdConfigObj = new JSONObject(content.toString());
       return openIdConfigObj.getString("jwks_uri");

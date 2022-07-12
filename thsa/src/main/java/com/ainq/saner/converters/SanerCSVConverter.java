@@ -61,7 +61,9 @@ public class SanerCSVConverter {
             String arg = args[i];
             if (csvFile != null) {
                 MeasureReport mr = convertCsvToResource(csvFile, new File(arg), null, Util.invertMap(columns), null);
-                writeMeasureReport(new FileWriter(outputFile), mr);
+                try(FileWriter fw = new FileWriter(outputFile)){
+                    writeMeasureReport(fw, mr);
+                }
                 csvFile = null;
                 columns.clear();
             } else if ("--help".equals(arg) || "-h".equals(arg)) {

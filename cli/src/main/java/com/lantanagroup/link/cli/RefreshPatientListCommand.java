@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
@@ -130,7 +131,14 @@ public class RefreshPatientListCommand {
       if (token == null) {
         throw new IOException("Authorization failed");
       }
-      request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+
+      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+        request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+      }
+      else {
+        throw new JWTVerificationException("Invalid token format");
+      }
+
     }
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));

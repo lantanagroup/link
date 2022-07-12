@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
@@ -135,7 +136,10 @@ public abstract class GenericSender {
         HttpResponse response = httpClient.execute(sendRequest);
 
         if (response.getStatusLine().getStatusCode() >= 300) {
-          String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
+          String responseContent = "";
+          try(InputStream responseStream = response.getEntity().getContent()) {
+            responseContent = IOUtils.toString(responseStream, StandardCharsets.UTF_8);
+          }
           logger.error(String.format("Error (%s) submitting report to %s: %s",
                   Helper.encodeLogging(String.valueOf(response.getStatusLine().getStatusCode())),
                   Helper.encodeLogging(authConfig.getUrl()),

@@ -73,9 +73,9 @@ public class QueryCommand extends BaseShellCommand {
 
           if (Strings.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
-            fos.close();
+            try(FileOutputStream fos = new FileOutputStream(file)) {
+              fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
+            }
             logger.info("Stored patient data XML to " + file);
           } else {
             System.out.println("Patient " + (i + 1) + " Bundle XML:");
@@ -86,6 +86,7 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Done");
     } catch (Exception ex) {
+
       logger.error("Error executing query: " + ex.getMessage(), ex);
     }
   }

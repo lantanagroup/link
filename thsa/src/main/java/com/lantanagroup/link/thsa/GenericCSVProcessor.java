@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 
+import static com.lantanagroup.link.thsa.CSVSender.logger;
+
 @Component
 public class GenericCSVProcessor implements IDataProcessor {
 
@@ -25,29 +27,39 @@ public class GenericCSVProcessor implements IDataProcessor {
 
     MeasureReport measureReport = new MeasureReport();
 
-    InputStream measureStream = getClass().getClassLoader().getResourceAsStream("THSAMasterAggregate.xml");
-    Measure measure = FhirContextProvider.getFhirContext().newXmlParser().parseResource(Measure.class, measureStream);
-
-    InputStream contentStream = new ByteArrayInputStream(dataContent);
-    Reader reader = new InputStreamReader(contentStream);
-
-    CsvToReportConverter converter = new CsvToReportConverter(measure, null, null);
-    try {
-      measureReport = converter.convert(reader);
-    } catch (IOException e) {
-      e.printStackTrace();
+    Measure measure = new Measure();
+    try(InputStream measureStream = getClass().getClassLoader().getResourceAsStream("THSAMasterAggregate.xml")) {
+      measure = FhirContextProvider.getFhirContext().newXmlParser().parseResource(Measure.class, measureStream);
+    } catch(IOException ex){
+      logger.error("Error retrieving measure in THSA data processor: " + ex.getMessage());
     }
 
-    measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+    try(InputStream contentStream = new ByteArrayInputStream(dataContent)) {
+      Reader reader = new InputStreamReader(contentStream);
 
-    // Store report
-    Bundle updateBundle = new Bundle();
-    updateBundle.setType(Bundle.BundleType.TRANSACTION);
-    updateBundle.addEntry()
-            .setResource(measureReport)
-            .setRequest(new Bundle.BundleEntryRequestComponent()
-                    .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
-    Bundle response = fhirDataProvider.transaction(updateBundle);
+      CsvToReportConverter converter = new CsvToReportConverter(measure, null, null);
+      try {
+        measureReport = converter.convert(reader);
+      } catch (IOException e) {
+
+        e.printStackTrace();
+      }
+
+      measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+
+      // Store report
+      Bundle updateBundle = new Bundle();
+      updateBundle.setType(Bundle.BundleType.TRANSACTION);
+      updateBundle.addEntry()
+              .setResource(measureReport)
+              .setRequest(new Bundle.BundleEntryRequestComponent()
+                      .setMethod(Bundle.HTTPVerb.PUT)
+                      .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
+      Bundle response = fhirDataProvider.transaction(updateBundle);
+
+    }
+    catch(IOException ex) {
+      logger.error("Error converting measure in THSA data processor: " + ex.getMessage());
+    }
   }
 }

@@ -249,8 +249,10 @@ public class ApiInit {
       FhirContext ctx = FhirContextProvider.getFhirContext();
       IParser xmlParser = ctx.newXmlParser();
       for (final Resource res : resources) {
-        IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());
-        provider.updateResource(resource);
+        try(InputStream inputStream = res.getInputStream();) {
+          IBaseResource resource = readFileAsFhirResource(xmlParser, inputStream);
+          provider.updateResource(resource);
+        }
       }
     } catch (Exception ex) {
       logger.error(String.format("Error in loadSearchParameters due to %s", ex.getMessage()));

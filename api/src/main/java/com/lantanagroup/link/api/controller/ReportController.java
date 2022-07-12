@@ -1107,7 +1107,7 @@ public class ReportController extends BaseController {
     if(submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
       if(patientId != null && !patientId.equals("")) {
-        logger.info("Searching for resources of specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
+        logger.info("Searching for resources of specified patient " + Helper.encodeLogging((Helper.validateLoggerValue(patientId) ? patientId : "")));
         Bundle patientBundle = getPatientResourcesById(patientId, submitted);
         patientBundles.add(patientBundle);
       }

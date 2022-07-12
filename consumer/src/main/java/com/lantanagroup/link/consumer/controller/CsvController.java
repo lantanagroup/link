@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UrlPathHelper;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
@@ -113,11 +114,14 @@ public class CsvController {
       HttpResponse response = httpClient.execute(sendRequest);
 
       if (response.getStatusLine().getStatusCode() >= 300) {
-        String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
+        String responseContent = "";
+        try(InputStream responseStream = response.getEntity().getContent()) {
+          responseContent = IOUtils.toString(responseStream, StandardCharsets.UTF_8);
+        }
         logger.error(String.format("Error (%s) submitting request to %s: %s", Helper.encodeLogging(String.valueOf(response.getStatusLine().getStatusCode())), Helper.encodeLogging(url), Helper.encodeLogging(responseContent)));
         throw new HttpResponseException(500, "Internal Server Error");
       } else {
-        logger.info("Response is: " + Helper.encodeLogging(response.getStatusLine().getReasonPhrase()));
+        logger.info("Response is: " + Helper.encodeLogging(String.valueOf(response.getStatusLine().getStatusCode())));
       }
     } catch (Exception ex) {
       logger.error(String.format("Error (%s) submitting request", ex.getMessage()));
