@@ -349,30 +349,25 @@ public class FhirDataProvider {
   public void submitToServer(String serverBase, String token, Resource resource) {
     IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
     submissionClient.registerInterceptor(new GZipContentInterceptor());
-    BearerTokenAuthInterceptor authInterceptor = null;
-    try {
-      authInterceptor = new BearerTokenAuthInterceptor(token);
-    } catch (Exception e) {
-      e.printStackTrace();
+    if(token != null || token.equals("")) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      submissionClient.registerInterceptor(authInterceptor);
     }
-    submissionClient.registerInterceptor(authInterceptor);
+
     submissionClient
             .update()
             .resource(resource)
             .execute();
   }
 
-  public Bundle retrieveFromServer(String token, String resourceType, String resourceId) {
+  public IBaseResource retrieveFromServer(String token, String resourceType, String resourceId) {
     client.registerInterceptor(new GZipContentInterceptor());
-    BearerTokenAuthInterceptor authInterceptor = null;
-    try {
-      authInterceptor = new BearerTokenAuthInterceptor(token);
-    } catch (Exception e) {
-      e.printStackTrace();
+    if(token != null || token.equals("")) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      client.registerInterceptor(authInterceptor);
     }
-    client.registerInterceptor(authInterceptor);
 
-    return (Bundle)client
+    return client
             .read()
             .resource(resourceType)
             .withId(resourceId)

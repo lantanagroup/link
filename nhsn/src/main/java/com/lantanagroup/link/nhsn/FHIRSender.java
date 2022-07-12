@@ -5,12 +5,15 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
+import org.apache.http.client.HttpResponseException;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,17 +34,15 @@ public class FHIRSender extends GenericSender implements IReportSender {
     if(type.equals("json")) {
       return fhirDataProvider.bundleToJson(bundle);
     }
-
-    if(type.equals("xml")) {
+    else if(type.equals("xml")) {
       return fhirDataProvider.bundleToXml(bundle);
     }
-
-    if(type.equals("csv")) {
+    else if(type.equals("csv")) {
       // TODO: Use Keith's CSV conversion code to convert Bundle to CSV
-      String csv = "";
-      return csv;
+      return "";
     }
-
-    return "";
+    else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing type, needs to be json, xml, or csv.");
+    }
   }
 }

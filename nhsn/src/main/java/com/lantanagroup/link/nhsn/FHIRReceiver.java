@@ -48,7 +48,7 @@ public class FHIRReceiver {
 
       String[] urlParts = url.split("/");
       FhirDataProvider fhirDataProvider = new FhirDataProvider(urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url);
-      bundle = fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
+      bundle = (Bundle)fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
     }
     return bundle;
   }
