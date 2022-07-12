@@ -99,4 +99,50 @@
             </criteria>
         </population>
     </group>
+    <group>
+        <code>
+            <coding>
+                <code value="vents"/>
+            </coding>
+        </code>
+        <population>
+            <code>
+                <coding>
+                    <system value="http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues"/>
+                    <code value="numVentUse"/>
+                    <display value="numVentUse"/>
+                </coding>
+            </code>
+            <criteria>
+                <language value="text/cql.identifier"/>
+                <expression value="TODO"/>
+            </criteria>
+        </population>
+        <population>
+            <code>
+                <coding>
+                    <system value="http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues"/>
+                    <code value="numVentAvail"/>
+                    <display value="numVentAvail"/>
+                </coding>
+            </code>
+            <criteria>
+                <language value="text/cql.identifier"/>
+                <expression value="TODO"/>
+            </criteria>
+        </population>
+        <population>
+            <code>
+                <coding>
+                    <system value="http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues"/>
+                    <code value="numVent"/>
+                    <display value="numVent"/>
+                </coding>
+            </code>
+            <criteria>
+                <language value="text/cql.identifier"/>
+                <expression value="TODO"/>
+            </criteria>
+        </population>
+    </group>
 </Measure>
