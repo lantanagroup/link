@@ -4,20 +4,20 @@ import com.ainq.saner.converters.csv.CsvToReportConverter;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.thsa.THSAConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
 
-import static com.lantanagroup.link.thsa.CSVSender.logger;
-
 @Component
 public class GenericCSVProcessor implements IDataProcessor {
+  private static final Logger logger = LoggerFactory.getLogger(GenericCSVProcessor.class);
 
   @Autowired
   private THSAConfig thsaConfig;
