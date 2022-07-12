@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.consumer;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.IValidationSupport;

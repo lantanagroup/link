@@ -1,12 +1,8 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.consumer;
 
 import ca.uhn.fhir.jpa.api.config.DaoConfig;
-import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
-import ca.uhn.fhir.jpa.dao.r4.FhirSystemDaoR4;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
-import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
-import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.h2.Driver;

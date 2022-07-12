@@ -1,16 +1,13 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.consumer;
 
 import ca.uhn.fhir.interceptor.api.Hook;
 import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
