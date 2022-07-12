@@ -109,7 +109,7 @@ public class ApiInit {
         try {
           HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
           content = response.body();
-          if(Strings.isEmpty(content)) {
+          if(!Strings.isEmpty(content)) {
             keepSearching = false;
           }
         } catch (ConnectException ex) {
