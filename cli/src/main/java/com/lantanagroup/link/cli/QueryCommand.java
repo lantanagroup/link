@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.IQuery;
@@ -30,7 +31,17 @@ public class QueryCommand extends BaseShellCommand {
 
   @Override
   protected List<Class> getBeanClasses() {
-    return List.of(QueryConfig.class, Query.class, PatientScoop.class, EpicAuth.class, EpicAuthConfig.class, CernerAuth.class, CernerAuthConfig.class, BasicAuth.class, BasicAuthConfig.class);
+    return List.of(
+            Query.class,
+            QueryConfig.class,
+            USCoreConfig.class,
+            PatientScoop.class,
+            EpicAuth.class,
+            EpicAuthConfig.class,
+            CernerAuth.class,
+            CernerAuthConfig.class,
+            BasicAuth.class,
+            BasicAuthConfig.class);
   }
 
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
@@ -73,9 +84,9 @@ public class QueryCommand extends BaseShellCommand {
 
           if (Strings.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
-            FileOutputStream fos = new FileOutputStream(file);
-            fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
-            fos.close();
+            try(FileOutputStream fos = new FileOutputStream(file)) {
+              fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
+            }
             logger.info("Stored patient data XML to " + file);
           } else {
             System.out.println("Patient " + (i + 1) + " Bundle XML:");
@@ -86,6 +97,7 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Done");
     } catch (Exception ex) {
+
       logger.error("Error executing query: " + ex.getMessage(), ex);
     }
   }

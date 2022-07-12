@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
@@ -10,6 +11,8 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.query.auth.EpicAuth;
+import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.HttpClient;
@@ -17,39 +20,44 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 @ShellComponent
-public class RefreshPatientListCommand {
-  @Autowired
-  private ApplicationContext applicationContext;
-
-  @Autowired
+public class RefreshPatientListCommand extends BaseShellCommand {
   private RefreshPatientListConfig config;
-
-  @Autowired
   private QueryConfig queryConfig;
-
-  @Autowired
   private ApiConfig apiConfig;
 
-  private final HttpClient httpClient = HttpClients.createDefault();
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
+
+  @Override
+  protected List<Class> getBeanClasses() {
+    return List.of(
+            ApiConfig.class,
+            QueryConfig.class,
+            EpicAuth.class,
+            EpicAuthConfig.class);
+  }
 
   @ShellMethod(
           key = "refresh-patient-list",
           value = "Read an Epic patient list and update the corresponding census in Link.")
   public void execute() throws Exception {
+    registerBeans();
+    config = applicationContext.getBean(RefreshPatientListConfig.class);
+    queryConfig = applicationContext.getBean(QueryConfig.class);
+    apiConfig = applicationContext.getBean(ApiConfig.class);
     if (config.getApiUrl() == null) {
       throw new IllegalArgumentException("api-url may not be null");
     }
@@ -129,7 +137,14 @@ public class RefreshPatientListCommand {
       if (token == null) {
         throw new IOException("Authorization failed");
       }
-      request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+
+      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+        request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+      }
+      else {
+        throw new JWTVerificationException("Invalid token format");
+      }
+
     }
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
