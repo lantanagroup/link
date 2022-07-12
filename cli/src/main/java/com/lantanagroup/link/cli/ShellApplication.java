@@ -7,11 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.shell.Shell;
 
-@SpringBootApplication(scanBasePackages = {
-        "com.lantanagroup.link.cli",
-        "com.lantanagroup.link.config",
-        "com.lantanagroup.link.query.auth"
-})
+@SpringBootApplication
 public class ShellApplication {
 
   public static void main(String[] args) {
