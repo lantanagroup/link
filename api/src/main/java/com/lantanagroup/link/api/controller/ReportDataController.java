@@ -37,8 +37,8 @@ public class ReportDataController extends BaseController {
 
     logger.debug("Receiving " + type + " data. Parsing...");
 
-    Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
-    IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(senderClass);
+    Class<?> dataProcessorClass = Class.forName(this.config.getDataProcessor().get(type));
+    IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
     dataProcessor.process(csvContent.getBytes(StandardCharsets.UTF_8), getFhirDataProvider());
   }
