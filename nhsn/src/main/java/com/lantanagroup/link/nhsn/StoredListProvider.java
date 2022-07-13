@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IPatientIdProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -36,10 +37,10 @@ public class StoredListProvider implements IPatientIdProvider {
     Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
 
     if (bundle.getEntry().size() == 0) {
-      logger.info("No patient identifier lists found matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
+      logger.warn("No patient identifier lists found matching time stamp " + Helper.encodeLogging(criteria.getPeriodStart()) + " and Measure " + Helper.encodeLogging(context.getMeasureId()));
       return patientsOfInterest;
     } else {
-      logger.info("Found patient identifier lists  matching time stamp " + criteria.getPeriodStart() + " and Measure " + context.getMeasureId());
+      logger.info("Found patient identifier lists  matching time stamp " + Helper.encodeLogging(criteria.getPeriodStart()) + " and Measure " + Helper.encodeLogging(context.getMeasureId()));
     }
 
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx);

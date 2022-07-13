@@ -8,7 +8,7 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public abstract class GenericSender {
     return bundle;
   }
 
-  public HttpClient getHttpClient() {
+  public CloseableHttpClient getHttpClient() {
     return HttpClientBuilder.create().build();
   }
 

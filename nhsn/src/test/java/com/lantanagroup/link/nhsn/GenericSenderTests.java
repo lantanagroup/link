@@ -8,8 +8,12 @@ import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.*;
-import org.apache.http.client.HttpClient;
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.hl7.fhir.r4.model.Attachment;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -24,13 +28,11 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 public class GenericSenderTests {
-
-
   @Test
   public void sendContentTest() throws Exception {
-    HttpClient mockHttpClient = mock(HttpClient.class);
-    when(mockHttpClient.execute(any())).thenReturn(mock(HttpResponse.class));
-    HttpResponse httpResponse = mock(HttpResponse.class);
+    CloseableHttpClient mockHttpClient = mock(CloseableHttpClient.class);
+    when(mockHttpClient.execute(any())).thenReturn(mock(CloseableHttpResponse.class));
+    CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
     StatusLine httpResponseStatus = mock(StatusLine.class);
     when(httpResponse.getStatusLine()).thenReturn(httpResponseStatus);
     when(httpResponseStatus.getStatusCode()).thenReturn(200);
@@ -57,7 +59,7 @@ public class GenericSenderTests {
     config.getAuthConfig().setScope("scope1 scope2 scope3");
     HttpEntity mockAuthEntity = mock(HttpEntity.class);
     InputStream mockAuthEntityIS = new ByteArrayInputStream("{\"access_token\": \"test-access-token\"}".getBytes());
-    HttpResponse mockAuthResponse = mock(HttpResponse.class);
+    CloseableHttpResponse mockAuthResponse = mock(CloseableHttpResponse.class);
     when(mockAuthResponse.getEntity()).thenReturn(mockAuthEntity);
     when(mockAuthEntity.getContent()).thenReturn(mockAuthEntityIS);
     when(mockHttpClient.execute(any())).thenReturn(mockAuthResponse).thenReturn(httpResponse);
