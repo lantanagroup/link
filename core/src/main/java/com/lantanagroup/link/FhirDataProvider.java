@@ -7,14 +7,18 @@ import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.AdditionalRequestHeadersInterceptor;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Getter;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -60,7 +64,7 @@ public class FhirDataProvider {
     return (Resource) outcome.getResource();
   }
 
-  public void updateResource(IBaseResource resource) {
+  public MethodOutcome updateResource(IBaseResource resource) {
     int initialVersion = resource.getMeta().getVersionId() != null ? Integer.parseInt(resource.getMeta().getVersionId()) : 0;
 
     // Make sure the ID is not version-specific
@@ -80,6 +84,8 @@ public class FhirDataProvider {
     } else {
       logger.info(String.format("Nothing changed in resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
+
+    return outcome;
   }
 
   public DocumentReference findDocRefByMeasureAndPeriod(Identifier identifier, String periodStart, String periodEnd) throws Exception {
@@ -342,27 +348,17 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submitToServer(String serverBase, FHIRSenderOAuthConfig senderConfig, Resource resource) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
-    submissionClient.registerInterceptor(authInterceptor);
-    submissionClient
-            .update()
-            .resource(resource)
-            .execute();
-  }
+  public IBaseResource retrieveFromServer(String token, String resourceType, String resourceId) {
+    client.registerInterceptor(new GZipContentInterceptor());
+    if(token != null || token.equals("")) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      client.registerInterceptor(authInterceptor);
+    }
 
-  public IBaseResource retrieveFromServer(String serverBase, FHIRSenderOAuthConfig senderConfig, String resourceType, String resourceId) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
-    submissionClient.registerInterceptor(authInterceptor);
-    return submissionClient
+    return client
             .read()
             .resource(resourceType)
             .withId(resourceId)
-            .elementsSubset("id")
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
   }

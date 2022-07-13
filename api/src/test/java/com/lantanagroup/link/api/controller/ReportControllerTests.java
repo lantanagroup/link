@@ -170,9 +170,7 @@ public class ReportControllerTests {
     bundle.addEntry().setResource(measureReport1);
     bundle.addEntry().setResource(measureReport2);
     when(context.getBean(FHIRReceiver.class)).thenReturn(receiver);
-    when(receiver.retrieveContent(anyString())).thenReturn(content);
-    when(cxt.newJsonParser()).thenReturn(jsonParser);
-    when(jsonParser.parseResource(anyObject(), anyString())).thenReturn(bundle);
+    when(receiver.retrieveContent(anyString())).thenReturn(bundle);
     when(fhirDataProvider.tryGetResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
     when(fhirDataProvider.tryGetResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
     when(fhirDataProvider.tryGetResource("Patient", "patient1")).thenReturn(patient1);
@@ -238,9 +236,7 @@ public class ReportControllerTests {
     bundle.addEntry().setResource(measureReport1);
     bundle.addEntry().setResource(measureReport2);
     when(context.getBean(FHIRReceiver.class)).thenReturn(receiver);
-    when(receiver.retrieveContent(anyString())).thenReturn(content);
-    when(cxt.newJsonParser()).thenReturn(jsonParser);
-    when(jsonParser.parseResource(anyObject(), anyString())).thenReturn(bundle);
+    when(receiver.retrieveContent(anyString())).thenReturn(bundle);
     when(fhirDataProvider.tryGetResource("MedicationRequest", "patient1")).thenReturn(medicationRequest1);
     when(fhirDataProvider.tryGetResource("MedicationRequest", "patient2")).thenReturn(medicationRequest2);
     when(fhirDataProvider.tryGetResource("Patient", "patient1")).thenReturn(patient1);
