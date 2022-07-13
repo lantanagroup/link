@@ -39,10 +39,8 @@ public class FhirHelper {
    *
    * @param resource
    */
-  public static DomainResource cleanResource(DomainResource resource, FhirContext ctx) {
-    IParser jsonParser = ctx.newJsonParser();
-    String json = jsonParser.encodeResourceToString(resource);
-    DomainResource cloned = jsonParser.parseResource(resource.getClass(), json);
+  public static DomainResource cleanResource(DomainResource resource) {
+    DomainResource cloned = resource.copy();
     cloned.setMeta(null);
     cloned.setText(null);
 
@@ -517,17 +515,6 @@ public class FhirHelper {
     return Helper.concatenate(usCoreConfig.getPatientResourceTypes(), usCoreConfig.getOtherResourceTypes());
   }
 
-  public static String getDocumentReferenceLocationByUrl(DocumentReference documentReference, String url) {
-    String location = "";
-    if (documentReference != null) {
-      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> !content.isEmpty() && content.hasAttachment() && content.getAttachment().hasUrl() && content.getAttachment().getUrl().contains(url)).findFirst();
-      if (loc.isPresent()) {
-        location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
-      }
-    }
-    return location;
-  }
-
   public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
     if (documentReference != null && documentReference.getContext() != null) {
       Bundle requestBundle = new Bundle();
@@ -554,7 +541,7 @@ public class FhirHelper {
     return new ArrayList<>();
   }
 
-  public static String getFirstDocumentReferenceLocation(DocumentReference documentReference) {
+  public static String getSubmittedLocation(DocumentReference documentReference) {
     String bundleLocation = "";
     for (DocumentReference.DocumentReferenceContentComponent content : documentReference.getContent()) {
       if (content.hasAttachment() && content.getAttachment().hasUrl()) {
@@ -562,6 +549,13 @@ public class FhirHelper {
       }
     }
     return bundleLocation;
+  }
+
+  public static void setSubmissionLocation(DocumentReference documentReference, String location) {
+    documentReference.getContent().removeIf(c -> c.hasAttachment() && c.getAttachment().hasUrl());
+    DocumentReference.DocumentReferenceContentComponent newContent = new DocumentReference.DocumentReferenceContentComponent();
+    newContent.getAttachment().setUrl(location);
+    documentReference.getContent().add(newContent);
   }
 
   public static void initSerializers(SimpleModule module, IParser jsonParser) {

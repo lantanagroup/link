@@ -1,15 +1,24 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.rest.api.MethodOutcome;
+import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
@@ -18,18 +27,10 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeGeneratedObservations, String location) {
+  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeGeneratedObservations) {
     logger.info("Building Bundle for MeasureReport to send...");
-
     FhirBundler bundler = new FhirBundler(fhirProvider);
-
     Bundle bundle = bundler.generateBundle(sendWholeBundle, removeGeneratedObservations, masterMeasureReport, documentReference);
-
-    //String existingLocation = getDocumentLocation(masterMeasureReport, fhirProvider);
-
-    if (!location.equals("")) {
-      bundle.setId(location);
-    }
     return bundle;
   }
 
@@ -37,53 +38,65 @@ public abstract class GenericSender {
     return HttpClientBuilder.create().build();
   }
 
-
   public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider, String type);
 
-  public String sendContent(MeasureReport masterMeasureReport, FhirDataProvider fhirProvider,
-                            boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
+  public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
-    String location = "";
-
-    if (this.config.getSendUrls() == null || this.config.getSendUrls().isEmpty()) {
+    if (StringUtils.isEmpty(this.config.getUrl())) {
       throw new Exception("Not configured with any locations to send");
     }
 
-    logger.trace(String.format("Configured to send to %s locations", this.config.getSendUrls().size()));
+    Resource copy = resourceToSend.copy();
+    IGenericClient client = fhirStoreProvider.ctx.newRestfulGenericClient(this.config.getUrl());
+    client.registerInterceptor(new GZipContentInterceptor());
 
-    for (FhirSenderUrlOAuthConfig authConfig : this.config.getSendUrls()) {
-      logger.info("Sending MeasureReport bundle to URL " + authConfig.getUrl());
-      DocumentReference documentReference = fhirProvider.findDocRefForReport(masterMeasureReport.getIdElement().getIdPart());
-      String existingLocation = FhirHelper.getDocumentReferenceLocationByUrl(documentReference, authConfig.getUrl());
-      String token = OAuth2Helper.getToken(authConfig.getAuthConfig(), getHttpClient());
-      Bundle bundle = generateBundle(documentReference, masterMeasureReport, fhirProvider, sendWholeBundle, removeGeneratedObservations, existingLocation);
+    String token = OAuth2Helper.getToken(this.config.getAuthConfig(), getHttpClient());
 
-      boolean hasBeenSent;
-      if(existingLocation.equals("")) {
-        hasBeenSent = false;
-        location = authConfig.getUrl();
-      }
-      else {
-        hasBeenSent = true;
-        location = existingLocation;
-      }
-      fhirProvider.submitToServer(locationCleaner(location, hasBeenSent), token, bundle);
+    if (StringUtils.isNotEmpty(token)) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      client.registerInterceptor(authInterceptor);
     }
-    return location;
+
+    FhirDataProvider consumerFhirProvider = new FhirDataProvider(client);
+
+    Optional<DocumentReference.DocumentReferenceContentComponent> content =
+            documentReference.getContent().stream().filter(c -> c.hasAttachment() && c.getAttachment().hasUrl()).collect(Collectors.toList()).stream().findFirst();
+
+    // If we've already submitted to the server and the base url of where it was submitted hasn't changed
+    if (content.isPresent() && content.get().getAttachment().getUrl().toLowerCase(Locale.ENGLISH).startsWith(this.config.getUrl().toLowerCase(Locale.ENGLISH))) {
+      String location = locationCleaner(content.get().getAttachment().getUrl());
+      copy.setId(location);
+    }
+
+    logger.info("Sending MeasureReport bundle to URL " + this.config.getUrl());
+
+    MethodOutcome outcome;
+
+    if (copy.hasId()) {
+      outcome = consumerFhirProvider.updateResource(copy);
+    } else {
+      outcome = consumerFhirProvider.createOutcome(copy);
+    }
+
+    List<String> locations = outcome.getResponseHeaders().get("content-location");
+
+    if (locations != null && locations.size() == 1) {
+      return locations.get(0);
+    }
+
+    return null;
   }
 
-  private String locationCleaner(String location, boolean hasBeenSent) {
+  private String locationCleaner(String location) {
     String cleanLocation = location.contains("/history")?location.substring(0, location.indexOf("/history")):location;
-    String[] locationParts = cleanLocation.split("/");
-    int idTrim = hasBeenSent?2:1;
-    return locationParts.length > idTrim?location.substring(0, location.indexOf(locationParts[locationParts.length - idTrim])):location;
+    return cleanLocation;
   }
 
-  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirDataProvider, String location) {
+  public void updateDocumentLocation(MeasureReport masterMeasureReport, FhirDataProvider fhirStoreProvider, String location) {
     String reportID = masterMeasureReport.getIdElement().getIdPart();
-    DocumentReference documentReference = fhirDataProvider.findDocRefForReport(reportID);
+    DocumentReference documentReference = fhirStoreProvider.findDocRefForReport(reportID);
     if (documentReference != null) {
-      String previousLocation = FhirHelper.getFirstDocumentReferenceLocation(documentReference);
+      String previousLocation = FhirHelper.getSubmittedLocation(documentReference);
       if(previousLocation != null && !previousLocation.equals("")) {
         for (int index = documentReference.getContent().size() - 1; index > -1; index--) {
           if (documentReference.getContent().get(index).hasAttachment() && documentReference.getContent().get(index).getAttachment().hasUrl()) {
@@ -95,7 +108,7 @@ public abstract class GenericSender {
       Attachment attachment = new Attachment();
       attachment.setUrl(location);
       documentReference.getContent().get(documentReference.getContent().size() - 1).setAttachment(attachment);
-      fhirDataProvider.updateResource(documentReference);
+      fhirStoreProvider.updateResource(documentReference);
     }
   }
 

@@ -408,6 +408,7 @@ public class ReportController extends BaseController {
         id = existingDocumentReference.getMasterIdentifier().getValue();
         triggerEvent(EventTypes.OnRegeneration, criteria, context);
       }
+
       triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
 
       // Get the patient identifiers for the given date
@@ -491,20 +492,21 @@ public class ReportController extends BaseController {
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
 
-    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
-    documentReference.setDate(new Date());
-    documentReference = FhirHelper.incrementMajorVersion(documentReference);
-
     MeasureReport report = this.getFhirDataProvider().getMeasureReportById(reportId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
-    // save the DocumentReference before sending report
-    this.getFhirDataProvider().updateResource(documentReference);
-    sender.send(report, request, authentication, this.getFhirDataProvider(),
+    // update the DocumentReference's status and date
+    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
+    documentReference.setDate(new Date());
+    documentReference = FhirHelper.incrementMajorVersion(documentReference);
+
+    sender.send(report, documentReference, request, authentication, this.getFhirDataProvider(),
             this.config.getSendWholeBundle() != null ? this.config.getSendWholeBundle() : true,
             this.config.isRemoveGeneratedObservations());
 
+    // Now that we've submitted (successfully), update the doc ref with the status and date
+    this.getFhirDataProvider().updateResource(documentReference);
 
     String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
 
@@ -513,7 +515,9 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
 
     if (this.config.getDeleteAfterSubmission()) {
+      logger.debug("Deleting submitted report data");
       deleteSentData(documentReference);
+      logger.debug("Done deleting submitted report data");
     }
   }
 
@@ -1070,7 +1074,7 @@ public class ReportController extends BaseController {
     String masterReportId = docRef.getMasterIdentifier().getValue();
 
 
-    String bundleLocation = FhirHelper.getFirstDocumentReferenceLocation(docRef);
+    String bundleLocation = FhirHelper.getSubmittedLocation(docRef);
     FHIRReceiver receiver = this.context.getBean(FHIRReceiver.class);
     Bundle submitted = null;
     try {

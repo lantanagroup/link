@@ -64,7 +64,7 @@ public class FhirDataProvider {
     return (Resource) outcome.getResource();
   }
 
-  public void updateResource(IBaseResource resource) {
+  public MethodOutcome updateResource(IBaseResource resource) {
     int initialVersion = resource.getMeta().getVersionId() != null ? Integer.parseInt(resource.getMeta().getVersionId()) : 0;
 
     // Make sure the ID is not version-specific
@@ -84,6 +84,8 @@ public class FhirDataProvider {
     } else {
       logger.info(String.format("Nothing changed in resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
+
+    return outcome;
   }
 
   public DocumentReference findDocRefByMeasureAndPeriod(Identifier identifier, String periodStart, String periodEnd) throws Exception {
@@ -343,20 +345,6 @@ public class FhirDataProvider {
             .forResource(Bundle.class)
             .withTag(system, value)
             .returnBundle(Bundle.class)
-            .execute();
-  }
-
-  public void submitToServer(String serverBase, String token, Resource resource) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
-    if(token != null || token.equals("")) {
-      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
-      submissionClient.registerInterceptor(authInterceptor);
-    }
-
-    submissionClient
-            .update()
-            .resource(resource)
             .execute();
   }
 

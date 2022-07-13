@@ -60,7 +60,7 @@ public class FhirBundler {
       }).findFirst();
 
       if (found.isPresent()) {
-        patientResources.add(FhirHelper.cleanResource((DomainResource) found.get().getResource(), this.fhirDataProvider.ctx));
+        patientResources.add(FhirHelper.cleanResource((DomainResource) found.get().getResource()));
       } else {
         logger.error(String.format("Could not find resource %s for in bundle %s", patientDataReference, patientDataBundle.getId()));
       }
@@ -119,7 +119,7 @@ public class FhirBundler {
             .setValue(UUID.randomUUID().toString());
 
     // Add the master measure report to the bundle
-    bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport, this.fhirDataProvider.ctx));
+    bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport));
 
     // Add census list(s) to the report bundle
     List<ListResource> censusLists = FhirHelper.getCensusLists(documentReference, this.fhirDataProvider);
@@ -138,7 +138,11 @@ public class FhirBundler {
       List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, fhirDataProvider);
 
       for (MeasureReport patientMeasureReport : patientReports) {
-        MeasureReport clonedPatientMeasureReport = (MeasureReport) FhirHelper.cleanResource(patientMeasureReport, this.fhirDataProvider.ctx);
+        if (patientMeasureReport == null) {
+          continue;
+        }
+
+        MeasureReport clonedPatientMeasureReport = (MeasureReport) FhirHelper.cleanResource(patientMeasureReport);
 
         if (removeContainedEvaluatedResources) {
           this.removeContainedEvaluatedResource(clonedPatientMeasureReport);
