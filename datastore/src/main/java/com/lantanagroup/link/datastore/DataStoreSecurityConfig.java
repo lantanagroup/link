@@ -28,20 +28,20 @@ public class DataStoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
-    authFilter.setAuthenticationManager(new LinkAuthManager(this.config.getIssuer(), this.config.getAuthJwksUrl()));
+    // PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
+    // authFilter.setAuthenticationManager(new LinkAuthManager(this.config.getIssuer(), this.config.getAuthJwksUrl()));
     http
             .csrf().disable()
-            .cors()
-            .and()
-            .authorizeRequests()
-            .antMatchers(HttpMethod.OPTIONS, "/**")
-            .permitAll()
-            .and()
-            .antMatcher("/csv/**")
-            .addFilter(authFilter)
-            .authorizeRequests()
-            .anyRequest()
-            .authenticated();
+            .cors();
+    // http
+    //         .authorizeRequests()
+    //         .antMatchers(HttpMethod.OPTIONS, "/**")
+    //         .permitAll()
+    //         .and()
+    //         .antMatcher("/**")
+    //         .addFilter(authFilter)
+    //         .authorizeRequests()
+    //         .anyRequest()
+    //         .authenticated();
   }
 }
