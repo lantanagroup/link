@@ -1,6 +1,6 @@
 package com.lantanagroup.link.consumer;
 
-import com.lantanagroup.link.api.auth.LinkAuthManager;
+import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
