@@ -1,4 +1,4 @@
-package com.lantanagroup.link.config.consumer;
+package com.lantanagroup.link.config.datastore;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import com.lantanagroup.link.config.Permission;
@@ -12,10 +12,10 @@ import org.springframework.validation.annotation.Validated;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "consumer")
+@ConfigurationProperties(prefix = "datastore")
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
-public class ConsumerConfig {
+public class DataStoreConfig {
   @Getter
   private DataSourceConfig dataSource;
   @Getter
@@ -24,12 +24,12 @@ public class ConsumerConfig {
   private String azorica;
 
   /***
-   <strong>consumer.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
+   <strong>datastore.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
    */
   @Getter
   private String issuer;
   /***
-   <strong>consumer.authJwksUrl</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
+   <strong>datastore.authJwksUrl</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
    */
   @Getter
   private String authJwksUrl;

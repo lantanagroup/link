@@ -1,4 +1,4 @@
-package com.lantanagroup.link.config.consumer;
+package com.lantanagroup.link.config;
 
 import lombok.Getter;
 import lombok.Setter;
