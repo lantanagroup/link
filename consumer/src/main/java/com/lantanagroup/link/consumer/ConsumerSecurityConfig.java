@@ -12,12 +12,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 /**
- * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
+ * Sets the security for the consumer component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
  */
 @Configuration
 @EnableWebSecurity
 @Order(1)
-public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
+public class ConsumerSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
   private ConsumerConfig config;

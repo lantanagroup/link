@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Bean;
         "com.lantanagroup.link.spring"
 })
 @ServletComponentScan(basePackageClasses = {JpaRestfulServer.class})
-public class ConsumerApiApplication extends SpringBootServletInitializer {
+public class ConsumerApplication extends SpringBootServletInitializer {
   @Autowired
   AutowireCapableBeanFactory beanFactory;
 
@@ -29,7 +29,7 @@ public class ConsumerApiApplication extends SpringBootServletInitializer {
   private ConsumerConfig consumerConfig;
 
   public static void main(String[] args) {
-    SpringApplication.run(ConsumerApiApplication.class, args);
+    SpringApplication.run(ConsumerApplication.class, args);
   }
 
   @Bean
