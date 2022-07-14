@@ -28,6 +28,7 @@ public class AuthInterceptor extends AuthorizationInterceptor {
   public List<IAuthRule> buildRuleList(RequestDetails theRequestDetails) {
 
     RuleBuilder ruleBuilder = new RuleBuilder();
+    ruleBuilder.allow().metadata();
 
     // readConsumerConfig
     Permission[] permissions = consumerConfig.getPermissions();
