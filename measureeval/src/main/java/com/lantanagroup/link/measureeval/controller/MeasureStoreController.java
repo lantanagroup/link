@@ -37,11 +37,9 @@ public class MeasureStoreController {
   public void storeMeasure(@RequestBody Bundle measureBundle) {
     // TODO: Store Bundle on file system in a file named <measureBundle.id>.xml
     FhirContext ctx = FhirContextProvider.getFhirContext();
-    String fileName = measureBundle.getId() + ".xml";
-    File file = new File(fileName);
+    File file = new File(measureBundle.getId() + ".xml");
     String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
-    try(FileWriter fw=new FileWriter(file))
-    {
+    try(FileWriter fw=new FileWriter(file)) {
       fw.write(measureContentXML);
       fw.flush();
     }catch(IOException ex)
