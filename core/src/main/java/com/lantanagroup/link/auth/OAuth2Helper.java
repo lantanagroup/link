@@ -14,12 +14,10 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -425,6 +423,7 @@ public class OAuth2Helper {
       //verify token
       JWTVerifier verifier = JWT.require(algorithm)
               .withIssuer(issuer)
+              .acceptLeeway(10000)
               .build(); //Reusable verifier instance
       DecodedJWT verifiedJwt = verifier.verify(token);
 
