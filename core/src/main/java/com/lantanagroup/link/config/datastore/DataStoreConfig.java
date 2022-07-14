@@ -1,5 +1,6 @@
 package com.lantanagroup.link.config.datastore;
 
+import com.lantanagroup.link.config.DataSourceConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import com.lantanagroup.link.config.Permission;
 import lombok.Getter;

@@ -1,8 +1,8 @@
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
+import com.lantanagroup.link.config.Permission;
+import com.lantanagroup.link.config.Role;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
-import com.lantanagroup.link.config.consumer.Permission;
-import com.lantanagroup.link.config.consumer.Role;
 import com.lantanagroup.link.consumer.auth.AuthInterceptor;
 import org.junit.Assert;
 import org.junit.Before;
