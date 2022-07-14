@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer;
+package com.lantanagroup.link.datastore;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.IValidationSupport;
@@ -15,9 +15,9 @@ import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.config.consumer.ConsumerConfig;
-import com.lantanagroup.link.consumer.auth.AuthInterceptor;
-import com.lantanagroup.link.consumer.auth.UserInterceptor;
+import com.lantanagroup.link.config.datastore.DataStoreConfig;
+import com.lantanagroup.link.datastore.auth.AuthInterceptor;
+import com.lantanagroup.link.datastore.auth.UserInterceptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
@@ -53,7 +53,7 @@ public class JpaRestfulServer extends RestfulServer {
   private ModelConfig modelConfig;
 
   @Autowired
-  private ConsumerConfig consumerConfig;
+  private DataStoreConfig dataStoreConfig;
 
   @Autowired
   ResourceProviderFactory resourceProviders;
@@ -91,8 +91,8 @@ public class JpaRestfulServer extends RestfulServer {
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
 
-    this.registerInterceptor(new UserInterceptor(consumerConfig.getIssuer(), consumerConfig.getAuthJwksUrl()));
-    this.registerInterceptor(new AuthInterceptor(consumerConfig));
+    this.registerInterceptor(new UserInterceptor(dataStoreConfig.getIssuer(), dataStoreConfig.getAuthJwksUrl()));
+    this.registerInterceptor(new AuthInterceptor(dataStoreConfig));
 
     reportCsvOperationProvider.initialize();
     this.registerProvider(reportCsvOperationProvider);

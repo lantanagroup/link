@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer;
+package com.lantanagroup.link.datastore;
 
 import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.jpa.config.HibernatePropertiesProvider;

@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer.controller;
+package com.lantanagroup.link.datastore.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.auth0.jwt.interfaces.DecodedJWT;

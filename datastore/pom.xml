@@ -9,8 +9,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>consumer</artifactId>
-    <name>Link Consumer</name>
+    <artifactId>datastore</artifactId>
+    <name>Link Data Store</name>
     <packaging>war</packaging>
 
     <properties>
@@ -190,7 +190,7 @@
     </dependencies>
 
     <build>
-        <finalName>link-consumer</finalName>
+        <finalName>link-datastore</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

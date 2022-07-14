@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer.auth;
+package com.lantanagroup.link.datastore.auth;
 
 import ca.uhn.fhir.interceptor.api.Hook;
 import ca.uhn.fhir.interceptor.api.Interceptor;

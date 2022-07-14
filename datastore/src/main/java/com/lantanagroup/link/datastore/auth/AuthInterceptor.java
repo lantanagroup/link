@@ -1,13 +1,13 @@
-package com.lantanagroup.link.consumer.auth;
+package com.lantanagroup.link.datastore.auth;
 
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.AuthorizationInterceptor;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
 import ca.uhn.fhir.rest.server.interceptor.auth.RuleBuilder;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.config.consumer.ConsumerConfig;
-import com.lantanagroup.link.config.consumer.Permission;
-import com.lantanagroup.link.config.consumer.Role;
+import com.lantanagroup.link.config.datastore.DataStoreConfig;
+import com.lantanagroup.link.config.datastore.Permission;
+import com.lantanagroup.link.config.datastore.Role;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +18,10 @@ import java.util.stream.Collectors;
 public class AuthInterceptor extends AuthorizationInterceptor {
   private static final Logger logger = LoggerFactory.getLogger(AuthorizationInterceptor.class);
   private static final String defaultRole = "default";
-  private ConsumerConfig consumerConfig;
+  private DataStoreConfig dataStoreConfig;
 
-  public AuthInterceptor(ConsumerConfig consumerConfig) {
-    this.consumerConfig = consumerConfig;
+  public AuthInterceptor(DataStoreConfig dataStoreConfig) {
+    this.dataStoreConfig = dataStoreConfig;
   }
 
   @Override
@@ -29,12 +29,12 @@ public class AuthInterceptor extends AuthorizationInterceptor {
 
     RuleBuilder ruleBuilder = new RuleBuilder();
 
-    // readConsumerConfig
-    Permission[] permissions = consumerConfig.getPermissions();
+    // readDataStoreConfig
+    Permission[] permissions = dataStoreConfig.getPermissions();
     String[] jwtRoles = theRequestDetails.getParameters().get(Constants.Roles);
     Set<String> userRoleSet = jwtRoles != null ? Arrays.stream(jwtRoles).collect(Collectors.toSet()) : new HashSet();
 
-    String azorica = consumerConfig.getAzorica();
+    String azorica = dataStoreConfig.getAzorica();
     if (azorica != null) {
       logger.info("Azorica " + azorica + " is found.");
     } else {
