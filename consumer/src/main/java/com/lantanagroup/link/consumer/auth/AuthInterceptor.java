@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer;
+package com.lantanagroup.link.consumer.auth;
 
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.AuthorizationInterceptor;
