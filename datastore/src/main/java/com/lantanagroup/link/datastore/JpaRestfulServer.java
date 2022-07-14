@@ -58,9 +58,6 @@ public class JpaRestfulServer extends RestfulServer {
   @Autowired
   ResourceProviderFactory resourceProviders;
 
-  @Autowired
-  ReportCsvOperationProvider reportCsvOperationProvider;
-
   private FhirContext fhirContext;
   private SearchParamRegistryImpl searchParamRegistry = new SearchParamRegistryImpl();
   private ResourceChangeListenerRegistryImpl resourceChangeListenerRegistry = new ResourceChangeListenerRegistryImpl();
@@ -93,9 +90,6 @@ public class JpaRestfulServer extends RestfulServer {
 
     // this.registerInterceptor(new UserInterceptor(dataStoreConfig.getIssuer(), dataStoreConfig.getAuthJwksUrl()));
     // this.registerInterceptor(new AuthInterceptor(dataStoreConfig));
-
-    reportCsvOperationProvider.initialize();
-    this.registerProvider(reportCsvOperationProvider);
   }
 
   @Bean
