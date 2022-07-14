@@ -8,12 +8,12 @@ WORKDIR /tmp
 # Copy code and compile
 COPY . .
 
-RUN echo "version: $version\nbuild: $build" > consumer/src/main/resources/build.yml
+RUN echo "version: $version\nbuild: $build" > datastore/src/main/resources/build.yml
 
 WORKDIR /tmp
 RUN mvn install
 
 FROM tomcat:jdk15-openjdk-oracle
-COPY --from=build /tmp/consumer/target/link-consumer.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=build /tmp/datastore/target/link-datastore.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
 CMD ["catalina.sh", "run"]
