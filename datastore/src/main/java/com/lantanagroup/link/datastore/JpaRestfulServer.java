@@ -8,6 +8,7 @@ import ca.uhn.fhir.jpa.cache.ResourceChangeListenerCacheFactory;
 import ca.uhn.fhir.jpa.cache.ResourceChangeListenerRegistryImpl;
 import ca.uhn.fhir.jpa.config.HibernatePropertiesProvider;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
+import ca.uhn.fhir.jpa.provider.IJpaSystemProvider;
 import ca.uhn.fhir.jpa.provider.JpaCapabilityStatementProvider;
 import ca.uhn.fhir.jpa.searchparam.matcher.InMemoryResourceMatcher;
 import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
@@ -39,6 +40,9 @@ public class JpaRestfulServer extends RestfulServer {
 
   @Autowired
   IFhirSystemDao fhirSystemDao;
+
+  @Autowired
+  IJpaSystemProvider jpaSystemProvider;
 
   @Autowired
   DaoConfig daoConfig;
@@ -84,6 +88,7 @@ public class JpaRestfulServer extends RestfulServer {
     this.searchParamRegistry.handleInit(new ArrayList<>());
 
     this.registerProviders(this.resourceProviders.createProviders());
+    this.registerProvider(jpaSystemProvider);
 
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
