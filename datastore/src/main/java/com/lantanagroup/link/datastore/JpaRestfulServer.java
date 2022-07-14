@@ -13,6 +13,7 @@ import ca.uhn.fhir.jpa.provider.JpaCapabilityStatementProvider;
 import ca.uhn.fhir.jpa.searchparam.matcher.InMemoryResourceMatcher;
 import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
 import ca.uhn.fhir.rest.server.RestfulServer;
+import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.FhirContextProvider;
@@ -98,6 +99,17 @@ public class JpaRestfulServer extends RestfulServer {
     daoConfig.setAutoCreatePlaceholderReferenceTargets(true);
     daoConfig.setResourceServerIdStrategy(DaoConfig.IdStrategyEnum.UUID);
     daoConfig.setResourceClientIdStrategy(DaoConfig.ClientIdStrategyEnum.ANY);
+
+    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
+    loggingInterceptor.setLoggerName("datastore");
+    loggingInterceptor.setMessageFormat(
+            "Path[${servletPath}] Source[${requestHeader.x-forwarded-for}] " +
+            "Operation[${operationType} ${operationName} ${idOrResourceName}] " +
+            "UA[${requestHeader.user-agent}] Params[${requestParameters}] " +
+            "ResponseEncoding[${responseEncodingNoDefault}]");
+    loggingInterceptor.setErrorMessageFormat("ERROR - ${requestVerb} ${requestUrl}");
+    loggingInterceptor.setLogExceptions(true);
+    this.registerInterceptor(loggingInterceptor);
 
     // this.registerInterceptor(new UserInterceptor(dataStoreConfig.getIssuer(), dataStoreConfig.getAuthJwksUrl()));
     // this.registerInterceptor(new AuthInterceptor(dataStoreConfig));
