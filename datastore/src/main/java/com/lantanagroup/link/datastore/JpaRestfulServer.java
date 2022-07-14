@@ -33,6 +33,7 @@ import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class JpaRestfulServer extends RestfulServer {
   @Autowired
@@ -92,6 +93,11 @@ public class JpaRestfulServer extends RestfulServer {
 
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
+
+    daoConfig.setBundleTypesAllowedForStorage(Set.of("document", "message", "transaction", "batch", "searchset", "collection"));
+    daoConfig.setAutoCreatePlaceholderReferenceTargets(true);
+    daoConfig.setResourceServerIdStrategy(DaoConfig.IdStrategyEnum.UUID);
+    daoConfig.setResourceClientIdStrategy(DaoConfig.ClientIdStrategyEnum.ANY);
 
     // this.registerInterceptor(new UserInterceptor(dataStoreConfig.getIssuer(), dataStoreConfig.getAuthJwksUrl()));
     // this.registerInterceptor(new AuthInterceptor(dataStoreConfig));
