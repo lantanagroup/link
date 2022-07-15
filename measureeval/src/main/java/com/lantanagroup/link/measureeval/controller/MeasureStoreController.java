@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 @RestController
 public class MeasureStoreController {
@@ -36,11 +38,11 @@ public class MeasureStoreController {
   @PostMapping("/$store-measure")
   public void storeMeasure(@RequestBody Bundle measureBundle) {
     FhirContext ctx = FhirContextProvider.getFhirContext();
-    File file = new File(this.config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml");
+    Path path = Paths.get(this.config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml");
     String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
-    try(FileWriter fw=new FileWriter(file)) {
-      fw.write(measureContentXML);
-      fw.flush();
+    try(BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+      writer.write(measureContentXML);
+      writer.flush();
     }catch(IOException ex)
     {
       ex.printStackTrace();
