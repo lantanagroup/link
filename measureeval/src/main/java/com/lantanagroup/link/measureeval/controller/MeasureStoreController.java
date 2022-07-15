@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.measureeval.config.MeasureEvalConfig;
+import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.WebDataBinder;
@@ -25,6 +26,7 @@ import java.nio.file.StandardOpenOption;
 @RestController
 public class MeasureStoreController {
   @Autowired
+  @Setter
   private MeasureEvalConfig config;
 
   // Disallow binding of sensitive attributes
@@ -38,9 +40,17 @@ public class MeasureStoreController {
   @PostMapping("/$store-measure")
   public void storeMeasure(@RequestBody Bundle measureBundle) {
     FhirContext ctx = FhirContextProvider.getFhirContext();
-    Path path = Paths.get(this.config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml");
     String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
-    try(BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+    if (!Files.exists(Paths.get(this.config.getMeasuresPath()))) {
+      try {
+        Files.createDirectories(Paths.get(this.config.getMeasuresPath()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    try(BufferedWriter writer = Files.newBufferedWriter(
+            Paths.get(this.config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml"),
+            StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
       writer.write(measureContentXML);
       writer.flush();
     }catch(IOException ex)
