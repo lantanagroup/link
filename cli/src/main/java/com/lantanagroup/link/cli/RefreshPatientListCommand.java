@@ -14,14 +14,15 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
 import org.springframework.shell.standard.ShellComponent;
@@ -150,6 +151,10 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
     httpClient.execute(request, response -> {
       System.out.println(response);
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        System.out.println(EntityUtils.toString(entity));
+      }
       return null;
     });
   }
