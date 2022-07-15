@@ -497,7 +497,7 @@ public class ReportController extends BaseController {
    * @param request
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
-  @GetMapping("/{reportId}/$send")
+  @PostMapping("/{reportId}/$send")
   public void send(
           Authentication authentication,
           @PathVariable String reportId,
