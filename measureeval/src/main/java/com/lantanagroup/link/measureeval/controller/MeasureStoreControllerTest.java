@@ -5,6 +5,7 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -21,6 +22,6 @@ public class MeasureStoreControllerTest {
     MeasureStoreController measureStoreController = new MeasureStoreController();
     measureStoreController.setConfig(config);
     measureStoreController.storeMeasure(measureBundle);
-    Assert.assertTrue(Files.exists(Paths.get(config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml")));
+    Assert.assertTrue(Files.exists(Paths.get(config.getMeasuresPath() + File.separator + measureBundle.getId() + ".xml")));
   }
 }

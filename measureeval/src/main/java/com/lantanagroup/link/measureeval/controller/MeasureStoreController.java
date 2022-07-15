@@ -49,7 +49,7 @@ public class MeasureStoreController {
       }
     }
     try(BufferedWriter writer = Files.newBufferedWriter(
-            Paths.get(this.config.getMeasuresPath() + "/" + measureBundle.getId() + ".xml"),
+            Paths.get(this.config.getMeasuresPath() + File.separator + measureBundle.getId() + ".xml"),
             StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
       writer.write(measureContentXML);
       writer.flush();
