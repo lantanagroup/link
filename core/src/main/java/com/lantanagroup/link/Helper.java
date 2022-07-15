@@ -1,22 +1,21 @@
 package com.lantanagroup.link;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class Helper {
   public static final String SIMPLE_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
@@ -170,9 +169,13 @@ public class Helper {
   }
 
   public static String encodeLogging(String message) {
+    if (StringUtils.isEmpty(message)) {
+      return message;
+    }
+
     //redundant checks to satisfy fortify scans
-    message = message.replace( '\n' ,  '_' ).replace( '\r' , '_' )
-            .replace( '\t' , '_' );
+    message = message.replace('\n', '_').replace('\r', '_')
+            .replace('\t', '_');
 
     String whiteList = "[^A-Za-z0-9\\-\\._~\\+\\/]";
     message = message.replaceAll(whiteList, "");
