@@ -44,11 +44,11 @@ public class MeasureStoreController {
       FhirContext ctx = FhirContextProvider.getFhirContext();
       String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
       Files.createDirectories(Paths.get(this.config.getMeasuresPath()));
-      BufferedWriter writer = Files.newBufferedWriter(
+      try (BufferedWriter writer = Files.newBufferedWriter(
               Paths.get(this.config.getMeasuresPath() + File.separator + measureBundle.getId() + ".xml"),
-              StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-      writer.write(measureContentXML);
-      writer.flush();
+              StandardCharsets.UTF_8, StandardOpenOption.WRITE)) {
+        writer.write(measureContentXML);
+      }
       logger.debug(this.config.getMeasuresPath());
     }
   }
