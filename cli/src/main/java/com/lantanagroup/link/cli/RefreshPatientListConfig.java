@@ -16,4 +16,5 @@ public class RefreshPatientListConfig {
   private String apiUrl;
   private AuthConfig auth;
   private String patientListId;
+  private CensusReportingPeriods censusReportingPeriod;
 }

@@ -22,10 +22,13 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
 
     // Get the Class definition of the auth class specified in config
     Class authClass = Class.forName(queryConfig.getAuthClass());
+
     // Get an instance of the class using Spring so that it injects/autowires
+    logger.debug(String.format("Getting an instance of the auth class \"%s\" from Spring", queryConfig.getAuthClass()));
     ICustomAuth authorizer = (ICustomAuth) context.getBean(authClass);
 
     try {
+      logger.debug("Requesting Authorization header from auth class");
       this.authHeader = authorizer.getAuthHeader();
     } catch (Exception ex) {
       logger.error("Error establishing Authorization header of FHIR server request: " + ex.getMessage());

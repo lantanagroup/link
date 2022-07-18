@@ -1,10 +1,15 @@
 package com.lantanagroup.link.nhsn;
 
+import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.r4.model.Bundle;
@@ -30,7 +35,16 @@ public class FHIRReceiver {
     String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
 
     String[] urlParts = url.split("/");
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url);
-    return (Bundle) fhirDataProvider.retrieveFromServer(token, urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
+    String fhirServerBase = urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url;
+    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(fhirServerBase);
+    client.registerInterceptor(new GZipContentInterceptor());
+
+    if (StringUtils.isNotEmpty(token)) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      client.registerInterceptor(authInterceptor);
+    }
+
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(client);
+    return (Bundle) fhirDataProvider.retrieveFromServer(urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
   }
 }

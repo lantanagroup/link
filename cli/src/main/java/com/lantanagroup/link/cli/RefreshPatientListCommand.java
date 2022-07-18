@@ -94,9 +94,18 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
     ListResource target = new ListResource();
-    Period period = new Period()
-            .setStart(Helper.getStartOfMonth(source.getDate()))
-            .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
+    Period period = new Period();
+
+    if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Month)) {
+      period
+              .setStart(Helper.getStartOfMonth(source.getDate()))
+              .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
+    } else if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Day)) {
+      period
+              .setStart(Helper.getStartOfDay(source.getDate()))
+              .setEnd(Helper.getEndOfDay(source.getDate(), 0));
+    }
+
     target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
     target.addIdentifier()
             .setSystem(Constants.MainSystem)
@@ -133,7 +142,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
               config.getAuth().getTokenUrl(),
               config.getAuth().getUser(),
               config.getAuth().getPass(),
-              "nhsnlink-app",
+              config.getAuth().getClientId(),
               config.getAuth().getScope());
       if (token == null) {
         throw new IOException("Authorization failed");
