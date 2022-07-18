@@ -65,7 +65,6 @@ public class StoredListProvider implements IPatientIdProvider {
     });
 
     logger.info("Loaded " + patientsOfInterest.size() + " patient ids");
-    patientsOfInterest.forEach(id -> logger.info("PatientId: " + id));
 
     context.setPatientsOfInterest(patientsOfInterest);
 
