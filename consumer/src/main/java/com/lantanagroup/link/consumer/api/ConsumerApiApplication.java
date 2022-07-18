@@ -71,6 +71,8 @@ public class ConsumerApiApplication extends SpringBootServletInitializer {
     theDaoConfig.setExpungeEnabled(true);
     theDaoConfig.setFetchSizeDefaultMaximum(100);
     theDaoConfig.setExpireSearchResultsAfterMillis(3600000);    // 60 minutes
+    theDaoConfig.setResourceServerIdStrategy(DaoConfig.IdStrategyEnum.UUID);
+    theDaoConfig.setResourceClientIdStrategy(DaoConfig.ClientIdStrategyEnum.ANY);
     return theDaoConfig;
   }
 

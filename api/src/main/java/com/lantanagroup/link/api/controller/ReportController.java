@@ -221,8 +221,8 @@ public class ReportController extends BaseController {
       }
     } else {
       IPatientIdProvider provider;
-      Class<?> senderClass = Class.forName(this.config.getPatientIdResolver());
-      Constructor<?> patientIdentifierConstructor = senderClass.getConstructor();
+      Class<?> patientIdResolverClass = Class.forName(this.config.getPatientIdResolver());
+      Constructor<?> patientIdentifierConstructor = patientIdResolverClass.getConstructor();
       provider = (IPatientIdProvider) patientIdentifierConstructor.newInstance();
       patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context, this.config);
     }
