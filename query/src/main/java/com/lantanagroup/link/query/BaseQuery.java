@@ -7,10 +7,14 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 public class BaseQuery {
+  private static final Logger logger = LoggerFactory.getLogger(BaseQuery.class);
+
   @Setter
   protected ApplicationContext applicationContext;
 
@@ -48,7 +52,10 @@ public class BaseQuery {
      */
 
     if (Strings.isNotEmpty(this.queryConfig.getAuthClass())) {
+      logger.debug(String.format("Authenticating queries using %s", this.queryConfig.getAuthClass()));
       fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
+    } else {
+      logger.warn("No authentication is configured for the FHIR server being queried");
     }
 
     this.fhirQueryClient = fhirQueryClient;
