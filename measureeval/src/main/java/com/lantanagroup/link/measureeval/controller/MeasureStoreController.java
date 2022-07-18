@@ -5,7 +5,10 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.measureeval.config.MeasureEvalConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -25,6 +28,7 @@ import java.nio.file.StandardOpenOption;
 
 @RestController
 public class MeasureStoreController {
+  private static final Logger logger = LoggerFactory.getLogger(MeasureStoreController.class);
   @Autowired
   @Setter
   private MeasureEvalConfig config;
@@ -38,25 +42,17 @@ public class MeasureStoreController {
   }
 
   @PostMapping("/$store-measure")
-  public void storeMeasure(@RequestBody Bundle measureBundle) {
-    FhirContext ctx = FhirContextProvider.getFhirContext();
-    String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
-    if (!Files.exists(Paths.get(this.config.getMeasuresPath()))) {
-      try {
-        Files.createDirectories(Paths.get(this.config.getMeasuresPath()));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    try(BufferedWriter writer = Files.newBufferedWriter(
-            Paths.get(this.config.getMeasuresPath() + File.separator + measureBundle.getId() + ".xml"),
-            StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+  public void storeMeasure(@RequestBody Bundle measureBundle) throws IOException {
+    if(StringUtils.isNotEmpty(measureBundle.getId())) {
+      FhirContext ctx = FhirContextProvider.getFhirContext();
+      String measureContentXML = ctx.newXmlParser().encodeResourceToString(measureBundle);
+      Files.createDirectories(Paths.get(this.config.getMeasuresPath()));
+      BufferedWriter writer = Files.newBufferedWriter(
+              Paths.get(this.config.getMeasuresPath() + File.separator + measureBundle.getId() + ".xml"),
+              StandardCharsets.UTF_8, StandardOpenOption.CREATE);
       writer.write(measureContentXML);
       writer.flush();
-    }catch(IOException ex)
-    {
-      ex.printStackTrace();
+      logger.debug(this.config.getMeasuresPath());
     }
-    System.out.println(this.config.getMeasuresPath());
   }
 }
