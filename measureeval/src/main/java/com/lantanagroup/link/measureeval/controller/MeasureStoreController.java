@@ -2,7 +2,6 @@ package com.lantanagroup.link.measureeval.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.measureeval.config.MeasureEvalConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -18,11 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
