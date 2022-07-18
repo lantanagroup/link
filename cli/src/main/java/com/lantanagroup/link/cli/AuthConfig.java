@@ -11,5 +11,6 @@ public class AuthConfig {
   private String user;
   private String pass;
   private String scope;
+  private String clientId;
 }
 

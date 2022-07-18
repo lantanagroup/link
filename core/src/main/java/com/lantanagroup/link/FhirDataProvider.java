@@ -5,20 +5,11 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
-import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.AdditionalRequestHeadersInterceptor;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
-import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
-import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Getter;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -47,6 +38,7 @@ public class FhirDataProvider {
 
   public FhirDataProvider(String fhirBase) {
     this.client = this.ctx.newRestfulGenericClient(fhirBase);
+    this.client.registerInterceptor(new GZipContentInterceptor());
   }
 
   public Resource createResource(IBaseResource resource) {
@@ -348,13 +340,7 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public IBaseResource retrieveFromServer(String token, String resourceType, String resourceId) {
-    client.registerInterceptor(new GZipContentInterceptor());
-    if(token != null || token.equals("")) {
-      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
-      client.registerInterceptor(authInterceptor);
-    }
-
+  public IBaseResource retrieveFromServer(String resourceType, String resourceId) {
     return client
             .read()
             .resource(resourceType)
