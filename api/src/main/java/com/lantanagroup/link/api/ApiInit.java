@@ -277,11 +277,13 @@ public class ApiInit {
   }
 
   public void init() {
+    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+
     if (this.config.getSkipInit()) {
-      logger.info("Skipping API initialization processes");
+      logger.info("Skipping API initialization processes to load measure definitions and search parameters");
       return;
     }
-    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+
     this.loadMeasureDefinitions();
     this.loadSearchParameters();
   }

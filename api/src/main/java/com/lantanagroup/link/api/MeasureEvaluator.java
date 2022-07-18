@@ -81,12 +81,12 @@ public class MeasureEvaluator {
           }
         }
 
-        logger.info("Done generating measure report, setting response answer to JSON of MeasureReport");
+        logger.info(String.format("Done generating measure report for %s-%s", this.context.getReportId(), this.patientId.hashCode()));
         measureReport.setId(this.context.getReportId());
         this.context.setMeasureReport(measureReport);
       }
     } catch (Exception e) {
-      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId, e.getMessage()));
+      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId.hashCode(), e.getMessage()));
       throw e;
     }
 

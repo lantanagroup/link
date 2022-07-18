@@ -84,7 +84,7 @@ public class EpicAuth implements ICustomAuth {
 
         if (responseTreeMap.containsKey("access_token")) {
           String accessToken = (String) responseTreeMap.get("access_token");
-          logger.debug("Epic access token for queries: " + accessToken);
+          logger.debug("Acquired access token for Epic");
           return "Bearer " + accessToken;
         } else {
           logger.error("Response from auth token request does not include an 'access_token' property");
