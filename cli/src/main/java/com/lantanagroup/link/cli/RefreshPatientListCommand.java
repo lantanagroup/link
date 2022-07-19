@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
@@ -13,13 +14,15 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
 import org.springframework.shell.standard.ShellComponent;
@@ -36,7 +39,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private QueryConfig queryConfig;
   private ApiConfig apiConfig;
 
-  private final HttpClient httpClient = HttpClients.createDefault();
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
 
   @Override
@@ -91,9 +94,18 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
     ListResource target = new ListResource();
-    Period period = new Period()
-            .setStart(Helper.getStartOfMonth(source.getDate()))
-            .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
+    Period period = new Period();
+
+    if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Month)) {
+      period
+              .setStart(Helper.getStartOfMonth(source.getDate()))
+              .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
+    } else if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Day)) {
+      period
+              .setStart(Helper.getStartOfDay(source.getDate()))
+              .setEnd(Helper.getEndOfDay(source.getDate(), 0));
+    }
+
     target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
     target.addIdentifier()
             .setSystem(Constants.MainSystem)
@@ -130,17 +142,28 @@ public class RefreshPatientListCommand extends BaseShellCommand {
               config.getAuth().getTokenUrl(),
               config.getAuth().getUser(),
               config.getAuth().getPass(),
-              "nhsnlink-app",
+              config.getAuth().getClientId(),
               config.getAuth().getScope());
       if (token == null) {
         throw new IOException("Authorization failed");
       }
-      request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+
+      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+        request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+      }
+      else {
+        throw new JWTVerificationException("Invalid token format");
+      }
+
     }
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
     httpClient.execute(request, response -> {
       System.out.println(response);
+      HttpEntity entity = response.getEntity();
+      if (entity != null) {
+        System.out.println(EntityUtils.toString(entity));
+      }
       return null;
     });
   }

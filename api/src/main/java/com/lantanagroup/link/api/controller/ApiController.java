@@ -77,6 +77,7 @@ public class ApiController {
     ApiInfoModel apiInfoModel = this.getVersionInfo();
     content = content.replace("{{version}}", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
 
+    inputStream.close();
     return content;
   }
 

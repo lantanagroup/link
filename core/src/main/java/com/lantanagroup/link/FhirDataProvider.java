@@ -5,15 +5,10 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
-import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
-import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -43,6 +38,7 @@ public class FhirDataProvider {
 
   public FhirDataProvider(String fhirBase) {
     this.client = this.ctx.newRestfulGenericClient(fhirBase);
+    this.client.registerInterceptor(new GZipContentInterceptor());
   }
 
   public Resource createResource(IBaseResource resource) {
@@ -54,13 +50,13 @@ public class FhirDataProvider {
     if (!outcome.getCreated() || outcome.getResource() == null) {
       logger.error("Failed to store/create FHIR resource");
     } else {
-      logger.debug("Stored FHIR resource with new ID of " + outcome.getResource().getIdElement().getIdPart());
+      logger.debug("Stored FHIR resource with new " + outcome.getId().toString());
     }
 
     return (Resource) outcome.getResource();
   }
 
-  public void updateResource(IBaseResource resource) {
+  public MethodOutcome updateResource(IBaseResource resource) {
     int initialVersion = resource.getMeta().getVersionId() != null ? Integer.parseInt(resource.getMeta().getVersionId()) : 0;
 
     // Make sure the ID is not version-specific
@@ -80,6 +76,8 @@ public class FhirDataProvider {
     } else {
       logger.info(String.format("Nothing changed in resource %s/%s", domainResource.getResourceType().toString(), domainResource.getIdElement().getIdPart()));
     }
+
+    return outcome;
   }
 
   public DocumentReference findDocRefByMeasureAndPeriod(Identifier identifier, String periodStart, String periodEnd) throws Exception {
@@ -342,27 +340,11 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public void submitToServer(String serverBase, FHIRSenderOAuthConfig senderConfig, Resource resource) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
-    submissionClient.registerInterceptor(authInterceptor);
-    submissionClient
-            .update()
-            .resource(resource)
-            .execute();
-  }
-
-  public IBaseResource retrieveFromServer(String serverBase, FHIRSenderOAuthConfig senderConfig, String resourceType, String resourceId) {
-    IGenericClient submissionClient = this.ctx.newRestfulGenericClient(serverBase);
-    submissionClient.registerInterceptor(new GZipContentInterceptor());
-    IClientInterceptor authInterceptor = new BasicAuthInterceptor(senderConfig.getUsername(), senderConfig.getPassword());
-    submissionClient.registerInterceptor(authInterceptor);
-    return submissionClient
+  public IBaseResource retrieveFromServer(String resourceType, String resourceId) {
+    return client
             .read()
             .resource(resourceType)
             .withId(resourceId)
-            .elementsSubset("id")
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
   }

@@ -1,3 +1,5 @@
+package com.lantanagroup.link.consumer.api;
+
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.interceptor.auth.IAuthRule;
 import com.lantanagroup.link.config.Permission;
@@ -85,7 +87,7 @@ public class AuthInterceptorTest {
     when(requestDetails.getParameters()).thenReturn(parameters);
     AuthInterceptor interceptor = new AuthInterceptor(consumerConfig);
     List<IAuthRule> list = interceptor.buildRuleList(requestDetails);
-    Assert.assertEquals(3, list.size());
+    Assert.assertEquals(4, list.size());
   }
 
   @Test
@@ -98,7 +100,7 @@ public class AuthInterceptorTest {
     when(requestDetails.getParameters()).thenReturn(parameters);
     AuthInterceptor interceptor = new AuthInterceptor(consumerConfig);
     List<IAuthRule> list = interceptor.buildRuleList(requestDetails);
-    Assert.assertEquals(3, list.size());
+    Assert.assertEquals(4, list.size());
   }
 
   @Test
@@ -111,7 +113,7 @@ public class AuthInterceptorTest {
     when(requestDetails.getParameters()).thenReturn(parameters);
     AuthInterceptor interceptor = new AuthInterceptor(consumerConfig);
     List<IAuthRule> list = interceptor.buildRuleList(requestDetails);
-    Assert.assertEquals(1, list.size());
+    Assert.assertEquals(2, list.size());
   }
 
 
@@ -125,7 +127,7 @@ public class AuthInterceptorTest {
     when(requestDetails.getParameters()).thenReturn(parameters);
     AuthInterceptor interceptor = new AuthInterceptor(consumerConfig);
     List<IAuthRule> list = interceptor.buildRuleList(requestDetails);
-    Assert.assertEquals(1, list.size());
+    Assert.assertEquals(2, list.size());
   }
 
 }

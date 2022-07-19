@@ -43,5 +43,9 @@ public class ConsumerSecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .anyRequest()
             .authenticated();
+
+    //set content security policy
+    String csp = "script-src 'self'";
+    http.headers().contentSecurityPolicy(csp);
   }
 }

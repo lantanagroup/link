@@ -3,6 +3,7 @@ package com.lantanagroup.link.api;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
@@ -76,7 +77,12 @@ public class ApiInit {
       if (authConfig != null) {
         try {
           String token = OAuth2Helper.getToken(authConfig);
-          requestBuilder.setHeader("Authorization", "Bearer " + token);
+          if(OAuth2Helper.validateHeaderJwtToken(token)) {
+            requestBuilder.setHeader("Authorization", "Bearer " + token);
+          }
+          else {
+            throw new JWTVerificationException("Invalid token format");
+          }
         } catch (Exception ex) {
           logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
           return;
@@ -94,13 +100,18 @@ public class ApiInit {
         return;
       }
 
+
+      boolean keepSearching = true;
       Integer retryCount = 0;
       String content = null;
 
-      while (Strings.isEmpty(content) && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+      while (keepSearching && retryCount <= this.config.getReportDefs().getMaxRetry()) {
         try {
           HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
           content = response.body();
+          if(!Strings.isEmpty(content)) {
+            keepSearching = false;
+          }
         } catch (ConnectException ex) {
           retryCount++;
 
@@ -238,8 +249,10 @@ public class ApiInit {
       FhirContext ctx = FhirContextProvider.getFhirContext();
       IParser xmlParser = ctx.newXmlParser();
       for (final Resource res : resources) {
-        IBaseResource resource = readFileAsFhirResource(xmlParser, res.getInputStream());
-        provider.updateResource(resource);
+        try(InputStream inputStream = res.getInputStream();) {
+          IBaseResource resource = readFileAsFhirResource(xmlParser, inputStream);
+          provider.updateResource(resource);
+        }
       }
     } catch (Exception ex) {
       logger.error(String.format("Error in loadSearchParameters due to %s", ex.getMessage()));
@@ -264,11 +277,13 @@ public class ApiInit {
   }
 
   public void init() {
+    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+
     if (this.config.getSkipInit()) {
-      logger.info("Skipping API initialization processes");
+      logger.info("Skipping API initialization processes to load measure definitions and search parameters");
       return;
     }
-    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+
     this.loadMeasureDefinitions();
     this.loadSearchParameters();
   }

@@ -82,15 +82,16 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
         if (populationCode.equals(NumTotBeds)) {
           totalInventoryMap.put(NumTotBeds, population.getCount());
-          break;
         } else if (populationCode.equals(NumICUBeds)) {
           totalInventoryMap.put(NumICUBeds, population.getCount());
-          break;
         } else if (populationCode.equals(NumVent)) {
           totalInventoryMap.put(NumVent, population.getCount());
+        } else if (populationCode.equals(NumVentUse)) {
+          usedInventoryMap.put(NumVentUse, population.getCount());
         }
       }
     }
+
     // store the available counts
     for (MeasureReport.MeasureReportGroupComponent group1 : masterMeasureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {

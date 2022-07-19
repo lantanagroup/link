@@ -32,7 +32,6 @@ public class ReportGenerator {
   private ApiConfig config;
   private IReportAggregator reportAggregator;
 
-
   public ReportGenerator(ReportContext context, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
     this.context = context;
     this.criteria = criteria;
@@ -40,7 +39,6 @@ public class ReportGenerator {
     this.config = config;
     this.reportAggregator = reportAggregator;
   }
-
 
   private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
     DocumentReference documentReference = new DocumentReference();
@@ -127,7 +125,7 @@ public class ReportGenerator {
   public void store(List<MeasureReport> patientMeasureReports, ReportCriteria criteria, ReportContext context, DocumentReference existingDocumentReference) throws ParseException {
 
     Bundle updateBundle = new Bundle();
-    updateBundle.setType(Bundle.BundleType.TRANSACTION);
+    updateBundle.setType(Bundle.BundleType.BATCH);
 
     patientMeasureReports.stream().map(patientMeasureReport -> {
 
@@ -179,8 +177,25 @@ public class ReportGenerator {
                     .setMethod(Bundle.HTTPVerb.PUT)
                     .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
 
-    // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-    this.context.getFhirProvider().transaction(updateBundle);
+    int maxCount = 50;
+    int transactionCount = (int) Math.ceil(updateBundle.getEntry().size() / ((double) maxCount));
 
+    logger.debug("Storing measure reports and updated document reference in internal FHIR Server. " + transactionCount + " bundles total.");
+
+    for (int i = 0; i < transactionCount; i++) {
+      Bundle updateBundleCopy = new Bundle();
+      updateBundleCopy.setType(Bundle.BundleType.BATCH);
+
+      List<Bundle.BundleEntryComponent> nextEntries = updateBundle.getEntry().subList(0, updateBundle.getEntry().size() >= maxCount ? maxCount : updateBundle.getEntry().size());
+      updateBundleCopy.getEntry().addAll(nextEntries);
+      updateBundle.getEntry().removeAll(nextEntries);
+
+      logger.debug("Processing bundle " + (i + 1));
+
+      // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
+      this.context.getFhirProvider().transaction(updateBundleCopy);
+
+      logger.debug("Done processing bundle " + (i + 1));
+    }
   }
 }

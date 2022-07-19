@@ -10,14 +10,13 @@ api:
   Data-Processor:
     csv: GenericCSVProcessor
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
-  sender: com.lantanagroup.link.nhsn.XMLSender
+  sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
       - com.lantanagroup.link.nhsn.FixResourceId
-  send-url:
   delete-after-submission: true
   cors:
     allowed-origins: '*'

@@ -66,36 +66,6 @@ public class MeasureEvaluator {
 
       logger.info(String.format("Done executing $evaluate-measure for %s", this.context.getMeasureId()));
 
-      if (this.config.getMeasureLocation() != null) {
-        logger.debug("Creating MeasureReport.subject based on config");
-        Reference subjectRef = measureReport.getSubject() != null && measureReport.getSubject().getReference() != null
-                ? measureReport.getSubject() : new Reference();
-        if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
-          subjectRef.setIdentifier(new Identifier()
-                  .setSystem(this.config.getMeasureLocation().getSystem())
-                  .setValue(this.config.getMeasureLocation().getValue()));
-        }
-
-        if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
-          Extension positionExt = new Extension(Constants.ReportPositionExtUrl);
-
-          if (this.config.getMeasureLocation().getLongitude() != null) {
-            Extension longExt = new Extension("longitude");
-            longExt.setValue(new DecimalType(this.config.getMeasureLocation().getLongitude()));
-            positionExt.addExtension(longExt);
-          }
-
-          if (this.config.getMeasureLocation().getLatitude() != null) {
-            Extension latExt = new Extension("latitude");
-            latExt.setValue(new DecimalType(this.config.getMeasureLocation().getLatitude()));
-            positionExt.addExtension(latExt);
-          }
-
-          subjectRef.addExtension(positionExt);
-        }
-        measureReport.setSubject(subjectRef);
-      }
-
       // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
       // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
       // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
@@ -111,12 +81,12 @@ public class MeasureEvaluator {
           }
         }
 
-        logger.info("Done generating measure report, setting response answer to JSON of MeasureReport");
+        logger.info(String.format("Done generating measure report for %s-%s", this.context.getReportId(), this.patientId.hashCode()));
         measureReport.setId(this.context.getReportId());
         this.context.setMeasureReport(measureReport);
       }
     } catch (Exception e) {
-      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId, e.getMessage()));
+      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId.hashCode(), e.getMessage()));
       throw e;
     }
 
