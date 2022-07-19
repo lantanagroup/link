@@ -6,6 +6,7 @@ import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.Patient;
@@ -27,6 +28,10 @@ public class Query extends BaseQuery implements IQuery {
     List<QueryResponse> result;
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
+    }
+
+    if(StringUtils.isEmpty(measureId)){
+      throw new IllegalArgumentException("Measure Id must be provided");
     }
 
     List<QueryResponse> queryResponses = new ArrayList();
