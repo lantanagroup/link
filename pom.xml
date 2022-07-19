@@ -35,6 +35,7 @@
         <module>query</module>
         <module>agent</module>
         <module>consumer</module>
+        <module>datastore</module>
         <module>measureeval</module>
         <module>thsa</module>
         <module>nhsn</module>

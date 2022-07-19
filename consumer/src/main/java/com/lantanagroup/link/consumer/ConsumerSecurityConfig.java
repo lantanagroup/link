@@ -1,8 +1,8 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.consumer;
 
-import com.lantanagroup.link.api.auth.LinkAuthManager;
-import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.config.consumer.ConsumerConfig;
+import com.lantanagroup.link.consumer.auth.PreAuthTokenHeaderFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -13,12 +13,12 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 /**
- * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
+ * Sets the security for the consumer component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
  */
 @Configuration
 @EnableWebSecurity
 @Order(1)
-public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
+public class ConsumerSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
   private ConsumerConfig config;

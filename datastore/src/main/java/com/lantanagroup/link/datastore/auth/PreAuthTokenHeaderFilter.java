@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.datastore.auth;
 
 import com.auth0.jwt.JWT;
 import com.lantanagroup.link.auth.LinkCredentials;

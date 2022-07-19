@@ -1,4 +1,4 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.consumer;
 
 import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;

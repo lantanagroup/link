@@ -172,7 +172,7 @@ public class GenerateAndSubmitCommand {
       URI urlWithParameters1 = builder1.buildAndExpand(map).toUri();
 
       // send the report
-      restTemplate.exchange(urlWithParameters1, HttpMethod.GET, entity, String.class);
+      restTemplate.exchange(urlWithParameters1, HttpMethod.POST, entity, String.class);
       logger.info("Report successfully generated and submitted.");
       client.close();
       System.exit(0);

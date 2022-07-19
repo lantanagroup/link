@@ -1,13 +1,9 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.datastore;
 
 import ca.uhn.fhir.jpa.api.config.DaoConfig;
-import ca.uhn.fhir.jpa.api.dao.IFhirSystemDao;
-import ca.uhn.fhir.jpa.dao.r4.FhirSystemDaoR4;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
-import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
-import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
-import com.lantanagroup.link.config.consumer.ConsumerConfig;
+import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.h2.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +16,20 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication(scanBasePackages = {
-        "com.lantanagroup.link.config.consumer",
-        "com.lantanagroup.link.consumer",
+        "com.lantanagroup.link.config.datastore",
+        "com.lantanagroup.link.datastore",
         "com.lantanagroup.link.spring"
 })
 @ServletComponentScan(basePackageClasses = {JpaRestfulServer.class})
-public class ConsumerApiApplication extends SpringBootServletInitializer {
+public class DataStoreApplication extends SpringBootServletInitializer {
   @Autowired
   AutowireCapableBeanFactory beanFactory;
 
   @Autowired
-  private ConsumerConfig consumerConfig;
+  private DataStoreConfig dataStoreConfig;
 
   public static void main(String[] args) {
-    SpringApplication.run(ConsumerApiApplication.class, args);
+    SpringApplication.run(DataStoreApplication.class, args);
   }
 
   @Bean
@@ -77,11 +73,11 @@ public class ConsumerApiApplication extends SpringBootServletInitializer {
   @Bean(destroyMethod = "close")
   public BasicDataSource dataSource() {
     BasicDataSource retVal = new BasicDataSource();
-    if (this.consumerConfig != null && this.consumerConfig.getDataSource() != null) {
-      retVal.setDriverClassName(this.consumerConfig.getDataSource().getDriverClassName());
-      retVal.setUrl(this.consumerConfig.getDataSource().getUrl());
-      retVal.setUsername(this.consumerConfig.getDataSource().getUsername());
-      retVal.setPassword(this.consumerConfig.getDataSource().getPassword());
+    if (this.dataStoreConfig != null && this.dataStoreConfig.getDataSource() != null) {
+      retVal.setDriverClassName(this.dataStoreConfig.getDataSource().getDriverClassName());
+      retVal.setUrl(this.dataStoreConfig.getDataSource().getUrl());
+      retVal.setUsername(this.dataStoreConfig.getDataSource().getUsername());
+      retVal.setPassword(this.dataStoreConfig.getDataSource().getPassword());
     } else {
       Driver driver = new Driver();
       retVal.setDriver(driver);
