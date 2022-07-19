@@ -1,8 +1,8 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.api.auth.LinkAuthManager;
 import com.lantanagroup.link.api.auth.LinkAuthenticationSuccessHandler;
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
+import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.springframework.beans.factory.annotation.Autowired;

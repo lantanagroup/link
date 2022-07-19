@@ -1,11 +1,11 @@
-package com.lantanagroup.link.consumer.api;
+package com.lantanagroup.link.datastore;
 
 import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.jpa.config.BaseJavaConfigR4;
 import ca.uhn.fhir.jpa.config.HibernatePropertiesProvider;
 import ca.uhn.fhir.jpa.search.DatabaseBackedPagingProvider;
 import ca.uhn.fhir.jpa.search.HapiLuceneAnalysisConfigurer;
-import com.lantanagroup.link.config.consumer.ConsumerConfig;
+import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import org.apache.lucene.util.Version;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.search.backend.lucene.cfg.LuceneBackendSettings;
@@ -30,7 +30,7 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
   private DataSource myDataSource;
 
   @Autowired
-  private ConsumerConfig consumerConfig;
+  private DataStoreConfig dataStoreConfig;
 
   @Override
   public DatabaseBackedPagingProvider databaseBackedPagingProvider() {
@@ -54,8 +54,8 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
 
     Properties properties = new Properties();
 
-    if (this.consumerConfig != null && this.consumerConfig.getDataSource() != null && this.consumerConfig.getDataSource().getHibernateDialect() != null) {
-      properties.putIfAbsent("hibernate.dialect", this.consumerConfig.getDataSource().getHibernateDialect());
+    if (this.dataStoreConfig != null && this.dataStoreConfig.getDataSource() != null && this.dataStoreConfig.getDataSource().getHibernateDialect() != null) {
+      properties.putIfAbsent("hibernate.dialect", this.dataStoreConfig.getDataSource().getHibernateDialect());
     }
 
     properties.putIfAbsent(BackendSettings.backendKey(BackendSettings.TYPE), LuceneBackendSettings.TYPE_NAME);
