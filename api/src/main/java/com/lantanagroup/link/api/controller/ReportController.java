@@ -321,7 +321,7 @@ public class ReportController extends BaseController {
         logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
         QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
         IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-        patientQueryResponses = query.execute(patientsOfInterest, resourceTypes);
+        patientQueryResponses = query.execute(patientsOfInterest, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
       } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
         patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
       }
