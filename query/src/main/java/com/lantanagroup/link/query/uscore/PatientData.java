@@ -1,17 +1,17 @@
 package com.lantanagroup.link.query.uscore;
 
-
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ResourceIdChanger;
-import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
+import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +29,7 @@ public class PatientData {
   private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
 
+
   public PatientData(IGenericClient fhirQueryServer, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
     this.patient = patient;
@@ -37,26 +38,56 @@ public class PatientData {
     this.resourceTypes = resourceTypes;
   }
 
-  public void loadData() {
+  public void loadData(String measureId) {
     if (resourceTypes.size() == 0) {
       logger.error("Not querying for any patient data.");
       return;
     }
 
-    List<String> queryString = resourceTypes.stream().map(query -> {
-      String returnedQuery;
-      if (query.equals("Observation")) {
-        returnedQuery = query + "?category=laboratory&patient=Patient/" + this.patientId;
-      } else {
-        returnedQuery = query + "?patient=Patient/" + this.patientId;
-      }
-      return returnedQuery;
-    }).collect(Collectors.toList());
+    //Loop through resource types specified. If observation, use config to add individual category queries
+    List<String> queryString = new ArrayList<>();
+    for (String resource: this.resourceTypes) {
+      if(resource.equals("Observation")) {
 
-    queryString.parallelStream().forEach(query -> {
-      Bundle bundle = PatientScoop.rawSearch(this.fhirQueryServer, query);
-      this.bundles.add(bundle);
-    });
+        HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
+
+        //check if queryParameters exist in config, if not just load patient without observations
+        if(queryParameters != null && !queryParameters.isEmpty()) {
+          //this was written in a way that if the resource equals check was removed, it would work for other resource types
+          this.usCoreConfig.getQueryParameters().get(measureId).stream().forEach(queryParams -> {
+            for (USCoreQueryParametersResourceParameterConfig param: queryParams.getParameters()) {
+              for (String paramValue: param.getValues()) {
+                queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId);
+              }
+            }
+          });
+        }
+        else {
+          logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));
+          //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
+        }
+
+      }
+      else {
+        queryString.add(resource + "?patient=Patient/" + this.patientId);
+      }
+    }
+
+    if(!queryString.isEmpty()) {
+      try {
+        queryString.parallelStream().forEach(query -> {
+          Bundle bundle = PatientScoop.rawSearch(this.fhirQueryServer, query);
+          this.bundles.add(bundle);
+        });
+      }
+      catch(Exception ex) {
+        logger.error("Error while parallel processing patient data queries: %s", Helper.encodeLogging(ex.getMessage()));
+      }
+    }
+    else{
+      logger.warn("No queries generated based on resource types and configuration");
+    }
+
   }
 
   public Bundle getBundleTransaction() {

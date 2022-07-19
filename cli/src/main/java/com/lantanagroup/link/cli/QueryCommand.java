@@ -2,10 +2,12 @@ package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
@@ -45,7 +47,7 @@ public class QueryCommand extends BaseShellCommand {
   }
 
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
-  public void query(String patient, String resourceTypes, @ShellOption(defaultValue = "") String output) {
+  public void query(String patient, String resourceTypes, String measureId, @ShellOption(defaultValue = "") String output) {
     try {
       this.registerBeans();
 
@@ -75,7 +77,7 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Executing query");
 
-      List<QueryResponse> queryResponses = query.execute(patientsOfInterest, resourceTypesList);
+      List<QueryResponse> queryResponses = query.execute(patientsOfInterest, resourceTypesList, measureId);
 
       if (queryResponses != null) {
         for (int i = 0; i < queryResponses.size(); i++) {

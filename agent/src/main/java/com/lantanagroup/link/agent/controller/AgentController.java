@@ -1,10 +1,13 @@
 package com.lantanagroup.link.agent.controller;
 
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.QueryResponse;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import lombok.Setter;
 import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +75,8 @@ public class AgentController {
     for (String resourceType : resourceTypes) {
       resourceTypeList.add(resourceType);
     }
-    return query.execute(allPatientsOfInterest, resourceTypeList);
+
+    //added null for measure since agent will be removed in the future
+    return query.execute(allPatientsOfInterest, resourceTypeList, null);
   }
 }

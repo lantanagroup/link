@@ -26,6 +26,7 @@ public class QueryTests {
     IGenericClient fhirQueryClient = mock(IGenericClient.class);
 
     // Configuration for which queries should be called for each patient
+    String measureId = "InitialInpatientPopulation";
     List<String> queries = new ArrayList<>();
     queries.add("Condition");
     queries.add("Encounter");
@@ -242,7 +243,7 @@ public class QueryTests {
     Query theQuery = new Query();
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    List<QueryResponse> patientQueryResponses = theQuery.execute(patientsOfInterest, queries);
+    List<QueryResponse> patientQueryResponses = theQuery.execute(patientsOfInterest, queries, measureId);
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
