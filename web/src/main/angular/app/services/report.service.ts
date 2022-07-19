@@ -42,7 +42,7 @@ export class ReportService {
 
   async send(reportId: string) {
     const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$send`);
-    return this.http.get(url).toPromise();
+    return this.http.post(url, null).toPromise();
   }
 
   async download(reportId: string) {

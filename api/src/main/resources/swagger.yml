@@ -82,7 +82,7 @@ paths:
         '200':
           description: default response
   /api/report/{reportId}/$send:
-    get:
+    post:
       tags:
         - Report Management
       summary: Send/submit the specified report to the consumer/recipient
