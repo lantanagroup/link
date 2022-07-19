@@ -64,7 +64,7 @@ public class PatientData {
         }
         else {
           logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));
-          queryString.add(resource + "?patient=Patient/" + this.patientId);
+          //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
         }
 
       }
