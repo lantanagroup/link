@@ -136,26 +136,51 @@ public class Helper {
   }
 
   public static boolean validateLoggerValue(String logValue) {
+    //check for empty/null input
+    if (StringUtils.isEmpty(logValue)) {
+      return false;
+    }
+
     String allowedLogCharacters = "^[\\w,\\s\\.-]+$";
     return Pattern.matches(allowedLogCharacters, logValue);
   }
 
   public static boolean validateHeaderValue(String headerValue) {
+    //check for empty/null input
+    if (StringUtils.isEmpty(headerValue)) {
+      return false;
+    }
+
     String allowedHeaderCharacters = "^[\\w,\\h\\.-]+$";
     return Pattern.matches(allowedHeaderCharacters, headerValue);
   }
 
   public static boolean validateApiKey(String apiKey) {
+    //check for empty/null input
+    if (StringUtils.isEmpty(apiKey)) {
+      return false;
+    }
+
     String allowedKeyCharacters = "^[\\S]+$";
     return Pattern.matches(allowedKeyCharacters, apiKey);
   }
 
   public static boolean validateBearerToken(String token) {
+    //check for empty/null input
+    if (StringUtils.isEmpty(token)) {
+      return false;
+    }
+
     String bearer = "[A-Za-z0-9\\-\\._~\\+\\/]+=*";
     return Pattern.matches(bearer, token);
   }
 
   public static String validateReportId(String reportId) throws Exception {
+    //check for empty/null input
+    if (StringUtils.isEmpty(reportId)) {
+      throw new Exception("Invalid Report Id");
+    }
+
     String safeString = "(?u)^[.\\\\w\\\\s*,()&+-]{0,1024}$";
     reportId = reportId.replace( '\n' ,  '_' )
             .replace( '\r' , '_' )
@@ -172,6 +197,11 @@ public class Helper {
   }
 
   public static String cleanHeaderManipulationChars(String val) {
+    //check for empty/null input
+    if (StringUtils.isEmpty(val)) {
+      return val;
+    }
+
     String whiteList = "[^A-Za-z0-9\\-\\._~\\+\\/]";
     val = val.replaceAll(whiteList, "");
 
@@ -206,6 +236,11 @@ public class Helper {
   }
 
   public static String encodeForUrl(String val) throws UnsupportedEncodingException, URISyntaxException {
+
+    if (StringUtils.isEmpty(val)) {
+      return val;
+    }
+
     val = val.replace( '\n' ,  '_' ).replace( '\r' , '_' )
             .replace( '\t' , '_' );
 
@@ -218,8 +253,9 @@ public class Helper {
 //    val = scheme + "://" + host + path + URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
     return val;
   }
+
   public static String quoteApostrophe(String input) {
-    if (input != null)
+    if (!StringUtils.isEmpty(input))
       return input.replaceAll("[\']", "&rsquo;");
     else
       return null;
