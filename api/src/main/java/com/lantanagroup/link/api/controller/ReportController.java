@@ -235,6 +235,7 @@ public class ReportController extends BaseController {
     return patientOfInterestModelList;
   }
 
+
   private List<ConceptMap> getConceptMaps() {
     List<ConceptMap> conceptMapsList = new ArrayList();
     if (this.config.getConceptMaps() != null) {

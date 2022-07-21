@@ -33,7 +33,7 @@ public class FHIRReceiver {
   public Bundle retrieveContent(String url) throws Exception {
     LinkOAuthConfig oAuthConfig = this.config.getAuthConfig();
     String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
-
+    url = (url.indexOf("_history") != -1) ? url.substring(0, url.indexOf("_history")) : url;
     String[] urlParts = url.split("/");
     String fhirServerBase = urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url;
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(fhirServerBase);
