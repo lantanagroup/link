@@ -316,14 +316,10 @@ public class ReportController extends BaseController {
       //List<QueryResponse> patientQueryResponses = new ArrayList<>();
 
       // Get the data
-      if (this.config.getQuery().getMode() == ApiQueryConfigModes.Local) {
-        logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-        QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-        IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-        patientQueryResponses = query.execute(patientsOfInterest, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
-      } else if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-        patientQueryResponses = this.getRemotePatientData(patientsOfInterest);
-      }
+      logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
+      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
+      IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
+      patientQueryResponses = query.execute(patientsOfInterest, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
       // De-duplicate patients now that we know all of their logical ids
       for (int i = patientQueryResponses.size() - 1; i >= 0; i--) {

@@ -122,13 +122,6 @@ public class ApiConfig {
   @Getter
   private ApiReportDefsConfig reportDefs;
 
-  /**
-   * <strong>api.query</strong><br>Configuration for how queries should be executed. If local, will run queries within the API. If remote,
-   * will request that a remote query agent perform the queries and respond to the API with the results.
-   */
-  @Getter
-  @NotNull
-  private ApiQueryConfig query;
 
   /**
    * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
