@@ -33,7 +33,6 @@
         <module>api</module>
         <module>cli</module>
         <module>query</module>
-        <module>agent</module>
         <module>consumer</module>
         <module>datastore</module>
         <module>measureeval</module>
