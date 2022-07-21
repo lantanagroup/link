@@ -6,7 +6,9 @@ import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.ResourceType;
 import org.slf4j.Logger;
@@ -22,10 +24,14 @@ public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public List<QueryResponse> execute(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes) {
+  public List<QueryResponse> execute(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, String measureId) {
     List<QueryResponse> result;
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
+    }
+
+    if(StringUtils.isEmpty(measureId)){
+      throw new IllegalArgumentException("Measure Id must be provided");
     }
 
     List<QueryResponse> queryResponses = new ArrayList();
@@ -36,7 +42,7 @@ public class Query extends BaseQuery implements IQuery {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
-        scoop.execute(patientsOfInterest, resourceTypes);
+        scoop.execute(patientsOfInterest, resourceTypes, measureId);
 
         List<PatientData> patientDatas = scoop.getPatientData();
 

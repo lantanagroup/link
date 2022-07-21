@@ -1,6 +1,5 @@
-package com.lantanagroup.link.api.auth;
+package com.lantanagroup.link.auth;
 
-import com.lantanagroup.link.auth.OAuth2Helper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
