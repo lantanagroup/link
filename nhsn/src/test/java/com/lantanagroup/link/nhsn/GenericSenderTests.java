@@ -5,8 +5,8 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.OAuthCredentialModes;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -51,7 +51,7 @@ public class GenericSenderTests {
     FHIRSender mockSender = this.getMockSender(config);
 
     config.setUrl("http://test.com/fhir");
-    config.setAuthConfig(new FHIRSenderOAuthConfig());
+    config.setAuthConfig(new LinkOAuthConfig());
     config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");
@@ -74,7 +74,7 @@ public class GenericSenderTests {
   public void updateDocumentLocation() throws Exception {
     FHIRSenderConfig config = new FHIRSenderConfig();
     config.setUrl("http://test.com/fhir");
-    config.setAuthConfig(new FHIRSenderOAuthConfig());
+    config.setAuthConfig(new LinkOAuthConfig());
     config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");

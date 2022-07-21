@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +107,7 @@ public class FhirBundler {
           DocumentReference documentReference) {
     Meta meta = new Meta();
     meta.addProfile(Constants.MeasureReportBundleProfileUrl);
+    meta.addTag(Constants.MainSystem, "report", "Report");
 
     Bundle bundle = new Bundle();
     bundle.setType(Bundle.BundleType.COLLECTION);
