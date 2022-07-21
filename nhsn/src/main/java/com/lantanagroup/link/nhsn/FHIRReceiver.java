@@ -6,8 +6,8 @@ import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -31,7 +31,7 @@ public class FHIRReceiver {
   }
 
   public Bundle retrieveContent(String url) throws Exception {
-    FHIRSenderOAuthConfig oAuthConfig = this.config.getAuthConfig();
+    LinkOAuthConfig oAuthConfig = this.config.getAuthConfig();
     String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
     url = (url.indexOf("_history") != -1) ? url.substring(0, url.indexOf("_history")) : url;
     String[] urlParts = url.split("/");
