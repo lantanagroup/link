@@ -7,7 +7,6 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
-import com.lantanagroup.link.config.api.ApiQueryConfigModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -19,7 +18,6 @@ import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -41,7 +39,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -236,56 +233,6 @@ public class ReportController extends BaseController {
     context.setPatientsOfInterest(patientOfInterestModelList);
 
     return patientOfInterestModelList;
-  }
-
-  private List<QueryResponse> getRemotePatientData(List<PatientOfInterestModel> patientsOfInterest) {
-    try {
-      URL url = new URL(new URL(this.config.getQuery().getUrl()), "/api/data");
-      URIBuilder uriBuilder = new URIBuilder(url.toString());
-
-      patientsOfInterest.forEach(poi -> {
-        if (poi.getReference() != null) {
-          uriBuilder.addParameter("patientRef", poi.getReference());
-        } else if (poi.getIdentifier() != null) {
-          uriBuilder.addParameter("patientIdentifier", poi.getIdentifier());
-        }
-      });
-
-      logger.info("Scooping data remotely for the patients: " + StringUtils.join(patientsOfInterest, ", ") + " from: " + uriBuilder);
-
-      HttpRequest request = HttpRequest.newBuilder()
-              .uri(uriBuilder.build().toURL().toURI())
-              .header("Authorization", "Key " + this.config.getQuery().getApiKey())
-              .build();
-      HttpClient client = HttpClient.newHttpClient();
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-      if (response.statusCode() != 200) {
-        throw new Exception(String.format("Response from remote query was %s: %s", response.statusCode(), response.body()));
-      }
-
-      String responseBody = response.body();
-      Bundle bundle = (Bundle) this.ctx.newJsonParser().parseResource(responseBody);
-
-      List<QueryResponse> queryResponses = new ArrayList<>();
-      QueryResponse queryResponse = new QueryResponse();
-      for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
-        if (e.getResource().getResourceType() == ResourceType.Patient) {
-          queryResponse = new QueryResponse(e.getResource().getIdElement().getIdPart(), new Bundle());
-          queryResponses.add(queryResponse);
-        }
-
-        if (queryResponse.getBundle() != null) {
-          queryResponse.getBundle().addEntry(e);
-        }
-      }
-
-      return queryResponses;
-    } catch (Exception ex) {
-      logger.error("Error retrieving remote patient data: " + ex.getMessage());
-    }
-
-    return null;
   }
 
 
