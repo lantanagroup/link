@@ -71,7 +71,7 @@ public class AuthInterceptor extends AuthorizationInterceptor {
                 ruleBuilder.allow().operation().named(perm).onInstancesOfType(resourceClass).andAllowAllResponses().andThen();
                 continue;
               }
-              switch (perm.toLowerCase()) {
+              switch (perm.toLowerCase(Locale.ENGLISH)) {
                 case "read":
                   ruleBuilder.allow().read().resourcesOfType(resourceType).withAnyId().andThen();
                   break;

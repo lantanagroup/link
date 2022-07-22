@@ -8,6 +8,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionIn
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class JpaHibernatePropertiesProvider extends HibernatePropertiesProvider {
@@ -17,8 +18,12 @@ public class JpaHibernatePropertiesProvider extends HibernatePropertiesProvider 
   public JpaHibernatePropertiesProvider(LocalContainerEntityManagerFactoryBean myEntityManagerFactory) {
     DataSource connection = myEntityManagerFactory.getDataSource();
     try {
-      dialect = new StandardDialectResolver()
-              .resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(connection.getConnection().getMetaData()));
+      assert connection != null;
+      try(Connection conn = connection.getConnection()) {
+
+        dialect = new StandardDialectResolver()
+                .resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(conn.getMetaData()));
+      }
     } catch (SQLException sqlException) {
       throw new ConfigurationException(sqlException.getMessage(), sqlException);
     }

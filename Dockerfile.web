@@ -1,9 +1,13 @@
 ### STAGE 1: Build ###
 FROM node:14.15-alpine AS build
+
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+
 WORKDIR /usr/src/app
 COPY ./web/package.json ./
 COPY ./web/package-lock.json ./
-RUN apk add python alpine-sdk
+RUN apk add python alpine-sdk=alpine=3.0
 RUN npm ci
 RUN npm install -g @angular/cli
 COPY web/ .
