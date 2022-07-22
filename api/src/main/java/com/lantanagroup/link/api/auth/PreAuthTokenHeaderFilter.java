@@ -5,6 +5,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
@@ -19,10 +20,12 @@ import java.io.IOException;
 public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessingFilter {
   private String authHeaderName;
   private LinkCredentials linkCredentials;
+  private ApiConfig apiConfig;
 
-  public PreAuthTokenHeaderFilter(String authHeaderName, LinkCredentials linkCredentials) {
+  public PreAuthTokenHeaderFilter(String authHeaderName, LinkCredentials linkCredentials, ApiConfig apiConfig) {
     this.authHeaderName = authHeaderName;
     this.linkCredentials = linkCredentials;
+    this.apiConfig = apiConfig;
   }
 
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -31,7 +34,9 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     }
     String ipAddress = FhirHelper.getRemoteAddress((HttpServletRequest) request);
     String authHeader = ((HttpServletRequest) request).getHeader("Authorization");
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+    //if configured, check to make sure the IP address of the request matches the IP address stored in the jwt token
+    if (apiConfig.getCheckIpAddress() && authHeader != null && authHeader.startsWith("Bearer ")) {
+      logger.info("Validating the requesting IP address against the token IP address.");
       DecodedJWT jwt = JWT.decode(authHeader.substring(7));
       if (!jwt.getClaim("ip").isNull() && !"0:0:0:0:0:0:0:1(0:0:0:0:0:0:0:1)".equals(ipAddress) && !jwt.getClaim("ip").asString().equals(ipAddress)) {
         throw new JWTVerificationException("IP Address does not match.");
