@@ -18,7 +18,6 @@ import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
 import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.datastore.DataStoreConfig;
-import com.lantanagroup.link.datastore.auth.AuthInterceptor;
 import com.lantanagroup.link.datastore.auth.UserInterceptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
@@ -111,8 +110,7 @@ public class JpaRestfulServer extends RestfulServer {
     loggingInterceptor.setLogExceptions(true);
     this.registerInterceptor(loggingInterceptor);
 
-    // this.registerInterceptor(new UserInterceptor(dataStoreConfig.getIssuer(), dataStoreConfig.getAuthJwksUrl()));
-    // this.registerInterceptor(new AuthInterceptor(dataStoreConfig));
+    this.registerInterceptor(new UserInterceptor(this.dataStoreConfig));
   }
 
   @Bean

@@ -11,6 +11,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 /**
  * Sets the security for the datastore component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
@@ -28,20 +29,26 @@ public class DataStoreSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    // PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
-    // authFilter.setAuthenticationManager(new LinkAuthManager(this.config.getIssuer(), this.config.getAuthJwksUrl()));
+    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
+
+    String issuer = this.config.getOauth() != null ? this.config.getOauth().getIssuer() : null;
+    String authJwksUrl = this.config.getOauth() != null ? this.config.getOauth().getAuthJwksUrl() : null;
+
+    authFilter.setAuthenticationManager(new LinkAuthManager(issuer, authJwksUrl, this.config.getBasicAuthUsers()));
     http
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
             .csrf().disable()
-            .cors();
-    // http
-    //         .authorizeRequests()
-    //         .antMatchers(HttpMethod.OPTIONS, "/**")
-    //         .permitAll()
-    //         .and()
-    //         .antMatcher("/**")
-    //         .addFilter(authFilter)
-    //         .authorizeRequests()
-    //         .anyRequest()
-    //         .authenticated();
+            .cors().and()
+            .authorizeRequests()
+            .antMatchers(HttpMethod.OPTIONS, "/**")
+            .permitAll()
+            .and()
+            .antMatcher("/**")
+            .addFilter(authFilter)
+            .authorizeRequests()
+            .anyRequest()
+            .authenticated();
   }
 }
