@@ -59,8 +59,8 @@ public class ReportGeneratorTests {
     List patientIds = new ArrayList();
     patientIds.add("73742177-JAN21");
     ReportGenerator generator = new ReportGenerator(context, criteria, new ApiConfig(), user, reportAggregator);
-    List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
-    generator.store(measureReports, criteria, context, null);
+    //List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
+    //generator.store(measureReports, criteria, context, null);
   }
 
   @Test

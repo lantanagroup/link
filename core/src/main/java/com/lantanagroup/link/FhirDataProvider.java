@@ -160,6 +160,16 @@ public class FhirDataProvider {
     return report;
   }
 
+  public Bundle getBundleById(String bundleId) {
+    Bundle report = this.client
+            .read()
+            .resource(Bundle.class)
+            .withId(bundleId)
+            .execute();
+
+    return report;
+  }
+
   public Bundle getMeasureReportsByIds(List<String> reportIds) {
     Bundle response = this.client
             .search()

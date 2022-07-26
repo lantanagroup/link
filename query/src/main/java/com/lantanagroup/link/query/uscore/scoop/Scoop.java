@@ -9,13 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.List;
 
 @Getter
 @Component
 public abstract class Scoop {
 	protected static final Logger logger = LoggerFactory.getLogger(Scoop.class);
-	protected List<PatientData> patientData;
+	protected PatientData patientData;
 	protected Date reportDate = null;
 
 	public static Bundle rawSearch(IGenericClient fhirClient, String query) {

@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -18,7 +19,7 @@ public abstract class GenericAggregator implements IReportAggregator {
   @Autowired
   private ApiConfig config;
 
-  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> patientMeasureReports);
+  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientsOfInterest);
 
   private void setSubject(MeasureReport masterMeasureReport) {
     if (this.config.getMeasureLocation() != null) {
@@ -54,7 +55,7 @@ public abstract class GenericAggregator implements IReportAggregator {
   }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context, List<MeasureReport> patientMeasureReports) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
     masterMeasureReport.setId(context.getReportId());
@@ -65,7 +66,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
     masterMeasureReport.setMeasure(context.getMeasure().getUrl());
 
-    this.aggregatePatientReports(masterMeasureReport, patientMeasureReports);
+    this.aggregatePatientReports(masterMeasureReport, context.getPatientsOfInterest());
 
     this.createGroupsFromMeasure(masterMeasureReport, context);
 

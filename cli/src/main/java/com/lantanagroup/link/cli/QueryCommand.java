@@ -1,29 +1,20 @@
 package com.lantanagroup.link.cli;
 
-import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.QueryResponse;
-import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.apache.http.client.HttpResponseException;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,25 +68,25 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Executing query");
 
-      List<QueryResponse> queryResponses = query.execute(patientsOfInterest, resourceTypesList, measureId);
+      query.execute(patientsOfInterest, "", resourceTypesList, measureId);
 
-      if (queryResponses != null) {
-        for (int i = 0; i < queryResponses.size(); i++) {
-          QueryResponse queryResponse = queryResponses.get(i);
-          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(queryResponse.getBundle());
-
-          if (Strings.isNotEmpty(output)) {
-            String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
-            try(FileOutputStream fos = new FileOutputStream(file)) {
-              fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
-            }
-            logger.info("Stored patient data XML to " + file);
-          } else {
-            System.out.println("Patient " + (i + 1) + " Bundle XML:");
-            System.out.println(patientDataXml);
-          }
-        }
-      }
+//      if (queryResponses != null) {
+//        for (int i = 0; i < queryResponses.size(); i++) {
+//          QueryResponse queryResponse = queryResponses.get(i);
+//          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(queryResponse.getBundle());
+//
+//          if (Strings.isNotEmpty(output)) {
+//            String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
+//            try(FileOutputStream fos = new FileOutputStream(file)) {
+//              fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
+//            }
+//            logger.info("Stored patient data XML to " + file);
+//          } else {
+//            System.out.println("Patient " + (i + 1) + " Bundle XML:");
+//            System.out.println(patientDataXml);
+//          }
+//        }
+//      }
 
       logger.info("Done");
     } catch (Exception ex) {

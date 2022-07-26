@@ -3,9 +3,10 @@ package com.lantanagroup.link.api;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.model.QueryResponse;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,8 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config, patientId);
+  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
@@ -47,15 +48,15 @@ public class MeasureEvaluator {
     try {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
 
-
-      QueryResponse patientData = context.getPatientData().stream().filter(e -> e.getPatientId() == patientId).findFirst().get();
-
+      // get patient bundle from the fhirserver
+      FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getFhirServerStore());
+      IBaseResource patientBundle = fhirStoreProvider.getBundleById(context.getReportId() + "-" + patientId.hashCode());
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
       parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-      parameters.addParameter().setName("additionalData").setResource(patientData.getBundle());
-      if(!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
+      parameters.addParameter().setName("additionalData").setResource((Bundle) patientBundle);
+      if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
         Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
         parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
         logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
