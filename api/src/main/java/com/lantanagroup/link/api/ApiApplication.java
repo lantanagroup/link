@@ -1,6 +1,8 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
@@ -113,7 +115,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Bean()
   public FhirDataProvider getProvider() {
-    return new FhirDataProvider(config.getFhirServerStore());
+    return new FhirDataProvider(config.getDataStore());
   }
 
   /**

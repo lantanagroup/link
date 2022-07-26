@@ -7,6 +7,10 @@ spring:
   batch:
     job:
       enabled: false
+  flyway:
+    enabled: false
+    check-location: false
+    baselineOnMigrate: true
 datastore:
   datasource:
     url: 'jdbc:h2:file:./target/database/h2'

@@ -5,10 +5,11 @@ swagger:
     - openid
     - profile
 api:
-  fhir-server-store:
+  data-store:
+    base-url: ''
+    username: ''
+    password: ''
   auth-jwks-url:
-  Data-Processor:
-    csv: GenericCSVProcessor
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider

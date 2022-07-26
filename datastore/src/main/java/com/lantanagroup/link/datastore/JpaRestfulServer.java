@@ -40,6 +40,9 @@ public class JpaRestfulServer extends RestfulServer {
   ApplicationContext applicationContext;
 
   @Autowired
+  ISearchParamRegistry searchParamRegistry;
+
+  @Autowired
   IFhirSystemDao fhirSystemDao;
 
   @Autowired
@@ -64,7 +67,6 @@ public class JpaRestfulServer extends RestfulServer {
   ResourceProviderFactory resourceProviders;
 
   private FhirContext fhirContext;
-  private SearchParamRegistryImpl searchParamRegistry = new SearchParamRegistryImpl();
   private ResourceChangeListenerRegistryImpl resourceChangeListenerRegistry = new ResourceChangeListenerRegistryImpl();
   private InMemoryResourceMatcher inMemoryResourceMatcher = new InMemoryResourceMatcher();
 
@@ -81,12 +83,6 @@ public class JpaRestfulServer extends RestfulServer {
     this.resourceChangeListenerRegistry.setFhirContext(this.fhirContext);
     this.resourceChangeListenerRegistry.setResourceChangeListenerCacheFactory(this.applicationContext.getBean(ResourceChangeListenerCacheFactory.class));
     this.resourceChangeListenerRegistry.setInMemoryResourceMatcher(new InMemoryResourceMatcher());
-
-    this.searchParamRegistry.setFhirContext(this.fhirContext);
-    this.searchParamRegistry.setModelConfig(this.modelConfig);
-    this.searchParamRegistry.setResourceChangeListenerRegistry(this.resourceChangeListenerRegistry);
-    this.searchParamRegistry.registerListener();
-    this.searchParamRegistry.handleInit(new ArrayList<>());
 
     this.registerProviders(this.resourceProviders.createProviders());
     this.registerProvider(jpaSystemProvider);
@@ -111,11 +107,6 @@ public class JpaRestfulServer extends RestfulServer {
     this.registerInterceptor(loggingInterceptor);
 
     this.registerInterceptor(new UserInterceptor(this.dataStoreConfig));
-  }
-
-  @Bean
-  public ISearchParamRegistry searchParamRegistry() {
-    return this.searchParamRegistry;
   }
 
   @Primary

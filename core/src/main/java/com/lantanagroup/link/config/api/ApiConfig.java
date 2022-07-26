@@ -35,7 +35,7 @@ public class ApiConfig {
    * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
    */
   @Getter
-  ApiMeasureLocationConfig measureLocation;
+  private ApiMeasureLocationConfig measureLocation;
 
   /**
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
@@ -43,17 +43,15 @@ public class ApiConfig {
   private Boolean skipInit = false;
 
   /**
-   * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
+   * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
    */
-  @NotNull
-  private String fhirServerStore;
+  @Getter @NotNull
+  private ApiDataStoreConfig dataStore;
 
   /**
    * <strong>evaluation-service</strong><br>The measure evaluation service (CQF-Ruler) installation that is to be used to evaluate patient data against measure logic.
    */
-  @Getter
-  @Setter
-  @NotNull
+  @Getter @Setter @NotNull
   private String evaluationService;
 
   /**
