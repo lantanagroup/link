@@ -13,6 +13,7 @@ variables:
   db_user: $(DATABASE_USER)
   db_pass: $(DATABASE_PASS)
   ns: $(NAMESPACE)
+  deploy_fhir: $(DEPLOYMENT_FHIR)
 
 steps:
 - task: Kubernetes@1
