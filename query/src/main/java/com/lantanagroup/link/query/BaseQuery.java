@@ -24,8 +24,10 @@ public class BaseQuery {
   @Setter
   private IGenericClient fhirQueryClient;
 
+
   @Autowired
   protected QueryConfig queryConfig;
+
 
   public FhirContext getFhirContext() {
     if (this.fhirContext != null) {
@@ -61,4 +63,6 @@ public class BaseQuery {
     this.fhirQueryClient = fhirQueryClient;
     return fhirQueryClient;
   }
+
+
 }

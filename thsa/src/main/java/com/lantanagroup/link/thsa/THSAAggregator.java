@@ -4,6 +4,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericAggregator;
 import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -61,12 +63,12 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context, List<MeasureReport> patientMeasureReports) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException {
 
     HashMap usedInventoryMap = new HashMap();
     HashMap totalInventoryMap = new HashMap();
     // store the used counts
-    MeasureReport measureReport = super.generate(criteria, context, patientMeasureReports);
+    MeasureReport measureReport = super.generate(criteria, context);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
@@ -191,19 +193,23 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  protected void aggregatePatientReports(MeasureReport
-                                                 masterMeasureReport, List<MeasureReport> patientMeasureReports) {
-    for (MeasureReport patientMeasureReport : patientMeasureReports) {
-      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
-        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-          // Check if group and population code exist in master, if not create
-          MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
-          // Add population.count to the master group/population count
-          if (measureGroupPopulation != null) {
-            measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
+  protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
+    List<String> reportIds = patientOfInterestModelList.stream().map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
+    Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
+    patientMeasureReportsBundle.getEntry().parallelStream().forEach(bundleEntry -> {
+      if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {
+        MeasureReport patientMeasureReport = (MeasureReport) bundleEntry.getResource();
+        for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
+          for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+            // Check if group and population code exist in master, if not create
+            MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
+            // Add population.count to the master group/population count
+            if (measureGroupPopulation != null) {
+              measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
+            }
           }
         }
       }
-    }
+    });
   }
 }
