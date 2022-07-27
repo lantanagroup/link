@@ -79,6 +79,13 @@ public class ApiConfig {
   private String issuer;
 
   /**
+   * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request
+   */
+  @Getter
+  @Setter
+  private Boolean checkIpAddress = true;
+
+  /**
    * <strong>api.downloader</strong><br>The class used to download reports
    */
   @NotNull
