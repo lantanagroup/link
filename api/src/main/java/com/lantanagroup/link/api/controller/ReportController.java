@@ -262,59 +262,21 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private List<QueryResponse> queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
+  private void queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
     try {
       List<QueryResponse> patientQueryResponses = null;
-      //List<QueryResponse> patientQueryResponses = new ArrayList<>();
 
       // Get the data
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      patientQueryResponses = query.execute(patientsOfInterest, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
-
-      // De-duplicate patients now that we know all of their logical ids
-      for (int i = patientQueryResponses.size() - 1; i >= 0; i--) {
-        QueryResponse current = patientQueryResponses.get(i);
-        if (patientQueryResponses.stream().anyMatch(p -> p != current && p.getPatientId().equals(current.getPatientId()))) {
-          logger.info(String.format("Patient %s queried multiple times, removing duplicate patient", current.getPatientId()));
-          patientQueryResponses.remove(current);
-        }
-      }
+      query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
       triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
-
-      if (patientQueryResponses == null) {
-        throw new Exception("patientDataBundle is null");
-      }
-
       // TODO: Should this be here? Or should this be in the ApplyConceptMaps class?
       context.setConceptMaps(getConceptMaps());
 
-      // store patient data
-      for (QueryResponse patientQueryResponse : patientQueryResponses) {
-        // Make sure the bundle is a batch - it will load as much as it can
-        patientQueryResponse.getBundle().setType(Bundle.BundleType.BATCH);
-
-        patientQueryResponse.getBundle().getEntry().forEach(entry ->
-                entry.getRequest()
-                        .setMethod(Bundle.HTTPVerb.PUT)
-                        .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
-        );
-
-        // Make sure the patient bundle returned by query component has an ID in the correct format
-        patientQueryResponse.getBundle().setId(reportId + "-" + patientQueryResponse.getPatientId().hashCode());
-
-        // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
-        patientQueryResponse.getBundle().getMeta().addTag(Constants.MainSystem, "patient-data", null);
-
-        // Store the data
-        logger.info("Storing patient data bundle Bundle/" + patientQueryResponse.getBundle().getId());
-        this.getFhirDataProvider().updateResource(patientQueryResponse.getBundle());
-      }
-
       triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
-      return patientQueryResponses;
     } catch (Exception ex) {
       String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
       logger.error(msg);
@@ -383,9 +345,10 @@ public class ReportController extends BaseController {
       List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), context.getReportDefBundle());
 
       // Scoop the data for the patients and store it
-      context.getPatientData().addAll(this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id));
+      this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id);
 
-      if(context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
+
+      if (context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
         logger.error(String.format("Census list not found."));
         throw new HttpResponseException(500, "Internal Server Error");
       }
@@ -414,14 +377,14 @@ public class ReportController extends BaseController {
 
       triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
 
-      List<MeasureReport> reports = generator.generate(criteria, context, context.getPatientData());
+      generator.generate(criteria, context);
 
       triggerEvent(EventTypes.AfterMeasureEval, criteria, context);
 
 
       triggerEvent(EventTypes.BeforeReportStore, criteria, context);
 
-      generator.store(reports, criteria, context, existingDocumentReference);
+      generator.store(criteria, context, existingDocumentReference);
 
       triggerEvent(EventTypes.AfterReportStore, criteria, context);
 

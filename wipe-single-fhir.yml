@@ -13,29 +13,9 @@ variables:
   db_user: $(DATABASE_USER)
   db_pass: $(DATABASE_PASS)
   ns: $(NAMESPACE)
-  deploy_api: $(DEPLOYMENT_API)
   deploy_fhir: $(DEPLOYMENT_FHIR)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
-
-- task: Kubernetes@1
-  inputs:
-    connectionType: 'Azure Resource Manager'
-    azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
-    azureResourceGroup: 'nhsnlink-rg'
-    kubernetesCluster: 'nhsnlink-aks'
-    command: 'scale'
-    arguments: 'deployment $(deploy_api) --replicas=0 -n $(ns)'
-    secretType: 'dockerRegistry'
-    containerRegistryType: 'Azure Container Registry'
-
 - task: Kubernetes@1
   inputs:
     connectionType: 'Azure Resource Manager'
@@ -71,16 +51,5 @@ steps:
     kubernetesCluster: 'nhsnlink-aks'
     command: 'scale'
     arguments: 'deployment $(deploy_fhir) --replicas=1 -n $(ns)'
-    secretType: 'dockerRegistry'
-    containerRegistryType: 'Azure Container Registry'
-
-- task: Kubernetes@1
-  inputs:
-    connectionType: 'Azure Resource Manager'
-    azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
-    azureResourceGroup: 'nhsnlink-rg'
-    kubernetesCluster: 'nhsnlink-aks'
-    command: 'scale'
-    arguments: 'deployment $(deploy_api) --replicas=1 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'

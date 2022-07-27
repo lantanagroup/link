@@ -6,7 +6,6 @@ import lombok.Setter;
 import org.hl7.fhir.r4.model.*;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -23,7 +22,6 @@ public class ReportContext {
   private String reportId;
   private String inventoryId;
   private MeasureReport measureReport;
-  private HashMap<String, Object> additional = new HashMap<>();
   private List<QueryResponse> patientData = new ArrayList<>();
   private Measure measure;
   private List<ListResource> patientCensusLists = new ArrayList<>();
