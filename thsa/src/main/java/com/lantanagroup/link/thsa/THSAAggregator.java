@@ -1,12 +1,11 @@
 package com.lantanagroup.link.thsa;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.GenericAggregator;
-import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -196,20 +195,18 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
     List<String> reportIds = patientOfInterestModelList.stream().map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
     Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
-    patientMeasureReportsBundle.getEntry().parallelStream().forEach(bundleEntry -> {
-      if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {
-        MeasureReport patientMeasureReport = (MeasureReport) bundleEntry.getResource();
-        for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
-          for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-            // Check if group and population code exist in master, if not create
-            MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
-            // Add population.count to the master group/population count
-            if (measureGroupPopulation != null) {
-              measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
-            }
+    List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
+    for (IBaseResource patientMeasureReportResource : bundles) {
+      for (MeasureReport.MeasureReportGroupComponent group : ((MeasureReport) patientMeasureReportResource).getGroup()) {
+        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+          // Check if group and population code exist in master, if not create
+          MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
+          // Add population.count to the master group/population count
+          if (measureGroupPopulation != null) {
+            measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
           }
         }
       }
-    });
+    }
   }
 }
