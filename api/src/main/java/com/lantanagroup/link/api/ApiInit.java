@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 
+import javax.security.auth.callback.TextInputCallback;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -219,7 +220,7 @@ public class ApiInit {
             return;
           }
         } catch (Exception ex) {
-          logger.error(String.format("Error storing report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
+          logger.error(String.format("Error searching data store for report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
           return;
         }
       }
@@ -229,14 +230,25 @@ public class ApiInit {
         measureDefBundle.setId((String) null);
         measureDefBundle.setMeta(new Meta());
         measureDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        provider.createResource(measureDefBundle);
-        logger.info(String.format("Created report def bundle from URL %s as ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+
+        try {
+          provider.createResource(measureDefBundle);
+          logger.info(String.format("Created report def bundle from URL %s as ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+        } catch (Exception ex) {
+          logger.error(String.format("Error creating report definition from %s on data store due to: %s", measureDefUrl, ex.getMessage()));
+        }
       } else if (searchResults.getEntry().size() == 1) {
         Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
-        measureDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
+        String existingId = foundReportDefBundle.getIdElement().getIdPart();
+        measureDefBundle.setId(existingId);
         measureDefBundle.setMeta(foundReportDefBundle.getMeta());
-        provider.updateResource(measureDefBundle);
-        logger.info(String.format("Updated report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+
+        try {
+          provider.updateResource(measureDefBundle);
+          logger.info(String.format("Updated report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+        } catch (Exception ex) {
+          logger.error(String.format("Error updating report definition with ID %s from %s on data store due to: %s", existingId, measureDefUrl, ex.getMessage()));
+        }
       } else {
         logger.error(String.format("Found multiple report def bundles with identifier %s|%s", measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue()));
         return;
