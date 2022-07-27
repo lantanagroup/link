@@ -70,7 +70,7 @@ steps:
     azureResourceGroup: 'nhsnlink-rg'
     kubernetesCluster: 'nhsnlink-aks'
     command: 'scale'
-    arguments: 'deployment $(deploy_api) --replicas=1 -n $(ns)'
+    arguments: 'deployment $(deploy_fhir) --replicas=1 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
 
@@ -81,6 +81,6 @@ steps:
     azureResourceGroup: 'nhsnlink-rg'
     kubernetesCluster: 'nhsnlink-aks'
     command: 'scale'
-    arguments: 'deployment $(deploy_fhir) --replicas=1 -n $(ns)'
+    arguments: 'deployment $(deploy_api) --replicas=1 -n $(ns)'
     secretType: 'dockerRegistry'
     containerRegistryType: 'Azure Container Registry'
