@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -119,7 +120,7 @@ public class PatientScoop extends Scoop {
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
       ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
 
-      forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
+      List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureId);
@@ -146,12 +147,15 @@ public class PatientScoop extends Scoop {
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());
+        } finally {
+          forkJoinPool.shutdown();
         }
         return patientData;
-      }));
+      })).get().collect(Collectors.toList());
     } catch (Exception e) {
       logger.error(e.getMessage());
     }
+
     return null;
   }
 }
