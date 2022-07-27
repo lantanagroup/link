@@ -51,6 +51,11 @@
             <artifactId>hapi-fhir-structures-r4</artifactId>
             <version>${hapi.lib.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.4.0</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
