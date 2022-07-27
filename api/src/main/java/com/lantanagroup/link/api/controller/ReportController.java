@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
@@ -241,8 +242,12 @@ public class ReportController extends BaseController {
     if (this.config.getConceptMaps() != null) {
       // get it from fhirserver
       this.config.getConceptMaps().stream().forEach(concepMapId -> {
-        IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
-        conceptMapsList.add((ConceptMap) conceptMap);
+        try {
+          IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
+          conceptMapsList.add((ConceptMap) conceptMap);
+        } catch (ResourceNotFoundException ex) {
+          logger.error(String.format("ConceptMap/%s not found on data store", concepMapId));
+        }
       });
     }
     return conceptMapsList;
@@ -713,7 +718,7 @@ public class ReportController extends BaseController {
     boolean andCond = false;
     ReportBundle reportBundle = new ReportBundle();
     try {
-      String url = this.config.getFhirServerStore();
+      String url = this.config.getDataStore().getBaseUrl();
       if (bundleId != null) {
         url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
       } else {
@@ -761,12 +766,10 @@ public class ReportController extends BaseController {
         }
       }
 
-
       bundle = this.getFhirDataProvider().fetchResourceFromUrl(url);
       List<Report> lst = bundle.getEntry().parallelStream().map(Report::new).collect(Collectors.toList());
       List<String> reportIds = lst.stream().map(report -> report.getId()).collect(Collectors.toList());
       Bundle response = this.getFhirDataProvider().getMeasureReportsByIds(reportIds);
-
 
       response.getEntry().parallelStream().forEach(bundleEntry -> {
         if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {

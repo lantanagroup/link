@@ -13,6 +13,7 @@ import org.hibernate.search.backend.lucene.cfg.LuceneIndexSettings;
 import org.hibernate.search.backend.lucene.lowlevel.directory.impl.LocalFileSystemDirectoryProvider;
 import org.hibernate.search.engine.cfg.BackendSettings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -42,8 +43,8 @@ public class FhirServerConfigR4 extends BaseJavaConfigR4 {
 
   @Override
   @Bean()
-  public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-    LocalContainerEntityManagerFactoryBean retVal = super.entityManagerFactory();
+  public LocalContainerEntityManagerFactoryBean entityManagerFactory(ConfigurableListableBeanFactory myConfigurableListableBeanFactory) {
+    LocalContainerEntityManagerFactoryBean retVal = super.entityManagerFactory(myConfigurableListableBeanFactory);
     retVal.setPersistenceUnitName("HAPI_PU");
 
     try {

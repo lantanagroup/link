@@ -7,6 +7,10 @@ spring:
   batch:
     job:
       enabled: false
+  flyway:
+    enabled: false
+    check-location: false
+    baselineOnMigrate: true
 datastore:
   datasource:
     url: 'jdbc:h2:file:./target/database/h2'
@@ -14,3 +18,6 @@ datastore:
     password:
     driver-class-name: org.h2.Driver
     hibernate-dialect: org.hibernate.dialect.H2Dialect
+  basic-auth-users:
+    test-user: test-password!
+    other-test-user: other-test-password!

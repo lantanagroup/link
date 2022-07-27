@@ -49,7 +49,7 @@ public class MeasureEvaluator {
       logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
 
       // get patient bundle from the fhirserver
-      FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getFhirServerStore());
+      FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
       IBaseResource patientBundle = fhirStoreProvider.getBundleById(context.getReportId() + "-" + patientId.hashCode());
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
