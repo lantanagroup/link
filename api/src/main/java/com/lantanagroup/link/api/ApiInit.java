@@ -168,7 +168,7 @@ public class ApiInit {
 
       String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), measureDefBundle);
       if (!missingResourceTypes.equals("")) {
-        logger.error(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
+        logger.warn(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
         // return;
       }
 

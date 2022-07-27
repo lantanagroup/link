@@ -177,7 +177,7 @@ public class ReportController extends BaseController {
       } else {
         missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), reportRemoteReportDefBundle);
         if (!missingResourceTypes.equals("")) {
-          logger.error(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
+          logger.warn(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
         }
       }
       if (reportRemoteReportDefBundle != null && !missingResourceTypes.equals("")) {
@@ -198,6 +198,17 @@ public class ReportController extends BaseController {
       logger.info("Storing the resources for the measure " + criteria.getReportDefId());
       this.storeReportBundleResources(reportDefBundle, context);
       context.setReportDefBundle(reportDefBundle);
+
+      Optional<Bundle.BundleEntryComponent> measureEntry = reportDefBundle.getEntry().stream()
+              .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.Measure)
+              .findFirst();
+
+      if (!measureEntry.isPresent()) {
+        throw new Exception("Measure definition bundle does not have a Measure resource in it");
+      } else {
+        context.setMeasure((Measure) measureEntry.get().getResource());
+        context.setMeasureId(context.getMeasure().getIdElement().getIdPart());
+      }
     } catch (Exception ex) {
       logger.error("Error storing resources for the measure " + criteria.getReportDefId() + ": " + ex.getMessage());
       throw new Exception("Error storing resources for the measure: " + ex.getMessage(), ex);
@@ -346,7 +357,6 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id);
-
 
       if (context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
         logger.error(String.format("Census list not found."));
