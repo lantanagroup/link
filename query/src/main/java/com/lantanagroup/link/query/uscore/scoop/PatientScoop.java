@@ -112,15 +112,15 @@ public class PatientScoop extends Scoop {
         e.printStackTrace();
       }
     });
-
+    ForkJoinPool forkJoinPool = null;
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
       int threshold = usCoreConfig.getParallelPatients();
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
-      ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
+      forkJoinPool = new ForkJoinPool(threshold);
 
-      List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
+      forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureId);
@@ -147,13 +147,15 @@ public class PatientScoop extends Scoop {
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());
-        } finally {
-          forkJoinPool.shutdown();
         }
         return patientData;
       })).get().collect(Collectors.toList());
     } catch (Exception e) {
       logger.error(e.getMessage());
+    } finally {
+      if (forkJoinPool != null) {
+        forkJoinPool.shutdown();
+      }
     }
 
     return null;
