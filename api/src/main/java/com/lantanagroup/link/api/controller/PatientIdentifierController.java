@@ -46,10 +46,14 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving RR FHIR CSV. Parsing...");
     try {
       if (reportTypeId == null || reportTypeId.isBlank()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report Type should be provided.");
+        String msg = "Report Type should be provided.";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
       if (!reportTypeId.contains("|")) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report type should be of format: system|value");
+        String msg = "Report type should be of format: system|value";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
       List<CsvEntry> list = this.getCsvEntries(csvContent);
         Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
@@ -88,10 +92,12 @@ public class PatientIdentifierController extends BaseController {
 
   private void checkMeasureIdentifier(ListResource list) {
     String system = list.getIdentifier().get(0).getSystem();
-    String value = list.getIdentifier().get(0).getValue();;
+    String value = list.getIdentifier().get(0).getValue();
     Bundle bundle = this.getFhirDataProvider().searchReportDefinition(system, value);
     if(bundle.getEntry().size() < 1) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report not Found.");
+      String msg = String.format("Measure %s (%s) not found on data store", value, system);
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
   }
 
@@ -105,37 +111,51 @@ public class PatientIdentifierController extends BaseController {
     while ((line = csvReader.readNext()) != null) {
       if (line.length > 0) {
         if (line[0] == null || line[0].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier is required.");
+          String msg = "Patient Identifier is required in CSV census import.";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         if (!line[0].contains("|")) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Patient Identifier should be of format: system|value");
+          String msg = "Patient Identifier in CSV census import should be of format: system|value";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         if (line[1] == null || line[1].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date is required.");
+          String msg = "Start date is required in CSV census import.";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         SimpleDateFormat formatStartDate = new SimpleDateFormat("yyyy-MM-dd");
         try {
           formatStartDate.setLenient(false);
           formatStartDate.parse(line[1]);
         } catch (ParseException ex) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid start date. The start date format should be: YYYY-mm-dd.");
+          String msg = "Invalid start date in CSV census import. The start date format should be: YYYY-mm-dd.";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         if (line[2] == null || line[1].isBlank()) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date is required.");
+          String msg = "End date is required in CSV census import.";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         SimpleDateFormat formatEndDate = new SimpleDateFormat("yyyy-MM-dd");
         try {
           formatEndDate.setLenient(false);
           formatEndDate.parse(line[2]);
         } catch (ParseException ex) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid end date. The end date format should be: YYYY-mm-dd.");
+          String msg = "Invalid end date format in CSV census import. The end date format should be: YYYY-mm-dd.";
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
         CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3], line[4]);
         list.add(entry);
       }
     }
     if (list.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The file should have at least one entry with data.");
+      String msg = "The file should have at least one entry with data in CSV census import.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
     //list.setExtension();
     return list;
@@ -151,7 +171,9 @@ public class PatientIdentifierController extends BaseController {
       List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
 
       if (identifierList.isEmpty()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Identifier is not present.");
+        String msg = "Census List is missing identifier";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
       // TODO: Check that the identifier matches a measure loaded in the system
@@ -159,21 +181,29 @@ public class PatientIdentifierController extends BaseController {
       Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
 
       if (applicablePeriodExt == null) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension is required");
+        String msg = "Census list applicable-period extension is required";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
       Period applicablePeriod = applicablePeriodExt.getValue().castToPeriod(applicablePeriodExt.getValue());
 
       if (applicablePeriod == null) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period extension must have a value of type Period");
+        String msg = "applicable-period extension must have a value of type Period";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
       if (!applicablePeriod.hasStart()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have start");
+        String msg = "applicable-period.start must have start";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
       if (!applicablePeriod.hasEnd()) {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "applicable-period.start must have end");
+        String msg = "applicable-period.start must have end";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
       //system and value represents the measure intended for this patient id list
@@ -219,7 +249,9 @@ public class PatientIdentifierController extends BaseController {
         this.getFhirDataProvider().updateResource(existingList);
       }
     } else {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only \"List\" resources are allowed");
+      String msg = "Only \"List\" resources are allowed";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     } /* else {
       this.getFhirDataProvider().createResource(resource);
     } */
