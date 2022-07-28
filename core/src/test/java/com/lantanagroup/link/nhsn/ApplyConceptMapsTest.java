@@ -2,21 +2,16 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.checkerframework.checker.units.qual.A;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
 
 public class ApplyConceptMapsTest {
 
@@ -78,7 +73,7 @@ public class ApplyConceptMapsTest {
     List<Coding> codes = ResourceIdChanger.findCodings(context.getPatientData().get(0));
     int codeExtend = codes.get(0).getExtension().size();
 
-    applyConceptMaps.execute(reportCriteria, context);
+    applyConceptMaps.execute(reportCriteria, context, null, null);
     List<Coding> codes2 = ResourceIdChanger.findCodings(context.getPatientData().get(0));
     Assert.assertEquals(codes2.get(0).getExtension().size(), codeExtend + 1);
   }
