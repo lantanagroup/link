@@ -14,7 +14,7 @@ WORKDIR /tmp
 RUN mvn -pl api -am install
 
 FROM tomcat:jdk15-openjdk-oracle
-RUN adduser -U dummy
+RUN adduser -U -d ${CATALINA_HOME} -s /bin/bash dummy && chown -R dummy:dummy ${CATALINA_HOME}
 USER dummy:dummy
 COPY --from=build /tmp/api/target/link-api.war /usr/local/tomcat/webapps/ROOT.war
 EXPOSE 8080
