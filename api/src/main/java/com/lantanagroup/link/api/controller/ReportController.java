@@ -284,8 +284,7 @@ public class ReportController extends BaseController {
       query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
       triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
-      // TODO: Should this be here? Or should this be in the ApplyConceptMaps class?
-      context.setConceptMaps(getConceptMaps());
+
 
       triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
     } catch (Exception ex) {
@@ -344,6 +343,7 @@ public class ReportController extends BaseController {
         id = existingDocumentReference.getMasterIdentifier().getValue();
         triggerEvent(EventTypes.OnRegeneration, criteria, context);
       }
+      context.setReportId(id);
 
       triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
 
@@ -366,8 +366,6 @@ public class ReportController extends BaseController {
       triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
-
-      context.setReportId(id);
 
       context.setInventoryId(thsaConfig.getDataMeasureReportId());
 
@@ -1154,7 +1152,7 @@ public class ReportController extends BaseController {
         try {
           Class<?> clazz = Class.forName(className);
           Object myObject = clazz.newInstance();
-          ((IReportGenerationEvent) myObject).execute(criteria, context);
+          ((IReportGenerationEvent) myObject).execute(criteria, context, config, getFhirDataProvider());
         } catch (NoClassDefFoundError ex) {
           logger.error(String.format("Error in triggerEvent for event %s and class %s: ", eventType.toString(), className) + ex.getMessage());
         }
