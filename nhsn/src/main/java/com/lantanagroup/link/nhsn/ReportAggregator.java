@@ -45,7 +45,7 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
   private void addMeasureReportReferences(MeasureReport patientMeasureReport, ListResource listResource) {
     ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
     listEntry.setItem(new Reference());
-    listEntry.getItem().setReference("MeasureReport/" + patientMeasureReport.getId());
+    listEntry.getItem().setReference("MeasureReport/" + patientMeasureReport.getIdElement().getIdPart());
     listResource.addEntry(listEntry);
   }
 
