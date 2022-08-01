@@ -1,13 +1,11 @@
 package com.lantanagroup.link.cli;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.QueryResponse;
-import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
@@ -15,6 +13,8 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.apache.http.client.HttpResponseException;
 import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
@@ -36,6 +36,7 @@ public class QueryCommand extends BaseShellCommand {
     return List.of(
             Query.class,
             QueryConfig.class,
+            ApiDataStoreConfig.class,
             USCoreConfig.class,
             PatientScoop.class,
             EpicAuth.class,
@@ -52,7 +53,10 @@ public class QueryCommand extends BaseShellCommand {
       this.registerBeans();
 
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
-      if(config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
+
+      ApiDataStoreConfig dataStoreConfig = this.applicationContext.getBean(ApiDataStoreConfig.class);
+
+      if (config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
         logger.error("Error, Query URL requires https");
         throw new HttpResponseException(500, "Internal Server Error");
       }
@@ -76,17 +80,17 @@ public class QueryCommand extends BaseShellCommand {
       }
 
       logger.info("Executing query");
-
-      List<QueryResponse> queryResponses = query.execute(patientsOfInterest, resourceTypesList, measureId);
-
-      if (queryResponses != null) {
-        for (int i = 0; i < queryResponses.size(); i++) {
-          QueryResponse queryResponse = queryResponses.get(i);
-          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(queryResponse.getBundle());
-
+      String masterReportid = "1847296839";
+      query.execute(patientsOfInterest, masterReportid, resourceTypesList, measureId);
+      FhirDataProvider fhirDataProvider = new FhirDataProvider(dataStoreConfig);
+      for (int i = 0; i < patientsOfInterest.size(); i++) {
+        logger.info("Patient is: " + patientsOfInterest.get(i).getId());
+        try {
+          IBaseResource patientBundle = fhirDataProvider.getBundleById(masterReportid + "-" + patientsOfInterest.get(i).getId().hashCode());
+          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString((Bundle) patientBundle);
           if (Strings.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
-            try(FileOutputStream fos = new FileOutputStream(file)) {
+            try (FileOutputStream fos = new FileOutputStream(file)) {
               fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));
             }
             logger.info("Stored patient data XML to " + file);
@@ -94,6 +98,8 @@ public class QueryCommand extends BaseShellCommand {
             System.out.println("Patient " + (i + 1) + " Bundle XML:");
             System.out.println(patientDataXml);
           }
+        } catch (Exception ex) {
+          logger.error("Exception is: " + ex.getMessage());
         }
       }
 

@@ -2,12 +2,13 @@ package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,15 +40,18 @@ public class PatientScoop extends Scoop {
   @Autowired
   private USCoreConfig usCoreConfig;
 
-  public void execute(List<PatientOfInterestModel> pois, List<String> resourceTypes, String measureId) throws Exception {
+  @Autowired
+  protected FhirDataProvider fhirDataProvider;
+
+  public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, String measureId) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.patientData = this.loadPatientData(pois, resourceTypes, measureId);
+    this.loadPatientData(pois, reportId, resourceTypes, measureId);
   }
 
-  private synchronized PatientData loadPatientData(Patient patient, List<String> resourceTypes, String measureId) {
+  private synchronized PatientData loadPatientData(Patient patient, String reportId, List<String> resourceTypes, String measureId) {
     if (patient == null) return null;
 
     try {
@@ -61,7 +65,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public List<PatientData> loadPatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, String measureId) {
+  public PatientData loadPatientData(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, String measureId) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -80,7 +84,8 @@ public class PatientScoop extends Scoop {
                   .resource(Patient.class)
                   .withId(id)
                   .execute();
-         patientMap.put(poi.getReference(), patient);
+          patientMap.put(poi.getReference(), patient);
+          poi.setId(patient.getIdElement().getIdPart());
         } else if (poi.getIdentifier() != null) {
           String searchUrl = "Patient?identifier=" + poi.getIdentifier();
 
@@ -94,36 +99,65 @@ public class PatientScoop extends Scoop {
           } else {
             Patient patient = (Patient) response.getEntryFirstRep().getResource();
             patientMap.put(poi.getIdentifier(), patient);
+            poi.setId(patient.getIdElement().getIdPart());
           }
         }
-      } catch (AuthenticationException ae) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ae.getResponseBody());
-        ae.printStackTrace();
+
+      } catch (ResourceNotFoundException ex) {
+        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
+      } catch (AuthenticationException ex) {
+        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
       } catch (Exception e) {
         logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to unexpected exception");
         e.printStackTrace();
       }
     });
-
+    ForkJoinPool forkJoinPool = null;
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
       int threshold = usCoreConfig.getParallelPatients();
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
-      ForkJoinPool forkJoinPool = new ForkJoinPool(threshold);
+      forkJoinPool = new ForkJoinPool(threshold);
 
-      List<PatientData> patientDataList = forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
+      forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = this.loadPatientData(patient, resourceTypes, measureId);
+        PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureId);
+        Bundle patientBundle = patientData.getBundleTransaction();
+        // store the data
+        try {
+          patientBundle.setType(Bundle.BundleType.BATCH);
+
+          patientBundle.getEntry().forEach(entry ->
+                  entry.getRequest()
+                          .setMethod(Bundle.HTTPVerb.PUT)
+                          .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
+          );
+
+          // Make sure the patient bundle returned by query component has an ID in the correct format
+          patientBundle.setId(reportId + "-" + patient.getIdElement().getIdPart().hashCode());
+
+          // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
+          patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
+
+          // Store the data
+          logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
+          this.fhirDataProvider.updateResource(patientBundle);
+          logger.debug("After patient data");
+        } catch (Exception ex) {
+          logger.info("Exception is: " + ex.getMessage());
+        }
         return patientData;
       })).get().collect(Collectors.toList());
-      logger.info("Patient Data List count: " + patientDataList.size());
-      return patientDataList;
     } catch (Exception e) {
       logger.error(e.getMessage());
+    } finally {
+      if (forkJoinPool != null) {
+        forkJoinPool.shutdown();
+      }
     }
 
-    return new ArrayList<>();
+    return null;
   }
 }

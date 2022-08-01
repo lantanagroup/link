@@ -52,15 +52,17 @@ public class PatientData {
         HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
 
         //check if queryParameters exist in config, if not just load patient without observations
-        if(queryParameters != null && !queryParameters.isEmpty()) {
-          //this was written in a way that if the resource equals check was removed, it would work for other resource types
-          this.usCoreConfig.getQueryParameters().get(measureId).stream().forEach(queryParams -> {
-            for (USCoreQueryParametersResourceParameterConfig param: queryParams.getParameters()) {
-              for (String paramValue: param.getValues()) {
-                queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId);
+        if (queryParameters != null && !queryParameters.isEmpty()) {
+          if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
+            //this was written in a way that if the resource equals check was removed, it would work for other resource types
+            this.usCoreConfig.getQueryParameters().get(measureId).stream().forEach(queryParams -> {
+              for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
+                for (String paramValue : param.getValues()) {
+                  queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId);
+                }
               }
-            }
-          });
+            });
+          }
         }
         else {
           logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));

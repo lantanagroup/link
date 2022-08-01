@@ -15,7 +15,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -133,7 +132,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service");
+        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -432,8 +431,7 @@ public class OAuth2Helper {
     } catch(JWTVerificationException e){
       //Invalid signature/claims
       throw new JWTVerificationException(e.getMessage());
-    }
-    catch(Exception e) {
+    } catch(Exception e) {
       logger.error(e.getMessage());
       return null;
       //throw new Exception(e.getMessage());
@@ -453,7 +451,7 @@ public class OAuth2Helper {
     return noRoles;
   }
 
-  public static String getToken(FHIRSenderOAuthConfig authConfig, CloseableHttpClient client) throws Exception {
+  public static String getToken(LinkOAuthConfig authConfig, CloseableHttpClient client) throws Exception {
     String token = "";
 
     if (authConfig != null && authConfig.hasCredentialProperties()) {

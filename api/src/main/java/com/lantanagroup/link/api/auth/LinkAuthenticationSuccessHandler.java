@@ -23,7 +23,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
   public LinkAuthenticationSuccessHandler(ApiConfig config) {
     this.config = config;
-    this.provider = new FhirDataProvider((config.getFhirServerStore()));
+    this.provider = new FhirDataProvider(config.getDataStore());
   }
 
   @Override
@@ -47,11 +47,11 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
         }
       }
     } catch (ResourceNotFoundException ex) {
-      String msg = String.format("Practitioner Resource with identifier  \"%s\"  was not found on FHIR server \"%s\". It will be created.", practitioner.getId(), config.getFhirServerStore());
+      String msg = String.format("Practitioner Resource with identifier \"%s\"  was not found on the data store. It will be created.", practitioner.getId());
       logger.debug(msg);
       provider.updateResource(practitioner);
     } catch (Exception ex) {
-      String msg = String.format("Unable to retrieve practitioner with identifier  \"%s\"  from FHIR server \"%s\"", practitioner.getId(), config.getFhirServerStore());
+      String msg = String.format("Unable to retrieve practitioner with identifier \"%s\" from the data store", practitioner.getId());
       logger.error(msg);
       ex.printStackTrace();
     }

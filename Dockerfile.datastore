@@ -14,7 +14,7 @@ COPY . .
 RUN echo "version: $version\nbuild: $build" > datastore/src/main/resources/build.yml
 
 WORKDIR /tmp
-RUN mvn install
+RUN mvn install -DskipTests
 
 FROM tomcat:jdk15-openjdk-oracle
 COPY --from=build /tmp/datastore/target/link-datastore.war /usr/local/tomcat/webapps/ROOT.war

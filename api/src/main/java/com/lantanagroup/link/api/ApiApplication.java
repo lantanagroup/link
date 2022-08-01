@@ -1,14 +1,14 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -61,15 +61,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Override
   public void afterPropertiesSet() throws Exception {
-    // Do some advanced validation on the configuration
-    if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-      if (StringUtils.isEmpty(this.config.getQuery().getUrl())) {
-        throw new Exception("When query.mode is \"Remote\", query.url is required");
-      }
-      if (StringUtils.isEmpty(this.config.getQuery().getApiKey())) {
-        throw new Exception("When query.mode is \"Remote\", query.apiKey is required");
-      }
-    }
+
   }
 
   /**
@@ -123,7 +115,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Bean()
   public FhirDataProvider getProvider() {
-    return new FhirDataProvider(config.getFhirServerStore());
+    return new FhirDataProvider(config.getDataStore());
   }
 
   /**

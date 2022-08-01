@@ -1,6 +1,10 @@
 import * as moment from "moment";
 
 export function padDateNumber(value: number) {
+  if (value === null || value === undefined) {
+    return value;
+  }
+
   if (value < 10) {
     return '0' + value.toString();
   }

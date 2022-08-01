@@ -35,7 +35,7 @@ public class ApiConfig {
    * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
    */
   @Getter
-  ApiMeasureLocationConfig measureLocation;
+  private ApiMeasureLocationConfig measureLocation;
 
   /**
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
@@ -43,17 +43,15 @@ public class ApiConfig {
   private Boolean skipInit = false;
 
   /**
-   * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
+   * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
    */
-  @NotNull
-  private String fhirServerStore;
+  @Getter @NotNull
+  private ApiDataStoreConfig dataStore;
 
   /**
    * <strong>evaluation-service</strong><br>The measure evaluation service (CQF-Ruler) installation that is to be used to evaluate patient data against measure logic.
    */
-  @Getter
-  @Setter
-  @NotNull
+  @Getter @Setter @NotNull
   private String evaluationService;
 
   /**
@@ -77,6 +75,13 @@ public class ApiConfig {
   @Getter
   @Setter
   private String issuer;
+
+  /**
+   * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request
+   */
+  @Getter
+  @Setter
+  private Boolean checkIpAddress = true;
 
   /**
    * <strong>api.downloader</strong><br>The class used to download reports
@@ -122,13 +127,6 @@ public class ApiConfig {
   @Getter
   private ApiReportDefsConfig reportDefs;
 
-  /**
-   * <strong>api.query</strong><br>Configuration for how queries should be executed. If local, will run queries within the API. If remote,
-   * will request that a remote query agent perform the queries and respond to the API with the results.
-   */
-  @Getter
-  @NotNull
-  private ApiQueryConfig query;
 
   /**
    * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
