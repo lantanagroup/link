@@ -160,4 +160,9 @@ public class ApiConfig {
 
   @Getter
   private String socketTimeout;
+
+  /**
+   * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
+   */
+  private Integer measureEvaluationThreads;
 }
