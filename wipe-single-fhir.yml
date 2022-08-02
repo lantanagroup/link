@@ -17,6 +17,7 @@ variables:
 
 steps:
 - task: Kubernetes@1
+  name: Scale Down FHIR Server $(deploy_fhir)
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
@@ -28,6 +29,7 @@ steps:
     containerRegistryType: 'Azure Container Registry'
 
 - task: AzureCLI@2
+  name: Drop Fhir Database $(db)
   inputs:
     azureSubscription: 'postgres-connection'
     scriptType: 'bash'
@@ -44,6 +46,7 @@ steps:
       EOF
 
 - task: Kubernetes@1
+  name: Scale up Fhir server $(deploy_fhir)
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
