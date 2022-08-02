@@ -22,6 +22,7 @@ import com.lantanagroup.link.datastore.auth.UserInterceptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
+import org.hibernate.internal.util.config.ConfigurationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.servlet.ServletException;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -112,12 +114,16 @@ public class JpaRestfulServer extends RestfulServer {
   @Primary
   @Bean
   public HibernatePropertiesProvider jpaStarterDialectProvider(LocalContainerEntityManagerFactoryBean myEntityManagerFactory) throws SQLException {
-    DatabaseMetaData metaData = this.dataSource.getConnection().getMetaData();
-    return new HibernatePropertiesProvider() {
-      @Override
-      public Dialect getDialect() {
-        return new StandardDialectResolver().resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(metaData));
-      }
-    };
+    try(Connection conn = this.dataSource.getConnection()) {
+      DatabaseMetaData metaData = conn.getMetaData();
+      return new HibernatePropertiesProvider() {
+        @Override
+        public Dialect getDialect() {
+          return new StandardDialectResolver().resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(metaData));
+        }
+      };
+    } catch (SQLException sqlException) {
+      throw new ConfigurationException(sqlException.getMessage(), sqlException);
+    }
   }
 }
