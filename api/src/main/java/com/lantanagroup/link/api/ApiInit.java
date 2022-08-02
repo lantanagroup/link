@@ -35,6 +35,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ApiInit {
@@ -226,10 +227,13 @@ public class ApiInit {
 
       // If none found, create. If one found, update. If more than one found, respond with error.
       if (searchResults.getEntry().size() == 0) {
-        measureDefBundle.setId((String) null);
+        // We would normally want this to be a create/POST request with a null ID
+        // But if we do it that way, HAPI suppresses the IDs on the bundled resources
+        // Instead, assign a UUID and make an update/PUT request
+        measureDefBundle.setId(UUID.randomUUID().toString());
         measureDefBundle.setMeta(new Meta());
         measureDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        provider.createResource(measureDefBundle);
+        provider.updateResource(measureDefBundle);
         logger.info(String.format("Created report def bundle from URL %s as ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
       } else if (searchResults.getEntry().size() == 1) {
         Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
