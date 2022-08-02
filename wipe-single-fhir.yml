@@ -46,7 +46,7 @@ steps:
       EOF
 
 - task: Kubernetes@1
-  displayName: Scale up Fhir server
+  displayName: Scale up FHIR server
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
