@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 /**
@@ -100,23 +102,25 @@ public class ReportGenerator {
    * @param criteria - the report criteria
    * @param context  -  the report context
    */
-  public void generate(ReportCriteria criteria, ReportContext context) throws ParseException {
+  public void generate(ReportCriteria criteria, ReportContext context) throws ParseException, ExecutionException, InterruptedException {
     if (this.config.getEvaluationService() == null) {
       throw new ConfigurationException("api.evaluation-service has not been configured");
     }
     logger.info("Patient list is : " + context.getPatientsOfInterest().size());
-    for (PatientOfInterestModel patient : context.getPatientsOfInterest()) {
-      System.out.println("Patient is: " + patient);
-      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patient);
-      patientMeasureReport.setId(context.getReportId() + "-" + patient.getId().hashCode());
-      // store the measure report
-      try {
+    ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
+            ? new ForkJoinPool(config.getMeasureEvaluationThreads())
+            : ForkJoinPool.commonPool();
+    try {
+      forkJoinPool.submit(() -> context.getPatientsOfInterest().parallelStream().forEach(patient -> {
+        System.out.println("Patient is: " + patient);
+        MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patient);
+        patientMeasureReport.setId(context.getReportId() + "-" + patient.getId().hashCode());
+        // store the measure report
         this.context.getFhirProvider().updateResource(patientMeasureReport);
-      } catch (Exception ex) {
-        logger.error("Exception is: " + ex.getMessage());
-      }
+      })).get();
+    } finally {
+      forkJoinPool.shutdown();
     }
-
     MeasureReport masterMeasureReport = reportAggregator.generate(criteria, context);
     context.setMeasureReport(masterMeasureReport);
 
