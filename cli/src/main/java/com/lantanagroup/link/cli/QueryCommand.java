@@ -2,6 +2,7 @@ package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -17,6 +18,7 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -36,6 +38,7 @@ public class QueryCommand extends BaseShellCommand {
     return List.of(
             Query.class,
             QueryConfig.class,
+            ApiConfig.class,
             ApiDataStoreConfig.class,
             USCoreConfig.class,
             PatientScoop.class,
@@ -47,14 +50,15 @@ public class QueryCommand extends BaseShellCommand {
             BasicAuthConfig.class);
   }
 
+
+
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
   public void query(String patient, String resourceTypes, String measureId, @ShellOption(defaultValue = "") String output) {
     try {
       this.registerBeans();
 
+      this.registerFhirDataProvider();
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
-
-      ApiDataStoreConfig dataStoreConfig = this.applicationContext.getBean(ApiDataStoreConfig.class);
 
       if (config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
         logger.error("Error, Query URL requires https");
@@ -82,7 +86,8 @@ public class QueryCommand extends BaseShellCommand {
       logger.info("Executing query");
       String masterReportid = "1847296839";
       query.execute(patientsOfInterest, masterReportid, resourceTypesList, measureId);
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(dataStoreConfig);
+      FhirDataProvider fhirDataProvider = this.applicationContext.getBean(FhirDataProvider.class);
+
       for (int i = 0; i < patientsOfInterest.size(); i++) {
         logger.info("Patient is: " + patientsOfInterest.get(i).getId());
         try {
@@ -103,7 +108,7 @@ public class QueryCommand extends BaseShellCommand {
         }
       }
 
-      logger.info("Done");
+     logger.info("Done");
     } catch (Exception ex) {
 
       logger.error("Error executing query: " + ex.getMessage(), ex);
