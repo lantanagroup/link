@@ -17,15 +17,9 @@ variables:
   deploy_fhir: $(DEPLOYMENT_FHIR)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
 
 - task: Kubernetes@1
+  displayName: Scale down API
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
@@ -37,6 +31,7 @@ steps:
     containerRegistryType: 'Azure Container Registry'
 
 - task: Kubernetes@1
+  displayName: Scale down FHIR
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
@@ -48,6 +43,7 @@ steps:
     containerRegistryType: 'Azure Container Registry'
 
 - task: AzureCLI@2
+  displayName: Drop Database
   inputs:
     azureSubscription: 'postgres-connection'
     scriptType: 'bash'
@@ -64,6 +60,7 @@ steps:
       EOF
 
 - task: Kubernetes@1
+  displayName: Scale up FHIR
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
@@ -75,6 +72,7 @@ steps:
     containerRegistryType: 'Azure Container Registry'
 
 - task: Kubernetes@1
+  displayName: Scale up API
   inputs:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'NHSNLink - Pay-As-You-Go(71125262-e1d6-4961-9803-8cb376d00871)'
