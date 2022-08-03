@@ -10,8 +10,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
-
 @RestController
 @RequestMapping("/api")
 public class ReportDataController extends BaseController {
@@ -30,8 +28,8 @@ public class ReportDataController extends BaseController {
   }
 
   @PostMapping(value = "/data/{type}")
-  public void retrieveData(@RequestBody() String csvContent, @PathVariable("type") String type) throws Exception {
-    if(config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
+  public void retrieveData(@RequestBody() byte[] csvContent, @PathVariable("type") String type) throws Exception {
+    if (config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
       throw new HttpResponseException(400, "Bad Request, cannot find data processor.");
     }
 
@@ -40,6 +38,6 @@ public class ReportDataController extends BaseController {
     Class<?> dataProcessorClass = Class.forName(this.config.getDataProcessor().get(type));
     IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
-    dataProcessor.process(csvContent.getBytes(StandardCharsets.UTF_8), getFhirDataProvider());
+    dataProcessor.process(csvContent, getFhirDataProvider());
   }
 }
