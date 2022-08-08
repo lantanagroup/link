@@ -25,44 +25,44 @@ public abstract class GenericAggregator implements IReportAggregator {
   protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientsOfInterest);
 
   private void setSubject(MeasureReport masterMeasureReport) {
-    if (this.config.getMeasureLocation() != null) {
+    if (this.config.getFacility() != null) {
       logger.debug("Creating MeasureReport.subject based on config");
 
       Reference subjectRef = masterMeasureReport.getSubject() != null && masterMeasureReport.getSubject().getReference() != null ?
               masterMeasureReport.getSubject() :
               new Reference();
 
-      Boolean hasSystem = StringUtils.isNotEmpty(this.config.getMeasureLocation().getSystem());
-      Boolean hasValue = StringUtils.isNotEmpty(this.config.getMeasureLocation().getValue());
+      Boolean hasSystem = StringUtils.isNotEmpty(this.config.getFacility().getSystem());
+      Boolean hasValue = StringUtils.isNotEmpty(this.config.getFacility().getValue());
 
       if (hasSystem || hasValue) {
         subjectRef.setIdentifier(new Identifier());
 
         if (hasSystem) {
-          subjectRef.getIdentifier().setSystem(this.config.getMeasureLocation().getSystem());
+          subjectRef.getIdentifier().setSystem(this.config.getFacility().getSystem());
         }
 
         if (hasValue) {
-          subjectRef.getIdentifier().setValue(this.config.getMeasureLocation().getValue());
+          subjectRef.getIdentifier().setValue(this.config.getFacility().getValue());
         }
       }
 
-      if (StringUtils.isNotEmpty(this.config.getMeasureLocation().getName())) {
-        subjectRef.setDisplay(this.config.getMeasureLocation().getName());
+      if (StringUtils.isNotEmpty(this.config.getFacility().getName())) {
+        subjectRef.setDisplay(this.config.getFacility().getName());
       }
 
-      if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
+      if (this.config.getFacility().getLatitude() != null || this.config.getFacility().getLongitude() != null) {
         Extension positionExt = new Extension(Constants.ReportPositionExtUrl);
 
-        if (this.config.getMeasureLocation().getLongitude() != null) {
+        if (this.config.getFacility().getLongitude() != null) {
           Extension longExt = new Extension("longitude");
-          longExt.setValue(new DecimalType(this.config.getMeasureLocation().getLongitude()));
+          longExt.setValue(new DecimalType(this.config.getFacility().getLongitude()));
           positionExt.addExtension(longExt);
         }
 
-        if (this.config.getMeasureLocation().getLatitude() != null) {
+        if (this.config.getFacility().getLatitude() != null) {
           Extension latExt = new Extension("latitude");
-          latExt.setValue(new DecimalType(this.config.getMeasureLocation().getLatitude()));
+          latExt.setValue(new DecimalType(this.config.getFacility().getLatitude()));
           positionExt.addExtension(latExt);
         }
 

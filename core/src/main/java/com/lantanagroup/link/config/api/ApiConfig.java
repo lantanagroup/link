@@ -35,7 +35,7 @@ public class ApiConfig {
    * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
    */
   @Getter
-  private ApiMeasureLocationConfig measureLocation;
+  private ApiFacilityConfig facility;
 
   /**
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped

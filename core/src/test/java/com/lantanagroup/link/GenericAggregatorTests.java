@@ -1,7 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiMeasureLocationConfig;
+import com.lantanagroup.link.config.api.ApiFacilityConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -22,10 +22,10 @@ public class GenericAggregatorTests {
     doCallRealMethod().when(aggregator).setConfig(any());
 
     ApiConfig config = new ApiConfig();
-    config.setMeasureLocation(new ApiMeasureLocationConfig());
-    config.getMeasureLocation().setName("Test Org");
-    config.getMeasureLocation().setSystem("http://cdc.gov");
-    config.getMeasureLocation().setValue("test-org-id");
+    config.setFacility(new ApiFacilityConfig());
+    config.getFacility().setName("Test Org");
+    config.getFacility().setSystem("http://cdc.gov");
+    config.getFacility().setValue("test-org-id");
     aggregator.setConfig(config);
 
     ReportCriteria criteria = new ReportCriteria("test", "2022-07-01T00:00:00Z", "2022-07-31T23:59:59Z");

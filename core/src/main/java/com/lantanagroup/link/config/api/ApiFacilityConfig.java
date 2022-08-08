@@ -5,8 +5,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-@Getter @Setter
-public class ApiMeasureLocationConfig {
+@Getter
+@Setter
+public class ApiFacilityConfig {
   /**
    * The value set in <code>MeasureReport.subject.identifier.system</code>.
    */
