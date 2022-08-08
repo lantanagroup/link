@@ -4,6 +4,8 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,7 @@ public abstract class GenericAggregator implements IReportAggregator {
   private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
 
   @Autowired
+  @Setter
   private ApiConfig config;
 
   protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientsOfInterest);
@@ -24,12 +27,28 @@ public abstract class GenericAggregator implements IReportAggregator {
   private void setSubject(MeasureReport masterMeasureReport) {
     if (this.config.getMeasureLocation() != null) {
       logger.debug("Creating MeasureReport.subject based on config");
-      Reference subjectRef = masterMeasureReport.getSubject() != null && masterMeasureReport.getSubject().getReference() != null
-              ? masterMeasureReport.getSubject() : new Reference();
-      if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
-        subjectRef.setIdentifier(new Identifier()
-                .setSystem(this.config.getMeasureLocation().getSystem())
-                .setValue(this.config.getMeasureLocation().getValue()));
+
+      Reference subjectRef = masterMeasureReport.getSubject() != null && masterMeasureReport.getSubject().getReference() != null ?
+              masterMeasureReport.getSubject() :
+              new Reference();
+
+      Boolean hasSystem = StringUtils.isNotEmpty(this.config.getMeasureLocation().getSystem());
+      Boolean hasValue = StringUtils.isNotEmpty(this.config.getMeasureLocation().getValue());
+
+      if (hasSystem || hasValue) {
+        subjectRef.setIdentifier(new Identifier());
+
+        if (hasSystem) {
+          subjectRef.getIdentifier().setSystem(this.config.getMeasureLocation().getSystem());
+        }
+
+        if (hasValue) {
+          subjectRef.getIdentifier().setValue(this.config.getMeasureLocation().getValue());
+        }
+      }
+
+      if (StringUtils.isNotEmpty(this.config.getMeasureLocation().getName())) {
+        subjectRef.setDisplay(this.config.getMeasureLocation().getName());
       }
 
       if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
@@ -64,7 +83,10 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.setPeriod(new Period());
     masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure(context.getMeasure().getUrl());
+
+    if (context.getMeasure() != null && StringUtils.isNotEmpty(context.getMeasure().getUrl())) {
+      masterMeasureReport.setMeasure(context.getMeasure().getUrl());
+    }
 
     this.aggregatePatientReports(masterMeasureReport, context.getPatientsOfInterest());
 
@@ -113,6 +135,4 @@ public abstract class GenericAggregator implements IReportAggregator {
   }
 
   protected abstract void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context);
-
-
 }
