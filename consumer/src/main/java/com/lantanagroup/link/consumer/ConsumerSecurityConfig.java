@@ -38,7 +38,7 @@ public class ConsumerSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()
             .and()
-            .antMatcher("/csv/**")
+            .antMatcher("/**")
             .addFilter(authFilter)
             .authorizeRequests()
             .anyRequest()

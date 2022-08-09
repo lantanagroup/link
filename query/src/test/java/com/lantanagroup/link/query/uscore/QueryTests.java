@@ -243,16 +243,16 @@ public class QueryTests {
     theQuery.execute(patientsOfInterest, "report1", queries, measureId);
 
     // Make sure the correct queries to the FHIR server was performed
-//    verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
-//    verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier2");
-//    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient1");
-//    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient1");
-//    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient1");
-//    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient2");
-//    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient2");
-//    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient2");
-//    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient3");
-//    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient3");
+    verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
+    verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier2");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient1");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("MedicationRequest?patient=Patient/patient2");
+    verify(untypedQuery, times(1)).byUrl("Condition?patient=Patient/patient3");
+    verify(untypedQuery, times(1)).byUrl("Encounter?patient=Patient/patient3");
 
     verify(read, times(1)).resource(Patient.class);
     verify(readTyped, times(1)).withId("patient3");

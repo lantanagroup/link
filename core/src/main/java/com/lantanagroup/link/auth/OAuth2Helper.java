@@ -431,8 +431,7 @@ public class OAuth2Helper {
     } catch(JWTVerificationException e){
       //Invalid signature/claims
       throw new JWTVerificationException(e.getMessage());
-    }
-    catch(Exception e) {
+    } catch(Exception e) {
       logger.error(e.getMessage());
       return null;
       //throw new Exception(e.getMessage());

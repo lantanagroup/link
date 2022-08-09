@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
@@ -34,10 +33,10 @@ public class UserController extends BaseController {
     List<UserModel> users = new ArrayList<>();
 
     Bundle bundle = fhirDataProvider
-            .searchPractitioner("https://nhsnlink.org", "link-user");
+            .searchPractitioner(Constants.MainSystem, "link-user");
 
     if (bundle.getEntry().size() == 0) {
-      logger.info("No practitioner ");
+      logger.warn("No practitioners found in data store");
       return users;
     }
 

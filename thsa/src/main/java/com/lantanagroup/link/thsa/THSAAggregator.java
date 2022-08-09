@@ -87,8 +87,6 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           totalInventoryMap.put(NumICUBeds, population.getCount());
         } else if (populationCode.equals(NumVent)) {
           totalInventoryMap.put(NumVent, population.getCount());
-        } else if (populationCode.equals(NumVentUse)) {
-          usedInventoryMap.put(NumVentUse, population.getCount());
         }
       }
     }
@@ -98,19 +96,19 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
         if (populationCode.equals(NumTotBedsOcc)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumICUBedsOcc)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumVentUse)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumTotBedsAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumTotBeds) - (Integer) usedInventoryMap.get(NumTotBedsOcc);
+          int available = (totalInventoryMap.get(NumTotBeds) != null ? (Integer) totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? (Integer) usedInventoryMap.get(NumTotBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumICUBedsAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumICUBeds) - (Integer) usedInventoryMap.get(NumICUBedsOcc);
+          int available = (totalInventoryMap.get(NumICUBeds) != null ? (Integer) totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? (Integer) usedInventoryMap.get(NumICUBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumVentAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumVent) - (Integer) usedInventoryMap.get(NumVentUse);
+          int available = (totalInventoryMap.get(NumVent) != null ? (Integer) totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? (Integer) usedInventoryMap.get(NumVentUse) : 0);
           population.setCount(available);
         }
       }
@@ -179,9 +177,11 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           group.getPopulation().forEach(population -> {
             MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
             if (!population.getCode().equals("numerator")) {
-              populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
-              populationComponent.setCount(0);
-              groupComponent.addPopulation(populationComponent);
+              if (group.getCode().getCoding() != null && group.getCode().getCoding().size() > 0) {
+                populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
+                populationComponent.setCount(0);
+                groupComponent.addPopulation(populationComponent);
+              }
             }
 
           });

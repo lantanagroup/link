@@ -44,7 +44,8 @@ public class UserInterceptor {
         throw new AuthenticationException();
       }
     } catch (Exception e) {
-      throw new AuthenticationException(e.getMessage());
+      logger.error("Error validating OAuth token due to: " + e.getMessage(), e);
+      throw new AuthenticationException();
     }
   }
 
@@ -86,7 +87,7 @@ public class UserInterceptor {
     }
 
     if (StringUtils.isNotEmpty(token)) {
-      this.assertToken(token);
+      this.assertToken(authHeader);
     }
 
     if (StringUtils.isNotEmpty(basic)) {

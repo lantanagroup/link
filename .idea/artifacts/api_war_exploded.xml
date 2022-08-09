@@ -77,7 +77,6 @@
           <element id="library" level="project" name="Maven: com.google.guava:guava:27.1-jre" />
           <element id="library" level="project" name="Maven: com.google.guava:failureaccess:1.0.1" />
           <element id="library" level="project" name="Maven: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" />
-          <element id="library" level="project" name="Maven: org.checkerframework:checker-qual:2.5.2" />
           <element id="library" level="project" name="Maven: com.google.errorprone:error_prone_annotations:2.2.0" />
           <element id="library" level="project" name="Maven: com.google.j2objc:j2objc-annotations:1.1" />
           <element id="library" level="project" name="Maven: org.codehaus.mojo:animal-sniffer-annotations:1.17" />
@@ -116,6 +115,8 @@
           <element id="library" level="project" name="Maven: xpp3:xpp3_xpath:1.1.4c" />
           <element id="library" level="project" name="Maven: junit:junit:4.13.1" />
           <element id="library" level="project" name="Maven: com.google.code.findbugs:jsr305:3.0.2" />
+          <element id="library" level="project" name="Maven: org.postgresql:postgresql:42.4.0" />
+          <element id="library" level="project" name="Maven: org.checkerframework:checker-qual:3.5.0" />
         </element>
       </element>
       <element id="directory" name="META-INF">

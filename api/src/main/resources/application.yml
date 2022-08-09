@@ -38,6 +38,7 @@ api:
     retry-wait: 5000
   query:
     mode: Local
+  measure-evaluation-threads: 10
 thsa:
   dataMeasureReportId: inventorydata
 query:

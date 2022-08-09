@@ -1,5 +1,8 @@
 package com.lantanagroup.link.cli;
 
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -33,5 +36,13 @@ public class BaseShellCommand {
         beanFactory.registerBeanDefinition(beanName, this.getBeanDef(beanClass));
       }
     }
+  }
+
+  protected void registerFhirDataProvider(){
+    DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((AnnotationConfigServletWebServerApplicationContext) this.applicationContext).getBeanFactory();
+    ApiConfig config = this.applicationContext.getBean(ApiConfig.class);
+    ApiDataStoreConfig dataStoreConfig = config.getDataStore();
+    FhirDataProvider provider = new FhirDataProvider(dataStoreConfig);
+    beanFactory.registerSingleton(String.valueOf(FhirDataProvider.class), provider);
   }
 }
