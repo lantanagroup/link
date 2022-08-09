@@ -20,4 +20,9 @@ public class ApiReportDefsUrlConfig {
    * <strong>api.report-defs.urls.patient-list-id</strong><br>ID used to retrieve the patient list from the query server.
    */
   private String patientListId;
+
+  /**
+   * <strong>api.report-defs.urls.report-aggregator</strong><br>Aggregator used to aggregate for that measure.
+   */
+  private String reportAggregator;
 }
