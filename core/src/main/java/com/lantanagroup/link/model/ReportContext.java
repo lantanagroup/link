@@ -1,10 +1,12 @@
 package com.lantanagroup.link.model;
 
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.auth.LinkCredentials;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,4 +29,6 @@ public class ReportContext {
   private List<ListResource> patientCensusLists = new ArrayList<>();
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<ConceptMap> conceptMaps = new ArrayList();
+  HttpServletRequest request;
+  LinkCredentials user;
 }

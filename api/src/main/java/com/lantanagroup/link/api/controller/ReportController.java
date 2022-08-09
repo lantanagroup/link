@@ -306,8 +306,8 @@ public class ReportController extends BaseController {
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
     ReportContext context = new ReportContext(this.getFhirDataProvider());
 
-    criteria.setRequest(request);
-    criteria.setUser(user);
+    context.setRequest(request);
+    context.setUser(user);
 
     try {
 

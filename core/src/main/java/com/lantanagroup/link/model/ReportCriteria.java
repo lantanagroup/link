@@ -17,8 +17,6 @@ public class ReportCriteria {
   String periodEnd;
   String measureId;
   HashMap<String, String> additional = new HashMap<>();
-  HttpServletRequest request;
-  LinkCredentials user;
 
   public ReportCriteria(String reportDefIdentifier, String periodStart, String periodEnd) {
     this.setReportDefIdentifier(reportDefIdentifier);

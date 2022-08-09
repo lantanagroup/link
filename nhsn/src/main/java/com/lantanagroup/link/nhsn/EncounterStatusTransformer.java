@@ -41,7 +41,7 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
           }
         }
         fhirDataProvider.updateResource(patientBundle);
-        fhirDataProvider.audit(reportCriteria.getRequest(), reportCriteria.getUser().getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully transformed encounters with an end date to finished.");
+        fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully transformed encounters with an end date to finished.");
       }
       catch (Exception ex) {
         logger.error("Exception is: " + ex.getMessage());
