@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
@@ -14,6 +15,7 @@ import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
@@ -282,6 +284,12 @@ public class ApiInit {
 
   public void init() {
     this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+
+    Optional measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
+    if (StringUtils.isEmpty(config.getReportAggregator()) && !measureReportAggregator.isEmpty()) {
+      logger.error("Not all measures have aggregators configured and there is no default aggregator in the configuration file.");
+      throw new ConfigurationException("Not all measures have aggregators configured and there is no default aggregator in the configuration file.");
+    }
 
     if (this.config.getSkipInit()) {
       logger.info("Skipping API initialization processes to load measure definitions and search parameters");
