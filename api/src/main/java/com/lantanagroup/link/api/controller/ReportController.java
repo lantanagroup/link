@@ -311,6 +311,9 @@ public class ReportController extends BaseController {
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
     ReportContext context = new ReportContext(this.getFhirDataProvider());
 
+    criteria.setRequest(request);
+    criteria.setUser(user);
+
     try {
 
       triggerEvent(EventTypes.BeforeMeasureResolution, criteria, context);

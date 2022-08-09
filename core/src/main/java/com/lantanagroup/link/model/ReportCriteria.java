@@ -1,8 +1,10 @@
 package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.auth.LinkCredentials;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 @Getter
@@ -15,6 +17,8 @@ public class ReportCriteria {
   String periodEnd;
   String measureId;
   HashMap<String, String> additional = new HashMap<>();
+  HttpServletRequest request;
+  LinkCredentials user;
 
   public ReportCriteria(String reportDefIdentifier, String periodStart, String periodEnd) {
     this.setReportDefIdentifier(reportDefIdentifier);

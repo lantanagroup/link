@@ -2,6 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -36,11 +37,11 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
               patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
               patientEncounter.addExtension(previous);
               patientResource.setResource(patientEncounter);
-              //fhirDataProvider.audit(new Request(), new JWT(), FhirHelper.AuditEventTypes.Export, "Recording transformation of encounter status.");
             }
           }
         }
         fhirDataProvider.updateResource(patientBundle);
+        fhirDataProvider.audit(reportCriteria.getRequest(), reportCriteria.getUser().getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully transformed encounters with an end date to finished.");
       }
       catch (Exception ex) {
         logger.error("Exception is: " + ex.getMessage());
