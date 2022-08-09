@@ -8,6 +8,7 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
+import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -56,28 +57,23 @@ public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
   private static final String PeriodStartParamName = "periodStart";
   private static final String PeriodEndParamName = "periodEnd";
-
-  @Autowired
-  @Setter
-  private THSAConfig thsaConfig;
-
-  @Autowired
-  private USCoreConfig usCoreConfig;
-
-  @Autowired
-  @Setter
-  private ApiConfigEvents apiConfigEvents;
-
-  @Autowired
-  @Setter
-  private ApplicationContext context;
-
-  @Autowired
-  private QueryConfig queryConfig;
-
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
+  @Autowired
+  @Setter
+  private THSAConfig thsaConfig;
+  @Autowired
+  private USCoreConfig usCoreConfig;
+  @Autowired
+  @Setter
+  private ApiConfigEvents apiConfigEvents;
+  @Autowired
+  @Setter
+  private ApplicationContext context;
+  @Autowired
+  private QueryConfig queryConfig;
+
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
@@ -151,10 +147,9 @@ public class ReportController extends BaseController {
       try {
         String token = OAuth2Helper.getToken(authConfig);
         //token = Helper.cleanHeaderManipulationChars(token);
-        if(OAuth2Helper.validateHeaderJwtToken(token)) {
+        if (OAuth2Helper.validateHeaderJwtToken(token)) {
           requestBuilder.setHeader("Authorization", "Bearer " + token);
-        }
-        else {
+        } else {
           throw new JWTVerificationException("Invalid token format");
         }
       } catch (Exception ex) {
@@ -220,8 +215,8 @@ public class ReportController extends BaseController {
 
     if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
       patientOfInterestModelList = new ArrayList<>();
-      for(ListResource censusList : context.getPatientCensusLists()) {
-        for(ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
+      for (ListResource censusList : context.getPatientCensusLists()) {
+        for (ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
           PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
                   censusPatient.getItem().getIdentifier().getSystem() + "|" + censusPatient.getItem().getIdentifier().getValue());
           patientOfInterestModelList.add(patient);
@@ -371,10 +366,18 @@ public class ReportController extends BaseController {
 
       response.setReportId(id);
 
-      // Generate the master measure report
+      // Get the aggregator
       Class<?> reportAggregatorClass = null;
       try {
-        reportAggregatorClass = Class.forName(this.config.getReportAggregator());
+        Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
+          String measureIdentifier = urlConfig.getUrl().substring(urlConfig.getUrl().lastIndexOf("/")+1);
+          return measureIdentifier.equalsIgnoreCase(context.getReportDefBundle().getIdentifier().getValue());
+        }).findFirst();
+        if (measureReportAggregatorUrl.isPresent()) {
+          reportAggregatorClass = Class.forName(measureReportAggregatorUrl.get().getReportAggregator());
+        } else {
+          reportAggregatorClass = Class.forName(this.config.getReportAggregator());
+        }
       } catch (ClassNotFoundException e) {
         logger.error(String.format("Error generating report: %s", e));
       }
@@ -458,16 +461,17 @@ public class ReportController extends BaseController {
 
   private void deleteSentData(DocumentReference documentReference) {
     String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
-    if(documentReference.getContext().getRelated().size() > 0) {
+    if (documentReference.getContext().getRelated().size() > 0) {
       List<ListResource> censusList = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
-      for(ListResource census : censusList) {
-        String censusID = census.getId().contains("List/") && census.getId().contains("/_history")?
-                census.getId().substring("List/".length(), census.getId().indexOf("/_history")):census.getId().contains("List/")?
-                census.getId().substring("List/".length()):census.getId();;
-        for(ListResource.ListEntryComponent entry: census.getEntry()) {
-          if(entry.getItem().getReference() != null) {
-            String patientRef = entry.getItem().getReference().contains("Patient/")?
-                    entry.getItem().getReference().substring("Patient/".length()):entry.getItem().getReference();
+      for (ListResource census : censusList) {
+        String censusID = census.getId().contains("List/") && census.getId().contains("/_history") ?
+                census.getId().substring("List/".length(), census.getId().indexOf("/_history")) : census.getId().contains("List/") ?
+                census.getId().substring("List/".length()) : census.getId();
+        ;
+        for (ListResource.ListEntryComponent entry : census.getEntry()) {
+          if (entry.getItem().getReference() != null) {
+            String patientRef = entry.getItem().getReference().contains("Patient/") ?
+                    entry.getItem().getReference().substring("Patient/".length()) : entry.getItem().getReference();
             String patientReportID = String.valueOf(patientRef.hashCode());
 
             try {
@@ -526,8 +530,7 @@ public class ReportController extends BaseController {
     //prevent injection from reportId parameter
     try {
       reportId = Helper.encodeForUrl(reportId);
-    }
-    catch(Exception ex) {
+    } catch (Exception ex) {
       logger.error(ex.getMessage());
     }
 
@@ -559,7 +562,7 @@ public class ReportController extends BaseController {
     List<Bundle> patientBundles = getPatientBundles(documentReference);
 
     PatientReportModel report = null;
-    for(Bundle patientBundle : patientBundles) {
+    for (Bundle patientBundle : patientBundles) {
       // in both cases add the patients info to patientreportmodel to be displayed in UI
       if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
         for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
@@ -631,7 +634,7 @@ public class ReportController extends BaseController {
       return data;
     }
 
-    for(Bundle patientBundle : patientBundles) {
+    for (Bundle patientBundle : patientBundles) {
       for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
         if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Condition")) {
           Condition condition = (Condition) entry.getResource();
@@ -686,7 +689,7 @@ public class ReportController extends BaseController {
 
     Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
     Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
-    if(existingVersion >= 1.0f) {
+    if (existingVersion >= 1.0f) {
       throw new HttpResponseException(400, "Bad Request, report version is greater than or equal to 1.0");
     }
 
@@ -1001,7 +1004,7 @@ public class ReportController extends BaseController {
    * or from the master measure report if it had not.
    * Can also search for specific patient data bundles by patientId or patientReportId
    *
-   * @param docRef document reference needed to get submission bundle if it had been sent and master reportId
+   * @param docRef    document reference needed to get submission bundle if it had been sent and master reportId
    * @param patientId if searching for a specific patient's data by patientId
    * @return a list of bundles containing data for each patient
    */
@@ -1019,44 +1022,40 @@ public class ReportController extends BaseController {
       e.printStackTrace();
     }
 
-    if(submitted != null && submitted.getEntry().size() > 0) {
+    if (submitted != null && submitted.getEntry().size() > 0) {
       logger.info("Report already sent: Searching for patient data from retrieved submission bundle");
-      if(patientId != null && !patientId.equals("")) {
+      if (patientId != null && !patientId.equals("")) {
         logger.info("Searching for resources of specified patient " + Helper.encodeLogging((Helper.validateLoggerValue(patientId) ? patientId : "")));
         Bundle patientBundle = getPatientResourcesById(patientId, submitted);
         patientBundles.add(patientBundle);
-      }
-      else {
+      } else {
         // Get ids of all patients in the submission bundle
         for (Bundle.BundleEntryComponent entry : submitted.getEntry()) {
           if (entry.getResource().getId() != null && entry.getResource().getId().contains("Patient")) {
             String[] refParts = entry.getResource().getId().split("/");
-            Bundle patientBundle = getPatientResourcesById(refParts[refParts.length -1].contains("history")?refParts[refParts.length -2]:refParts[refParts.length -1], submitted);
+            Bundle patientBundle = getPatientResourcesById(refParts[refParts.length - 1].contains("history") ? refParts[refParts.length - 2] : refParts[refParts.length - 1], submitted);
             patientBundles.add(patientBundle);
           }
         }
       }
-    }
-    else
-    {
+    } else {
       logger.info("Report not sent: Searching for patient data from master measure report");
       MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
-      ListResource refs = (ListResource)masterReport.getContained();
-      for(ListResource.ListEntryComponent ref : refs.getEntry()) {
+      ListResource refs = (ListResource) masterReport.getContained();
+      for (ListResource.ListEntryComponent ref : refs.getEntry()) {
         String[] refParts = ref.getItem().getReference().split("/");
-        if(refParts.length > 1) {
-          if(patientId != null && !patientId.equals("")) {
-            logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length-1]);
-            if(refParts[refParts.length-1].contains(String.valueOf(patientId.hashCode()))) {
+        if (refParts.length > 1) {
+          if (patientId != null && !patientId.equals("")) {
+            logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length - 1]);
+            if (refParts[refParts.length - 1].contains(String.valueOf(patientId.hashCode()))) {
               logger.info("Searching for specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
-              Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]));
+              Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length - 1]));
               patientBundles.add(patientBundle);
               break;
             }
-          }
-          else {
-            logger.info("Searching for patient report " + refParts[refParts.length-1] + " out of all patients in master measure report");
-            Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length-1]));
+          } else {
+            logger.info("Searching for patient report " + refParts[refParts.length - 1] + " out of all patients in master measure report");
+            Bundle patientBundle = getPatientBundleByReport(this.getFhirDataProvider().getMeasureReportById(refParts[refParts.length - 1]));
             patientBundles.add(patientBundle);
           }
         }
@@ -1077,11 +1076,10 @@ public class ReportController extends BaseController {
 
   private Bundle getPatientResourcesById(String patientId, Bundle ResourceBundle) {
     Bundle patientResourceBundle = new Bundle();
-    for(Bundle.BundleEntryComponent entry : ResourceBundle.getEntry()) {
-      if(entry.getResource().getId().contains(patientId)) {
+    for (Bundle.BundleEntryComponent entry : ResourceBundle.getEntry()) {
+      if (entry.getResource().getId().contains(patientId)) {
         patientResourceBundle.addEntry(entry);
-      }
-      else {
+      } else {
         String type = entry.getResource().getResourceType().toString();
         if (type.equals("Condition")) {
           Condition condition = (Condition) entry.getResource();
@@ -1127,10 +1125,10 @@ public class ReportController extends BaseController {
   private Bundle getPatientBundleByReport(MeasureReport patientReport) {
     Bundle patientBundle = new Bundle();
     List<Reference> refs = patientReport.getEvaluatedResource();
-    for(Reference ref : refs) {
+    for (Reference ref : refs) {
       String[] refParts = ref.getReference().split("/");
-      if(refParts.length == 2) {
-        Resource resource = (Resource)this.getFhirDataProvider().tryGetResource(refParts[0], refParts[1]);
+      if (refParts.length == 2) {
+        Resource resource = (Resource) this.getFhirDataProvider().tryGetResource(refParts[0], refParts[1]);
         Bundle.BundleEntryComponent component = new Bundle.BundleEntryComponent().setResource(resource);
         patientBundle.addEntry(component);
       }
