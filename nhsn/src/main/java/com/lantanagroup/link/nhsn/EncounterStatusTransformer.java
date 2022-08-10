@@ -12,21 +12,18 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 public class EncounterStatusTransformer implements IReportGenerationEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
 
   @Override
   public void execute(ReportCriteria reportCriteria, ReportContext context, ApiConfig config, FhirDataProvider fhirDataProvider) {
-
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
-      logger.info("Patient is: " + patientOfInterest.getId());
+      logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
       try {
         Bundle patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
         for(Bundle.BundleEntryComponent patientResource : patientBundle.getEntry()) {
           if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
-            logger.info("Patient encounter is: " + patientResource.getResource().getId());
+            logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
             Encounter patientEncounter = (Encounter)patientResource.getResource();
             if(patientEncounter.getPeriod().hasEnd()) {
               Extension previous = new Extension();
@@ -36,12 +33,11 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
               previous.setValue(coding);
               patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
               patientEncounter.addExtension(previous);
-              patientResource.setResource(patientEncounter);
             }
           }
         }
         fhirDataProvider.updateResource(patientBundle);
-        fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully transformed encounters with an end date to finished.");
+        fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Transformation, "Successfully transformed encounters with an end date to finished.");
       }
       catch (Exception ex) {
         logger.error("Exception is: " + ex.getMessage());
