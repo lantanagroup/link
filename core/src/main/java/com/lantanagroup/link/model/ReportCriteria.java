@@ -1,8 +1,10 @@
 package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.auth.LinkCredentials;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 
 @Getter
