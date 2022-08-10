@@ -8,7 +8,6 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -304,23 +303,23 @@ public class ReportController extends BaseController {
 
     GenerateResponse response = new GenerateResponse();
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
-    ReportContext context = new ReportContext(this.getFhirDataProvider());
+    ReportContext reportContext = new ReportContext(this.getFhirDataProvider());
 
     context.setRequest(request);
     context.setUser(user);
 
     try {
 
-      triggerEvent(EventTypes.BeforeMeasureResolution, criteria, context);
+      triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
       // Get the latest measure def and update it on the FHIR storage server
-      this.resolveMeasure(criteria, context);
+      this.resolveMeasure(criteria, reportContext);
 
-      triggerEvent(EventTypes.AfterMeasureResolution, criteria, context);
+      triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
       // Search the reference document by measure criteria nd reporting period
       DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
-              context.getReportDefBundle().getIdentifier(),
+              reportContext.getReportDefBundle().getIdentifier(),
               periodStart,
               periodEnd,
               regenerate);
@@ -339,68 +338,53 @@ public class ReportController extends BaseController {
         id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
       } else {
         id = existingDocumentReference.getMasterIdentifier().getValue();
-        triggerEvent(EventTypes.OnRegeneration, criteria, context);
+        triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
       }
-      context.setReportId(id);
+      reportContext.setReportId(id);
 
-      triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, context);
+      triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
       // Get the patient identifiers for the given date
-      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, context);
+      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
 
-      triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, context);
+      triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
       // Get the resource types to query
-      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), context.getReportDefBundle());
+      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
 
       // Scoop the data for the patients and store it
-      this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, context, id);
+      this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
 
-      if (context.getPatientCensusLists().size() < 1 || context.getPatientCensusLists() == null) {
+      if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
         logger.error(String.format("Census list not found."));
         throw new HttpResponseException(500, "Internal Server Error");
       }
 
-      triggerEvent(EventTypes.BeforePatientDataStore, criteria, context);
+      triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-      context.setInventoryId(thsaConfig.getDataMeasureReportId());
+      reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
 
       response.setReportId(id);
 
-      // Get the aggregator
-      Class<?> reportAggregatorClass = null;
-      try {
-        Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
-          String measureIdentifier = urlConfig.getUrl().substring(urlConfig.getUrl().lastIndexOf("/")+1);
-          return measureIdentifier.equalsIgnoreCase(context.getReportDefBundle().getIdentifier().getValue());
-        }).findFirst();
-        if (measureReportAggregatorUrl.isPresent()) {
-          reportAggregatorClass = Class.forName(measureReportAggregatorUrl.get().getReportAggregator());
-        } else {
-          reportAggregatorClass = Class.forName(this.config.getReportAggregator());
-        }
-      } catch (ClassNotFoundException e) {
-        logger.error(String.format("Error generating report: %s", e));
-      }
+      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, reportContext.getReportDefBundle());
 
-      IReportAggregator reportAggregator = (IReportAggregator) this.context.getBean(reportAggregatorClass);
+      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(context, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(reportContext, criteria, config, user, reportAggregator);
 
-      triggerEvent(EventTypes.BeforeMeasureEval, criteria, context);
+      triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
 
-      generator.generate(criteria, context);
+      generator.generate(criteria, reportContext);
 
-      triggerEvent(EventTypes.AfterMeasureEval, criteria, context);
+      triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
 
+      triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
 
-      triggerEvent(EventTypes.BeforeReportStore, criteria, context);
+      generator.store(criteria, reportContext, existingDocumentReference);
 
-      generator.store(criteria, context, existingDocumentReference);
-
-      triggerEvent(EventTypes.AfterReportStore, criteria, context);
+      triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
 
       this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     } catch (ResponseStatusException rse) {
