@@ -63,31 +63,23 @@ public class OAuth2Helper {
 
   public static String getToken(LinkOAuthConfig config) throws Exception {
 
-    try{
-
-      //ensure authentication properties have been set
-      if(!config.hasCredentialProperties()) {
-        throw new AuthenticationException("Authentication credentials were not supplied.");
-      }
-
-      //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
-
-      //get token based on credential mode
-      switch(config.getCredentialMode()) {
-        case Client: {
-          return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
-        }
-        case Password: {
-          return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
-        }
-        default:
-          throw new AuthenticationException("Invalid credential mode.");
-      }
-    } catch(AuthenticationException e) {
-      throw e; // rethrowing the exception
+    //ensure authentication properties have been set
+    if(!config.hasCredentialProperties()) {
+      throw new AuthenticationException("Authentication credentials were not supplied.");
     }
-    catch(Exception e){
-      throw e; // rethrowing the exception
+
+    //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
+
+    //get token based on credential mode
+    switch(config.getCredentialMode()) {
+      case Client: {
+        return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+      }
+      case Password: {
+        return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
+      }
+      default:
+        throw new AuthenticationException("Invalid credential mode.");
     }
 
   }

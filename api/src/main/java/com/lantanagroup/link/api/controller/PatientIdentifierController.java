@@ -44,29 +44,21 @@ public class PatientIdentifierController extends BaseController {
           @RequestBody() String csvContent,
           @RequestParam String reportTypeId) throws Exception {
     logger.debug("Receiving RR FHIR CSV. Parsing...");
-    try {
-      if (reportTypeId == null || reportTypeId.isBlank()) {
-        String msg = "Report Type should be provided.";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-      if (!reportTypeId.contains("|")) {
-        String msg = "Report type should be of format: system|value";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-      List<CsvEntry> list = this.getCsvEntries(csvContent);
-        Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
-      for (String key : csvMap.keySet()) {
-        ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
-        this.receiveFHIR(listResource);
-      }
-    } catch (ResponseStatusException ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
-    } catch (Exception ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
+    if (reportTypeId == null || reportTypeId.isBlank()) {
+      String msg = "Report Type should be provided.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    if (!reportTypeId.contains("|")) {
+      String msg = "Report type should be of format: system|value";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    List<CsvEntry> list = this.getCsvEntries(csvContent);
+      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
+    for (String key : csvMap.keySet()) {
+      ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
+      this.receiveFHIR(listResource);
     }
   }
 
@@ -97,7 +89,7 @@ public class PatientIdentifierController extends BaseController {
     if(bundle.getEntry().size() < 1) {
       String msg = String.format("Measure %s (%s) not found on data store", value, system);
       logger.error(msg);
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
   }
 
