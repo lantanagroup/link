@@ -4,7 +4,6 @@ import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.apache.http.client.HttpResponseException;
 import org.springframework.core.Ordered;
-import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,7 +24,7 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
   @Override
   public int getOrder() {
     // Priority should be as high as possible, but lower than that of ErrorPageFilter
-    // That way, we can catch as many exceptions as possible without ErrorPageFilter swallowing them
+    // That way, we can catch exceptions before ErrorPageFilter swallows them
     // But we can still rely on ErrorPageFilter to forward requests to our custom error page
     return Ordered.HIGHEST_PRECEDENCE + 2;
   }
@@ -48,14 +47,14 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
       UUID errorId = UUID.randomUUID();
       logger.error(String.format(UNRESOLVED_MESSAGE, e.getClass().getSimpleName(), errorId), e);
       request.setAttribute(ERROR_ID, errorId);
-      response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value());
+      response.sendError(500);
     }
   }
 
   private boolean resolve(HttpServletResponse response, Throwable throwable) throws IOException {
-    HttpStatus status = getStatus(throwable);
-    if (status != null) {
-      response.sendError(status.value(), throwable.getMessage());
+    Integer statusCode = getStatusCode(throwable);
+    if (statusCode != null) {
+      response.sendError(statusCode, throwable.getMessage());
       return true;
     }
     if (throwable instanceof ResponseStatusException) {
@@ -71,12 +70,12 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
     return false;
   }
 
-  private HttpStatus getStatus(Throwable throwable) {
+  private Integer getStatusCode(Throwable throwable) {
     if (throwable instanceof JwkException) {
-      return HttpStatus.UNAUTHORIZED;
+      return 401;
     }
     if (throwable instanceof JWTVerificationException) {
-      return HttpStatus.UNAUTHORIZED;
+      return 401;
     }
     return null;
   }
