@@ -27,4 +27,13 @@ public class ApiReportDefsConfig {
    * <strong>api.report-defs.auth</strong><br>A list of authentication properties.
    */
   public LinkOAuthConfig auth;
+
+  public ApiReportDefsUrlConfig getUrlByBundleId(String bundleId) {
+    for (ApiReportDefsUrlConfig url : urls) {
+      if (url.getBundleId().equals(bundleId)) {
+        return url;
+      }
+    }
+    return null;
+  }
 }
