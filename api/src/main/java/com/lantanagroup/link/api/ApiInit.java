@@ -37,7 +37,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ApiInit {
