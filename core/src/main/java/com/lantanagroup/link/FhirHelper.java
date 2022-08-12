@@ -581,8 +581,8 @@ public class FhirHelper {
   public static String getReportAggregatorClassName(ApiConfig config, Bundle reportDefBundle) {
     String reportAggregatorClassName = null;
     Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
-      String measureIdentifier = urlConfig.getUrl().substring(urlConfig.getUrl().lastIndexOf("/") + 1);
-      return measureIdentifier.equalsIgnoreCase(reportDefBundle.getIdentifier().getValue());
+      String bundleId = urlConfig.getBundleId();
+      return bundleId.equalsIgnoreCase(reportDefBundle.getIdElement().getIdPart());
     }).findFirst();
     if (measureReportAggregatorUrl.isPresent() && !StringUtils.isEmpty(measureReportAggregatorUrl.get().getReportAggregator())) {
       reportAggregatorClassName = measureReportAggregatorUrl.get().getReportAggregator();
@@ -601,7 +601,8 @@ public class FhirHelper {
     Send,
     SearchLocations,
     InitiateQuery,
-    SearchReports
+    SearchReports,
+    Transformation
   }
 }
 
