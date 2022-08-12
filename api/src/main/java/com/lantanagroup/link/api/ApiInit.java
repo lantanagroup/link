@@ -11,6 +11,7 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -67,183 +68,185 @@ public class ApiInit {
       return;
     }
 
-    this.config.getReportDefs().getUrls().parallelStream().forEach(measureDef -> {
-      String measureDefUrl = measureDef.getUrl();
-      logger.info(String.format("Getting the latest measure from URL %s", measureDefUrl));
+    this.config.getReportDefs().getUrls().parallelStream().forEach(measureDef -> loadMeasureDefinition(client, measureDef));
+  }
 
-      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-              .uri(URI.create(measureDefUrl));
+  private void loadMeasureDefinition(HttpClient client, ApiReportDefsUrlConfig measureDef) {
+    String measureDefUrl = measureDef.getUrl();
+    logger.info(String.format("Getting the latest measure from URL %s", measureDefUrl));
 
-      //check if report-defs config has auth properties, if so generate token and add to request
-      LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-      if (authConfig != null) {
-        try {
-          String token = OAuth2Helper.getToken(authConfig);
-          if(OAuth2Helper.validateHeaderJwtToken(token)) {
-            requestBuilder.setHeader("Authorization", "Bearer " + token);
-          }
-          else {
-            throw new JWTVerificationException("Invalid token format");
-          }
-        } catch (Exception ex) {
-          logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+            .uri(URI.create(measureDefUrl));
+
+    //check if report-defs config has auth properties, if so generate token and add to request
+    LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
+    if (authConfig != null) {
+      try {
+        String token = OAuth2Helper.getToken(authConfig);
+        if(OAuth2Helper.validateHeaderJwtToken(token)) {
+          requestBuilder.setHeader("Authorization", "Bearer " + token);
+        }
+        else {
+          throw new JWTVerificationException("Invalid token format");
+        }
+      } catch (Exception ex) {
+        logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
+        return;
+      }
+    }
+
+    HttpRequest request = requestBuilder.build();
+
+//    HttpRequest request = HttpRequest.newBuilder()
+//            .uri(URI.create(measureDefUrl))
+//            .build();
+
+    if (this.config.isRequireHttps() && !measureDefUrl.contains("https")) {
+      logger.error(String.format("https required for measure definition url: ", measureDefUrl));
+      return;
+    }
+
+
+    boolean keepSearching = true;
+    Integer retryCount = 0;
+    String content = null;
+
+    while (keepSearching && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+      try {
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        content = response.body();
+        if(!Strings.isEmpty(content)) {
+          keepSearching = false;
+        }
+      } catch (ConnectException ex) {
+        retryCount++;
+
+        logger.error(String.format("Error loading measure from URL %s due to a connection issue", measureDefUrl));
+        if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
+          logger.info(String.format("Retrying to retrieve measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+        } else if (this.config.getReportDefs().getRetryWait() <= 0) {
+          logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
+          return;
+        } else {
+          logger.error(String.format("Reached maximum retry attempts for measure %s", measureDefUrl));
           return;
         }
-      }
 
-      HttpRequest request = requestBuilder.build();
-
-//      HttpRequest request = HttpRequest.newBuilder()
-//              .uri(URI.create(measureDefUrl))
-//              .build();
-
-      if (this.config.isRequireHttps() && !measureDefUrl.contains("https")) {
-        logger.error(String.format("https required for measure definition url: ", measureDefUrl));
-        return;
-      }
-
-
-      boolean keepSearching = true;
-      Integer retryCount = 0;
-      String content = null;
-
-      while (keepSearching && retryCount <= this.config.getReportDefs().getMaxRetry()) {
         try {
-          HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-          content = response.body();
-          if(!Strings.isEmpty(content)) {
-            keepSearching = false;
-          }
-        } catch (ConnectException ex) {
-          retryCount++;
-
-          logger.error(String.format("Error loading measure from URL %s due to a connection issue", measureDefUrl));
-          if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
-            logger.info(String.format("Retrying to retrieve measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
-          } else if (this.config.getReportDefs().getRetryWait() <= 0) {
-            logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
-            return;
-          } else {
-            logger.error(String.format("Reached maximum retry attempts for measure %s", measureDefUrl));
-            return;
-          }
-
-          try {
-            Thread.sleep(this.config.getReportDefs().getRetryWait());
-          } catch (InterruptedException ie) {
-            return;
-          }
-        } catch (Exception ex) {
-          logger.error(String.format("Error loading report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
+          Thread.sleep(this.config.getReportDefs().getRetryWait());
+        } catch (InterruptedException ie) {
           return;
         }
-      }
-
-      if (Strings.isEmpty(content)) {
-        logger.error(String.format("Could not retrieve measure at %s", measureDefUrl));
+      } catch (Exception ex) {
+        logger.error(String.format("Error loading report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
         return;
       }
+    }
 
-      Bundle measureDefBundle = FhirHelper.getBundle(content);
+    if (Strings.isEmpty(content)) {
+      logger.error(String.format("Could not retrieve measure at %s", measureDefUrl));
+      return;
+    }
 
-      if (measureDefBundle == null) {
-        logger.error(String.format("Error parsing report def bundle from %s", measureDefUrl));
-        return;
-      }
+    Bundle measureDefBundle = FhirHelper.getBundle(content);
 
-      measureDefBundle = FhirHelper.storeTerminologyAndReturnOther(measureDefBundle, this.config);
+    if (measureDefBundle == null) {
+      logger.error(String.format("Error parsing report def bundle from %s", measureDefUrl));
+      return;
+    }
 
-      Optional<Measure> foundMeasure = measureDefBundle.getEntry().stream()
-              .filter(e -> e.getResource() instanceof Measure)
-              .map(e -> (Measure) e.getResource())
-              .findFirst();
+    measureDefBundle = FhirHelper.storeTerminologyAndReturnOther(measureDefBundle, this.config);
 
-      if (!foundMeasure.isPresent()) {
-        logger.error(String.format("Measure definition bundle from %s does not include a Measure resource", measureDefUrl));
-        return;
-      }
+    Optional<Measure> foundMeasure = measureDefBundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Measure)
+            .map(e -> (Measure) e.getResource())
+            .findFirst();
 
-      if (!FhirHelper.validLibraries(measureDefBundle)) {
-        logger.error(String.format("Measure definition bundle from %s contains libraries without dataRequirements.", measureDefUrl));
-        return;
-      }
+    if (!foundMeasure.isPresent()) {
+      logger.error(String.format("Measure definition bundle from %s does not include a Measure resource", measureDefUrl));
+      return;
+    }
 
-      String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), measureDefBundle);
-      if (!missingResourceTypes.equals("")) {
-        logger.warn(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
-        // return;
-      }
+    if (!FhirHelper.validLibraries(measureDefBundle)) {
+      logger.error(String.format("Measure definition bundle from %s contains libraries without dataRequirements.", measureDefUrl));
+      return;
+    }
 
-      Measure measure = foundMeasure.get();
+    String missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), measureDefBundle);
+    if (!missingResourceTypes.equals("")) {
+      logger.warn(String.format("These resource types %s are in data requirements for %s but missing from the configuration.", missingResourceTypes, measureDefUrl));
+      // return;
+    }
 
-      Identifier defaultIdentifier = new Identifier()
-              .setSystem(Constants.MainSystem)
-              .setValue(measureDefBundle.getIdElement().getIdPart());
+    Measure measure = foundMeasure.get();
 
-      if (measure.getIdentifier().size() == 0) {
-        measure.addIdentifier(defaultIdentifier);
-      } else {
-        defaultIdentifier = measure.getIdentifierFirstRep();
-      }
+    Identifier defaultIdentifier = new Identifier()
+            .setSystem(Constants.MainSystem)
+            .setValue(measureDefBundle.getIdElement().getIdPart());
 
-      // Make sure the report def bundle has an identifier
-      if (measureDefBundle.getIdentifier().isEmpty()) {
-        measureDefBundle.setIdentifier(defaultIdentifier);
-      }
+    if (measure.getIdentifier().size() == 0) {
+      measure.addIdentifier(defaultIdentifier);
+    } else {
+      defaultIdentifier = measure.getIdentifierFirstRep();
+    }
 
-      logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", measureDefBundle.getIdentifier().getValue(), measureDefBundle.getIdentifier().getSystem()));
+    // Make sure the report def bundle has an identifier
+    if (measureDefBundle.getIdentifier().isEmpty()) {
+      measureDefBundle.setIdentifier(defaultIdentifier);
+    }
 
-      Bundle searchResults = null;
-      retryCount = 0;
+    logger.info(String.format("Retrieved and parsed %s (%s) report def. Storing the report def in internal store.", measureDefBundle.getIdentifier().getValue(), measureDefBundle.getIdentifier().getSystem()));
 
-      while (searchResults == null && retryCount <= this.config.getReportDefs().getMaxRetry()) {
-        try {
-          // Search to see if the report def bundle already exists
+    Bundle searchResults = null;
+    retryCount = 0;
 
-          searchResults = provider.searchReportDefinition(measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue());
-        } catch (FhirClientConnectionException fcce) {
-          retryCount++;
+    while (searchResults == null && retryCount <= this.config.getReportDefs().getMaxRetry()) {
+      try {
+        // Search to see if the report def bundle already exists
 
-          logger.error(String.format("Error storing measure from URL %s in internal FHIR store due to a connection issue", measureDefUrl));
-          if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
-            logger.info(String.format("Retrying to store measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
-          } else if (this.config.getReportDefs().getRetryWait() <= 0) {
-            logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
-            return;
-          } else {
-            logger.error(String.format("Reached maximum retry attempts to store measure %s", measureDefUrl));
-            return;
-          }
+        searchResults = provider.searchReportDefinition(measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue());
+      } catch (FhirClientConnectionException fcce) {
+        retryCount++;
 
-          try {
-            Thread.sleep(this.config.getReportDefs().getRetryWait());
-          } catch (InterruptedException ie) {
-            return;
-          }
-        } catch (Exception ex) {
-          logger.error(String.format("Error storing report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
+        logger.error(String.format("Error storing measure from URL %s in internal FHIR store due to a connection issue", measureDefUrl));
+        if (retryCount <= this.config.getReportDefs().getMaxRetry()) {
+          logger.info(String.format("Retrying to store measure in %s seconds...", this.config.getReportDefs().getRetryWait() / 1000));
+        } else if (this.config.getReportDefs().getRetryWait() <= 0) {
+          logger.error("System not configured with api.report-defs.retry-wait. Won't retry.");
+          return;
+        } else {
+          logger.error(String.format("Reached maximum retry attempts to store measure %s", measureDefUrl));
           return;
         }
-      }
 
-      // If none found, create. If one found, update. If more than one found, respond with error.
-      if (searchResults.getEntry().size() == 0) {
-        measureDefBundle.setId(measureDef.getBundleId());
-        measureDefBundle.setMeta(new Meta());
-        measureDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
-        provider.updateResource(measureDefBundle);
-        logger.info(String.format("Created report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
-      } else if (searchResults.getEntry().size() == 1) {
-        Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
-        measureDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
-        measureDefBundle.setMeta(foundReportDefBundle.getMeta());
-        provider.updateResource(measureDefBundle);
-        logger.info(String.format("Updated report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
-      } else {
-        logger.error(String.format("Found multiple report def bundles with identifier %s|%s", measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue()));
+        try {
+          Thread.sleep(this.config.getReportDefs().getRetryWait());
+        } catch (InterruptedException ie) {
+          return;
+        }
+      } catch (Exception ex) {
+        logger.error(String.format("Error storing report def from URL %s due to %s", measureDefUrl, ex.getMessage()));
         return;
       }
-    });
+    }
+
+    // If none found, create. If one found, update. If more than one found, respond with error.
+    if (searchResults.getEntry().size() == 0) {
+      measureDefBundle.setId(measureDef.getBundleId());
+      measureDefBundle.setMeta(new Meta());
+      measureDefBundle.getMeta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null);
+      provider.updateResource(measureDefBundle);
+      logger.info(String.format("Created report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+    } else if (searchResults.getEntry().size() == 1) {
+      Bundle foundReportDefBundle = (Bundle) searchResults.getEntryFirstRep().getResource();
+      measureDefBundle.setId(foundReportDefBundle.getIdElement().getIdPart());
+      measureDefBundle.setMeta(foundReportDefBundle.getMeta());
+      provider.updateResource(measureDefBundle);
+      logger.info(String.format("Updated report def bundle from URL %s with ID %s", measureDefUrl, measureDefBundle.getIdElement().getIdPart()));
+    } else {
+      logger.error(String.format("Found multiple report def bundles with identifier %s|%s", measureDefBundle.getIdentifier().getSystem(), measureDefBundle.getIdentifier().getValue()));
+      return;
+    }
   }
 
   private void loadSearchParameters() {
