@@ -8,6 +8,7 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
+import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -135,7 +136,12 @@ public class ReportController extends BaseController {
     SimpleDateFormat formatter = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
     String lastUpdateDate = formatter.format(reportDefBundle.getMeta().getLastUpdated());
 
-    String url = this.queryConfig.getFhirServerBase() + "/" + reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart();
+    String bundleId = reportDefBundle.getIdElement().getIdPart();
+    ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
+    if (urlConfig == null) {
+      throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
+    }
+    String url = urlConfig.getUrl();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .setHeader("if-modified-since", lastUpdateDate);
