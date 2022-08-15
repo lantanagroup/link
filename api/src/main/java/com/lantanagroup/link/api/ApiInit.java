@@ -62,10 +62,6 @@ public class ApiInit {
 
     logger.info("Loading measures defined in configuration...");
 
-    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
-      logger.error("Error, Query URL requires https");
-      return;
-    }
 
     this.config.getReportDefs().getUrls().parallelStream().forEach(measureDef -> loadMeasureDefinition(client, measureDef));
   }
@@ -288,6 +284,10 @@ public class ApiInit {
       String msg = "Not all measures have aggregators configured and there is no default aggregator in the configuration file.";
       logger.error(msg);
       throw new IllegalStateException(msg);
+    }
+
+    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
+      throw new IllegalStateException("Error, Query URL requires https");
     }
 
     if (this.config.getSkipInit()) {
