@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
@@ -286,8 +285,9 @@ public class ApiInit {
 
     Optional measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
     if (StringUtils.isEmpty(config.getReportAggregator()) && !measureReportAggregator.isEmpty()) {
-      logger.error("Not all measures have aggregators configured and there is no default aggregator in the configuration file.");
-      throw new ConfigurationException("Not all measures have aggregators configured and there is no default aggregator in the configuration file.");
+      String msg = "Not all measures have aggregators configured and there is no default aggregator in the configuration file.";
+      logger.error(msg);
+      throw new IllegalStateException(msg);
     }
 
     if (this.config.getSkipInit()) {

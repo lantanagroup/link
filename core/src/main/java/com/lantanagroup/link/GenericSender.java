@@ -43,7 +43,7 @@ public abstract class GenericSender {
   public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getUrl())) {
-      throw new Exception("Not configured with any locations to send");
+      throw new IllegalStateException("Not configured with any locations to send");
     }
 
     Resource copy = resourceToSend.copy();
