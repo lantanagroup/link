@@ -8,7 +8,10 @@ import com.lantanagroup.link.config.api.ApiReportDefsConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.HumanName;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Resource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -100,14 +103,12 @@ public class FhirHelperTests {
     apiReportDefsConfig.setUrls(apiReportDefsConfigList);
     ApiReportDefsUrlConfig apiReportDefsUrlConfig = new ApiReportDefsUrlConfig();
     apiReportDefsUrlConfig.setUrl("https://ehr-test.nhsnlink.org/fhir/Bundle/NHSNGlycemicControlHypoglycemicInitialPopulation");
+    apiReportDefsUrlConfig.setBundleId("NHSNGlycemicControlHypoglycemicInitialPopulation");
     apiReportDefsUrlConfig.setReportAggregator("com.lantanagroup.link.nhsn.ReportAggregator");
     apiConfig.setReportDefs(apiReportDefsConfig);
     apiReportDefsConfigList.add(apiReportDefsUrlConfig);
     Bundle bundle = new Bundle();
-    Identifier identifier = new Identifier();
-    identifier.setSystem("http://nhsnlink.org");
-    identifier.setValue("NHSNGlycemicControlHypoglycemicInitialPopulation");
-    bundle.setIdentifier(identifier);
+    bundle.setId("NHSNGlycemicControlHypoglycemicInitialPopulation");
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(apiConfig, bundle);
     Assert.assertEquals("com.lantanagroup.link.nhsn.ReportAggregator", reportAggregatorClassName);
   }
@@ -121,14 +122,12 @@ public class FhirHelperTests {
     apiReportDefsConfig.setUrls(apiReportDefsConfigList);
     ApiReportDefsUrlConfig apiReportDefsUrlConfig = new ApiReportDefsUrlConfig();
     apiReportDefsUrlConfig.setUrl("https://ehr-test.nhsnlink.org/fhir/Bundle/NHSNGlycemicControlHypoglycemicInitialPopulation");
+    apiReportDefsUrlConfig.setBundleId("NHSNGlycemicControlHypoglycemicInitialPopulation");
     apiReportDefsUrlConfig.setReportAggregator("");
     apiConfig.setReportDefs(apiReportDefsConfig);
     apiReportDefsConfigList.add(apiReportDefsUrlConfig);
     Bundle bundle = new Bundle();
-    Identifier identifier = new Identifier();
-    identifier.setSystem("http://nhsnlink.org");
-    identifier.setValue("NHSNGlycemicControlHypoglycemicInitialPopulation");
-    bundle.setIdentifier(identifier);
+    bundle.setId("NHSNGlycemicControlHypoglycemicInitialPopulation");
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(apiConfig, bundle);
     Assert.assertEquals("com.lantanagroup.link.nhsn.ReportAggregator", reportAggregatorClassName);
   }
@@ -142,14 +141,12 @@ public class FhirHelperTests {
     apiReportDefsConfig.setUrls(apiReportDefsConfigList);
     ApiReportDefsUrlConfig apiReportDefsUrlConfig = new ApiReportDefsUrlConfig();
     apiReportDefsUrlConfig.setUrl("https://ehr-test.nhsnlink.org/fhir/Bundle/THSAMeasure");
+    apiReportDefsUrlConfig.setBundleId("THSAMeasure");
     apiReportDefsUrlConfig.setReportAggregator("com.lantanagroup.link.thsa.THSAAggregator");
     apiConfig.setReportDefs(apiReportDefsConfig);
     apiReportDefsConfigList.add(apiReportDefsUrlConfig);
     Bundle bundle = new Bundle();
-    Identifier identifier = new Identifier();
-    identifier.setSystem("http://nhsnlink.org");
-    identifier.setValue("THSAMeasure");
-    bundle.setIdentifier(identifier);
+    bundle.setId("THSAMeasure");
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(apiConfig, bundle);
     Assert.assertEquals("com.lantanagroup.link.thsa.THSAAggregator", reportAggregatorClassName);
   }
