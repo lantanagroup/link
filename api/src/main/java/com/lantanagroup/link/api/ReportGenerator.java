@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
@@ -104,7 +103,7 @@ public class ReportGenerator {
    */
   public void generate(ReportCriteria criteria, ReportContext context) throws ParseException, ExecutionException, InterruptedException {
     if (this.config.getEvaluationService() == null) {
-      throw new ConfigurationException("api.evaluation-service has not been configured");
+      throw new IllegalStateException("api.evaluation-service has not been configured");
     }
     logger.info("Patient list is : " + context.getPatientsOfInterest().size());
     ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
