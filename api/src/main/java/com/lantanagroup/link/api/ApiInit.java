@@ -165,9 +165,7 @@ public class ApiInit {
     Identifier identifier = measure.hasIdentifier()
             ? measure.getIdentifierFirstRep()
             : measure.addIdentifier().setSystem(Constants.MainSystem).setValue(bundleId);
-    if (!evaluationBundle.hasIdentifier()) {
-      evaluationBundle.setIdentifier(identifier);
-    }
+    evaluationBundle.setIdentifier(identifier);
 
     // Store to evaluation service and internal data store
     logger.debug("Storing to evaluation service");
