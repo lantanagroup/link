@@ -1,15 +1,13 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.api.ApiInit;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.thsa.THSAConfig;
@@ -39,15 +37,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -72,49 +65,12 @@ public class ReportController extends BaseController {
   private ApplicationContext context;
   @Autowired
   private QueryConfig queryConfig;
+  @Autowired
+  private ApiInit apiInit;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
-  }
-
-  private void storeReportBundleResources(Bundle bundle, ReportContext context) {
-    Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
-            .findFirst();
-
-    if (measureEntry.isPresent()) {
-      Measure measure = (Measure) measureEntry.get().getResource();
-      context.setMeasureId(measure.getIdElement().getIdPart());
-      context.setMeasure(measure);
-    }
-
-    // Make sure each entry in the bundle has a request
-    bundle.getEntry().forEach(entry -> {
-      if (entry.getRequest() == null) {
-        entry.setRequest(new Bundle.BundleEntryRequestComponent());
-      }
-
-      if (entry.getResource() != null && entry.getResource().getIdElement() != null && StringUtils.isNotEmpty(entry.getResource().getIdElement().getIdPart())) {
-        if (entry.getRequest().getMethod() == null) {
-          entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-        }
-
-        if (StringUtils.isEmpty(entry.getRequest().getUrl())) {
-          entry.getRequest().setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-        }
-      }
-    });
-
-    logger.info("Executing the measure definition bundle");
-
-    // Store the resources of the measure on the evaluation service
-    bundle.setType(Bundle.BundleType.BATCH);
-    bundle = FhirHelper.storeTerminologyAndReturnOther(bundle, this.config);
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-    fhirDataProvider.transaction(bundle);
-
-    logger.info("Done executing the measure definition bundle");
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
@@ -124,94 +80,30 @@ public class ReportController extends BaseController {
             criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
             criteria.getReportDefIdentifier();
 
-    // Find the measure bundle for the given ID
+    // Find the report def for the given identifier
     Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
-
     if (reportDefBundle == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find measure with identifier " + criteria.getReportDefIdentifier());
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + criteria.getReportDefIdentifier());
     }
 
-    // check if the remote measure build is newer
-    SimpleDateFormat formatter = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
-    String lastUpdateDate = formatter.format(reportDefBundle.getMeta().getLastUpdated());
-
+    // Check if the remote report def is newer
     String bundleId = reportDefBundle.getIdElement().getIdPart();
     ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
     if (urlConfig == null) {
       throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
     }
-    String url = urlConfig.getUrl();
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .setHeader("if-modified-since", lastUpdateDate);
+    logger.info("Loading report def");
+    reportDefBundle = apiInit.loadMeasureDefinition(HttpClient.newHttpClient(), urlConfig, reportDefBundle);
 
-    //check if report-defs config has auth properties, if so generate token and add to request
-    LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-    if (authConfig != null) {
-      try {
-        String token = OAuth2Helper.getToken(authConfig);
-        //token = Helper.cleanHeaderManipulationChars(token);
-        if (OAuth2Helper.validateHeaderJwtToken(token)) {
-          requestBuilder.setHeader("Authorization", "Bearer " + token);
-        } else {
-          throw new JWTVerificationException("Invalid token format");
-        }
-      } catch (Exception ex) {
-        logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
-        return;
-      }
-    }
-
-    HttpRequest request = requestBuilder.build();
-
-    HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
-    logger.info(String.format("Checked the latest version of the Measure bundle: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart()));
-
-    if (response.statusCode() == 200) {
-      Bundle reportRemoteReportDefBundle = FhirHelper.getBundle(response.body());
-      String missingResourceTypes = "";
-      if (reportRemoteReportDefBundle == null) {
-        logger.error(String.format("Error parsing report def bundle from %s", url));
-      } else {
-        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), reportRemoteReportDefBundle);
-        if (!missingResourceTypes.equals("")) {
-          logger.warn(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
-        }
-      }
-      if (reportRemoteReportDefBundle != null && !missingResourceTypes.equals("")) {
-        String latestDate = formatter.format(reportRemoteReportDefBundle.getMeta().getLastUpdated());
-        logger.info(String.format("Acquired the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
-        reportRemoteReportDefBundle.setId(reportDefBundle.getIdElement().getIdPart());
-        reportRemoteReportDefBundle.setMeta(reportDefBundle.getMeta());
-        this.getFhirDataProvider().updateResource(reportRemoteReportDefBundle);
-        reportDefBundle = reportRemoteReportDefBundle;
-        logger.info(String.format("Stored the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
-      }
-    } else {
-      logger.info("The latest version of the Measure bundle is already stored. There is no need to re-acquire it.");
-    }
-
-    try {
-      // Store the resources in the measure bundle on the internal FHIR server
-      logger.info("Storing the resources for the measure " + criteria.getReportDefId());
-      this.storeReportBundleResources(reportDefBundle, context);
-      context.setReportDefBundle(reportDefBundle);
-
-      Optional<Bundle.BundleEntryComponent> measureEntry = reportDefBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.Measure)
-              .findFirst();
-
-      if (!measureEntry.isPresent()) {
-        throw new Exception("Measure definition bundle does not have a Measure resource in it");
-      } else {
-        context.setMeasure((Measure) measureEntry.get().getResource());
-        context.setMeasureId(context.getMeasure().getIdElement().getIdPart());
-      }
-    } catch (Exception ex) {
-      logger.error("Error storing resources for the measure " + criteria.getReportDefIdentifier());
-      throw ex;
-    }
+    // Update the context
+    context.setReportDefBundle(reportDefBundle);
+    Measure measure = reportDefBundle.getEntry().stream()
+            .filter(entry -> entry.getResource() instanceof Measure)
+            .map(entry -> (Measure) entry.getResource())
+            .findFirst()
+            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+    context.setMeasure(measure);
+    context.setMeasureId(measure.getIdElement().getIdPart());
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
