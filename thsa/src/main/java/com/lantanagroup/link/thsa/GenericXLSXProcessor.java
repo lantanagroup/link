@@ -4,6 +4,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.thsa.THSAConfig;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hl7.fhir.r4.model.*;
@@ -25,6 +26,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
   public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) {
     try(InputStream contentStream = new ByteArrayInputStream(dataContent)) {
       XSSFWorkbook workbook = new XSSFWorkbook(contentStream);
+
       XSSFSheet sheet = workbook.getSheetAt(0);
       MeasureReport measureReport = convert(sheet);
       measureReport.setId(this.thsaConfig.getDataMeasureReportId());

@@ -60,6 +60,7 @@
           <element id="library" level="project" name="Maven: org.apache.xmlbeans:xmlbeans:5.0.3" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-compress:1.21" />
           <element id="library" level="project" name="Maven: com.github.virtuald:curvesapi:1.07" />
+          <element id="library" level="project" name="Maven: commons-io:commons-io:2.11.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.4.0" />
           <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.2.71" />
           <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.2.71" />
@@ -69,7 +70,6 @@
           <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.8.1" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-text:1.9" />
           <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.11" />
-          <element id="library" level="project" name="Maven: commons-io:commons-io:2.8.0" />
           <element id="library" level="project" name="Maven: com.google.guava:guava:30.1.1-jre" />
           <element id="library" level="project" name="Maven: com.google.guava:failureaccess:1.0.1" />
           <element id="library" level="project" name="Maven: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" />
