@@ -1,15 +1,13 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.api.ApiInit;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.thsa.THSAConfig;
@@ -19,7 +17,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.HttpResponseException;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -40,15 +37,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -73,49 +65,12 @@ public class ReportController extends BaseController {
   private ApplicationContext context;
   @Autowired
   private QueryConfig queryConfig;
+  @Autowired
+  private ApiInit apiInit;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
-  }
-
-  private void storeReportBundleResources(Bundle bundle, ReportContext context) {
-    Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
-            .findFirst();
-
-    if (measureEntry.isPresent()) {
-      Measure measure = (Measure) measureEntry.get().getResource();
-      context.setMeasureId(measure.getIdElement().getIdPart());
-      context.setMeasure(measure);
-    }
-
-    // Make sure each entry in the bundle has a request
-    bundle.getEntry().forEach(entry -> {
-      if (entry.getRequest() == null) {
-        entry.setRequest(new Bundle.BundleEntryRequestComponent());
-      }
-
-      if (entry.getResource() != null && entry.getResource().getIdElement() != null && StringUtils.isNotEmpty(entry.getResource().getIdElement().getIdPart())) {
-        if (entry.getRequest().getMethod() == null) {
-          entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-        }
-
-        if (StringUtils.isEmpty(entry.getRequest().getUrl())) {
-          entry.getRequest().setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-        }
-      }
-    });
-
-    logger.info("Executing the measure definition bundle");
-
-    // Store the resources of the measure on the evaluation service
-    bundle.setType(Bundle.BundleType.BATCH);
-    bundle = FhirHelper.storeTerminologyAndReturnOther(bundle, this.config);
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-    fhirDataProvider.transaction(bundle);
-
-    logger.info("Done executing the measure definition bundle");
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
@@ -125,94 +80,30 @@ public class ReportController extends BaseController {
             criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
             criteria.getReportDefIdentifier();
 
-    // Find the measure bundle for the given ID
+    // Find the report def for the given identifier
     Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
-
     if (reportDefBundle == null) {
-      throw new Exception("Did not find measure with ID " + criteria.getReportDefId());
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + criteria.getReportDefIdentifier());
     }
 
-    // check if the remote measure build is newer
-    SimpleDateFormat formatter = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
-    String lastUpdateDate = formatter.format(reportDefBundle.getMeta().getLastUpdated());
-
+    // Check if the remote report def is newer
     String bundleId = reportDefBundle.getIdElement().getIdPart();
     ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
     if (urlConfig == null) {
       throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
     }
-    String url = urlConfig.getUrl();
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .setHeader("if-modified-since", lastUpdateDate);
+    logger.info("Loading report def");
+    reportDefBundle = apiInit.loadMeasureDefinition(HttpClient.newHttpClient(), urlConfig, reportDefBundle);
 
-    //check if report-defs config has auth properties, if so generate token and add to request
-    LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-    if (authConfig != null) {
-      try {
-        String token = OAuth2Helper.getToken(authConfig);
-        //token = Helper.cleanHeaderManipulationChars(token);
-        if (OAuth2Helper.validateHeaderJwtToken(token)) {
-          requestBuilder.setHeader("Authorization", "Bearer " + token);
-        } else {
-          throw new JWTVerificationException("Invalid token format");
-        }
-      } catch (Exception ex) {
-        logger.error(String.format("Error generating authorization token: %s", ex.getMessage()));
-        return;
-      }
-    }
-
-    HttpRequest request = requestBuilder.build();
-
-    HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
-    logger.info(String.format("Checked the latest version of the Measure bundle: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart()));
-
-    if (response.statusCode() == 200) {
-      Bundle reportRemoteReportDefBundle = FhirHelper.getBundle(response.body());
-      String missingResourceTypes = "";
-      if (reportRemoteReportDefBundle == null) {
-        logger.error(String.format("Error parsing report def bundle from %s", url));
-      } else {
-        missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig), reportRemoteReportDefBundle);
-        if (!missingResourceTypes.equals("")) {
-          logger.warn(String.format("These resource types %s are in data requirements but missing from the configuration.", missingResourceTypes));
-        }
-      }
-      if (reportRemoteReportDefBundle != null && !missingResourceTypes.equals("")) {
-        String latestDate = formatter.format(reportRemoteReportDefBundle.getMeta().getLastUpdated());
-        logger.info(String.format("Acquired the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
-        reportRemoteReportDefBundle.setId(reportDefBundle.getIdElement().getIdPart());
-        reportRemoteReportDefBundle.setMeta(reportDefBundle.getMeta());
-        this.getFhirDataProvider().updateResource(reportRemoteReportDefBundle);
-        reportDefBundle = reportRemoteReportDefBundle;
-        logger.info(String.format("Stored the latest Measure bundle %s with the date of: %s", reportDefBundle.getResourceType() + "/" + reportDefBundle.getEntryFirstRep().getResource().getIdElement().getIdPart(), latestDate));
-      }
-    } else {
-      logger.info("The latest version of the Measure bundle is already stored. There is no need to re-acquire it.");
-    }
-
-    try {
-      // Store the resources in the measure bundle on the internal FHIR server
-      logger.info("Storing the resources for the measure " + criteria.getReportDefId());
-      this.storeReportBundleResources(reportDefBundle, context);
-      context.setReportDefBundle(reportDefBundle);
-
-      Optional<Bundle.BundleEntryComponent> measureEntry = reportDefBundle.getEntry().stream()
-              .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.Measure)
-              .findFirst();
-
-      if (!measureEntry.isPresent()) {
-        throw new Exception("Measure definition bundle does not have a Measure resource in it");
-      } else {
-        context.setMeasure((Measure) measureEntry.get().getResource());
-        context.setMeasureId(context.getMeasure().getIdElement().getIdPart());
-      }
-    } catch (Exception ex) {
-      logger.error("Error storing resources for the measure " + criteria.getReportDefId() + ": " + ex.getMessage());
-      throw new Exception("Error storing resources for the measure: " + ex.getMessage(), ex);
-    }
+    // Update the context
+    context.setReportDefBundle(reportDefBundle);
+    Measure measure = reportDefBundle.getEntry().stream()
+            .filter(entry -> entry.getResource() instanceof Measure)
+            .map(entry -> (Measure) entry.getResource())
+            .findFirst()
+            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+    context.setMeasure(measure);
+    context.setMeasureId(measure.getIdElement().getIdPart());
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -288,9 +179,8 @@ public class ReportController extends BaseController {
 
       triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
     } catch (Exception ex) {
-      String msg = String.format("Error scooping/storing data for the patients (%s): %s", StringUtils.join(patientsOfInterest, ", "), ex.getMessage());
-      logger.error(msg);
-      throw new Exception(msg, ex);
+      logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
+      throw ex;
     }
   }
 
@@ -305,7 +195,8 @@ public class ReportController extends BaseController {
           @RequestParam("reportDefIdentifier") String reportDefIdentifier,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
-          boolean regenerate) {
+          boolean regenerate)
+          throws Exception {
 
     GenerateResponse response = new GenerateResponse();
     ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
@@ -314,92 +205,84 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    try {
+    triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
-      triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    // Get the latest measure def and update it on the FHIR storage server
+    this.resolveMeasure(criteria, reportContext);
 
-      // Get the latest measure def and update it on the FHIR storage server
-      this.resolveMeasure(criteria, reportContext);
+    triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
-      triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
-
-      // Search the reference document by measure criteria nd reporting period
-      DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
-              reportContext.getReportDefBundle().getIdentifier(),
-              periodStart,
-              periodEnd,
-              regenerate);
-      if (existingDocumentReference != null && !regenerate) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. Are you sure you want to re-generate the report (re-query the data from the EHR and re-evaluate the measure based on updated data)?");
-      }
-
-      if (existingDocumentReference != null) {
-        existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
-      }
-
-      // Generate the master report id
-      String id = "";
-      if (!regenerate || existingDocumentReference == null) {
-        // generate master report id based on the report date range and the measure used in the report generation
-        id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
-      } else {
-        id = existingDocumentReference.getMasterIdentifier().getValue();
-        triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
-      }
-      reportContext.setReportId(id);
-
-      triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
-
-      // Get the patient identifiers for the given date
-      List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
-
-      triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
-
-      // Get the resource types to query
-      List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
-
-      // Scoop the data for the patients and store it
-      this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
-
-      if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
-        logger.error(String.format("Census list not found."));
-        throw new HttpResponseException(500, "Internal Server Error");
-      }
-
-      triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
-
-      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
-
-      reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
-
-      response.setReportId(id);
-
-      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, reportContext.getReportDefBundle());
-
-      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
-
-      ReportGenerator generator = new ReportGenerator(reportContext, criteria, config, user, reportAggregator);
-
-      triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
-
-      generator.generate(criteria, reportContext);
-
-      triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
-
-      triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
-
-      generator.store(criteria, reportContext, existingDocumentReference);
-
-      triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
-
-      this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
-    } catch (ResponseStatusException rse) {
-      logger.error(String.format("Error generating report: %s", rse.getMessage()), rse);
-      throw rse;
-    } catch (Exception ex) {
-      logger.error(String.format("Error generating report: %s", ex.getMessage()), ex);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error.");
+    // Search the reference document by measure criteria nd reporting period
+    DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
+            reportContext.getReportDefBundle().getIdentifier(),
+            periodStart,
+            periodEnd,
+            regenerate);
+    if (existingDocumentReference != null && !regenerate) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
     }
+
+    if (existingDocumentReference != null) {
+      existingDocumentReference = FhirHelper.incrementMinorVersion(existingDocumentReference);
+    }
+
+    // Generate the master report id
+    String id = "";
+    if (!regenerate || existingDocumentReference == null) {
+      // generate master report id based on the report date range and the measure used in the report generation
+      id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
+    } else {
+      id = existingDocumentReference.getMasterIdentifier().getValue();
+      triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+    }
+    reportContext.setReportId(id);
+
+    triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+
+    // Get the patient identifiers for the given date
+    List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
+
+    triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+
+    // Get the resource types to query
+    List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
+
+    // Scoop the data for the patients and store it
+    this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
+
+    if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
+      String msg = "A census for the specified criteria was not found.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
+    }
+
+    triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
+
+    this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+
+    reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
+
+    response.setReportId(id);
+
+    String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, reportContext.getReportDefBundle());
+
+    IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+
+    ReportGenerator generator = new ReportGenerator(reportContext, criteria, config, user, reportAggregator);
+
+    triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
+
+    generator.generate(criteria, reportContext);
+
+    triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
+
+    triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
+
+    generator.store(criteria, reportContext, existingDocumentReference);
+
+    triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
+
+    this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
     return response;
   }
@@ -419,7 +302,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getSender()))
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for sending");
+      throw new IllegalStateException("Not configured for sending");
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
 
@@ -502,7 +385,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getDownloader()))
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for downloading");
+      throw new IllegalStateException("Not configured for downloading");
 
     IReportDownloader downloader;
     Class<?> downloaderClass = Class.forName(this.config.getDownloader());
@@ -583,13 +466,8 @@ public class ReportController extends BaseController {
 
     documentReference = FhirHelper.incrementMinorVersion(documentReference);
 
-    try {
-      this.getFhirDataProvider().updateResource(documentReference);
-      this.getFhirDataProvider().updateResource(data.getMeasureReport());
-    } catch (Exception ex) {
-      logger.error(String.format("Error saving changes to report: %s", ex.getMessage()));
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving changes to report");
-    }
+    this.getFhirDataProvider().updateResource(documentReference);
+    this.getFhirDataProvider().updateResource(data.getMeasureReport());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
@@ -683,7 +561,7 @@ public class ReportController extends BaseController {
     Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
     Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
     if (existingVersion >= 1.0f) {
-      throw new HttpResponseException(400, "Bad Request, report version is greater than or equal to 1.0");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report version is greater than or equal to 1.0");
     }
 
     // Make sure the bundle is a transaction
@@ -716,84 +594,81 @@ public class ReportController extends BaseController {
           @RequestParam(required = false) String periodStartDate,
           @RequestParam(required = false) String periodEndDate,
           @RequestParam(required = false) String docStatus,
-          @RequestParam(required = false) String submittedDate) {
+          @RequestParam(required = false) String submittedDate)
+          throws Exception {
 
     Bundle bundle;
     boolean andCond = false;
     ReportBundle reportBundle = new ReportBundle();
-    try {
-      String url = this.config.getDataStore().getBaseUrl();
-      if (bundleId != null) {
-        url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
-      } else {
-        if (!url.endsWith("/")) url += "/";
-        url += "DocumentReference?";
-        if (author != null) {
-          url += "author=" + author;
-          andCond = true;
+
+    String url = this.config.getDataStore().getBaseUrl();
+    if (bundleId != null) {
+      url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
+    } else {
+      if (!url.endsWith("/")) url += "/";
+      url += "DocumentReference?";
+      if (author != null) {
+        url += "author=" + author;
+        andCond = true;
+      }
+      if (identifier != null) {
+        if (andCond) {
+          url += "&";
         }
-        if (identifier != null) {
-          if (andCond) {
-            url += "&";
-          }
-          url += "identifier=" + Helper.URLEncode(identifier);
-          andCond = true;
+        url += "identifier=" + Helper.URLEncode(identifier);
+        andCond = true;
+      }
+      if (periodStartDate != null) {
+        if (andCond) {
+          url += "&";
         }
-        if (periodStartDate != null) {
-          if (andCond) {
-            url += "&";
-          }
-          url += PeriodStartParamName + "=ge" + periodStartDate;
-          andCond = true;
+        url += PeriodStartParamName + "=ge" + periodStartDate;
+        andCond = true;
+      }
+      if (periodEndDate != null) {
+        if (andCond) {
+          url += "&";
         }
-        if (periodEndDate != null) {
-          if (andCond) {
-            url += "&";
-          }
-          url += PeriodEndParamName + "=le" + periodEndDate;
-          andCond = true;
+        url += PeriodEndParamName + "=le" + periodEndDate;
+        andCond = true;
+      }
+      if (docStatus != null) {
+        if (andCond) {
+          url += "&";
         }
-        if (docStatus != null) {
-          if (andCond) {
-            url += "&";
-          }
-          url += "docStatus=" + docStatus.toLowerCase();
+        url += "docStatus=" + docStatus.toLowerCase();
+      }
+      if (submittedDate != null) {
+        if (andCond) {
+          url += "&";
         }
-        if (submittedDate != null) {
-          if (andCond) {
-            url += "&";
-          }
-          Date submittedDateAsDate = Helper.parseFhirDate(submittedDate);
-          Date theDayAfterSubmittedDateEnd = Helper.addDays(submittedDateAsDate, 1);
-          String theDayAfterSubmittedDateEndAsString = Helper.getFhirDate(theDayAfterSubmittedDateEnd);
-          url += "date=ge" + submittedDate + "&date=le" + theDayAfterSubmittedDateEndAsString;
+        Date submittedDateAsDate = Helper.parseFhirDate(submittedDate);
+        Date theDayAfterSubmittedDateEnd = Helper.addDays(submittedDateAsDate, 1);
+        String theDayAfterSubmittedDateEndAsString = Helper.getFhirDate(theDayAfterSubmittedDateEnd);
+        url += "date=ge" + submittedDate + "&date=le" + theDayAfterSubmittedDateEndAsString;
+      }
+    }
+
+    bundle = this.getFhirDataProvider().fetchResourceFromUrl(url);
+    List<Report> lst = bundle.getEntry().parallelStream().map(Report::new).collect(Collectors.toList());
+    List<String> reportIds = lst.stream().map(report -> report.getId()).collect(Collectors.toList());
+    Bundle response = this.getFhirDataProvider().getMeasureReportsByIds(reportIds);
+
+    response.getEntry().parallelStream().forEach(bundleEntry -> {
+      if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {
+        MeasureReport measureReport = (MeasureReport) bundleEntry.getResource();
+        Extension extension = measureReport.getExtensionByUrl(Constants.NotesUrl);
+        Report foundReport = lst.stream().filter(rep -> rep.getId().equals(measureReport.getIdElement().getIdPart())).findAny().orElse(null);
+        if (extension != null && foundReport != null) {
+          foundReport.setNote(extension.getValue().toString());
         }
       }
+    });
+    reportBundle.setReportTypeId(bundleId != null ? bundleId : bundle.getId());
+    reportBundle.setList(lst);
+    reportBundle.setTotalSize(bundle.getTotal());
 
-      bundle = this.getFhirDataProvider().fetchResourceFromUrl(url);
-      List<Report> lst = bundle.getEntry().parallelStream().map(Report::new).collect(Collectors.toList());
-      List<String> reportIds = lst.stream().map(report -> report.getId()).collect(Collectors.toList());
-      Bundle response = this.getFhirDataProvider().getMeasureReportsByIds(reportIds);
-
-      response.getEntry().parallelStream().forEach(bundleEntry -> {
-        if (bundleEntry.getResource().getResourceType().equals(ResourceType.MeasureReport)) {
-          MeasureReport measureReport = (MeasureReport) bundleEntry.getResource();
-          Extension extension = measureReport.getExtensionByUrl(Constants.NotesUrl);
-          Report foundReport = lst.stream().filter(rep -> rep.getId().equals(measureReport.getIdElement().getIdPart())).findAny().orElse(null);
-          if (extension != null && foundReport != null) {
-            foundReport.setNote(extension.getValue().toString());
-          }
-        }
-      });
-      reportBundle.setReportTypeId(bundleId != null ? bundleId : bundle.getId());
-      reportBundle.setList(lst);
-      reportBundle.setTotalSize(bundle.getTotal());
-
-      this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.SearchReports, "Successfully Searched Reports");
-    } catch (Exception ex) {
-      logger.error(String.format("Error searching Reports: %s", ex.getMessage()), ex);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Please contact system administrator regarding this error");
-    }
+    this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.SearchReports, "Successfully Searched Reports");
 
     return reportBundle;
   }
@@ -811,7 +686,6 @@ public class ReportController extends BaseController {
    * @param reportId         The ID of the report to re-evaluate after DELETE'ing/excluding the patients.
    * @param excludedPatients A list of patients to be excluded from the report, including reasons for their exclusion
    * @return A ReportModel that has been updated to reflect the exclusions
-   * @throws HttpResponseException
    */
   @PostMapping("/{reportId}/$exclude")
   public ReportModel excludePatients(
@@ -819,29 +693,28 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @RequestBody List<ExcludedPatientModel> excludedPatients) throws HttpResponseException {
+          @RequestBody List<ExcludedPatientModel> excludedPatients) {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(reportId);
 
     if (reportDocRef == null) {
-      throw new HttpResponseException(404, String.format("Report %s not found", reportId));
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
 
     MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
     if (measureReport == null) {
-      throw new HttpResponseException(404, String.format("Report %s does not have a MeasureReport", reportId));
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s does not have a MeasureReport", reportId));
     }
 
     if (excludedPatients == null || excludedPatients.size() == 0) {
-      throw new HttpResponseException(400, "Not patients indicated to be excluded");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No exclusions specified");
     }
 
     Measure measure = this.getFhirDataProvider().getMeasureForReport(reportDocRef);
 
     if (measure == null) {
-      logger.error(String.format("The measure for report %s no longer exists on the system", reportId));
-      throw new HttpResponseException(500, "Internal Server Error");
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("The measure for report %s was not found or no longer exists on the system", reportId));
     }
 
     Bundle excludeChangesBundle = new Bundle();
@@ -850,11 +723,11 @@ public class ReportController extends BaseController {
 
     for (ExcludedPatientModel excludedPatient : excludedPatients) {
       if (Strings.isEmpty(excludedPatient.getPatientId())) {
-        throw new HttpResponseException(400, String.format("Patient ID not provided for all exclusions"));
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Patient ID not provided for all exclusions"));
       }
 
       if (excludedPatient.getReason() == null || excludedPatient.getReason().isEmpty()) {
-        throw new HttpResponseException(400, String.format("Excluded patient ID %s does not specify a reason", excludedPatient.getPatientId()));
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Excluded patient ID %s does not specify a reason", excludedPatient.getPatientId()));
       }
 
       // Find any references to the Patient in the MeasureReport.evaluatedResources
@@ -873,7 +746,7 @@ public class ReportController extends BaseController {
 
       // Throw an error if the Patient does not show up in either evaluatedResources or the excluded extensions
       if (foundEvaluatedPatient.size() == 0 && !foundExcluded) {
-        throw new HttpResponseException(400, String.format("Patient %s is not included in report %s", excludedPatient.getPatientId(), reportId));
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Patient %s is not included in report %s", excludedPatient.getPatientId(), reportId));
       }
 
       // Create an extension for the excluded patient on the MeasureReport
@@ -920,12 +793,7 @@ public class ReportController extends BaseController {
     if (excludeChangesBundle.getEntry().size() > 0) {
       logger.debug(String.format("Executing transaction update bundle to delete patients and/or update MeasureReport %s", reportId));
 
-      try {
-        this.getFhirDataProvider().transaction(excludeChangesBundle);
-      } catch (Exception ex) {
-        logger.error(String.format("Error updating resources for report %s to exclude %s patient(s)", reportId, excludedPatients.size()), ex);
-        throw new HttpResponseException(500, "Internal Server Error");
-      }
+      this.getFhirDataProvider().transaction(excludeChangesBundle);
     }
 
     // Create ReportCriteria to be used by MeasureEvaluator
@@ -967,13 +835,8 @@ public class ReportController extends BaseController {
                             .setMethod(Bundle.HTTPVerb.PUT))
             .setResource(reportDocRef);
 
-    try {
-      // Execute the update transaction bundle for MeasureReport and DocumentReference
-      this.getFhirDataProvider().transaction(reportUpdateBundle);
-    } catch (Exception ex) {
-      logger.error("Error updating DocumentReference and MeasureReport during patient exclusion", ex);
-      throw new HttpResponseException(500, "Internal Server Error");
-    }
+    // Execute the update transaction bundle for MeasureReport and DocumentReference
+    this.getFhirDataProvider().transaction(reportUpdateBundle);
 
     // Record an audit event that the report has had exclusions
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.ExcludePatients, String.format("Excluded %s patients from report %s", excludedPatients.size(), reportId));

@@ -51,7 +51,7 @@ public class MeasureReportDownloader implements IReportDownloader {
       response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
     }
     else {
-      throw new IllegalArgumentException("Invalid report Id");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report Id");
     }
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
