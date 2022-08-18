@@ -1,5 +1,8 @@
-package com.lantanagroup.link;
+package com.lantanagroup.link.thsa;
 
+import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.thsa.THSAConfig;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -7,12 +10,13 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.Date;
 
+@Component
 public class GenericXLSXProcessor implements IDataProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(GenericXLSXProcessor.class);
 
   @Autowired
   private THSAConfig thsaConfig;

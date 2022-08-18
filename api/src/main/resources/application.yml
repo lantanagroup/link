@@ -16,7 +16,7 @@ api:
   report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
   data-processor:
     csv: com.lantanagroup.link.thsa.GenericCSVProcessor
-    xlsx: com.lantanagroup.link.GenericXLSXProcessor
+    xlsx: com.lantanagroup.link.thsa.GenericXLSXProcessor
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps

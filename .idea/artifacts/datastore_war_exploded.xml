@@ -35,16 +35,6 @@
           <element id="library" level="project" name="Maven: net.minidev:json-smart:2.3" />
           <element id="library" level="project" name="Maven: net.minidev:accessors-smart:1.2" />
           <element id="library" level="project" name="Maven: org.ow2.asm:asm:5.0.4" />
-          <element id="library" level="project" name="Maven: org.apache.poi:poi:5.2.2" />
-          <element id="library" level="project" name="Maven: org.apache.commons:commons-collections4:4.4" />
-          <element id="library" level="project" name="Maven: org.apache.commons:commons-math3:3.6.1" />
-          <element id="library" level="project" name="Maven: com.zaxxer:SparseBitSet:1.2" />
-          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.17.1" />
-          <element id="library" level="project" name="Maven: org.apache.poi:poi-ooxml:5.2.2" />
-          <element id="library" level="project" name="Maven: org.apache.poi:poi-ooxml-lite:5.2.2" />
-          <element id="library" level="project" name="Maven: org.apache.xmlbeans:xmlbeans:5.0.3" />
-          <element id="library" level="project" name="Maven: org.apache.commons:commons-compress:1.21" />
-          <element id="library" level="project" name="Maven: com.github.virtuald:curvesapi:1.07" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.utilities:5.6.27" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-base:5.7.0" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.9" />
@@ -80,6 +70,7 @@
           <element id="library" level="project" name="Maven: jakarta.activation:jakarta.activation-api:1.2.1" />
           <element id="library" level="project" name="Maven: com.github.bbottema:emailaddress-rfc2822:2.2.0" />
           <element id="library" level="project" name="Maven: com.github.bbottema:jetbrains-runtime-annotations:1.0.0" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-collections4:4.4" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-server-mdm:5.7.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-storage:5.7.0" />
           <element id="library" level="project" name="Maven: org.fhir:ucum:1.0.3" />
@@ -113,6 +104,7 @@
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.validation:5.6.27" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:org.hl7.fhir.dstu2016may:5.6.27" />
           <element id="library" level="project" name="Maven: net.sf.saxon:Saxon-HE:9.5.1-5" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-compress:1.20" />
           <element id="library" level="project" name="Maven: com.google.code.gson:gson:2.8.5" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu2:5.7.0" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-structures-dstu3:5.7.0" />
@@ -164,6 +156,7 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-websocket:5.1.9.RELEASE" />
           <element id="library" level="project" name="Maven: org.glassfish:javax.el:3.0.0" />
           <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-to-slf4j:2.15.0" />
+          <element id="library" level="project" name="Maven: org.apache.logging.log4j:log4j-api:2.17.1" />
           <element id="library" level="project" name="Maven: org.elasticsearch.client:elasticsearch-rest-high-level-client:6.4.3" />
           <element id="library" level="project" name="Maven: org.elasticsearch:elasticsearch:6.4.3" />
           <element id="library" level="project" name="Maven: org.elasticsearch:elasticsearch-core:6.4.3" />
@@ -205,6 +198,7 @@
           <element id="library" level="project" name="Maven: org.jboss.jdeparser:jdeparser:2.0.3.Final" />
           <element id="library" level="project" name="Maven: org.openjdk.jmh:jmh-generator-annprocess:1.23" />
           <element id="library" level="project" name="Maven: org.openjdk.jmh:jmh-core:1.23" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-math3:3.2" />
           <element id="library" level="project" name="Maven: org.hibernate.search:hibernate-search-backend-lucene:6.0.3.Final" />
           <element id="library" level="project" name="Maven: org.apache.lucene:lucene-core:8.7.0" />
           <element id="library" level="project" name="Maven: org.apache.lucene:lucene-analyzers-common:8.7.0" />
