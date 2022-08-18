@@ -30,6 +30,8 @@ public class GenericXLSXProcessor implements IDataProcessor {
       XSSFSheet sheet = workbook.getSheetAt(0);
       MeasureReport measureReport = convert(sheet);
       measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+      measureReport.setType(MeasureReport.MeasureReportType.SUMMARY);
+      measureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
 
       Bundle updateBundle = new Bundle();
       updateBundle.setType(Bundle.BundleType.TRANSACTION);
@@ -53,9 +55,10 @@ public class GenericXLSXProcessor implements IDataProcessor {
     ventCoding.setSystem("TODO");
     ventCoding.setCode("vents");
     group.setCode(new CodeableConcept(ventCoding));
-    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(3).toString(), sheet, 45, 3));
-    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(4).toString(), sheet, 45, 4));
-    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(5).toString(), sheet, 45, 5));
+    for (int col = 3; col < 6; col++) {
+      String varName = sheet.getRow(2).getCell(col).toString();
+      group.addPopulation(getGroupPop(varName, sheet, 45, col));
+    }
     measureReport.addGroup(group);
     return measureReport;
   }
@@ -67,7 +70,8 @@ public class GenericXLSXProcessor implements IDataProcessor {
     coding.setCode(type);
     coding.setDisplay(type);
     pop.setCode(new CodeableConcept(coding));
-    pop.setCount(Integer.parseInt(sheet.getRow(row).getCell(col).toString()));
+    String count = sheet.getRow(row).getCell(col).getRawValue();
+    pop.setCount(Integer.parseInt(count));
     return pop;
   }
 }
