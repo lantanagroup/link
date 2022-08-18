@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.*;
 import java.util.Date;
 
-public class GenericXLSProcessor implements IDataProcessor {
-  private static final Logger logger = LoggerFactory.getLogger(GenericXLSProcessor.class);
+public class GenericXLSXProcessor implements IDataProcessor {
+  private static final Logger logger = LoggerFactory.getLogger(GenericXLSXProcessor.class);
 
   @Autowired
   private THSAConfig thsaConfig;
