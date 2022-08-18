@@ -47,9 +47,9 @@ public class GenericXLSProcessor implements IDataProcessor {
     ventCoding.setSystem("TODO");
     ventCoding.setCode("vents");
     group.setCode(new CodeableConcept(ventCoding));
-    group.addPopulation(getGroupPop("totalAvail", sheet, 45, 3));
-    group.addPopulation(getGroupPop("inUse", sheet, 45, 4));
-    group.addPopulation(getGroupPop("currentAvail", sheet, 45, 5));
+    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(3).toString(), sheet, 45, 3));
+    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(4).toString(), sheet, 45, 4));
+    group.addPopulation(getGroupPop(sheet.getRow(2).getCell(5).toString(), sheet, 45, 5));
     measureReport.addGroup(group);
     return measureReport;
   }
