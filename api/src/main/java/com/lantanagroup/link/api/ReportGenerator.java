@@ -7,9 +7,9 @@ import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,11 +111,13 @@ public class ReportGenerator {
             : ForkJoinPool.commonPool();
     try {
       forkJoinPool.submit(() -> context.getPatientsOfInterest().parallelStream().forEach(patient -> {
-        System.out.println("Patient is: " + patient);
-        MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patient);
-        patientMeasureReport.setId(context.getReportId() + "-" + patient.getId().hashCode());
-        // store the measure report
-        this.context.getFhirProvider().updateResource(patientMeasureReport);
+        logger.info("Patient is: " + patient);
+        if (!StringUtils.isEmpty(patient.getId())) {
+          MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, patient);
+          patientMeasureReport.setId(context.getReportId() + "-" + patient.getId().hashCode());
+          // store the measure report
+          this.context.getFhirProvider().updateResource(patientMeasureReport);
+        }
       })).get();
     } finally {
       forkJoinPool.shutdown();
