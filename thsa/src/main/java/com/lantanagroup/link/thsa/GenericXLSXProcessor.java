@@ -52,10 +52,11 @@ public class GenericXLSXProcessor implements IDataProcessor {
     ventCoding.setSystem(Constants.MeasuredValues);
     ventCoding.setCode("vents");
     group.setCode(new CodeableConcept(ventCoding));
-    for (int col = 3; col < 6; col++) {
-      String varName = sheet.getRow(2).getCell(col).toString();
-      group.addPopulation(getGroupPop(varName, sheet, 45, col));
-    }
+
+    group.addPopulation(getGroupPop("numVent", sheet, 45, 3));
+    group.addPopulation(getGroupPop("numVentUse", sheet, 45, 4));
+    group.addPopulation(getGroupPop("numVentAvailable", sheet, 45, 5));
+
     measureReport.addGroup(group);
     return measureReport;
   }
