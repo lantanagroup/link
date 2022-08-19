@@ -27,7 +27,7 @@ public class ReportDataController extends BaseController {
   }
 
   @PostMapping(value = "/data/{type}")
-  public void retrieveData(@RequestBody() byte[] csvContent, @PathVariable("type") String type) throws Exception {
+  public void retrieveData(@RequestBody() byte[] content, @PathVariable("type") String type) throws Exception {
     if (config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
       throw new IllegalStateException("Cannot find data processor.");
     }
@@ -37,6 +37,6 @@ public class ReportDataController extends BaseController {
     Class<?> dataProcessorClass = Class.forName(this.config.getDataProcessor().get(type));
     IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
-    dataProcessor.process(csvContent, getFhirDataProvider());
+    dataProcessor.process(content, getFhirDataProvider());
   }
 }
