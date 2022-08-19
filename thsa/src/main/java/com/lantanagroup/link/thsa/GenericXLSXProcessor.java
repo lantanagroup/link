@@ -23,27 +23,24 @@ public class GenericXLSXProcessor implements IDataProcessor {
   private THSAConfig thsaConfig;
 
   @Override
-  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) {
-    try(InputStream contentStream = new ByteArrayInputStream(dataContent)) {
-      XSSFWorkbook workbook = new XSSFWorkbook(contentStream);
+  public void process(byte[] dataContent, FhirDataProvider fhirDataProvider) throws IOException {
+    InputStream contentStream = new ByteArrayInputStream(dataContent);
+    XSSFWorkbook workbook = new XSSFWorkbook(contentStream);
 
-      XSSFSheet sheet = workbook.getSheetAt(0);
-      MeasureReport measureReport = convert(sheet);
-      measureReport.setId(this.thsaConfig.getDataMeasureReportId());
-      measureReport.setType(MeasureReport.MeasureReportType.SUMMARY);
-      measureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
+    XSSFSheet sheet = workbook.getSheetAt(0);
+    MeasureReport measureReport = convert(sheet);
+    measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+    measureReport.setType(MeasureReport.MeasureReportType.SUMMARY);
+    measureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
 
-      Bundle updateBundle = new Bundle();
-      updateBundle.setType(Bundle.BundleType.TRANSACTION);
-      updateBundle.addEntry()
-              .setResource(measureReport)
-              .setRequest(new Bundle.BundleEntryRequestComponent()
-                      .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
-      Bundle response = fhirDataProvider.transaction(updateBundle);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    Bundle updateBundle = new Bundle();
+    updateBundle.setType(Bundle.BundleType.TRANSACTION);
+    updateBundle.addEntry()
+            .setResource(measureReport)
+            .setRequest(new Bundle.BundleEntryRequestComponent()
+                    .setMethod(Bundle.HTTPVerb.PUT)
+                    .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
+    Bundle response = fhirDataProvider.transaction(updateBundle);
   }
 
   MeasureReport convert(XSSFSheet sheet) {
@@ -52,7 +49,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
     measureReport.setDate(new Date());
     MeasureReport.MeasureReportGroupComponent group = new MeasureReport.MeasureReportGroupComponent();
     Coding ventCoding = new Coding();
-    ventCoding.setSystem("TODO");
+    ventCoding.setSystem(Constants.MeasuredValues);
     ventCoding.setCode("vents");
     group.setCode(new CodeableConcept(ventCoding));
     for (int col = 3; col < 6; col++) {
