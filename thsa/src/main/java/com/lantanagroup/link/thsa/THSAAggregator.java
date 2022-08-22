@@ -5,6 +5,7 @@ import com.lantanagroup.link.*;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -193,7 +194,7 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
 
   @Override
   protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
-    List<String> reportIds = patientOfInterestModelList.stream().map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
+    List<String> reportIds = patientOfInterestModelList.stream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
     Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
     List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
     for (IBaseResource patientMeasureReportResource : bundles) {
