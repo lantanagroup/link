@@ -154,6 +154,11 @@
             <version>7.9</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core</artifactId>
+            <version>1.30.0</version>
+        </dependency>
 
     </dependencies>
 </project>
