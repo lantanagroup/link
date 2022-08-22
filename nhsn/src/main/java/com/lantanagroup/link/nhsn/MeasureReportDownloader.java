@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
@@ -22,7 +23,7 @@ public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
 
   @Override
-  public void download(String reportId, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, ApiConfig config) throws IOException, TransformerException {
+  public void download(String reportId, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config) throws IOException, TransformerException {
 
     DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId);
 
