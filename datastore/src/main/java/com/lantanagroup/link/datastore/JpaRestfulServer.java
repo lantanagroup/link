@@ -12,6 +12,7 @@ import ca.uhn.fhir.jpa.provider.IJpaSystemProvider;
 import ca.uhn.fhir.jpa.provider.JpaCapabilityStatementProvider;
 import ca.uhn.fhir.jpa.searchparam.matcher.InMemoryResourceMatcher;
 import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
+import ca.uhn.fhir.rest.server.HardcodedServerAddressStrategy;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
@@ -19,6 +20,7 @@ import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import com.lantanagroup.link.datastore.auth.UserInterceptor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
@@ -88,6 +90,10 @@ public class JpaRestfulServer extends RestfulServer {
 
     this.registerProviders(this.resourceProviders.createProviders());
     this.registerProvider(jpaSystemProvider);
+
+    if (StringUtils.isNotEmpty(this.dataStoreConfig.getPublicAddress())) {
+      this.setServerAddressStrategy(new HardcodedServerAddressStrategy(this.dataStoreConfig.getPublicAddress()));
+    }
 
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);

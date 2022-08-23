@@ -17,6 +17,7 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
 
   @Override
   public void execute(ReportCriteria reportCriteria, ReportContext context, ApiConfig config, FhirDataProvider fhirDataProvider) {
+    logger.debug("Beginning Encounter Status Transformer.");
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
       logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
       try {
