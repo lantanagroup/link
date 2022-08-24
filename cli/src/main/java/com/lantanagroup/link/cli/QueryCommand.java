@@ -59,8 +59,9 @@ public class QueryCommand extends BaseShellCommand {
 
       this.registerFhirDataProvider();
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
+      USCoreConfig usCoreConfig = this.applicationContext.getBean(USCoreConfig.class);
 
-      if (config.isRequireHttps() && !config.getFhirServerBase().contains("https")) {
+      if (config.isRequireHttps() && !usCoreConfig.getFhirServerBase().contains("https")) {
         throw new IllegalStateException("Query URL requires https");
       }
 
