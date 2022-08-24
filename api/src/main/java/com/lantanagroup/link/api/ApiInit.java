@@ -218,7 +218,7 @@ public class ApiInit {
       throw new IllegalStateException(msg);
     }
 
-    if (this.queryConfig.isRequireHttps() && !this.queryConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
+    if (this.queryConfig.isRequireHttps() && !this.usCoreConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
       throw new IllegalStateException("Error, Query URL requires https");
     }
 

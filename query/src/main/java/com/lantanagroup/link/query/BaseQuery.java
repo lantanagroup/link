@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
@@ -24,6 +25,8 @@ public class BaseQuery {
   @Setter
   private IGenericClient fhirQueryClient;
 
+  @Autowired
+  protected USCoreConfig usCoreConfig;
 
   @Autowired
   protected QueryConfig queryConfig;
@@ -44,7 +47,7 @@ public class BaseQuery {
     }
 
     //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
-    IGenericClient fhirQueryClient = this.getFhirContext().newRestfulGenericClient(this.queryConfig.getFhirServerBase());
+    IGenericClient fhirQueryClient = this.getFhirContext().newRestfulGenericClient(this.usCoreConfig.getFhirServerBase());
 
     /*
     LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
