@@ -47,10 +47,6 @@ thsa:
 bundler:
   send-whole-bundle: true
   remove-generated-observations: true
-apply-concept-maps:
-    concept-maps:
-      - concept-map-id: local-codes-cerner-test
-        fhir-path-contexts: Location.type
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
