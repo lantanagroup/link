@@ -9,5 +9,5 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 
 public interface IReportDownloader {
-  void download(String reportId, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config) throws IOException, TransformerException;
+  void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config) throws IOException, TransformerException;
 }

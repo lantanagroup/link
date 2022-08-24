@@ -109,10 +109,10 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  async download() {
+  async download(type: string) {
     try {
       this.downloading = true;
-      await this.reportService.download(this.reportId);
+      await this.reportService.download(this.reportId, type);
       this.toastService.showInfo('Report downloaded!');
     } catch (ex) {
       this.toastService.showException('Error downloading report: ' + this.reportId, ex);
