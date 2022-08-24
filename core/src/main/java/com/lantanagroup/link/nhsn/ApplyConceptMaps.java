@@ -71,6 +71,7 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
               this.applyMap(conceptMap, code);
             });
           });
+          fhirDataProvider.updateResource(patientBundle);
         } catch (Exception ex) {
           logger.error("Exception is: " + ex.getMessage());
         }
