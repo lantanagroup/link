@@ -44,6 +44,12 @@ api:
   measure-evaluation-threads: 10
 thsa:
   dataMeasureReportId: inventorydata
+
+apply-concept-maps:
+  concept-maps:
+    - concept-map-id: local-codes-cerner-test
+      fhir-path-contexts: Location.type
+
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query

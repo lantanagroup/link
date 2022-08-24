@@ -11,12 +11,17 @@ import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class EncounterStatusTransformer implements IReportGenerationEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
 
+  @Autowired
+  private FhirDataProvider fhirDataProvider;
+
+
   @Override
-  public void execute(ReportCriteria reportCriteria, ReportContext context, ApiConfig config, FhirDataProvider fhirDataProvider) {
+  public void execute(ReportCriteria reportCriteria, ReportContext context) {
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
       logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
       try {
