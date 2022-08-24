@@ -44,16 +44,16 @@ api:
   measure-evaluation-threads: 10
 thsa:
   dataMeasureReportId: inventorydata
-
+bundler:
+  send-whole-bundle: true
+  remove-generated-observations: true
 apply-concept-maps:
-  concept-maps:
-    - concept-map-id: local-codes-cerner-test
-      fhir-path-contexts: Location.type
-
+    concept-maps:
+      - concept-map-id: local-codes-cerner-test
+        fhir-path-contexts: Location.type
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
-  fhir-server-base: https://ehr-test.nhsnlink.org/fhir
   proxy-address: 23i90u4akdjsf
   allowed-remote:
     - testbadip
@@ -63,6 +63,7 @@ query:
     - test-api.nhsnlink.org
   api-key: 89a83764-9530-4340-9a14-1058b9e84f84c977f983-46e3-4e49-9c3b-869bb2b0f5328ba571b9-e785-4a0b-9fdd-5ff34b8125c47859d241-4ccc-406a-96b6-6fdc918a05e6f3288ebd-927c-4db5
 uscore:
+  fhir-server-base: https://ehr-test.nhsnlink.org/fhir
   patient-resource-types:
     - Encounter?patient=Patient/{{patientId}}
     - Condition?patient=Patient/{{patientId}}

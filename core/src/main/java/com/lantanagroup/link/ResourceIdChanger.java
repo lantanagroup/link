@@ -143,9 +143,10 @@ public class ResourceIdChanger {
    */
   public void changeIds() {
 
-    // Find resources that invalid invalid IDs
+    // Find resources that have invalid IDs
     List<Resource> invalidResourceIds = this.bundle.getEntry().stream()
-            .filter(e -> e.getResource().getIdElement().getIdPart().length() > 64 || e.getResource().getIdElement().getIdPart().contains(Constants.UuidPrefix))
+            .filter(e -> e.getResource() != null && e.getResource().getIdElement() != null && e.getResource().getIdElement().getIdPart() != null &&
+                    (e.getResource().getIdElement().getIdPart().length() > 64 || e.getResource().getIdElement().getIdPart().contains(Constants.UuidPrefix)))
             .map(e -> e.getResource())
             .collect(Collectors.toList());
     // Create a map where key = old id, value = new id (a hash of the old id)
