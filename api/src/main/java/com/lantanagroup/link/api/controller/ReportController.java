@@ -377,9 +377,10 @@ public class ReportController extends BaseController {
     }
   }
 
-  @GetMapping("/{reportId}/$download")
+  @GetMapping("/{reportId}/$download/{type}")
   public void download(
           @PathVariable String reportId,
+          @PathVariable String type,
           HttpServletResponse response,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
@@ -392,7 +393,7 @@ public class ReportController extends BaseController {
     Constructor<?> downloaderCtor = downloaderClass.getConstructor();
     downloader = (IReportDownloader) downloaderCtor.newInstance();
 
-    downloader.download(reportId, this.getFhirDataProvider(), response, this.ctx, this.config);
+    downloader.download(reportId, type, this.getFhirDataProvider(), response, this.ctx, this.config);
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }
