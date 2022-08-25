@@ -21,7 +21,7 @@ public class AzureBlobStorageConfig {
   private String address;
 
   /***
-   <strong>sender.format</strong><br>This is the format used to send to an azure blog storage endpoint
+   <strong>sender.abs.format</strong><br>This is the format used to send to an azure blog storage endpoint
    */
   private AzureBlobStorageSenderFormats format = AzureBlobStorageSenderFormats.JSON;
 
