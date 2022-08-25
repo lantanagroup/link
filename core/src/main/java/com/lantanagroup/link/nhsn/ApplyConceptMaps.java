@@ -40,7 +40,7 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
 
 
   private Map<String, ConceptMap> getConceptMaps(FhirDataProvider fhirDataProvider) {
-    if (applyConceptMapConfig != null) {
+    if (applyConceptMapConfig != null && applyConceptMapConfig.getConceptMaps() != null) {
       // get it from fhirserver
       applyConceptMapConfig.getConceptMaps().stream().forEach(concepMap -> {
         try {
