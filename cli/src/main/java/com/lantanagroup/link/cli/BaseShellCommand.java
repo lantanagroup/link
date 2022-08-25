@@ -9,8 +9,10 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
 
+import javax.validation.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class BaseShellCommand {
   @Autowired
@@ -44,5 +46,16 @@ public class BaseShellCommand {
     ApiDataStoreConfig dataStoreConfig = config.getDataStore();
     FhirDataProvider provider = new FhirDataProvider(dataStoreConfig);
     beanFactory.registerSingleton(String.valueOf(FhirDataProvider.class), provider);
+  }
+
+  protected <T> void validate(T object) {
+    Validator validator;
+    try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+      validator = factory.getValidator();
+    }
+    Set<ConstraintViolation<T>> violations = validator.validate(object);
+    if (!violations.isEmpty()) {
+      throw new ConstraintViolationException(violations);
+    }
   }
 }
