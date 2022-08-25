@@ -8,6 +8,7 @@ import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -34,7 +35,6 @@ public class EventController {
   private ApiConfigEvents apiConfigEvents;
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext) throws Exception {
-
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
     List<Object> beans = getBeans(eventType, classNames);
@@ -67,13 +67,19 @@ public class EventController {
   public List<Object> getBeans(List<Class<?>> classes) {
     ArrayList beans = new ArrayList();
     DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((ConfigurableApplicationContext) this.context).getBeanFactory();
+
     for (Class<?> beanClass : classes) {
-      GenericBeanDefinition gbd = new GenericBeanDefinition();
-      gbd.setBeanClass(beanClass);
-      if (!beanFactory.containsBeanDefinition(beanClass.getName())) {
-        beanFactory.registerBeanDefinition(beanClass.getName(), gbd);
+      try {
+        beans.add(this.context.getBean(beanClass));
+      } catch (NoSuchBeanDefinitionException ex) {
+        logger.info(String.format("Bean %s not found: in the context", beanClass));
+        GenericBeanDefinition gbd = new GenericBeanDefinition();
+        gbd.setBeanClass(beanClass);
+        if (!beanFactory.containsBeanDefinition(beanClass.getName())) {
+          beanFactory.registerBeanDefinition(beanClass.getName(), gbd);
+        }
+        beans.add(this.context.getBean(beanClass.getName()));
       }
-      beans.add(this.context.getBean(beanClass.getName()));
     }
     return beans;
   }
