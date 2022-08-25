@@ -4,9 +4,9 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
+import com.lantanagroup.link.api.EventController;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -36,7 +36,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,12 +56,15 @@ public class ReportController extends BaseController {
   private THSAConfig thsaConfig;
   @Autowired
   private USCoreConfig usCoreConfig;
-  @Autowired
+
   @Setter
-  private ApiConfigEvents apiConfigEvents;
+  @Autowired
+  private EventController eventController;
+
   @Autowired
   @Setter
   private ApplicationContext context;
+
   @Autowired
   private QueryConfig queryConfig;
   @Autowired
@@ -174,10 +176,10 @@ public class ReportController extends BaseController {
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
       query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
-      triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
+      eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
 
 
-      triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
+      eventController.triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
@@ -205,12 +207,12 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
     this.resolveMeasure(criteria, reportContext);
 
-    triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     // Search the reference document by measure criteria nd reporting period
     DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
@@ -233,16 +235,16 @@ public class ReportController extends BaseController {
       id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
     } else {
       id = existingDocumentReference.getMasterIdentifier().getValue();
-      triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+      eventController.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
     reportContext.setReportId(id);
 
-    triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
     List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
 
-    triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
     // Get the resource types to query
     List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
@@ -256,7 +258,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
@@ -270,17 +272,17 @@ public class ReportController extends BaseController {
 
     ReportGenerator generator = new ReportGenerator(reportContext, criteria, config, user, reportAggregator);
 
-    triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
 
     generator.generate(criteria, reportContext);
 
-    triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
 
-    triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
 
     generator.store(criteria, reportContext, existingDocumentReference);
 
-    triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
@@ -991,30 +993,6 @@ public class ReportController extends BaseController {
       }
     }
     return patientBundle;
-  }
-
-  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) {
-    try {
-      Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
-      List<String> classes = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
-      if (classes == null) {
-        logger.debug(String.format("No class set-up for event %s", eventType.toString()));
-        return;
-      }
-      for (String className : classes) {
-        logger.info(String.format("Executing class %s for event %s", className, eventType.toString()));
-
-        try {
-          Class<?> clazz = Class.forName(className);
-          Object myObject = clazz.newInstance();
-          ((IReportGenerationEvent) myObject).execute(criteria, context, config, getFhirDataProvider());
-        } catch (NoClassDefFoundError ex) {
-          logger.error(String.format("Error in triggerEvent for event %s and class %s: ", eventType.toString(), className) + ex.getMessage());
-        }
-      }
-    } catch (Exception ex) {
-      logger.error(String.format("Error in triggerEvent for event  %s: ", eventType.toString()) + ex.getMessage());
-    }
   }
 
 }
