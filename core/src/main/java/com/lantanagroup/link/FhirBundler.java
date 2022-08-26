@@ -45,9 +45,7 @@ public class FhirBundler {
 
               return true;
             })
-            .map(er -> {
-              return er.getReference();
-            }).collect(Collectors.toList());
+            .map(er -> er.getReference()).collect(Collectors.toList());
 
     // Return a list of all the resources identified by evaluated resources
     List<DomainResource> patientResources = new ArrayList<>();
@@ -63,6 +61,16 @@ public class FhirBundler {
       } else {
         logger.error(String.format("Could not find resource %s for in bundle %s", patientDataReference, patientDataBundle.getId()));
       }
+    }
+
+    //If the bundle doesn't already have the patient resource, add it in
+    if(patientResources.stream().noneMatch(i -> i.getResourceType().toString().equals("Patient") && i.getIdElement().getIdPart().equals(patientId))){
+      List<DomainResource> patient = patientDataBundle.getEntry().stream()
+              .filter(e -> e.getResource().getResourceType().toString().equals("Patient") && e.getResource().getIdElement().getIdPart().equals(patientId))
+              .map(e -> (DomainResource) e.getResource()).collect(Collectors.toList());
+
+      //Even if there's more than one copy of the Patient resource that exists in the Bundle for some reason, only add the first
+      patientResources.add(FhirHelper.cleanResource(patient.get(0)));
     }
 
     return patientResources;
