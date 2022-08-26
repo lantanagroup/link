@@ -18,10 +18,16 @@ public class SftpDownloader {
     Session session = jSch.getSession(config.getUsername(), config.getHost(), config.getPort());
     session.setPassword(config.getPassword());
     session.connect();
-    ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-    channel.connect();
-    try (InputStream stream = channel.get(config.getPath())) {
-      return stream.readAllBytes();
+    try {
+      ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+      channel.connect();
+      try (InputStream stream = channel.get(config.getPath())) {
+        return stream.readAllBytes();
+      } finally {
+        channel.exit();
+      }
+    } finally {
+      session.disconnect();
     }
   }
 }
