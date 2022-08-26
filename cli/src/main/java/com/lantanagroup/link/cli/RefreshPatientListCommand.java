@@ -11,6 +11,7 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
@@ -43,6 +44,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   private RefreshPatientListConfig config;
   private QueryConfig queryConfig;
+  private USCoreConfig usCoreConfig;
   private ApiConfig apiConfig;
 
   @Override
@@ -50,6 +52,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     return List.of(
             ApiConfig.class,
             QueryConfig.class,
+            USCoreConfig.class,
             EpicAuth.class,
             EpicAuthConfig.class);
   }
@@ -61,6 +64,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
+    usCoreConfig = applicationContext.getBean(USCoreConfig.class);
     apiConfig = applicationContext.getBean(ApiConfig.class);
     if (config.getApiUrl() == null) {
       throw new IllegalArgumentException("api-url may not be null");
@@ -90,7 +94,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     String url = URLEncodedUtils.formatSegments("STU3", "List", config.getPatientListId());
     logger.info("Reading from {}", url);
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-    IGenericClient client = fhirContext.newRestfulGenericClient(queryConfig.getFhirServerBase());
+    IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
     return client.fetchResourceFromUrl(ListResource.class, url);
   }
@@ -119,7 +123,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     target.setTitle(String.format("Census List for %s", censusIdentifier));
     target.setCode(source.getCode());
     target.setDate(source.getDate());
-    URI baseUrl = new URI(queryConfig.getFhirServerBase());
+    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
       target.addEntry(transformListEntry(sourceEntry, baseUrl));
     }
