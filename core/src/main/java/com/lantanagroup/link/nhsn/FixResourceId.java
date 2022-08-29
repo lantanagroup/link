@@ -30,6 +30,7 @@ public class FixResourceId implements IReportGenerationEvent {
       if (!StringUtils.isEmpty(patientOfInterest.getId())) {
         IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
         ResourceIdChanger.changeIds((Bundle) patientBundle);
+        fhirDataProvider.updateResource(patientBundle);
       }
     }
   }

@@ -117,6 +117,7 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
             this.applyMap(conceptMapsMap.get(conceptMap.getConceptMapId()), code);
           });
         });
+        fhirDataProvider.updateResource(patientBundle);
       }
     }
   }
