@@ -17,10 +17,8 @@ import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 
 import javax.naming.ConfigurationException;
@@ -43,11 +41,6 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   // **********************************
   protected static Logger logger = LoggerFactory.getLogger(AzureBlobStorageSender.class);
 
-  // **********************************
-  // * Members
-  // **********************************
-  private BlobContainerAsyncClient client;
-
   public AzureBlobStorageSender() { }
 
   /**
@@ -59,7 +52,13 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Override
   public void upload(String filename, InputStream inputStream) throws IOException {
     try {
-      getAbsClientConnection();
+      BlobContainerAsyncClient client = getAbsClientConnection();
+      if(client == null) {
+        String errorMessage = String.format("Failed to create blob async client.");
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        throw new IOException(errorMessage);
+      }
+
       BlobAsyncClient blobAsyncClient = client.getBlobAsyncClient(filename);
       Flux<ByteBuffer> data = Flux.just(ByteBuffer.wrap(inputStream.readAllBytes()));
       ParallelTransferOptions parallelTransferOptions = new ParallelTransferOptions();
@@ -82,7 +81,13 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Override
   public void upload(String filename, String filepath) throws IOException {
     try {
-      getAbsClientConnection();
+      BlobContainerAsyncClient client = getAbsClientConnection();
+      if(client == null) {
+        String errorMessage = String.format("Failed to create blob async client.");
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        throw new IOException(errorMessage);
+      }
+
       BlobAsyncClient blobAsyncClient = client.getBlobAsyncClient(filename);
       blobAsyncClient.uploadFromFile(filepath, true).block();
     } catch (Exception ex) {
@@ -103,7 +108,13 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Override
   public void upload(String filename, BinaryData data) throws IOException {
     try {
-      getAbsClientConnection();
+      BlobContainerAsyncClient client = getAbsClientConnection();
+      if(client == null) {
+        String errorMessage = String.format("Failed to create blob async client.");
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        throw new IOException(errorMessage);
+      }
+
       BlobAsyncClient blobAsyncClient = client.getBlobAsyncClient(filename);
       blobAsyncClient.upload(data, true).block();
     } catch (Exception ex) {
@@ -168,18 +179,20 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   /**
    * Creates the blob service client using absConfig
    */
-  private void getAbsClientConnection() {
+  private BlobContainerAsyncClient getAbsClientConnection() {
     try{
       BlobServiceAsyncClient svcClient = new BlobServiceClientBuilder()
               .endpoint(this.absConfig.getAddress())
               .sasToken(this.absConfig.getSecret())
               .buildAsyncClient();
 
-      client = svcClient.getBlobContainerAsyncClient(this.absConfig.getAzureStorageContainerName());
+      return svcClient.getBlobContainerAsyncClient(this.absConfig.getAzureStorageContainerName());
     }
     catch (Exception ex) {
       logger.error("Failed to send measure report to blob storage: %s", Helper.encodeLogging(ex.getMessage()));
     }
+
+    return null;
 
   }
 
