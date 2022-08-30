@@ -55,11 +55,11 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-storage-blob</artifactId>
-            <version>12.18.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.azure</groupId>-->
+<!--            <artifactId>azure-storage-blob</artifactId>-->
+<!--            <version>12.19.0</version>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>com.azure.spring</groupId>-->
 <!--            <artifactId>spring-cloud-azure-starter-storage-blob</artifactId>-->

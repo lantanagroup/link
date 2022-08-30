@@ -1,11 +1,9 @@
 package com.lantanagroup.link.nhsn;
 
 import com.azure.core.util.BinaryData;
+import com.azure.storage.blob.*;
+import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.lantanagroup.link.*;
-import com.azure.storage.blob.BlobAsyncClient;
-import com.azure.storage.blob.BlobContainerAsyncClient;
-import com.azure.storage.blob.BlobServiceAsyncClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
@@ -126,6 +124,27 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
   }
 
+  public void upload(String filename, String serializedData, boolean replaceExistingBlob) throws IOException {
+    logger.info("Sending MeasureReport bundle to blob storage container %s.", this.absConfig.getAzureStorageContainerName());
+
+    BlobClient blobClient = new BlobClientBuilder()
+            .endpoint(this.absConfig.getAddress())
+            .sasToken(this.absConfig.getSecret())
+            .containerName(this.absConfig.getAzureStorageContainerName())
+            .blobName(filename)
+            .buildClient();
+
+    try(InputStream dataStream = new ByteArrayInputStream(serializedData.getBytes(StandardCharsets.UTF_8))) {
+      blobClient.upload(dataStream, serializedData.length(), replaceExistingBlob);
+      logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
+    } catch (Exception ex) {
+      logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
+      String errorMessage = String.format("Failed to send measure report: %s", ex.getMessage());
+      throw new IOException(errorMessage);
+    }
+
+  }
+
   @Override
   public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
@@ -142,6 +161,8 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       logger.info("Missing format in abs configuration.");
       throw new ConfigurationException("Missing abs format configuration, needs to be json or xml.");
     }
+
+    //this.upload(((Bundle) resourceToSend).getIdentifier().getValue(), bundleSerialization, true);
 
     try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
       this.upload(((Bundle) resourceToSend).getIdentifier().getValue(), stream);
