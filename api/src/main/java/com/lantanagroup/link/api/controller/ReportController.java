@@ -195,6 +195,7 @@ public class ReportController extends BaseController {
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
           @RequestParam("reportDefIdentifier") String reportDefIdentifier,
+          @RequestParam(value = "bundleIds", required = false) String[] bundleIds,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
           boolean regenerate)
