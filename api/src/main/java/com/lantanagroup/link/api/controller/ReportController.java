@@ -329,54 +329,6 @@ public class ReportController extends BaseController {
     logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
-
-    if (this.config.getDeleteAfterSubmission()) {
-      logger.debug("Deleting submitted report data");
-      deleteSentData(documentReference);
-      logger.debug("Done deleting submitted report data");
-    }
-  }
-
-  private void deleteSentData(DocumentReference documentReference) {
-    String masterMeasureReportID = documentReference.getMasterIdentifier().getValue();
-    if (documentReference.getContext().getRelated().size() > 0) {
-      List<ListResource> censusList = FhirHelper.getCensusLists(documentReference, this.getFhirDataProvider());
-      for (ListResource census : censusList) {
-        String censusID = census.getId().contains("List/") && census.getId().contains("/_history") ?
-                census.getId().substring("List/".length(), census.getId().indexOf("/_history")) : census.getId().contains("List/") ?
-                census.getId().substring("List/".length()) : census.getId();
-        ;
-        for (ListResource.ListEntryComponent entry : census.getEntry()) {
-          if (entry.getItem().getReference() != null) {
-            String patientRef = entry.getItem().getReference().contains("Patient/") ?
-                    entry.getItem().getReference().substring("Patient/".length()) : entry.getItem().getReference();
-            String patientReportID = String.valueOf(patientRef.hashCode());
-
-            try {
-              this.getFhirDataProvider().deleteResource("Bundle", masterMeasureReportID + "-" + patientReportID, true);
-            } catch (Exception e) {
-              logger.error(e.getMessage());
-            }
-
-            try {
-              this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID + "-" + patientReportID, true);
-            } catch (Exception e) {
-              logger.error(e.getMessage());
-            }
-          }
-        }
-        try {
-          this.getFhirDataProvider().deleteResource("List", censusID, true);
-        } catch (Exception e) {
-          logger.error(e.getMessage());
-        }
-      }
-      try {
-        this.getFhirDataProvider().deleteResource("MeasureReport", masterMeasureReportID, true);
-      } catch (Exception e) {
-        logger.error(e.getMessage());
-      }
-    }
   }
 
   @GetMapping("/{reportId}/$download/{type}")
