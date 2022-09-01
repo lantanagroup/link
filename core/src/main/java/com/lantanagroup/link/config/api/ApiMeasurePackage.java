@@ -9,7 +9,7 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @Setter
 @Validated
-public class MultiMeasure {
+public class ApiMeasurePackage {
 
   @NotBlank
   private String id;

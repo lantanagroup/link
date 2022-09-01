@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
@@ -18,7 +17,6 @@ import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,23 +136,6 @@ public class ReportController extends BaseController {
     context.setPatientsOfInterest(patientOfInterestModelList);
 
     return patientOfInterestModelList;
-  }
-
-
-  private List<ConceptMap> getConceptMaps() {
-    List<ConceptMap> conceptMapsList = new ArrayList();
-    if (this.config.getConceptMaps() != null) {
-      // get it from fhirserver
-      this.config.getConceptMaps().stream().forEach(concepMapId -> {
-        try {
-          IBaseResource conceptMap = getFhirDataProvider().getResourceByTypeAndId("ConceptMap", concepMapId);
-          conceptMapsList.add((ConceptMap) conceptMap);
-        } catch (ResourceNotFoundException ex) {
-          logger.error(String.format("ConceptMap/%s not found on data store", concepMapId));
-        }
-      });
-    }
-    return conceptMapsList;
   }
 
   /**
