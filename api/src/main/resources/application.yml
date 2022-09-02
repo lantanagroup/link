@@ -22,7 +22,7 @@ api:
   cors:
     allowed-origins: '*'
     allowed-headers: '*'
-    allowed-credentials: true
+    allowed-credentials: false
     allowed-methods:
       - GET
       - POST

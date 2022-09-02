@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.1.8.RELEASE</version>
+        <version>2.5.5</version>
         <relativePath/>
     </parent>
 
@@ -41,6 +41,13 @@
     </modules>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <version>2.5.5</version>
+        </dependency>
+
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-base</artifactId>
@@ -70,31 +77,6 @@
                 <artifactId>log4j-to-slf4j</artifactId>
                 <version>2.15.0</version>
             </dependency>
-            <dependency>
-                <groupId>com.azure</groupId>
-                <artifactId>azure-storage-blob</artifactId>
-                <version>12.19.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.projectreactor</groupId>
-                <artifactId>reactor-core</artifactId>
-                <version>3.4.22</version> <!-- {x-version-update;io.projectreactor:reactor-core;external_dependency} -->
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>4.1.50.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>4.1.79.Final</version>
-            </dependency>
-<!--            <dependency>-->
-<!--                <groupId>com.azure.spring</groupId>-->
-<!--                <artifactId>spring-cloud-azure-starter-storage-blob</artifactId>-->
-<!--                <version>4.3.0</version>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
