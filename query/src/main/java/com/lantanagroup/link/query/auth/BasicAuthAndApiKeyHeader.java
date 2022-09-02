@@ -5,11 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class BasicAuth implements ICustomAuth {
-  private static final Logger logger = LoggerFactory.getLogger(BasicAuth.class);
+public class BasicAuthAndApiKeyHeader implements ICustomAuth{
+  private static final Logger logger = LoggerFactory.getLogger(BasicAuthAndApiKeyHeader.class);
 
   @Autowired
-  private BasicAuthConfig config;
+  private BasicAuthAndApiKeyHeaderConfig config;
 
   @Override
   public String getAuthHeader() {
@@ -22,8 +22,8 @@ public class BasicAuth implements ICustomAuth {
   }
 
   @Override
-  public String getApiKeyHeader() throws Exception {
-    return null;
+  public String getApiKeyHeader() {
+    logger.debug("Adding API key to request");
+    return this.config.getApikey();
   }
-
 }
