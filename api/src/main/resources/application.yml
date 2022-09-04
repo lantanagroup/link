@@ -41,6 +41,11 @@ api:
   query:
     mode: Local
   measure-evaluation-threads: 10
+  data-governance:
+    retention-period:
+      census-list-retention:
+      patient-data-retention:
+      report-retention:
 thsa:
   dataMeasureReportId: inventorydata
 bundler:
