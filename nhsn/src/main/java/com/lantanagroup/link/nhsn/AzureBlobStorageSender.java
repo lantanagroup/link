@@ -5,6 +5,7 @@ import com.azure.storage.blob.*;
 import com.lantanagroup.link.*;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
@@ -33,6 +34,10 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Autowired
   @Setter
   private AzureBlobStorageConfig absConfig;
+
+  @Autowired
+  @Setter
+  private ApiConfig apiConfig;
 
   // **********************************
   // * Constants
@@ -163,7 +168,14 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     }
 
     ///set file name
-    String fileName = new SimpleDateFormat("yyyyMMdd").format(documentReference.getDate()) + "_" + documentReference.getIdentifier().get(0).getValue();
+    String fileName;
+    if(apiConfig.getMeasureLocation() != null) {
+      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + documentReference.getIdentifier().get(0).getValue();
+    }
+    else {
+      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + documentReference.getIdentifier().get(0).getValue();
+    }
+
 
     try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
       this.upload(fileName, stream);
