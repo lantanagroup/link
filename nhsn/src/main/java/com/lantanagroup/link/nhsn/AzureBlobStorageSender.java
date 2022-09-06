@@ -8,6 +8,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Component
 public class AzureBlobStorageSender extends GenericSender implements IReportSender, IAzureBlobStorageSender {
@@ -169,13 +171,21 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
 
     ///set file name
     String fileName;
-    if(apiConfig.getMeasureLocation() != null) {
-      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + documentReference.getIdentifier().get(0).getValue();
-    }
-    else {
-      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + documentReference.getIdentifier().get(0).getValue();
+    Date bundleDate = documentReference.getDate();
+    String measureName = documentReference.getIdentifier().get(0).getValue();
+
+    if(bundleDate == null) {
+      logger.debug("No date found in document reference, generating timestamp at time of this check.");
+      bundleDate = new Date();
     }
 
+    if(StringUtils.isEmpty(measureName)) {
+      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + measureName;
+    }
+    else {
+      logger.debug("No measure name found in configuration, excluding it from file name.");
+      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + measureName;
+    }
 
     try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
       this.upload(fileName, stream);
