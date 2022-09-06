@@ -2,7 +2,6 @@ package com.lantanagroup.link.nhsn;
 
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.*;
-import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.lantanagroup.link.*;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -26,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 
 @Component
 public class AzureBlobStorageSender extends GenericSender implements IReportSender, IAzureBlobStorageSender {
@@ -162,10 +162,11 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       throw new ConfigurationException("Missing abs format configuration, needs to be json or xml.");
     }
 
-    //this.upload(((Bundle) resourceToSend).getIdentifier().getValue(), bundleSerialization, true);
+    ///set file name
+    String fileName = new SimpleDateFormat("yyyyMMdd").format(documentReference.getDate()) + "_" + documentReference.getIdentifier().get(0).getValue();
 
     try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
-      this.upload(((Bundle) resourceToSend).getIdentifier().getValue(), stream);
+      this.upload(fileName, stream);
       logger.info("Send to upload here");
     }
     catch(Exception ex) {
@@ -174,7 +175,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     }
 
 //    try {
-//      this.upload(((Bundle) resourceToSend).getIdentifier().getValue(), BinaryData.fromString(bundleSerialization));
+//      this.upload(fileName, BinaryData.fromString(bundleSerialization));
 //      logger.info("Send to upload here");
 //    }
 //    catch(Exception ex) {
@@ -193,6 +194,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Override
   public void send(MeasureReport masterMeasureReport, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
     Bundle bundle = this.generateBundle(documentReference, masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
+
     this.sendContent(bundle, documentReference, fhirDataProvider);
     FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
