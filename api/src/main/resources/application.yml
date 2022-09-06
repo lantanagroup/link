@@ -71,3 +71,8 @@ uscore:
     - Location/{{locationId}}
     - Medication/{{medicationId}}
   parallel-patients: 10
+data-governance:
+  retention-period:
+    census-list-retention:
+    patient-data-retention:
+    report-retention:
