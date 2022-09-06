@@ -14,7 +14,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "data-governance")
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
-public class dataGovernanceConfig {
+public class DataGovernanceConfig {
   /**
    * <strong>data-governance.retention-period</strong><br>Contains the retention periods for the census list, patient data, and the report.
    */
