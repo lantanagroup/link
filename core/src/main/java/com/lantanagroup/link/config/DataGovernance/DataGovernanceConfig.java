@@ -20,26 +20,25 @@ public class DataGovernanceConfig {
   /**
    * <strong>data-governance.retention-period</strong><br>Contains the retention periods for the census list, patient data, and the report.
    */
-  @Getter @NotNull
+  @NotNull
   private RetentionPeriod retentionPeriod = new RetentionPeriod();
 }
 
+@Getter
+@Setter
 class RetentionPeriod {
   /**
    * <strong>data-governance.retention-period.census-list-retention</strong><br>Contains the retention periods for the census list.
    */
-  @Getter @NotNull
   private String censusListRetention;
 
   /**
    * <strong>data-governance.retention-period.patient-data-retention</strong><br>Contains the retention periods for the patient data.
    */
-  @Getter @NotNull
   private String patientDataRetention;
 
   /**
    * <strong>data-governance.retention-period.report-retention</strong><br>Contains the retention periods for the report.
    */
-  @Getter @NotNull
   private String reportRetention;
 }
