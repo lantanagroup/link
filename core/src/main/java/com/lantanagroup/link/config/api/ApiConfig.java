@@ -118,6 +118,11 @@ public class ApiConfig {
   @Getter
   private ApiReportDefsConfig reportDefs;
 
+  /**
+   * <strong>api.measure-packages</strong><br>Configuration for multi measures supported by the system
+   */
+  @Getter
+  private List<ApiMeasurePackage> measurePackages;
 
   /**
    * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
@@ -125,11 +130,6 @@ public class ApiConfig {
   @Getter
   private UserConfig user;
 
-  /**
-   * <strong>api.concept-maps</strong><br>API configuration to indicate one or more ConceptMaps to apply to patient data
-   */
-  @Getter
-  private List<String> conceptMaps;
 
   /**
    * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.
