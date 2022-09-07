@@ -104,7 +104,7 @@ public class PatientScoop extends Scoop {
         }
 
       } catch (ResourceNotFoundException ex) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
+        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to resource not found errors: \n" + ex.getResponseBody());
       } catch (AuthenticationException ex) {
         logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
       } catch (Exception e) {
