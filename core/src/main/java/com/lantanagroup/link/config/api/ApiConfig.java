@@ -19,6 +19,13 @@ import java.util.List;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
+
+  /**
+   * <strong>api.validate-fhir-server</strong><br>Boolean for whether to check for metadata before request or not
+   */
+  @Getter
+  private Boolean validateFhirServer;
+
   /**
    * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
    */
