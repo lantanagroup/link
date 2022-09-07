@@ -8,6 +8,7 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.hapi.ctx.DefaultProfileValidationSupport;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
@@ -110,14 +111,16 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
     if (!conceptMapsMap.isEmpty()) {
       for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
         // logger.info("Patient is: " + patientOfInterest.getId());
-        IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
-        applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
-          List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
-          codes.stream().forEach(code -> {
-            this.applyMap(conceptMapsMap.get(conceptMap.getConceptMapId()), code);
+        if(!StringUtils.isEmpty(patientOfInterest.getId())){
+          IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
+          applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
+            List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
+            codes.stream().forEach(code -> {
+              this.applyMap(conceptMapsMap.get(conceptMap.getConceptMapId()), code);
+            });
           });
-        });
-        fhirDataProvider.updateResource(patientBundle);
+          fhirDataProvider.updateResource(patientBundle);
+        }
       }
     }
   }

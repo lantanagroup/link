@@ -115,7 +115,7 @@ public class FhirHelper {
       agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
     }
 
-    if (jsonObject.has("aud")) {
+    if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
       String aud = jsonObject.get("aud").getAsString();
       Identifier identifier = new Identifier().setValue(aud);
       agent.setLocation(new Reference().setIdentifier(identifier));

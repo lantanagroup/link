@@ -8,18 +8,16 @@ public class DataGovernanceConfigTest {
   @Test
   public void getRetentionPeriod() {
     DataGovernanceConfig dataGovernanceConfig = new DataGovernanceConfig();
-    RetentionPeriod retentionPeriod = dataGovernanceConfig.getRetentionPeriod();
-    Assert.notNull(retentionPeriod);
-    Assert.isNull(retentionPeriod.getCensusListRetention());
-    Assert.isNull(retentionPeriod.getPatientDataRetention());
-    Assert.isNull(retentionPeriod.getReportRetention());
+    Assert.isNull(dataGovernanceConfig.getCensusListRetention());
+    Assert.isNull(dataGovernanceConfig.getPatientDataRetention());
+    Assert.isNull(dataGovernanceConfig.getReportRetention());
 
-    retentionPeriod.setCensusListRetention("PT4H");
-    retentionPeriod.setPatientDataRetention("PT4H");
-    retentionPeriod.setReportRetention("PT4H");
+    dataGovernanceConfig.setCensusListRetention("PT4H");
+    dataGovernanceConfig.setPatientDataRetention("PT4H");
+    dataGovernanceConfig.setReportRetention("PT4H");
 
-    Assert.notNull(retentionPeriod.getCensusListRetention());
-    Assert.notNull(retentionPeriod.getPatientDataRetention());
-    Assert.notNull(retentionPeriod.getReportRetention());
+    Assert.notNull(dataGovernanceConfig.getCensusListRetention());
+    Assert.notNull(dataGovernanceConfig.getPatientDataRetention());
+    Assert.notNull(dataGovernanceConfig.getReportRetention());
   }
 }
