@@ -1,6 +1,8 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
+import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,9 @@ public class ReportDataController extends BaseController {
   @Autowired
   @Setter
   private ApplicationContext context;
+
+  @Autowired
+  private DataGovernanceConfig dataGovernanceConfig;
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -38,5 +43,26 @@ public class ReportDataController extends BaseController {
     IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
     dataProcessor.process(content, getFhirDataProvider());
+  }
+
+  @PostMapping(value = "expunge/data/")
+  public void expungeData() {
+    if(dataGovernanceConfig.getCensusListRetention() != null) {
+
+    }
+
+    if(dataGovernanceConfig.getPatientDataRetention() != null) {
+
+    }
+
+    if(dataGovernanceConfig.getReportRetention() != null) {
+
+    }
+  }
+
+  private void expungeData(String retentionPeriod, String id, String type) {
+    FhirDataProvider fhirDataProvider = getFhirDataProvider();
+    fhirDataProvider.deleteResource(type, id, true);
+    logger.info(type + ":" + id + " has been expunged.");
   }
 }
