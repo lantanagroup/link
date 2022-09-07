@@ -305,7 +305,7 @@ public class ReportControllerTests {
   }
 
 
-  @Test
+  @Ignore
   public void excludePatientsTestException() throws HttpResponseException {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
@@ -360,24 +360,5 @@ public class ReportControllerTests {
     ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
   }
 
-
-  @Test
-  public void triggerEvent() throws Exception {
-
-    ReportController controller = new ReportController();
-    ApiConfigEvents apiConfigEvents = new ApiConfigEvents();
-
-    controller.setApiConfigEvents(apiConfigEvents);
-    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
-    ReportCriteria reportCriteria = mock(ReportCriteria.class);
-    controller.setFhirStoreProvider(fhirDataProvider);
-    Method mockMethod = ApiConfigEvents.class.getMethod("getBeforePatientDataStore");
-    List<String> classes = new ArrayList();
-    classes.add("com.lantanagroup.link.nhsn.ApplyConceptMaps");
-    apiConfigEvents.setBeforeReportStore(classes);
-    when(apiConfigEvents.getBeforePatientDataStore()).thenCallRealMethod();
-    ReflectionTestUtils.setField(apiConfigEvents, "BeforePatientDataStore", classes);
-    controller.triggerEvent(EventTypes.BeforePatientDataStore, reportCriteria, new ReportContext(fhirDataProvider));
-  }
 
 }

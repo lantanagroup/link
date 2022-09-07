@@ -45,8 +45,8 @@ export class ReportService {
     return this.http.post(url, null).toPromise();
   }
 
-  async download(reportId: string) {
-    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download`);
+  async download(reportId: string, type: string) {
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download/${type}`);
     const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
     const contentType = downloadResponse.headers.get('Content-Type');
 

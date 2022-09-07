@@ -28,45 +28,45 @@ public class UserInterceptor {
 
   private void assertToken(String token) {
     if (this.config.getOauth() == null || StringUtils.isEmpty(this.config.getOauth().getIssuer()) || StringUtils.isEmpty(this.config.getOauth().getAuthJwksUrl())) {
-      logger.error("oauth is not configured");
-      throw new ConfigurationException();
+      String msg = "oauth is not configured";
+      logger.error(msg);
+      throw new ConfigurationException(msg);
     }
 
-    try {
-      DecodedJWT jwt = OAuth2Helper.verifyToken(
-              token,
-              OAuth2Helper.TokenAlgorithmsEnum.RSA256,
-              this.config.getOauth().getIssuer(),
-              this.config.getOauth().getAuthJwksUrl());
+    DecodedJWT jwt = OAuth2Helper.verifyToken(
+            token,
+            OAuth2Helper.TokenAlgorithmsEnum.RSA256,
+            this.config.getOauth().getIssuer(),
+            this.config.getOauth().getAuthJwksUrl());
 
-      if(jwt == null) {
-        logger.error("OAuth token certificate is unknown or invalid");
-        throw new AuthenticationException();
-      }
-    } catch (Exception e) {
-      logger.error("Error validating OAuth token due to: " + e.getMessage(), e);
-      throw new AuthenticationException();
+    if(jwt == null) {
+      String msg = "OAuth token certificate is unknown or invalid";
+      logger.error(msg);
+      throw new AuthenticationException(msg);
     }
   }
 
   private void assertBasic(String basic) {
     if (this.config.getBasicAuthUsers() == null) {
-      logger.error("basicAuthUsers is not configured");
-      throw new ConfigurationException();
+      String msg = "basicAuthUsers is not configured";
+      logger.error(msg);
+      throw new ConfigurationException(msg);
     }
 
     BasicAuthModel model = BasicAuthModel.getBasicAuth(basic);
 
     if (!this.config.getBasicAuthUsers().containsKey(model.getUsername())) {
-      logger.info(String.format("User %s not found in configuration", model.getUsername()));
-      throw new AuthenticationException();
+      String msg = String.format("User %s not found in configuration", model.getUsername());
+      logger.info(msg);
+      throw new AuthenticationException(msg);
     }
 
     String p = this.config.getBasicAuthUsers().get(model.getUsername());
 
     if (!p.equals(model.getPassword())) {
-      logger.info(String.format("Credentials do not match configuration for user %", model.getUsername()));
-      throw new AuthenticationException();
+      String msg = String.format("Credentials do not match configuration for user %", model.getUsername());
+      logger.info(msg);
+      throw new AuthenticationException(msg);
     }
   }
 
@@ -77,13 +77,15 @@ public class UserInterceptor {
     String basic = authHeader != null && authHeader.toLowerCase(Locale.ROOT).startsWith("basic ") ? authHeader.substring(6) : null;
 
     if (authHeader == null) {
-      logger.error("Authorization header not found, cannot continue processing request.");
-      throw new AuthenticationException();
+      String msg = "Authorization header not found, cannot continue processing request.";
+      logger.error(msg);
+      throw new AuthenticationException(msg);
     }
 
     if (StringUtils.isEmpty(token) && StringUtils.isEmpty(basic)) {
-      logger.error("Authorization header is not \"basic\" or \"bearer\".");
-      throw new AuthenticationException();
+      String msg = "Authorization header is not \"basic\" or \"bearer\".";
+      logger.error(msg);
+      throw new AuthenticationException(msg);
     }
 
     if (StringUtils.isNotEmpty(token)) {

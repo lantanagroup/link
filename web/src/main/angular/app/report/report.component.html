@@ -86,7 +86,14 @@
         <button (click)="regenerate()" *ngIf="isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
             {{regenerateReportButtonText}}
         </button>
-        <button (click)="download()" class="btn btn-primary" [disabled]="downloading">{{!downloading ? 'Download' : 'Downloading...'}}</button>
+        <div class="btn-group" ngbDropdown role="group">
+            <button class="btn btn-primary" [disabled]="downloading" ngbDropdownToggle>{{!downloading ? 'Download' : 'Downloading...'}}</button>
+            <div class="dropdown-menu" ngbDropdownMenu>
+                <button (click)="download('XML')" ngbDropdownItem>XML</button>
+                <button (click)="download('JSON')" ngbDropdownItem>JSON</button>
+            </div>
+        </div>
+
     </div>
 </div>
 
