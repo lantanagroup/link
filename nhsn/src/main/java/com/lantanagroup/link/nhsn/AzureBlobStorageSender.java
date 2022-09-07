@@ -180,11 +180,11 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     }
 
     if(StringUtils.isEmpty(measureName)) {
-      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + measureName;
+      fileName = new SimpleDateFormat("yyyyMMdd'T'HH_mm_ss").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + measureName;
     }
     else {
       logger.debug("No measure name found in configuration, excluding it from file name.");
-      fileName = new SimpleDateFormat("yyyyMMddHHMMSS").format(documentReference.getDate()) + "_" + measureName;
+      fileName = new SimpleDateFormat("yyyyMMdd'T'HH_mm_ss").format(documentReference.getDate()) + "_" + measureName;
     }
 
     try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
