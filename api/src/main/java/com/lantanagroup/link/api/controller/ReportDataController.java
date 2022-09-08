@@ -45,8 +45,8 @@ public class ReportDataController extends BaseController {
     dataProcessor.process(content, getFhirDataProvider());
   }
 
-  @PostMapping(value = "expunge/data/")
-  public void expungeData() {
+  @DeleteMapping(value = "/data/expunge")
+  public void expungeData(@RequestBody() byte[] content) {
     if(dataGovernanceConfig.getCensusListRetention() != null) {
 
     }
