@@ -228,7 +228,7 @@ public class ApiInit {
       return;
     }
 
-    if(!this.config.getValidateFhirServer()){
+    if(this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()){
       this.ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
       logger.info("Setting client to never query for metadata");
     }
