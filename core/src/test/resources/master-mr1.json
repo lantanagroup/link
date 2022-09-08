@@ -1,0 +1,73 @@
+{
+  "resourceType": "MeasureReport",
+  "id": "1847296829",
+  "meta": {
+    "versionId": "19",
+    "lastUpdated": "2022-09-07T15:36:22.226+00:00",
+    "source": "#FOci3Hs3Hdzw41qi"
+  },
+  "contained": [
+    {
+      "resourceType": "List",
+      "id": "initial-population-subject-list",
+      "status": "current",
+      "mode": "snapshot",
+      "entry": [
+        {
+          "item": {
+            "reference": "MeasureReport/1847296829--1919342693"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "type": "subject-list",
+  "measure": "http://nhsnlink.org/fhir/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+  "subject": {
+    "extension": [
+      {
+        "url": "http://hl7.org/fhir/uv/saner/StructureDefinition/GeoLocation",
+        "extension": [
+          {
+            "url": "longitude",
+            "valueDecimal": 3.234234
+          },
+          {
+            "url": "latitude",
+            "valueDecimal": -1.234
+          }
+        ]
+      }
+    ],
+    "identifier": {
+      "system": "https://test.com",
+      "value": "lakjsdfljasdf"
+    }
+  },
+  "period": {
+    "start": "2022-01-01T00:00:00+00:00",
+    "end": "2022-01-31T23:59:59+00:00"
+  },
+  "group": [
+    {
+      "population": [
+        {
+          "code": {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+                "code": "initial-population",
+                "display": "Initial Population"
+              }
+            ]
+          },
+          "count": 1,
+          "subjectResults": {
+            "reference": "#initial-population-subject-list"
+          }
+        }
+      ]
+    }
+  ]
+}
