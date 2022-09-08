@@ -1,5 +1,7 @@
 package com.lantanagroup.link;
 
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +12,7 @@ import java.util.stream.Collectors;
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
 
+  @Setter
   private FhirDataProvider fhirDataProvider;
 
   public FhirBundler(FhirDataProvider fhirDataProvider) {
@@ -26,28 +29,35 @@ public class FhirBundler {
     }
 
     // Add all references to evaluated resources to the bundle as entries with a request method & url
-    List<String> patientDataReferences = patientMeasureReport.getEvaluatedResource().stream()
-            .filter(er -> {
-              if (er.getReference() == null || er.getReference().isEmpty()) {
+    List<String> patientDataReferences = patientMeasureReport.getExtension().stream()
+            .filter(ext -> {
+              if (StringUtils.isEmpty(ext.getUrl()) || !ext.getUrl().equals(Constants.ExtensionSupplementalData)) {
                 return false;
               }
+
+              if (!(ext.getValue() instanceof Reference)) {
+                return false;
+              }
+
+              Reference ref = (Reference) ext.getValue();
 
               // Evaluated resources that don't have the populationReference extension did fully satisfy
               // the criteria of at least one CQL definition
-              if (er.getExtensionsByUrl(Constants.ExtensionPopulationReference).isEmpty()) {
+              if (ref.getExtensionsByUrl(Constants.ExtensionCriteriaReference).isEmpty()) {
                 return false;
               }
 
-              // Ignore contained references
-              if (er.getReference() != null && er.getReference().startsWith("#")) {
+              // TODO: Reverse this and ONLY include contained resources so that we aren't sending EHR data as-is from the source.
+              if (StringUtils.isEmpty(ref.getReference()) || ref.getReference().startsWith("#")) {
                 return false;
               }
 
               return true;
             })
-            .map(er -> {
-              return er.getReference();
-            }).collect(Collectors.toList());
+            .map(ext -> {
+              return ((Reference) ext.getValue()).getReference();
+            })
+            .collect(Collectors.toList());
 
     // Return a list of all the resources identified by evaluated resources
     List<DomainResource> patientResources = new ArrayList<>();
@@ -62,6 +72,18 @@ public class FhirBundler {
         patientResources.add(FhirHelper.cleanResource((DomainResource) found.get().getResource()));
       } else {
         logger.error(String.format("Could not find resource %s for in bundle %s", patientDataReference, patientDataBundle.getId()));
+      }
+    }
+
+    //If the bundle doesn't already have the patient resource, add it in
+    if(patientResources.stream().noneMatch(i -> i.getResourceType().toString().equals("Patient") && i.getIdElement().getIdPart().equals(patientId))) {
+      List<DomainResource> patient = patientDataBundle.getEntry().stream()
+              .filter(e -> e.getResource().getResourceType().toString().equals("Patient") && e.getResource().getIdElement().getIdPart().equals(patientId))
+              .map(e -> (DomainResource) e.getResource()).collect(Collectors.toList());
+
+      //Even if there's more than one copy of the Patient resource that exists in the Bundle for some reason, only add the first
+      if (patient.size() > 0) {
+        patientResources.add(FhirHelper.cleanResource(patient.get(0)));
       }
     }
 
@@ -122,12 +144,14 @@ public class FhirBundler {
     bundle.addEntry().setResource(FhirHelper.cleanResource(masterMeasureReport));
 
     // Add census list(s) to the report bundle
-    List<ListResource> censusLists = FhirHelper.getCensusLists(documentReference, this.fhirDataProvider);
-    bundle.getEntry().addAll(censusLists.stream().map(censusList -> {
-      Bundle.BundleEntryComponent newCensusListEntry = new Bundle.BundleEntryComponent();
-      newCensusListEntry.setResource(censusList);
-      return newCensusListEntry;
-    }).collect(Collectors.toList()));
+    if (documentReference != null) {
+      List<ListResource> censusLists = FhirHelper.getCensusLists(documentReference, this.fhirDataProvider);
+      bundle.getEntry().addAll(censusLists.stream().map(censusList -> {
+        Bundle.BundleEntryComponent newCensusListEntry = new Bundle.BundleEntryComponent();
+        newCensusListEntry.setResource(censusList);
+        return newCensusListEntry;
+      }).collect(Collectors.toList()));
+    }
 
     // If configured to include all resources...
     if (includePopulationSubjectResults) {
@@ -135,7 +159,7 @@ public class FhirBundler {
       List<String> patientMeasureReportReferences = FhirHelper.getPatientMeasureReportReferences(masterMeasureReport);
 
       // Retrieve the individual patient measure reports from the server
-      List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, fhirDataProvider);
+      List<MeasureReport> patientReports = FhirHelper.getPatientReports(patientMeasureReportReferences, this.fhirDataProvider);
 
       for (MeasureReport patientMeasureReport : patientReports) {
         if (patientMeasureReport == null) {

@@ -1,46 +1,61 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IReportGenerationEvent;
-import com.lantanagroup.link.ResourceIdChanger;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.ConceptMap;
-import org.hl7.fhir.r4.model.Extension;
+import org.hl7.fhir.r4.hapi.ctx.DefaultProfileValidationSupport;
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
+import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Component
 public class ApplyConceptMaps implements IReportGenerationEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
+  Map<String, ConceptMap> conceptMapMap = new HashMap<>();
 
-  private List<ConceptMap> getConceptMaps(ApiConfig config, FhirDataProvider fhirDataProvider) {
-    List<ConceptMap> conceptMapsList = new ArrayList();
-    if (config.getConceptMaps() != null) {
+  @Autowired
+  @Setter
+  private ApplyConceptMapsConfig applyConceptMapConfig;
+
+  @Autowired
+  @Setter
+  private FhirDataProvider fhirDataProvider;
+
+
+  private Map<String, ConceptMap> getConceptMaps(FhirDataProvider fhirDataProvider) {
+    if (applyConceptMapConfig != null && applyConceptMapConfig.getConceptMaps() != null) {
       // get it from fhirserver
-      config.getConceptMaps().stream().forEach(concepMapId -> {
+      applyConceptMapConfig.getConceptMaps().stream().forEach(concepMap -> {
         try {
-          IBaseResource conceptMap = fhirDataProvider.getResourceByTypeAndId("ConceptMap", concepMapId);
-          conceptMapsList.add((ConceptMap) conceptMap);
+          IBaseResource conceptMap = fhirDataProvider.getResourceByTypeAndId("ConceptMap", concepMap.getConceptMapId());
+          conceptMapMap.put(concepMap.getConceptMapId(), (ConceptMap) conceptMap);
         } catch (Exception ex) {
-          logger.error(String.format("ConceptMap %s not found", concepMapId));
+          logger.error(String.format("ConceptMap %s not found", concepMap.getConceptMapId()));
         }
       });
     }
-    return conceptMapsList;
+    return conceptMapMap;
   }
 
-  private void applyMap(ConceptMap map, Coding code) {
-    // TODO: Lookup ConceptMap.group based on code system
+  public void applyMap(ConceptMap map, Coding code) {
     map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
       if (group.getSource().equals(code.getSystem())) {
         List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
@@ -49,7 +64,6 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
         originalCode.setUrl(Constants.ConceptMappingExtension);
         originalCode.setValue(code.copy());
         code.getExtension().add(originalCode);
-        // pick the last element from list
         code.setSystem(group.getTarget());
         code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
         code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
@@ -57,24 +71,58 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
     });
   }
 
-  public void execute(ReportCriteria reportCriteria, ReportContext context, ApiConfig config, FhirDataProvider fhirDataProvider) {
+  private void addCode(ArrayList codes, List<Base> results, int i) {
+    if (results.get(i) instanceof CodeableConcept) {
+      CodeableConcept cc = (CodeableConcept) results.get(i);
+      codes.add(cc.getCoding().get(0));
+    } else if (results.get(i) instanceof Coding) {
+      Coding cc = (Coding) results.get(i);
+      codes.add(cc);
+    } else if (results.get(i) instanceof CodeType) {
+      CodeType c = (CodeType) results.get(i);
+      CodeableConcept cc = new CodeableConcept();
+      cc.addCoding().setCode(c.asStringValue());
+      codes.add(cc.getCoding().get(0));
+    }
+  }
+
+  public List<Coding> findCodings(List<String> pathList, Bundle patientBundle) {
+    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), new DefaultProfileValidationSupport());
+    FHIRPathEngine fhirPathEngine = new FHIRPathEngine(workerContext);
+
+    ArrayList codes = new ArrayList();
+    for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
+      Resource resource = entry.getResource();
+      for (int j = 0; j < pathList.size(); j++) {
+        List<Base> results = fhirPathEngine.evaluate(resource, pathList.get(j));
+        if (results.isEmpty()) continue;
+        for (int i = 0; i < results.size(); i++) {
+          addCode(codes, results, i);
+        }
+      }
+    }
+    return codes;
+  }
+
+  public void execute(ReportCriteria reportCriteria, ReportContext context) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
-    List<ConceptMap> conceptMapsList = getConceptMaps(config, fhirDataProvider);
-    if (!conceptMapsList.isEmpty()) {
+
+    Map<String, ConceptMap> conceptMapsMap = getConceptMaps(fhirDataProvider);
+    if (!conceptMapsMap.isEmpty()) {
       for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
-        logger.info("Patient is: " + patientOfInterest.getId());
-        try {
+        // logger.info("Patient is: " + patientOfInterest.getId());
+        if(!StringUtils.isEmpty(patientOfInterest.getId())){
           IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
-          List<Coding> codes = ResourceIdChanger.findCodings(patientBundle);
-          conceptMapsList.stream().forEach(conceptMap -> {
-            codes.parallelStream().forEach(code -> {
-              this.applyMap(conceptMap, code);
+          applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
+            List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
+            codes.stream().forEach(code -> {
+              this.applyMap(conceptMapsMap.get(conceptMap.getConceptMapId()), code);
             });
           });
-        } catch (Exception ex) {
-          logger.error("Exception is: " + ex.getMessage());
+          fhirDataProvider.updateResource(patientBundle);
         }
       }
     }
   }
 }
+

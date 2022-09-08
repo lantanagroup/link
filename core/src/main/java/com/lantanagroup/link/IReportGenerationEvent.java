@@ -6,5 +6,5 @@ import com.lantanagroup.link.model.ReportCriteria;
 
 public interface IReportGenerationEvent {
 
-  public void execute(ReportCriteria reportCriteria, ReportContext context, ApiConfig config, FhirDataProvider fhirDataProvider);
+  public void execute(ReportCriteria reportCriteria, ReportContext context);
 }

@@ -2,7 +2,6 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.IDataProcessor;
 import lombok.Setter;
-import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +27,9 @@ public class ReportDataController extends BaseController {
   }
 
   @PostMapping(value = "/data/{type}")
-  public void retrieveData(@RequestBody() byte[] csvContent, @PathVariable("type") String type) throws Exception {
+  public void retrieveData(@RequestBody() byte[] content, @PathVariable("type") String type) throws Exception {
     if (config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
-      throw new HttpResponseException(400, "Bad Request, cannot find data processor.");
+      throw new IllegalStateException("Cannot find data processor.");
     }
 
     logger.debug("Receiving " + type + " data. Parsing...");
@@ -38,6 +37,6 @@ public class ReportDataController extends BaseController {
     Class<?> dataProcessorClass = Class.forName(this.config.getDataProcessor().get(type));
     IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
-    dataProcessor.process(csvContent, getFhirDataProvider());
+    dataProcessor.process(content, getFhirDataProvider());
   }
 }

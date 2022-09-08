@@ -95,15 +95,6 @@ public class ApiConfig {
   @NotNull
   private String sender;
 
-  /**
-   * <strong>api.send-whole-bundle</strong><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
-   */
-  private Boolean sendWholeBundle;
-
-  /**
-   * <strong>api.remove-generated-observations</strong><br>Whether to remove contained evaluated resources from patient measure reports
-   */
-  private boolean removeGeneratedObservations = true;
 
   /**
    * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
@@ -127,6 +118,11 @@ public class ApiConfig {
   @Getter
   private ApiReportDefsConfig reportDefs;
 
+  /**
+   * <strong>api.measure-packages</strong><br>Configuration for multi measures supported by the system
+   */
+  @Getter
+  private List<ApiMeasurePackage> measurePackages;
 
   /**
    * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
@@ -134,14 +130,6 @@ public class ApiConfig {
   @Getter
   private UserConfig user;
 
-  /**
-   * <strong>api.concept-maps</strong><br>API configuration to indicate one or more ConceptMaps to apply to patient data
-   */
-  @Getter
-  private List<String> conceptMaps;
-
-  @Getter
-  private Boolean deleteAfterSubmission;
 
   /**
    * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.

@@ -16,12 +16,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.util.TimeZone;
 
 /**
@@ -63,21 +60,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public void afterPropertiesSet() throws Exception {
 
   }
-
-  /**
-   * Triggered during SpringBoot application's startup. Adds to the security filter chain.
-   * @param servletContext
-   * @throws ServletException
-   */
-  @Override
-  public void onStartup(ServletContext servletContext) throws ServletException {
-    servletContext
-            .addFilter("securityFilter", new DelegatingFilterProxy("springSecurityFilterChain"))
-            .addMappingForUrlPatterns(null, false, "/*");
-
-    super.onStartup(servletContext);
-  }
-
 
   /**
    * Sets the CORS configuration based on the api.yml (or its override)
