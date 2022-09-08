@@ -20,7 +20,8 @@ public class Constants {
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";
   public static final String TerminologyEndpointSystem = "http://terminology.hl7.org/CodeSystem/endpoint-connection-type";
   public static final String ConceptMappingExtension = "https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept";
-  public static final String ExtensionPopulationReference = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-populationReference";
+  public static final String ExtensionCriteriaReference = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference";
   public static final String MeasuredValues = "http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues";
   public static final String OriginalEncounterStatus = "https://www.lantanagroup.com/fhir/StructureDefinition/nhsn-encounter-original-status";
+  public static final String ExtensionSupplementalData = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData";
 }
