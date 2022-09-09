@@ -21,6 +21,7 @@ import {CalculatedFieldComponent} from './components/calculated-field/calculated
 import {NgbdDatepickerPopup} from "./components/dates/datepicker-popup";
 import {ReportDefinitionService} from './services/report-definition.service';
 import {ErrorPageComponent} from './error-page/error-page.component';
+import {UnauthorizedComponent} from "./unauthorized/unauthorized.component";
 import {ViewLineLevelComponent} from './view-line-level/view-line-level.component';
 import {MedAdminComponent} from "./report/med-admin.component";
 import {NotesComponent} from "./components/notes/notes.component";
@@ -48,6 +49,7 @@ export const initFactory = (configService: ConfigService, authService: AuthServi
         NgbdDatepickerRangePopup,
         NgbdDatepickerPopup,
         ErrorPageComponent,
+        UnauthorizedComponent,
         ViewLineLevelComponent,
         MedAdminComponent,
         NotesComponent,

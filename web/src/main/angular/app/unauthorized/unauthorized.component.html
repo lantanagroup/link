@@ -1,0 +1,7 @@
+<div>
+    <h4>{{ errorMessage }}</h4>
+</div>
+<div>
+    <button *ngIf="!user()" (click)="login()">Login</button>
+    <button *ngIf="user()" (click)="logout()">Logout</button>
+</div>

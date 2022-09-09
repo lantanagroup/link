@@ -1,3 +1,14 @@
+<!-- TODO: Move nav bar into into a reusable component -->
+<ul ngbNav #nav="ngbNav" class="nav-tabs">
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla.isActive" #rla="routerLinkActive"
+           routerLink="/generate">Generate</a>
+    </li>
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla1.isActive" #rla1="routerLinkActive"
+           routerLink="/review">Review</a>
+    </li>
+</ul>
 <div class="card">
     <div class="card-header">Filter/Criteria</div>
     <div class="flex-container">
