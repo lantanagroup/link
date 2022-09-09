@@ -66,6 +66,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
     masterMeasureReport.setMeasure(context.getMeasure().getUrl());
 
+    // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
     this.aggregatePatientReports(masterMeasureReport, context.getPatientsOfInterest());
 
     this.createGroupsFromMeasure(masterMeasureReport, context);

@@ -12,11 +12,11 @@ import java.util.HashMap;
 public class ReportCriteria {
 
   String reportDefIdentifier;
-  String reportDefId;
+  String reportDefId;  // TODO: Remove? Currently unused (though that may change as part of LINK-1151)
   String periodStart;
   String periodEnd;
-  String measureId;
-  HashMap<String, String> additional = new HashMap<>();
+  String measureId;  // TODO: Remove? Currently unused
+  HashMap<String, String> additional = new HashMap<>();  // TODO: Remove? Currently unused
 
   public ReportCriteria(String reportDefIdentifier, String periodStart, String periodEnd) {
     this.setReportDefIdentifier(reportDefIdentifier);

@@ -44,6 +44,7 @@ public class ReportGenerator {
   private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
     DocumentReference documentReference = new DocumentReference();
     Identifier identifier = new Identifier();
+    // TODO: System defaults to urn:ietf:rfc:3986; shouldn't we use a UUID for the value (urn:uuid:...)?
     identifier.setSystem(config.getDocumentReferenceSystem());
     identifier.setValue(identifierValue);
 
@@ -139,6 +140,7 @@ public class ReportGenerator {
 
 
     // Generate the master measure report
+    // TODO: Remove this; it duplicates the call in generate
     reportAggregator.generate(criteria, context);
 
     // Save measure report and documentReference
@@ -161,6 +163,7 @@ public class ReportGenerator {
       documentReference.setContent(existingDocumentReference.getContent());
     } else {
       // generate document reference id based on the report date range and the measure used in the report generation
+      // TODO: Remove the call to hashCode
       String id = criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd().hashCode();
       UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
       documentReference.setId(documentId.toString());

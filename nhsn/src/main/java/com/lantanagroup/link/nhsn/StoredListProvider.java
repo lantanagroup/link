@@ -24,6 +24,7 @@ public class StoredListProvider implements IPatientIdProvider {
 
   @Override
   public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
+    // TODO: Remove any census lists currently in the context
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     FhirContext ctx = context.getFhirProvider().getClient().getFhirContext();
 
@@ -36,6 +37,7 @@ public class StoredListProvider implements IPatientIdProvider {
 
     Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
 
+    // TODO: Tweak log messages; we're searching by bundle identifier, not measure ID
     if (bundle.getEntry().size() == 0) {
       logger.warn("No patient identifier lists found matching time stamp " + Helper.encodeLogging(criteria.getPeriodStart()) + " and Measure " + Helper.encodeLogging(context.getMeasureId()));
       return patientsOfInterest;
@@ -43,6 +45,8 @@ public class StoredListProvider implements IPatientIdProvider {
       logger.info("Found patient identifier lists  matching time stamp " + Helper.encodeLogging(criteria.getPeriodStart()) + " and Measure " + Helper.encodeLogging(context.getMeasureId()));
     }
 
+    // TODO: Rename to lists (i.e., the lists from the searchset bundle returned by findListByIdentifierAndDate)
+    //       And add a generic overload to getAllPages allowing the actual resource type to be specified
     List<IBaseResource> bundles = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx);
 
     bundles.parallelStream().forEach(bundleResource -> {
@@ -66,6 +70,7 @@ public class StoredListProvider implements IPatientIdProvider {
 
     logger.info("Loaded " + patientsOfInterest.size() + " patient ids");
 
+    // TODO: Remove this; ReportController.getPatientIdentifiers already does it
     context.setPatientsOfInterest(patientsOfInterest);
 
     return patientsOfInterest;

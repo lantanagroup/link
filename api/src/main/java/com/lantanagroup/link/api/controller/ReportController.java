@@ -74,6 +74,8 @@ public class ReportController extends BaseController {
   }
 
   private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
+    // TODO: Create a utility class for converting between strings and identifiers
+    //       Fix similar usage elsewhere; may help to do a project-wide search for a pipe character in double quotes
     String reportDefIdentifierSystem = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
             criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) : "";
     String reportDefIdentifierValue = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
@@ -109,6 +111,10 @@ public class ReportController extends BaseController {
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     List<PatientOfInterestModel> patientOfInterestModelList;
 
+    // TODO: When would the following condition ever be true?
+    //       In the standard report generation pipeline, census lists haven't been retrieved by the time we get here
+    //       Are we guarding against a case where a BeforePatientOfInterestLookup handler might have done so?
+    //       (But wouldn't it be more appropriate to plug that logic in as the patient ID resolver?)
     if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
       patientOfInterestModelList = new ArrayList<>();
       for (ListResource censusList : context.getPatientCensusLists()) {
@@ -155,12 +161,16 @@ public class ReportController extends BaseController {
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
+      // TODO: Refactor query/store event triggering
+      //       Querying and storing both occur within the following call
+      //       So we can't trigger separate events for Before/AfterPatientDataQuery and Before/AfterPatientDataStore
+      //       For consistency, trigger Before/AfterPatientDataQuery in generateReport
+      //       And remove the Before/AfterPatientDataStore event types completely
       query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
-      eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
+      eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);  // TODO: Move to generateReport
 
-
-      eventController.triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
+      eventController.triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);  // TODO: Remove
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
@@ -213,9 +223,12 @@ public class ReportController extends BaseController {
     String id = "";
     if (!regenerate || existingDocumentReference == null) {
       // generate master report id based on the report date range and the measure used in the report generation
+      // TODO: Create a utility class for generating report IDs (both individual and summary)
+      //       Fix similar usage elsewhere; may help to do a project-wide search for hashCode calls
       id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
     } else {
       id = existingDocumentReference.getMasterIdentifier().getValue();
+      // TODO: Set the report ID on the context before triggering this event, so handlers have access to it
       eventController.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
     reportContext.setReportId(id);
@@ -227,22 +240,28 @@ public class ReportController extends BaseController {
 
     eventController.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
+    // TODO: Trigger BeforePatientDataQuery
+
     // Get the resource types to query
+    // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
+    //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
     List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
 
     // Scoop the data for the patients and store it
     this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
 
+    // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
     if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
       String msg = "A census for the specified criteria was not found.";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventController.triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);  // TODO: Change to AfterPatientDataQuery
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
+    // TODO: Remove this; read it from THSAConfig directly in THSAAggregator
     reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
 
     response.setReportId(id);

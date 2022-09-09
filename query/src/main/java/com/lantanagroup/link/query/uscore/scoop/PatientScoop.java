@@ -90,6 +90,7 @@ public class PatientScoop extends Scoop {
           String searchUrl = "Patient?identifier=" + poi.getIdentifier();
 
           logger.debug("Searching for patient at index " + poiIndex);
+          // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
           Bundle response = this.fhirQueryServer.search()
                   .byUrl(searchUrl)
                   .returnBundle(Bundle.class)
@@ -103,6 +104,8 @@ public class PatientScoop extends Scoop {
           }
         }
 
+        // TODO: Should we really be swallowing all exceptions here?
+        //       And if so, do we need three separate catch blocks with nearly identical behavior?
       } catch (ResourceNotFoundException ex) {
         logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to resource not found errors: \n" + ex.getResponseBody());
       } catch (AuthenticationException ex) {
@@ -158,6 +161,7 @@ public class PatientScoop extends Scoop {
       }
     }
 
+    // TODO: Change method return type to void
     return null;
   }
 }

@@ -83,7 +83,11 @@ public class MeasureEvaluator {
         }
 
         logger.info(String.format("Done generating measure report for %s-%s", this.context.getReportId(), this.patientId.hashCode()));
+        // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
         measureReport.setId(this.context.getReportId());
+        // TODO: Remove this; it's expected to be the summary report, not an individual report
+        //       Though maybe it would be helpful to collect the individual reports in the context as well
+        //       That way, we wouldn't have to retrieve them from the data store service during aggregation
         this.context.setMeasureReport(measureReport);
       }
     } catch (Exception e) {

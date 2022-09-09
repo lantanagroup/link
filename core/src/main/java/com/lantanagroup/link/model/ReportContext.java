@@ -22,13 +22,13 @@ public class ReportContext {
   private String measureId;
   private Bundle reportDefBundle;
   private String reportId;
-  private String inventoryId;
+  private String inventoryId;  // TODO: Remove (see usage in ReportController.generateReport)
   private MeasureReport measureReport;
-  private List<QueryResponse> patientData = new ArrayList<>();
+  private List<QueryResponse> patientData = new ArrayList<>();  // TODO: Remove? Currently unused
   private Measure measure;
   private List<ListResource> patientCensusLists = new ArrayList<>();
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-  private List<ConceptMap> conceptMaps = new ArrayList();
+  private List<ConceptMap> conceptMaps = new ArrayList();  // TODO: Remove? Currently unused
   HttpServletRequest request;
   LinkCredentials user;
 }

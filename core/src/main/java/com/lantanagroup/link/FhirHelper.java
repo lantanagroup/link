@@ -538,6 +538,8 @@ public class FhirHelper {
     return bundleLocation;
   }
 
+  // TODO: This typically creates a second content element, which I don't think we want
+  //       The one initially created in ReportGenerator.generateDocumentReference has a creation date but no URL
   public static void setSubmissionLocation(DocumentReference documentReference, String location) {
     documentReference.getContent().removeIf(c -> c.hasAttachment() && c.getAttachment().hasUrl());
     DocumentReference.DocumentReferenceContentComponent newContent = new DocumentReference.DocumentReferenceContentComponent();

@@ -56,8 +56,12 @@ public class PatientData {
           if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
             //this was written in a way that if the resource equals check was removed, it would work for other resource types
             this.usCoreConfig.getQueryParameters().get(measureId).stream().forEach(queryParams -> {
+              // TODO: Verify that we're dealing with the correct resource type
+              //       I.e., the resource type of queryParams must be equal to resource (the outer loop variable)
+              //       Could make that check here (within the forEach) or in a filter before the forEach
               for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
                 for (String paramValue : param.getValues()) {
+                  // TODO: Use Apache's URLEncodedUtils or similar to encode query string components
                   queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId);
                 }
               }
@@ -66,6 +70,8 @@ public class PatientData {
         }
         else {
           logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));
+          // TODO: Fall back to a query with the patient parameter only?
+          //       I.e., uncomment the following line and remove the category parameter?
           //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
         }
 
