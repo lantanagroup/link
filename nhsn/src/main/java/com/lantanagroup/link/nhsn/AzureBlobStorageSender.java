@@ -59,8 +59,8 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     try {
       BlobContainerAsyncClient client = getAbsClientConnection();
       if(client == null) {
-        String errorMessage = String.format("Failed to create blob async client.");
-        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        String errorMessage = "Failed to create blob async client.";
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName());
         throw new IOException(errorMessage);
       }
 
@@ -70,7 +70,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       blobAsyncClient.upload(data, parallelTransferOptions, true).block();
     } catch (Exception ex) {
       logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: %s", ex.getMessage());
+      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
       throw new IOException(errorMessage);
     }
 
@@ -97,7 +97,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       blobAsyncClient.uploadFromFile(filepath, true).block();
     } catch (Exception ex) {
       logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: %s", ex.getMessage());
+      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
       throw new IOException(errorMessage);
     }
 
@@ -124,7 +124,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       blobAsyncClient.upload(data, true).block();
     } catch (Exception ex) {
       logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: %s", ex.getMessage());
+      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
       throw new IOException(errorMessage);
     }
 
@@ -132,7 +132,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   public void upload(String filename, String serializedData, boolean replaceExistingBlob) throws IOException {
-    logger.info("Sending MeasureReport bundle to blob storage container %s.", this.absConfig.getAzureStorageContainerName());
+    logger.info("Sending MeasureReport bundle to blob storage container {}.", this.absConfig.getAzureStorageContainerName());
 
     BlobClient blobClient = new BlobClientBuilder()
             .endpoint(this.absConfig.getAddress())
@@ -146,7 +146,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
     } catch (Exception ex) {
       logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: %s", ex.getMessage());
+      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
       throw new IOException(errorMessage);
     }
 
@@ -155,7 +155,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Override
   public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
-    logger.info("Sending MeasureReport bundle to blob storage container %s.", this.absConfig.getAzureStorageContainerName());
+    logger.info("Sending MeasureReport bundle to blob storage container {}.", this.absConfig.getAzureStorageContainerName());
 
     String bundleSerialization;
     if(absConfig.getFormat() == AzureBlobStorageSenderFormats.JSON) {
@@ -192,18 +192,9 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       logger.info("Send to upload here");
     }
     catch(Exception ex) {
-      logger.error("Failed to send measure report to blob storage: %s", Helper.encodeLogging(ex.getMessage()));
+      logger.error("Failed to send measure report to blob storage: {}", Helper.encodeLogging(ex.getMessage()));
       throw new Exception(ex.getMessage());
     }
-
-//    try {
-//      this.upload(fileName, BinaryData.fromString(bundleSerialization));
-//      logger.info("Send to upload here");
-//    }
-//    catch(Exception ex) {
-//      logger.error("Failed to send measure report to blob storage: %s", Helper.encodeLogging(ex.getMessage()));
-//      throw new Exception(ex.getMessage());
-//    }
 
     return "MeasureReport sent successfully to blob storage";
   }
@@ -234,7 +225,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       return svcClient.getBlobContainerAsyncClient(this.absConfig.getAzureStorageContainerName());
     }
     catch (Exception ex) {
-      logger.error("Failed to send measure report to blob storage: %s", Helper.encodeLogging(ex.getMessage()));
+      logger.error("Failed to send measure report to blob storage: {}", Helper.encodeLogging(ex.getMessage()));
     }
 
     return null;
