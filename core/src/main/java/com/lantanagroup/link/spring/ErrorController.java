@@ -11,13 +11,6 @@ import java.util.Map;
 @RestController
 @RequestMapping({"${server.error.path:${error.path:/error}}"})
 public class ErrorController implements org.springframework.boot.web.servlet.error.ErrorController {
-  @Value("${error.path:/error}")
-  private String errorPath = "/error";
-
-  @Override
-  public String getErrorPath() {
-    return errorPath;
-  }
 
   @RequestMapping
   public Map<String, Object> handle(HttpServletRequest request, HttpServletResponse response) {
