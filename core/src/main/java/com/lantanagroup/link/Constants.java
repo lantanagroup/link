@@ -23,4 +23,6 @@ public class Constants {
   public static final String ExtensionPopulationReference = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-populationReference";
   public static final String MeasuredValues = "http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues";
   public static final String OriginalEncounterStatus = "https://www.lantanagroup.com/fhir/StructureDefinition/nhsn-encounter-original-status";
+  public static final String patientDataTag = "patient-data";
+  public static final String reportTag = "report";
 }
