@@ -157,15 +157,17 @@ public class ReportController extends BaseController {
     try {
       List<QueryResponse> patientQueryResponses = null;
 
-      // Get the data
-      logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
       // TODO: Refactor query/store event triggering
       //       Querying and storing both occur within the following call
       //       So we can't trigger separate events for Before/AfterPatientDataQuery and Before/AfterPatientDataStore
       //       For consistency, trigger Before/AfterPatientDataQuery in generateReport
       //       And remove the Before/AfterPatientDataStore event types completely
+
+      // Get the data
+      logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
+      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
+      IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
+      // TODO: Refactor this method to accept multiple measure identifiers
       query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
 
       eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);  // TODO: Move to generateReport
@@ -185,7 +187,7 @@ public class ReportController extends BaseController {
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
-          @RequestParam("reportDefIdentifier") String reportDefIdentifier,
+          @RequestParam("reportDefIdentifier") String reportDefIdentifier,  // TODO: Change to array
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
           boolean regenerate)
@@ -201,11 +203,13 @@ public class ReportController extends BaseController {
     eventController.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
+    // TODO: Call this once for each measure (with the report definition identifier as a new parameter)
     this.resolveMeasure(criteria, reportContext);
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     // Search the reference document by measure criteria nd reporting period
+    // TODO: Search using all report definition identifiers
     DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
             reportContext.getReportDefBundle().getIdentifier(),
             periodStart,
@@ -223,8 +227,14 @@ public class ReportController extends BaseController {
     String id = "";
     if (!regenerate || existingDocumentReference == null) {
       // generate master report id based on the report date range and the measure used in the report generation
-      // TODO: Create a utility class for generating report IDs (both individual and summary)
+      // TODO: Create a utility class for generating master identifiers and report IDs
       //       Fix similar usage elsewhere; may help to do a project-wide search for hashCode calls
+      //       Generation logic will need to support multiple report definition identifiers, ensuring they are sorted
+      //       The unhashed master identifier will use the report definition identifiers as follows:
+      //       {identifier-1}-{identifier-2}-...-{identifier-n}-{period-start}-{period-end}
+      //       Measure-specific IDs (e.g., for individual/summary measure reports) may be generated as follows:
+      //       {hashed-master-identifier}-{hashed-identifier}[-{hashed-patient-id}]
+      //       Though consider the possibility of generating UUIDs rather than concatenated integer hashes
       id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
     } else {
       id = existingDocumentReference.getMasterIdentifier().getValue();
@@ -236,6 +246,11 @@ public class ReportController extends BaseController {
     eventController.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
+    // TODO: Call this once for each measure
+    //       Will need to rework how/when census lists and POIs get added to the context
+    //       I.e., ensure that POIs are unique across measures and not overwritten on subsequent calls
+    //       Then populate patientsOfInterest across all such calls, ensuring uniqueness
+    //       (Or forgo the local variable entirely, and get POIs from the context when needed)
     List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
 
     eventController.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
@@ -243,9 +258,11 @@ public class ReportController extends BaseController {
     // TODO: Trigger BeforePatientDataQuery
 
     // Get the resource types to query
+    // TODO: Refactor this method to accept multiple report definition bundles
+    //       Or call it once for each measure, populating resourceTypesToQuery across all such calls, ensuring uniqueness
+    List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
     // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
     //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
-    List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
 
     // Scoop the data for the patients and store it
     this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
@@ -265,6 +282,11 @@ public class ReportController extends BaseController {
     reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
 
     response.setReportId(id);
+
+    // TODO: Everything from here to AfterReportStore should be executed once per measure
+    //       Method signatures should be updated to accept the "active" measure
+    //       Pass this as a report definition identifier? Or the corresponding measure-specific context?
+    //       Will also need to tweak the logic for generating report IDs and document references
 
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, reportContext.getReportDefBundle());
 

@@ -19,6 +19,8 @@ public class ReportContext {
     this.setFhirProvider(fhirProvider);
   }
 
+  // TODO: Create a new measure-specific context class; move measure-specific fields into that class
+  //       Here, maintain a map of measure-specific contexts keyed by report definition identifier
   private String measureId;
   private Bundle reportDefBundle;
   private String reportId;

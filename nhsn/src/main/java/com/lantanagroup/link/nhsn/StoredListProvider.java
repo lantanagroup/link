@@ -24,7 +24,7 @@ public class StoredListProvider implements IPatientIdProvider {
 
   @Override
   public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
-    // TODO: Remove any census lists currently in the context
+    // TODO: Remove any census lists currently in the context? (May not be desired for multi-measure)
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     FhirContext ctx = context.getFhirProvider().getClient().getFhirContext();
 

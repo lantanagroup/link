@@ -11,7 +11,7 @@ import java.util.HashMap;
 @Setter
 public class ReportCriteria {
 
-  String reportDefIdentifier;
+  String reportDefIdentifier;  // TODO: Change to an appropriate collection type; elements should be sorted and unique
   String reportDefId;  // TODO: Remove? Currently unused (though that may change as part of LINK-1151)
   String periodStart;
   String periodEnd;
