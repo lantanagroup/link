@@ -8,8 +8,6 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
@@ -19,7 +17,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -45,12 +42,10 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private RefreshPatientListConfig config;
   private QueryConfig queryConfig;
   private USCoreConfig usCoreConfig;
-  private ApiConfig apiConfig;
 
   @Override
   protected List<Class> getBeanClasses() {
     return List.of(
-            ApiConfig.class,
             QueryConfig.class,
             USCoreConfig.class,
             EpicAuth.class,
@@ -65,38 +60,23 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
     usCoreConfig = applicationContext.getBean(USCoreConfig.class);
-    apiConfig = applicationContext.getBean(ApiConfig.class);
-    if (config.getApiUrl() == null) {
-      throw new IllegalArgumentException("api-url may not be null");
-    }
-    if (config.getPatientListId() == null) {
-      throw new IllegalArgumentException("patient-list-id may not be null");
-    }
-    ApiReportDefsUrlConfig urlConfig = getUrlConfig();
-    if (urlConfig.getCensusIdentifier() == null) {
-      throw new IllegalArgumentException("census-identifier may not be null");
-    }
-    ListResource source = readList();
-    ListResource target = transformList(source, urlConfig.getCensusIdentifier());
-    updateList(target);
-  }
 
-  private ApiReportDefsUrlConfig getUrlConfig() {
-    for (ApiReportDefsUrlConfig urlConfig : apiConfig.getReportDefs().getUrls()) {
-      if (config.getPatientListId().equals(urlConfig.getPatientListId())) {
-        return urlConfig;
+    for (int i = 0; i < config.getPatientList().size(); i++) {
+      ListResource source = readList(config.getPatientList().get(i).getPatientListId());
+      for (int j = 0; j < config.getPatientList().get(i).getCensusIdentifier().size(); j++) {
+        if (StringUtils.isNotBlank(config.getPatientList().get(i).getCensusIdentifier().get(j))) {
+          ListResource target = transformList(source, config.getPatientList().get(i).getCensusIdentifier().get(j));
+          updateList(target);
+        }
       }
     }
-    throw new IllegalArgumentException("patient-list-id not found");
   }
 
-  private ListResource readList() throws ClassNotFoundException {
-    String url = URLEncodedUtils.formatSegments("STU3", "List", config.getPatientListId());
-    logger.info("Reading from {}", url);
+  private ListResource readList(String patientListId) throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
-    return client.fetchResourceFromUrl(ListResource.class, url);
+    return client.fetchResourceFromUrl(ListResource.class, patientListId);
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
