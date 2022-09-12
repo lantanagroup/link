@@ -62,12 +62,13 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
     for (int i = 0; i < config.getPatientList().size(); i++) {
-      ListResource source = readList(config.getPatientList().get(i).getPatientListId());
+      ListResource source = readList(config.getPatientList().get(i).getPatientListPath());
       for (int j = 0; j < config.getPatientList().get(i).getCensusIdentifier().size(); j++) {
-        if (StringUtils.isNotBlank(config.getPatientList().get(i).getCensusIdentifier().get(j))) {
-          ListResource target = transformList(source, config.getPatientList().get(i).getCensusIdentifier().get(j));
-          updateList(target);
+        if (StringUtils.isBlank(config.getPatientList().get(i).getCensusIdentifier().get(j))) {
+          throw new IllegalArgumentException("Census Identifier cannot be null.");
         }
+        ListResource target = transformList(source, config.getPatientList().get(i).getCensusIdentifier().get(j));
+        updateList(target);
       }
     }
   }
