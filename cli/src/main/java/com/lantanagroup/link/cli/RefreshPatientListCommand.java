@@ -54,8 +54,8 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
   @ShellMethod(
           key = "refresh-patient-list",
-          value = "Read an Epic patient list and update the corresponding census in Link.")
-  public void execute() throws Exception {
+          value = "Read patient lists and update the corresponding census in Link.")
+  public void execute(String[] patientListPath) throws Exception {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
@@ -64,9 +64,6 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     for (int i = 0; i < config.getPatientList().size(); i++) {
       ListResource source = readList(config.getPatientList().get(i).getPatientListPath());
       for (int j = 0; j < config.getPatientList().get(i).getCensusIdentifier().size(); j++) {
-        if (StringUtils.isBlank(config.getPatientList().get(i).getCensusIdentifier().get(j))) {
-          throw new IllegalArgumentException("Census Identifier cannot be null.");
-        }
         ListResource target = transformList(source, config.getPatientList().get(i).getCensusIdentifier().get(j));
         updateList(target);
       }

@@ -37,5 +37,5 @@ class PatientList {
   private String patientListPath;
   @NotNull
   @Size(min = 1)
-  private List<String> censusIdentifier;
+  private List<@NotBlank String> censusIdentifier;
 }
