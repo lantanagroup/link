@@ -2,6 +2,6 @@
     <h4>{{ errorMessage }}</h4>
 </div>
 <div>
-    <button *ngIf="!user()" (click)="login()">Login</button>
-    <button *ngIf="user()" (click)="logout()">Logout</button>
+    <button *ngIf="!user() || tokenExpired" (click)="login()">Login</button>
+    <button *ngIf="user() && !tokenExpired" (click)="logout()">Logout</button>
 </div>

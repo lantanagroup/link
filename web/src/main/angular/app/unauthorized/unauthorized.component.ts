@@ -9,6 +9,7 @@ import {AuthService} from "../services/auth.service";
 })
 export class UnauthorizedComponent implements OnInit {
   errorMessage: string;
+  tokenExpired: boolean = false;
 
   constructor(private route: ActivatedRoute, private authService: AuthService) {
   }
@@ -19,6 +20,11 @@ export class UnauthorizedComponent implements OnInit {
           this.errorMessage = data['message'];
         }
     );
+
+    //check auth status
+    let tokenExperiation = this.authService.oauthService.getAccessTokenExpiration();
+    this.tokenExpired = Date.now() > tokenExperiation;
+
   }
 
   public user() {

@@ -19,3 +19,19 @@ div.alert {
     content: ' ';
     display: block;
 }
+
+.nav-link.active{
+    background-color: #55a2f5;
+    color: #ffffff;
+    border: solid #005cbf;
+    border-width: 1px 3px 3px 1px;
+}
+
+.nav-link{
+    background-color: #ffffff;
+    color: #000000;
+    padding: 1px 60px 1px 60px;
+    margin: 40px 0 0 0;
+    border: solid #005cbf;
+    border-width: 1px 1px 3px 1px;
+}
