@@ -14,6 +14,10 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.NotNull;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.Duration;
+import java.util.Calendar;
 import java.util.Date;
 
 @RestController
@@ -53,8 +57,17 @@ public class ReportDataController extends BaseController {
   @DeleteMapping(value = "/data/expunge")
   public void expungeData() {
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
-    /*if(tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getCensusListRetention() != null) {
 
+    //for testing
+    /*if(dataGovernanceConfig == null) {
+      dataGovernanceConfig = new DataGovernanceConfig();
+      dataGovernanceConfig.setCensusListRetention("PT4H");
+      dataGovernanceConfig.setPatientDataRetention("PT4H");
+      dataGovernanceConfig.setReportRetention("PT4H");
+    }*/
+
+    /*if(dataGovernanceConfig.getCensusListRetention() != null) {
+      expungeData(fhirDataProvider, dataGovernanceConfig.getCensusListRetention(), String id, String type);
     }*/
 
     Bundle bundle = fhirDataProvider.getAllResources();
@@ -62,19 +75,46 @@ public class ReportDataController extends BaseController {
       for(Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         String tag = entry.getResource().getMeta().getTag().get(0).getCode();
         Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-        /*if(tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getPatientDataRetention() != null) {
-          String retention = dataGovernanceConfig.getPatientDataRetention();
-        }*/
 
-       /*if(tag.equals(Constants.reportTag) && dataGovernanceConfig.getReportRetention() != null) {
+        if(tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getPatientDataRetention() != null) {
+          expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
+                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+        }
 
-        }*/
+       if(tag.equals(Constants.reportTag) && dataGovernanceConfig.getReportRetention() != null) {
+          expungeData(fhirDataProvider, dataGovernanceConfig.getReportRetention(),
+                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+        }
       }
     }
   }
 
-  private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, String id, String type) {
-    fhirDataProvider.deleteResource(type, id, true);
-    logger.info(type + ":" + id + " has been expunged.");
+  private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) {
+    try {
+      Date comp = adjustTime(retentionPeriod, lastDatePosted);
+      Date today = new Date();
+
+      if(today.compareTo(comp) >= 0) {
+        fhirDataProvider.deleteResource(type, id, true);
+        logger.info(type + ": " + id + " has been expunged.");
+      }
+    } catch (DatatypeConfigurationException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private Date adjustTime(String retentionPeriod, Date lastDatePosted) throws DatatypeConfigurationException {
+    Duration dur = DatatypeFactory.newInstance().newDuration(retentionPeriod);
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(lastDatePosted);
+
+    calendar.add(Calendar.YEAR, dur.getYears());
+    calendar.add(Calendar.MONTH, dur.getMonths());
+    calendar.add(Calendar.DAY_OF_MONTH, dur.getDays());
+    calendar.add(Calendar.HOUR_OF_DAY, dur.getHours());
+    calendar.add(Calendar.MINUTE, dur.getMinutes());
+    calendar.add(Calendar.SECOND, dur.getSeconds());
+
+    return calendar.getTime();
   }
 }
