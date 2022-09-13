@@ -58,32 +58,28 @@ public class ReportDataController extends BaseController {
   public void expungeData() {
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
 
-    //for testing
-    /*if(dataGovernanceConfig == null) {
-      dataGovernanceConfig = new DataGovernanceConfig();
-      dataGovernanceConfig.setCensusListRetention("PT4H");
-      dataGovernanceConfig.setPatientDataRetention("PT4H");
-      dataGovernanceConfig.setReportRetention("PT4H");
-    }*/
-
-    /*if(dataGovernanceConfig.getCensusListRetention() != null) {
-      expungeData(fhirDataProvider, dataGovernanceConfig.getCensusListRetention(), String id, String type);
-    }*/
-
-    Bundle bundle = fhirDataProvider.getAllResources();
-    if(bundle != null) {
-      for(Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-        String tag = entry.getResource().getMeta().getTag().get(0).getCode();
-        Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-
-        if(tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getPatientDataRetention() != null) {
-          expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
-                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+    if(dataGovernanceConfig != null) {
+      Bundle censusBundle = fhirDataProvider.getCensusLists();
+      if(censusBundle != null) {
+        for (Bundle.BundleEntryComponent entry : censusBundle.getEntry()) {
+          if(dataGovernanceConfig.getCensusListRetention() != null) {
+            Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
+            expungeData(fhirDataProvider, dataGovernanceConfig.getCensusListRetention(),
+                    lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+          }
         }
+      }
 
-       if(tag.equals(Constants.reportTag) && dataGovernanceConfig.getReportRetention() != null) {
-          expungeData(fhirDataProvider, dataGovernanceConfig.getReportRetention(),
-                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+      Bundle bundle = fhirDataProvider.getAllResources();
+      if(bundle != null) {
+        for(Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+          String tag = entry.getResource().getMeta().getTag().get(0).getCode();
+          Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
+          if((tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getPatientDataRetention() != null) ||
+                  (tag.equals(Constants.reportTag) && dataGovernanceConfig.getReportRetention() != null)) {
+            expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
+                    lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+          }
         }
       }
     }

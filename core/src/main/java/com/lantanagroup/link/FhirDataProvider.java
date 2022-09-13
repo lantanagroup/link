@@ -381,6 +381,14 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public Bundle getCensusLists() {
+    return client
+            .search()
+            .forResource(ListResource.class)
+            .returnBundle(Bundle.class)
+            .execute();
+  }
+
   public void deleteResource(String resourceType, String id, boolean permanent) {
     try {
       URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"?_expunge=true":""));
