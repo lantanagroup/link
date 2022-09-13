@@ -1,0 +1,144 @@
+{
+  "resourceType": "Bundle",
+  "id": "787caa3f-328b-4822-ab4a-b46af536b822",
+  "type": "transaction-response",
+  "link": [
+    {
+      "relation": "self",
+      "url": "https://test-fhir.nhsnlink.org/fhir"
+    }
+  ],
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "MeasureReport",
+        "id": "1847296829--1919342693",
+        "meta": {
+          "versionId": "64",
+          "lastUpdated": "2022-09-07T22:05:15.722+00:00",
+          "source": "#fUSWJhZMPJgW0eTA"
+        },
+        "contained": [
+          {
+            "resourceType": "Patient",
+            "id": "57f91b28-7fd4-bec8-aa69-c655e42a7906",
+            "gender": "female",
+            "birthDate": "1999-07-27"
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
+            "valueString": "All inpatient encounters (including ED/Observation visits that end within 1 hour of the start of the inpatient encounter) for patients of all ages where at least one ADD was ordered or administered during the encounter that is during the measurement period."
+          },
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+            "valueReference": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-medication-administration"
+                }
+              ],
+              "reference": "MedicationAdministration/d2f3c47c-da31-d748-9a83-e006d0f67a8b"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+            "valueReference": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-medication-administration"
+                }
+              ],
+              "reference": "MedicationAdministration/7ef24f94-9148-aa29-8ed9-005693571001"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+            "valueReference": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-medication-request"
+                },
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-minimal-medication-requests"
+                }
+              ],
+              "reference": "MedicationRequest/075add36-e219-2327-d31b-75c5f5f12b85"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+            "valueReference": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-medication-request"
+                },
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-minimal-medication-requests"
+                }
+              ],
+              "reference": "MedicationRequest/04760a73-a327-05b6-9b56-344854451f60"
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+            "valueReference": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+                  "valueString": "sde-minimal-patient"
+                }
+              ],
+              "reference": "#57f91b28-7fd4-bec8-aa69-c655e42a7906"
+            }
+          }
+        ],
+        "status": "complete",
+        "type": "individual",
+        "measure": "http://nhsnlink.org/fhir/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+        "subject": {
+          "reference": "Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906"
+        },
+        "date": "2022-09-07T22:05:15+00:00",
+        "period": {
+          "start": "2022-01-01T00:00:00+00:00",
+          "end": "2022-01-31T23:59:59+00:00"
+        },
+        "group": [
+          {
+            "population": [
+              {
+                "extension": [
+                  {
+                    "url": "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
+                    "valueString": "All inpatient encounters, as well as ED and OBS encounters that end within 1 hour of the start of the inpatient encounter, for patients of all ages where at least one antidiabetic drug (ADD) was ordered or administered during the encounter that is during the measurement period."
+                  }
+                ],
+                "code": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+                      "code": "initial-population",
+                      "display": "Initial Population"
+                    }
+                  ]
+                },
+                "count": 1
+              }
+            ]
+          }
+        ]
+      },
+      "response": {
+        "status": "200 OK"
+      }
+    }
+  ]
+}

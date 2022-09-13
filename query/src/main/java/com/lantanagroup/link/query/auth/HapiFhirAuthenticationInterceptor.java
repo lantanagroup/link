@@ -14,6 +14,7 @@ import java.io.IOException;
 public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
   private static final Logger logger = LoggerFactory.getLogger(HapiFhirAuthenticationInterceptor.class);
   private String authHeader;
+  private String apiKey;
 
   public HapiFhirAuthenticationInterceptor(QueryConfig queryConfig, ApplicationContext context) throws ClassNotFoundException {
     if (Strings.isEmpty(queryConfig.getAuthClass())) {
@@ -30,6 +31,7 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
     try {
       logger.debug("Requesting Authorization header from auth class");
       this.authHeader = authorizer.getAuthHeader();
+      this.apiKey = authorizer.getApiKeyHeader();
     } catch (Exception ex) {
       logger.error("Error establishing Authorization header of FHIR server request: " + ex.getMessage());
     }
@@ -39,6 +41,9 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
   public void interceptRequest(IHttpRequest iHttpRequest) {
     if (this.authHeader != null && !this.authHeader.isEmpty()) {
       iHttpRequest.addHeader("Authorization", this.authHeader);
+    }
+    if (this.apiKey != null && !this.apiKey.isEmpty()) {
+      iHttpRequest.addHeader("apikey", this.apiKey);
     }
   }
 

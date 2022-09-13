@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.*;
@@ -225,6 +226,11 @@ public class ApiInit {
     if (this.config.getSkipInit()) {
       logger.info("Skipping API initialization processes to load report defs and search parameters");
       return;
+    }
+
+    if(this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()){
+      this.ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+      logger.info("Setting client to never query for metadata");
     }
 
     this.loadMeasureDefinitions();
