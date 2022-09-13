@@ -112,7 +112,7 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
       for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
         // logger.info("Patient is: " + patientOfInterest.getId());
         if(!StringUtils.isEmpty(patientOfInterest.getId())){
-          IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
+          IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode());
           applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
             List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
             codes.stream().forEach(code -> {

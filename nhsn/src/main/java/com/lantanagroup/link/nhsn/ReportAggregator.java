@@ -82,10 +82,10 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
     }
   }
 
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
     // if there are no groups generated then gets them from the measure
     if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
+      Bundle bundle = measureContext.getReportDefBundle();
       Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
               .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
               .findFirst();

@@ -6,9 +6,9 @@ import org.springframework.context.ApplicationContext;
 import java.util.List;
 
 public interface IQuery {
-  // TODO: The measureId parameter actually represents an identifier, not an ID
+  // TODO: The measureIds parameter actually represents identifier values, not IDs
   //       It should probably be renamed, but that change will need to be propagated through all the query logic
-  void execute(List<PatientOfInterestModel> patientIdentifiers, String reportId, List<String> resourceTypes, String measureId);
+  void execute(List<PatientOfInterestModel> patientIdentifiers, String reportId, List<String> resourceTypes, List<String> measureIds);
 
   void setApplicationContext(ApplicationContext context);
 }

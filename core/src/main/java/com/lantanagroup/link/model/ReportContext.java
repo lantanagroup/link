@@ -4,7 +4,10 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
 import lombok.Getter;
 import lombok.Setter;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ListResource;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.MeasureReport;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -14,23 +17,24 @@ import java.util.List;
 @Setter
 public class ReportContext {
   private FhirDataProvider fhirProvider;
-
-  public ReportContext(FhirDataProvider fhirProvider) {
-    this.setFhirProvider(fhirProvider);
-  }
-
-  // TODO: Create a new measure-specific context class; move measure-specific fields into that class
-  //       Here, maintain a map of measure-specific contexts keyed by report definition identifier
-  private String measureId;
-  private Bundle reportDefBundle;
-  private String reportId;
-  private String inventoryId;  // TODO: Remove (see usage in ReportController.generateReport)
-  private MeasureReport measureReport;
-  private List<QueryResponse> patientData = new ArrayList<>();  // TODO: Remove? Currently unused
-  private Measure measure;
+  private HttpServletRequest request;
+  private LinkCredentials user;
+  private String masterIdentifierValue;
   private List<ListResource> patientCensusLists = new ArrayList<>();
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-  private List<ConceptMap> conceptMaps = new ArrayList();  // TODO: Remove? Currently unused
-  HttpServletRequest request;
-  LinkCredentials user;
+  private List<MeasureContext> measureContexts = new ArrayList<>();
+
+  public ReportContext(FhirDataProvider fhirProvider) {
+    this.fhirProvider = fhirProvider;
+  }
+
+  @Getter
+  @Setter
+  public static class MeasureContext {
+    private String reportDefIdentifier;
+    private Bundle reportDefBundle;
+    private Measure measure;
+    private String reportId;
+    private MeasureReport measureReport;
+  }
 }

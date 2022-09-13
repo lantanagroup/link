@@ -7,5 +7,5 @@ import org.hl7.fhir.r4.model.MeasureReport;
 import java.text.ParseException;
 
 public interface IReportAggregator {
-  MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException;
+  MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException;
 }

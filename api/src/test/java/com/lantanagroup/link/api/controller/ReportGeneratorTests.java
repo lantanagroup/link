@@ -35,7 +35,8 @@ public class ReportGeneratorTests {
   @Autowired
   private ResourceLoader resourceLoader;
 
-
+  // TODO: Update for multi-measure
+  /*
   @Ignore
   public void testGenerateAnStore() throws ParseException, IOException {
     IReportAggregator reportAggregator = mock(IReportAggregator.class);
@@ -88,7 +89,7 @@ public class ReportGeneratorTests {
     // List<MeasureReport> measureReports = generator.generate(criteria, context, patientIds);
     // generator.store(measureReports, criteria, context, null);
   }
-
+  */
 
   private Measure getMeasure() throws IOException {
     File measure = resourceLoader.getResource("classpath:report-generator-measure.json").getFile();

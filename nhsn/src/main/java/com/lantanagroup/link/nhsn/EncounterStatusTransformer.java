@@ -25,7 +25,7 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
       logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
       try {
-        Bundle patientBundle = fhirDataProvider.getBundleById(context.getReportId() + "-" + patientOfInterest.getId().hashCode());
+        Bundle patientBundle = fhirDataProvider.getBundleById(context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode());
         for(Bundle.BundleEntryComponent patientResource : patientBundle.getEntry()) {
           if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
             logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");

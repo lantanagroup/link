@@ -43,20 +43,20 @@ public class PatientScoop extends Scoop {
   @Autowired
   protected FhirDataProvider fhirDataProvider;
 
-  public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, String measureId) throws Exception {
+  public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(pois, reportId, resourceTypes, measureId);
+    this.loadPatientData(pois, reportId, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(Patient patient, String reportId, List<String> resourceTypes, String measureId) {
+  private synchronized PatientData loadPatientData(Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
       PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig, resourceTypes);
-      patientData.loadData(measureId);
+      patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -65,7 +65,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public PatientData loadPatientData(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, String measureId) {
+  public PatientData loadPatientData(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -126,7 +126,7 @@ public class PatientScoop extends Scoop {
       forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureId);
+        PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureIds);
         Bundle patientBundle = patientData.getBundleTransaction();
         // store the data
         try {
