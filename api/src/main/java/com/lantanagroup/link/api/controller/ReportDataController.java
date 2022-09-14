@@ -92,7 +92,7 @@ public class ReportDataController extends BaseController {
 
     if(today.compareTo(comp) >= 0) {
       fhirDataProvider.deleteResource(type, id, true);
-      logger.info(type + ": " + id + " has been expunged.");
+      logger.info(String.format("{}: {} has been expunged.", type, id));
     }
   }
 
