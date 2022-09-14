@@ -6,7 +6,10 @@ import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ListResource;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,27 +63,22 @@ public class ReportDataController extends BaseController {
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
 
     if(dataGovernanceConfig != null) {
-      Bundle censusBundle = fhirDataProvider.getCensusLists();
-      if(censusBundle != null) {
-        for (Bundle.BundleEntryComponent entry : censusBundle.getEntry()) {
-          if(StringUtils.isNotBlank(dataGovernanceConfig.getCensusListRetention())) {
-            Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-            expungeData(fhirDataProvider, dataGovernanceConfig.getCensusListRetention(),
-                    lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
-          }
-        }
-      }
+      expungeData(fhirDataProvider, ListResource.class, false, dataGovernanceConfig.getCensusListRetention());
+      expungeData(fhirDataProvider, Bundle.class, true, dataGovernanceConfig.getPatientDataRetention());
+      expungeData(fhirDataProvider, MeasureReport.class, false, dataGovernanceConfig.getReportRetention());
+    }
+  }
 
-      Bundle bundle = fhirDataProvider.getAllResources();
-      if(bundle != null) {
-        for(Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-          String tag = entry.getResource().getMeta().getTag().get(0).getCode();
-          Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-          if((tag.equals(Constants.patientDataTag) && StringUtils.isNotBlank(dataGovernanceConfig.getPatientDataRetention())) ||
-                  (tag.equals(Constants.reportTag) && StringUtils.isNotBlank(dataGovernanceConfig.getReportRetention()))) {
-            expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
-                    lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
-          }
+  private void expungeData(FhirDataProvider fhirDataProvider, Class<? extends IBaseResource> classType, boolean filterPatientData, String retention) throws DatatypeConfigurationException {
+    Bundle bundle = fhirDataProvider.getAllResourcesByType(classType);
+    if(bundle != null)
+    {
+      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+        String tag = entry.getResource().getMeta().getTag().isEmpty()? "" :entry.getResource().getMeta().getTag().get(0).getCode();
+        Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
+        if((StringUtils.isNotBlank(retention)) && ((filterPatientData && tag.equals(Constants.patientDataTag)) || !filterPatientData)) {
+          expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
+                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
         }
       }
     }

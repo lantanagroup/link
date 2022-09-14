@@ -373,18 +373,10 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public Bundle getAllResources() {
+  public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
     return client
             .search()
-            .forResource(Bundle.class)
-            .returnBundle(Bundle.class)
-            .execute();
-  }
-
-  public Bundle getCensusLists() {
-    return client
-            .search()
-            .forResource(ListResource.class)
+            .forResource(classType)
             .returnBundle(Bundle.class)
             .execute();
   }
