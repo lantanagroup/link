@@ -5,6 +5,7 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,14 +56,14 @@ public class ReportDataController extends BaseController {
   }
 
   @DeleteMapping(value = "/data/expunge")
-  public void expungeData() {
+  public void expungeData() throws DatatypeConfigurationException {
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
 
     if(dataGovernanceConfig != null) {
       Bundle censusBundle = fhirDataProvider.getCensusLists();
       if(censusBundle != null) {
         for (Bundle.BundleEntryComponent entry : censusBundle.getEntry()) {
-          if(dataGovernanceConfig.getCensusListRetention() != null) {
+          if(StringUtils.isNotBlank(dataGovernanceConfig.getCensusListRetention())) {
             Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
             expungeData(fhirDataProvider, dataGovernanceConfig.getCensusListRetention(),
                     lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
@@ -75,8 +76,8 @@ public class ReportDataController extends BaseController {
         for(Bundle.BundleEntryComponent entry : bundle.getEntry()) {
           String tag = entry.getResource().getMeta().getTag().get(0).getCode();
           Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-          if((tag.equals(Constants.patientDataTag) && dataGovernanceConfig.getPatientDataRetention() != null) ||
-                  (tag.equals(Constants.reportTag) && dataGovernanceConfig.getReportRetention() != null)) {
+          if((tag.equals(Constants.patientDataTag) && StringUtils.isNotBlank(dataGovernanceConfig.getPatientDataRetention())) ||
+                  (tag.equals(Constants.reportTag) && StringUtils.isNotBlank(dataGovernanceConfig.getReportRetention()))) {
             expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
                     lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
           }
@@ -85,17 +86,13 @@ public class ReportDataController extends BaseController {
     }
   }
 
-  private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) {
-    try {
-      Date comp = adjustTime(retentionPeriod, lastDatePosted);
-      Date today = new Date();
+  private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) throws DatatypeConfigurationException {
+    Date comp = adjustTime(retentionPeriod, lastDatePosted);
+    Date today = new Date();
 
-      if(today.compareTo(comp) >= 0) {
-        fhirDataProvider.deleteResource(type, id, true);
-        logger.info(type + ": " + id + " has been expunged.");
-      }
-    } catch (DatatypeConfigurationException e) {
-      e.printStackTrace();
+    if(today.compareTo(comp) >= 0) {
+      fhirDataProvider.deleteResource(type, id, true);
+      logger.info(type + ": " + id + " has been expunged.");
     }
   }
 
