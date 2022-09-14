@@ -4,6 +4,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
+import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -34,6 +35,8 @@ public class ReportDataController extends BaseController {
   private ApplicationContext context;
 
   @Autowired
+  @Setter
+  @Getter
   private DataGovernanceConfig dataGovernanceConfig;
 
   // Disallow binding of sensitive attributes
