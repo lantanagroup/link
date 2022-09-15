@@ -134,15 +134,6 @@ public class ReportController extends BaseController {
       patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context, this.config);
     }
 
-    // de-duplicate any patients from the census
-    patientOfInterestModelList = patientOfInterestModelList.stream()
-            .collect(Collectors.groupingBy(PatientOfInterestModel::toString))
-            .values().stream()
-            .map(poi -> poi.get(0))
-            .collect(Collectors.toList());
-
-    context.setPatientsOfInterest(patientOfInterestModelList);
-
     return patientOfInterestModelList;
   }
 

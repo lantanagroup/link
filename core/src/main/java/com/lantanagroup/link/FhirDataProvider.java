@@ -193,6 +193,10 @@ public class FhirDataProvider {
   }
 
   public Bundle getMeasureReportsByIds(List<String> reportIds) {
+    // TODO: Is there a practical limit to the number of report IDs we can send here?
+    //       E.g., a maximum query string length that HAPI will accept?
+    //       If so, modify this logic to use multiple requests
+    //       Limit the number of report IDs (based on total query string length?) sent in any single request
     Bundle response = this.client
             .search()
             .forResource(MeasureReport.class)

@@ -35,6 +35,7 @@ public class ReportContext {
     private Bundle reportDefBundle;
     private Measure measure;
     private String reportId;
+    private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     private MeasureReport measureReport;
   }
 }

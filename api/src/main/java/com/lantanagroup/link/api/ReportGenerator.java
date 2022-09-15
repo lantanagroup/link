@@ -48,10 +48,7 @@ public class ReportGenerator {
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
     try {
-      // TODO: Limit report generation to POIs for the specified measure
-      //       (We're currently generating a report for all POIs across all measures)
-      //       May require storing measure-specific POI lists in each measure context during POI lookup
-      forkJoinPool.submit(() -> reportContext.getPatientsOfInterest().parallelStream().forEach(patient -> {
+      forkJoinPool.submit(() -> measureContext.getPatientsOfInterest().parallelStream().forEach(patient -> {
         logger.info("Patient is: " + patient);
         if (!StringUtils.isEmpty(patient.getId())) {
           MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
