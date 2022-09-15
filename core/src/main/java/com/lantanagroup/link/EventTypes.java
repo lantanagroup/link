@@ -9,8 +9,6 @@ public enum EventTypes {
   AfterPatientOfInterestLookup,
   BeforePatientDataQuery,
   AfterPatientDataQuery,
-  BeforePatientDataStore,
-  AfterPatientDataStore,
   BeforeMeasureEval,
   AfterMeasureEval,
   BeforeReportStore,

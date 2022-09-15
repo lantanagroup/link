@@ -168,7 +168,7 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
-      // TODO: Check that the identifier matches a measure loaded in the system
+      // TODO: Call checkMeasureIdentifier here; remove the calls in getPatientIdentifierListXML/JSON
 
       Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
 
@@ -223,6 +223,7 @@ public class PatientIdentifierController extends BaseController {
                     return !existingList.getEntry().stream().anyMatch(s -> reference.equals(s.getItem().getReference()));
                   }
                   else if(e.getItem().getIdentifier() != null) {
+                    // TODO: Remove systemA and valueA; compare identifiers directly using equalsShallow
                     String systemA = e.getItem().getIdentifier().getSystem();
                     String valueA = e.getItem().getIdentifier().getValue();
                     return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));

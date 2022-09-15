@@ -34,16 +34,19 @@ public class EventController {
   @Setter
   private ApiConfigEvents apiConfigEvents;
 
-  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext) throws Exception {
+  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
     List<Object> beans = getBeans(eventType, classNames);
     if (beans == null) return;
     for (Object bean : beans) {
-      ((IReportGenerationEvent) bean).execute(criteria, reportContext);
+      ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
     }
   }
 
+  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) throws Exception {
+    triggerEvent(eventType, criteria, context, null);
+  }
 
   public List<Object> getBeans(EventTypes eventType, List<String> classNames) {
     List<Class<?>> classes = new ArrayList();

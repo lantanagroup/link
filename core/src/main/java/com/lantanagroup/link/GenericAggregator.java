@@ -55,20 +55,21 @@ public abstract class GenericAggregator implements IReportAggregator {
   }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
-    masterMeasureReport.setId(context.getReportId());
+    masterMeasureReport.setId(measureContext.getReportId());
     masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
     masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
     masterMeasureReport.setPeriod(new Period());
     masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure(context.getMeasure().getUrl());
+    masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
 
-    this.aggregatePatientReports(masterMeasureReport, context.getPatientsOfInterest());
+    // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
+    this.aggregatePatientReports(masterMeasureReport, reportContext.getPatientsOfInterest());
 
-    this.createGroupsFromMeasure(masterMeasureReport, context);
+    this.createGroupsFromMeasure(masterMeasureReport, measureContext);
 
     this.setSubject(masterMeasureReport);
 
@@ -112,7 +113,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     return masteReportGroupPopulationValue;
   }
 
-  protected abstract void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context);
+  protected abstract void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext);
 
 
 }

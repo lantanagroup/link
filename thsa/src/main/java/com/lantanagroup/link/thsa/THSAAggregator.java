@@ -2,6 +2,7 @@ package com.lantanagroup.link.thsa;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -35,6 +36,9 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   @Autowired
   private FhirDataProvider provider;
 
+  @Autowired
+  private THSAConfig thsaConfig;
+
   private CodeableConcept getTranslatedPopulationCoding(String groupCode) {
     // get the alias populationcode
     String populationCode = "";
@@ -63,12 +67,12 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
 
     HashMap usedInventoryMap = new HashMap();
     HashMap totalInventoryMap = new HashMap();
     // store the used counts
-    MeasureReport measureReport = super.generate(criteria, context);
+    MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
@@ -76,7 +80,7 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       }
     }
     // look up the inventory on the Fhir Server
-    MeasureReport masterMeasureReport = provider.getMeasureReportById(context.getInventoryId());
+    MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
 
     //store the total inventory
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
@@ -162,10 +166,10 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
     // if there are no groups generated then gets them from the measure
     if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
+      Bundle bundle = measureContext.getReportDefBundle();
       Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
               .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
               .findFirst();

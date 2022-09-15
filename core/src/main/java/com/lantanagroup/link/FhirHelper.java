@@ -224,9 +224,8 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
-    List<IBaseResource> bundles = new ArrayList<>();
-    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+  public static <T extends IBaseResource> List<T> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx, Class<T> resourceType) {
+    List<T> resources = new ArrayList<>(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
 
     // Load the subsequent pages
     while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
@@ -235,10 +234,14 @@ public class FhirHelper {
               .loadPage()
               .next(bundle)
               .execute();
-      logger.info("Adding next page of bundles...");
-      bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+      logger.info("Adding next page of resources...");
+      resources.addAll(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
     }
-    return bundles;
+    return resources;
+  }
+
+  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
+    return getAllPages(bundle, fhirDataProvider, ctx, IBaseResource.class);
   }
 
   public static PatientReportModel setPatientFields(Patient patient, Boolean excluded) {
@@ -461,18 +464,12 @@ public class FhirHelper {
     return bundle;
   }
 
-  protected static Set getDataRequirementTypes(Bundle reportRefBundle) {
-    List<Library> libraryList = reportRefBundle.getEntry().stream()
-            .filter(e -> e.getResource() instanceof Library)
-            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
-
-    HashSet dataRequirements = new HashSet();
-    libraryList.forEach(library -> {
-      Set libTypes = library.getDataRequirement().stream().map(DataRequirement::getType).collect(Collectors.toSet());
-      dataRequirements.addAll(libTypes);
-
-    });
-    return dataRequirements;
+  public static Set<String> getDataRequirementTypes(Bundle reportDefBundle) {
+    return reportDefBundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(resource -> resource instanceof Library)
+            .flatMap(resource -> ((Library) resource).getDataRequirement().stream().map(DataRequirement::getType))
+            .collect(Collectors.toSet());
   }
 
   public static boolean validLibraries(Bundle reportRefBundle) {
@@ -538,6 +535,8 @@ public class FhirHelper {
     return bundleLocation;
   }
 
+  // TODO: This typically creates a second content element, which I don't think we want
+  //       The one initially created in ReportGenerator.generateDocumentReference has a creation date but no URL
   public static void setSubmissionLocation(DocumentReference documentReference, String location) {
     documentReference.getContent().removeIf(c -> c.hasAttachment() && c.getAttachment().hasUrl());
     DocumentReference.DocumentReferenceContentComponent newContent = new DocumentReference.DocumentReferenceContentComponent();
