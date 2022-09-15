@@ -61,6 +61,11 @@ public class ReportDataController extends BaseController {
     dataProcessor.process(content, getFhirDataProvider());
   }
 
+  /**
+   * @throws DatatypeConfigurationException
+   * Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
+   * has been reached.
+   */
   @DeleteMapping(value = "/data/expunge")
   public void expungeData() throws DatatypeConfigurationException {
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
@@ -72,6 +77,16 @@ public class ReportDataController extends BaseController {
     }
   }
 
+
+  /**
+   * @param fhirDataProvider used to work with data on the server.
+   * @param classType the type of class for the data.
+   * @param filterPatientData if looking for patientDataBundles and not other bundles.
+   * @param retention how long to keep the data.
+   * @throws DatatypeConfigurationException
+   * if a retention period exists for the data, expunge the data.
+   * if the data being expunged are patientDataBundles, only expunge bundles with the patient data tag.
+   */
   private void expungeData(FhirDataProvider fhirDataProvider, Class<? extends IBaseResource> classType, boolean filterPatientData, String retention) throws DatatypeConfigurationException {
     Bundle bundle = fhirDataProvider.getAllResourcesByType(classType);
     if(bundle != null)
@@ -87,6 +102,15 @@ public class ReportDataController extends BaseController {
     }
   }
 
+  /**
+   * @param fhirDataProvider used to work with data on the server.
+   * @param retentionPeriod how long to keep the data.
+   * @param lastDatePosted when the data was last updated.
+   * @param id id of the data.
+   * @param type the type of data.
+   * @throws DatatypeConfigurationException
+   * Determines if the retention period has passed, if so then it expunges the data.
+   */
   private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) throws DatatypeConfigurationException {
     Date comp = adjustTime(retentionPeriod, lastDatePosted);
     Date today = new Date();
@@ -97,6 +121,12 @@ public class ReportDataController extends BaseController {
     }
   }
 
+  /**
+   * @param retentionPeriod how long to keep the data
+   * @param lastDatePosted when the data was last updated
+   * @return the adjusted day from when the data had been last updated to the end of its specified retention period
+   * @throws DatatypeConfigurationException
+   */
   private Date adjustTime(String retentionPeriod, Date lastDatePosted) throws DatatypeConfigurationException {
     Duration dur = DatatypeFactory.newInstance().newDuration(retentionPeriod);
     Calendar calendar = Calendar.getInstance();
