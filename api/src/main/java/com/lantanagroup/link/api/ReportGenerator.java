@@ -43,7 +43,7 @@ public class ReportGenerator {
     if (this.config.getEvaluationService() == null) {
       throw new IllegalStateException("api.evaluation-service has not been configured");
     }
-    logger.info("Patient list is : " + reportContext.getPatientsOfInterest().size());
+    logger.info("Patient list is : " + measureContext.getPatientsOfInterest().size());
     ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
