@@ -1,4 +1,4 @@
-package com.lantanagroup.link.config.DataGovernance;
+package com.lantanagroup.link.config.datagovernance;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;

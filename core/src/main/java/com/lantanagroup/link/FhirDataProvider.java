@@ -385,6 +385,14 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
+    return client
+            .search()
+            .forResource(classType)
+            .returnBundle(Bundle.class)
+            .execute();
+  }
+
   public void deleteResource(String resourceType, String id, boolean permanent) {
     try {
       URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"?_expunge=true":""));
