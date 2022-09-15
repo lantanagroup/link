@@ -28,10 +28,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ShellComponent
 public class RefreshPatientListCommand extends BaseShellCommand {
@@ -43,8 +45,10 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private QueryConfig queryConfig;
   private USCoreConfig usCoreConfig;
 
+
   @Override
   protected List<Class> getBeanClasses() {
+
     return List.of(
             QueryConfig.class,
             USCoreConfig.class,
@@ -55,16 +59,21 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   @ShellMethod(
           key = "refresh-patient-list",
           value = "Read patient lists and update the corresponding census in Link.")
-  public void execute(String[] patientListPath) throws Exception {
+  public void execute(@ShellOption(defaultValue = "") String[] patientListPath) throws Exception {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
     usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
-    for (int i = 0; i < config.getPatientList().size(); i++) {
-      ListResource source = readList(config.getPatientList().get(i).getPatientListPath());
-      for (int j = 0; j < config.getPatientList().get(i).getCensusIdentifier().size(); j++) {
-        ListResource target = transformList(source, config.getPatientList().get(i).getCensusIdentifier().get(j));
+    List<PatientList> filteredList = config.getPatientList();
+    // if patientListPath argument is not passed to the command then load all the lists defined in the configuration file
+    if (patientListPath.length > 0) {
+      filteredList = config.getPatientList().stream().filter(item -> List.of(patientListPath).contains(item.getPatientListPath())).collect(Collectors.toList());
+    }
+    for (PatientList listResource : filteredList) {
+      ListResource source = readList(listResource.getPatientListPath());
+      for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
+        ListResource target = transformList(source, listResource.getCensusIdentifier().get(j));
         updateList(target);
       }
     }

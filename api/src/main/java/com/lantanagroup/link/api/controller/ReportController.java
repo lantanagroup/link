@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
@@ -9,7 +10,6 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
 import com.lantanagroup.link.query.IQuery;
@@ -35,9 +35,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.http.HttpClient;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -49,9 +49,6 @@ public class ReportController extends BaseController {
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
-  @Autowired
-  @Setter
-  private THSAConfig thsaConfig;
   @Autowired
   private USCoreConfig usCoreConfig;
 
@@ -73,42 +70,53 @@ public class ReportController extends BaseController {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
   }
 
-  private void resolveMeasure(ReportCriteria criteria, ReportContext context) throws Exception {
-    String reportDefIdentifierSystem = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
-            criteria.getReportDefIdentifier().substring(0, criteria.getReportDefIdentifier().indexOf("|")) : "";
-    String reportDefIdentifierValue = criteria.getReportDefIdentifier() != null && criteria.getReportDefIdentifier().indexOf("|") >= 0 ?
-            criteria.getReportDefIdentifier().substring(criteria.getReportDefIdentifier().indexOf("|") + 1) :
-            criteria.getReportDefIdentifier();
+  private void resolveMeasures(ReportCriteria criteria, ReportContext context) throws Exception {
+    context.getMeasureContexts().clear();
+    for (String reportDefIdentifier : criteria.getReportDefIdentifiers()) {
+      // TODO: Create a utility class for converting between strings and codings/identifiers/token parameters
+      //       Fix similar usage elsewhere; may help to do a project-wide search for "|" and "\\|"
+      String reportDefIdentifierSystem = reportDefIdentifier != null && reportDefIdentifier.indexOf("|") >= 0 ?
+              reportDefIdentifier.substring(0, reportDefIdentifier.indexOf("|")) : "";
+      String reportDefIdentifierValue = reportDefIdentifier != null && reportDefIdentifier.indexOf("|") >= 0 ?
+              reportDefIdentifier.substring(reportDefIdentifier.indexOf("|") + 1) :
+              reportDefIdentifier;
 
-    // Find the report def for the given identifier
-    Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
-    if (reportDefBundle == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + criteria.getReportDefIdentifier());
+      // Find the report def for the given identifier
+      Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
+      if (reportDefBundle == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + reportDefIdentifier);
+      }
+
+      // Check if the remote report def is newer
+      String bundleId = reportDefBundle.getIdElement().getIdPart();
+      ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
+      if (urlConfig == null) {
+        throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
+      }
+      logger.info("Loading report def");
+      reportDefBundle = apiInit.loadMeasureDefinition(HttpClient.newHttpClient(), urlConfig, reportDefBundle);
+
+      // Update the context
+      ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
+      measureContext.setReportDefIdentifier(reportDefIdentifier);
+      measureContext.setReportDefBundle(reportDefBundle);
+      Measure measure = reportDefBundle.getEntry().stream()
+              .filter(entry -> entry.getResource() instanceof Measure)
+              .map(entry -> (Measure) entry.getResource())
+              .findFirst()
+              .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+      measureContext.setMeasure(measure);
+      context.getMeasureContexts().add(measureContext);
     }
-
-    // Check if the remote report def is newer
-    String bundleId = reportDefBundle.getIdElement().getIdPart();
-    ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
-    if (urlConfig == null) {
-      throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
-    }
-    logger.info("Loading report def");
-    reportDefBundle = apiInit.loadMeasureDefinition(HttpClient.newHttpClient(), urlConfig, reportDefBundle);
-
-    // Update the context
-    context.setReportDefBundle(reportDefBundle);
-    Measure measure = reportDefBundle.getEntry().stream()
-            .filter(entry -> entry.getResource() instanceof Measure)
-            .map(entry -> (Measure) entry.getResource())
-            .findFirst()
-            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
-    context.setMeasure(measure);
-    context.setMeasureId(measure.getIdElement().getIdPart());
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     List<PatientOfInterestModel> patientOfInterestModelList;
 
+    // TODO: When would the following condition ever be true?
+    //       In the standard report generation pipeline, census lists haven't been retrieved by the time we get here
+    //       Are we guarding against a case where a BeforePatientOfInterestLookup handler might have done so?
+    //       (But wouldn't it be more appropriate to plug that logic in as the patient ID resolver?)
     if (context.getPatientCensusLists() != null && context.getPatientCensusLists().size() > 0) {
       patientOfInterestModelList = new ArrayList<>();
       for (ListResource censusList : context.getPatientCensusLists()) {
@@ -126,15 +134,6 @@ public class ReportController extends BaseController {
       patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context, this.config);
     }
 
-    // de-duplicate any patients from the census
-    patientOfInterestModelList = patientOfInterestModelList.stream()
-            .collect(Collectors.groupingBy(poi -> poi.toString()))
-            .values().stream()
-            .map(poi -> poi.get(0))
-            .collect(Collectors.toList());
-
-    context.setPatientsOfInterest(patientOfInterestModelList);
-
     return patientOfInterestModelList;
   }
 
@@ -142,47 +141,39 @@ public class ReportController extends BaseController {
    * Executes the configured query implementation against a list of POIs. The POI at the start of this
    * may be either identifier (such as MRN) or logical id for the FHIR Patient resource.
    *
-   * @param patientsOfInterest
    * @return Returns a list of the logical ids for the Patient resources stored on the internal fhir server
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, ReportCriteria criteria, ReportContext context, String reportId) throws Exception {
+  private void queryAndStorePatientData(List<String> resourceTypes, ReportContext context) throws Exception {
+    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
+    List<String> measureIds = context.getMeasureContexts().stream()
+            .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
+            .collect(Collectors.toList());
     try {
-      List<QueryResponse> patientQueryResponses = null;
-
       // Get the data
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(patientsOfInterest, reportId, resourceTypes, context.getMeasure().getIdentifier().get(0).getValue());
-
-      eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, context);
-
-
-      eventController.triggerEvent(EventTypes.AfterPatientDataStore, criteria, context);
+      query.execute(patientsOfInterest, context.getMasterIdentifierValue(), resourceTypes, measureIds);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
     }
   }
 
-  private DocumentReference getDocumentReferenceByMeasureAndPeriod(Identifier measureIdentifier, String startDate, String endDate, boolean regenerate) throws Exception {
-    return this.getFhirDataProvider().findDocRefByMeasureAndPeriod(measureIdentifier, startDate, endDate);
-  }
-
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
-          @RequestParam("reportDefIdentifier") String reportDefIdentifier,
+          @RequestParam("reportDefIdentifier") String[] reportDefIdentifiers,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
           boolean regenerate)
           throws Exception {
 
     GenerateResponse response = new GenerateResponse();
-    ReportCriteria criteria = new ReportCriteria(reportDefIdentifier, periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(List.of(reportDefIdentifiers), periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(this.getFhirDataProvider());
 
     reportContext.setRequest(request);
@@ -191,16 +182,17 @@ public class ReportController extends BaseController {
     eventController.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
-    this.resolveMeasure(criteria, reportContext);
+    this.resolveMeasures(criteria, reportContext);
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     // Search the reference document by measure criteria nd reporting period
-    DocumentReference existingDocumentReference = this.getDocumentReferenceByMeasureAndPeriod(
-            reportContext.getReportDefBundle().getIdentifier(),
+    DocumentReference existingDocumentReference = this.getFhirDataProvider().findDocRefByMeasuresAndPeriod(
+            reportContext.getMeasureContexts().stream()
+                    .map(measureContext -> measureContext.getReportDefBundle().getIdentifier())
+                    .collect(Collectors.toList()),
             periodStart,
-            periodEnd,
-            regenerate);
+            periodEnd);
     if (existingDocumentReference != null && !regenerate) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
     }
@@ -210,66 +202,154 @@ public class ReportController extends BaseController {
     }
 
     // Generate the master report id
-    String id = "";
     if (!regenerate || existingDocumentReference == null) {
       // generate master report id based on the report date range and the measure used in the report generation
-      id = String.valueOf((criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd()).hashCode());
+      // TODO: Create a utility class for generating master identifiers and report IDs
+      //       Fix similar usage elsewhere; may help to do a project-wide search for hashCode calls
+      Collection<String> components = new ArrayList<>(criteria.getReportDefIdentifiers());
+      components.add(criteria.getPeriodStart());
+      components.add(criteria.getPeriodEnd());
+      reportContext.setMasterIdentifierValue(Integer.toString(String.join("-", components).hashCode()));
     } else {
-      id = existingDocumentReference.getMasterIdentifier().getValue();
+      reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
       eventController.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
-    reportContext.setReportId(id);
 
     eventController.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
-    List<PatientOfInterestModel> patientsOfInterest = this.getPatientIdentifiers(criteria, reportContext);
+    this.getPatientIdentifiers(criteria, reportContext);
 
     eventController.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
+    eventController.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+
     // Get the resource types to query
-    List<String> resourceTypesToQuery = FhirHelper.getQueryConfigurationDataReqCommonResourceTypes(usCoreConfig.getPatientResourceTypes(), reportContext.getReportDefBundle());
+    Set<String> resourceTypesToQuery = new HashSet<>();
+    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+      resourceTypesToQuery.addAll(FhirHelper.getDataRequirementTypes(measureContext.getReportDefBundle()));
+    }
+    // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
+    //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
+    resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
 
     // Scoop the data for the patients and store it
-    this.queryAndStorePatientData(patientsOfInterest, resourceTypesToQuery, criteria, reportContext, id);
+    this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), reportContext);
 
+    // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
     if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
       String msg = "A census for the specified criteria was not found.";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventController.triggerEvent(EventTypes.BeforePatientDataStore, criteria, reportContext);
+    eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-    reportContext.setInventoryId(thsaConfig.getDataMeasureReportId());
+    response.setReportId(reportContext.getMasterIdentifierValue());
 
-    response.setReportId(id);
+    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+      measureContext.setReportId(reportContext.getMasterIdentifierValue() + "-" + measureContext.getReportDefIdentifier().hashCode());
 
-    String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, reportContext.getReportDefBundle());
+      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
-    IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-    ReportGenerator generator = new ReportGenerator(reportContext, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
 
-    eventController.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext);
+      eventController.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-    generator.generate(criteria, reportContext);
+      generator.generate();
 
-    eventController.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext);
+      eventController.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
-    eventController.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext);
+      eventController.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
 
-    generator.store(criteria, reportContext, existingDocumentReference);
+      generator.store();
 
-    eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext);
+      eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+    }
+
+    DocumentReference documentReference = this.generateDocumentReference(criteria, reportContext);
+
+    if (existingDocumentReference != null) {
+      documentReference.setId(existingDocumentReference.getId());
+
+      Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
+      String existingVersion = existingVersionExt.getValue().toString();
+
+      documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
+
+      documentReference.setContent(existingDocumentReference.getContent());
+    } else {
+      // generate document reference id based on the report date range and the measure used in the report generation
+      UUID documentId = UUID.nameUUIDFromBytes(reportContext.getMasterIdentifierValue().getBytes(StandardCharsets.UTF_8));
+      documentReference.setId(documentId.toString());
+    }
+
+    this.getFhirDataProvider().updateResource(documentReference);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
 
     return response;
   }
 
+  private DocumentReference generateDocumentReference(ReportCriteria reportCriteria, ReportContext reportContext) throws ParseException {
+    DocumentReference documentReference = new DocumentReference();
+    Identifier identifier = new Identifier();
+    identifier.setSystem(config.getDocumentReferenceSystem());
+    identifier.setValue(reportContext.getMasterIdentifierValue());
+
+    documentReference.setMasterIdentifier(identifier);
+    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+      documentReference.addIdentifier(measureContext.getReportDefBundle().getIdentifier());
+    }
+
+    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+
+    List<Reference> list = new ArrayList<>();
+    Reference reference = new Reference();
+    String practitionerId = reportContext.getUser().getPractitioner().getId();
+    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
+    list.add(reference);
+    documentReference.setAuthor(list);
+
+    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
+
+    CodeableConcept type = new CodeableConcept();
+    List<Coding> codings = new ArrayList<>();
+    Coding coding = new Coding();
+    coding.setCode(com.lantanagroup.link.Constants.DocRefCode);
+    coding.setSystem(com.lantanagroup.link.Constants.LoincSystemUrl);
+    coding.setDisplay(Constants.DocRefDisplay);
+    codings.add(coding);
+    type.setCoding(codings);
+    documentReference.setType(type);
+
+    List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
+    DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
+    Attachment attachment = new Attachment();
+    attachment.setCreation(new Date());
+    doc.setAttachment(attachment);
+    listDoc.add(doc);
+    documentReference.setContent(listDoc);
+
+    DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
+    Period period = new Period();
+    Date startDate = Helper.parseFhirDate(reportCriteria.getPeriodStart());
+    Date endDate = Helper.parseFhirDate(reportCriteria.getPeriodEnd());
+    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
+    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
+
+    docReference.setPeriod(period);
+
+    documentReference.setContext(docReference);
+
+    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
+
+    return documentReference;
+  }
 
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
@@ -733,15 +813,23 @@ public class ReportController extends BaseController {
     }
 
     // Create ReportCriteria to be used by MeasureEvaluator
+    String reportDefIdentifier = measure.getIdentifier().get(0).getSystem() + "|" + measure.getIdentifier().get(0).getValue();
     ReportCriteria criteria = new ReportCriteria(
-            measure.getIdentifier().get(0).getSystem() + "|" + measure.getIdentifier().get(0).getValue(),
+            List.of(reportDefIdentifier),
             reportDocRef.getContext().getPeriod().getStartElement().asStringValue(),
             reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
 
     // Create ReportContext to be used by MeasureEvaluator
     ReportContext context = new ReportContext(this.getFhirDataProvider());
-    context.setReportId(measureReport.getIdElement().getIdPart());
-    context.setMeasureId(measure.getIdElement().getIdPart());
+    context.setRequest(request);
+    context.setUser(user);
+    context.setMasterIdentifierValue(reportId);
+    ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
+    measureContext.setReportDefIdentifier(reportDefIdentifier);
+    // TODO: Set report def bundle on measure context
+    measureContext.setMeasure(measure);
+    measureContext.setReportId(measureReport.getIdElement().getIdPart());
+    context.getMeasureContexts().add(measureContext);
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 

@@ -176,7 +176,10 @@ public class FhirBundler {
         bundle.addEntry().setResource(clonedPatientMeasureReport);
 
         // Get all the evaluated resources in the individual patient measure reports and add them to the bundle
-        List<DomainResource> patientResources = this.getPatientResources(masterMeasureReport.getIdElement().getIdPart(), patientMeasureReport);
+        String reportId = documentReference != null
+                ? documentReference.getMasterIdentifier().getValue()
+                : masterMeasureReport.getIdElement().getIdPart();
+        List<DomainResource> patientResources = this.getPatientResources(reportId, patientMeasureReport);
 
         for (DomainResource patientResource : patientResources) {
           bundle.addEntry().setResource(patientResource);

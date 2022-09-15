@@ -57,6 +57,7 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
     List<String> reportIds = patientOfInterestModelList.stream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
 
     Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
+    // TODO: Rename to measureReports and use the generic getAllPages overload (currently non-existent, see StoredListProvider)
     List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
     logger.info("Number of reports generated is: " + bundles.size());
     for (IBaseResource patientMeasureReportResource : bundles) {
@@ -81,10 +82,10 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
     }
   }
 
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
     // if there are no groups generated then gets them from the measure
     if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
+      Bundle bundle = measureContext.getReportDefBundle();
       Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
               .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
               .findFirst();

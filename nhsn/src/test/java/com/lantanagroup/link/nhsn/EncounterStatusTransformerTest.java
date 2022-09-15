@@ -33,7 +33,7 @@ public class EncounterStatusTransformerTest {
     String reportID = "testID";
     String patientID = "testPatient";
     FhirDataProvider fhirProvider = mock(FhirDataProvider.class);
-    ReportCriteria reportCriteria = new ReportCriteria(reportID, start, end);
+    ReportCriteria reportCriteria = new ReportCriteria(List.of(reportID), start, end);
     ApiConfig config = new ApiConfig();
     ReportContext context = new ReportContext(fhirProvider);
     EncounterStatusTransformer encounterStatusTransformer = new EncounterStatusTransformer();
@@ -65,8 +65,8 @@ public class EncounterStatusTransformerTest {
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     patientsOfInterest.add(patientOfInterest);
     context.setPatientsOfInterest(patientsOfInterest);
-    context.setReportId(reportID);
-    String bundleId = context.getReportId() + "-" + patientOfInterest.getId().hashCode();
+    context.setMasterIdentifierValue(reportID);
+    String bundleId = context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode();
     when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
     encounterStatusTransformer.execute(reportCriteria, context);

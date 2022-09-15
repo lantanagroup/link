@@ -1,26 +1,21 @@
 package com.lantanagroup.link.model;
 
-import com.lantanagroup.link.auth.LinkCredentials;
 import lombok.Getter;
-import lombok.Setter;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 @Getter
-@Setter
 public class ReportCriteria {
+  private final SortedSet<String> reportDefIdentifiers;
+  private final String periodStart;
+  private final String periodEnd;
 
-  String reportDefIdentifier;
-  String reportDefId;
-  String periodStart;
-  String periodEnd;
-  String measureId;
-  HashMap<String, String> additional = new HashMap<>();
-
-  public ReportCriteria(String reportDefIdentifier, String periodStart, String periodEnd) {
-    this.setReportDefIdentifier(reportDefIdentifier);
-    this.setPeriodStart(periodStart);
-    this.setPeriodEnd(periodEnd);
+  public ReportCriteria(Collection<String> reportDefIdentifiers, String periodStart, String periodEnd) {
+    this.reportDefIdentifiers = new TreeSet<>(reportDefIdentifiers);
+    // TODO: Reformat dates for consistency/compatibility? Or parse into an actual date type?
+    this.periodStart = periodStart;
+    this.periodEnd = periodEnd;
   }
 }

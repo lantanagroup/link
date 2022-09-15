@@ -240,7 +240,7 @@ public class QueryTests {
     Query theQuery = new Query();
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    theQuery.execute(patientsOfInterest, "report1", queries, measureId);
+    theQuery.execute(patientsOfInterest, "report1", queries, List.of(measureId));
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");

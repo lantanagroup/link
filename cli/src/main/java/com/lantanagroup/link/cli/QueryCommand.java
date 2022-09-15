@@ -85,7 +85,7 @@ public class QueryCommand extends BaseShellCommand {
 
       logger.info("Executing query");
       String masterReportid = "1847296839";
-      query.execute(patientsOfInterest, masterReportid, resourceTypesList, measureId);
+      query.execute(patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
       FhirDataProvider fhirDataProvider = this.applicationContext.getBean(FhirDataProvider.class);
 
       for (int i = 0; i < patientsOfInterest.size(); i++) {
