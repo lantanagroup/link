@@ -59,14 +59,16 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
     map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
       if (group.getSource().equals(code.getSystem())) {
         List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
-        // preserve original code
-        Extension originalCode = new Extension();
-        originalCode.setUrl(Constants.ConceptMappingExtension);
-        originalCode.setValue(code.copy());
-        code.getExtension().add(originalCode);
-        code.setSystem(group.getTarget());
-        code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
-        code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
+        if(elements.size() > 0){
+          // preserve original code
+          Extension originalCode = new Extension();
+          originalCode.setUrl(Constants.ConceptMappingExtension);
+          originalCode.setValue(code.copy());
+          code.getExtension().add(originalCode);
+          code.setSystem(group.getTarget());
+          code.setDisplay(elements.get(elements.size() - 1).getTarget().get(0).getDisplay());
+          code.setCode(elements.get(elements.size() - 1).getTarget().get(0).getCode());
+        }
       }
     });
   }
