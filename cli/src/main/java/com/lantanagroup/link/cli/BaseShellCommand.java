@@ -1,8 +1,8 @@
 package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -40,12 +40,17 @@ public class BaseShellCommand {
     }
   }
 
-  protected void registerFhirDataProvider(){
+  protected void registerFhirDataProvider() {
     DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((AnnotationConfigServletWebServerApplicationContext) this.applicationContext).getBeanFactory();
-    ApiConfig config = this.applicationContext.getBean(ApiConfig.class);
-    ApiDataStoreConfig dataStoreConfig = config.getDataStore();
-    FhirDataProvider provider = new FhirDataProvider(dataStoreConfig);
-    beanFactory.registerSingleton(String.valueOf(FhirDataProvider.class), provider);
+    QueryCliConfig config = this.applicationContext.getBean(QueryCliConfig.class);
+    FhirDataProvider fhirDataprovider = null;
+    try {
+      fhirDataprovider = this.applicationContext.getBean(FhirDataProvider.class);
+    } catch (NoSuchBeanDefinitionException ex) {
+      ApiDataStoreConfig dataStoreConfig = config.getDataStore();
+      fhirDataprovider = new FhirDataProvider(dataStoreConfig);
+      beanFactory.registerSingleton(String.valueOf(FhirDataProvider.class), fhirDataprovider);
+    }
   }
 
   protected <T> void validate(T object) {
