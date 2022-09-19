@@ -2,7 +2,6 @@ package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -12,13 +11,11 @@ import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
-import org.apache.http.client.HttpResponseException;
 import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -38,7 +35,6 @@ public class QueryCommand extends BaseShellCommand {
     return List.of(
             Query.class,
             QueryConfig.class,
-            ApiConfig.class,
             ApiDataStoreConfig.class,
             USCoreConfig.class,
             PatientScoop.class,
@@ -51,26 +47,25 @@ public class QueryCommand extends BaseShellCommand {
   }
 
 
-
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
-  public void query(String patient, String resourceTypes, String measureId, @ShellOption(defaultValue = "") String output) {
+  public void query(String patient, String resourceTypes, String[] measureId, @ShellOption(defaultValue = "") String output) {
     try {
       this.registerBeans();
 
       this.registerFhirDataProvider();
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
+      QueryCliConfig cliConfig = this.applicationContext.getBean(QueryCliConfig.class);
       USCoreConfig usCoreConfig = this.applicationContext.getBean(USCoreConfig.class);
-
-      if (config.isRequireHttps() && !usCoreConfig.getFhirServerBase().contains("https")) {
+      String queryUrl = cliConfig.getFhirServerBase() != null ? cliConfig.getFhirServerBase() : usCoreConfig.getFhirServerBase();
+      if (config.isRequireHttps() && !queryUrl.contains("https")) {
         throw new IllegalStateException("Query URL requires https");
       }
-
+      usCoreConfig.setFhirServerBase(queryUrl);
       List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
       IQuery query = QueryFactory.getQueryInstance(this.applicationContext, config.getQueryClass());
-
       for (String pid : patient.split(",")) {
         PatientOfInterestModel poi = new PatientOfInterestModel();
-        if (pid.indexOf("/") > 0) {
+        if (pid.lastIndexOf("/") > 0) {
           poi.setReference(pid);
         } else if (pid.indexOf("|") > 0) {
           poi.setIdentifier(pid);
@@ -108,7 +103,7 @@ public class QueryCommand extends BaseShellCommand {
         }
       }
 
-     logger.info("Done");
+      logger.info("Done");
     } catch (Exception ex) {
 
       logger.error("Error executing query: " + ex.getMessage(), ex);
