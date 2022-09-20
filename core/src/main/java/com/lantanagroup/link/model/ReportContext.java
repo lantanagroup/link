@@ -31,7 +31,7 @@ public class ReportContext {
   @Getter
   @Setter
   public static class MeasureContext {
-    private String reportDefIdentifier;
+    private String bundleId;
     private Bundle reportDefBundle;
     private Measure measure;
     private String reportId;

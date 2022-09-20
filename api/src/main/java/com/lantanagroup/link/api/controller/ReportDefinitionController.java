@@ -2,10 +2,12 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.StoredMeasure;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +21,10 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/measure")
 public class ReportDefinitionController extends BaseController {
+
+
+  @Autowired
+  ApiConfig config;
 
   /**
    * Responds with a list of the measures stored in the system
@@ -35,7 +41,7 @@ public class ReportDefinitionController extends BaseController {
     // Find all Bundles with the measure tag
     Bundle searchResults = fhirClient.searchBundleByTag(Constants.MainSystem, Constants.ReportDefinitionTag);
 
-    return searchResults.getEntry().stream().map(e -> {
+    List<StoredMeasure> storedMeasures = searchResults.getEntry().stream().map(e -> {
       Bundle reportDefinitionBundle = (Bundle) e.getResource();
       StoredMeasure storedMeasure = new StoredMeasure();
 
@@ -55,9 +61,22 @@ public class ReportDefinitionController extends BaseController {
       }
 
       storedMeasure.setId(reportDefinitionBundle.getIdElement().getIdPart());
-      storedMeasure.setSystem(reportDefinitionBundle.getIdentifier().getSystem());
-      storedMeasure.setValue(reportDefinitionBundle.getIdentifier().getValue());
+
+      storedMeasure.getBundleIds().add(reportDefinitionBundle.getIdElement().getIdPart());
       return storedMeasure;
     }).collect(Collectors.toList());
+    //  add the multi-measure reports
+    config.getMeasurePackages().forEach(apiMeasurePackage -> {
+      String[] bundleIds = apiMeasurePackage.getBundleIds();
+      List<StoredMeasure> multiStoredMeasures = storedMeasures.stream().filter(storedMeasure -> List.of(bundleIds).contains(storedMeasure.getId())).collect(Collectors.toList());
+      StoredMeasure multiMeasure = new StoredMeasure();
+      multiMeasure.setName(multiStoredMeasures.stream().map(storedMeasure -> storedMeasure.getName()).collect(Collectors.joining("-")));
+      multiMeasure.setId(apiMeasurePackage.getId());
+      for (StoredMeasure multiStoreMeasure : multiStoredMeasures) {
+        multiMeasure.getBundleIds().add(multiStoreMeasure.getId());
+      }
+      storedMeasures.add(multiMeasure);
+    });
+    return storedMeasures;
   }
 }
