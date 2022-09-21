@@ -1,6 +1,5 @@
 package com.lantanagroup.link.config.datastore;
 
-import com.lantanagroup.link.config.SharedCorsConfig;
 import com.lantanagroup.link.config.DataSourceConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;
@@ -42,10 +41,4 @@ public class DataStoreConfig {
    */
   @Getter
   private String publicAddress;
-
-  /**
-   * <strong>api.shared-cors-config</strong><br>Contains shared values for API and data store.
-   */
-  @Getter
-  private SharedCorsConfig sharedCorsConfig;
 }
