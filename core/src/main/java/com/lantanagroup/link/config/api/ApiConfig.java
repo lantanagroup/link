@@ -1,5 +1,6 @@
 package com.lantanagroup.link.config.api;
 
+import com.lantanagroup.link.config.SharedCorsConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -160,4 +161,10 @@ public class ApiConfig {
    * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
    */
   private Integer measureEvaluationThreads;
+
+  /**
+   * <strong>api.shared-cors-config</strong><br>Contains shared values for API and data store.
+   */
+  @Getter
+  private SharedCorsConfig sharedCorsConfig;
 }
