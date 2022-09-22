@@ -44,7 +44,7 @@ public class DataStoreConfig {
   private String publicAddress;
 
   /**
-   * <strong>api.cors</strong><br>CORS configuration used for browser interaction with the API
+   * <strong>datastore.cors</strong><br>CORS configuration used for browser interaction with the Data Store
    */
   @Getter
   private CorsConfig cors;
