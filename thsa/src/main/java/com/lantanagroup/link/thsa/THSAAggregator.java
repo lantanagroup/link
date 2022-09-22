@@ -79,8 +79,10 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
         usedInventoryMap.put(populationCode, population.getCount());
       }
     }
-    // look up the inventory on the Fhir Server
+    // look up the inventory on the Fhir Server but save the original ID before to restore it
+    String id = measureReport.getId();
     MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
+    masterMeasureReport.setId(id);
 
     //store the total inventory
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
