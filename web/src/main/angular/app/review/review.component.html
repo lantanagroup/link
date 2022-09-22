@@ -82,7 +82,7 @@
     <tbody>
     <tr *ngFor="let report of reports">
         <td>
-            {{getMeasureName(report.measureIdentifier)}}
+            {{getMeasureName(report.id)}}
         </td>
         <td style="min-width: 16rem">
             {{report.periodStartDate | date:'MMM d, y' :"UTC"}}
