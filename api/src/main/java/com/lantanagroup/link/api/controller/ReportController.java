@@ -78,7 +78,7 @@ public class ReportController extends BaseController {
       // Find the report def for the given bundleId
       Bundle reportDefBundle = this.getFhirDataProvider().getBundleById(bundleId);
       if (reportDefBundle == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + bundleId);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with ID " + bundleId);
       }
 
       ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
@@ -174,8 +174,7 @@ public class ReportController extends BaseController {
 
 
   /**
-   * to be invoke when only a multiMeasureBundleId is provided
-   * might make sense to provide everything in a RequestBody
+   * to be invoked when only a multiMeasureBundleId is provided
    *
    * @return Returns a GenerateResponse
    * @throws Exception
@@ -201,9 +200,10 @@ public class ReportController extends BaseController {
       }
     }
     // get the associated bundle-ids
-    if (apiMeasurePackage.isPresent()) {
-      singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
+    if (!apiMeasurePackage.isPresent()) {
+      throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
     }
+    singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
     return generateResponse(user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
@@ -224,7 +224,7 @@ public class ReportController extends BaseController {
     this.resolveMeasures(criteria, reportContext);
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
-    //  String test = criteria.getBundleIds().stream().collect(Collectors.joining("-"));
+
     String masterIdentifierValue = IdentifiersHelper.getMasterIdentifierValue(criteria);
 
     // Search the reference document by measure criteria nd reporting period
