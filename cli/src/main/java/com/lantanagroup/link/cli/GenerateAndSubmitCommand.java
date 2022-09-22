@@ -10,7 +10,6 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
@@ -157,7 +156,7 @@ public class GenerateAndSubmitCommand {
       // send POST request
       ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);
 
-      String reportId = response.getBody() != null ? response.getBody().getReportId() : null;
+      String reportId = response.getBody() != null ? (String) response.getBody().getReportIds().get(0) : null;
       if (reportId == null) {
         logger.error("Error generating report. Please contact the system administrator.");
         client.close();

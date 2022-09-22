@@ -7,6 +7,7 @@ import com.lantanagroup.link.api.ApiInit;
 import com.lantanagroup.link.api.EventController;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiMeasurePackage;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -40,6 +41,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @RestController
 @RequestMapping("/api/report")
 public class ReportController extends BaseController {
@@ -72,23 +74,13 @@ public class ReportController extends BaseController {
 
   private void resolveMeasures(ReportCriteria criteria, ReportContext context) throws Exception {
     context.getMeasureContexts().clear();
-    for (String reportDefIdentifier : criteria.getReportDefIdentifiers()) {
-      // TODO: Create a utility class for converting between strings and codings/identifiers/token parameters
-      //       Fix similar usage elsewhere; may help to do a project-wide search for "|" and "\\|"
-      String reportDefIdentifierSystem = reportDefIdentifier != null && reportDefIdentifier.indexOf("|") >= 0 ?
-              reportDefIdentifier.substring(0, reportDefIdentifier.indexOf("|")) : "";
-      String reportDefIdentifierValue = reportDefIdentifier != null && reportDefIdentifier.indexOf("|") >= 0 ?
-              reportDefIdentifier.substring(reportDefIdentifier.indexOf("|") + 1) :
-              reportDefIdentifier;
-
-      // Find the report def for the given identifier
-      Bundle reportDefBundle = this.getFhirDataProvider().findBundleByIdentifier(reportDefIdentifierSystem, reportDefIdentifierValue);
+    for (String bundleId : criteria.getBundleIds()) {
+      // Find the report def for the given bundleId
+      Bundle reportDefBundle = this.getFhirDataProvider().getBundleById(bundleId);
       if (reportDefBundle == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with identifier " + reportDefIdentifier);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with ID " + bundleId);
       }
 
-      // Check if the remote report def is newer
-      String bundleId = reportDefBundle.getIdElement().getIdPart();
       ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
       if (urlConfig == null) {
         throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
@@ -98,8 +90,9 @@ public class ReportController extends BaseController {
 
       // Update the context
       ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
-      measureContext.setReportDefIdentifier(reportDefIdentifier);
+      // measureContext.setReportDefIdentifier(reportDefBundle.getIdentifier().getSystem() + "|" + reportDefBundle.getIdentifier().getValue());
       measureContext.setReportDefBundle(reportDefBundle);
+      measureContext.setBundleId(reportDefBundle.getIdElement().getIdPart());
       Measure measure = reportDefBundle.getEntry().stream()
               .filter(entry -> entry.getResource() instanceof Measure)
               .map(entry -> (Measure) entry.getResource())
@@ -162,18 +155,64 @@ public class ReportController extends BaseController {
     }
   }
 
+
   @PostMapping("/$generate")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
-          @RequestParam("reportDefIdentifier") String[] reportDefIdentifiers,
+          @RequestParam("bundleIds") String[] bundleIds,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
           boolean regenerate)
           throws Exception {
 
+    if (bundleIds.length < 1) {
+      throw new IllegalStateException("At least one bundleId should be specified");
+    }
+    return generateResponse(user, request, bundleIds, periodStart, periodEnd, regenerate);
+  }
+
+
+  /**
+   * to be invoked when only a multiMeasureBundleId is provided
+   *
+   * @return Returns a GenerateResponse
+   * @throws Exception
+   */
+
+  @PostMapping("/$generateMultiMeasure")
+  public GenerateResponse generateReport(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @RequestParam("multiMeasureBundleId") String multiMeasureBundleId,
+          @RequestParam("periodStart") String periodStart,
+          @RequestParam("periodEnd") String periodEnd,
+          boolean regenerate)
+          throws Exception {
+    String[] singleMeasureBundleIds = new String[]{};
+
+    // should we look for multiple multimeasureid in the configuration file just in case there is a configuration mistake and error out?
+    Optional<ApiMeasurePackage> apiMeasurePackage = Optional.empty();
+    for (ApiMeasurePackage multiMeasurePackage : config.getMeasurePackages()) {
+      if (multiMeasurePackage.getId().equals(multiMeasureBundleId)) {
+        apiMeasurePackage = Optional.of(multiMeasurePackage);
+        break;
+      }
+    }
+    // get the associated bundle-ids
+    if (!apiMeasurePackage.isPresent()) {
+      throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
+    }
+    singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
+    return generateResponse(user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
+  }
+
+  /**
+   * generates a response with one or multiple reports
+   */
+  private GenerateResponse generateResponse(LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
     GenerateResponse response = new GenerateResponse();
-    ReportCriteria criteria = new ReportCriteria(List.of(reportDefIdentifiers), periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(List.of(bundleIds), periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(this.getFhirDataProvider());
 
     reportContext.setRequest(request);
@@ -186,13 +225,22 @@ public class ReportController extends BaseController {
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
+    String masterIdentifierValue = IdentifiersHelper.getMasterIdentifierValue(criteria);
+
     // Search the reference document by measure criteria nd reporting period
-    DocumentReference existingDocumentReference = this.getFhirDataProvider().findDocRefByMeasuresAndPeriod(
-            reportContext.getMeasureContexts().stream()
-                    .map(measureContext -> measureContext.getReportDefBundle().getIdentifier())
-                    .collect(Collectors.toList()),
-            periodStart,
-            periodEnd);
+    // searching by combination of identifiers could return multiple documents
+    // like in the case one document contains the subset of identifiers of what other document contains
+//    DocumentReference existingDocumentReference = this.getFhirDataProvider().findDocRefByMeasuresAndPeriod(
+//            reportContext.getMeasureContexts().stream()
+//                    .map(measureContext -> measureContext.getReportDefBundle().getIdentifier())
+//                    .collect(Collectors.toList()),
+//            periodStart,
+//            periodEnd);
+
+    // search by masterIdentifierValue to uniquely identify the document - searching by combination of identifiers could return multiple documents
+    // like in the case one document contains the subset of identifiers of what other document contains
+    DocumentReference existingDocumentReference = this.getFhirDataProvider().findDocRefForReport(masterIdentifierValue);
+    // Search the reference document by measure criteria and reporting period
     if (existingDocumentReference != null && !regenerate) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
     }
@@ -203,13 +251,8 @@ public class ReportController extends BaseController {
 
     // Generate the master report id
     if (!regenerate || existingDocumentReference == null) {
-      // generate master report id based on the report date range and the measure used in the report generation
-      // TODO: Create a utility class for generating master identifiers and report IDs
-      //       Fix similar usage elsewhere; may help to do a project-wide search for hashCode calls
-      Collection<String> components = new ArrayList<>(criteria.getReportDefIdentifiers());
-      components.add(criteria.getPeriodStart());
-      components.add(criteria.getPeriodEnd());
-      reportContext.setMasterIdentifierValue(Integer.toString(String.join("-", components).hashCode()));
+      // generate master report id based on the report date range and the bundles used in the report generation
+      reportContext.setMasterIdentifierValue(masterIdentifierValue);
     } else {
       reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
       eventController.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
@@ -247,10 +290,11 @@ public class ReportController extends BaseController {
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-    response.setReportId(reportContext.getMasterIdentifierValue());
+    response.setMasterReportId(reportContext.getMasterIdentifierValue());
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      measureContext.setReportId(reportContext.getMasterIdentifierValue() + "-" + measureContext.getReportDefIdentifier().hashCode());
+
+      measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
@@ -269,6 +313,8 @@ public class ReportController extends BaseController {
       generator.store();
 
       eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+
+      response.getReportIds().add(measureContext.getReportId());
     }
 
     DocumentReference documentReference = this.generateDocumentReference(criteria, reportContext);
@@ -306,6 +352,7 @@ public class ReportController extends BaseController {
       documentReference.addIdentifier(measureContext.getReportDefBundle().getIdentifier());
     }
 
+
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
 
     List<Reference> list = new ArrayList<>();
@@ -320,8 +367,8 @@ public class ReportController extends BaseController {
     CodeableConcept type = new CodeableConcept();
     List<Coding> codings = new ArrayList<>();
     Coding coding = new Coding();
-    coding.setCode(com.lantanagroup.link.Constants.DocRefCode);
-    coding.setSystem(com.lantanagroup.link.Constants.LoincSystemUrl);
+    coding.setCode(Constants.DocRefCode);
+    coding.setSystem(Constants.LoincSystemUrl);
     coding.setDisplay(Constants.DocRefDisplay);
     codings.add(coding);
     type.setCoding(codings);
@@ -413,36 +460,41 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }
 
-  @GetMapping(value = "/{reportId}")
-  public ReportModel getReport(
-          @PathVariable("reportId") String reportId) {
+  @GetMapping(value = "/{reportId}/masterReport/{masterReportId}")
+  public List<ReportModel> getReport(
+          @PathVariable("reportId") String[] reportId,
+          @PathVariable("masterReportId") String masterReportId) {
 
-    ReportModel report = new ReportModel();
+    List<ReportModel> reportModelList = new ArrayList();
+    for (int i = 0; i < reportId.length; i++) {
+      ReportModel report = new ReportModel();
+      String encodedReport = "";
+      //prevent injection from reportId parameter
+      try {
+        encodedReport = Helper.encodeForUrl(reportId[i]);
+      } catch (Exception ex) {
+        logger.error(ex.getMessage());
+      }
 
-    //prevent injection from reportId parameter
-    try {
-      reportId = Helper.encodeForUrl(reportId);
-    } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
+      report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
+
+      FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+      Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
+
+      report.setMeasure(measure);
+
+      // report.setIdentifier(reportId);
+      report.setVersion(documentReference
+              .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
+              documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
+      report.setStatus(documentReference.getDocStatus().toString());
+      report.setDate(documentReference.getDate());
+      reportModelList.add(report);
     }
-
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
-    report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(documentReference.getMasterIdentifier().getValue()));
-
-    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-    Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(0));
-
-    report.setMeasure(measure);
-
-    report.setIdentifier(reportId);
-    report.setVersion(documentReference
-            .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
-            documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
-    report.setStatus(documentReference.getDocStatus().toString());
-    report.setDate(documentReference.getDate());
-
-    return report;
+    return reportModelList;
   }
+
 
   @GetMapping(value = "/{reportId}/patient")
   public List<PatientReportModel> getReportPatients(
@@ -825,7 +877,7 @@ public class ReportController extends BaseController {
     context.setUser(user);
     context.setMasterIdentifierValue(reportId);
     ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
-    measureContext.setReportDefIdentifier(reportDefIdentifier);
+    //  measureContext.setBundleId(reportDefIdentifier);
     // TODO: Set report def bundle on measure context
     measureContext.setMeasure(measure);
     measureContext.setReportId(measureReport.getIdElement().getIdPart());

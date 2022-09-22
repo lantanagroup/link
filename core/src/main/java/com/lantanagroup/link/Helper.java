@@ -261,4 +261,13 @@ public class Helper {
       return null;
   }
 
+  public static String getHashedValue(String... components) {
+    return Integer.toString(String.join("-", components).hashCode());
+  }
+
+
+  public static String getHashedValue(List<String> components) {
+    return Integer.toString(String.join("-", components).hashCode());
+  }
+
 }

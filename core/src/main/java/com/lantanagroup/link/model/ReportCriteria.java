@@ -8,12 +8,12 @@ import java.util.TreeSet;
 
 @Getter
 public class ReportCriteria {
-  private final SortedSet<String> reportDefIdentifiers;
+  private final SortedSet<String> bundleIds;
   private final String periodStart;
   private final String periodEnd;
 
-  public ReportCriteria(Collection<String> reportDefIdentifiers, String periodStart, String periodEnd) {
-    this.reportDefIdentifiers = new TreeSet<>(reportDefIdentifiers);
+  public ReportCriteria(Collection<String> bundleIds, String periodStart, String periodEnd) {
+    this.bundleIds = new TreeSet<>(bundleIds);
     // TODO: Reformat dates for consistency/compatibility? Or parse into an actual date type?
     this.periodStart = periodStart;
     this.periodEnd = periodEnd;
