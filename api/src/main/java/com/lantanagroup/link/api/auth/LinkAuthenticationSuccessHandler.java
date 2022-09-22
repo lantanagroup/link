@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Resource;
@@ -59,14 +60,22 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
   private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
     boolean same = true;
-    String familyNamePractitioner1 = practitioner1.getName().get(0).getFamily();
-    String familyNamePractitioner2 = practitioner2.getName().get(0).getFamily();
-    String givenNamePractitioner1 = practitioner1.getName().get(0).getGiven().get(0).toString();
-    String givenNamePractitioner2 = practitioner2.getName().get(0).getGiven().get(0).toString();
-    String email1Value = practitioner1.getTelecomFirstRep().getValue();
-    String email2Value = practitioner2.getTelecomFirstRep().getValue();
-    String email1System = practitioner1.getTelecomFirstRep().getSystem().name();
-    String email2System = practitioner2.getTelecomFirstRep().getSystem().name();
+    String familyNamePractitioner1 = StringUtils.isNotBlank(practitioner1.getName().get(0).getFamily())?
+            practitioner1.getName().get(0).getFamily():"";
+    String familyNamePractitioner2 = StringUtils.isNotBlank(practitioner2.getName().get(0).getFamily())?
+            practitioner2.getName().get(0).getFamily():"";
+    String givenNamePractitioner1 = StringUtils.isNotBlank(practitioner1.getName().get(0).getGiven().get(0).toString())?
+            practitioner1.getName().get(0).getGiven().get(0).toString():"";
+    String givenNamePractitioner2 = StringUtils.isNotBlank(practitioner2.getName().get(0).getGiven().get(0).toString())?
+            practitioner2.getName().get(0).getGiven().get(0).toString():"";
+    String email1Value = StringUtils.isNotBlank(practitioner1.getTelecomFirstRep().getValue())?
+            practitioner1.getTelecomFirstRep().getValue():"";
+    String email2Value = StringUtils.isNotBlank(practitioner2.getTelecomFirstRep().getValue())?
+            practitioner2.getTelecomFirstRep().getValue():"";
+    String email1System = StringUtils.isNotBlank(practitioner1.getTelecomFirstRep().getSystem().name())?
+            practitioner1.getTelecomFirstRep().getSystem().name():"";
+    String email2System = StringUtils.isNotBlank(practitioner2.getTelecomFirstRep().getSystem().name())?
+            practitioner2.getTelecomFirstRep().getSystem().name():"";
     if (!familyNamePractitioner1.equals(familyNamePractitioner2) || !givenNamePractitioner1.equals(givenNamePractitioner2) ||
             !email1System.equals(email2System) || !email1Value.equals(email2Value)) {
       same = false;
