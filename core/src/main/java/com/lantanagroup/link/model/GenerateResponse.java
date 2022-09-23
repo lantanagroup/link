@@ -9,6 +9,5 @@ import java.util.List;
 @Getter
 @Setter
 public class GenerateResponse {
-  private String masterReportId;
   private List reportIds = new ArrayList();
 }

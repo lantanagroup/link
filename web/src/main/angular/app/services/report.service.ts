@@ -16,9 +16,10 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  async generate(reportDefIdentifier: string, periodStart: string, periodEnd: string, regenerate = false) {
+
+  async generate(bundleIds: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = 'report/$generate?';
-    url += `reportDefIdentifier=${encodeURIComponent(reportDefIdentifier)}&`;
+    url += `bundleIds=${encodeURIComponent(bundleIds)}&`;
     url += `periodStart=${encodeURIComponent(periodStart)}&`;
     url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
     url += 'regenerate=' + (regenerate ? 'true' : 'false');
@@ -81,7 +82,7 @@ export class ReportService {
 
   async getReport(reportId: string) {
     const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}`);
-    return await this.http.get<ReportModel>(url).toPromise();
+    return await this.http.get<ReportModel[]>(url).toPromise();
   }
 
   async save(report: ReportSaveModel, id: string) {

@@ -6,6 +6,7 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.IdentifiersHelper;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -139,7 +140,7 @@ public class PatientScoop extends Scoop {
           );
 
           // Make sure the patient bundle returned by query component has an ID in the correct format
-          patientBundle.setId(reportId + "-" + patient.getIdElement().getIdPart().hashCode());
+          patientBundle.setId(IdentifiersHelper.getPatientBundleId(reportId, patient.getIdElement().getIdPart()));
 
           // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
           patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
