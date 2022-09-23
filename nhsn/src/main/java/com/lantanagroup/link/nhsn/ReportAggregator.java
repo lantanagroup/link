@@ -51,17 +51,10 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
   }
 
 
-  public void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
-    // agregate all individual reports in one
-
-    List<String> reportIds = patientOfInterestModelList.stream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
-
-    Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
-    // TODO: Rename to measureReports and use the generic getAllPages overload (currently non-existent, see StoredListProvider)
-    List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
-    logger.info("Number of reports generated is: " + bundles.size());
-    for (IBaseResource patientMeasureReportResource : bundles) {
-      for (MeasureReport.MeasureReportGroupComponent group : ((MeasureReport) patientMeasureReportResource).getGroup()) {
+  public void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports) {
+    // aggregate all individual reports in ones
+    for (MeasureReport patientMeasureReportResource : measureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReportResource.getGroup()) {
         for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
           // Check if group and population code exist in master, if not create
           MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
@@ -70,7 +63,7 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
           // If this population incremented the master
           if (population.getCount() > 0) {
             // add subject results
-            logger.info("Measure Report with count > 0 is: " + ((MeasureReport) patientMeasureReportResource).getId());
+            logger.info("Measure Report with count > 0 is: " + patientMeasureReportResource.getId());
             addSubjectResults(population, measureGroupPopulation);
             // Identify or create the List for this master group/population
             ListResource listResource = (ListResource) getOrCreateContainedList(masterMeasureReport, population.getCode().getCoding().get(0).getCode());

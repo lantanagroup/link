@@ -1,7 +1,6 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -19,7 +18,7 @@ public abstract class GenericAggregator implements IReportAggregator {
   @Autowired
   private ApiConfig config;
 
-  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientsOfInterest);
+  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports);
 
   private void setSubject(MeasureReport masterMeasureReport) {
     if (this.config.getMeasureLocation() != null) {
@@ -67,7 +66,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
 
     // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
-    this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientsOfInterest());
+    this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
 
     this.createGroupsFromMeasure(masterMeasureReport, measureContext);
 

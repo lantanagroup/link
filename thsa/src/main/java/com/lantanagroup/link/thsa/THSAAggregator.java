@@ -1,13 +1,12 @@
 package com.lantanagroup.link.thsa;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.GenericAggregator;
+import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.config.thsa.THSAConfig;
-import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -199,12 +197,9 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
-    List<String> reportIds = patientOfInterestModelList.stream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
-    Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
-    List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
-    for (IBaseResource patientMeasureReportResource : bundles) {
-      for (MeasureReport.MeasureReportGroupComponent group : ((MeasureReport) patientMeasureReportResource).getGroup()) {
+  protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports) {
+    for (MeasureReport patientMeasureReportResource : measureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReportResource.getGroup()) {
         for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
           // Check if group and population code exist in master, if not create
           MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
