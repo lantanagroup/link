@@ -334,6 +334,11 @@ public class ReportController extends BaseController {
       documentReference.setId(documentId.toString());
     }
 
+    // Add the patient census list(s) to the document reference
+    documentReference.getContext().getRelated().clear();
+    documentReference.getContext().getRelated().addAll(reportContext.getPatientCensusLists().stream().map(censusList -> new Reference()
+            .setReference("List/" + censusList.getIdElement().getIdPart())).collect(Collectors.toList()));
+
     this.getFhirDataProvider().updateResource(documentReference);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
