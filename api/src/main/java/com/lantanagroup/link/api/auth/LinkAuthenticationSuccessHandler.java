@@ -85,13 +85,9 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
   }
 
   private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
-    boolean same = true;
-    if (!StringUtils.equals(checkFamily(practitioner1),checkFamily(practitioner2)) ||
-            !StringUtils.equals(checkGiven(practitioner1),checkGiven(practitioner2)) ||
-            checkEmailSystem(practitioner1) != checkEmailSystem(practitioner2) ||
-            !StringUtils.equals(checkEmailValue(practitioner1),checkEmailValue(practitioner2))) {
-      same = false;
-    }
-    return same;
+   return (StringUtils.equals(checkFamily(practitioner1),checkFamily(practitioner2)) ||
+            StringUtils.equals(checkGiven(practitioner1),checkGiven(practitioner2)) ||
+            checkEmailSystem(practitioner1) == checkEmailSystem(practitioner2) ||
+            StringUtils.equals(checkEmailValue(practitioner1),checkEmailValue(practitioner2)));
   }
 }
