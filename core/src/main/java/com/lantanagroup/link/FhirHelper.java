@@ -8,8 +8,7 @@ import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -116,8 +115,17 @@ public class FhirHelper {
     }
 
     if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
-      String aud = jsonObject.get("aud").getAsString();
-      Identifier identifier = new Identifier().setValue(aud);
+      logger.info(String.format("Aud is : " + jsonObject.get("aud").toString()));
+      JsonElement aud = jsonObject.get("aud");
+      String identifierValue = "";
+      if (aud instanceof JsonPrimitive) {
+        identifierValue = aud.getAsString();
+      } else if (aud instanceof JsonArray) {
+        for (int i = 0; i < ((JsonArray) aud).size(); i++) {
+          identifierValue += ((JsonArray) aud).get(i).getAsString();
+        }
+      }
+      Identifier identifier = new Identifier().setValue(identifierValue);
       agent.setLocation(new Reference().setIdentifier(identifier));
     }
     agentList.add(agent);
