@@ -1,0 +1,187 @@
+package com.lantanagroup.link.cli;
+
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.model.GenerateResponse;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.*;
+
+
+@ShellComponent
+public class GenerateAndSubmitCommand {
+
+
+  private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
+
+  @Autowired
+  @Setter
+  @Getter
+  private GenerateAndSubmitConfig configInfo;
+
+  public static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Calendar cal = new GregorianCalendar();
+    cal.add(Calendar.HOUR, adjustHours);
+    cal.add(Calendar.MONTH, adjustMonths);
+    if (startOfDay) {
+      cal.set(Calendar.MILLISECOND, 0);
+      cal.set(Calendar.SECOND, 0);
+      cal.set(Calendar.MINUTE, 0);
+      cal.set(Calendar.HOUR_OF_DAY, 0);
+    }
+    return cal.getTime();
+  }
+
+  public static Date getEndOfDay(int adjustDays, boolean endOfDay) {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    Calendar cal = new GregorianCalendar();
+    cal.add(Calendar.HOUR, adjustDays);
+    if (endOfDay) {
+      cal.set(Calendar.HOUR, 23);
+      cal.set(Calendar.MINUTE, 59);
+      cal.set(Calendar.SECOND, 59);
+      cal.set(Calendar.MILLISECOND, 0);
+    }
+    return cal.getTime();
+  }
+
+  @ShellMethod("generate-and-submit")
+  public void generateAndSubmit() throws IOException {
+    CloseableHttpClient client = HttpClientBuilder.create().build();
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+
+      if (Strings.isBlank(configInfo.getApiUrl())) {
+        logger.error("The api-url parameter is required.");
+        return;
+      }
+      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
+        logger.error("The period-start parameter is required.");
+        return;
+      }
+      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
+        logger.error("The period-start parameter is required.");
+        return;
+      }
+      if (Strings.isBlank(configInfo.getReportTypeId())) {
+        logger.error("The report-type-is is required.");
+        return;
+      }
+      if (configInfo.getAuth() == null) {
+        logger.error("Auth is required.");
+        return;
+      }
+      if (Strings.isBlank(configInfo.getAuth().getTokenUrl())) {
+        logger.error("The token-url is required.");
+        return;
+      }
+      if (Strings.isBlank(configInfo.getAuth().getUser())) {
+        logger.error("The user is required.");
+        return;
+      }
+      if (Strings.isBlank(configInfo.getAuth().getPass())) {
+        logger.error("The password is required.");
+        return;
+      }
+      if (Strings.isBlank(configInfo.getAuth().getScope())) {
+        logger.error("The scope is required.");
+        return;
+      }
+      String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
+      if (token == null) {
+        client.close();
+        logger.error("Authentication failed. Please contact the system administrator.");
+        System.exit(1);
+      }
+      DecodedJWT jwt = JWT.decode(token);
+      LinkCredentials principal = new LinkCredentials();
+      principal.setJwt(jwt);
+      principal.setPractitioner(FhirHelper.toPractitioner(jwt));
+      String url = configInfo.getApiUrl() + "/report/$generate";
+
+      // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day
+      Date startDate = getStartDate(this.configInfo.getPeriodStart().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodStart().isStartOfDay());
+      String startDateFormatted = Helper.getFhirDate(startDate);
+      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay() * 24, this.configInfo.getPeriodEnd().isEndOfDay()));
+
+      UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
+              // Add query parameter
+              .queryParam("reportDefIdentifier", configInfo.getReportTypeId())
+              .queryParam("periodStart", startDateFormatted)
+              .queryParam("periodEnd", endDateFormatted)
+              .queryParam("regenerate", false);
+      Map<String, String> uriParams = new HashMap<>();
+      URI urlWithParameters = builder.buildAndExpand(uriParams).toUri();
+
+      // create headers
+      HttpHeaders headers = new HttpHeaders();
+      // set `content-type` header
+      headers.setContentType(MediaType.APPLICATION_JSON);
+
+      //bearer token header
+      if (OAuth2Helper.validateHeaderJwtToken(token)) {
+        headers.setBearerAuth(token);
+      } else {
+        client.close();
+        throw new JWTVerificationException("Invalid token format");
+      }
+
+      // set `accept` header
+      headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+      // build the request
+      HttpEntity<Map<String, Object>> entity = new HttpEntity<>(headers);
+
+      // send POST request
+      ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);
+
+      String reportId = response.getBody() != null ? (String) response.getBody().getReportIds().get(0) : null;
+      if (reportId == null) {
+        logger.error("Error generating report. Please contact the system administrator.");
+        client.close();
+        System.exit(1);
+      }
+
+      url = configInfo.getApiUrl() + "/report/{reportId}/$send";
+      UriComponentsBuilder builder1 = UriComponentsBuilder.fromUriString(url);
+
+      Map<String, Object> map = new HashMap<>();
+      map.put("reportId", reportId);
+      URI urlWithParameters1 = builder1.buildAndExpand(map).toUri();
+
+      // send the report
+      restTemplate.exchange(urlWithParameters1, HttpMethod.POST, entity, String.class);
+      logger.info("Report successfully generated and submitted.");
+      client.close();
+      System.exit(0);
+    } catch (Exception ex) {
+      client.close();
+      logger.error(String.format("Error generating and submitting report: %s", ex.getMessage()), ex);
+      System.exit(1);
+    } finally {
+      if (client != null) {
+        client.close();
+      }
+    }
+  }
+}
