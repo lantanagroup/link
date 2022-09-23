@@ -6,6 +6,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthenticationSuccessHandler.class);
@@ -58,26 +60,36 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
     }
   }
 
+  private String checkFamily (Practitioner practitioner) {
+    return !practitioner.getName().isEmpty()?
+            (StringUtils.isNotBlank(practitioner.getName().get(0).getFamily())?
+                    practitioner.getName().get(0).getFamily():""):"";
+  }
+
+  private String checkGiven(Practitioner practitioner) {
+    return !practitioner.getName().isEmpty()?
+            (!practitioner.getName().get(0).getGiven().isEmpty()?
+                    (StringUtils.isNotBlank(practitioner.getName().get(0).getGiven().get(0).toString())?
+                            practitioner.getName().get(0).getGiven().get(0).toString():""):""):"";
+  }
+
+  private String checkEmailValue(Practitioner practitioner) {
+    return !practitioner.getTelecomFirstRep().isEmpty()?
+              (StringUtils.isNotBlank(practitioner.getTelecomFirstRep().getValue())?
+              practitioner.getTelecomFirstRep().getValue():""):"";
+  }
+
+  private ContactPoint.ContactPointSystem checkEmailSystem(Practitioner practitioner) {
+    return !practitioner.getTelecomFirstRep().isEmpty()?
+              practitioner.getTelecomFirstRep().getSystem():ContactPoint.ContactPointSystem.NULL;
+  }
+
   private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
     boolean same = true;
-    String familyNamePractitioner1 = StringUtils.isNotBlank(practitioner1.getName().get(0).getFamily())?
-            practitioner1.getName().get(0).getFamily():"";
-    String familyNamePractitioner2 = StringUtils.isNotBlank(practitioner2.getName().get(0).getFamily())?
-            practitioner2.getName().get(0).getFamily():"";
-    String givenNamePractitioner1 = StringUtils.isNotBlank(practitioner1.getName().get(0).getGiven().get(0).toString())?
-            practitioner1.getName().get(0).getGiven().get(0).toString():"";
-    String givenNamePractitioner2 = StringUtils.isNotBlank(practitioner2.getName().get(0).getGiven().get(0).toString())?
-            practitioner2.getName().get(0).getGiven().get(0).toString():"";
-    String email1Value = StringUtils.isNotBlank(practitioner1.getTelecomFirstRep().getValue())?
-            practitioner1.getTelecomFirstRep().getValue():"";
-    String email2Value = StringUtils.isNotBlank(practitioner2.getTelecomFirstRep().getValue())?
-            practitioner2.getTelecomFirstRep().getValue():"";
-    String email1System = StringUtils.isNotBlank(practitioner1.getTelecomFirstRep().getSystem().name())?
-            practitioner1.getTelecomFirstRep().getSystem().name():"";
-    String email2System = StringUtils.isNotBlank(practitioner2.getTelecomFirstRep().getSystem().name())?
-            practitioner2.getTelecomFirstRep().getSystem().name():"";
-    if (!familyNamePractitioner1.equals(familyNamePractitioner2) || !givenNamePractitioner1.equals(givenNamePractitioner2) ||
-            !email1System.equals(email2System) || !email1Value.equals(email2Value)) {
+    if (!StringUtils.equals(checkFamily(practitioner1),checkFamily(practitioner2)) ||
+            !StringUtils.equals(checkGiven(practitioner1),checkGiven(practitioner2)) ||
+            checkEmailSystem(practitioner1) != checkEmailSystem(practitioner2) ||
+            !StringUtils.equals(checkEmailValue(practitioner1),checkEmailValue(practitioner2))) {
       same = false;
     }
     return same;
