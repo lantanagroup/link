@@ -4,7 +4,6 @@ import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
-import com.lantanagroup.link.api.EventController;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
@@ -355,10 +354,14 @@ public class ReportController extends BaseController {
 
     List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
-    String practitionerId = reportContext.getUser().getPractitioner().getId();
-    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
-    list.add(reference);
-    documentReference.setAuthor(list);
+    if (reportContext.getUser() != null && reportContext.getUser().getPractitioner() != null) {
+      String practitionerId = reportContext.getUser().getPractitioner().getId();
+      if (StringUtils.isNotEmpty(practitionerId)) {
+        reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
+        list.add(reference);
+        documentReference.setAuthor(list);
+      }
+    }
 
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
 
