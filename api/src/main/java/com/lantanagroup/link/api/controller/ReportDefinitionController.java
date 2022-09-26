@@ -4,6 +4,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.StoredMeasure;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/measure")
 public class ReportDefinitionController extends BaseController {
 
-
+  @Setter
   @Autowired
   ApiConfig config;
 

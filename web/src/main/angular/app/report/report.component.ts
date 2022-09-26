@@ -17,7 +17,8 @@ import {formatDateToISO} from "../helper";
 })
 export class ReportComponent implements OnInit, OnDestroy {
   reportId: string;
-  reports: ReportModel[];
+  reportModel: ReportModel;
+  reportMeasureList: any[];
   paramsSubscription: Subscription;
   loading = false;
   hasRequiredErrors = false;
@@ -40,13 +41,13 @@ export class ReportComponent implements OnInit, OnDestroy {
     } else return "Submit Bundle";
   }
 
-  getRepVersionNumber(report) {
-    return Number(report.version);
+  getRepVersionNumber() {
+    return Number(this.reportModel.version);
   }
 
-  isSubmitted(report) {
-    if (!report) return false;
-    return report.status === 'FINAL';
+  isSubmitted() {
+    if (!this.reportModel) return false;
+    return this.reportModel.status === 'FINAL';
   }
 
   setRequiredErrorsFlag(hasErrors) {
@@ -135,7 +136,9 @@ export class ReportComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     try {
-      this.reports = await this.reportService.getReport(this.reportId.substr(0));
+      this.reportModel = await this.reportService.getReport(this.reportId.substr(0));
+      const reportBundle = await this.reportModel;
+      this.reportMeasureList = reportBundle.reportMeasureList || [];
     } catch (ex) {
       this.toastService.showException('Error loading report', ex);
     } finally {
@@ -143,8 +146,8 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  getStatusDisplay(report) {
-    switch (report.status.toLowerCase()) {
+  getStatusDisplay() {
+    switch (this.reportModel.status.toLowerCase()) {
       case 'preliminary':
         return 'Reviewing';
       case 'final':
@@ -154,7 +157,7 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async save() {
     let reportSaveModel = new ReportSaveModel();
-    reportSaveModel.measureReport = this.reports[0].measureReport;
+    reportSaveModel.measureReport = this.reportMeasureList[0];
     try {
       await this.reportService.save(reportSaveModel, this.reportId);
       this.toastService.showInfo('Report saved!');
@@ -167,14 +170,14 @@ export class ReportComponent implements OnInit, OnDestroy {
   async regenerate() {
     this.loading = true;
     this.regenerateReportButtonText = 'Loading...';
-    const bundleIds = this.reports.map(report => report.bundleId) + "";
+    const bundleIds = (this.reportMeasureList || []).map(reportMeasure => reportMeasure.bundleId) + "";
 
     try {
       if (confirm('Confirm re-generate?\n Re-generating will re-acquire the latest date from the EHR for the period and re-evaluate the measure. ' +
           'Once re-evaluated, the newest calculated aggregate totals will be updated in this report. ' +
           'Fields not calculated as part of the measure will not be affected. Are you sure you want to continue?')) {
         try {
-          const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reports[0].measureReport.period.start), formatDateToISO(this.reports[0].measureReport.period.end), true);
+          const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
           await this.router.navigate(['review', generateResponse.reportIds + ""]);
           this.toastService.showInfo('Report re-generated!');
           await this.initReport();
@@ -182,7 +185,7 @@ export class ReportComponent implements OnInit, OnDestroy {
           if (ex.status === 409) {
             if (confirm(ex.error.message)) {
               try {
-                const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reports[0].measureReport.period.start), formatDateToISO(this.reports[0].measureReport.period.end), true);
+                const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
                 await this.router.navigate(['review', generateResponse.reportIds + ""]);
               } catch (ex) {
                 this.toastService.showException('Error re-generating report', ex);
