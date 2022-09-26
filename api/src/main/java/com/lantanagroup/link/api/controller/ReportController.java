@@ -463,12 +463,13 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping(value = "/{reportId}")
-  public List<ReportModel> getReport(
+  public ReportModel getReport(
           @PathVariable("reportId") String[] reportId) {
 
-    List<ReportModel> reportModelList = new ArrayList();
+    ReportModel reportModel = new ReportModel();
+    List<ReportModel.ReportMeasure> reportModelList = new ArrayList<>();
+    reportModel.setReportMeasureList(reportModelList);
     for (int i = 0; i < reportId.length; i++) {
-      ReportModel report = new ReportModel();
       String encodedReport = "";
       //prevent injection from reportId parameter
       try {
@@ -478,23 +479,22 @@ public class ReportController extends BaseController {
       }
       String masterReportId = IdentifiersHelper.getMasterMeasureReportId(reportId[i]);
       DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
-      report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
-
       FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
-
       Bundle bundle = this.getFhirDataProvider().findBundleByIdentifier(documentReference.getIdentifier().get(i).getSystem(), documentReference.getIdentifier().get(i).getValue());
-      report.setBundleId(bundle.getIdElement().getIdPart());
-      report.setMeasure(measure);
 
-      report.setVersion(documentReference
+      ReportModel.ReportMeasure reportMeasure = new ReportModel.ReportMeasure();
+      reportMeasure.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
+      reportMeasure.setBundleId(bundle.getIdElement().getIdPart());
+      reportMeasure.setMeasure(measure);
+      reportModel.setVersion(documentReference
               .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
               documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
-      report.setStatus(documentReference.getDocStatus().toString());
-      report.setDate(documentReference.getDate());
-      reportModelList.add(report);
+      reportModel.setStatus(documentReference.getDocStatus().toString());
+      reportModel.setDate(documentReference.getDate());
+      reportModelList.add(reportMeasure);
     }
-    return reportModelList;
+    return reportModel;
   }
 
   @GetMapping(value = "/{reportId}/patient")
@@ -920,9 +920,9 @@ public class ReportController extends BaseController {
 
     // Create the ReportModel that will be returned
     ReportModel report = new ReportModel();
-    report.setMeasureReport(updatedMeasureReport);
-    report.setMeasure(measure);
-    report.setIdentifier(reportId);
+//    report.setMeasureReport(updatedMeasureReport);
+//    report.setMeasure(measure);
+//    report.setIdentifier(reportId);
     report.setVersion(reportDocRef
             .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
             reportDocRef.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);

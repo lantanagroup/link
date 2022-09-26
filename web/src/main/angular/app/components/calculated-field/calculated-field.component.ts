@@ -11,7 +11,7 @@ import {debounceTime} from "rxjs/operators";
 export class CalculatedFieldComponent implements OnInit {
   private static readonly PopOrigCountUrl = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-pop-orig-count';
   private static readonly PopCountChangedReason = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-pop-count-changed-reason';
-  @Input()   report: ReportModel;
+  @Input()   report: any;
   @Input()   groupCode: string;
   @Input()   populationCode: string;
   @Output()  invalidate: EventEmitter<any> = new EventEmitter<any>();

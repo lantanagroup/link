@@ -11,8 +11,33 @@
            routerLink="/review">Review</a>
     </li>
 </ul>
-<div *ngFor="let report of reports">
-    <div *ngIf="report && !loading" class="report">
+<div class="document">
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Period</div>
+        </div>
+        <input [disabled]="true" class="form-control" id="report-period" type="text" value="TODO"/>
+    </div>
+
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Status/Version</div>
+        </div>
+        <input [disabled]="true" class="form-control" id="report-status-version"
+               type="text"
+               value="{{getStatusDisplay()}} - {{reportModel.version || 'N/A'}}"/>
+    </div>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Submission Date</div>
+        </div>
+        <div [ngbTooltip]="reportModel.date | date: 'MMM d, y, h:mm:ss a' : 'UTC'" class="form-control"
+             id="report-submit-date">{{reportModel.date | date:'MMM d, y' : 'UTC' }}</div>
+    </div>
+</div>
+
+<div *ngFor="let report of reportMeasureList">
+    <div class="card" *ngIf="report && !loading" >
         <div class="row">
             <div class="col-md-4">
                 <div *ngIf="report?.measure?.title" class="input-group">
@@ -21,29 +46,6 @@
                     </div>
                     <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" id="report-type"
                            type="text"/>
-                </div>
-
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">Period</div>
-                    </div>
-                    <input [disabled]="true" class="form-control" id="report-period" type="text" value="TODO"/>
-                </div>
-
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">Status/Version</div>
-                    </div>
-                    <input [disabled]="true" class="form-control" id="report-status-version"
-                           type="text"
-                           value="{{getStatusDisplay(report)}} - {{report.version || 'N/A'}}"/>
-                </div>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">Submission Date</div>
-                    </div>
-                    <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a' : 'UTC'" class="form-control"
-                         id="report-submit-date">{{report.date | date:'MMM d, y' : 'UTC' }}</div>
                 </div>
             </div>
             <div class="col-md-8">
@@ -89,24 +91,25 @@
                 </div>
             </div>
         </div>
-        <div class="btn-group">
-            <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
-            <button (click)="save()" *ngIf="!isSubmitted(report)" [disabled]="!dirty" class="btn btn-primary">Save
-            </button>
-            <button (click)="discard()" *ngIf="!isSubmitted(report)" [disabled]="getRepVersionNumber(report) >= 1.0"
-                    class="btn btn-primary">
-                Discard
-            </button>
-        </div>
+
     </div>
 </div>
 
 <div class="report-buttons btn-group">
-    <button (click)="send()" *ngIf="!isSubmitted(reports[0])" [disabled]="hasRequiredErrors || submitInProgress"
+    <div class="btn-group">
+        <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
+        <button (click)="save()" *ngIf="!isSubmitted()" [disabled]="!dirty" class="btn btn-primary">Save
+        </button>
+        <button (click)="discard()" *ngIf="!isSubmitted()" [disabled]="getRepVersionNumber() >= 1.0"
+                class="btn btn-primary">
+            Discard
+        </button>
+    </div>
+    <button (click)="send()" *ngIf="!isSubmitted()" [disabled]="hasRequiredErrors || submitInProgress"
             class="btn btn-primary">
         {{submitText}}
     </button>
-    <button (click)="regenerate()" *ngIf="isSubmitted(reports[0])" [disabled]="hasRequiredErrors"
+    <button (click)="regenerate()" *ngIf="isSubmitted()" [disabled]="hasRequiredErrors"
             class="btn btn-primary">
         {{regenerateReportButtonText}}
     </button>

@@ -82,7 +82,7 @@ export class ReportService {
 
   async getReport(reportId: string) {
     const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}`);
-    return await this.http.get<ReportModel[]>(url).toPromise();
+    return await this.http.get<ReportModel>(url).toPromise();
   }
 
   async save(report: ReportSaveModel, id: string) {
