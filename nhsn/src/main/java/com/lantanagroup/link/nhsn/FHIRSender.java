@@ -31,8 +31,6 @@ public class FHIRSender extends GenericSender implements IReportSender {
     if (StringUtils.isNotEmpty(location)) {
       FhirHelper.setSubmissionLocation(documentReference, location);
     }
-
-    FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 
   public String bundle(Bundle bundle, FhirDataProvider fhirDataProvider, String type) {

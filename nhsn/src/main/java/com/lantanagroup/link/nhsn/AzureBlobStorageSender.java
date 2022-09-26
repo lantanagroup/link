@@ -209,7 +209,6 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     Bundle bundle = this.generateBundle(documentReference, masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
 
     this.sendContent(bundle, documentReference, fhirDataProvider);
-    FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 
   /**

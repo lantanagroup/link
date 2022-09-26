@@ -543,6 +543,7 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().updateResource(documentReference);
     this.getFhirDataProvider().updateResource(data.getMeasureReport());
 
+    // TODO: Wrong audit event type? We're saving the report, not sending it
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
                     documentReference.getMasterIdentifier().getValue());
