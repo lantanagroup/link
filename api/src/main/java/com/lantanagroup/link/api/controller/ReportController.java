@@ -292,7 +292,7 @@ public class ReportController extends BaseController {
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
-      measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+      measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getReportDefBundle().getIdentifier()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 

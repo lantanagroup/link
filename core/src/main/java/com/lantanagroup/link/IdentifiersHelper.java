@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.model.ReportCriteria;
+import org.hl7.fhir.r4.model.Identifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -14,8 +15,11 @@ public class IdentifiersHelper {
     return Helper.getHashedValue(components);
   }
 
-  public static String getMasterMeasureReportId(String masterIdentifierValue, String measureBundleId) {
-    return masterIdentifierValue + "-" + measureBundleId.hashCode();
+  public static String getMasterMeasureReportId(String masterIdentifierValue, Identifier reportDefIdentifier) {
+    String reportDefIdentifierString = reportDefIdentifier.hasSystem()
+            ? String.format("%s|%s", reportDefIdentifier.getSystem(), reportDefIdentifier.getValue())
+            : reportDefIdentifier.getValue();
+    return masterIdentifierValue + "-" + reportDefIdentifierString.hashCode();
   }
 
   public static String getIndividualMeasureReportId(String masterMeasureReportId, String patientId) {
