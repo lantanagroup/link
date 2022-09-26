@@ -28,6 +28,7 @@ public class ReportContext {
     this.fhirProvider = fhirProvider;
   }
 
+
   @Getter
   @Setter
   public static class MeasureContext {
@@ -36,6 +37,7 @@ public class ReportContext {
     private Measure measure;
     private String reportId;
     private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+    private List<MeasureReport> patientReports = new ArrayList<>();
     private MeasureReport measureReport;
   }
 }

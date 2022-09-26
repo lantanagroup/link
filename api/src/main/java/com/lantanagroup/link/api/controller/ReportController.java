@@ -290,8 +290,6 @@ public class ReportController extends BaseController {
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
-    response.setMasterReportId(reportContext.getMasterIdentifierValue());
-
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
       measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
@@ -362,10 +360,14 @@ public class ReportController extends BaseController {
 
     List<Reference> list = new ArrayList<>();
     Reference reference = new Reference();
-    String practitionerId = reportContext.getUser().getPractitioner().getId();
-    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
-    list.add(reference);
-    documentReference.setAuthor(list);
+    if (reportContext.getUser() != null && reportContext.getUser().getPractitioner() != null) {
+      String practitionerId = reportContext.getUser().getPractitioner().getId();
+      if (StringUtils.isNotEmpty(practitionerId)) {
+        reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
+        list.add(reference);
+        documentReference.setAuthor(list);
+      }
+    }
 
     documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
 
@@ -465,10 +467,9 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }
 
-  @GetMapping(value = "/{reportId}/masterReport/{masterReportId}")
+  @GetMapping(value = "/{reportId}")
   public List<ReportModel> getReport(
-          @PathVariable("reportId") String[] reportId,
-          @PathVariable("masterReportId") String masterReportId) {
+          @PathVariable("reportId") String[] reportId) {
 
     List<ReportModel> reportModelList = new ArrayList();
     for (int i = 0; i < reportId.length; i++) {
@@ -480,16 +481,17 @@ public class ReportController extends BaseController {
       } catch (Exception ex) {
         logger.error(ex.getMessage());
       }
-
+      String masterReportId = IdentifiersHelper.getMasterMeasureReportId(reportId[i]);
       DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
       report.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
 
       FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
 
+      Bundle bundle = this.getFhirDataProvider().findBundleByIdentifier(documentReference.getIdentifier().get(i).getSystem(), documentReference.getIdentifier().get(i).getValue());
+      report.setBundleId(bundle.getIdElement().getIdPart());
       report.setMeasure(measure);
 
-      // report.setIdentifier(reportId);
       report.setVersion(documentReference
               .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?
               documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).getValue().toString() : null);
@@ -499,7 +501,6 @@ public class ReportController extends BaseController {
     }
     return reportModelList;
   }
-
 
   @GetMapping(value = "/{reportId}/patient")
   public List<PatientReportModel> getReportPatients(
