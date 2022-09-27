@@ -48,10 +48,10 @@ public class StoredListProvider implements IPatientIdProvider {
         List<PatientOfInterestModel> pois = list.getEntry().stream().map(patient -> {
 
           PatientOfInterestModel poi = new PatientOfInterestModel();
-          if (patient.getItem().getIdentifier() != null) {
+          if (patient.getItem().hasIdentifier()) {
             poi.setIdentifier(IdentifierHelper.toString(patient.getItem().getIdentifier()));
           }
-          if (patient.getItem().getReference() != null) {
+          if (patient.getItem().hasReference()) {
             poi.setReference(patient.getItem().getReference());
           }
           return poi;
