@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IPatientIdProvider;
+import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -47,10 +48,10 @@ public class StoredListProvider implements IPatientIdProvider {
         List<PatientOfInterestModel> pois = list.getEntry().stream().map(patient -> {
 
           PatientOfInterestModel poi = new PatientOfInterestModel();
-          if (patient.getItem().getIdentifier() != null) {
-            poi.setIdentifier(patient.getItem().getIdentifier().getSystem() + "|" + patient.getItem().getIdentifier().getValue());
+          if (patient.getItem().hasIdentifier()) {
+            poi.setIdentifier(IdentifierHelper.toString(patient.getItem().getIdentifier()));
           }
-          if (patient.getItem().getReference() != null) {
+          if (patient.getItem().hasReference()) {
             poi.setReference(patient.getItem().getReference());
           }
           return poi;

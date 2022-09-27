@@ -2,7 +2,6 @@ package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -18,6 +17,7 @@ import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
@@ -39,10 +39,8 @@ public class MeasureReportDownloader implements IReportDownloader {
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    //Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider, config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true);
-
     FhirBundler bundler = new FhirBundler(fhirDataProvider);
-    Bundle bundle = bundler.generateBundle(config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true, config.isRemoveGeneratedObservations(), measureReport, docRefBundle);
+    Bundle bundle = bundler.generateBundle(config.isSendWholeBundle(), config.isRemoveContainedResources(), List.of(measureReport), docRefBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
     String responseBody = "";

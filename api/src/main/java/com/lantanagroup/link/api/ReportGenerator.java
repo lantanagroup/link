@@ -1,7 +1,7 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
-import com.lantanagroup.link.IdentifiersHelper;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -57,7 +57,7 @@ public class ReportGenerator {
               measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
                 logger.info("Patient is: " + patient);
                 MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
-                patientMeasureReport.setId(IdentifiersHelper.getPatientBundleId(measureContext.getReportId(), patient.getId()));
+                patientMeasureReport.setId(ReportIdHelper.getPatientDataBundleId(measureContext.getReportId(), patient.getId()));
                 return patientMeasureReport;
               })).get().collect(Collectors.toList());
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream

@@ -3,6 +3,7 @@ package com.lantanagroup.link.cli;
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import org.apache.commons.csv.CSVFormat;
@@ -90,7 +91,7 @@ public class KnoxMeasureReportTransferCommand extends BaseShellCommand {
     report.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
     report.setType(MeasureReport.MeasureReportType.SUMMARY);
     report.setMeasure(config.getMeasureUrl());
-    report.getSubject().setIdentifier(getSubjectIdentifier());
+    report.getSubject().setIdentifier(IdentifierHelper.fromString(config.getSubjectIdentifier()));
     report.setDate(new Date());
     // DAY precision doesn't conform to PublicHealthMeasureReport, but it matches SanerCSVConverter's output
     report.getPeriod()
@@ -98,14 +99,6 @@ public class KnoxMeasureReportTransferCommand extends BaseShellCommand {
             .setEnd(date, TemporalPrecisionEnum.DAY);
     report.getGroupFirstRep().getCode().getCodingFirstRep().setCode(config.getGroupCode());
     return report;
-  }
-
-  private Identifier getSubjectIdentifier() {
-    String[] components = config.getSubjectIdentifier().split("\\|", 2);
-    if (components.length == 2) {
-      return new Identifier().setSystem(components[0]).setValue(components[1]);
-    }
-    return new Identifier().setValue(config.getSubjectIdentifier());
   }
 
   private void submit(MeasureReport report) throws Exception {

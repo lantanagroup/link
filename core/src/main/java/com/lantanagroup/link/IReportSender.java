@@ -8,7 +8,8 @@ import org.hl7.fhir.r4.model.MeasureReport;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public interface IReportSender {
-  void send(MeasureReport masterMeasureReport, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception;
+  void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception;
 }

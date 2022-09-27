@@ -90,7 +90,6 @@ public class ReportController extends BaseController {
 
       // Update the context
       ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
-      // measureContext.setReportDefIdentifier(reportDefBundle.getIdentifier().getSystem() + "|" + reportDefBundle.getIdentifier().getValue());
       measureContext.setReportDefBundle(reportDefBundle);
       measureContext.setBundleId(reportDefBundle.getIdElement().getIdPart());
       Measure measure = reportDefBundle.getEntry().stream()
@@ -114,8 +113,9 @@ public class ReportController extends BaseController {
       patientOfInterestModelList = new ArrayList<>();
       for (ListResource censusList : context.getPatientCensusLists()) {
         for (ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
-          PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
-                  censusPatient.getItem().getIdentifier().getSystem() + "|" + censusPatient.getItem().getIdentifier().getValue());
+          PatientOfInterestModel patient = new PatientOfInterestModel(
+                  censusPatient.getItem().getReference(),
+                  IdentifierHelper.toString(censusPatient.getItem().getIdentifier()));
           patientOfInterestModelList.add(patient);
         }
       }
@@ -225,7 +225,7 @@ public class ReportController extends BaseController {
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
-    String masterIdentifierValue = IdentifiersHelper.getMasterIdentifierValue(criteria);
+    String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
     // Search the reference document by measure criteria nd reporting period
     // searching by combination of identifiers could return multiple documents
@@ -292,7 +292,7 @@ public class ReportController extends BaseController {
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
-      measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getReportDefBundle().getIdentifier()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
@@ -331,6 +331,11 @@ public class ReportController extends BaseController {
       UUID documentId = UUID.nameUUIDFromBytes(reportContext.getMasterIdentifierValue().getBytes(StandardCharsets.UTF_8));
       documentReference.setId(documentId.toString());
     }
+
+    // Add the patient census list(s) to the document reference
+    documentReference.getContext().getRelated().clear();
+    documentReference.getContext().getRelated().addAll(reportContext.getPatientCensusLists().stream().map(censusList -> new Reference()
+            .setReference("List/" + censusList.getIdElement().getIdPart())).collect(Collectors.toList()));
 
     this.getFhirDataProvider().updateResource(documentReference);
 
@@ -417,8 +422,11 @@ public class ReportController extends BaseController {
       throw new IllegalStateException("Not configured for sending");
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+    List<MeasureReport> reports = documentReference.getIdentifier().stream()
+            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(reportId, identifier))
+            .map(id -> this.getFhirDataProvider().getMeasureReportById(id))
+            .collect(Collectors.toList());
 
-    MeasureReport report = this.getFhirDataProvider().getMeasureReportById(reportId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
@@ -427,9 +435,9 @@ public class ReportController extends BaseController {
     documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
-    sender.send(report, documentReference, request, authentication, this.getFhirDataProvider(),
-            this.bundlerConfig.getSendWholeBundle() != null ? this.bundlerConfig.getSendWholeBundle() : true,
-            this.bundlerConfig.isRemoveGeneratedObservations());
+    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(),
+            this.bundlerConfig.isSendWholeBundle(),
+            this.bundlerConfig.isRemoveContainedResources());
 
     // Now that we've submitted (successfully), update the doc ref with the status and date
     this.getFhirDataProvider().updateResource(documentReference);
@@ -477,7 +485,7 @@ public class ReportController extends BaseController {
       } catch (Exception ex) {
         logger.error(ex.getMessage());
       }
-      String masterReportId = IdentifiersHelper.getMasterMeasureReportId(reportId[i]);
+      String masterReportId = ReportIdHelper.getMasterIdentifierValue(reportId[i]);
       DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
       FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
@@ -538,6 +546,7 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().updateResource(documentReference);
     this.getFhirDataProvider().updateResource(data.getMeasureReport());
 
+    // TODO: Wrong audit event type? We're saving the report, not sending it
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(),
             FhirHelper.AuditEventTypes.Send, "Successfully updated MeasureReport with id: " +
                     documentReference.getMasterIdentifier().getValue());
@@ -866,9 +875,8 @@ public class ReportController extends BaseController {
     }
 
     // Create ReportCriteria to be used by MeasureEvaluator
-    String reportDefIdentifier = measure.getIdentifier().get(0).getSystem() + "|" + measure.getIdentifier().get(0).getValue();
     ReportCriteria criteria = new ReportCriteria(
-            List.of(reportDefIdentifier),
+            List.of(IdentifierHelper.toString(measure.getIdentifierFirstRep())),
             reportDocRef.getContext().getPeriod().getStartElement().asStringValue(),
             reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
 
@@ -941,6 +949,7 @@ public class ReportController extends BaseController {
    * @param patientId if searching for a specific patient's data by patientId
    * @return a list of bundles containing data for each patient
    */
+  // TODO: Update for multi-measure
   private List<Bundle> getPatientBundles(DocumentReference docRef, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
     String masterReportId = docRef.getMasterIdentifier().getValue();

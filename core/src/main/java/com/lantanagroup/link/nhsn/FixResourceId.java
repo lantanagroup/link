@@ -2,6 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IReportGenerationEvent;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -28,7 +29,8 @@ public class FixResourceId implements IReportGenerationEvent {
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
       logger.info("Patient is: " + patientOfInterest.getId());
       if (!StringUtils.isEmpty(patientOfInterest.getId())) {
-        IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode());
+        String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
+        IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
         ResourceIdChanger.changeIds((Bundle) patientBundle);
         fhirDataProvider.updateResource(patientBundle);
       }

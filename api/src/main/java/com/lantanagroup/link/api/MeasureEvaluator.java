@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -46,6 +47,7 @@ public class MeasureEvaluator {
 
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
+    String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
 
     try {
       String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
@@ -53,7 +55,7 @@ public class MeasureEvaluator {
 
       // get patient bundle from the fhirserver
       FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
-      IBaseResource patientBundle = fhirStoreProvider.getBundleById(reportContext.getMasterIdentifierValue() + "-" + patientId.hashCode());
+      IBaseResource patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
@@ -85,7 +87,7 @@ public class MeasureEvaluator {
           }
         }
 
-        logger.info(String.format("Done generating measure report for %s-%s", this.reportContext.getMasterIdentifierValue(), this.patientId.hashCode()));
+        logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
         // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
         measureReport.setId(this.measureContext.getReportId());
         // TODO: Remove this; it's expected to be the summary report, not an individual report
@@ -94,7 +96,7 @@ public class MeasureEvaluator {
         this.measureContext.setMeasureReport(measureReport);
       }
     } catch (Exception e) {
-      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s", this.reportContext.getMasterIdentifierValue(), this.patientId.hashCode()));
+      logger.error(String.format("Error evaluating Measure Report for patient bundle %s", patientDataBundleId));
       throw e;
     }
 

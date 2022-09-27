@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 @Component
 public class AzureBlobStorageSender extends GenericSender implements IReportSender, IAzureBlobStorageSender {
@@ -205,11 +206,10 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   @Override
-  public void send(MeasureReport masterMeasureReport, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
-    Bundle bundle = this.generateBundle(documentReference, masterMeasureReport, fhirDataProvider, sendWholeBundle, removeGeneratedObservations);
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception {
+    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, sendWholeBundle, removeContainedResources);
 
     this.sendContent(bundle, documentReference, fhirDataProvider);
-    FhirHelper.recordAuditEvent(request, fhirDataProvider, ((LinkCredentials) auth.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully sent report");
   }
 
   /**
