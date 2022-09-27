@@ -16,7 +16,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
 
 public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthenticationSuccessHandler.class);
@@ -60,34 +59,25 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
     }
   }
 
-  private String checkFamily (Practitioner practitioner) {
-    return !practitioner.getName().isEmpty()?
-            (StringUtils.isNotBlank(practitioner.getName().get(0).getFamily())?
-                    practitioner.getName().get(0).getFamily():""):"";
+  private String getFamilyName(Practitioner practitioner) {
+    return practitioner.getNameFirstRep().getFamily();
   }
 
-  private String checkGiven(Practitioner practitioner) {
-    return !practitioner.getName().isEmpty()?
-            (!practitioner.getName().get(0).getGiven().isEmpty()?
-                    (StringUtils.isNotBlank(practitioner.getName().get(0).getGiven().get(0).toString())?
-                            practitioner.getName().get(0).getGiven().get(0).toString():""):""):"";
+  private String getGivenName(Practitioner practitioner) {
+    return practitioner.getNameFirstRep().getGivenAsSingleString();
   }
 
-  private String checkEmailValue(Practitioner practitioner) {
-    return !practitioner.getTelecomFirstRep().isEmpty()?
-              (StringUtils.isNotBlank(practitioner.getTelecomFirstRep().getValue())?
-              practitioner.getTelecomFirstRep().getValue():""):"";
-  }
-
-  private ContactPoint.ContactPointSystem checkEmailSystem(Practitioner practitioner) {
-    return !practitioner.getTelecomFirstRep().isEmpty()?
-              practitioner.getTelecomFirstRep().getSystem():ContactPoint.ContactPointSystem.NULL;
+  private String getEmailAddress(Practitioner practitioner) {
+    return practitioner.getTelecom().stream()
+            .filter(telecom -> telecom.getSystem() == ContactPoint.ContactPointSystem.EMAIL)
+            .map(ContactPoint::getValue)
+            .findFirst()
+            .orElse(null);
   }
 
   private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
-   return (StringUtils.equals(checkFamily(practitioner1),checkFamily(practitioner2)) ||
-            StringUtils.equals(checkGiven(practitioner1),checkGiven(practitioner2)) ||
-            checkEmailSystem(practitioner1) == checkEmailSystem(practitioner2) ||
-            StringUtils.equals(checkEmailValue(practitioner1),checkEmailValue(practitioner2)));
+    return StringUtils.equals(getFamilyName(practitioner1), getFamilyName(practitioner2))
+            && StringUtils.equals(getGivenName(practitioner1), getGivenName(practitioner2))
+            && StringUtils.equals(getEmailAddress(practitioner1), getEmailAddress(practitioner2));
   }
 }
