@@ -27,10 +27,10 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeGeneratedObservations) {
+  public Bundle generateBundle(DocumentReference documentReference, List<MeasureReport> masterMeasureReports, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeContainedResources) {
     logger.info("Building Bundle for MeasureReport to send...");
     FhirBundler bundler = new FhirBundler(fhirProvider);
-    Bundle bundle = bundler.generateBundle(sendWholeBundle, removeGeneratedObservations, masterMeasureReport, documentReference);
+    Bundle bundle = bundler.generateBundle(sendWholeBundle, removeContainedResources, masterMeasureReports, documentReference);
     return bundle;
   }
 

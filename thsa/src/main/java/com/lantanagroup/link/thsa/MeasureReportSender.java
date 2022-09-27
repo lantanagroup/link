@@ -10,12 +10,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @Component
 public class MeasureReportSender extends GenericSender implements IReportSender {
   @Override
-  public void send(MeasureReport masterMeasureReport, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, Boolean sendWholeBundle, boolean removeGeneratedObservations) throws Exception {
-    this.sendContent(masterMeasureReport, documentReference, fhirDataProvider);
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception {
+    if (masterMeasureReports.size() == 1) {
+      this.sendContent(masterMeasureReports.get(0), documentReference, fhirDataProvider);
+    } else {
+      Bundle bundle = new Bundle();
+      bundle.setType(Bundle.BundleType.COLLECTION);
+      for (MeasureReport masterMeasureReport : masterMeasureReports) {
+        bundle.addEntry().setResource(masterMeasureReport);
+      }
+      this.sendContent(bundle, documentReference, fhirDataProvider);
+    }
   }
 
   @Override

@@ -24,6 +24,184 @@
             "id": "57f91b28-7fd4-bec8-aa69-c655e42a7906",
             "gender": "female",
             "birthDate": "1999-07-27"
+          },
+          {
+            "resourceType": "MedicationRequest",
+            "id": "075add36-e219-2327-d31b-75c5f5f12b85",
+            "meta": {
+              "versionId": "9",
+              "lastUpdated": "2022-08-22T21:14:24.962+00:00",
+              "source": "#2f02f41675620e1c",
+              "profile": [
+                "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+              ]
+            },
+            "status": "active",
+            "intent": "order",
+            "medicationReference": {
+              "reference": "Medication/f1223a39-0b00-a43c-76ac-9c24b5449fe6"
+            },
+            "subject": {
+              "reference": "Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906"
+            },
+            "encounter": {
+              "reference": "Encounter/30620cdf-186c-dc76-47f0-a04f8a60830d"
+            },
+            "authoredOn": "2022-01-04T15:28:17-05:00",
+            "requester": {
+              "reference": "Practitioner/8245cf82-5f31-3347-bb7b-16d34d18d7e2",
+              "display": "Dr. Chauncey770 Schoen8"
+            },
+            "dosageInstruction": [
+              {
+                "sequence": 1,
+                "timing": {
+                  "repeat": {
+                    "frequency": 1,
+                    "period": 1,
+                    "periodUnit": "d"
+                  }
+                },
+                "asNeededBoolean": false,
+                "doseAndRate": [
+                  {
+                    "type": {
+                      "coding": [
+                        {
+                          "system": "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                          "code": "ordered",
+                          "display": "Ordered"
+                        }
+                      ]
+                    },
+                    "doseQuantity": {
+                      "value": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "resourceType": "MedicationRequest",
+            "id": "04760a73-a327-05b6-9b56-344854451f60",
+            "meta": {
+              "versionId": "5",
+              "lastUpdated": "2022-07-21T21:31:48.793+00:00",
+              "source": "#9f8fa4f8b0d90be5",
+              "profile": [
+                "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+              ]
+            },
+            "status": "active",
+            "intent": "order",
+            "medicationReference": {
+              "reference": "Medication/6bbf62f4-5f64-0495-6e63-ba38897a240f"
+            },
+            "subject": {
+              "reference": "Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906"
+            },
+            "encounter": {
+              "reference": "Encounter/ade6f2a4-3ce5-030d-d495-28c1c48fbdb1"
+            },
+            "authoredOn": "2022-01-04T20:19:17-05:00",
+            "requester": {
+              "reference": "Practitioner/8245cf82-5f31-3347-bb7b-16d34d18d7e2",
+              "display": "Dr. Chauncey770 Schoen8"
+            },
+            "dosageInstruction": [
+              {
+                "sequence": 1,
+                "timing": {
+                  "repeat": {
+                    "frequency": 1,
+                    "period": 1,
+                    "periodUnit": "d"
+                  }
+                },
+                "asNeededBoolean": false,
+                "doseAndRate": [
+                  {
+                    "type": {
+                      "coding": [
+                        {
+                          "system": "http://terminology.hl7.org/CodeSystem/dose-rate-type",
+                          "code": "ordered",
+                          "display": "Ordered"
+                        }
+                      ]
+                    },
+                    "doseQuantity": {
+                      "value": 1
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "resourceType": "MedicationAdministration",
+            "id": "d2f3c47c-da31-d748-9a83-e006d0f67a8b",
+            "meta": {
+              "versionId": "1",
+              "lastUpdated": "2022-07-11T21:18:10.281+00:00",
+              "source": "#a401930cf06cd295"
+            },
+            "status": "completed",
+            "medicationCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "259111",
+                  "display": "insulin lispro 25 UNT/ML / insulin lispro protamine, human 75 UNT/ML Injectable Suspension"
+                }
+              ],
+              "text": "insulin lispro 25 UNT/ML / insulin lispro protamine, human 75 UNT/ML Injectable Suspension"
+            },
+            "subject": {
+              "reference": "Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906"
+            },
+            "context": {
+              "reference": "Encounter/30620cdf-186c-dc76-47f0-a04f8a60830d"
+            },
+            "effectiveDateTime": "2022-01-04T15:28:17-05:00",
+            "dosage": {
+              "dose": {
+                "value": 1
+              }
+            }
+          },
+          {
+            "resourceType": "MedicationAdministration",
+            "id": "7ef24f94-9148-aa29-8ed9-005693571001",
+            "meta": {
+              "versionId": "1",
+              "lastUpdated": "2022-07-11T21:18:10.281+00:00",
+              "source": "#a401930cf06cd295"
+            },
+            "status": "completed",
+            "medicationCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "1157460",
+                  "display": "insulin lispro / insulin lispro protamine, human Injectable Product"
+                }
+              ],
+              "text": "insulin lispro / insulin lispro protamine, human Injectable Product"
+            },
+            "subject": {
+              "reference": "Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906"
+            },
+            "context": {
+              "reference": "Encounter/ade6f2a4-3ce5-030d-d495-28c1c48fbdb1"
+            },
+            "effectiveDateTime": "2022-01-04T20:19:17-05:00",
+            "dosage": {
+              "dose": {
+                "value": 1
+              }
+            }
           }
         ],
         "extension": [
@@ -40,7 +218,7 @@
                   "valueString": "sde-medication-administration"
                 }
               ],
-              "reference": "MedicationAdministration/d2f3c47c-da31-d748-9a83-e006d0f67a8b"
+              "reference": "#d2f3c47c-da31-d748-9a83-e006d0f67a8b"
             }
           },
           {
@@ -52,7 +230,7 @@
                   "valueString": "sde-medication-administration"
                 }
               ],
-              "reference": "MedicationAdministration/7ef24f94-9148-aa29-8ed9-005693571001"
+              "reference": "#7ef24f94-9148-aa29-8ed9-005693571001"
             }
           },
           {
@@ -68,7 +246,7 @@
                   "valueString": "sde-minimal-medication-requests"
                 }
               ],
-              "reference": "MedicationRequest/075add36-e219-2327-d31b-75c5f5f12b85"
+              "reference": "#075add36-e219-2327-d31b-75c5f5f12b85"
             }
           },
           {
@@ -84,7 +262,7 @@
                   "valueString": "sde-minimal-medication-requests"
                 }
               ],
-              "reference": "MedicationRequest/04760a73-a327-05b6-9b56-344854451f60"
+              "reference": "#04760a73-a327-05b6-9b56-344854451f60"
             }
           },
           {

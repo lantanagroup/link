@@ -422,8 +422,11 @@ public class ReportController extends BaseController {
       throw new IllegalStateException("Not configured for sending");
 
     DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+    List<MeasureReport> reports = documentReference.getIdentifier().stream()
+            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(reportId, identifier))
+            .map(id -> this.getFhirDataProvider().getMeasureReportById(id))
+            .collect(Collectors.toList());
 
-    MeasureReport report = this.getFhirDataProvider().getMeasureReportById(reportId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
@@ -432,9 +435,9 @@ public class ReportController extends BaseController {
     documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
-    sender.send(report, documentReference, request, authentication, this.getFhirDataProvider(),
-            this.bundlerConfig.getSendWholeBundle() != null ? this.bundlerConfig.getSendWholeBundle() : true,
-            this.bundlerConfig.isRemoveGeneratedObservations());
+    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(),
+            this.bundlerConfig.isSendWholeBundle(),
+            this.bundlerConfig.isRemoveContainedResources());
 
     // Now that we've submitted (successfully), update the doc ref with the status and date
     this.getFhirDataProvider().updateResource(documentReference);

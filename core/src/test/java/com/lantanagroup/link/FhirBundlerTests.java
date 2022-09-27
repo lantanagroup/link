@@ -9,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -19,9 +20,8 @@ public class FhirBundlerTests {
   }
 
   /**
-   * Tests that a patient who is in the initial-population produces a bundle that includes all of the resources
-   * from the patient data bundle that are referenced in the patient measure report's "extension-supplementalData"
-   * extensions.
+   * Tests that a patient who is in the initial-population produces a bundle that includes contained resources
+   * that are referenced in the patient measure report's "extension-supplementalData" extensions.
    */
   @Test
   public void testBundleReferences() {
@@ -29,21 +29,17 @@ public class FhirBundlerTests {
 
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
     Bundle patientMeasureReports = this.deserializeResource("patient-mr-bundle1.json", Bundle.class);
-    Bundle patientDataBundle = this.deserializeResource("patient-data-bundle1.json", Bundle.class);
 
     // Mock up the transaction request to the FHIR server
     when(fhirDataProvider.transaction(any())).thenReturn(patientMeasureReports);
-    // Mock up the GET Bundle/XXX-YYY request to the FHIR server
-    when(fhirDataProvider.getResourceByTypeAndId("Bundle", "1847296829-8d99279b")).thenReturn(patientDataBundle);
 
     FhirBundler bundler = new FhirBundler(fhirDataProvider);
 
     // Generate the bundle
-    Bundle bundle = bundler.generateBundle(true, true, masterMeasureReport, null);
+    Bundle bundle = bundler.generateBundle(true, true, List.of(masterMeasureReport), null);
 
     // Ensure that transaction and getResourceByTypeAndId were called the expected number of times
     verify(fhirDataProvider, times(1)).transaction(any());
-    verify(fhirDataProvider, times(1)).getResourceByTypeAndId("Bundle", "1847296829-8d99279b");
 
     // Ensure that the returned bundle meets minimum expectations for having included the patient data we expected
     Assert.assertNotNull(bundle);
@@ -81,6 +77,6 @@ public class FhirBundlerTests {
   @Ignore()
   @Test()
   public void testMultiplePatients() {
-
+    // TODO
   }
 }

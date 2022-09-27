@@ -16,12 +16,12 @@ import org.springframework.validation.annotation.Validated;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class BundlerConfig {
   /**
-   * <strong>api.send-whole-bundle</strong><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
+   * <strong>bundler.send-whole-bundle</strong><br>Whether to include patient data in the submission bundle
    */
-  private Boolean sendWholeBundle;
+  private boolean sendWholeBundle = true;
 
   /**
-   * <strong>api.remove-generated-observations</strong><br>Whether to remove contained evaluated resources from patient measure reports
+   * <strong>bundler.remove-contained-resources</strong><br>Whether to remove contained resources from patient measure reports
    */
-  private boolean removeGeneratedObservations = true;
+  private boolean removeContainedResources = true;
 }

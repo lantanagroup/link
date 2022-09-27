@@ -45,7 +45,7 @@ thsa:
   dataMeasureReportId: inventorydata
 bundler:
   send-whole-bundle: true
-  remove-generated-observations: true
+  remove-contained-resources: true
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
