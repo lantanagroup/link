@@ -2,6 +2,7 @@ package com.lantanagroup.link.config.datastore;
 
 import com.lantanagroup.link.config.DataSourceConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import com.lantanagroup.link.config.api.CorsConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -41,4 +42,10 @@ public class DataStoreConfig {
    */
   @Getter
   private String publicAddress;
+
+  /**
+   * <strong>datastore.cors</strong><br>CORS configuration used for browser interaction with the Data Store
+   */
+  @Getter
+  private CorsConfig cors;
 }

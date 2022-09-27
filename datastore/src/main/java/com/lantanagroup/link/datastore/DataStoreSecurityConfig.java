@@ -12,6 +12,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 /**
  * Sets the security for the datastore component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
@@ -40,7 +43,15 @@ public class DataStoreSecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .csrf().disable()
-            .cors().and()
+            .cors().configurationSource(request -> {
+                      var cors = new CorsConfiguration();
+                      cors.setAllowedOrigins(List.of(config.getCors().getAllowedOrigins()));
+                      cors.setAllowedMethods(List.of(config.getCors().getAllowedMethods()));
+                      cors.setAllowedHeaders(List.of(config.getCors().getAllowedHeaders()));
+                      cors.setAllowCredentials(config.getCors().getAllowedCredentials());
+                      return cors;
+                    })
+            .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
             .permitAll()

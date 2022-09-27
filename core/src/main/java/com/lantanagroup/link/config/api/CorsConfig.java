@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class ApiCorsConfig {
+public class CorsConfig {
   /**
    * <strong>api.cors.allowed-origins</strong><br>Space-separated list of allowed origins. Asterisk is allowed.
    */

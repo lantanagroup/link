@@ -117,7 +117,7 @@ public class ApiConfig {
    * <strong>api.cors</strong><br>CORS configuration used for browser interaction with the API
    */
   @Getter
-  private ApiCorsConfig cors;
+  private CorsConfig cors;
 
   /**
    * <strong>api.report-defs</strong><br>Configuration for measures supported by the system
