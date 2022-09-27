@@ -300,8 +300,8 @@ public class ReportControllerTests {
     when(fhirDataProvider.getMeasureReport(eq("the-measure"), any(Parameters.class))).thenReturn(measureReport);
 
     ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
-    Assert.assertEquals(4, model.getMeasureReport().getEvaluatedResource().size());
-    Assert.assertEquals(2, model.getMeasureReport().getExtension().size());
+    Assert.assertEquals(4, model.getReportMeasureList().get(0).getMeasureReport().getEvaluatedResource().size());
+    Assert.assertEquals(2, model.getReportMeasureList().get(0).getMeasureReport().getExtension().size());
   }
 
 
