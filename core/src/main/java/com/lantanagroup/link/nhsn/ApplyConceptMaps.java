@@ -1,9 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -114,7 +112,8 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
       for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
         // logger.info("Patient is: " + patientOfInterest.getId());
         if(!StringUtils.isEmpty(patientOfInterest.getId())){
-          IBaseResource patientBundle = fhirDataProvider.getBundleById(context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode());
+          String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
+          IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
           applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
             List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
             codes.stream().forEach(code -> {

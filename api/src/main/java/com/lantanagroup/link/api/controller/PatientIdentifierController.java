@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -252,11 +253,7 @@ public class PatientIdentifierController extends BaseController {
 
   private ListResource getListResource(String reportTypeId, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
-    List<Identifier> identifierList = new ArrayList<>();
-    identifierList.add(new Identifier());
-    identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
-    identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
-    list.setIdentifier(identifierList);
+    list.addIdentifier(IdentifierHelper.fromString(reportTypeId));
     List<Extension> applicablePeriodExtensionUrl = new ArrayList<>();
     applicablePeriodExtensionUrl.add(new Extension(Constants.ApplicablePeriodExtensionUrl));
     applicablePeriodExtensionUrl.get(0).setValue(csvList.get(0).getPeriod());
@@ -268,9 +265,7 @@ public class PatientIdentifierController extends BaseController {
       if (csvEntry.getPatientLogicalID() != null && !csvEntry.getPatientLogicalID().isBlank()) {
         reference.setReference("Patient/" + csvEntry.getPatientLogicalID());
       }
-      reference.setIdentifier(new Identifier());
-      reference.getIdentifier().setSystemElement(new UriType(csvEntry.getPatientIdentifier().substring(0, csvEntry.getPatientIdentifier().indexOf("|"))));
-      reference.getIdentifier().setValueElement(new StringType(csvEntry.getPatientIdentifier().substring(csvEntry.getPatientIdentifier().indexOf("|") + 1)));
+      reference.setIdentifier(IdentifierHelper.fromString(csvEntry.getPatientIdentifier()));
       listEntry.setItem(reference);
 
       list.addEntry(listEntry);

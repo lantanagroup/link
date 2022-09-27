@@ -90,7 +90,6 @@ public class ReportController extends BaseController {
 
       // Update the context
       ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
-      // measureContext.setReportDefIdentifier(reportDefBundle.getIdentifier().getSystem() + "|" + reportDefBundle.getIdentifier().getValue());
       measureContext.setReportDefBundle(reportDefBundle);
       measureContext.setBundleId(reportDefBundle.getIdElement().getIdPart());
       Measure measure = reportDefBundle.getEntry().stream()
@@ -114,8 +113,9 @@ public class ReportController extends BaseController {
       patientOfInterestModelList = new ArrayList<>();
       for (ListResource censusList : context.getPatientCensusLists()) {
         for (ListResource.ListEntryComponent censusPatient : censusList.getEntry()) {
-          PatientOfInterestModel patient = new PatientOfInterestModel(censusPatient.getItem().getReference(),
-                  censusPatient.getItem().getIdentifier().getSystem() + "|" + censusPatient.getItem().getIdentifier().getValue());
+          PatientOfInterestModel patient = new PatientOfInterestModel(
+                  censusPatient.getItem().getReference(),
+                  IdentifierHelper.toString(censusPatient.getItem().getIdentifier()));
           patientOfInterestModelList.add(patient);
         }
       }
@@ -225,7 +225,7 @@ public class ReportController extends BaseController {
 
     eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
-    String masterIdentifierValue = IdentifiersHelper.getMasterIdentifierValue(criteria);
+    String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
     // Search the reference document by measure criteria nd reporting period
     // searching by combination of identifiers could return multiple documents
@@ -292,7 +292,7 @@ public class ReportController extends BaseController {
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
-      measureContext.setReportId(IdentifiersHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getReportDefBundle().getIdentifier()));
+      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getReportDefBundle().getIdentifier()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
@@ -482,7 +482,7 @@ public class ReportController extends BaseController {
       } catch (Exception ex) {
         logger.error(ex.getMessage());
       }
-      String masterReportId = IdentifiersHelper.getMasterMeasureReportId(reportId[i]);
+      String masterReportId = ReportIdHelper.getMasterIdentifierValue(reportId[i]);
       DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
       FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
@@ -872,9 +872,8 @@ public class ReportController extends BaseController {
     }
 
     // Create ReportCriteria to be used by MeasureEvaluator
-    String reportDefIdentifier = measure.getIdentifier().get(0).getSystem() + "|" + measure.getIdentifier().get(0).getValue();
     ReportCriteria criteria = new ReportCriteria(
-            List.of(reportDefIdentifier),
+            List.of(IdentifierHelper.toString(measure.getIdentifierFirstRep())),
             reportDocRef.getContext().getPeriod().getStartElement().asStringValue(),
             reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
 
@@ -947,6 +946,7 @@ public class ReportController extends BaseController {
    * @param patientId if searching for a specific patient's data by patientId
    * @return a list of bundles containing data for each patient
    */
+  // TODO: Update for multi-measure
   private List<Bundle> getPatientBundles(DocumentReference docRef, String patientId) {
     List<Bundle> patientBundles = new ArrayList<>();
     String masterReportId = docRef.getMasterIdentifier().getValue();

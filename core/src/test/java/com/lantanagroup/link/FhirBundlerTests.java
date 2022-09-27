@@ -34,7 +34,7 @@ public class FhirBundlerTests {
     // Mock up the transaction request to the FHIR server
     when(fhirDataProvider.transaction(any())).thenReturn(patientMeasureReports);
     // Mock up the GET Bundle/XXX-YYY request to the FHIR server
-    when(fhirDataProvider.getResourceByTypeAndId("Bundle", "1847296829--1919342693")).thenReturn(patientDataBundle);
+    when(fhirDataProvider.getResourceByTypeAndId("Bundle", "1847296829-8d99279b")).thenReturn(patientDataBundle);
 
     FhirBundler bundler = new FhirBundler(fhirDataProvider);
 
@@ -43,7 +43,7 @@ public class FhirBundlerTests {
 
     // Ensure that transaction and getResourceByTypeAndId were called the expected number of times
     verify(fhirDataProvider, times(1)).transaction(any());
-    verify(fhirDataProvider, times(1)).getResourceByTypeAndId("Bundle", "1847296829--1919342693");
+    verify(fhirDataProvider, times(1)).getResourceByTypeAndId("Bundle", "1847296829-8d99279b");
 
     // Ensure that the returned bundle meets minimum expectations for having included the patient data we expected
     Assert.assertNotNull(bundle);
@@ -53,7 +53,7 @@ public class FhirBundlerTests {
     Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(0).getResource().getResourceType());
     Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829", bundle.getEntry().get(0).getFullUrl());
     Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(1).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829--1919342693", bundle.getEntry().get(1).getFullUrl());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829-8d99279b", bundle.getEntry().get(1).getFullUrl());
     Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(2).getResource().getResourceType());
     Assert.assertEquals("http://nhsnlink.org/fhir/MedicationAdministration/d2f3c47c-da31-d748-9a83-e006d0f67a8b", bundle.getEntry().get(2).getFullUrl());
     Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(3).getResource().getResourceType());

@@ -2,6 +2,7 @@ package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -79,14 +80,15 @@ public class QueryCommand extends BaseShellCommand {
       }
 
       logger.info("Executing query");
-      String masterReportid = "1847296839";
+      String masterReportid = "1847296839";  // TODO: Why is this hard-coded?
       query.execute(patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
       FhirDataProvider fhirDataProvider = this.applicationContext.getBean(FhirDataProvider.class);
 
       for (int i = 0; i < patientsOfInterest.size(); i++) {
         logger.info("Patient is: " + patientsOfInterest.get(i).getId());
         try {
-          IBaseResource patientBundle = fhirDataProvider.getBundleById(masterReportid + "-" + patientsOfInterest.get(i).getId().hashCode());
+          String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(masterReportid, patientsOfInterest.get(i).getId());
+          IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
           String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString((Bundle) patientBundle);
           if (Strings.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";

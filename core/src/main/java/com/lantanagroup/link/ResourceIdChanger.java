@@ -131,7 +131,7 @@ public class ResourceIdChanger {
   private String getNewId(String rId) {
     String newId = rId.replace(Constants.UuidPrefix, "");
     if (newId.length() > 64) {
-      newId = "HASH" + String.valueOf(newId.hashCode());
+      newId = "hash-" + Integer.toHexString(newId.hashCode());
     }
     return newId;
   }

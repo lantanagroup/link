@@ -1,9 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -25,7 +23,8 @@ public class EncounterStatusTransformer implements IReportGenerationEvent {
     for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
       logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
       try {
-        Bundle patientBundle = fhirDataProvider.getBundleById(context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode());
+        String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
+        Bundle patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
         for(Bundle.BundleEntryComponent patientResource : patientBundle.getEntry()) {
           if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
             logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");

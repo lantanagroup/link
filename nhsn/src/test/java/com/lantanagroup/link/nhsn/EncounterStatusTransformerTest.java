@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -66,7 +67,7 @@ public class EncounterStatusTransformerTest {
     patientsOfInterest.add(patientOfInterest);
     context.setPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue(reportID);
-    String bundleId = context.getMasterIdentifierValue() + "-" + patientOfInterest.getId().hashCode();
+    String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
     when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
     encounterStatusTransformer.execute(reportCriteria, context);

@@ -21,10 +21,11 @@ public class FhirBundler {
 
   private List<DomainResource> getPatientResources(String reportId, MeasureReport patientMeasureReport) {
     String patientId = patientMeasureReport.getSubject().getReference().replace("Patient/", "");
-    Bundle patientDataBundle = (Bundle) this.fhirDataProvider.getResourceByTypeAndId("Bundle", reportId + "-" + patientId.hashCode());
+    String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportId, patientId);
+    Bundle patientDataBundle = (Bundle) this.fhirDataProvider.getResourceByTypeAndId("Bundle", patientDataBundleId);
 
     if (patientDataBundle == null) {
-      logger.error(String.format("Did not find patient data bundle Bundle/%s-%s", reportId, patientId.hashCode()));
+      logger.error(String.format("Did not find patient data bundle Bundle/%s", patientDataBundleId));
       return new ArrayList<>();
     }
 
