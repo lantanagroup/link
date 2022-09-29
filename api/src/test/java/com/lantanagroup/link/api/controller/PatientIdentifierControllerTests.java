@@ -196,7 +196,6 @@ public class PatientIdentifierControllerTests {
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
     thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
-    //  verify(fhirDataProvider, times(1)).createResource(any());
   }
 
   @Test
