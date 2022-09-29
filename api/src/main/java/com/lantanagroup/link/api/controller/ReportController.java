@@ -92,11 +92,7 @@ public class ReportController extends BaseController {
       ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
       measureContext.setReportDefBundle(reportDefBundle);
       measureContext.setBundleId(reportDefBundle.getIdElement().getIdPart());
-      Measure measure = reportDefBundle.getEntry().stream()
-              .filter(entry -> entry.getResource() instanceof Measure)
-              .map(entry -> (Measure) entry.getResource())
-              .findFirst()
-              .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+      Measure measure = FhirHelper.getMeasure(reportDefBundle);
       measureContext.setMeasure(measure);
       context.getMeasureContexts().add(measureContext);
     }
@@ -288,11 +284,13 @@ public class ReportController extends BaseController {
 
     eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
+    response.setReportId(reportContext.getMasterIdentifierValue());
+
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
-      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getReportDefBundle().getIdentifier()));
+      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
@@ -312,7 +310,6 @@ public class ReportController extends BaseController {
 
       eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
 
-      response.getReportIds().add(measureContext.getReportId());
     }
 
     DocumentReference documentReference = this.generateDocumentReference(criteria, reportContext);
@@ -352,9 +349,8 @@ public class ReportController extends BaseController {
 
     documentReference.setMasterIdentifier(identifier);
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      documentReference.addIdentifier(measureContext.getReportDefBundle().getIdentifier());
+      documentReference.addIdentifier().setSystem(Constants.MainSystem).setValue(measureContext.getBundleId());
     }
-
 
     documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
 
@@ -421,9 +417,11 @@ public class ReportController extends BaseController {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new IllegalStateException("Not configured for sending");
 
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+    String masterIndentifierValue = ReportIdHelper.getMasterIdentifierValue(reportId);
+
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterIndentifierValue);
     List<MeasureReport> reports = documentReference.getIdentifier().stream()
-            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(reportId, identifier))
+            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(masterIndentifierValue, identifier.getValue()))
             .map(id -> this.getFhirDataProvider().getMeasureReportById(id))
             .collect(Collectors.toList());
 
@@ -435,8 +433,7 @@ public class ReportController extends BaseController {
     documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
-    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(),
-            this.bundlerConfig.isSendWholeBundle(),
+    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(), this.bundlerConfig.isSendWholeBundle(),
             this.bundlerConfig.isRemoveContainedResources());
 
     // Now that we've submitted (successfully), update the doc ref with the status and date
@@ -472,26 +469,26 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/{reportId}")
   public ReportModel getReport(
-          @PathVariable("reportId") String[] reportId) {
+          @PathVariable("reportId") String reportId) throws Exception {
 
     ReportModel reportModel = new ReportModel();
     List<ReportModel.ReportMeasure> reportModelList = new ArrayList<>();
     reportModel.setReportMeasureList(reportModelList);
-    for (int i = 0; i < reportId.length; i++) {
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
+
+    for (int i = 0; i < documentReference.getIdentifier().size(); i++) {
       String encodedReport = "";
       //prevent injection from reportId parameter
       try {
-        encodedReport = Helper.encodeForUrl(reportId[i]);
+        encodedReport = Helper.encodeForUrl(ReportIdHelper.getMasterMeasureReportId(reportId, documentReference.getIdentifier().get(i).getValue()));
       } catch (Exception ex) {
         logger.error(ex.getMessage());
       }
-      String masterReportId = ReportIdHelper.getMasterIdentifierValue(reportId[i]);
-      DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
-      FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-      Measure measure = evaluationDataProvider.findMeasureByIdentifier(documentReference.getIdentifier().get(i));
-      Bundle bundle = this.getFhirDataProvider().findBundleByIdentifier(documentReference.getIdentifier().get(i).getSystem(), documentReference.getIdentifier().get(i).getValue());
 
+      Bundle bundle = this.getFhirDataProvider().getBundleById(documentReference.getIdentifier().get(i).getValue());
+      Measure measure = FhirHelper.getMeasure(bundle);
       ReportModel.ReportMeasure reportMeasure = new ReportModel.ReportMeasure();
+      // get Master Measure Report
       reportMeasure.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
       reportMeasure.setBundleId(bundle.getIdElement().getIdPart());
       reportMeasure.setMeasure(measure);
@@ -504,6 +501,7 @@ public class ReportController extends BaseController {
     }
     return reportModel;
   }
+
 
   @GetMapping(value = "/{reportId}/patient")
   public List<PatientReportModel> getReportPatients(

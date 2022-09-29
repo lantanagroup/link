@@ -588,6 +588,15 @@ public class FhirHelper {
   }
 
 
+  public static Measure getMeasure(Bundle reportDefBundle) throws Exception {
+    return reportDefBundle.getEntry().stream()
+            .filter(entry -> entry.getResource() instanceof Measure)
+            .map(entry -> (Measure) entry.getResource())
+            .findFirst()
+            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+  }
+
+
   public enum AuditEventTypes {
     Generate,
     ExcludePatients,

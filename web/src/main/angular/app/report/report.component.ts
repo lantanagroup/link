@@ -178,7 +178,7 @@ export class ReportComponent implements OnInit, OnDestroy {
           'Fields not calculated as part of the measure will not be affected. Are you sure you want to continue?')) {
         try {
           const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
-          await this.router.navigate(['review', generateResponse.reportIds + ""]);
+          await this.router.navigate(['review', generateResponse.reportId]);
           this.toastService.showInfo('Report re-generated!');
           await this.initReport();
         } catch (ex) {
@@ -186,7 +186,7 @@ export class ReportComponent implements OnInit, OnDestroy {
             if (confirm(ex.error.message)) {
               try {
                 const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
-                await this.router.navigate(['review', generateResponse.reportIds + ""]);
+                await this.router.navigate(['review', generateResponse.reportId]);
               } catch (ex) {
                 this.toastService.showException('Error re-generating report', ex);
               }

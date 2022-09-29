@@ -1,3 +1,3 @@
 export interface GenerateResponse {
-  reportIds: string[];
+  reportId: string;
 }
