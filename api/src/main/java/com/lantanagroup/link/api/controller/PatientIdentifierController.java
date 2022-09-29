@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.model.CsvEntry;
@@ -90,7 +91,8 @@ public class PatientIdentifierController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
-    Measure measure = this.getFhirDataProvider().findMeasureByIdentifier(measureIdentifier);
+    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    Measure measure = evaluationDataProvider.findMeasureByIdentifier(measureIdentifier);
     if (measure == null) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
       logger.error(msg);
