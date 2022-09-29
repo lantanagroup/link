@@ -1,8 +1,8 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.model.CsvEntry;
@@ -83,12 +83,18 @@ public class PatientIdentifierController extends BaseController {
     this.receiveFHIR(list);
   }
 
+
   private void checkMeasureIdentifier(ListResource list) {
-    String system = list.getIdentifier().get(0).getSystem();
-    String value = list.getIdentifier().get(0).getValue();
-    Bundle bundle = this.getFhirDataProvider().searchReportDefinition(system, value);
-    if(bundle.getEntry().size() < 1) {
-      String msg = String.format("Measure %s (%s) not found on data store", value, system);
+    if (list.getIdentifier().size() < 1) {
+      String msg = "Census list should have an identifier.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    Identifier measureIdentifier = list.getIdentifier().get(0);
+    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    Measure measure = evaluationDataProvider.findMeasureByIdentifier(measureIdentifier);
+    if (measure == null) {
+      String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }

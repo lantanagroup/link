@@ -32,9 +32,9 @@ public class StoredListProvider implements IPatientIdProvider {
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      Identifier reportDefIdentifier = measureContext.getReportDefBundle().getIdentifier();
-      String system = reportDefIdentifier.getSystem();
-      String value = reportDefIdentifier.getValue();
+      Identifier measureIdentifier = measureContext.getMeasure().getIdentifier().get(0);
+      String system = measureIdentifier.getSystem();
+      String value = measureIdentifier.getValue();
 
       logger.info("Searching for patient census lists with identifier {}|{} and applicable period {}-{}", system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
       Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());

@@ -16,7 +16,6 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.Meta;
 import org.slf4j.Logger;
@@ -147,26 +146,24 @@ public class ApiInit {
               "Report def contains data requirements that are not configured for querying: %s",
               String.join(", ", missingResourceTypes)));
     }
-    Measure measure = remoteBundle.getEntry().stream()
-            .filter(entry -> entry.getResource() instanceof Measure)
-            .map(entry -> (Measure) entry.getResource())
-            .findFirst()
-            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+
 
     // Store to terminology service
     logger.debug("Storing to terminology service");
     Bundle evaluationBundle = FhirHelper.storeTerminologyAndReturnOther(remoteBundle, config);
 
-    // Set ID, meta, and identifiers
+    // Set ID, meta
     String bundleId = urlConfig.getBundleId();
     evaluationBundle.setId(bundleId);
     evaluationBundle.setMeta(localBundle != null
             ? localBundle.getMeta()
             : new Meta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null));
-    Identifier identifier = measure.hasIdentifier()
-            ? measure.getIdentifierFirstRep()
-            : measure.addIdentifier().setSystem(Constants.MainSystem).setValue(bundleId);
-    evaluationBundle.setIdentifier(identifier);
+
+    Measure measure = FhirHelper.getMeasure(remoteBundle);
+    if (!measure.hasIdentifier()) {
+      logger.error(String.format("Measure : %s does not have an identifier.", measure.getId()));
+      measure.addIdentifier().setSystem(Constants.MainSystem).setValue(bundleId);
+    }
 
     // Store to evaluation service and internal data store
     logger.debug("Storing to evaluation service");
@@ -182,7 +179,7 @@ public class ApiInit {
       FhirContext ctx = FhirContextProvider.getFhirContext();
       IParser xmlParser = ctx.newXmlParser();
       for (final Resource res : resources) {
-        try(InputStream inputStream = res.getInputStream();) {
+        try (InputStream inputStream = res.getInputStream();) {
           IBaseResource resource = readFileAsFhirResource(xmlParser, inputStream);
           provider.updateResource(resource);
         }
@@ -228,7 +225,7 @@ public class ApiInit {
       return;
     }
 
-    if(this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()){
+    if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
       this.ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
       logger.info("Setting client to never query for metadata");
     }
