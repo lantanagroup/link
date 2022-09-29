@@ -417,11 +417,9 @@ public class ReportController extends BaseController {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new IllegalStateException("Not configured for sending");
 
-    String masterIndentifierValue = ReportIdHelper.getMasterIdentifierValue(reportId);
-
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterIndentifierValue);
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
     List<MeasureReport> reports = documentReference.getIdentifier().stream()
-            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(masterIndentifierValue, identifier.getValue()))
+            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(reportId, identifier.getValue()))
             .map(id -> this.getFhirDataProvider().getMeasureReportById(id))
             .collect(Collectors.toList());
 
