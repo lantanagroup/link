@@ -155,7 +155,7 @@ public class GenerateAndSubmitCommand {
       // send POST request
       ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);
 
-      String reportId = response.getBody() != null ? (String) response.getBody().getReportIds().get(0) : null;
+      String reportId = response.getBody() != null ? response.getBody().getReportId() : null;
       if (reportId == null) {
         logger.error("Error generating report. Please contact the system administrator.");
         client.close();
