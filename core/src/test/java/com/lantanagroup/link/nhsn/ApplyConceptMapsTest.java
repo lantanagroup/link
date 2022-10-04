@@ -1,5 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
+import ca.uhn.fhir.util.BundleUtil;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -108,9 +110,9 @@ public class ApplyConceptMapsTest {
     Mockito.when(fhirDataProviderMock.getBundleById(any())).thenReturn(patientBundle);
     List<Coding> codes = new ArrayList<>();
     codes.add(getLocation().getType().get(0).getCoding().get(0));
-    Mockito.doReturn(codes).when(applyConceptMaps).findCodings(any(), any());
+    Mockito.doReturn(codes).when(applyConceptMaps).filterCodingsByPathList(any(), any());
 
-    applyConceptMaps.execute(reportCriteria, context);
+    applyConceptMaps.execute(patientBundle);
 
     List<Coding> codes2 = ResourceIdChanger.findCodings(patientBundle);
     Coding changedCoding = codes.get(0);
@@ -133,13 +135,13 @@ public class ApplyConceptMapsTest {
     ConceptMap conceptMap = getConceptMap();
     Mockito.when(fhirDataProviderMock.getResourceByTypeAndId(any(), any())).thenReturn(conceptMap);
     Mockito.when(fhirDataProviderMock.getBundleById(any())).thenReturn(getPatienBundle());
-    List<Coding> list = applyConceptMaps.findCodings(pathList, getPatienBundle());
+    List<Coding> list = applyConceptMaps.filterCodingsByPathList((DomainResource)getPatienBundle().getEntry().get(0).getResource(), pathList);
 
     Assert.assertEquals(list.get(0).getCode(), "some-type");
   }
 
   @Test
-  public void testApplyMap() {
+  public void testApplyTransformation() {
 
     FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
 
@@ -150,7 +152,7 @@ public class ApplyConceptMapsTest {
     pathList.add("Location.type");
 
     Coding coding = getLocation().getType().get(0).getCoding().get(0);
-    applyConceptMaps.applyMap(getConceptMap(), coding);
+    applyConceptMaps.applyTransformation(getConceptMap(), List.of(coding));
 
     Assert.assertEquals(coding.getCode(), "1027-2");
     Assert.assertEquals(coding.getExtension().size(), 1);

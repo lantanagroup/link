@@ -1,10 +1,8 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.*;
+import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.ReportContext;
-import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.*;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -24,10 +22,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
-public class ApplyConceptMaps implements IReportGenerationEvent {
+public class ApplyConceptMaps implements IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
-  Map<String, ConceptMap> conceptMapMap = new HashMap<>();
+  Map<String, ConceptMap> conceptMaps = new HashMap<>();
 
   @Autowired
   @Setter
@@ -37,27 +35,31 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
   @Setter
   private FhirDataProvider fhirDataProvider;
 
-
   private Map<String, ConceptMap> getConceptMaps(FhirDataProvider fhirDataProvider) {
     if (applyConceptMapConfig != null && applyConceptMapConfig.getConceptMaps() != null) {
-      // get it from fhirserver
       applyConceptMapConfig.getConceptMaps().stream().forEach(concepMap -> {
         try {
           IBaseResource conceptMap = fhirDataProvider.getResourceByTypeAndId("ConceptMap", concepMap.getConceptMapId());
-          conceptMapMap.put(concepMap.getConceptMapId(), (ConceptMap) conceptMap);
+          conceptMaps.put(concepMap.getConceptMapId(), (ConceptMap) conceptMap);
         } catch (Exception ex) {
           logger.error(String.format("ConceptMap %s not found", concepMap.getConceptMapId()));
         }
       });
     }
-    return conceptMapMap;
+    return conceptMaps;
   }
 
-  public void applyMap(ConceptMap map, Coding code) {
+  private FHIRPathEngine getFhirPathEngine() {
+    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), new DefaultProfileValidationSupport());
+    return new FHIRPathEngine(workerContext);
+  }
+
+
+  private void translateCoding(ConceptMap map, Coding code) {
     map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
       if (group.getSource().equals(code.getSystem())) {
         List<ConceptMap.SourceElementComponent> elements = group.getElement().stream().filter(elem -> elem.getCode().equals(code.getCode())).collect(Collectors.toList());
-        if(elements.size() > 0){
+        if (elements.size() > 0) {
           // preserve original code
           Extension originalCode = new Extension();
           originalCode.setUrl(Constants.ConceptMappingExtension);
@@ -71,59 +73,81 @@ public class ApplyConceptMaps implements IReportGenerationEvent {
     });
   }
 
-  private void addCode(ArrayList codes, List<Base> results, int i) {
-    if (results.get(i) instanceof CodeableConcept) {
-      CodeableConcept cc = (CodeableConcept) results.get(i);
-      codes.add(cc.getCoding().get(0));
-    } else if (results.get(i) instanceof Coding) {
-      Coding cc = (Coding) results.get(i);
-      codes.add(cc);
-    } else if (results.get(i) instanceof CodeType) {
-      CodeType c = (CodeType) results.get(i);
-      CodeableConcept cc = new CodeableConcept();
-      cc.addCoding().setCode(c.asStringValue());
-      codes.add(cc.getCoding().get(0));
+  private void displayTransformation(Resource resource, List<Coding> codingList) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("Transformation for resource:  " + resource.getResourceType() + "/" + resource.getIdElement().getIdPart());
+    String message = codingList.stream().map(coding -> "From : " + ((Coding) coding.getExtension().get(0).getValue()).getSystem() + ":" + ((Coding) coding.getExtension().get(0).getValue()).getCode() +
+            " To: " + coding.getSystem() + ":" + coding.getCode()).collect(Collectors.joining("\n"));
+    builder.append(message);
+    if (!StringUtils.isBlank(builder.toString())) {
+      logger.info(builder.toString());
     }
   }
 
-  public List<Coding> findCodings(List<String> pathList, Bundle patientBundle) {
-    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), new DefaultProfileValidationSupport());
-    FHIRPathEngine fhirPathEngine = new FHIRPathEngine(workerContext);
-
-    ArrayList codes = new ArrayList();
-    for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
-      Resource resource = entry.getResource();
-      for (int j = 0; j < pathList.size(); j++) {
-        List<Base> results = fhirPathEngine.evaluate(resource, pathList.get(j));
-        if (results.isEmpty()) continue;
-        for (int i = 0; i < results.size(); i++) {
-          addCode(codes, results, i);
-        }
+  /* TO-DO
+     Move them to a resource filter
+   */
+  public List<Coding> filterCodingsByPathList(DomainResource resource, List<String> pathList) {
+    List<Base> resources = filterResourcesByPathList(resource, pathList);
+    List codingList = new ArrayList();
+    for (Base element : resources) {
+      if (element instanceof CodeableConcept) {
+        codingList.add(((CodeableConcept) element).getCoding().get(0));
+      } else if (element instanceof Coding) {
+        codingList.add(element);
+      } else if (element instanceof CodeType) {
+        CodeableConcept cc = new CodeableConcept();
+        cc.addCoding().setCode(((CodeType) element).asStringValue());
+        codingList.add(cc.getCoding().get(0));
       }
     }
-    return codes;
+    return codingList;
   }
 
-  public void execute(ReportCriteria reportCriteria, ReportContext context) {
+  /* TO-DO
+     Move them to a resource filter
+   */
+  public List<Base> filterResourcesByPathList(DomainResource resource, List<String> pathList) {
+    List<Base> results = new ArrayList<>();
+    logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
+    pathList.stream().forEach(path -> {
+      results.addAll(getFhirPathEngine().evaluate(resource, path));
+    });
+    return results;
+  }
+
+  public List<Coding> applyTransformation(ConceptMap conceptMap, List<Coding> codingList) {
+    List<Coding> changedCodes = new ArrayList();
+    codingList.stream().forEach(coding -> {
+      this.translateCoding(conceptMap, coding);
+      if (coding.getExtension() != null) {
+        changedCodes.add(coding);
+      }
+    });
+    return changedCodes;
+  }
+
+  public void execute(Bundle bundle) {
+    logger.info("Before applying transformation for bundle " + FhirContextProvider.getFhirContext().newXmlParser().setPrettyPrint(true).encodeResourceToString(bundle));
+    List<DomainResource> resourceList = BundleUtil.toListOfResourcesOfType(FhirContextProvider.getFhirContext(), bundle, DomainResource.class);
+    execute(resourceList);
+    logger.info("After applying transformation for bundle " + FhirContextProvider.getFhirContext().newXmlParser().setPrettyPrint(true).encodeResourceToString(bundle));
+  }
+
+  public void execute(List<DomainResource> resourceList) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
-
-    Map<String, ConceptMap> conceptMapsMap = getConceptMaps(fhirDataProvider);
-    if (!conceptMapsMap.isEmpty()) {
-      for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
-        // logger.info("Patient is: " + patientOfInterest.getId());
-        if(!StringUtils.isEmpty(patientOfInterest.getId())){
-          String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
-          IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
-          applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMap -> {
-            List<Coding> codes = this.findCodings(conceptMap.getFhirPathContexts(), (Bundle) patientBundle);
-            codes.stream().forEach(code -> {
-              this.applyMap(conceptMapsMap.get(conceptMap.getConceptMapId()), code);
-            });
-          });
-          fhirDataProvider.updateResource(patientBundle);
-        }
-      }
+    Map<String, ConceptMap> conceptMaps = getConceptMaps(fhirDataProvider);
+    if (!conceptMaps.isEmpty()) {
+      applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
+        ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());
+        resourceList.stream().forEach(resource -> {
+          List<Coding> codingList = filterCodingsByPathList(resource, conceptMapConfig.getFhirPathContexts());
+          applyTransformation(conceptMap, codingList);
+          if (!codingList.isEmpty()) {
+            displayTransformation(resource, codingList);
+          }
+        });
+      });
     }
   }
 }
-

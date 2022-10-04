@@ -4,7 +4,6 @@ import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
-import com.lantanagroup.link.api.EventController;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
@@ -56,7 +55,7 @@ public class ReportController extends BaseController {
 
   @Setter
   @Autowired
-  private EventController eventController;
+  private EventService eventService;
 
   @Autowired
   @Setter
@@ -64,6 +63,7 @@ public class ReportController extends BaseController {
 
   @Autowired
   private QueryConfig queryConfig;
+
   @Autowired
   private ApiInit apiInit;
 
@@ -214,12 +214,12 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    eventController.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
     this.resolveMeasures(criteria, reportContext);
 
-    eventController.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
@@ -251,17 +251,17 @@ public class ReportController extends BaseController {
       reportContext.setMasterIdentifierValue(masterIdentifierValue);
     } else {
       reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
-      eventController.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+      eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
 
-    eventController.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
     this.getPatientIdentifiers(criteria, reportContext);
 
-    eventController.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    eventController.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Get the resource types to query
     Set<String> resourceTypesToQuery = new HashSet<>();
@@ -282,7 +282,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventController.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
+    eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     response.setReportId(reportContext.getMasterIdentifierValue());
 
@@ -298,17 +298,17 @@ public class ReportController extends BaseController {
 
       ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
 
-      eventController.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
       generator.generate();
 
-      eventController.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+      eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
-      eventController.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
+      eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
 
       generator.store();
 
-      eventController.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+      eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
 
     }
 

@@ -1,11 +1,11 @@
-package com.lantanagroup.link.api;
+package com.lantanagroup.link;
 
-import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.IReportGenerationEvent;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -22,9 +22,9 @@ import java.util.List;
 
 
 @Component
-public class EventController {
+public class EventService {
 
-  private static final Logger logger = LoggerFactory.getLogger(EventController.class);
+  private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 
   @Autowired
   @Setter
@@ -35,12 +35,12 @@ public class EventController {
   private ApiConfigEvents apiConfigEvents;
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
-    Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
-    List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
-    List<Object> beans = getBeans(eventType, classNames);
+    List<Object> beans = getBeans(eventType);
     if (beans == null) return;
     for (Object bean : beans) {
-      ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+      if (bean instanceof IReportGenerationEvent) {
+        ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+      }
     }
   }
 
@@ -48,8 +48,20 @@ public class EventController {
     triggerEvent(eventType, criteria, context, null);
   }
 
-  public List<Object> getBeans(EventTypes eventType, List<String> classNames) {
+  public void triggerPatientEvent(EventTypes eventType, Bundle patientBundle) throws Exception {
+    List<Object> beans = getBeans(eventType);
+    if (beans == null) return;
+    for (Object bean : beans) {
+      if (bean instanceof IReportGenerationDataEvent) {
+        ((IReportGenerationDataEvent) bean).execute(patientBundle);
+      }
+    }
+  }
+
+  public List<Object> getBeans(EventTypes eventType) throws Exception{
     List<Class<?>> classes = new ArrayList();
+    Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
+    List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
     if (classNames == null) {
       logger.debug(String.format("No class set-up for event %s", eventType.toString()));
       return null;
