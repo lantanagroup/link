@@ -3,10 +3,8 @@ package com.lantanagroup.link.query.uscore.scoop;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.ReportIdHelper;
+import ca.uhn.fhir.util.BundleUtil;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -15,6 +13,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -43,6 +42,12 @@ public class PatientScoop extends Scoop {
 
   @Autowired
   protected FhirDataProvider fhirDataProvider;
+
+  @Setter
+  @Autowired
+  private EventService eventService;
+
+
 
   public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
@@ -105,6 +110,7 @@ public class PatientScoop extends Scoop {
           }
         }
 
+
         // TODO: Should we really be swallowing all exceptions here?
         //       And if so, do we need three separate catch blocks with nearly identical behavior?
       } catch (ResourceNotFoundException ex) {
@@ -128,9 +134,13 @@ public class PatientScoop extends Scoop {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureIds);
+
         Bundle patientBundle = patientData.getBundleTransaction();
         // store the data
         try {
+
+          eventService.triggerPatientEvent(EventTypes.AfterPatientDataQuery, patientBundle);
+
           patientBundle.setType(Bundle.BundleType.BATCH);
 
           patientBundle.getEntry().forEach(entry ->
@@ -145,9 +155,15 @@ public class PatientScoop extends Scoop {
           // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
           patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
-          // Store the data
+
+          eventService.triggerPatientEvent(EventTypes.BeforePatientDataStore,  patientBundle);
+
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
+
+          // staore data
           this.fhirDataProvider.updateResource(patientBundle);
+
+          eventService.triggerPatientEvent(EventTypes.AfterPatientDataStore, patientBundle);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());

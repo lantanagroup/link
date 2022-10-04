@@ -1,21 +1,21 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.IReportGenerationEvent;
-import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.ResourceIdChanger;
-import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DomainResource;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class FixResourceId implements IReportGenerationEvent {
+import java.util.List;
+
+public class FixResourceId implements IReportGenerationEvent, IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(FixResourceId.class);
 
@@ -32,9 +32,17 @@ public class FixResourceId implements IReportGenerationEvent {
         String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
         IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
         ResourceIdChanger.changeIds((Bundle) patientBundle);
-        fhirDataProvider.updateResource(patientBundle);
       }
     }
+  }
+
+  public void execute(Bundle data) {
+    logger.info("Called: " + FixResourceId.class.getName());
+    ResourceIdChanger.changeIds(data);
+  }
+
+  public void execute(List<DomainResource> resourceList) {
+    throw new RuntimeException("Not Implemented yet.");
   }
 }
 
