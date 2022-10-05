@@ -1,8 +1,6 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
@@ -26,6 +24,7 @@ import java.util.TimeZone;
  * hosts controllers defined within the project.
  */
 @SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link",
         "com.lantanagroup.link.api",
         "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
