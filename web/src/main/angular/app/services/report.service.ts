@@ -16,9 +16,10 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  async generate(reportDefIdentifier: string, periodStart: string, periodEnd: string, regenerate = false) {
+
+  async generate(bundleIds: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = 'report/$generate?';
-    url += `reportDefIdentifier=${encodeURIComponent(reportDefIdentifier)}&`;
+    url += `bundleIds=${encodeURIComponent(bundleIds)}&`;
     url += `periodStart=${encodeURIComponent(periodStart)}&`;
     url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
     url += 'regenerate=' + (regenerate ? 'true' : 'false');
@@ -45,8 +46,8 @@ export class ReportService {
     return this.http.post(url, null).toPromise();
   }
 
-  async download(reportId: string) {
-    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download`);
+  async download(reportId: string, type: string) {
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download/${type}`);
     const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
     const contentType = downloadResponse.headers.get('Content-Type');
 

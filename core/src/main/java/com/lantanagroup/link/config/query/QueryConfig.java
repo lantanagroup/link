@@ -30,12 +30,6 @@ public class QueryConfig {
   private boolean requireHttps;
 
   /**
-   * <strong>query.fhir-server-base</strong><br>The base URL of the FHIR server that should be queried
-   */
-  @NotBlank @URL
-  private String fhirServerBase;
-
-  /**
    * <strong>query.api-key</strong><br>If running in a Remote scenario (<strong>api.query.mode == "Remote"</strong>), the API Key that the QueryAPI component should expect to allow requests.
    */
   @Size(min = 128)

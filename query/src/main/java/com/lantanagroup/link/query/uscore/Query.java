@@ -1,74 +1,38 @@
 package com.lantanagroup.link.query.uscore;
 
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.ResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public List<QueryResponse> execute(List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, String measureId) {
-    List<QueryResponse> result;
+  public void execute(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
     }
 
-    if(StringUtils.isEmpty(measureId)){
-      throw new IllegalArgumentException("Measure Id must be provided");
+    if (measureIds == null) {
+      throw new IllegalArgumentException("Measure IDs must be provided");
     }
 
-    List<QueryResponse> queryResponses = new ArrayList();
-
-    if (patientsOfInterest.size() == 0) {
-      result = queryResponses;
-    } else {
+    if (patientsOfInterest.size() > 0) {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
-        scoop.execute(patientsOfInterest, resourceTypes, measureId);
-
-        List<PatientData> patientDatas = scoop.getPatientData();
-
-        for (PatientData patientData : patientDatas) {
-          Bundle patientBundle = patientData.getBundleTransaction();
-          Optional<Bundle.BundleEntryComponent> patientEntry = patientBundle.getEntry().stream().filter(e -> e.getResource().getResourceType() == ResourceType.Patient).findFirst();
-
-          if (patientEntry.isEmpty()) {
-            logger.error("No Patient resource found in patient data bundle. Not adding them to the query responses.");
-            continue;
-          };
-
-          Patient patient = (Patient) patientEntry.get().getResource();
-
-          QueryResponse queryResponse = new QueryResponse(patient.getIdElement().getIdPart(), patientBundle);
-          queryResponse.getBundle().setType(Bundle.BundleType.SEARCHSET);
-          queryResponse.getBundle().setTotal(queryResponse.getBundle().getEntry().size());
-          queryResponses.add(queryResponse);
-        }
+        scoop.execute(patientsOfInterest, reportId, resourceTypes, measureIds);
       } catch (Exception ex) {
         logger.error("Error scooping data for patients: " + ex.getMessage());
         ex.printStackTrace();
       }
-      result = queryResponses;
     }
-
-    return result;
   }
 }

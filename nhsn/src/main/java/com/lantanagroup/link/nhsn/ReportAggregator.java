@@ -1,16 +1,26 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.GenericAggregator;
-import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.*;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class ReportAggregator extends GenericAggregator implements IReportAggregator {
+  private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
+
+  @Autowired
+  private FhirDataProvider provider;
 
   private Resource getOrCreateContainedList(MeasureReport master, String code) {
     // find the list by code
@@ -36,15 +46,15 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
   private void addMeasureReportReferences(MeasureReport patientMeasureReport, ListResource listResource) {
     ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
     listEntry.setItem(new Reference());
-    listEntry.getItem().setReference("MeasureReport/" + patientMeasureReport.getId());
+    listEntry.getItem().setReference("MeasureReport/" + patientMeasureReport.getIdElement().getIdPart());
     listResource.addEntry(listEntry);
   }
 
 
-  public void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> patientMeasureReports) {
-    // agregate all individual reports in one
-    for (MeasureReport patientMeasureReport : patientMeasureReports) {
-      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReport.getGroup()) {
+  public void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports) {
+    // aggregate all individual reports in ones
+    for (MeasureReport patientMeasureReportResource : measureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReportResource.getGroup()) {
         for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
           // Check if group and population code exist in master, if not create
           MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
@@ -53,21 +63,22 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
           // If this population incremented the master
           if (population.getCount() > 0) {
             // add subject results
+            logger.info("Measure Report with count > 0 is: " + patientMeasureReportResource.getId());
             addSubjectResults(population, measureGroupPopulation);
             // Identify or create the List for this master group/population
             ListResource listResource = (ListResource) getOrCreateContainedList(masterMeasureReport, population.getCode().getCoding().get(0).getCode());
             // add this patient measure report to the contained List
-            addMeasureReportReferences(patientMeasureReport, listResource);
+            addMeasureReportReferences(((MeasureReport) patientMeasureReportResource), listResource);
           }
         }
       }
     }
   }
 
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
     // if there are no groups generated then gets them from the measure
     if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
+      Bundle bundle = measureContext.getReportDefBundle();
       Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
               .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
               .findFirst();

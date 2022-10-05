@@ -78,7 +78,6 @@ export class GenerateComponent implements OnInit {
         this.criteria.periodEnd = getFhirDate(this.criteria.periodEnd);
       }
 
-      const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
       const periodStart = this.criteria.periodStart;
       // add time to periodEnd
       const periodEnd = this.criteria.periodEnd;
@@ -88,15 +87,13 @@ export class GenerateComponent implements OnInit {
       periodEndDate.add(59, 'seconds');
 
       try {
-
-        const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
+        const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
         await this.router.navigate(['review', generateResponse.reportId]);
       } catch (ex) {
         if (ex.status === 409) {
           if (confirm('A report already exists for the selected criteria. Would you like to re-generate the report?')) {
             try {
-              const identifier = this.criteria.reportDef.system + '|' + this.criteria.reportDef.value;
-              const generateResponse = await this.reportService.generate(identifier, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
+              const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
               await this.router.navigate(['review', generateResponse.reportId]);
             } catch (ex) {
               this.toastService.showException('Error generating report', ex);

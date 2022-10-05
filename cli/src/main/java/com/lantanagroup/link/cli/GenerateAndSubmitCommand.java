@@ -10,7 +10,6 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.util.Strings;
@@ -44,7 +43,7 @@ public class GenerateAndSubmitCommand {
     Calendar cal = new GregorianCalendar();
     cal.add(Calendar.HOUR, adjustHours);
     cal.add(Calendar.MONTH, adjustMonths);
-    if(startOfDay) {
+    if (startOfDay) {
       cal.set(Calendar.MILLISECOND, 0);
       cal.set(Calendar.SECOND, 0);
       cal.set(Calendar.MINUTE, 0);
@@ -57,7 +56,7 @@ public class GenerateAndSubmitCommand {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
     cal.add(Calendar.HOUR, adjustDays);
-    if(endOfDay) {
+    if (endOfDay) {
       cal.set(Calendar.HOUR, 23);
       cal.set(Calendar.MINUTE, 59);
       cal.set(Calendar.SECOND, 59);
@@ -140,10 +139,9 @@ public class GenerateAndSubmitCommand {
       headers.setContentType(MediaType.APPLICATION_JSON);
 
       //bearer token header
-      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+      if (OAuth2Helper.validateHeaderJwtToken(token)) {
         headers.setBearerAuth(token);
-      }
-      else {
+      } else {
         client.close();
         throw new JWTVerificationException("Invalid token format");
       }
@@ -180,12 +178,10 @@ public class GenerateAndSubmitCommand {
       client.close();
       logger.error(String.format("Error generating and submitting report: %s", ex.getMessage()), ex);
       System.exit(1);
-    }
-    finally {
-      if(client != null) {
+    } finally {
+      if (client != null) {
         client.close();
       }
     }
   }
 }
-

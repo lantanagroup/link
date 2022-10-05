@@ -9,7 +9,7 @@ import {ReportModel} from "../../model/ReportModel";
 })
 export class NotesComponent implements OnInit {
     private static readonly notesUrl = 'https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-note';
-    @Input()   report: ReportModel;
+    @Input()   report: any;
     @Output()  dirty: EventEmitter<any> = new EventEmitter<any>();
 
     constructor() {

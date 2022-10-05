@@ -96,4 +96,9 @@ public class EpicAuth implements ICustomAuth {
 
     return null;
   }
+
+  @Override
+  public String getApiKeyHeader() throws Exception {
+    return null;
+  }
 }

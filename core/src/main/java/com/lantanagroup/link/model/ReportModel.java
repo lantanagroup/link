@@ -1,19 +1,28 @@
 package com.lantanagroup.link.model;
 
-import ca.uhn.fhir.rest.api.CacheControlDirective;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.http.client.HttpResponseException;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.MeasureReport;
+
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Getter @Setter
 public class ReportModel {
-    String identifier;
-    String version;
-    String status;
-    Date date;
-    Measure measure;
-    MeasureReport measureReport;
+
+    private String version;
+    private String status;
+    private Date date;
+    private List<ReportMeasure> reportMeasureList = new ArrayList<>();
+
+    @Getter
+    @Setter
+    public static class ReportMeasure {
+        private String identifier;
+        private String bundleId;
+        private Measure measure;
+        private MeasureReport measureReport;
+    }
 }

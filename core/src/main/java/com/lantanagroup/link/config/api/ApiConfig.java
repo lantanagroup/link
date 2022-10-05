@@ -19,6 +19,13 @@ import java.util.List;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
+
+  /**
+   * <strong>api.validate-fhir-server</strong><br>Boolean for whether to check for metadata before request or not
+   */
+  @Getter
+  private Boolean validateFhirServer;
+
   /**
    * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
    */
@@ -35,7 +42,7 @@ public class ApiConfig {
    * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
    */
   @Getter
-  ApiMeasureLocationConfig measureLocation;
+  private ApiMeasureLocationConfig measureLocation;
 
   /**
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
@@ -43,17 +50,15 @@ public class ApiConfig {
   private Boolean skipInit = false;
 
   /**
-   * <strong>api.fhir-server-store</strong><br>URL where the FHIR server is that is used for storage
+   * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
    */
-  @NotNull
-  private String fhirServerStore;
+  @Getter @NotNull
+  private ApiDataStoreConfig dataStore;
 
   /**
    * <strong>evaluation-service</strong><br>The measure evaluation service (CQF-Ruler) installation that is to be used to evaluate patient data against measure logic.
    */
-  @Getter
-  @Setter
-  @NotNull
+  @Getter @Setter @NotNull
   private String evaluationService;
 
   /**
@@ -79,6 +84,13 @@ public class ApiConfig {
   private String issuer;
 
   /**
+   * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request
+   */
+  @Getter
+  @Setter
+  private Boolean checkIpAddress = true;
+
+  /**
    * <strong>api.downloader</strong><br>The class used to download reports
    */
   @NotNull
@@ -90,15 +102,6 @@ public class ApiConfig {
   @NotNull
   private String sender;
 
-  /**
-   * <strong>api.send-whole-bundle</strong><br>Boolean used to determine if the full Bundle is sent or just the MeasureReport. True to send full bundle and false to send just the MeasureReport
-   */
-  private Boolean sendWholeBundle;
-
-  /**
-   * <strong>api.remove-generated-observations</strong><br>Whether to remove contained evaluated resources from patient measure reports
-   */
-  private boolean removeGeneratedObservations = true;
 
   /**
    * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
@@ -114,7 +117,7 @@ public class ApiConfig {
    * <strong>api.cors</strong><br>CORS configuration used for browser interaction with the API
    */
   @Getter
-  private ApiCorsConfig cors;
+  private CorsConfig cors;
 
   /**
    * <strong>api.report-defs</strong><br>Configuration for measures supported by the system
@@ -123,12 +126,10 @@ public class ApiConfig {
   private ApiReportDefsConfig reportDefs;
 
   /**
-   * <strong>api.query</strong><br>Configuration for how queries should be executed. If local, will run queries within the API. If remote,
-   * will request that a remote query agent perform the queries and respond to the API with the results.
+   * <strong>api.measure-packages</strong><br>Configuration for multi measures supported by the system
    */
   @Getter
-  @NotNull
-  private ApiQueryConfig query;
+  private List<ApiMeasurePackage> measurePackages;
 
   /**
    * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
@@ -136,14 +137,6 @@ public class ApiConfig {
   @Getter
   private UserConfig user;
 
-  /**
-   * <strong>api.concept-maps</strong><br>API configuration to indicate one or more ConceptMaps to apply to patient data
-   */
-  @Getter
-  private List<String> conceptMaps;
-
-  @Getter
-  private Boolean deleteAfterSubmission;
 
   /**
    * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.
@@ -162,4 +155,9 @@ public class ApiConfig {
 
   @Getter
   private String socketTimeout;
+
+  /**
+   * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
+   */
+  private Integer measureEvaluationThreads;
 }

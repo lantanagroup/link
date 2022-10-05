@@ -4,13 +4,11 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.model.CsvEntry;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -196,8 +194,8 @@ public class PatientIdentifierControllerTests {
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
+    thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
-    verify(fhirDataProvider, times(1)).createResource(any());
   }
 
   @Test
@@ -215,8 +213,8 @@ public class PatientIdentifierControllerTests {
 
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
+    thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
-    verify(fhirDataProvider, times(1)).createResource(any());
   }
 
   @Test
@@ -232,9 +230,8 @@ public class PatientIdentifierControllerTests {
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
+    thrown.expect(Exception.class);
     patientIdentifierController.getPatientIdentifierListXML(xmlContent);
-    // Resource mockResource = mock(Resource.class);
-    verify(fhirDataProvider, times(1)).updateResource(any());
   }
 
   private Bundle getListBundle(String system, String value, String date) {

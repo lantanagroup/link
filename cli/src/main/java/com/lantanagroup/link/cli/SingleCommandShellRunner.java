@@ -18,7 +18,9 @@ public class SingleCommandShellRunner implements ApplicationRunner {
   private final List<String> commands = List.of(
           "query",
           "generate-and-submit",
-          "refresh-patient-list");
+          "knox-measure-report-transfer",
+          "refresh-patient-list",
+          "parkland-inventory-import");
 
   public SingleCommandShellRunner(Shell shell, ConfigurableEnvironment environment) {
     this.shell = shell;

@@ -7,7 +7,6 @@ import {ReportDefinitionService} from '../services/report-definition.service';
 import {formatDateToISO, getEndOfDayDate, getFhirDate} from '../helper';
 import {UserModel} from "../model/user-model";
 import {ToastService} from "../toast.service";
-import * as moment from "moment";
 
 @Component({
   selector: 'nandina-review',
@@ -104,7 +103,7 @@ export class ReviewComponent implements OnInit {
       if (this.filter.measure !== "Select measure") {
         // find the measure
         const measure = this.measures.find(p => p.name === this.filter.measure);
-        filterCriteria += `identifier=${encodeURIComponent(measure.system + "|" + measure.value)}&`
+        filterCriteria += `identifier=${encodeURIComponent(measure[0].system + "|" + measure[0].value)}&`
       }
       if (this.filter.status !== 'Select status') {
         const status = this.statuses.find(p => p.name === this.filter.status);
@@ -149,8 +148,8 @@ export class ReviewComponent implements OnInit {
       measureSystem = measure.substr(0, measure.indexOf("|"));
       measureId = measure.substr(measure.indexOf("|") + 1);
     }
-    let foundMeasure = (this.measures || []).find((m) => m.value === measureId && m.system === measureSystem);
-    if (foundMeasure != undefined && foundMeasure.value != undefined) return foundMeasure.name;
+    let foundMeasure = (this.measures || []).find((m) => m[0].value === measureId && m[0].system === measureSystem);
+    if (foundMeasure != undefined && foundMeasure[0].value != undefined) return foundMeasure.name;
   }
 
   getStatusName(status: string) {

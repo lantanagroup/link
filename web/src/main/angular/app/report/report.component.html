@@ -1,70 +1,89 @@
 <div *ngIf="loading" class="alert alert-info">Loading...</div>
 
-<div *ngIf="report && !loading" class="report">
-    <div class="row">
-        <div class="col-md-4">
-            <div *ngIf="report?.measure?.title" class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Type</div>
-                </div>
-                <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" id="report-type"
-                       type="text"/>
-            </div>
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Period</div>
-                </div>
-                <input [disabled]="true" class="form-control" type="text" value="TODO" id="report-period"/>
-            </div>
-
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Status/Version</div>
-                </div>
-                <input [disabled]="true" class="form-control" type="text"
-                       value="{{getStatusDisplay()}} - {{report.version || 'N/A'}}" id="report-status-version"/>
-            </div>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">Submission Date</div>
-                </div>
-                <div [ngbTooltip]="report.date | date: 'MMM d, y, h:mm:ss a' : 'UTC'" class="form-control"
-                     id="report-submit-date">{{report.date | date:'MMM d, y' : 'UTC' }}</div>
-            </div>
+<!-- TODO: Move nav bar into into a reusable component -->
+<ul ngbNav #nav="ngbNav" class="nav-tabs">
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla.isActive" #rla="routerLinkActive"
+           routerLink="/generate">Generate</a>
+    </li>
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla1.isActive" #rla1="routerLinkActive"
+           routerLink="/review">Review</a>
+    </li>
+</ul>
+<div class="document">
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Period</div>
         </div>
-        <div class="col-md-8">
-            <notes [report]="report" (dirty)="setDirtyFlag($event)" >Notes</notes>
-        </div>
+        <input [disabled]="true" class="form-control" id="report-period" type="text" value="TODO"/>
     </div>
 
-    <div [ngSwitch]="measureId" *ngIf="report?.measure && report?.measureReport">
-        <!-- When report type is med-admin show the med-admin component -->
-        <app-report-med-admin *ngSwitchCase="'nhsn-medication-administration'" (invalidate)="setRequiredErrorsFlag($event)" (dirty)="setDirtyFlag($event)" [report]="report"></app-report-med-admin>
-        <!-- Otherwise, generate the fields automatically based on measure definition -->
-        <div class="row report-fields" *ngSwitchDefault>
-            <div class="col-md-4" *ngFor="let group of report.measure.group || []; let groupIndex = index;">
-                <div class="card">
-                    <div class="card-header">
-                        {{group.code | codeableConcept: false : 'Group ' + (groupIndex + 1)}}
-                        <span class="help-block" *ngIf="group.description">{{group.description}}</span>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Status/Version</div>
+        </div>
+        <input [disabled]="true" class="form-control" id="report-status-version"
+               type="text"
+               value="{{getStatusDisplay()}} - {{reportModel.version || 'N/A'}}"/>
+    </div>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <div class="input-group-text">Submission Date</div>
+        </div>
+        <div [ngbTooltip]="reportModel.date | date: 'MMM d, y, h:mm:ss a' : 'UTC'" class="form-control"
+             id="report-submit-date">{{reportModel.date | date:'MMM d, y' : 'UTC' }}</div>
+    </div>
+</div>
+
+<div *ngFor="let report of reportMeasureList">
+    <div class="card" *ngIf="report && !loading" >
+        <div class="row">
+            <div class="col-md-4">
+                <div *ngIf="report?.measure?.title" class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Type</div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6" *ngFor="let population of group.population || []">
-                                <div class="form-group">
-                                    <label>
-                                        {{population.code | codeableConcept}}
-                                    </label>
-                                    <app-calculated-field
-                                            (dirty)="setDirtyFlag($event)"
-                                            (invalidate)="setRequiredErrorsFlag($event)"
-                                            [groupCode]="group.code | codeableConcept: true"
-                                            [populationCode]="population.code | codeableConcept: true"
-                                            [report]="report">
-                                    </app-calculated-field>
-                                    <span *ngIf="population.description"
-                                          class="help-block">{{population.description}}</span>
+                    <input [(ngModel)]="report.measure.title" [disabled]="true" class="form-control" id="report-type"
+                           type="text"/>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <notes (dirty)="setDirtyFlag($event)" [report]="report">Notes</notes>
+            </div>
+        </div>
+
+        <div *ngIf="report?.measure && report?.measureReport" [ngSwitch]="getMeasureId(report)">
+            <!-- When report type is med-admin show the med-admin component -->
+            <app-report-med-admin (dirty)="setDirtyFlag($event)"
+                                  (invalidate)="setRequiredErrorsFlag($event)"
+                                  *ngSwitchCase="'nhsn-medication-administration'"
+                                  [report]="report"></app-report-med-admin>
+            <!-- Otherwise, generate the fields automatically based on measure definition -->
+            <div *ngSwitchDefault class="row report-fields">
+                <div *ngFor="let group of report.measure.group || []; let groupIndex = index;" class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            {{group.code | codeableConcept: false : 'Group ' + (groupIndex + 1)}}
+                            <span *ngIf="group.description" class="help-block">{{group.description}}</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div *ngFor="let population of group.population || []" class="col-md-6">
+                                    <div class="form-group">
+                                        <label>
+                                            {{population.code | codeableConcept}}
+                                        </label>
+                                        <app-calculated-field
+                                                (dirty)="setDirtyFlag($event)"
+                                                (invalidate)="setRequiredErrorsFlag($event)"
+                                                [groupCode]="group.code | codeableConcept: true"
+                                                [populationCode]="population.code | codeableConcept: true"
+                                                [report]="report">
+                                        </app-calculated-field>
+                                        <span *ngIf="population.description"
+                                              class="help-block">{{population.description}}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -72,21 +91,35 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="btn-group">
-        <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
-        <button (click)="save()" *ngIf="!isSubmitted" [disabled]="!dirty" class="btn btn-primary">Save</button>
-        <button (click)="discard()" *ngIf="!isSubmitted" [disabled]="repVersionNumber >= 1.0" class="btn btn-primary">
-            Discard
-        </button>
-        <button (click)="send()" *ngIf="!isSubmitted" [disabled]="hasRequiredErrors || submitInProgress" class="btn btn-primary">
-            {{submitText}}
-        </button>
-        <button (click)="regenerate()" *ngIf="isSubmitted" [disabled]="hasRequiredErrors" class="btn btn-primary">
-            {{regenerateReportButtonText}}
-        </button>
-        <button (click)="download()" class="btn btn-primary" [disabled]="downloading">{{!downloading ? 'Download' : 'Downloading...'}}</button>
     </div>
 </div>
 
+<div class="report-buttons btn-group">
+    <div class="btn-group">
+        <button (click)="viewLineLevel()" class="btn btn-primary">View Line-Level Data</button>
+        <button (click)="save()" *ngIf="!isSubmitted()" [disabled]="!dirty" class="btn btn-primary">Save
+        </button>
+        <button (click)="discard()" *ngIf="!isSubmitted()" [disabled]="getRepVersionNumber() >= 1.0"
+                class="btn btn-primary">
+            Discard
+        </button>
+    </div>
+    <button (click)="send()" *ngIf="!isSubmitted()" [disabled]="hasRequiredErrors || submitInProgress"
+            class="btn btn-primary">
+        {{submitText}}
+    </button>
+    <button (click)="regenerate()" *ngIf="isSubmitted()" [disabled]="hasRequiredErrors"
+            class="btn btn-primary">
+        {{regenerateReportButtonText}}
+    </button>
+    <div class="btn-group" ngbDropdown role="group">
+        <button [disabled]="downloading" class="btn btn-primary"
+                ngbDropdownToggle>{{!downloading ? 'Download Bundle' : 'Downloading...'}}</button>
+        <div class="dropdown-menu" ngbDropdownMenu>
+            <button (click)="download('XML')" ngbDropdownItem>XML</button>
+            <button (click)="download('JSON')" ngbDropdownItem>JSON</button>
+        </div>
+    </div>
+
+</div>

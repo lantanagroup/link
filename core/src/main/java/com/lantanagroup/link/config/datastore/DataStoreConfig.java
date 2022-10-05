@@ -2,13 +2,15 @@ package com.lantanagroup.link.config.datastore;
 
 import com.lantanagroup.link.config.DataSourceConfig;
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
-import com.lantanagroup.link.config.Permission;
+import com.lantanagroup.link.config.api.CorsConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
+
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -17,21 +19,33 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class DataStoreConfig {
+  /**
+   * <strong>datastore.data-source</strong><br/>Persistence configuration (i.e. Postgres connection information) for the data store
+   */
   @Getter
   private DataSourceConfig dataSource;
-  @Getter
-  private Permission[] permissions;
-  @Getter
-  private String azorica;
 
-  /***
-   <strong>datastore.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
+  /**
+   * <strong>datastore.oauth</strong><br/>OAuth configuration of the data store
    */
   @Getter
-  private String issuer;
-  /***
-   <strong>datastore.authJwksUrl</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
+  private DataStoreOAuthConfig oauth;
+
+  /**
+   * <strong>datastore.basic-auth-users</strong><br/>Key-Value pair of usernames and passwords that have access to the data store
    */
   @Getter
-  private String authJwksUrl;
+  private HashMap<String, String> basicAuthUsers;
+
+  /**
+   * <strong>datastore.public-address</strong><br/>The public address that the data store is exposed at.
+   */
+  @Getter
+  private String publicAddress;
+
+  /**
+   * <strong>datastore.cors</strong><br>CORS configuration used for browser interaction with the Data Store
+   */
+  @Getter
+  private CorsConfig cors;
 }

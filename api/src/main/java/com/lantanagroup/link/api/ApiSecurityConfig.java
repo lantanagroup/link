@@ -13,8 +13,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 /**
  * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
@@ -37,14 +41,25 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials);
-    authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAuthJwksUrl()));
+    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config);
+    authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAuthJwksUrl(), null));
     authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
     http
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
             .csrf().disable()
 //            .csrf().csrfTokenRepository(customCsrfTokenRepository) //.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
 //            .and()
-            .cors()
+            //.cors()
+            .cors().configurationSource(request -> {
+                      var cors = new CorsConfiguration();
+                      cors.setAllowedOrigins(List.of(config.getCors().getAllowedOrigins()));
+                      cors.setAllowedMethods(List.of(config.getCors().getAllowedMethods()));
+                      cors.setAllowedHeaders(List.of(config.getCors().getAllowedHeaders()));
+                      cors.setAllowCredentials(config.getCors().getAllowedCredentials());
+                      return cors;
+                    })
             .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
@@ -63,4 +78,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
     http.headers().contentSecurityPolicy(csp);
 
   }
+
 }
+
+

@@ -58,7 +58,9 @@ public class ReportDefinitionControllerTest {
     responseBundleTest.setEntry(componentListTest);
 
     when(fhirDataProvider.searchBundleByTag(Constants.MainSystem, Constants.ReportDefinitionTag)).thenReturn(responseBundleTest);
-
+    ApiConfig config = new ApiConfig();
+    config.setMeasurePackages(new ArrayList());
+    reportDefinitionControllerTest.setConfig(config);
     List<StoredMeasure> measures = reportDefinitionControllerTest.getMeasures(authMock.getAuthentication(), request);
     Assert.assertEquals( 1, measures.size());
     Assert.assertEquals("testMeasureTitle", measures.get(0).getName());
