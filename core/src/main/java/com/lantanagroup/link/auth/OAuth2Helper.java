@@ -14,12 +14,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
 import com.lantanagroup.link.model.CernerClaimData;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -39,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.interfaces.RSAPublicKey;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class OAuth2Helper {
   private static final Logger logger = LoggerFactory.getLogger(OAuth2Helper.class);
@@ -56,43 +54,47 @@ public class OAuth2Helper {
     EC
   }
 
+  public static Boolean validateHeaderJwtToken(String jwtToken) {
+    //validate token
+    //https://www.regextester.com/105777
+    String allowedHeaderCharacters = "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$";
+    return Pattern.matches(allowedHeaderCharacters, jwtToken);
+  }
+
   public static String getToken(LinkOAuthConfig config) throws Exception {
 
-    try{
-
-      //ensure authentication properties have been set
-      if(!config.hasCredentialProperties()) {
-        throw new AuthenticationException("Authentication credentials were not supplied.");
-      }
-
-      //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
-
-      //get token based on credential mode
-      switch(config.getCredentialMode()) {
-        case Client: {
-          return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
-        }
-        case Password: {
-          return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
-        }
-        default:
-          throw new AuthenticationException("Invalid credential mode.");
-      }
-    } catch(AuthenticationException e) {
-      throw e; // rethrowing the exception
+    //ensure authentication properties have been set
+    if(!config.hasCredentialProperties()) {
+      throw new AuthenticationException("Authentication credentials were not supplied.");
     }
-    catch(Exception e){
-      throw e; // rethrowing the exception
+
+    //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
+
+    //get token based on credential mode
+    switch(config.getCredentialMode()) {
+      case Client: {
+        return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+      }
+      case Password: {
+        return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
+      }
+      default:
+        throw new AuthenticationException("Invalid credential mode.");
     }
 
   }
 
   public static String getPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String scope) {
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
   }
 
-  public static String getPasswordCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
+  public static String getPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     request.addHeader("Accept", "application/json");
@@ -122,7 +124,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service: \n" + content);
+        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -139,11 +141,16 @@ public class OAuth2Helper {
   }
 
   public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
-    CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-    return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
   }
 
-  public static String getClientCredentialsToken(HttpClient httpClient, String tokenUrl, String username, String password, String scope) {
+  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
     String userPassCombo = username + ":" + password;
@@ -175,7 +182,7 @@ public class OAuth2Helper {
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 client credentials token from auth service: \n" + content);
+        logger.error("Error retrieving OAuth2 client credentials token from auth service");
       }
 
       JSONObject jsonObject = new JSONObject(content);
@@ -298,13 +305,16 @@ public class OAuth2Helper {
       conn.setRequestMethod("GET");
       int status = conn.getResponseCode();
 
-      BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-      String inputLine;
       StringBuffer content = new StringBuffer();
-      while ((inputLine = in.readLine()) != null) {
-        content.append(inputLine);
+      try(InputStreamReader streamReader = new InputStreamReader(conn.getInputStream())) {
+
+        BufferedReader in = new BufferedReader(streamReader);
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+          content.append(inputLine);
+        }
+        in.close();
       }
-      in.close();
 
       JSONObject openIdConfigObj = new JSONObject(content.toString());
       return openIdConfigObj.getString("jwks_uri");
@@ -404,6 +414,7 @@ public class OAuth2Helper {
       //verify token
       JWTVerifier verifier = JWT.require(algorithm)
               .withIssuer(issuer)
+              .acceptLeeway(10000)
               .build(); //Reusable verifier instance
       DecodedJWT verifiedJwt = verifier.verify(token);
 
@@ -412,8 +423,7 @@ public class OAuth2Helper {
     } catch(JWTVerificationException e){
       //Invalid signature/claims
       throw new JWTVerificationException(e.getMessage());
-    }
-    catch(Exception e) {
+    } catch(Exception e) {
       logger.error(e.getMessage());
       return null;
       //throw new Exception(e.getMessage());
@@ -433,7 +443,7 @@ public class OAuth2Helper {
     return noRoles;
   }
 
-  public static String getToken(FHIRSenderOAuthConfig authConfig, HttpClient client) throws Exception {
+  public static String getToken(LinkOAuthConfig authConfig, CloseableHttpClient client) throws Exception {
     String token = "";
 
     if (authConfig != null && authConfig.hasCredentialProperties()) {

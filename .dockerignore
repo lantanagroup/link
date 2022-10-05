@@ -1,1 +1,6 @@
-target/
+**/target/
+**/node_modules/
+web/dist/
+.idea/
+.settings/
+docs/

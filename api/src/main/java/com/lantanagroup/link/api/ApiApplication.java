@@ -7,8 +7,6 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiQueryConfigModes;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -16,12 +14,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.util.TimeZone;
 
 /**
@@ -29,12 +24,16 @@ import java.util.TimeZone;
  * hosts controllers defined within the project.
  */
 @SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link",
         "com.lantanagroup.link.api",
+        "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
         "com.lantanagroup.link.config.api",
+        "com.lantanagroup.link.nhsn",
         "com.lantanagroup.link.query",
-        "com.lantanagroup.link.auth",
-        "com.lantanagroup.link.nhsn"})
+        "com.lantanagroup.link.spring",
+        "com.lantanagroup.link.thsa"
+})
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
@@ -58,31 +57,8 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Override
   public void afterPropertiesSet() throws Exception {
-    // Do some advanced validation on the configuration
-    if (this.config.getQuery().getMode() == ApiQueryConfigModes.Remote) {
-      if (StringUtils.isEmpty(this.config.getQuery().getUrl())) {
-        throw new Exception("When query.mode is \"Remote\", query.url is required");
-      }
-      if (StringUtils.isEmpty(this.config.getQuery().getApiKey())) {
-        throw new Exception("When query.mode is \"Remote\", query.apiKey is required");
-      }
-    }
+
   }
-
-  /**
-   * Triggered during SpringBoot application's startup. Adds to the security filter chain.
-   * @param servletContext
-   * @throws ServletException
-   */
-  @Override
-  public void onStartup(ServletContext servletContext) throws ServletException {
-    servletContext
-            .addFilter("securityFilter", new DelegatingFilterProxy("springSecurityFilterChain"))
-            .addMappingForUrlPatterns(null, false, "/*");
-
-    super.onStartup(servletContext);
-  }
-
 
   /**
    * Sets the CORS configuration based on the api.yml (or its override)
@@ -120,7 +96,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Bean()
   public FhirDataProvider getProvider() {
-    return new FhirDataProvider(config.getFhirServerStore());
+    return new FhirDataProvider(config.getDataStore());
   }
 
   /**

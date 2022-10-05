@@ -1,11 +1,8 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.FhirBundler;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.IReportDownloader;
-import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.*;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
@@ -20,12 +17,13 @@ import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
 
   @Override
-  public void download(String reportId, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, ApiConfig config) throws IOException, TransformerException {
+  public void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config) throws IOException, TransformerException {
 
     DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId);
 
@@ -41,16 +39,26 @@ public class MeasureReportDownloader implements IReportDownloader {
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    //Bundle bundle = FhirHelper.bundleMeasureReport(measureReport, fhirDataProvider, config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true);
-
     FhirBundler bundler = new FhirBundler(fhirDataProvider);
-    Bundle bundle = bundler.generateBundle(config.getSendWholeBundle() != null ? config.getSendWholeBundle() : true, config.isRemoveGeneratedObservations(), measureReport, docRefBundle);
+    Bundle bundle = bundler.generateBundle(config.isSendWholeBundle(), config.isRemoveContainedResources(), List.of(measureReport), docRefBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
+    String responseBody = "";
+    if(downloadType.equals("XML")){
+      responseBody = ctx.newXmlParser().encodeResourceToString(bundle);
+      response.setContentType("application/xml");
+    }
+    else if(downloadType.equals("JSON")){
+      responseBody = ctx.newJsonParser().encodeResourceToString(bundle);
+      response.setContentType("application/json");
+    }
 
-    String responseBody = ctx.newXmlParser().encodeResourceToString(bundle);
-    response.setContentType("application/xml");
-    response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
+    if(Helper.validateHeaderValue(reportId)) {
+      response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
+    }
+    else {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report Id");
+    }
 
     InputStream is = new ByteArrayInputStream(responseBody.getBytes());
     IOUtils.copy(is, response.getOutputStream());

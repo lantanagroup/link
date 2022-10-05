@@ -7,6 +7,7 @@ import lombok.Setter;
 public class PatientOfInterestModel {
   private String reference;
   private String identifier;
+  private String id;
 
   public PatientOfInterestModel() {
 

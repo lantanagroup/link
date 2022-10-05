@@ -1,24 +1,21 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.context.ConfigurationException;
-import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.model.QueryResponse;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.nhsn.ReportAggregator;
-import org.hl7.fhir.r4.model.*;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.util.*;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 /**
@@ -27,112 +24,75 @@ import java.util.stream.Collectors;
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
 
-
-  private ReportContext context;
+  private ReportContext reportContext;
+  private ReportContext.MeasureContext measureContext;
   private ReportCriteria criteria;
   private LinkCredentials user;
   private ApiConfig config;
   private IReportAggregator reportAggregator;
 
 
-  public ReportGenerator(ReportContext context, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
-    this.context = context;
+  public ReportGenerator(ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+    this.reportContext = reportContext;
+    this.measureContext = measureContext;
     this.criteria = criteria;
     this.user = user;
     this.config = config;
     this.reportAggregator = reportAggregator;
   }
 
-
-  private DocumentReference generateDocumentReference(LinkCredentials user, ReportCriteria criteria, ReportContext context, String identifierValue) throws ParseException {
-    DocumentReference documentReference = new DocumentReference();
-    Identifier identifier = new Identifier();
-    identifier.setSystem(config.getDocumentReferenceSystem());
-    identifier.setValue(identifierValue);
-
-    documentReference.setMasterIdentifier(identifier);
-    documentReference.addIdentifier(context.getReportDefBundle().getIdentifier());
-
-    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-
-    List<Reference> list = new ArrayList<>();
-    Reference reference = new Reference();
-    String practitionerId = user.getPractitioner().getId();
-    reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
-    list.add(reference);
-    documentReference.setAuthor(list);
-
-    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
-
-    CodeableConcept type = new CodeableConcept();
-    List<Coding> codings = new ArrayList<>();
-    Coding coding = new Coding();
-    coding.setCode(com.lantanagroup.link.Constants.DocRefCode);
-    coding.setSystem(com.lantanagroup.link.Constants.LoincSystemUrl);
-    coding.setDisplay(Constants.DocRefDisplay);
-    codings.add(coding);
-    type.setCoding(codings);
-    documentReference.setType(type);
-
-    List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
-    DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
-    Attachment attachment = new Attachment();
-    attachment.setCreation(new Date());
-    doc.setAttachment(attachment);
-    listDoc.add(doc);
-    documentReference.setContent(listDoc);
-
-    DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    Period period = new Period();
-    Date startDate = Helper.parseFhirDate(criteria.getPeriodStart());
-    Date endDate = Helper.parseFhirDate(criteria.getPeriodEnd());
-    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-
-    docReference.setPeriod(period);
-
-    documentReference.setContext(docReference);
-
-    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
-
-    return documentReference;
-  }
-
   /**
    * This method accepts a list of patients and generates an individual measure report for each patient. Then agregates all the individual reports into a master measure report.
-   *
-   * @param criteria       - the report criteria
-   * @param context        -  the report context
-   * @param queryResponses - the list of patient id-s and bundle-s to generate reports for
    */
-  public List<MeasureReport> generate(ReportCriteria criteria, ReportContext context, List<QueryResponse> queryResponses) throws ParseException {
+  public void generate() throws ParseException, ExecutionException, InterruptedException {
     if (this.config.getEvaluationService() == null) {
-      throw new ConfigurationException("api.evaluation-service has not been configured");
+      throw new IllegalStateException("api.evaluation-service has not been configured");
     }
-
-    // Generate a report for each patient
-    List<MeasureReport> patientMeasureReports = queryResponses.stream().map(queryResponse -> {
-      MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, context, config, queryResponse.getPatientId());
-      patientMeasureReport.setId(context.getReportId() + "-" + queryResponse.getPatientId().hashCode());
-      return patientMeasureReport;
-    }).collect(Collectors.toList());
-
-    MeasureReport masterMeasureReport = reportAggregator.generate(criteria, context, patientMeasureReports);
-    context.setMeasureReport(masterMeasureReport);
-    return patientMeasureReports;
+    logger.info("Patient list is : " + measureContext.getPatientsOfInterest().size());
+    ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
+            ? new ForkJoinPool(config.getMeasureEvaluationThreads())
+            : ForkJoinPool.commonPool();
+    try {
+      List<MeasureReport> patientMeasureReports = forkJoinPool.submit(() ->
+              measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
+                logger.info("Patient is: " + patient);
+                MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
+                patientMeasureReport.setId(ReportIdHelper.getPatientDataBundleId(measureContext.getReportId(), patient.getId()));
+                return patientMeasureReport;
+              })).get().collect(Collectors.toList());
+      // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
+      // pass them to aggregators using measureContext
+      measureContext.setPatientReports(patientMeasureReports);
+    } finally {
+      if (forkJoinPool != null) {
+        forkJoinPool.shutdown();
+      }
+    }
+    MeasureReport masterMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
+    measureContext.setMeasureReport(masterMeasureReport);
   }
 
   /**
-   * It also stores all individual reports and the master measure report on the Fhir Server. If is regenerating it is reusing the already generated Id-s for all document reference, master measure report and individual reports.
-   * @param existingDocumentReference - the existing document reference
+   * Stores the individual patient reports on the Fhir Server in batches of 50 for performance reasons
+   * Stores the master measure report on the Fhir Server.
    **/
-  public void store(List<MeasureReport> patientMeasureReports, ReportCriteria criteria, ReportContext context, DocumentReference existingDocumentReference) throws ParseException {
+  public void store() {
 
+    storeIndividualReports(measureContext.getPatientReports());
+
+    this.reportContext.getFhirProvider().updateResource(measureContext.getMeasureReport());
+  }
+
+  /**
+   * Stores the individual measure report on the Fhir Server.
+   * batch it like 50 at a time to increase performance
+   **/
+  private void storeIndividualReports(List<MeasureReport> patientMeasureReports) {
+    int maxCount = 50;
     Bundle updateBundle = new Bundle();
-    updateBundle.setType(Bundle.BundleType.TRANSACTION);
+    updateBundle.setType(Bundle.BundleType.BATCH);
 
     patientMeasureReports.stream().map(patientMeasureReport -> {
-
       updateBundle.addEntry()
               .setResource(patientMeasureReport)
               .setRequest(new Bundle.BundleEntryRequestComponent()
@@ -142,47 +102,24 @@ public class ReportGenerator {
       return patientMeasureReport;
     }).collect(Collectors.toList());
 
-    // Generate the master measure report
-    MeasureReport masterMeasureReport = new ReportAggregator().generate(criteria, context, patientMeasureReports);
+    int transactionCount = (int) Math.ceil(updateBundle.getEntry().size() / ((double) maxCount));
 
-    // Save measure report and documentReference
-    updateBundle.addEntry()
-            .setResource(context.getMeasureReport())
-            .setRequest(new Bundle.BundleEntryRequestComponent()
-                    .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + context.getReportId()));
+    logger.debug("Storing measure reports and updated document reference in internal FHIR Server. " + transactionCount + " bundles total.");
 
-    DocumentReference documentReference = this.generateDocumentReference(this.user, criteria, context, context.getReportId());
+    for (int i = 0; i < transactionCount; i++) {
+      Bundle updateBundleCopy = new Bundle();
+      updateBundleCopy.setType(Bundle.BundleType.BATCH);
 
-    if (existingDocumentReference != null) {
-      documentReference.setId(existingDocumentReference.getId());
+      List<Bundle.BundleEntryComponent> nextEntries = updateBundle.getEntry().subList(0, updateBundle.getEntry().size() >= maxCount ? maxCount : updateBundle.getEntry().size());
+      updateBundleCopy.getEntry().addAll(nextEntries);
+      updateBundle.getEntry().removeAll(nextEntries);
 
-      Extension existingVersionExt = existingDocumentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
-      String existingVersion = existingVersionExt.getValue().toString();
+      logger.debug("Processing bundle " + (i + 1));
 
-      documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl).setValue(new StringType(existingVersion));
+      // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
+      this.reportContext.getFhirProvider().transaction(updateBundleCopy);
 
-      documentReference.setContent(existingDocumentReference.getContent());
-    } else {
-      // generate document reference id based on the report date range and the measure used in the report generation
-      String id = criteria.getReportDefIdentifier() + "-" + criteria.getPeriodStart() + "-" + criteria.getPeriodEnd().hashCode();
-      UUID documentId = UUID.nameUUIDFromBytes(id.getBytes(StandardCharsets.UTF_8));
-      documentReference.setId(documentId.toString());
+      logger.debug("Done processing bundle " + (i + 1));
     }
-
-    // Add the patient census list(s) to the document reference
-    documentReference.getContext().getRelated().clear();
-    documentReference.getContext().getRelated().addAll(this.context.getPatientCensusLists().stream().map(censusList -> new Reference()
-              .setReference("List/" + censusList.getIdElement().getIdPart())).collect(Collectors.toList()));
-
-    updateBundle.addEntry()
-            .setResource(documentReference)
-            .setRequest(new Bundle.BundleEntryRequestComponent()
-                    .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("DocumentReference/" + documentReference.getIdElement().getIdPart()));
-
-    // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-    this.context.getFhirProvider().transaction(updateBundle);
-
   }
 }

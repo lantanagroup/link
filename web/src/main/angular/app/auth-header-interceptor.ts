@@ -4,6 +4,8 @@ import {from, Observable} from 'rxjs';
 import {AuthService} from './services/auth.service';
 import {ConfigService} from './services/config.service';
 import {catchError, switchMap} from "rxjs/operators";
+import {ToastService} from "./toast.service";
+import {Router} from "@angular/router";
 
 /**
  * This class is an HTTP interceptor that is responsible for adding an
@@ -12,7 +14,7 @@ import {catchError, switchMap} from "rxjs/operators";
 @Injectable()
 export class AddHeaderInterceptor implements HttpInterceptor {
 
-    constructor(private authService: AuthService, private configService: ConfigService, private csrfTokenExtractor: HttpXsrfTokenExtractor) {
+    constructor(public toastService: ToastService, private router: Router, private authService: AuthService, private configService: ConfigService, private csrfTokenExtractor: HttpXsrfTokenExtractor) {
     }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
@@ -55,24 +57,20 @@ export class AddHeaderInterceptor implements HttpInterceptor {
 
         return next.handle((req.clone({ headers: headers }))).pipe(
             catchError((error) => {
-                if (error.status === 403) {
-                    return from(this.authService.loginLocal()).pipe(
-                        switchMap(() => {
-                            let token = this.authService.getAuthToken();
-                            req = req.clone({
-                                headers: req.headers
-                                    .set('Authorization', `Bearer ${token}`)
-                                    .set('Cache-Control', 'no-cache')
-                                    .set('X-Requested-With', 'XMLHttpRequest')
-                                    .set('fhirBase', this.authService.fhirBase)
-                            });
-                            return next.handle(req);
-                        })
-                    );
-                }
-                else{
-                    throw error;
-                }
+              if (error.status === 401) {
+                this.toastService.showException('Unauthorized', error);
+                this.router.navigate(['/unauthorized']);
+                throw error;
+              }
+              else if (error.status === 403) {
+                this.toastService.showException('Access Forbidden', error);
+                this.router.navigate(['/unauthorized']);
+                throw error;
+              }
+              else{
+                //this.toastService.showException('Server Error', error);
+                throw error;
+              }
             })
         );
     }

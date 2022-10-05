@@ -1,28 +1,22 @@
 package com.lantanagroup.link.nhsn;
 
+import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
+import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
-import com.lantanagroup.link.config.sender.FHIRSenderOAuthConfig;
-import com.lantanagroup.link.config.sender.FhirSenderUrlOAuthConfig;
 import lombok.Setter;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.logging.log4j.util.Strings;
+import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component
 public class FHIRReceiver {
@@ -32,44 +26,25 @@ public class FHIRReceiver {
   @Setter
   private FHIRSenderConfig config;
 
-  public HttpClient getHttpClient() {
+  public CloseableHttpClient getHttpClient() {
     return HttpClientBuilder.create().build();
   }
 
-  public String retrieveContent(String url) throws Exception {
+  public Bundle retrieveContent(String url) throws Exception {
+    LinkOAuthConfig oAuthConfig = this.config.getAuthConfig();
+    String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
+    url = (url.indexOf("_history") != -1) ? url.substring(0, url.indexOf("_history")) : url;
+    String[] urlParts = url.split("/");
+    String fhirServerBase = urlParts.length > 2?url.substring(0, url.indexOf(urlParts[urlParts.length - 2])):url;
+    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(fhirServerBase);
+    client.registerInterceptor(new GZipContentInterceptor());
 
-    String content = "";
-
-    Optional<FhirSenderUrlOAuthConfig> foundOauth = this.config.getSendUrls().stream().filter(authConfig -> url.contains(authConfig.getUrl())).findFirst();
-
-    if (foundOauth.isPresent()) {
-      FHIRSenderOAuthConfig oAuthConfig = foundOauth.get().getAuthConfig();
-      String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
-      HttpGet getRequest = new HttpGet(url);
-      getRequest.addHeader("Content-Type", "application/json");
-      if (Strings.isNotEmpty(token)) {
-        logger.debug("Adding auth token to submit request");
-        getRequest.addHeader("Authorization", "Bearer " + token);
-      }
-      try {
-        HttpClient httpClient = this.getHttpClient();
-        HttpResponse response = httpClient.execute(getRequest);
-        if (response.getStatusLine().getStatusCode() >= 300) {
-          String responseContent = IOUtils.toString(response.getEntity().getContent(), StandardCharsets.UTF_8);
-          logger.error(String.format("Error (%s) getting report to %s: %s", response.getStatusLine().getStatusCode(), url, responseContent));
-          throw new HttpResponseException(500, "Internal Server Error");
-        }
-        content = new BufferedReader(new InputStreamReader(response.getEntity().getContent())).lines().collect(Collectors.joining("\n"));
-      } catch (IOException ex) {
-        if (ex.getMessage().contains("403")) {
-          logger.error("Error authorizing receive: " + ex.getMessage());
-        } else {
-          logger.error("Error while receiving MeasureReport bundle from URL", ex);
-        }
-        throw ex;
-      }
+    if (StringUtils.isNotEmpty(token)) {
+      BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
+      client.registerInterceptor(authInterceptor);
     }
-    return content;
-  }
 
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(client);
+    return (Bundle) fhirDataProvider.retrieveFromServer(urlParts[urlParts.length - 2], urlParts[urlParts.length - 1]);
+  }
 }

@@ -15,7 +15,12 @@ import java.util.Optional;
 public class SingleCommandShellRunner implements ApplicationRunner {
   private final ConfigurableEnvironment environment;
   private final Shell shell;
-  private final List<String> commands = List.of("query", "generate-and-submit");
+  private final List<String> commands = List.of(
+          "query",
+          "generate-and-submit",
+          "knox-measure-report-transfer",
+          "refresh-patient-list",
+          "parkland-inventory-import");
 
   public SingleCommandShellRunner(Shell shell, ConfigurableEnvironment environment) {
     this.shell = shell;
@@ -42,8 +47,10 @@ public class SingleCommandShellRunner implements ApplicationRunner {
       }
     }
 
+
     InteractiveShellApplicationRunner.disable(this.environment);
     String[] commands = new String[commandAndArgs.size()];
     shell.run(new ShellInputProvider(commandAndArgs.toArray(commands)));
+    shell.run(new ShellInputProvider(new String[]{"exit"}));
   }
 }

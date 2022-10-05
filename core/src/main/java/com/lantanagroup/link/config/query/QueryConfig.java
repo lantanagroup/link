@@ -30,12 +30,6 @@ public class QueryConfig {
   private boolean requireHttps;
 
   /**
-   * <strong>query.fhir-server-base</strong><br>The base URL of the FHIR server that should be queried
-   */
-  @NotBlank @URL
-  private String fhirServerBase;
-
-  /**
    * <strong>query.api-key</strong><br>If running in a Remote scenario (<strong>api.query.mode == "Remote"</strong>), the API Key that the QueryAPI component should expect to allow requests.
    */
   @Size(min = 128)
@@ -62,19 +56,4 @@ public class QueryConfig {
    * <strong>query.auth-class</strong><br>The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
    */
   private String authClass;
-
-  /**
-   * <strong>query.patient-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are specific to a patient (support the 'patient' search parameter)
-   */
-  private List<String> patientResourceTypes;
-
-  /**
-   * <strong>query.other-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are NOT specific to a patient. These are queried via references from patient resources.
-   */
-  private List<String> otherResourceTypes;
-
-  /**
-   * <strong>query.parallel-patients</strong><br>The number of patients to query for at a single time.
-   */
-  private int parallelPatients = 10;
 }

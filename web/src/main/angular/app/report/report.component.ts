@@ -17,7 +17,8 @@ import {formatDateToISO} from "../helper";
 })
 export class ReportComponent implements OnInit, OnDestroy {
   reportId: string;
-  report: ReportModel;
+  reportModel: ReportModel;
+  reportMeasureList: any[];
   paramsSubscription: Subscription;
   loading = false;
   hasRequiredErrors = false;
@@ -34,19 +35,19 @@ export class ReportComponent implements OnInit, OnDestroy {
       private router: Router) {
   }
 
-  get repVersionNumber() {
-    return Number(this.report.version);
+  get submitText() {
+    if (this.submitInProgress) {
+      return "Submitting...";
+    } else return "Submit Bundle";
   }
 
-  get isSubmitted() {
-    if (!this.report) return false;
-    return this.report.status === 'FINAL';
+  getRepVersionNumber() {
+    return Number(this.reportModel.version);
   }
 
-  get measureId() {
-    if (this.report && this.report.measure && this.report.measure.identifier && this.report.measure.identifier.length > 0) {
-      return this.report.measure.identifier[0].value;
-    }
+  isSubmitted() {
+    if (!this.reportModel) return false;
+    return this.reportModel.status === 'FINAL';
   }
 
   setRequiredErrorsFlag(hasErrors) {
@@ -80,11 +81,10 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  get submitText(){
-    if(this.submitInProgress){
-      return "Submitting...";
+  getMeasureId(report) {
+    if (report && report.measure && report.measure.identifier && report.measure.identifier.length > 0) {
+      return report.measure.identifier[0].value;
     }
-    else return "Submit";
   }
 
   async send() {
@@ -100,7 +100,7 @@ export class ReportComponent implements OnInit, OnDestroy {
         this.submitInProgress = true;
         await this.reportService.send(this.reportId);
         this.toastService.showInfo('Report sent!');
-        await this.initReport();
+        await this.router.navigate(['/review']);
       }
     } catch (ex) {
       this.toastService.showException('Error sending report: ' + this.reportId, ex);
@@ -109,10 +109,10 @@ export class ReportComponent implements OnInit, OnDestroy {
     }
   }
 
-  async download() {
+  async download(type: string) {
     try {
       this.downloading = true;
-      await this.reportService.download(this.reportId);
+      await this.reportService.download(this.reportId, type);
       this.toastService.showInfo('Report downloaded!');
     } catch (ex) {
       this.toastService.showException('Error downloading report: ' + this.reportId, ex);
@@ -136,7 +136,9 @@ export class ReportComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     try {
-      this.report = await this.reportService.getReport(this.reportId);
+      this.reportModel = await this.reportService.getReport(this.reportId.substr(0));
+      const reportBundle = await this.reportModel;
+      this.reportMeasureList = reportBundle.reportMeasureList || [];
     } catch (ex) {
       this.toastService.showException('Error loading report', ex);
     } finally {
@@ -145,7 +147,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   }
 
   getStatusDisplay() {
-    switch (this.report.status.toLowerCase()) {
+    switch (this.reportModel.status.toLowerCase()) {
       case 'preliminary':
         return 'Reviewing';
       case 'final':
@@ -155,7 +157,7 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async save() {
     let reportSaveModel = new ReportSaveModel();
-    reportSaveModel.measureReport = this.report.measureReport;
+    reportSaveModel.measureReport = this.reportMeasureList[0];
     try {
       await this.reportService.save(reportSaveModel, this.reportId);
       this.toastService.showInfo('Report saved!');
@@ -168,13 +170,14 @@ export class ReportComponent implements OnInit, OnDestroy {
   async regenerate() {
     this.loading = true;
     this.regenerateReportButtonText = 'Loading...';
-    const identifier = this.report.measure.identifier[0].system + " | " + this.report.measure.identifier[0].value;
+    const bundleIds = (this.reportMeasureList || []).map(reportMeasure => reportMeasure.bundleId) + "";
+
     try {
       if (confirm('Confirm re-generate?\n Re-generating will re-acquire the latest date from the EHR for the period and re-evaluate the measure. ' +
           'Once re-evaluated, the newest calculated aggregate totals will be updated in this report. ' +
           'Fields not calculated as part of the measure will not be affected. Are you sure you want to continue?')) {
         try {
-          const generateResponse = await this.reportService.generate(identifier, formatDateToISO(this.report.measureReport.period.start), formatDateToISO(this.report.measureReport.period.end), true);
+          const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
           await this.router.navigate(['review', generateResponse.reportId]);
           this.toastService.showInfo('Report re-generated!');
           await this.initReport();
@@ -182,7 +185,7 @@ export class ReportComponent implements OnInit, OnDestroy {
           if (ex.status === 409) {
             if (confirm(ex.error.message)) {
               try {
-                const generateResponse = await this.reportService.generate(identifier, formatDateToISO(this.report.measureReport.period.start), formatDateToISO(this.report.measureReport.period.end), true);
+                const generateResponse = await this.reportService.generate(bundleIds, formatDateToISO(this.reportMeasureList[0].measureReport.period.start), formatDateToISO(this.reportMeasureList[0].measureReport.period.end), true);
                 await this.router.navigate(['review', generateResponse.reportId]);
               } catch (ex) {
                 this.toastService.showException('Error re-generating report', ex);

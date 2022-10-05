@@ -5,22 +5,26 @@ swagger:
     - openid
     - profile
 api:
-  fhir-server-store:
+  data-store:
+    base-url: ''
+    username: ''
+    password: ''
   auth-jwks-url:
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
   report-aggregator: com.lantanagroup.link.nhsn.ReportAggregator
+  data-processor:
+    csv: com.lantanagroup.link.thsa.GenericCSVProcessor
+    xlsx: com.lantanagroup.link.thsa.GenericXLSXProcessor
   events:
     before-patient-data-store:
       - com.lantanagroup.link.nhsn.ApplyConceptMaps
       - com.lantanagroup.link.nhsn.FixResourceId
-  send-url:
-  delete-after-submission: true
   cors:
     allowed-origins: '*'
     allowed-headers: '*'
-    allowed-credentials: true
+    allowed-credentials: false
     allowed-methods:
       - GET
       - POST
@@ -28,6 +32,7 @@ api:
       - PUT
       - OPTIONS
   document-reference-system: urn:ietf:rfc:3986
+  socket-timeout: 30000
   user:
     timezone: UTC
   report-defs:
@@ -35,19 +40,38 @@ api:
     retry-wait: 5000
   query:
     mode: Local
+  measure-evaluation-threads: 10
+thsa:
+  dataMeasureReportId: inventorydata
+bundler:
+  send-whole-bundle: true
+  remove-contained-resources: true
 query:
   require-https: true
-  parallel-patients: 10
   query-class: com.lantanagroup.link.query.uscore.Query
-  uscore:
-    queries:
-      - Encounter?patient=Patient/{{patientId}}
-      - Condition?patient=Patient/{{patientId}}
-      - MedicationRequest?patient=Patient/{{patientId}}
-      - Observation?category=laboratory&patient=Patient/{{patientId}}
-      - Procedure?patient=Patient/{{patientId}}
-      - ServiceRequest?patient=Patient/{{patientId}}
-      - Coverage?patient=Patient/{{patientId}}
-    additional-resources:
-      - Location/{{locationId}}
-      - Medication/{{medicationId}}
+  proxy-address: 23i90u4akdjsf
+  allowed-remote:
+    - testbadip
+    - 0:0:0:0:0:0:0:1
+    - 127.0.0.1
+    - dev-api.nhsnlink.org
+    - test-api.nhsnlink.org
+  api-key: 89a83764-9530-4340-9a14-1058b9e84f84c977f983-46e3-4e49-9c3b-869bb2b0f5328ba571b9-e785-4a0b-9fdd-5ff34b8125c47859d241-4ccc-406a-96b6-6fdc918a05e6f3288ebd-927c-4db5
+uscore:
+  fhir-server-base:
+  patient-resource-types:
+    - Encounter?patient=Patient/{{patientId}}
+    - Condition?patient=Patient/{{patientId}}
+    - MedicationRequest?patient=Patient/{{patientId}}
+    - Observation?category=laboratory&patient=Patient/{{patientId}}
+    - Procedure?patient=Patient/{{patientId}}
+    - ServiceRequest?patient=Patient/{{patientId}}
+    - Coverage?patient=Patient/{{patientId}}
+  additional-resources:
+    - Location/{{locationId}}
+    - Medication/{{medicationId}}
+  parallel-patients: 10
+data-governance:
+  census-list-retention:
+  patient-data-retention:
+  report-retention:

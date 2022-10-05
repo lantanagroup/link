@@ -20,4 +20,10 @@ public class BasicAuth implements ICustomAuth {
     String encoded = Base64.encodeBase64String(credentials.getBytes());
     return "Basic " + encoded;
   }
+
+  @Override
+  public String getApiKeyHeader() throws Exception {
+    return null;
+  }
+
 }

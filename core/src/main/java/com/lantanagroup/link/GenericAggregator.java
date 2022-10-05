@@ -1,30 +1,77 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
 public abstract class GenericAggregator implements IReportAggregator {
+  private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
 
-  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> patientMeasureReports);
+  @Autowired
+  private ApiConfig config;
+
+  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports);
+
+  private void setSubject(MeasureReport masterMeasureReport) {
+    if (this.config.getMeasureLocation() != null) {
+      logger.debug("Creating MeasureReport.subject based on config");
+      Reference subjectRef = masterMeasureReport.getSubject() != null && masterMeasureReport.getSubject().getReference() != null
+              ? masterMeasureReport.getSubject() : new Reference();
+      if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
+        subjectRef.setIdentifier(new Identifier()
+                .setSystem(this.config.getMeasureLocation().getSystem())
+                .setValue(this.config.getMeasureLocation().getValue()));
+      }
+
+      if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
+        Extension positionExt = new Extension(Constants.ReportPositionExtUrl);
+
+        if (this.config.getMeasureLocation().getLongitude() != null) {
+          Extension longExt = new Extension("longitude");
+          longExt.setValue(new DecimalType(this.config.getMeasureLocation().getLongitude()));
+          positionExt.addExtension(longExt);
+        }
+
+        if (this.config.getMeasureLocation().getLatitude() != null) {
+          Extension latExt = new Extension("latitude");
+          latExt.setValue(new DecimalType(this.config.getMeasureLocation().getLatitude()));
+          positionExt.addExtension(latExt);
+        }
+
+        subjectRef.addExtension(positionExt);
+      }
+
+      masterMeasureReport.setSubject(subjectRef);
+    }
+  }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context, List<MeasureReport> patientMeasureReports) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
-    masterMeasureReport.setId(context.getReportId());
+    masterMeasureReport.setId(measureContext.getReportId());
     masterMeasureReport.setType(MeasureReport.MeasureReportType.SUBJECTLIST);
     masterMeasureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
     masterMeasureReport.setPeriod(new Period());
     masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure(context.getMeasure().getUrl());
-    aggregatePatientReports(masterMeasureReport, patientMeasureReports);
-    createGroupsFromMeasure(masterMeasureReport, context);
+    masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
+
+    // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
+    this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
+
+    this.createGroupsFromMeasure(masterMeasureReport, measureContext);
+
+    this.setSubject(masterMeasureReport);
+
     return masterMeasureReport;
   }
 
@@ -65,28 +112,7 @@ public abstract class GenericAggregator implements IReportAggregator {
     return masteReportGroupPopulationValue;
   }
 
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
-    // if there are no groups generated then gets them from the measure
-    if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
-      Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
-              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
-              .findFirst();
+  protected abstract void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext);
 
-      if (measureEntry.isPresent()) {
-        Measure measure = (Measure) measureEntry.get().getResource();
-        measure.getGroup().forEach(group -> {
-          MeasureReport.MeasureReportGroupComponent groupComponent = new MeasureReport.MeasureReportGroupComponent();
-          groupComponent.setCode(group.getCode());
-          group.getPopulation().forEach(population -> {
-            MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
-            populationComponent.setCode(population.getCode());
-            populationComponent.setCount(0);
-            groupComponent.addPopulation(populationComponent);
-          });
-          masterMeasureReport.addGroup(groupComponent);
-        });
-      }
-    }
-  }
+
 }

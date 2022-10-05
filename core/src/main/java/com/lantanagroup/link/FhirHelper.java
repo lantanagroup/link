@@ -2,15 +2,16 @@ package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.EncodingEnum;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
@@ -38,10 +39,8 @@ public class FhirHelper {
    *
    * @param resource
    */
-  public static DomainResource cleanResource(DomainResource resource, FhirContext ctx) {
-    IParser jsonParser = ctx.newJsonParser();
-    String json = jsonParser.encodeResourceToString(resource);
-    DomainResource cloned = jsonParser.parseResource(resource.getClass(), json);
+  public static DomainResource cleanResource(DomainResource resource) {
+    DomainResource cloned = resource.copy();
     cloned.setMeta(null);
     cloned.setText(null);
 
@@ -115,9 +114,18 @@ public class FhirHelper {
       agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
     }
 
-    if (jsonObject.has("aud")) {
-      String aud = jsonObject.get("aud").getAsString();
-      Identifier identifier = new Identifier().setValue(aud);
+    if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
+      logger.info(String.format("Aud is : " + jsonObject.get("aud").toString()));
+      JsonElement aud = jsonObject.get("aud");
+      String identifierValue = "";
+      if (aud instanceof JsonPrimitive) {
+        identifierValue = aud.getAsString();
+      } else if (aud instanceof JsonArray) {
+        for (int i = 0; i < ((JsonArray) aud).size(); i++) {
+          identifierValue += ((JsonArray) aud).get(i).getAsString();
+        }
+      }
+      Identifier identifier = new Identifier().setValue(identifierValue);
       agent.setLocation(new Reference().setIdentifier(identifier));
     }
     agentList.add(agent);
@@ -224,9 +232,8 @@ public class FhirHelper {
     return documentReference;
   }
 
-  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
-    List<IBaseResource> bundles = new ArrayList<>();
-    bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+  public static <T extends IBaseResource> List<T> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx, Class<T> resourceType) {
+    List<T> resources = new ArrayList<>(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
 
     // Load the subsequent pages
     while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
@@ -235,10 +242,14 @@ public class FhirHelper {
               .loadPage()
               .next(bundle)
               .execute();
-      logger.info("Adding next page of bundles...");
-      bundles.addAll(BundleUtil.toListOfResources(ctx, bundle));
+      logger.info("Adding next page of resources...");
+      resources.addAll(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
     }
-    return bundles;
+    return resources;
+  }
+
+  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
+    return getAllPages(bundle, fhirDataProvider, ctx, IBaseResource.class);
   }
 
   public static PatientReportModel setPatientFields(Patient patient, Boolean excluded) {
@@ -336,22 +347,10 @@ public class FhirHelper {
     return practitioner;
   }
 
-  public static Bundle getBundle(String content) {
-    FhirContext ctx = FhirContextProvider.getFhirContext();
-    IParser jsonParser = ctx.newJsonParser();
-    IParser xmlParser = ctx.newXmlParser();
-    Bundle reportDefBundle;
-    try {
-      if (content.trim().startsWith("{") || content.trim().startsWith("[")) {
-        reportDefBundle = jsonParser.parseResource(Bundle.class, content);
-      } else {
-        reportDefBundle = xmlParser.parseResource(Bundle.class, content);
-      }
-    } catch (Exception ex) {
-      logger.error(String.format("Error parsing report def bundle due to %s", ex.getMessage()));
-      return null;
-    }
-    return reportDefBundle;
+  public static <T extends IBaseResource> T parseResource(Class<T> resourceType, String string) {
+    return EncodingEnum.detectEncoding(string)
+            .newParser(FhirContextProvider.getFhirContext())
+            .parseResource(resourceType, string);
   }
 
   /**
@@ -451,42 +450,34 @@ public class FhirHelper {
    * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
    */
   public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
-    if (bundle.getEntry() != null) {
+    if (bundle.hasEntry()) {
       FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
       Bundle txBundle = new Bundle();
       Bundle returnBundle = new Bundle();
       txBundle.setType(Bundle.BundleType.BATCH);
       returnBundle.setType(bundle.getType());
-      logger.info("Filtering the measure definition bundle");
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-        if (entry.getResource().getResourceType().toString() == "ValueSet"
-                || entry.getResource().getResourceType().toString().equals("CodeSystem")) {
-          entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
+        if (entry.getResource() instanceof ValueSet || entry.getResource() instanceof CodeSystem) {
           txBundle.addEntry(entry);
         } else {
           returnBundle.addEntry(entry);
         }
       }
-      logger.info("Storing ValueSet and CodeSystem resources to Terminology Service");
-      fhirDataProvider.transaction(txBundle);
+      if (txBundle.hasEntry()) {
+        fhirDataProvider.transaction(txBundle);
+      }
       return returnBundle;
     }
     return bundle;
   }
 
-  protected static Set getDataRequirementTypes(Bundle reportRefBundle) {
-    List<Library> libraryList = reportRefBundle.getEntry().stream()
-            .filter(e -> e.getResource() instanceof Library)
-            .map(e -> (Library) e.getResource()).collect(Collectors.toList());
-
-    HashSet dataRequirements = new HashSet();
-    libraryList.forEach(library -> {
-      Set libTypes = library.getDataRequirement().stream().map(DataRequirement::getType).collect(Collectors.toSet());
-      dataRequirements.addAll(libTypes);
-
-    });
-    return dataRequirements;
+  public static Set<String> getDataRequirementTypes(Bundle reportDefBundle) {
+    return reportDefBundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(resource -> resource instanceof Library)
+            .flatMap(resource -> ((Library) resource).getDataRequirement().stream().map(DataRequirement::getType))
+            .collect(Collectors.toSet());
   }
 
   public static boolean validLibraries(Bundle reportRefBundle) {
@@ -498,11 +489,11 @@ public class FhirHelper {
     return libraryEmptyList.isEmpty();
   }
 
-  public static String getQueryConfigurationDataReqMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
+  public static List<String> getQueryConfigurationDataReqMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
     // get data requirements
     Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
-    return reportDefBundleDataReqSet.stream().filter(e -> !properties.contains(e)).collect(Collectors.joining(","));
+    return reportDefBundleDataReqSet.stream().filter(e -> !e.equals("Patient") && !properties.contains(e)).collect(Collectors.toList());
   }
 
   public static List<String> getQueryConfigurationDataReqCommonResourceTypes(List<String> properties, Bundle measureDefBundle) {
@@ -512,19 +503,8 @@ public class FhirHelper {
     return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
   }
 
-  public static List<String> getQueryConfigurationResourceTypes(QueryConfig queryConfig) {
-    return Helper.concatenate(queryConfig.getPatientResourceTypes(), queryConfig.getOtherResourceTypes());
-  }
-
-  public static String getDocumentReferenceLocationByUrl(DocumentReference documentReference, String url) {
-    String location = "";
-    if (documentReference != null) {
-      Optional<DocumentReference.DocumentReferenceContentComponent> loc = documentReference.getContent().stream().filter(content -> !content.isEmpty() && content.hasAttachment() && content.getAttachment().hasUrl() && content.getAttachment().getUrl().contains(url)).findFirst();
-      if (loc.isPresent()) {
-        location = loc.get().getAttachment().getUrl() != null ? loc.get().getAttachment().getUrl() : "";
-      }
-    }
-    return location;
+  public static List<String> getQueryConfigurationResourceTypes(USCoreConfig usCoreConfig) {
+    return Helper.concatenate(usCoreConfig.getPatientResourceTypes(), usCoreConfig.getOtherResourceTypes());
   }
 
   public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
@@ -553,7 +533,7 @@ public class FhirHelper {
     return new ArrayList<>();
   }
 
-  public static String getFirstDocumentReferenceLocation(DocumentReference documentReference) {
+  public static String getSubmittedLocation(DocumentReference documentReference) {
     String bundleLocation = "";
     for (DocumentReference.DocumentReferenceContentComponent content : documentReference.getContent()) {
       if (content.hasAttachment() && content.getAttachment().hasUrl()) {
@@ -563,8 +543,17 @@ public class FhirHelper {
     return bundleLocation;
   }
 
+  // TODO: This typically creates a second content element, which I don't think we want
+  //       The one initially created in ReportGenerator.generateDocumentReference has a creation date but no URL
+  public static void setSubmissionLocation(DocumentReference documentReference, String location) {
+    documentReference.getContent().removeIf(c -> c.hasAttachment() && c.getAttachment().hasUrl());
+    DocumentReference.DocumentReferenceContentComponent newContent = new DocumentReference.DocumentReferenceContentComponent();
+    newContent.getAttachment().setUrl(location);
+    documentReference.getContent().add(newContent);
+  }
+
   public static void initSerializers(SimpleModule module, IParser jsonParser) {
-    List.of("Account","ActivityDefinition","AdverseEvent","AllergyIntolerance","Appointment","AppointmentResponse","AuditEvent","Basic","Binary","BiologicallyDerivedProduct","BodyStructure","Bundle","CapabilityStatement","CarePlan","CareTeam","CatalogEntry","ChargeItem","ChargeItemDefinition","Claim","ClaimResponse","ClinicalImpression","CodeSystem","Communication","CommunicationRequest","CompartmentDefinition","Composition","ConceptMap","Condition","Consent","Contract","Coverage","CoverageEligibilityRequest","CoverageEligibilityResponse","DetectedIssue","Device","DeviceDefinition","DeviceMetric","DeviceRequest","DeviceUseStatement","DiagnosticReport","DocumentManifest","DocumentReference","EffectEvidenceSynthesis","Encounter","Endpoint","EnrollmentRequest","EnrollmentResponse","EpisodeOfCare","EventDefinition","Evidence","EvidenceVariable","ExampleScenario","ExplanationOfBenefit","FamilyMemberHistory","Flag","Goal","GraphDefinition","Group","GuidanceResponse","HealthcareService","ImagingStudy","Immunization","ImmunizationEvaluation","ImmunizationRecommendation","ImplementationGuide","InsurancePlan","Invoice","Library","Linkage","ListResource","Location","Measure","MeasureReport","Media","Medication","MedicationAdministration","MedicationDispense","MedicationKnowledge","MedicationRequest","MedicationStatement","MedicinalProduct","MedicinalProductAuthorization","MedicinalProductContraindication","MedicinalProductIndication","MedicinalProductIngredient","MedicinalProductInteraction","MedicinalProductManufactured","MedicinalProductPackaged","MedicinalProductPharmaceutical","MedicinalProductUndesirableEffect","MessageDefinition","MessageHeader","MolecularSequence","NamingSystem","NutritionOrder","Observation","ObservationDefinition","OperationDefinition","OperationOutcome","Organization","OrganizationAffiliation","Parameters","Patient","PaymentNotice","PaymentReconciliation","Person","PlanDefinition","Practitioner","PractitionerRole","Procedure","Provenance","Questionnaire","QuestionnaireResponse","RelatedPerson","RequestGroup","ResearchDefinition","ResearchElementDefinition","ResearchStudy","ResearchSubject","RiskAssessment","RiskEvidenceSynthesis","Schedule","SearchParameter","ServiceRequest","Slot","Specimen","SpecimenDefinition","StructureDefinition","StructureMap","Subscription","Substance","SubstancePolymer","SubstanceProtein","SubstanceReferenceInformation","SubstanceSpecification","SubstanceSourceMaterial","SupplyDelivery","SupplyRequest","Task","TerminologyCapabilities","TestReport","TestScript","ValueSet","VerificationResult","VisionPrescription")
+    List.of("Account", "ActivityDefinition", "AdverseEvent", "AllergyIntolerance", "Appointment", "AppointmentResponse", "AuditEvent", "Basic", "Binary", "BiologicallyDerivedProduct", "BodyStructure", "Bundle", "CapabilityStatement", "CarePlan", "CareTeam", "CatalogEntry", "ChargeItem", "ChargeItemDefinition", "Claim", "ClaimResponse", "ClinicalImpression", "CodeSystem", "Communication", "CommunicationRequest", "CompartmentDefinition", "Composition", "ConceptMap", "Condition", "Consent", "Contract", "Coverage", "CoverageEligibilityRequest", "CoverageEligibilityResponse", "DetectedIssue", "Device", "DeviceDefinition", "DeviceMetric", "DeviceRequest", "DeviceUseStatement", "DiagnosticReport", "DocumentManifest", "DocumentReference", "EffectEvidenceSynthesis", "Encounter", "Endpoint", "EnrollmentRequest", "EnrollmentResponse", "EpisodeOfCare", "EventDefinition", "Evidence", "EvidenceVariable", "ExampleScenario", "ExplanationOfBenefit", "FamilyMemberHistory", "Flag", "Goal", "GraphDefinition", "Group", "GuidanceResponse", "HealthcareService", "ImagingStudy", "Immunization", "ImmunizationEvaluation", "ImmunizationRecommendation", "ImplementationGuide", "InsurancePlan", "Invoice", "Library", "Linkage", "ListResource", "Location", "Measure", "MeasureReport", "Media", "Medication", "MedicationAdministration", "MedicationDispense", "MedicationKnowledge", "MedicationRequest", "MedicationStatement", "MedicinalProduct", "MedicinalProductAuthorization", "MedicinalProductContraindication", "MedicinalProductIndication", "MedicinalProductIngredient", "MedicinalProductInteraction", "MedicinalProductManufactured", "MedicinalProductPackaged", "MedicinalProductPharmaceutical", "MedicinalProductUndesirableEffect", "MessageDefinition", "MessageHeader", "MolecularSequence", "NamingSystem", "NutritionOrder", "Observation", "ObservationDefinition", "OperationDefinition", "OperationOutcome", "Organization", "OrganizationAffiliation", "Parameters", "Patient", "PaymentNotice", "PaymentReconciliation", "Person", "PlanDefinition", "Practitioner", "PractitionerRole", "Procedure", "Provenance", "Questionnaire", "QuestionnaireResponse", "RelatedPerson", "RequestGroup", "ResearchDefinition", "ResearchElementDefinition", "ResearchStudy", "ResearchSubject", "RiskAssessment", "RiskEvidenceSynthesis", "Schedule", "SearchParameter", "ServiceRequest", "Slot", "Specimen", "SpecimenDefinition", "StructureDefinition", "StructureMap", "Subscription", "Substance", "SubstancePolymer", "SubstanceProtein", "SubstanceReferenceInformation", "SubstanceSpecification", "SubstanceSourceMaterial", "SupplyDelivery", "SupplyRequest", "Task", "TerminologyCapabilities", "TestReport", "TestScript", "ValueSet", "VerificationResult", "VisionPrescription")
             .forEach(e -> {
               try {
                 Class theClass = Class.forName("org.hl7.fhir.r4.model." + e);
@@ -576,6 +565,38 @@ public class FhirHelper {
             });
   }
 
+  /**
+   * Reads the configuration file and figures out what aggregator to instantiate for a given measure bundle
+   *
+   * @param reportDefBundle
+   * @param config
+   * @return Returns the aggregator class for that measure
+   */
+  public static String getReportAggregatorClassName(ApiConfig config, Bundle reportDefBundle) {
+    String reportAggregatorClassName = null;
+    Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
+      String bundleId = urlConfig.getBundleId();
+      return bundleId.equalsIgnoreCase(reportDefBundle.getIdElement().getIdPart());
+    }).findFirst();
+    if (measureReportAggregatorUrl.isPresent() && !StringUtils.isEmpty(measureReportAggregatorUrl.get().getReportAggregator())) {
+      reportAggregatorClassName = measureReportAggregatorUrl.get().getReportAggregator();
+    } else {
+      reportAggregatorClassName = config.getReportAggregator();
+    }
+    logger.info(String.format("Using aggregator %s for measure %s", reportAggregatorClassName, reportDefBundle.getId()));
+    return reportAggregatorClassName;
+  }
+
+
+  public static Measure getMeasure(Bundle reportDefBundle) throws Exception {
+    return reportDefBundle.getEntry().stream()
+            .filter(entry -> entry.getResource() instanceof Measure)
+            .map(entry -> (Measure) entry.getResource())
+            .findFirst()
+            .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+  }
+
+
   public enum AuditEventTypes {
     Generate,
     ExcludePatients,
@@ -583,7 +604,8 @@ public class FhirHelper {
     Send,
     SearchLocations,
     InitiateQuery,
-    SearchReports
+    SearchReports,
+    Transformation
   }
 }
 

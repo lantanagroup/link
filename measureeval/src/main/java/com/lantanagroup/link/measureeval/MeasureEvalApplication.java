@@ -11,7 +11,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link.measureeval",
+        "com.lantanagroup.link.spring"
+})
 public class MeasureEvalApplication extends SpringBootServletInitializer {
   @Autowired
   private FhirContext fhirContext;

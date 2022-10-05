@@ -3,7 +3,8 @@ package com.lantanagroup.link.model;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 public class GenerateResponse {
   private String reportId;
 }

@@ -4,7 +4,9 @@ import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -23,7 +25,7 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
   public LinkAuthenticationSuccessHandler(ApiConfig config) {
     this.config = config;
-    this.provider = new FhirDataProvider((config.getFhirServerStore()));
+    this.provider = new FhirDataProvider(config.getDataStore());
   }
 
   @Override
@@ -47,30 +49,35 @@ public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHa
         }
       }
     } catch (ResourceNotFoundException ex) {
-      String msg = String.format("Practitioner Resource with identifier  \"%s\"  was not found on FHIR server \"%s\". It will be created.", practitioner.getId(), config.getFhirServerStore());
+      String msg = String.format("Practitioner Resource with identifier \"%s\"  was not found on the data store. It will be created.", practitioner.getId());
       logger.debug(msg);
       provider.updateResource(practitioner);
     } catch (Exception ex) {
-      String msg = String.format("Unable to retrieve practitioner with identifier  \"%s\"  from FHIR server \"%s\"", practitioner.getId(), config.getFhirServerStore());
+      String msg = String.format("Unable to retrieve practitioner with identifier \"%s\" from the data store", practitioner.getId());
       logger.error(msg);
       ex.printStackTrace();
     }
   }
 
+  private String getFamilyName(Practitioner practitioner) {
+    return practitioner.getNameFirstRep().getFamily();
+  }
+
+  private String getGivenName(Practitioner practitioner) {
+    return practitioner.getNameFirstRep().getGivenAsSingleString();
+  }
+
+  private String getEmailAddress(Practitioner practitioner) {
+    return practitioner.getTelecom().stream()
+            .filter(telecom -> telecom.getSystem() == ContactPoint.ContactPointSystem.EMAIL)
+            .map(ContactPoint::getValue)
+            .findFirst()
+            .orElse(null);
+  }
+
   private boolean isSamePractitioner(Practitioner practitioner1, Practitioner practitioner2) {
-    boolean same = true;
-    String familyNamePractitioner1 = practitioner1.getName().get(0).getFamily();
-    String familyNamePractitioner2 = practitioner2.getName().get(0).getFamily();
-    String givenNamePractitioner1 = practitioner1.getName().get(0).getGiven().get(0).toString();
-    String givenNamePractitioner2 = practitioner2.getName().get(0).getGiven().get(0).toString();
-    String email1Value = practitioner1.getTelecomFirstRep().getValue();
-    String email2Value = practitioner2.getTelecomFirstRep().getValue();
-    String email1System = practitioner1.getTelecomFirstRep().getSystem().name();
-    String email2System = practitioner2.getTelecomFirstRep().getSystem().name();
-    if (!familyNamePractitioner1.equals(familyNamePractitioner2) || !givenNamePractitioner1.equals(givenNamePractitioner2) ||
-            !email1System.equals(email2System) || !email1Value.equals(email2Value)) {
-      same = false;
-    }
-    return same;
+    return StringUtils.equals(getFamilyName(practitioner1), getFamilyName(practitioner2))
+            && StringUtils.equals(getGivenName(practitioner1), getGivenName(practitioner2))
+            && StringUtils.equals(getEmailAddress(practitioner1), getEmailAddress(practitioner2));
   }
 }

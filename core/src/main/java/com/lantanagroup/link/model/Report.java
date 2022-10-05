@@ -12,7 +12,6 @@ import java.util.Date;
 @Setter
 public class Report {
   String id;
-  String measureIdentifier;
   String status;
   String docStatus;
   String author;
@@ -42,9 +41,6 @@ public class Report {
     }
     if (docReference.getContext() != null && docReference.getContext().getPeriod() != null && docReference.getContext().getPeriod().getStart() != null) {
       this.setPeriodStartDate(Helper.getFhirDate(docReference.getContext().getPeriod().getStart()));
-    }
-    if (!docReference.getIdentifier().isEmpty()) {
-      this.setMeasureIdentifier(docReference.getIdentifier().get(0).getSystem() + "|" + docReference.getIdentifier().get(0).getValue());
     }
     if (docReference.getDate() != null) {
       this.setSubmittedDate(Helper.getFhirDate(docReference.getDate()));
