@@ -762,14 +762,14 @@ public class ReportController extends BaseController {
    * @return A ReportModel that has been updated to reflect the exclusions
    */
   @PostMapping("/{reportId}/$exclude")
-  public ReportModel excludePatients(
+  public ReportModel excludePatients( 
           Authentication authentication,
           HttpServletRequest request,
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
           @RequestBody List<ExcludedPatientModel> excludedPatients) {
 
-    DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(reportId);
+    DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(ReportIdHelper.getMasterIdentifierValue(reportId));
 
     if (reportDocRef == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
