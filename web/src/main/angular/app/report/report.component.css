@@ -2,15 +2,17 @@
     width: 150px;
 }
 
+.row {
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
 .card {
     border: 1px solid #dadada;
     box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.2);
     transition: 0.2s;
     display: flex;
     flex-direction: column;
-    margin-top: 50px;
-    margin-left: 25px;
-    margin-right: 25px;
 }
 
 
@@ -50,6 +52,7 @@ div.alert {
 
 .report-buttons {
     margin-top: 50px;
+    margin-bottom: 50px;
 }
 
 .btn {
@@ -60,3 +63,4 @@ div.alert {
     margin-top: 50px;
     margin-bottom: 50px;
 }
+
