@@ -762,7 +762,7 @@ public class ReportController extends BaseController {
    * @return A ReportModel that has been updated to reflect the exclusions
    */
   @PostMapping("/{reportId}/$exclude")
-  public ReportModel excludePatients( 
+  public ReportModel excludePatients(
           Authentication authentication,
           HttpServletRequest request,
           @AuthenticationPrincipal LinkCredentials user,
