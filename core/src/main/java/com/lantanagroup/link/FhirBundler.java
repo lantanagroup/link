@@ -44,6 +44,17 @@ public class FhirBundler {
       addMeasureReports(bundle, aggregateMeasureReport);
     }
     triggerEvent(EventTypes.AfterBundling, bundle);
+    for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+      Resource resource = entry.getResource();
+      String resourceId = String.format("%s/%s", resource.getResourceType(), resource.getIdElement().getIdPart());
+      entry.setFullUrl(String.format("http://nhsnlink.org/fhir/%s", resourceId));
+      if (config.getBundleType() == Bundle.BundleType.TRANSACTION
+              || config.getBundleType() == Bundle.BundleType.BATCH) {
+        entry.getRequest()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(resourceId);
+      }
+    }
     return bundle;
   }
 
@@ -74,15 +85,7 @@ public class FhirBundler {
     if (copiedResource instanceof DomainResource) {
       ((DomainResource) copiedResource).setText(null);
     }
-    Bundle.BundleEntryComponent entry = bundle.addEntry()
-            .setFullUrl(String.format("http://nhsnlink.org/fhir/%s", copiedResourceId))
-            .setResource(copiedResource);
-    if (config.getBundleType() == Bundle.BundleType.TRANSACTION || config.getBundleType() == Bundle.BundleType.BATCH) {
-      entry.getRequest()
-              .setMethod(Bundle.HTTPVerb.PUT)
-              .setUrl(copiedResourceId.getValue());
-    }
-    return entry;
+    return bundle.addEntry().setResource(copiedResource);
   }
 
   private void addCensuses(Bundle bundle, DocumentReference documentReference) {
