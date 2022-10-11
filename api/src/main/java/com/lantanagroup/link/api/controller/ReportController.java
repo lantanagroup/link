@@ -900,7 +900,7 @@ public class ReportController extends BaseController {
 
     // Create ReportCriteria to be used by MeasureEvaluator
     ReportCriteria criteria = new ReportCriteria(
-            List.of(IdentifierHelper.toString(measure.getIdentifierFirstRep())),
+            bundleIds,
             reportDocRef.getContext().getPeriod().getStartElement().asStringValue(),
             reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
 
@@ -918,29 +918,20 @@ public class ReportController extends BaseController {
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
-    List<String> reportIds = new ArrayList<>();
-    List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+    List<MeasureReport> reportList = new ArrayList<>();
     ListResource refs = (ListResource)measureReport.getContained().get(0);
     for(ListResource.ListEntryComponent patient : refs.getEntry()) {
       for(ExcludedPatientModel excludedPatient : excludedPatients) {
         String patientId = patient.getItem().getReference().substring(patient.getItem().getReference().indexOf("/") + 1);
         String excludePatientId = ReportIdHelper.getPatientMeasureReportId(reportId, excludedPatient.getPatientId());
         if(!patientId.equals(excludePatientId)) {
-          reportIds.add(patient.getId());
+          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(patientId);
+          reportList.add(patientReport);
         }
-      }
-    }
-    Bundle reportBundle = this.getFhirDataProvider().getMeasureReportsByIds(reportIds);
-    List<MeasureReport> reportList = new ArrayList<>();
-    for(Bundle.BundleEntryComponent comp : reportBundle.getEntry()) {
-      String compType = comp.getResource().getResourceType().toString();
-      if(compType.equals("MeasureReport")) {
-        reportList.add((MeasureReport)comp.getResource());
       }
     }
     measureContext.setPatientReports(reportList);
 
-    //ReportAggregator reportAggregator = new ReportAggregator();
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureBundle);
     IReportAggregator reportAggregator = null;
     try {
