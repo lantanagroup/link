@@ -25,7 +25,7 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
           MeasureReport.MeasureReportGroupPopulationComponent aggregatePopulation) {
     logger.debug(
             "Adding subject result to {}: {}",
-            aggregatePopulation.getCode().getCodingFirstRep(),
+            aggregatePopulation.getCode().getCodingFirstRep().getCode(),
             individualMeasureReport.getId());
     ListResource subjectResults;
     if (aggregatePopulation.hasSubjectResults()) {
@@ -37,8 +37,8 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
       aggregatePopulation.getSubjectResults().setResource(subjectResults);
       aggregatePopulation.setSubjectResultsTarget(subjectResults);
     }
-    subjectResults.addEntry().getItem().setReferenceElement(
-            individualMeasureReport.getIdElement().toUnqualifiedVersionless());
+    subjectResults.addEntry().getItem().setReference(
+            "MeasureReport/" + individualMeasureReport.getIdElement().getIdPart());
   }
 
   public void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports) {
