@@ -13,8 +13,6 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.*;
 
 import com.lantanagroup.link.nhsn.FHIRReceiver;
-import com.lantanagroup.link.nhsn.ReportAggregator;
-
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
