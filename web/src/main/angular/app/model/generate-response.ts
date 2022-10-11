@@ -1,3 +1,3 @@
 export interface GenerateResponse {
-  reportId: string;
+  masterId: string;
 }

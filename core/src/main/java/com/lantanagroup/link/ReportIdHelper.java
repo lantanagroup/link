@@ -45,4 +45,10 @@ public class ReportIdHelper {
   public static String getPatientDataBundleId(String masterIdentifierValue, String patientId) {
     return combine(masterIdentifierValue, hash(patientId));
   }
+
+  public static String getPatientDataBundleId(String patientReportId) {
+    String[] ids = patientReportId.split("-");
+    return ids.length == 3 ? combine(ids[0], ids[2]) : "";
+  }
+
 }
