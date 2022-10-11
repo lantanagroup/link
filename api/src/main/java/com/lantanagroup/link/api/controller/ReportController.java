@@ -775,17 +775,43 @@ public class ReportController extends BaseController {
     }
 
 
-    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
+    /*MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
     if (measureReport == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s does not have a MeasureReport", reportId));
-    }
+    }*/
 
     if (excludedPatients == null || excludedPatients.size() == 0) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No exclusions specified");
     }
 
-    Measure measure = new Measure();
-    measure.setUrl(measureReport.getMeasure());
+
+
+    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
+    if (measureReport == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s does not have a MeasureReport", reportId));
+    }
+    Measure measure = null;
+    Bundle measureBundle = null;
+    for (int i = 0; i < reportDocRef.getIdentifier().size(); i++) {
+      String report = "";
+      try {
+        report = ReportIdHelper.getMasterMeasureReportId(ReportIdHelper.getMasterIdentifierValue(reportId), reportDocRef.getIdentifier().get(i).getValue());
+        if(report.equals(measureReport.getIdElement().getIdPart())){
+          measureBundle =  this.getFhirDataProvider().getBundleById(reportDocRef.getIdentifier().get(i).getValue());
+          measure = FhirHelper.getMeasure(measureBundle);
+          break;
+        }
+      } catch (Exception ex) {
+        logger.error(ex.getMessage());
+      }
+    }
+
+    List<String> bundleIds = reportDocRef.getIdentifier().stream().map(identifier -> identifier.getValue()).collect(Collectors.toList());
+
+
+
+    //Measure measure = new Measure();
+    //measure.setUrl(measureReport.getMeasure());
 
     if (measure == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("The measure for report %s was not found or no longer exists on the system", reportId));
@@ -819,12 +845,14 @@ public class ReportController extends BaseController {
                       }));
 
       // Throw an error if the Patient does not show up in either evaluatedResources or the excluded extensions
-      if (foundEvaluatedPatient.size() == 0 && !foundExcluded) {
+      //Commented out until CQF ruler is fixed
+      /*if (foundEvaluatedPatient.size() == 0 && !foundExcluded) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Patient %s is not included in report %s", excludedPatient.getPatientId(), reportId));
-      }
+      }*/
 
       // Create an extension for the excluded patient on the MeasureReport
-      if (!foundExcluded) {
+      //Commented out until CQF ruler is fixed
+      /*if (!foundExcluded) {
         Extension newExtension = new Extension(Constants.ExcludedPatientExtUrl);
         newExtension.addExtension("patient", new Reference("Patient/" + excludedPatient.getPatientId()));
         newExtension.addExtension("reason", excludedPatient.getReason());
@@ -835,7 +863,7 @@ public class ReportController extends BaseController {
         if (foundEvaluatedPatient.size() > 0) {
           foundEvaluatedPatient.forEach(ep -> measureReport.getEvaluatedResource().remove(ep));
         }
-      }
+      }*/
 
       logger.debug(String.format("Checking if patient %s has been deleted already", excludedPatient.getPatientId()));
 
@@ -890,23 +918,36 @@ public class ReportController extends BaseController {
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
+    List<String> reportIds = new ArrayList<>();
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-    // TODO: Add patientList without excluded Patients to measureContext
     ListResource refs = (ListResource)measureReport.getContained().get(0);
     for(ListResource.ListEntryComponent patient : refs.getEntry()) {
       for(ExcludedPatientModel excludedPatient : excludedPatients) {
-        if(!patient.getId().equals(String.valueOf(excludedPatient.getPatientId().hashCode()))) {
-          PatientOfInterestModel includedPatient = new PatientOfInterestModel();
-          includedPatient.setReference(patient.getId());
-          patientsOfInterest.add(includedPatient);
+        String patientId = patient.getItem().getReference().substring(patient.getItem().getReference().indexOf("/") + 1);
+        String excludePatientId = ReportIdHelper.getPatientMeasureReportId(reportId, excludedPatient.getPatientId());
+        if(!patientId.equals(excludePatientId)) {
+          reportIds.add(patient.getId());
         }
       }
     }
-    measureContext.setPatientsOfInterest(patientsOfInterest);
+    Bundle reportBundle = this.getFhirDataProvider().getMeasureReportsByIds(reportIds);
+    List<MeasureReport> reportList = new ArrayList<>();
+    for(Bundle.BundleEntryComponent comp : reportBundle.getEntry()) {
+      String compType = comp.getResource().getResourceType().toString();
+      if(compType.equals("MeasureReport")) {
+        reportList.add((MeasureReport)comp.getResource());
+      }
+    }
+    measureContext.setPatientReports(reportList);
 
-    ReportAggregator reportAggregator = new ReportAggregator();
-    //String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
-    //IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+    //ReportAggregator reportAggregator = new ReportAggregator();
+    String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureBundle);
+    IReportAggregator reportAggregator = null;
+    try {
+      reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
     MeasureReport updatedMeasureReport = null;
     try {
       updatedMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
