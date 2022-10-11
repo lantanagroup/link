@@ -5,7 +5,6 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -48,12 +47,12 @@ public class EventService {
     triggerEvent(eventType, criteria, context, null);
   }
 
-  public void triggerPatientEvent(EventTypes eventType, Bundle patientBundle) throws Exception {
+  public void triggerDataEvent(EventTypes eventType, Bundle bundle) throws Exception {
     List<Object> beans = getBeans(eventType);
     if (beans == null) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
-        ((IReportGenerationDataEvent) bean).execute(patientBundle);
+        ((IReportGenerationDataEvent) bean).execute(bundle);
       }
     }
   }
