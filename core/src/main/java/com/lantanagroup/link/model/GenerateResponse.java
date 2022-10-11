@@ -6,5 +6,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GenerateResponse {
-  private String reportId;
+  private String masterId;
 }
