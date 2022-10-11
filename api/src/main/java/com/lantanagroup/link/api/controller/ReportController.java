@@ -922,10 +922,10 @@ public class ReportController extends BaseController {
     ListResource refs = (ListResource)measureReport.getContained().get(0);
     for(ListResource.ListEntryComponent patient : refs.getEntry()) {
       for(ExcludedPatientModel excludedPatient : excludedPatients) {
-        String patientId = patient.getItem().getReference().substring(patient.getItem().getReference().indexOf("/") + 1);
-        String excludePatientId = ReportIdHelper.getPatientMeasureReportId(reportId, excludedPatient.getPatientId());
-        if(!patientId.equals(excludePatientId)) {
-          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(patientId);
+        String patientReportId = patient.getItem().getReference().substring(patient.getItem().getReference().indexOf("/") + 1);
+        String excludePatientReportId = ReportIdHelper.getPatientMeasureReportId(reportId, excludedPatient.getPatientId());
+        if(!patientReportId.equals(excludePatientReportId)) {
+          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(patientReportId);
           reportList.add(patientReport);
         }
       }
