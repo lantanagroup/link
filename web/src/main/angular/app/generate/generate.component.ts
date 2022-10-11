@@ -1,11 +1,12 @@
 import {Component, OnInit} from '@angular/core';
-import {formatDateToISO, getFhirDate, getFhirYesterday} from '../helper';
+import {formatDateToISO, getFhirDate, getFhirNow, getFhirYesterday} from '../helper';
 import {StoredReportDefinition} from '../model/stored-report-definition';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {Router} from '@angular/router';
 import * as moment from 'moment';
+import {NgbCheckBox} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: 'nandina-generate',
@@ -17,6 +18,7 @@ export class GenerateComponent implements OnInit {
   sending = false;
   loadingMeasures = false;
   reportGenerated = false;
+  //defaultTimeCheckBox = new NgbCheckBox();
   startDate = getFhirYesterday();
   endDate = getFhirYesterday();
   criteria: {
@@ -54,6 +56,11 @@ export class GenerateComponent implements OnInit {
     this.endDate = getFhirDate(this.criteria.periodEnd);
   }
 
+  onDefaultTimeSelect() {
+    const defaultStart = new Date(1990, 1, 1);
+    this.startDate = getFhirDate(defaultStart);
+    this.endDate = getFhirNow();
+  }
 
   async reload() {
     try {
