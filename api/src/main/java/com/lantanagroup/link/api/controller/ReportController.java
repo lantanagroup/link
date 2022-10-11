@@ -12,6 +12,7 @@ import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.FHIRReceiver;
+import com.lantanagroup.link.nhsn.ReportAggregator;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
@@ -785,7 +786,8 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No exclusions specified");
     }
 
-    Measure measure = this.getFhirDataProvider().getMeasureForReport(reportDocRef);
+    Measure measure = new Measure();
+    measure.setUrl(measureReport.getMeasure());
 
     if (measure == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("The measure for report %s was not found or no longer exists on the system", reportId));
@@ -877,20 +879,42 @@ public class ReportController extends BaseController {
             reportDocRef.getContext().getPeriod().getEndElement().asStringValue());
 
     // Create ReportContext to be used by MeasureEvaluator
-    ReportContext context = new ReportContext(this.getFhirDataProvider());
-    context.setRequest(request);
-    context.setUser(user);
-    context.setMasterIdentifierValue(reportId);
+    ReportContext reportContext = new ReportContext(this.getFhirDataProvider());
+    reportContext.setRequest(request);
+    reportContext.setUser(user);
+    reportContext.setMasterIdentifierValue(reportId);
     ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
     //  measureContext.setBundleId(reportDefIdentifier);
     // TODO: Set report def bundle on measure context
     measureContext.setMeasure(measure);
     measureContext.setReportId(measureReport.getIdElement().getIdPart());
-    context.getMeasureContexts().add(measureContext);
+    reportContext.getMeasureContexts().add(measureContext);
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
+    List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+    // TODO: Add patientList without excluded Patients to measureContext
+    ListResource refs = (ListResource)measureReport.getContained().get(0);
+    for(ListResource.ListEntryComponent patient : refs.getEntry()) {
+      for(ExcludedPatientModel excludedPatient : excludedPatients) {
+        if(!patient.getId().equals(String.valueOf(excludedPatient.getPatientId().hashCode()))) {
+          PatientOfInterestModel includedPatient = new PatientOfInterestModel();
+          includedPatient.setReference(patient.getId());
+          patientsOfInterest.add(includedPatient);
+        }
+      }
+    }
+    measureContext.setPatientsOfInterest(patientsOfInterest);
+
+    ReportAggregator reportAggregator = new ReportAggregator();
+    //String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
+    //IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
     MeasureReport updatedMeasureReport = null;
+    try {
+      updatedMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
+    } catch (ParseException e) {
+      e.printStackTrace();
+    }
 
     updatedMeasureReport.setId(reportId);
     updatedMeasureReport.setExtension(measureReport.getExtension());    // Copy extensions from the original report before overwriting
