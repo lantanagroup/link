@@ -14,10 +14,16 @@ public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
   private final BundlerConfig config;
   private final FhirDataProvider fhirDataProvider;
+  private final EventService eventService;
 
-  public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider) {
+  public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider, EventService eventService) {
     this.config = config;
     this.fhirDataProvider = fhirDataProvider;
+    this.eventService = eventService;
+  }
+
+  public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider) {
+    this(config, fhirDataProvider, null);
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, DocumentReference documentReference) {
@@ -30,13 +36,26 @@ public class FhirBundler {
             .setValue(UUID.randomUUID().toString());
     bundle.setType(config.getBundleType());
     bundle.setTimestamp(new Date());
+    triggerEvent(EventTypes.BeforeBundling, bundle);
     if (config.isIncludeCensuses()) {
       addCensuses(bundle, documentReference);
     }
     for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
       addMeasureReports(bundle, aggregateMeasureReport);
     }
+    triggerEvent(EventTypes.AfterBundling, bundle);
     return bundle;
+  }
+
+  private void triggerEvent(EventTypes eventType, Bundle bundle) {
+    if (eventService == null) {
+      return;
+    }
+    try {
+      eventService.triggerDataEvent(eventType, bundle);
+    } catch (Exception e) {
+      logger.error(String.format("Error occurred in %s handler", eventType), e);
+    }
   }
 
   private Bundle.BundleEntryComponent addOrGetEntry(Bundle bundle, Resource resource) {

@@ -28,9 +28,12 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
+  @Autowired
+  private EventService eventService;
+
   public Bundle generateBundle(DocumentReference documentReference, List<MeasureReport> masterMeasureReports, FhirDataProvider fhirProvider, BundlerConfig bundlerConfig) {
     logger.info("Building Bundle for MeasureReport to send...");
-    FhirBundler bundler = new FhirBundler(bundlerConfig, fhirProvider);
+    FhirBundler bundler = new FhirBundler(bundlerConfig, fhirProvider, eventService);
     return bundler.generateBundle(masterMeasureReports, documentReference);
   }
 
