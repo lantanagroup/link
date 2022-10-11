@@ -20,8 +20,8 @@
         <module name="cli" />
         <module name="thsa" />
         <module name="measureeval" />
-        <module name="nhsn" />
         <module name="datastore" />
+        <module name="nhsn" />
         <module name="query" />
         <module name="api" />
         <module name="consumer" />
@@ -49,7 +49,7 @@
       <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
       <module name="datastore" options="-parameters" />
-      <module name="link" options="-parameters" />
+      <module name="link" options="" />
       <module name="measureeval" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
