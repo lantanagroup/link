@@ -248,7 +248,7 @@ public class ReportControllerTests {
   }
 
   @Ignore
-  public void excludePatientsTest() throws HttpResponseException, ParseException, ClassNotFoundException {
+  public void excludePatientsTest() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -303,7 +303,7 @@ public class ReportControllerTests {
 
 
   @Ignore
-  public void excludePatientsTestException() throws HttpResponseException, ParseException, ClassNotFoundException {
+  public void excludePatientsTestException() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);

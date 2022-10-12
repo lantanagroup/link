@@ -764,7 +764,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @RequestBody List<ExcludedPatientModel> excludedPatients) throws ParseException, ClassNotFoundException {
+          @RequestBody List<ExcludedPatientModel> excludedPatients) throws Exception {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(ReportIdHelper.getMasterIdentifierValue(reportId));
 
