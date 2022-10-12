@@ -916,8 +916,8 @@ public class ReportController extends BaseController {
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
-    List<String> excludedPatientReportIds = ReportIdHelper.patientMeasureReportIdTransformer(
-            excludedPatients.stream().map(patient -> patient.getPatientId()).collect(Collectors.toList()), reportId);
+    List<String> excludedPatientReportIds = excludedPatients.stream().map(
+            patient -> ReportIdHelper.getPatientMeasureReportId(reportId, patient.getPatientId())).collect(Collectors.toList());
 
     Set<String> reportRefs = measureReport.getContained().stream().map(list -> (ListResource) list).flatMap(list -> list.getEntry().stream().map(
             entry -> entry.getItem().getReference().substring(entry.getItem().getReference().indexOf("/") + 1))).collect(Collectors.toSet());

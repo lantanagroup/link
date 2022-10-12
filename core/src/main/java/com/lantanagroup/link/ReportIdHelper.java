@@ -20,14 +20,6 @@ public class ReportIdHelper {
     return Integer.toHexString(combine(components).hashCode());
   }
 
-  public static List<String>patientMeasureReportIdTransformer(List<String> patientIds, String reportId) {
-    List<String> patientReportIds = new ArrayList<>();
-    for(String patientId : patientIds) {
-      patientReportIds.add(ReportIdHelper.getPatientMeasureReportId(reportId, patientId));
-    }
-    return patientReportIds;
-  }
-
   private static String hash(String... components) {
     return hash(List.of(components));
   }
