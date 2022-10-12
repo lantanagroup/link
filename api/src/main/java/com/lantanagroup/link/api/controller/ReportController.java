@@ -764,7 +764,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable("reportId") String reportId,
-          @RequestBody List<ExcludedPatientModel> excludedPatients) {
+          @RequestBody List<ExcludedPatientModel> excludedPatients) throws ParseException, ClassNotFoundException {
 
     DocumentReference reportDocRef = this.getFhirDataProvider().findDocRefForReport(ReportIdHelper.getMasterIdentifierValue(reportId));
 
@@ -927,18 +927,8 @@ public class ReportController extends BaseController {
     }).collect(Collectors.toList()));
 
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureBundle);
-    IReportAggregator reportAggregator = null;
-    try {
-      reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    MeasureReport updatedMeasureReport = null;
-    try {
-      updatedMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
+    IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+    MeasureReport updatedMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
 
     updatedMeasureReport.setId(reportId);
     updatedMeasureReport.setExtension(measureReport.getExtension());    // Copy extensions from the original report before overwriting
