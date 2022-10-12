@@ -916,19 +916,15 @@ public class ReportController extends BaseController {
 
     logger.debug("Re-evaluating measure with state of data on FHIR server");
 
-    List<MeasureReport> reportList = new ArrayList<>();
-    ListResource refs = (ListResource)measureReport.getContained().get(0);
-    for(ListResource.ListEntryComponent patient : refs.getEntry()) {
-      for(ExcludedPatientModel excludedPatient : excludedPatients) {
-        String patientReportId = patient.getItem().getReference().substring(patient.getItem().getReference().indexOf("/") + 1);
-        String excludePatientReportId = ReportIdHelper.getPatientMeasureReportId(reportId, excludedPatient.getPatientId());
-        if(!patientReportId.equals(excludePatientReportId)) {
-          MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(patientReportId);
-          reportList.add(patientReport);
-        }
-      }
-    }
-    measureContext.setPatientReports(reportList);
+    List<String> excludedPatientReportIds = ReportIdHelper.patientMeasureReportIdTransformer(
+            excludedPatients.stream().map(patient -> patient.getPatientId()).collect(Collectors.toList()), reportId);
+
+    Set<String> reportRefs = measureReport.getContained().stream().map(list -> (ListResource) list).flatMap(list -> list.getEntry().stream().map(
+            entry -> entry.getItem().getReference().substring(entry.getItem().getReference().indexOf("/") + 1))).collect(Collectors.toSet());
+
+    measureContext.setPatientReports(reportRefs.stream().filter(ref -> !excludedPatientReportIds.contains(ref)).map(ref -> {
+      MeasureReport patientReport = this.getFhirDataProvider().getMeasureReportById(ref); return patientReport;
+    }).collect(Collectors.toList()));
 
     String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureBundle);
     IReportAggregator reportAggregator = null;

@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.model.ReportCriteria;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +18,14 @@ public class ReportIdHelper {
 
   private static String hash(Iterable<String> components) {
     return Integer.toHexString(combine(components).hashCode());
+  }
+
+  public static List<String>patientMeasureReportIdTransformer(List<String> patientIds, String reportId) {
+    List<String> patientReportIds = new ArrayList<>();
+    for(String patientId : patientIds) {
+      patientReportIds.add(ReportIdHelper.getPatientMeasureReportId(reportId, patientId));
+    }
+    return patientReportIds;
   }
 
   private static String hash(String... components) {
