@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.model.ReportCriteria;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
