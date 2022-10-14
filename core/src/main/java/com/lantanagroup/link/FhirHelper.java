@@ -576,6 +576,24 @@ public class FhirHelper {
             .orElseThrow(() -> new Exception("Report def does not contain a measure"));
   }
 
+  /**
+   * Copies entries from {@code list2} into {@code list1} that are not already present in {@code list1}.
+   * Entries are considered equal if their items' references or identifiers are equal.
+   */
+  public static void mergeCensusLists(ListResource list1, ListResource list2) {
+    for (ListResource.ListEntryComponent entry2 : list2.getEntry()) {
+      Reference item2 = entry2.getItem();
+      boolean exists = list1.getEntry().stream().anyMatch(entry1 -> {
+        Reference item1 = entry1.getItem();
+        return StringUtils.equals(item1.getReference(), item2.getReference())
+                || item1.getIdentifier().equalsShallow(item2.getIdentifier());
+      });
+      if (!exists) {
+        list1.addEntry(entry2.copy());
+      }
+    }
+  }
+
 
   public enum AuditEventTypes {
     Generate,

@@ -100,12 +100,7 @@ public class FhirBundler {
       mergedCensus.setId(UUID.randomUUID().toString());
       mergedCensus.getEntry().clear();
       for (ListResource census : censuses) {
-        for (ListResource.ListEntryComponent entry : census.getEntry()) {
-          if (mergedCensus.getEntry().stream().anyMatch(mergedEntry -> mergedEntry.equalsDeep(entry))) {
-            continue;
-          }
-          mergedCensus.addEntry(entry.copy());
-        }
+        FhirHelper.mergeCensusLists(mergedCensus, census);
       }
       addOrGetEntry(bundle, mergedCensus);
     } else {
