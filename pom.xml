@@ -38,6 +38,7 @@
         <module>measureeval</module>
         <module>thsa</module>
         <module>nhsn</module>
+        <module>mhl</module>
     </modules>
 
     <dependencies>

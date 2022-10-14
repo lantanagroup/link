@@ -431,8 +431,7 @@ public class ReportController extends BaseController {
     documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
-    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(), this.bundlerConfig.isSendWholeBundle(),
-            this.bundlerConfig.isRemoveContainedResources());
+    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(), bundlerConfig);
 
     // Now that we've submitted (successfully), update the doc ref with the status and date
     this.getFhirDataProvider().updateResource(documentReference);
@@ -460,7 +459,7 @@ public class ReportController extends BaseController {
     Constructor<?> downloaderCtor = downloaderClass.getConstructor();
     downloader = (IReportDownloader) downloaderCtor.newInstance();
 
-    downloader.download(reportId, type, this.getFhirDataProvider(), response, this.ctx, this.bundlerConfig);
+    downloader.download(reportId, type, this.getFhirDataProvider(), response, this.ctx, this.bundlerConfig, this.eventService);
 
     this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Export, "Successfully Exported Report for Download");
   }

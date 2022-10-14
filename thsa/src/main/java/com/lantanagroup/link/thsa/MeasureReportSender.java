@@ -3,6 +3,7 @@ package com.lantanagroup.link.thsa;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -15,7 +16,7 @@ import java.util.List;
 @Component
 public class MeasureReportSender extends GenericSender implements IReportSender {
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception {
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
     if (masterMeasureReports.size() == 1) {
       this.sendContent(masterMeasureReports.get(0), documentReference, fhirDataProvider);
     } else {

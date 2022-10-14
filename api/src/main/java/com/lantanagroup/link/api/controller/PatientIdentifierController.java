@@ -1,10 +1,8 @@
 package com.lantanagroup.link.api.controller;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -167,7 +165,7 @@ public class PatientIdentifierController extends BaseController {
     if (resource instanceof ListResource) {
       ListResource list = (ListResource) resource;
 
-      List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
+      List<Identifier> identifierList = list.getIdentifier();
 
       if (identifierList.isEmpty()) {
         String msg = "Census List is missing identifier";
@@ -206,8 +204,8 @@ public class PatientIdentifierController extends BaseController {
       }
 
       //system and value represents the measure intended for this patient id list
-      String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
-      String value = ((ListResource) resource).getIdentifier().get(0).getValue();
+      String system = identifierList.get(0).getSystem();
+      String value = identifierList.get(0).getValue();
       DateTimeType startDate = applicablePeriod.getStartElement();
       DateTimeType endDate = applicablePeriod.getEndElement();
       String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
@@ -217,35 +215,10 @@ public class PatientIdentifierController extends BaseController {
       if (bundle.getEntry().size() == 0) {
         applicablePeriod.setStartElement(new DateTimeType(start));
         applicablePeriod.setEndElement(new DateTimeType(end));
-        this.getFhirDataProvider().createResource(resource);
+        this.getFhirDataProvider().createResource(list);
       } else {
         ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
-        // filter out duplicates
-        List<ListResource.ListEntryComponent> uniqueEntries = ((ListResource) resource).getEntry().parallelStream()
-                .filter(e -> {
-
-                  //check if reference or identifier exists, give priority to reference
-                  String reference = e.getItem().getReference();
-                  if(reference != null && !reference.isEmpty() && !reference.isBlank()) {
-                    return !existingList.getEntry().stream().anyMatch(s -> reference.equals(s.getItem().getReference()));
-                  }
-                  else if(e.getItem().getIdentifier() != null) {
-                    // TODO: Remove systemA and valueA; compare identifiers directly using equalsShallow
-                    String systemA = e.getItem().getIdentifier().getSystem();
-                    String valueA = e.getItem().getIdentifier().getValue();
-                    return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
-                  }
-                  else {
-                    //log that no reference or id for patient
-                    logger.info("No reference or identifier present for patient in provided resource.");
-                    return false;
-                  }
-                }).collect(Collectors.toList());
-
-        // merge lists into existingList
-        uniqueEntries.parallelStream().forEach(entry -> {
-          existingList.getEntry().add(entry);
-        });
+        FhirHelper.mergeCensusLists(existingList, list);
         this.getFhirDataProvider().updateResource(existingList);
       }
     } else {

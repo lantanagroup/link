@@ -41,7 +41,7 @@ public class BaseQuery {
     return this.fhirContext;
   }
 
-  protected IGenericClient getFhirQueryClient() throws ClassNotFoundException {
+  public IGenericClient getFhirQueryClient() throws ClassNotFoundException {
     if (this.fhirQueryClient != null) {
       return this.fhirQueryClient;
     }

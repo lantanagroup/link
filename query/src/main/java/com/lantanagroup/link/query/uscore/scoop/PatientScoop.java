@@ -3,7 +3,6 @@ package com.lantanagroup.link.query.uscore.scoop;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -13,7 +12,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -139,7 +137,7 @@ public class PatientScoop extends Scoop {
         // store the data
         try {
 
-          eventService.triggerPatientEvent(EventTypes.AfterPatientDataQuery, patientBundle);
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle);
 
           patientBundle.setType(Bundle.BundleType.BATCH);
 
@@ -156,14 +154,14 @@ public class PatientScoop extends Scoop {
           patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
 
-          eventService.triggerPatientEvent(EventTypes.BeforePatientDataStore,  patientBundle);
+          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore,  patientBundle);
 
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
           // staore data
           this.fhirDataProvider.updateResource(patientBundle);
 
-          eventService.triggerPatientEvent(EventTypes.AfterPatientDataStore, patientBundle);
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());
