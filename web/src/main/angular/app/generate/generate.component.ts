@@ -6,7 +6,6 @@ import {ReportService} from '../services/report.service';
 import {ReportDefinitionService} from '../services/report-definition.service';
 import {Router} from '@angular/router';
 import * as moment from 'moment';
-import {NgbCheckBox} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
   selector: 'nandina-generate',
@@ -18,7 +17,6 @@ export class GenerateComponent implements OnInit {
   sending = false;
   loadingMeasures = false;
   reportGenerated = false;
-  //defaultTimeCheckBox = new NgbCheckBox();
   startDate = getFhirYesterday();
   endDate = getFhirYesterday();
   criteria: {
