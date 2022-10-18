@@ -19,18 +19,14 @@ export class ReportService {
 
   async generate(bundleIds: string, periodStart: string, periodEnd: string, regenerate = false) {
     let url = 'report/$generate?';
-    url += `bundleIds=${encodeURIComponent(bundleIds)}&`;
-    url += `periodStart=${encodeURIComponent(periodStart)}&`;
-    url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
-    url += 'regenerate=' + (regenerate ? 'true' : 'false');
     url = this.configService.getApiUrl(url);
-
-    return await this.http.post<GenerateResponse>(url, null).toPromise();
+    const generateRequest = {bundleIds, periodStart,  periodEnd, regenerate: (regenerate ? 'true' : 'false') };
+    return await this.http.post<GenerateResponse>(url, generateRequest).toPromise();
   }
 
   getReports(queryParams) {
     let url = this.configService.getApiUrl('report?');
-    if (queryParams != undefined && queryParams != "") {
+    if (queryParams !== undefined && queryParams !== '') {
       url += queryParams;
     }
     return this.http.get<ReportBundle>(url).toPromise();

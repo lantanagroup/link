@@ -158,16 +158,13 @@ public class ReportController extends BaseController {
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
-          @RequestParam("bundleIds") String[] bundleIds,
-          @RequestParam("periodStart") String periodStart,
-          @RequestParam("periodEnd") String periodEnd,
-          boolean regenerate)
+          @RequestBody GenerateRequest input)
           throws Exception {
 
-    if (bundleIds.length < 1) {
-      throw new IllegalStateException("At least one bundleId should be specified");
+    if (input.getBundleIds().length < 1) {
+      throw new IllegalStateException("At least one bundleId should be specified.");
     }
-    return generateResponse(user, request, bundleIds, periodStart, periodEnd, regenerate);
+    return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
 
