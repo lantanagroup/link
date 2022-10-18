@@ -8,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 @Getter
 @Setter
 @Configuration
@@ -20,6 +23,8 @@ public class GenerateAndSubmitConfig {
   private GenerateAndSubmitPeriodStart periodStart;
   private GenerateAndSubmitPeriodEnd periodEnd;
   private AuthConfig auth;
+  @NotNull
+  @Size(min = 1)
   private String[] bundleIds;
 }
 

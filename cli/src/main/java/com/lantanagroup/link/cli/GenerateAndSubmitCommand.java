@@ -85,10 +85,6 @@ public class GenerateAndSubmitCommand {
         logger.error("The period-start parameter is required.");
         return;
       }
-      if (configInfo.getBundleIds() == null || configInfo.getBundleIds().length == 0) {
-        logger.error("The bundle id is required.");
-        return;
-      }
       if (configInfo.getAuth() == null) {
         logger.error("Auth is required.");
         return;
