@@ -20,7 +20,7 @@ public class GenerateAndSubmitConfig {
   private GenerateAndSubmitPeriodStart periodStart;
   private GenerateAndSubmitPeriodEnd periodEnd;
   private AuthConfig auth;
-  private String reportTypeId;
+  private String[] bundleIds;
 }
 
 @Getter
@@ -37,5 +37,6 @@ class GenerateAndSubmitPeriodStart {
 class GenerateAndSubmitPeriodEnd {
 
   private int adjustDay;
+  private int adjustMonth;
   private boolean endOfDay;
 }
