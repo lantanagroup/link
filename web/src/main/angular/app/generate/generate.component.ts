@@ -55,9 +55,10 @@ export class GenerateComponent implements OnInit {
   }
 
   onDefaultTimeSelect() {
-    const defaultStart = new Date(1990, 1, 1);
+    //const defaultStart = new Date(1900, 1, 1);
+    const defaultStart = {year: 1900, month: 1, day: 1};
     this.startDate = getFhirDate(defaultStart);
-    this.endDate = getFhirNow();
+    this.endDate = getFhirDate(getFhirNow());
   }
 
   async reload() {
