@@ -11,9 +11,9 @@ import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,15 +73,15 @@ public class GenerateAndSubmitCommand {
     try {
       RestTemplate restTemplate = new RestTemplate();
 
-      if (Strings.isBlank(configInfo.getApiUrl())) {
+      if (StringUtils.isBlank(configInfo.getApiUrl())) {
         logger.error("The api-url parameter is required.");
         return;
       }
-      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
+      if (StringUtils.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
         logger.error("The period-start parameter is required.");
         return;
       }
-      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
+      if (StringUtils.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
         logger.error("The period-start parameter is required.");
         return;
       }
@@ -89,19 +89,19 @@ public class GenerateAndSubmitCommand {
         logger.error("Auth is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getTokenUrl())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getTokenUrl())) {
         logger.error("The token-url is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getUser())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getUser())) {
         logger.error("The user is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getPass())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getPass())) {
         logger.error("The password is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getScope())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getScope())) {
         logger.error("The scope is required.");
         return;
       }

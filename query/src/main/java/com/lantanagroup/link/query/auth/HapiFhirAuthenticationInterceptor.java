@@ -4,7 +4,7 @@ import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.lantanagroup.link.config.query.QueryConfig;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -17,7 +17,7 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
   private String apiKey;
 
   public HapiFhirAuthenticationInterceptor(QueryConfig queryConfig, ApplicationContext context) throws ClassNotFoundException {
-    if (Strings.isEmpty(queryConfig.getAuthClass())) {
+    if (StringUtils.isEmpty(queryConfig.getAuthClass())) {
       return;
     }
 
