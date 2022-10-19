@@ -6,6 +6,7 @@ import com.lantanagroup.link.*;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -206,8 +207,8 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception {
-    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, sendWholeBundle, removeContainedResources);
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
+    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
 
     this.sendContent(bundle, documentReference, fhirDataProvider);
   }

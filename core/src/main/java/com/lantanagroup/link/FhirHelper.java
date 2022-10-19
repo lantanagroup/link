@@ -7,7 +7,6 @@ import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Strings;
 import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
@@ -33,25 +32,6 @@ public class FhirHelper {
   private static final String NAME = "name";
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
-
-  /**
-   * Removes any extra properties that should not be included in the bundle's submission
-   *
-   * @param resource
-   */
-  public static DomainResource cleanResource(DomainResource resource) {
-    DomainResource cloned = resource.copy();
-    cloned.setMeta(null);
-    cloned.setText(null);
-
-    // Reset the ID. The ID element can include history information, which gets included in Resource.meta.versionId
-    // during serialization, which defeats the purpose of removing <meta>
-    if (cloned.getIdElement() != null && !Strings.isNullOrEmpty(cloned.getIdElement().getIdPart())) {
-      cloned.setId(cloned.getIdElement().getIdPart());
-    }
-
-    return cloned;
-  }
 
   public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
@@ -508,9 +488,9 @@ public class FhirHelper {
   }
 
   public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
-    if (documentReference != null && documentReference.getContext() != null) {
+    if (documentReference != null && documentReference.getContext() != null && documentReference.getContext().hasRelated()) {
       Bundle requestBundle = new Bundle();
-      requestBundle.setType(Bundle.BundleType.BATCH);
+      requestBundle.setType(Bundle.BundleType.TRANSACTION);
 
       // Add each census list reference to the batch bundle as a GET
       requestBundle.getEntry().addAll(documentReference.getContext().getRelated().stream().map(related -> {
@@ -594,6 +574,24 @@ public class FhirHelper {
             .map(entry -> (Measure) entry.getResource())
             .findFirst()
             .orElseThrow(() -> new Exception("Report def does not contain a measure"));
+  }
+
+  /**
+   * Copies entries from {@code list2} into {@code list1} that are not already present in {@code list1}.
+   * Entries are considered equal if their items' references or identifiers are equal.
+   */
+  public static void mergeCensusLists(ListResource list1, ListResource list2) {
+    for (ListResource.ListEntryComponent entry2 : list2.getEntry()) {
+      Reference item2 = entry2.getItem();
+      boolean exists = list1.getEntry().stream().anyMatch(entry1 -> {
+        Reference item1 = entry1.getItem();
+        return StringUtils.equals(item1.getReference(), item2.getReference())
+                || item1.getIdentifier().equalsShallow(item2.getIdentifier());
+      });
+      if (!exists) {
+        list1.addEntry(entry2.copy());
+      }
+    }
   }
 
 

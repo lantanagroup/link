@@ -23,7 +23,7 @@ public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
 
   @Override
-  public void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config) throws IOException, TransformerException {
+  public void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config, EventService eventService) throws IOException, TransformerException {
 
     DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId);
 
@@ -39,24 +39,22 @@ public class MeasureReportDownloader implements IReportDownloader {
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    FhirBundler bundler = new FhirBundler(fhirDataProvider);
-    Bundle bundle = bundler.generateBundle(config.isSendWholeBundle(), config.isRemoveContainedResources(), List.of(measureReport), docRefBundle);
+    FhirBundler bundler = new FhirBundler(config, fhirDataProvider, eventService);
+    Bundle bundle = bundler.generateBundle(List.of(measureReport), docRefBundle);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
     String responseBody = "";
-    if(downloadType.equals("XML")){
+    if (downloadType.equals("XML")) {
       responseBody = ctx.newXmlParser().encodeResourceToString(bundle);
       response.setContentType("application/xml");
-    }
-    else if(downloadType.equals("JSON")){
+    } else if (downloadType.equals("JSON")) {
       responseBody = ctx.newJsonParser().encodeResourceToString(bundle);
       response.setContentType("application/json");
     }
 
-    if(Helper.validateHeaderValue(reportId)) {
+    if (Helper.validateHeaderValue(reportId)) {
       response.setHeader("Content-Disposition", "attachment; filename=\"" + reportId + ".xml\"");
-    }
-    else {
+    } else {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report Id");
     }
 

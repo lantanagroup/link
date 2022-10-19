@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -247,7 +248,7 @@ public class ReportControllerTests {
   }
 
   @Ignore
-  public void excludePatientsTest() throws HttpResponseException {
+  public void excludePatientsTest() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -302,7 +303,7 @@ public class ReportControllerTests {
 
 
   @Ignore
-  public void excludePatientsTestException() throws HttpResponseException {
+  public void excludePatientsTestException() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);

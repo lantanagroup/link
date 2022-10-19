@@ -38,6 +38,7 @@
         <module>measureeval</module>
         <module>thsa</module>
         <module>nhsn</module>
+        <module>mhl</module>
     </modules>
 
     <dependencies>
@@ -60,7 +61,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.4.0</version>
+            <version>42.4.1</version>
         </dependency>
         <dependency>
             <groupId>com.mchange</groupId>
