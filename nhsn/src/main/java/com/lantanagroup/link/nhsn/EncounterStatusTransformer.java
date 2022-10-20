@@ -11,41 +11,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class EncounterStatusTransformer implements IReportGenerationEvent {
+import java.util.List;
+
+public class EncounterStatusTransformer implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
 
   @Autowired
   private FhirDataProvider fhirDataProvider;
 
-
   @Override
-  public void execute(ReportCriteria reportCriteria, ReportContext context) {
-    for (PatientOfInterestModel patientOfInterest : context.getPatientsOfInterest()) {
-      logger.debug("Reviewing encounter status for patient " + patientOfInterest.getId());
-      try {
-        String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
-        Bundle patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
-        for(Bundle.BundleEntryComponent patientResource : patientBundle.getEntry()) {
-          if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
-            logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
-            Encounter patientEncounter = (Encounter)patientResource.getResource();
-            if(patientEncounter.getPeriod().hasEnd()) {
-              Extension previous = new Extension();
-              previous.setUrl(Constants.OriginalEncounterStatus);
-              Coding coding = new Coding();
-              coding.setCode(patientEncounter.getStatus().toString());
-              previous.setValue(coding);
-              patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
-              patientEncounter.addExtension(previous);
-            }
-          }
+  public void execute(Bundle bundle) {
+    logger.info("Called: " + EncounterStatusTransformer.class.getName());
+    for(Bundle.BundleEntryComponent patientResource : bundle.getEntry()) {
+      if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
+        logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
+        Encounter patientEncounter = (Encounter)patientResource.getResource();
+        if(patientEncounter.getPeriod().hasEnd()) {
+          Extension previous = new Extension();
+          previous.setUrl(Constants.OriginalEncounterStatus);
+          Coding coding = new Coding();
+          coding.setCode(patientEncounter.getStatus().toString());
+          previous.setValue(coding);
+          patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
+          patientEncounter.addExtension(previous);
         }
-        fhirDataProvider.updateResource(patientBundle);
-        fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Transformation, "Successfully transformed encounters with an end date to finished.");
-      }
-      catch (Exception ex) {
-        logger.error("Exception is: " + ex.getMessage());
       }
     }
   }
+
+  @Override
+  public void execute(List<DomainResource> data) throws RuntimeException{
+    throw new RuntimeException("Not yet implemented");
+  }
+
+  @Override
+  public void execute(Bundle data, ReportCriteria criteria, ReportContext context) {
+    execute(data);
+    fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Transformation, "Successfully transformed encounters with an end date to finished.");
+    fhirDataProvider.updateResource(data);
+  }
+
 }
