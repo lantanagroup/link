@@ -31,6 +31,7 @@ public class FHIRReceiver {
   }
 
   public Bundle retrieveContent(String url) throws Exception {
+    if(url.equals("")) return null;
     LinkOAuthConfig oAuthConfig = this.config.getAuthConfig();
     String token = OAuth2Helper.getToken(oAuthConfig, getHttpClient());
     url = (url.indexOf("_history") != -1) ? url.substring(0, url.indexOf("_history")) : url;

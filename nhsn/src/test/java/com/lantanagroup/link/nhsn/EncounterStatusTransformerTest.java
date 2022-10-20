@@ -70,12 +70,13 @@ public class EncounterStatusTransformerTest {
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
     when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
-    encounterStatusTransformer.execute(reportCriteria, context);
+    encounterStatusTransformer.execute(bundle);
 
     Encounter encounterTest1 = (Encounter)bundle.getEntry().get(1).getResource();
     Encounter encounterTest2 = (Encounter)bundle.getEntry().get(2).getResource();
-    Assert.assertEquals(encounterTest1.getStatus(), Encounter.EncounterStatus.TRIAGED);
-    Assert.assertEquals(encounterTest1.getExtension().size(), 0);
+    //Rewriting these tests to check that the transformed values persist rather than checking that they DON'T persist
+    Assert.assertEquals(encounterTest1.getStatus(), Encounter.EncounterStatus.FINISHED);
+    Assert.assertEquals(encounterTest1.getExtension().size(), 1);
     Assert.assertEquals(encounterTest2.getStatus(), Encounter.EncounterStatus.TRIAGED);
     Assert.assertEquals(encounterTest2.getExtension().size(), 0);
   }
