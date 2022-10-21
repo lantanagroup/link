@@ -4,7 +4,7 @@
     <div class="jumbotron">
         <div class="top-bar">
             <div class="main-logo">
-                <img class="main-logo" src="assets/nhsn_logo.png"/>
+                <img class="main-logo" src="assets/THSALink.png"/>
                 <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
                 <span *ngIf="!authService.user">NHSNLink</span>
             </div>
@@ -16,11 +16,11 @@
                             <span>{{authService.user.name}}</span>
                         </button>
                         <div ngbDropdownMenu aria-labelledby="userDropDown">
-                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
-                                <i class="fa fa-info-circle"></i> About NHSNLink
-                            </a>
-                            <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>
-                                <i class="fa fa-github"></i> GitHub
+<!--                           <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
+                                <i class="fa fa-info-circle"></i> About THSNLink
+                            </a>-->
+                            <a href="https://github.com/AudaciousInquiry/THSAlink/" target="_new" ngbDropdownItem>
+                                <i class="fa fa-github"></i> THSALink GitHub
                             </a>
                             <a [href]="configService.config.getHelpUrl" *ngIf="configService.config?.getHelpUrl" target="_blank" ngbDropdownItem>
                                 <i class="fa fa-question-circle"></i> Get Help
