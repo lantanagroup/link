@@ -213,7 +213,7 @@ public class OAuth2Helper {
       InputStream inputStream = c.getInputStream();
       Throwable var3 = null;
 
-      Map var4;
+      Map<String, Object> var4;
       try {
         var4 = (Map) reader.readValue(inputStream);
       } catch (Throwable var14) {
@@ -245,7 +245,7 @@ public class OAuth2Helper {
     List<Map<String, Object>> keys = (List) getJwks().get("keys");
     if (keys != null && !keys.isEmpty()) {
       try {
-        Iterator var3 = keys.iterator();
+        Iterator<Map<String, Object>> var3 = keys.iterator();
 
         while (var3.hasNext()) {
           Map<String, Object> values = (Map) var3.next();
@@ -267,7 +267,7 @@ public class OAuth2Helper {
       return (Jwk) jwks.get(0);
     } else {
       if (keyId != null) {
-        Iterator var3 = jwks.iterator();
+        Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
           Jwk jwk = (Jwk) var3.next();

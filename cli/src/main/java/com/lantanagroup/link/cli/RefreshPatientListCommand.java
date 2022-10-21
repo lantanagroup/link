@@ -47,7 +47,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
 
   @Override
-  protected List<Class> getBeanClasses() {
+  protected List<Class<?>> getBeanClasses() {
 
     return List.of(
             QueryConfig.class,

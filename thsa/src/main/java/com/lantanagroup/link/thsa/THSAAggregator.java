@@ -67,8 +67,8 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   @Override
   public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
 
-    HashMap usedInventoryMap = new HashMap();
-    HashMap totalInventoryMap = new HashMap();
+    HashMap<String, Integer> usedInventoryMap = new HashMap<>();
+    HashMap<String, Integer> totalInventoryMap = new HashMap<>();
     // store the used counts
     MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {

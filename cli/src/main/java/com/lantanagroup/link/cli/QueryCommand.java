@@ -32,7 +32,7 @@ public class QueryCommand extends BaseShellCommand {
   private static final Logger logger = LoggerFactory.getLogger(QueryCommand.class);
 
   @Override
-  protected List<Class> getBeanClasses() {
+  protected List<Class<?>> getBeanClasses() {
     return List.of(
             Query.class,
             QueryConfig.class,

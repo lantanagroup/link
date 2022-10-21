@@ -40,6 +40,7 @@ public class JpaRestfulServer extends RestfulServer {
   ApplicationContext applicationContext;
 
   @Autowired
+  @SuppressWarnings("rawtypes")
   IFhirSystemDao fhirSystemDao;
 
   @Autowired

@@ -75,7 +75,7 @@ public class EpicAuth implements ICustomAuth {
             .build();
 
     try {
-      HttpResponse response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
       String responseBody = (String) response.body();
       Object responseObj = new Gson().fromJson(responseBody, Object.class);
 

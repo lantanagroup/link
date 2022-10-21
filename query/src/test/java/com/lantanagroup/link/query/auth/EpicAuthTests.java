@@ -35,7 +35,7 @@ public class EpicAuthTests {
     String jwtContent = EpicAuth.getJwt(config);
 
     //Date expectedExp = new Date(System.currentTimeMillis() + (1000 * 60 * 4) / 1000);
-    Jwt jwt = Jwts.parser()
+    Jwt<?, DefaultClaims> jwt = Jwts.parser()
             //.requireExpiration(expectedExp)
             .setSigningKey(kp.getPublic())
             .parse(jwtContent);

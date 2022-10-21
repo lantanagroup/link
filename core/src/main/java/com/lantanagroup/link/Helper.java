@@ -128,8 +128,8 @@ public class Helper {
     }
   }
 
-  public static List concatenate(List list1, List list2) {
-    List<String> list = new ArrayList<>();
+  public static <T> List<T> concatenate(List<T> list1, List<T> list2) {
+    List<T> list = new ArrayList<>();
     list.addAll(list1);
     list.addAll(list2);
     return list;

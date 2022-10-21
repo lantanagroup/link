@@ -31,7 +31,7 @@ public class AzureAuth implements ICustomAuth {
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();
 
-    HttpResponse response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
     String responseBody = (String) response.body();
     Object responseObj = new Gson().fromJson(responseBody, Object.class);
 

@@ -130,7 +130,7 @@ public class ResourceIdChangerTests {
     location.setType(codeableConceptList);
     location.setName("Some Location");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(location));
-    List codings = ResourceIdChanger.findCodings(bundle);
+    List<Coding> codings = ResourceIdChanger.findCodings(bundle);
     Assert.assertEquals(2, codings.size());
     Coding codingTarget = (Coding) codings.get(0);
     Assert.assertEquals("some-type1", codingTarget.getCode());

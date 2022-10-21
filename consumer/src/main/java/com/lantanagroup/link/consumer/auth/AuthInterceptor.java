@@ -33,7 +33,7 @@ public class AuthInterceptor extends AuthorizationInterceptor {
     // readConsumerConfig
     Permission[] permissions = consumerConfig.getPermissions();
     String[] jwtRoles = theRequestDetails.getParameters().get(Constants.Roles);
-    Set<String> userRoleSet = jwtRoles != null ? Arrays.stream(jwtRoles).collect(Collectors.toSet()) : new HashSet();
+    Set<String> userRoleSet = jwtRoles != null ? Arrays.stream(jwtRoles).collect(Collectors.toSet()) : new HashSet<>();
 
     String azorica = consumerConfig.getAzorica();
     if (azorica != null) {

@@ -47,6 +47,7 @@ public class JpaRestfulServer extends RestfulServer {
   ISearchParamRegistry searchParamRegistry;
 
   @Autowired
+  @SuppressWarnings("rawtypes")
   IFhirSystemDao fhirSystemDao;
 
   @Autowired

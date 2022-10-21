@@ -91,12 +91,12 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
    */
   public List<Coding> filterCodingsByPathList(DomainResource resource, List<String> pathList) {
     List<Base> resources = filterResourcesByPathList(resource, pathList);
-    List codingList = new ArrayList();
+    List<Coding> codingList = new ArrayList<>();
     for (Base element : resources) {
       if (element instanceof CodeableConcept) {
         codingList.add(((CodeableConcept) element).getCoding().get(0));
       } else if (element instanceof Coding) {
-        codingList.add(element);
+        codingList.add((Coding) element);
       } else if (element instanceof CodeType) {
         CodeableConcept cc = new CodeableConcept();
         cc.addCoding().setCode(((CodeType) element).asStringValue());
@@ -119,7 +119,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   }
 
   public List<Coding> applyTransformation(ConceptMap conceptMap, List<Coding> codingList) {
-    List<Coding> changedCodes = new ArrayList();
+    List<Coding> changedCodes = new ArrayList<>();
     codingList.stream().forEach(coding -> {
       this.translateCoding(conceptMap, coding);
       if (coding.getExtension() != null) {

@@ -33,8 +33,8 @@ public class ConsumerApplication extends SpringBootServletInitializer {
   }
 
   @Bean
-  public ServletRegistrationBean fhirServletRegistration() {
-    ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean();
+  public ServletRegistrationBean<JpaRestfulServer> fhirServletRegistration() {
+    ServletRegistrationBean<JpaRestfulServer> servletRegistrationBean = new ServletRegistrationBean<>();
     JpaRestfulServer jpaRestfulServer = new JpaRestfulServer();
     beanFactory.autowireBean(jpaRestfulServer);
     servletRegistrationBean.setServlet(jpaRestfulServer);
