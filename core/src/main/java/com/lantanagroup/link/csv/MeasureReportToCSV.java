@@ -1,6 +1,6 @@
 package com.lantanagroup.link.csv;
 
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -14,7 +14,7 @@ public class MeasureReportToCSV {
     if (code == null) return null;
 
     Coding coding = code.getCodingFirstRep();
-    if (coding != null && Strings.isNotEmpty(coding.getCode())) {
+    if (coding != null && StringUtils.isNotEmpty(coding.getCode())) {
       return String.format("%s|%s", coding.getSystem() != null ? coding.getSystem() : "", coding.getCode());
     }
 
@@ -41,7 +41,7 @@ public class MeasureReportToCSV {
     measureReport.getGroup().forEach(group -> {
       String groupCode = this.getValue(group.getCode());
 
-      if (Strings.isEmpty(groupCode) && Strings.isNotEmpty(group.getId())) {
+      if (StringUtils.isEmpty(groupCode) && StringUtils.isNotEmpty(group.getId())) {
         groupCode = "id:" + group.getId();
       }
 

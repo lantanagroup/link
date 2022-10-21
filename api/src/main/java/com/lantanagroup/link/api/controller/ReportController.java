@@ -17,7 +17,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -816,7 +815,7 @@ public class ReportController extends BaseController {
     Boolean changedMeasureReport = false;
 
     for (ExcludedPatientModel excludedPatient : excludedPatients) {
-      if (Strings.isEmpty(excludedPatient.getPatientId())) {
+      if (StringUtils.isEmpty(excludedPatient.getPatientId())) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Patient ID not provided for all exclusions"));
       }
 
