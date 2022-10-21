@@ -32,10 +32,6 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 public class ReportControllerTests {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
 //  private void mockSearchMeasure(IUntypedQuery untypedQuery, Measure measure) {
 //
 //
@@ -352,9 +348,9 @@ public class ReportControllerTests {
 
 
     //Assert.assertEquals(4, model.getMeasureReport().getEvaluatedResource().size());
-    thrown.expect(HttpResponseException.class);
-    thrown.expectMessage("Patient testPatient4 is not included in report testReportId");
-    ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    Assert.assertThrows("Patient testPatient4 is not included in report testReportId", HttpResponseException.class, () -> {
+      ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    });
   }
 
 

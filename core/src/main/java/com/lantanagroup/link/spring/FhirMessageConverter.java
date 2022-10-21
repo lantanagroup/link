@@ -43,7 +43,7 @@ public class FhirMessageConverter<T> implements HttpMessageConverter<T> {
 
   @Override
   public T read(Class<? extends T> aClass, HttpInputMessage httpInputMessage) throws IOException, HttpMessageNotReadableException {
-    throw new HttpMessageNotReadableException("Reading parameters for FHIR resources is not yet supported");
+    throw new HttpMessageNotReadableException("Reading parameters for FHIR resources is not yet supported", httpInputMessage);
   }
 
   @Override

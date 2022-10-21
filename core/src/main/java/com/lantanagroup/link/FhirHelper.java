@@ -79,7 +79,7 @@ public class FhirHelper {
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);
 
-    JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
+    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
     if (jsonObject.has(NAME)) {
       agent.setName(jsonObject.get(NAME).toString());
     }
@@ -303,7 +303,7 @@ public class FhirHelper {
     String payload = jwt.getPayload();
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);
-    JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
+    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
     List<HumanName> list = new ArrayList<>();
     HumanName dst = new HumanName();
     if (jsonObject.has("family_name")) {
