@@ -264,13 +264,13 @@ public class OAuth2Helper {
   private static Jwk get(String keyId) throws JwkException {
     List<Jwk> jwks = getAll();
     if (keyId == null && jwks.size() == 1) {
-      return (Jwk) jwks.get(0);
+      return jwks.get(0);
     } else {
       if (keyId != null) {
         Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
-          Jwk jwk = (Jwk) var3.next();
+          Jwk jwk = var3.next();
           if (keyId.equals(jwk.getId())) {
             return jwk;
           }

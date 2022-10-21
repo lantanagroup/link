@@ -132,10 +132,10 @@ public class ResourceIdChangerTests {
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(location));
     List<Coding> codings = ResourceIdChanger.findCodings(bundle);
     Assert.assertEquals(2, codings.size());
-    Coding codingTarget = (Coding) codings.get(0);
+    Coding codingTarget = codings.get(0);
     Assert.assertEquals("some-type1", codingTarget.getCode());
     Assert.assertEquals("http://some-system.com", codingTarget.getSystem());
-    Coding codingTarget2 = (Coding) codings.get(1);
+    Coding codingTarget2 = codings.get(1);
     Assert.assertEquals("some-type2", codingTarget2.getCode());
     Assert.assertEquals("http://some-system2.com", codingTarget2.getSystem());
   }

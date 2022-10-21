@@ -32,7 +32,7 @@ public class AzureAuth implements ICustomAuth {
             .build();
 
     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    String responseBody = (String) response.body();
+    String responseBody = response.body();
     Object responseObj = new Gson().fromJson(responseBody, Object.class);
 
     if (responseObj != null) {

@@ -39,7 +39,7 @@ public class EpicAuthTests {
             //.requireExpiration(expectedExp)
             .setSigningKey(kp.getPublic())
             .parse(jwtContent);
-    DefaultClaims body = (DefaultClaims) jwt.getBody();
+    DefaultClaims body = jwt.getBody();
 
     Assert.assertEquals(body.get("iss"), config.getClientId());
     Assert.assertEquals(body.get("sub"), config.getClientId());

@@ -123,13 +123,13 @@ public class CustomUrlJwkProvider implements JwkProvider {
   public Jwk get(String keyId) throws JwkException {
     List<Jwk> jwks = this.getAll();
     if (keyId == null && jwks.size() == 1) {
-      return (Jwk) jwks.get(0);
+      return jwks.get(0);
     } else {
       if (keyId != null) {
         Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
-          Jwk jwk = (Jwk) var3.next();
+          Jwk jwk = var3.next();
           if (keyId.equals(jwk.getId())) {
             return jwk;
           }
