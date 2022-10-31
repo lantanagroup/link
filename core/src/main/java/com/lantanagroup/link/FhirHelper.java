@@ -63,8 +63,10 @@ public class FhirHelper {
         break;
       case InitiateQuery:
         auditEvent.setType(new Coding(null, "initiate-query", null));
+        break;
       case SearchReports:
         auditEvent.setType(new Coding(null, "search-reports", null));
+        break;
     }
 
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
