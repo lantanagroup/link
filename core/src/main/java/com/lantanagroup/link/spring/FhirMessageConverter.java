@@ -19,15 +19,15 @@ import java.util.List;
  * Implementation of HttpMessageConverter that is used by SpringBoot to serialize responses
  * from APIs in FHIR JSON or XML. Uses the HAPI libraries to serialize.
  */
-public class FhirMessageConverter implements HttpMessageConverter {
+public class FhirMessageConverter<T> implements HttpMessageConverter<T> {
 
   @Override
-  public boolean canRead(Class aClass, MediaType mediaType) {
+  public boolean canRead(Class<?> aClass, MediaType mediaType) {
     return false;
   }
 
   @Override
-  public boolean canWrite(Class aClass, MediaType mediaType) {
+  public boolean canWrite(Class<?> aClass, MediaType mediaType) {
     return aClass.equals(Bundle.class);
   }
 
@@ -42,8 +42,8 @@ public class FhirMessageConverter implements HttpMessageConverter {
   }
 
   @Override
-  public Object read(Class aClass, HttpInputMessage httpInputMessage) throws IOException, HttpMessageNotReadableException {
-    throw new HttpMessageNotReadableException("Reading parameters for FHIR resources is not yet supported");
+  public T read(Class<? extends T> aClass, HttpInputMessage httpInputMessage) throws IOException, HttpMessageNotReadableException {
+    throw new HttpMessageNotReadableException("Reading parameters for FHIR resources is not yet supported", httpInputMessage);
   }
 
   @Override

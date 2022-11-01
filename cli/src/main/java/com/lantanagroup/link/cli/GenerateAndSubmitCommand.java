@@ -150,7 +150,7 @@ public class GenerateAndSubmitCommand {
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
       // build the request
-      HttpEntity<Map<String, Object>> entity = new HttpEntity(generateRequest, headers);
+      HttpEntity<GenerateRequest> entity = new HttpEntity<>(generateRequest, headers);
 
       // send POST request
       ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);

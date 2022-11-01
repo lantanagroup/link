@@ -263,7 +263,7 @@ public class FhirDataProvider {
     this.createResource(auditEvent);
   }
 
-  public Bundle getResources(ICriterion criterion, String resourceType) {
+  public Bundle getResources(ICriterion<?> criterion, String resourceType) {
     return this.client
             .search()
             .forResource(resourceType)

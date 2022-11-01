@@ -11,6 +11,7 @@ import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,7 @@ public class AzureBlobStorageSenderTests {
 
 
   private MeasureReport getMasterMeasureReport() throws IOException {
-    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
+    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"), Charset.defaultCharset());
     FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }

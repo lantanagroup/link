@@ -66,7 +66,7 @@ public class ApplyConceptMapsTest {
     locationCoding.setCode("some-type");
     locationCoding.setSystem("http://some-system.com");
     codeableConcept.addCoding(locationCoding);
-    List<CodeableConcept> list = new ArrayList();
+    List<CodeableConcept> list = new ArrayList<>();
     list.add(codeableConcept);
     location.setType(list);
     return location;
@@ -85,7 +85,7 @@ public class ApplyConceptMapsTest {
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
     applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
 
-    List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList();
+    List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList<>();
     ApplyConceptMapConfig applyConceptMapConfig = new ApplyConceptMapConfig();
     applyConceptMapConfig.setConceptMapId("local-codes-cerner-test'");
     List<String> fhirPathContexts = new ArrayList<>();
@@ -96,7 +96,7 @@ public class ApplyConceptMapsTest {
     applyConceptMapsConfig.setConceptMaps(applyConceptMapConfigsList);
     applyConceptMaps.setApplyConceptMapConfig(applyConceptMapsConfig);
 
-    List<PatientOfInterestModel> patientOfInterestModel = new ArrayList();
+    List<PatientOfInterestModel> patientOfInterestModel = new ArrayList<>();
     PatientOfInterestModel model = new PatientOfInterestModel();
     model.setReference("Patient/nhsn-iip-ip102");
     model.setId("10000");
@@ -130,7 +130,7 @@ public class ApplyConceptMapsTest {
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
     applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
 
-    List<String> pathList = new ArrayList();
+    List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
     ConceptMap conceptMap = getConceptMap();
     Mockito.when(fhirDataProviderMock.getResourceByTypeAndId(any(), any())).thenReturn(conceptMap);
@@ -148,7 +148,7 @@ public class ApplyConceptMapsTest {
     ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
     applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
 
-    List<String> pathList = new ArrayList();
+    List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
 
     Coding coding = getLocation().getType().get(0).getCoding().get(0);

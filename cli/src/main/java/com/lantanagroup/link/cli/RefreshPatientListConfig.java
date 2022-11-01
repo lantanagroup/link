@@ -27,15 +27,14 @@ public class RefreshPatientListConfig {
   @Size(min = 1)
   private List<PatientList> patientList;
   private CensusReportingPeriods censusReportingPeriod;
-}
 
-
-@Getter
-@Setter
-class PatientList {
-  @NotBlank
-  private String patientListPath;
-  @NotNull
-  @Size(min = 1)
-  private List<@NotBlank String> censusIdentifier;
+  @Getter
+  @Setter
+  public static class PatientList {
+    @NotBlank
+    private String patientListPath;
+    @NotNull
+    @Size(min = 1)
+    private List<@NotBlank String> censusIdentifier;
+  }
 }

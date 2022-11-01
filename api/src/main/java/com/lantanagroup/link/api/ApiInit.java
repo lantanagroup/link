@@ -209,7 +209,7 @@ public class ApiInit {
   public void init() {
     this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
-    Optional measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
+    Optional<ApiReportDefsUrlConfig> measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
     if (StringUtils.isEmpty(config.getReportAggregator()) && !measureReportAggregator.isEmpty()) {
       String msg = "Not all measures have aggregators configured and there is no default aggregator in the configuration file.";
       logger.error(msg);

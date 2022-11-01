@@ -58,7 +58,7 @@ public class EventService {
   }
 
   public List<Object> getBeans(EventTypes eventType) throws Exception{
-    List<Class<?>> classes = new ArrayList();
+    List<Class<?>> classes = new ArrayList<>();
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
     if (classNames == null) {
@@ -79,7 +79,7 @@ public class EventService {
 
 
   public List<Object> getBeans(List<Class<?>> classes) {
-    ArrayList beans = new ArrayList();
+    ArrayList<Object> beans = new ArrayList<>();
     DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((ConfigurableApplicationContext) this.context).getBeanFactory();
 
     for (Class<?> beanClass : classes) {
