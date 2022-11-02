@@ -16,6 +16,7 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar" />
         </processorPath>
+        <module name="mhl" />
         <module name="core" />
         <module name="cli" />
         <module name="thsa" />
@@ -34,8 +35,9 @@
       <module name="consumer" target="11" />
       <module name="core" target="11" />
       <module name="datastore" target="11" />
-      <module name="link" target="1.8" />
+      <module name="link" target="11" />
       <module name="measureeval" target="11" />
+      <module name="mhl" target="11" />
       <module name="nhsn" target="11" />
       <module name="query" target="11" />
       <module name="thsa" target="11" />
@@ -51,6 +53,7 @@
       <module name="datastore" options="-parameters" />
       <module name="link" options="" />
       <module name="measureeval" options="-parameters" />
+      <module name="mhl" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
       <module name="thsa" options="-parameters" />

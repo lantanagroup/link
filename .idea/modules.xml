@@ -9,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/datastore/datastore.iml" filepath="$PROJECT_DIR$/datastore/datastore.iml" />
       <module fileurl="file://$PROJECT_DIR$/link.iml" filepath="$PROJECT_DIR$/link.iml" />
       <module fileurl="file://$PROJECT_DIR$/measureeval/measureeval.iml" filepath="$PROJECT_DIR$/measureeval/measureeval.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mhl/mhl.iml" filepath="$PROJECT_DIR$/mhl/mhl.iml" />
       <module fileurl="file://$PROJECT_DIR$/nhsn/nhsn.iml" filepath="$PROJECT_DIR$/nhsn/nhsn.iml" />
       <module fileurl="file://$PROJECT_DIR$/query/query.iml" filepath="$PROJECT_DIR$/query/query.iml" />
       <module fileurl="file://$PROJECT_DIR$/thsa/thsa.iml" filepath="$PROJECT_DIR$/thsa/thsa.iml" />

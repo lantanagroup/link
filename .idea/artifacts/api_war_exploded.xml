@@ -15,6 +15,9 @@
           <element id="module-output" name="api" />
         </element>
         <element id="directory" name="lib">
+          <element id="archive" name="mhl-1.0.0-SNAPSHOT.jar">
+            <element id="module-output" name="mhl" />
+          </element>
           <element id="archive" name="nhsn-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="nhsn" />
           </element>
