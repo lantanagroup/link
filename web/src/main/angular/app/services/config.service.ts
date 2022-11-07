@@ -1,6 +1,5 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {IOAuthConfig} from '../model/oauth-config';
 import {IConfig} from '../model/config';
 import {ApiInfoModel} from '../model/api-info-model';
 
@@ -10,7 +9,8 @@ import {ApiInfoModel} from '../model/api-info-model';
 export class ConfigService {
   config: IConfig;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+  }
 
   getApiUrl(urlPart: string) {
     return this.config.apiUrl +
@@ -35,4 +35,5 @@ export class ConfigService {
   async getApiInfo() {
     return await this.http.get<ApiInfoModel>(this.config.apiUrl).toPromise();
   }
+
 }
