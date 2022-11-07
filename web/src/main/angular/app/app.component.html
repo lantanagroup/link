@@ -4,7 +4,8 @@
     <div class="jumbotron">
         <div class="top-bar">
             <div class="main-logo">
-                <img class="main-logo" src="assets/nhsn_logo.png"/>
+                <img [src]="configService.config?.logoPath?configService.config?.logoPath:'assets/nhsn_logo.png'"
+                     class="main-logo"/>
                 <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
                 <span *ngIf="!authService.user">NHSNLink</span>
             </div>
@@ -16,8 +17,9 @@
                             <span>{{authService.user.name}}</span>
                         </button>
                         <div ngbDropdownMenu aria-labelledby="userDropDown">
-                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
-                                <i class="fa fa-info-circle"></i> About NHSNLink
+                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new"
+                               ngbDropdownItem>
+                                <i class="fa fa-info-circle"></i> About
                             </a>
                             <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>
                                 <i class="fa fa-github"></i> GitHub

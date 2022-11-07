@@ -13,12 +13,28 @@
     <div class="card-header">Report Generation Criteria</div>
     <div class="card-body">
         <div class="row">
+            <div class="col-md-1">
+                <p><strong>
+                    All historical
+                </strong>
+                </p>
+                <div class="input-group">
+                    <input
+                        #checkbox
+                        (change)="onDefaultTimeSelect()"
+                        class="form-check-input"
+                        id="DefaultTime"
+                        ngbCheckbox
+                        type="checkbox"
+                        value=""/>
+                </div>
+            </div>
             <div class="col-md-2">
                 <p><strong>Report Start Date</strong></p>
                 <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
                 <div class="input-group">
-                    <input   [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
-                             [disabled]="checkbox.checked"
+                    <input [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
+                           [disabled]="checkbox.checked"
                            class="form-control" name="dp" ngbDatepicker #d="ngbDatepicker"
                            placeholder="{{startDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
@@ -26,12 +42,12 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-md-2">
                 <p><strong>Report End Date</strong></p>
                 <div class="input-group">
                     <input   [(ngModel)]="criteria.periodEnd" (ngModelChange)="onEndDateSelected()"
                              class="form-control" name="dp" ngbDatepicker #d1="ngbDatepicker"
-                             [disabled]="checkbox.checked"
                              placeholder="{{endDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
                         <button (click)="d1.toggle()" class="btn btn-outline-secondary calendar" type="button"></button>
@@ -55,19 +71,7 @@
                     </div>
                 </div>
             </div>
-            <div>
-                <input
-                        ngbCheckbox
-                        class="form-check-input"
-                        type="checkbox"
-                        value=""
-                        id="DefaultTime"
-                        (change)="onDefaultTimeSelect()"
-                #checkbox/>
-                <label class="form-check-label" for="DefaultTime">
-                    Default Time
-                </label>
-            </div>
+
         </div>
     </div>
     <div class="card-footer">

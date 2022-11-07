@@ -4,4 +4,5 @@ export interface IConfig {
   apiUrl: string;
   getHelpUrl?: string;
   oauth?: IOAuthConfig;
+  logoPath?: string;
 }

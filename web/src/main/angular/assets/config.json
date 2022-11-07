@@ -1,4 +1,5 @@
 {
   "getHelpUrl": "https://nhsnlink.atlassian.net/servicedesk/customer/portal/1",
-  "apiUrl": "http://localhost:8082/api"
+  "apiUrl": "http://localhost:8082/api",
+  "logoPath": "assets/MHLink_logo.png"
 }
