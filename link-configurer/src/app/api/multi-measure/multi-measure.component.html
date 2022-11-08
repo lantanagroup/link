@@ -1,0 +1,44 @@
+
+<div class="card">
+    <div class="card-header">
+      <label>Measure Packages</label>
+      <button type="button"  class="btn btn-primary btn-sm" (click)="onClick(); envService.saveEnvEvent.next(null)" title="Add measure package">
+        <fa-icon [icon]="faAdd"></fa-icon>
+      </button>
+    </div>
+  </div>
+  <div  *ngIf="measurePackages?.length">
+    <div class="card"  *ngFor="let cm of measurePackages; let cmIndex = index; trackBy: trackByMethod">
+      <div class="card-header">
+        <label>Measure Package</label>
+        <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.api.measurePackages.splice(cmIndex,1); envService.saveEnvEvent.next(null)" title="Remove measure package">
+          <fa-icon [icon]="faRemove"></fa-icon>
+        </button>
+      </div>
+      <div class="card-body">   
+        <div class="mb-3">
+          <label>Measure Package Id</label>
+          <input type="text" class="form-control" [(ngModel)]="measurePackages[cmIndex].id" (change)="envService.saveEnvEvent.next(null)" />
+        </div>
+  
+        <div class="card">
+          <div class="card-body">
+            <label>
+             Bundle Ids
+            </label>
+            <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.api.measurePackages[cmIndex].bundleIds = envService.apiConfig.api.measurePackages[cmIndex].bundleIds || [];   envService.apiConfig.api.measurePackages[cmIndex].bundleIds.push(''); envService.saveEnvEvent.next(null);" title="Add Bundle IDs">
+              <fa-icon [icon]="faAdd"></fa-icon>
+            </button>
+            <span class="help-block">This indicates what bundle id to add</span>
+            <div class="input-group" *ngFor="let cm of measurePackages[cmIndex].bundleIds; let fpIndex = index; trackBy: trackByMethod">
+              <input type="text" class="form-control" [(ngModel)]="measurePackages[cmIndex].bundleIds[fpIndex]" (change)="envService.saveEnvEvent.next(null)" />
+              <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.api.measurePackages[cmIndex].bundleIds.splice(fpIndex, 1); envService.saveEnvEvent.next(null)"  title="Remove bundle Id">
+                <fa-icon [icon]="faRemove"></fa-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> 
+  </div>
+   <div *ngIf="!measurePackages?.length">No measure package</div>

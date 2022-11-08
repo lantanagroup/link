@@ -1,0 +1,20 @@
+<div *ngIf="webConfig">
+  <ul ngbNav #webConfigNav="ngbNav" class="nav-tabs">
+    <li ngbNavItem>
+      <a ngbNavLink>General</a>
+      <ng-template ngbNavContent>
+        <app-single-line-text [parentObject]="this" propertyName="oauthIssuer" label="Issuer" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+        <app-single-line-text [parentObject]="this" propertyName="oauthClientId" label="Client ID" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+        <app-single-line-text [parentObject]="this" propertyName="oauthScope" label="Scope" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+      </ng-template>
+    </li>
+    <li ngbNavItem>
+      <a ngbNavLink>JSON</a>
+      <ng-template ngbNavContent>
+        <app-download-tab [config]="webConfig" format="json"></app-download-tab>
+      </ng-template>
+    </li>
+  </ul>
+
+  <div [ngbNavOutlet]="webConfigNav" class="mt-2"></div>
+</div>

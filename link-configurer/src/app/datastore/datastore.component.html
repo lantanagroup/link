@@ -1,0 +1,6 @@
+<div> 
+  <app-single-line-text [parentObject]="dataStore" propertyName="baseUrl"  label="Base URL" (change)="onChange()"   placeholder='https://dev-fhir.nhsnlink.org/fhir'  [requireUrl]="true"></app-single-line-text>
+  <app-single-line-text [parentObject]="dataStore" propertyName="username" label="Username" (change)="onChange()"   placeholder='' [required]="true"></app-single-line-text>
+  <app-single-line-text [parentObject]="dataStore" propertyName="password" label="Password" (change)="onChange()"   placeholder='' [required]="true"></app-single-line-text>
+</div>
+

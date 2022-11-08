@@ -1,0 +1,23 @@
+
+   .card {
+    border: 1px solid #dadada;
+    box-shadow: 4px 4px 8px 0 rgba(0, 0, 0, 0.2);
+    transition: 0.2s;
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px;
+    margin-left: 25px;
+    margin-right: 25px;
+  }
+
+
+  .row>* {
+   padding-right: 0;
+   padding-left: 0;
+  }
+
+  .card-body {
+    flex: 1 1 auto;
+    padding: 5px;
+  }
