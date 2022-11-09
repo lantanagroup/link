@@ -1,0 +1,26 @@
+<app-single-line-text id="allowedOriginsField" [parentObject]="cors" propertyName="allowedOrigins" placeholder="ex: *" label="Allowed Origins" (change)="onChange()"></app-single-line-text>
+
+<app-single-line-text id="allowedHeadersField" [parentObject]="cors" propertyName="allowedHeaders" label="Allowed Headers" (change)="onChange()"></app-single-line-text>
+
+<app-boolean id="allowedCredentialsField" [parentObject]="cors" propertyName="allowedCredentials" label="Allowed Credentials" (change)="onChange()" [defaultValue]="false"></app-boolean>
+
+<div class="mb-3">
+  <label class="form-label">
+    Allowed Methods
+    <button type="button" class="btn btn-primary btn-sm" [disabled]="cors.allowedMethods?.length === 5" (click)="cors.allowedMethods = cors.allowedMethods || []; cors.allowedMethods.push('');" title="Add allowed method">
+      <fa-icon [icon]="faAdd"></fa-icon>
+    </button>
+  </label>
+  <div class="input-group" *ngFor="let alm of cors.allowedMethods || []; let almIndex = index; trackBy: trackByIndex">
+    <select class="form-control" [(ngModel)]="cors.allowedMethods[almIndex]">
+      <option *ngIf="alm === 'GET' || cors.allowedMethods.indexOf('GET') < 0">GET</option>
+      <option *ngIf="alm === 'PUT' || cors.allowedMethods.indexOf('PUT') < 0">PUT</option>
+      <option *ngIf="alm === 'POST' || cors.allowedMethods.indexOf('POST') < 0">POST</option>
+      <option *ngIf="alm === 'DELETE' || cors.allowedMethods.indexOf('DELETE') < 0">DELETE</option>
+      <option *ngIf="alm === 'OPTIONS' || cors.allowedMethods.indexOf('OPTIONS') < 0">OPTIONS</option>
+    </select>
+    <button type="button" class="btn btn-primary" (click)="cors.allowedMethods.splice(almIndex, 1)">
+      <fa-icon [icon]="faRemove"></fa-icon>
+    </button>
+  </div>
+</div>

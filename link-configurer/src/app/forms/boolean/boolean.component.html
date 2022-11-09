@@ -1,0 +1,8 @@
+<div class="mb-3">
+  <label for="{{id}}" class="form-label">{{label}}</label>
+  <span class="help-block" *ngIf="subText">{{subText}}</span>
+  <select class="form-control" id="{{id}}" [(ngModel)]="parentObject[propertyName]" (change)="change.next(parentObject[propertyName])">
+    <option [value]="true">Yes</option>
+    <option [value]="false">No</option>
+  </select>
+</div>

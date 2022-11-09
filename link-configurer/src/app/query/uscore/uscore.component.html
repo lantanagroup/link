@@ -1,0 +1,50 @@
+<div class="card">
+  <div class="card-header">US Core</div>
+  <div class="card-body">
+    <app-single-line-text [parentObject]="usCoreConfig" propertyName="fhirServerBase" label="FHIR Server Base URL" (change)="onChange()" [required]="true"></app-single-line-text>
+
+    <div class="mb-3">
+      <label>Parallel Patients</label>
+      <span class="help-block">The number of patients that should be queried in parallel.</span>
+      <input type="number" class="form-control" [(ngModel)]="usCoreConfig.parallelPatients" />
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <label>
+          Patient Resource Types
+          <button type="button" class="btn btn-primary btn-sm" (click)="usCoreConfig.patientResourceTypes = usCoreConfig.patientResourceTypes || []; usCoreConfig.patientResourceTypes.push(''); envService.saveEnvEvent.next(null);" title="Add patient resource type">
+            <fa-icon [icon]="faAdd"></fa-icon>
+          </button>
+        </label>
+        <span class="help-block">This indicates what patient-based resources are supported by the EHR that is being queried. Patient-based resources are resources that can be queried with the <i>patient</i> search parameter. The Patient resource <strong>should not</strong> be included in this list, as it is automatically queried as part of the US Core engine.</span>
+        <div class="input-group" *ngFor="let rt of usCoreConfig.patientResourceTypes || []; let rtIndex = index; trackBy: trackByFn">
+          <input type="text" class="form-control" placeholder="Resource Type" [(ngModel)]="usCoreConfig.patientResourceTypes[rtIndex]" (change)="envService.saveEnvEvent.next(null)" />
+          <button type="button" class="btn btn-primary" (click)="usCoreConfig.patientResourceTypes.splice(rtIndex, 1); envService.saveEnvEvent.next(null)" title="Remove patient resource type">
+            <fa-icon [icon]="faRemove"></fa-icon>
+          </button>
+        </div>
+        <p *ngIf="!usCoreConfig.patientResourceTypes?.length">No patient resource types</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <label>
+          Other Resource Types
+          <button type="button" class="btn btn-primary btn-sm" (click)="usCoreConfig.otherResourceTypes = usCoreConfig.otherResourceTypes || []; usCoreConfig.otherResourceTypes.push(''); envService.saveEnvEvent.next(null)" title="Add other resource type">
+            <fa-icon [icon]="faAdd"></fa-icon>
+          </button>
+        </label>
+        <span class="help-block">This indicates what non-patient resources are supported by the EHR that is being queried; resources that do <i>not</i> support the patient search parameter, are referenced patient-based resources, and must be retrieved individually.</span>
+        <div class="input-group" *ngFor="let rt of usCoreConfig.otherResourceTypes || []; let rtIndex = index; trackBy: trackByFn">
+          <input type="text" class="form-control" placeholder="Resource Type" [(ngModel)]="usCoreConfig.otherResourceTypes[rtIndex]" (change)="envService.saveEnvEvent.next(null)" />
+          <button type="button" class="btn btn-primary" (click)="usCoreConfig.otherResourceTypes.splice(rtIndex, 1); envService.saveEnvEvent.next(null);">
+            <fa-icon [icon]="faRemove"></fa-icon>
+          </button>
+        </div>
+        <p *ngIf="!usCoreConfig.otherResourceTypes?.length">No other resource types</p>
+      </div>
+    </div>
+  </div>
+</div>
