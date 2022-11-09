@@ -6,6 +6,7 @@ import {AppComponent} from './app.component';
 import {FormsModule} from "@angular/forms";
 import {ApiComponent} from './api/api.component';
 import {ConsumerComponent} from './consumer/consumer.component';
+import {AgentComponent} from './agent/agent.component';
 import {WebComponent} from './web/web.component';
 import {HttpClientModule} from "@angular/common/http";
 import {HomeComponent} from './home/home.component';
@@ -18,25 +19,26 @@ import {CorsComponent} from './api/cors/cors.component';
 import {ReportDefsComponent} from './api/report-defs/report-defs.component';
 import {AuthConfigComponent} from './auth-config/auth-config.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
-import { ToastsComponent } from './toasts/toasts.component';
-import { ApiQueryComponent } from './api/query/api-query.component';
+import {ToastsComponent} from './toasts/toasts.component';
+import {ApiQueryComponent} from './api/query/api-query.component';
 import {QueryComponent} from "./query/query.component";
-import { JsonConfigPipe } from './json-config.pipe';
-import { UscoreComponent } from './query/uscore/uscore.component';
-import { ConceptMapsComponent } from './api/concept-maps/concept-maps.component';
+import {JsonConfigPipe} from './json-config.pipe';
+import {UscoreComponent} from './query/uscore/uscore.component';
+import {ConceptMapsComponent} from './api/concept-maps/concept-maps.component';
 import {FontAwesomeModule} from "@fortawesome/angular-fontawesome";
-import { FhirSenderComponent } from './api/submission/fhir-sender/fhir-sender.component';
-import { MeasureReportSenderComponent } from './api/submission/measure-report-sender/measure-report-sender.component';
-import { DatastoreComponent } from './datastore/datastore.component';
-import { EventComponent } from './api/events/event.component';
-import { BundlerComponent } from './bundler/bundler.component';
-import { MultiMeasureComponent } from './api/multi-measure/multi-measure.component';
+import {FhirSenderComponent} from './api/submission/fhir-sender/fhir-sender.component';
+import {MeasureReportSenderComponent} from './api/submission/measure-report-sender/measure-report-sender.component';
+import {DatastoreComponent} from './datastore/datastore.component';
+import {EventComponent} from './api/events/event.component';
+import {BundlerComponent} from './bundler/bundler.component';
+import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ApiComponent,
     ConsumerComponent,
+    AgentComponent,
     WebComponent,
     HomeComponent,
     YamlPipe,
