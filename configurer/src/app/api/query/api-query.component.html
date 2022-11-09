@@ -1,0 +1,6 @@
+<app-string-dropdown [parentObject]="this" propertyName="queryMode" label="Query Mode" [required]="true" [options]="['Local', 'Remote']" (change)="modeChanged()"></app-string-dropdown>
+
+<div *ngIf="queryMode === 'Remote'">
+  <app-single-line-text [parentObject]="this" propertyName="queryUrl" label="Query URL" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+  <app-single-line-text [parentObject]="this" propertyName="queryApiKey" label="Query API Key" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+</div>

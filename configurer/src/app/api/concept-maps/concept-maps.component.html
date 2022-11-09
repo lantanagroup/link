@@ -1,0 +1,46 @@
+
+<div class="card">
+  <div class="card-header">
+    <label>Apply Concept Maps</label>
+    <button type="button"  class="btn btn-primary btn-sm" (click)="onClick(); envService.saveEnvEvent.next(null)" title="Add concept map">
+      <fa-icon [icon]="faAdd"></fa-icon>
+    </button>
+  </div>
+</div>
+<div  *ngIf="conceptMaps?.length">
+  <div class="card"  *ngFor="let cm of conceptMaps; let cmIndex = index; trackBy: trackByMethod">
+    <div class="card-header">
+      <label>Concept Map</label>
+      <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.applyConceptMaps.conceptMaps.splice(cmIndex,1); envService.saveEnvEvent.next(null)" title="Remove concept map">
+        <fa-icon [icon]="faRemove"></fa-icon>
+      </button>
+    </div>
+    <div class="card-body">   
+      <div class="mb-3">
+        <label>Concept Map Id</label>
+        <input type="text" class="form-control" [(ngModel)]="conceptMaps[cmIndex].conceptMapId" (change)="envService.saveEnvEvent.next(null)" />
+      </div>
+      
+      <div class="card">
+        <div class="card-body">
+          <label>
+            Fhir Context Path
+          </label>
+          <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.applyConceptMaps.conceptMaps[cmIndex].fhirPathContexts = envService.apiConfig.applyConceptMaps.conceptMaps[cmIndex].fhirPathContexts || [];   envService.apiConfig.applyConceptMaps.conceptMaps[cmIndex].fhirPathContexts.push(''); envService.saveEnvEvent.next(null);" title="Add fhir resource">
+            <fa-icon [icon]="faAdd"></fa-icon>
+          </button>
+          <span class="help-block">This indicates what path to use for searching elements within a Fhir resource</span>
+          <div class="input-group" *ngFor="let cm of conceptMaps[cmIndex].fhirPathContexts; let fpIndex = index; trackBy: trackByMethod">
+            <input type="text" class="form-control" [(ngModel)]="conceptMaps[cmIndex].fhirPathContexts[fpIndex]" (change)="envService.saveEnvEvent.next(null)" />
+            <button type="button" class="btn btn-primary btn-sm" (click)="envService.apiConfig.applyConceptMaps.conceptMaps[cmIndex].fhirPathContexts.splice(fpIndex, 1); envService.saveEnvEvent.next(null)"  title="Remove fhir path">
+              <fa-icon [icon]="faRemove"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> 
+</div>
+ <div *ngIf="!conceptMaps?.length">No concept maps</div>
+
+  

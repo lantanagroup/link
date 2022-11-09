@@ -1,0 +1,65 @@
+<div class="d-flex">
+  <ul ngbNav #nav="ngbNav" class="nav-pills" orientation="vertical">
+    <li ngbNavItem>
+      <a ngbNavLink>Server</a>
+      <ng-template ngbNavContent>
+       
+        <app-string-dropdown [parentObject]="queryConfig" propertyName="authClass" label="Auth Method" (change)="onChangeAuth()" [options]="['com.lantanagroup.link.query.AzureAuth', 'com.lantanagroup.link.query.EpicAuth', 'com.lantanagroup.link.query.BasicAuth', 'com.lantanagroup.link.query.CernerAuth', 'com.lantanagroup.link.query.TokenAuth']"></app-string-dropdown>
+
+        <div class="card" *ngIf="queryConfig.authClass?.endsWith('.AzureAuth') && queryConfig.auth?.azure">
+          <div class="card-header">Azure</div>
+          <div class="card-body">
+            <app-single-line-text [parentObject]="queryConfig.auth.azure" propertyName="tokenUrl" label="Token URL"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.azure" propertyName="clientId" label="Client ID"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.azure" propertyName="secret"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.azure" propertyName="resource"></app-single-line-text>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="queryConfig.authClass?.endsWith('.EpicAuth') && queryConfig.auth?.epic">
+          <div class="card-header">Epic</div>
+          <div class="card-body">
+            <app-single-line-text [parentObject]="queryConfig.auth.epic" propertyName="tokenUrl" label="Token URL"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.epic" propertyName="clientId" label="Client ID"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.epic" propertyName="key" subText="The SSL private key for signing the JWTs passed to Epic"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.epic" propertyName="audience"></app-single-line-text>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="queryConfig.authClass?.endsWith('.CernerAuth') && queryConfig.auth?.cerner">
+          <div class="card-header">Cerner</div>
+          <div class="card-body">
+            <app-single-line-text [parentObject]="queryConfig.auth.cerner" propertyName="tokenUrl" label="Token URL"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.cerner" propertyName="clientId" label="Client ID"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.cerner" propertyName="secret"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.cerner" propertyName="scopes"></app-single-line-text>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="queryConfig.authClass?.endsWith('.BasicAuth') && queryConfig.auth?.basic">
+          <div class="card-header">Basic</div>
+          <div class="card-body">
+            <app-single-line-text [parentObject]="queryConfig.auth.basic" propertyName="username"></app-single-line-text>
+            <app-single-line-text [parentObject]="queryConfig.auth.basic" propertyName="password"></app-single-line-text>
+          </div>
+        </div>
+
+        <div class="card" *ngIf="queryConfig.authClass?.endsWith('.TokenAuth') && queryConfig.auth?.token">
+          <div class="card-header">Token</div>
+          <div class="card-body">
+            <app-single-line-text [parentObject]="queryConfig.auth.token" propertyName="token"></app-single-line-text>
+          </div>
+        </div>
+      </ng-template>
+    </li>
+    <li ngbNavItem="bottom">
+      <a ngbNavLink>Method</a>
+      <ng-template ngbNavContent>
+        <app-string-dropdown [parentObject]="queryConfig" propertyName="queryClass" label="Query Method" (change)="queryClassChanged()" [options]="['com.lantanagroup.link.query.uscore.Query']"></app-string-dropdown>
+        <app-query-uscore *ngIf="queryConfig.queryClass === 'com.lantanagroup.link.query.uscore.Query' && configWrapper.uscore" [usCoreConfig]="configWrapper.uscore"></app-query-uscore>
+      </ng-template>
+    </li>
+  </ul>
+
+  <div [ngbNavOutlet]="nav" class=""></div>
+</div>

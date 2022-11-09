@@ -1,0 +1,56 @@
+<div class="d-flex">
+  <ul ngbNav #nav="ngbNav" class="nav-pills" orientation="vertical">
+    <li ngbNavItem>
+      <a ngbNavLink>Measure Definitions</a>
+      <ng-template ngbNavContent>
+        <table class="table table-striped">
+          <thead>
+          <tr>
+            <th>Bundle Id</th>
+            <th>URL</th>
+            <th>Report Aggregator</th>
+            <th style="width: 50px;">
+              <button type="button" class="btn btn-primary" (click)="reportDefs.urls = reportDefs.urls || []; reportDefs.urls.push({'bundleId':'','url':'','reportAggregator':''}); onChange()" title="Add measure definition">
+                <fa-icon [icon]="faAdd"></fa-icon>
+              </button>
+            </th>
+          </tr>
+          </thead>
+          <tbody *ngIf="reportDefs.urls?.length">
+          <tr *ngFor="let rd of reportDefs.urls || []; let rdIndex = index;">
+            <td><input type="text" class="form-control" [(ngModel)]="rd.bundleId" (change)="onChange()" [class.is-invalid]="!rd.bundleId"/></td>
+            <td><input type="text" class="form-control" [(ngModel)]="rd.url" (change)="onChange()" [class.is-invalid]="!rd.url" /></td>
+            <td><input type="text" class="form-control" [(ngModel)]="rd.reportAggregator" (change)="onChange()" /></td>
+            <td>
+              <button type="button" class="btn btn-primary" (click)="reportDefs.urls.splice(rdIndex, 1); onChange()" title="Remove measure definition">
+                <fa-icon [icon]="faRemove"></fa-icon>
+              </button>
+            </td>
+          </tr>
+          </tbody>
+          <tbody *ngIf="!reportDefs.urls?.length">
+          <tr>
+            <td colspan="4">No measure definitions</td>
+          </tr>
+          </tbody>
+        </table>
+        <app-multi-measure [apiConfig]="envService.apiConfig.api"></app-multi-measure>
+      </ng-template>
+    </li>
+    <li ngbNavItem>
+      <a ngbNavLink>Authentication</a>
+      <ng-template ngbNavContent>
+        <app-auth-config [parentObject]="reportDefs" propertyName="auth"></app-auth-config>
+      </ng-template>
+    </li>
+    <li ngbNavItem>
+      <a ngbNavLink>Init Params</a>
+      <ng-template ngbNavContent>
+        <app-single-line-text [parentObject]="reportDefs" propertyName="maxRetry" placeholder="ex: 5" label="Max Retries" (change)="onChange()" type="number" subText="The number of times that a measure definition should attempt to be loaded during the API's startup."></app-single-line-text>
+        <app-single-line-text [parentObject]="reportDefs" propertyName="retryWait" placeholder="ex: 5000" label="Retry Wait (milliseconds)" (change)="onChange()" type="number" subText="The number of milliseconds to wait in between retries when loading measure definitions during the API's startup."></app-single-line-text>
+      </ng-template>
+    </li>
+  </ul>
+
+  <div [ngbNavOutlet]="nav" class=""></div>
+</div>
