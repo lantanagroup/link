@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.HashMap;
 import java.util.List;
 
@@ -54,6 +56,19 @@ public class ApiConfig {
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
    */
   private Boolean skipInit = false;
+
+  /**
+   * <strong>api.max-retry</strong><br>The number of times the API should try to check that prerequisite services are available. If the retry value is null the check will run indefinitely.
+   */
+  @PositiveOrZero
+  public Integer maxRetry;
+
+  /**
+   * <strong>api.retry-wait</strong><br>The number of milliseconds the API should wait in between attempts at checking that prerequisite services are available.
+   */
+  @PositiveOrZero
+  public int retryWait = 5000;
+
 
   /**
    * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
