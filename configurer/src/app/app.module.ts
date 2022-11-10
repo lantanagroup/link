@@ -32,6 +32,7 @@ import {DatastoreComponent} from './datastore/datastore.component';
 import {EventComponent} from './api/events/event.component';
 import {BundlerComponent} from './bundler/bundler.component';
 import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component';
+import {APP_BASE_HREF} from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -70,7 +71,7 @@ import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component
     NgbModule,
     FontAwesomeModule
   ],
-  providers: [],
+  providers: [{provide: APP_BASE_HREF, useValue: '/configurer'}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
