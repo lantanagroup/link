@@ -25,7 +25,7 @@ public class MeasureReportDownloader implements IReportDownloader {
   @Override
   public void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config, EventService eventService) throws IOException, TransformerException {
 
-    DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId);
+    DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId.contains("-") ? reportId.substring(0, reportId.indexOf('-')) : reportId);
 
     if (docRefBundle == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not exist.");
