@@ -139,11 +139,15 @@ public class PatientData {
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
         resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
-          Resource resource = (Resource) this.fhirQueryServer.read()
-                  .resource(resourceType)
-                  .withId(resourceId)
-                  .execute();
-          bundle.addEntry().setResource(resource);
+          try {
+            Resource resource = (Resource) this.fhirQueryServer.read()
+                    .resource(resourceType)
+                    .withId(resourceId)
+                    .execute();
+            bundle.addEntry().setResource(resource);
+          }catch(Exception e){
+            logger.debug("Can't find resource of type: " + resourceType + " and id: " + resourceId);
+          }
         });
       });
     }
