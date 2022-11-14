@@ -7,10 +7,12 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+@Component
 public class SamsTokenValidator implements  ITokenValidator {
   private static final Logger logger = LoggerFactory.getLogger(SamsTokenValidator.class);
   String tokenValidationUrl = ""; //get from config

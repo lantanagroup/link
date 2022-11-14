@@ -10,6 +10,9 @@ api:
     username: ''
     password: ''
   auth-jwks-url:
+  # signing algorithm: RSA256,
+  algorithm: RSA256
+  token-verification-class: com.lantanagroup.link.auth.OAuthTokenValidator
   downloader: com.lantanagroup.link.nhsn.MeasureReportDownloader
   sender: com.lantanagroup.link.nhsn.FHIRSender
   patient-id-resolver: com.lantanagroup.link.nhsn.StoredListProvider
