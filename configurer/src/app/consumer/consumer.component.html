@@ -70,6 +70,12 @@
       <app-download-tab [config]="envService.consumerConfig"></app-download-tab>
     </ng-template>
   </li>
+  <li ngbNavItem>
+    <a ngbNavLink>Upload</a>
+    <ng-template ngbNavContent>
+      <upload-file configType='consumer'></upload-file>
+    </ng-template>
+  </li>
 </ul>
 
 <div [ngbNavOutlet]="nav" class="mt-2"></div>

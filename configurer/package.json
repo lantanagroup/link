@@ -33,6 +33,8 @@
     "file-saver": "^2.0.5",
     "js-yaml": "^3.14.1",
     "mongoose": "^6.7.0",
+    "multer": "*",
+    "ng2-file-upload": "^1.4.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "valid-url": "^1.0.9",

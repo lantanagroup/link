@@ -39,7 +39,6 @@ export class ApiConfig {
   issuer?: string;
   downloader?: string;
   sender?: string;
-  sendWholeBundle?: boolean;
   patientIdResolver?: string;
   documentReferenceSystem = 'urn:ietf:rfc:3986';
   cors = new ApiCorsConfig();
@@ -47,7 +46,6 @@ export class ApiConfig {
   query?: ApiQueryConfig;
   user?: UserConfig;
   measurePackages: MeasurePackagesConfig[] = [];
-  deleteAfterSubmission?: boolean;
   dataProcessor?: { [index: string]: string };
   dataMeasureReportId?: string;
   reportAggregator?: string;
@@ -61,7 +59,6 @@ export class ApiConfigEvents {
   beforeMeasureResolution?: string[];
   afterMeasureResolution?: string[];
   beforePatientOfInterestLookup?: string[];
-  afterMeasureEval?: string[];
   afterPatientOfInterestLookup?: string[];
   beforePatientDataQuery?: string[];
   afterPatientDataQuery?: string[];

@@ -6,14 +6,28 @@ const jsyaml = require('js-yaml');
 var bodyParser = require("body-parser");
 var fs = require('fs');
 var path = require('path');
+var multer = require('multer');
 
 
+var DIRECTORY = 'db/';
 
-var directory = 'db/';
 
 // Create new instance of the express server
 var app = express();
 
+
+let storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, DIRECTORY);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + path.extname(file.originalname));
+  }
+});
+
+let upload = multer({
+  storage: storage
+});
 
 
 // Define the JSON parser as a default way
@@ -52,32 +66,82 @@ function updateData(data, dataPath) {
 }
 
 
-app.get('/api/config/:configType', function(req, res) {
-  let dataPath = directory + req.params.configType + '.yml';
+app.get('/configurer/api/config/:configType', function (req, res) {
+  let dataPath = DIRECTORY + req.params.configType + '.yml';
   console.log(dataPath);
   var data = getData(dataPath);
   console.log(data);
   res.send(data);
 });
 
-app.post('/api/config/:configType', function (req, res) {
-  let dataPath = directory + req.params.configType + '.yml';
+app.post('/configurer/api/config/:configType', function (req, res) {
+  let dataPath = DIRECTORY + req.params.configType + '.yml';
   updateData(req.body.api, dataPath);
   res.send();
 });
 
-app.delete('/api/config/:configType', function(req, res) {
-  let dataPath = directory + req.params.configType + '.yml';
+app.delete('/configurer/api/config/:configType', function (req, res) {
+  let dataPath = DIRECTORY + req.params.configType + '.yml';
   fs.unlink(dataPath, function (err) {
     if (err) throw err;
     // if no error, file has been deleted successfully
     console.log('File deleted!');
-});
+  });
   res.send();
 });
 
+// Upload Api File
+app.post('/configurer/api/upload/api', upload.single('api'), function (req, res) {
 
-app.get('*', (req,res) => {
+  if (!req.file) {
+    console.log("No file is available!");
+    return res.send({
+      success: false
+    });
+
+  } else {
+    console.log('File is available!');
+    return res.send({
+      success: true
+    })
+  }
+});
+
+// Upload web File
+app.post('/configurer/api/upload/web', upload.single('web'), function (req, res) {
+
+  if (!req.file) {
+    console.log("No file is available!");
+    return res.send({
+      success: false
+    });
+
+  } else {
+    console.log('File is available!');
+    return res.send({
+      success: true
+    })
+  }
+});
+
+// Upload Consumer File
+app.post('/configurer/api/upload/consumer', upload.single('consumer'), function (req, res) {
+
+  if (!req.file) {
+    console.log("No file is available!");
+    return res.send({
+      success: false
+    });
+
+  } else {
+    console.log('File is available!');
+    return res.send({
+      success: true
+    })
+  }
+});
+
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '/client-dist/index.html'));
 });
 

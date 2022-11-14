@@ -19,34 +19,40 @@
     <button class="nav-link" id="query-tab" data-bs-toggle="tab" data-bs-target="#query-tab-pane" type="button" role="tab" aria-controls="query-tab-pane" aria-selected="false">Query</button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="submission-tab" data-bs-toggle="tab" data-bs-target="#submission-tab-pane" type="button" role="tab" aria-controls="submission-tab-pane" aria-selected="false">Submission</button>
+    <button class="nav-link" id="submission-tab" data-bs-toggle="tab" data-bs-target="#submission-tab-pane"
+            type="button" role="tab" aria-controls="submission-tab-pane" aria-selected="false">Submission
+    </button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-tab-pane" type="button" role="tab" aria-controls="events-tab" aria-selected="true">Events</button>
+    <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-tab-pane" type="button"
+            role="tab" aria-controls="events-tab" aria-selected="true">Events
+    </button>
   </li>
   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="yaml-tab" data-bs-toggle="tab" data-bs-target="#yaml-tab-pane" type="button" role="tab" aria-controls="yaml-tab-pane" aria-selected="false">YAML</button>
+    <button class="nav-link" id="yaml-tab" data-bs-toggle="tab" data-bs-target="#yaml-tab-pane" type="button" role="tab"
+            aria-controls="yaml-tab-pane" aria-selected="false">YAML
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button aria-controls="upload-tab-pane" aria-selected="false" class="nav-link" data-bs-target="#upload-tab-pane"
+            data-bs-toggle="tab" id="uploadfile-tab" role="tab" type="button">Upload
+    </button>
   </li>
 </ul>
-
 
 <div class="tab-content" id="myTabContent">
   <div class="tab-pane fade show active" id="general-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
     <app-boolean id="requireHttpsField" [parentObject]="envService.apiConfig.api" propertyName="requireHttps" label="Require HTTPS?" (change)="envService.saveEnvEvent.next(null)" [defaultValue]="true"></app-boolean>
     <app-boolean id="skipInitField" [parentObject]="envService.apiConfig.api" propertyName="skipInit" label="Skip Init?" (change)="envService.saveEnvEvent.next(null)" [defaultValue]="false" subText="Skips the initialization process for the API that is responsible for loading custom search parameters and measure definitions. Should only be disabled if the API has been initialized at least once before, to ensure that these artifacts are loaded in the environment at least once."></app-boolean>
     <app-single-line-text id="publicAddressField" [parentObject]="envService.apiConfig.api" [required]="true" propertyName="publicAddress" placeholder="https://some-public-address.com/api" label="Public Address" (change)="envService.saveEnvEvent.next(null)" subText="The public address for this installation of the API so that the API knows its own installation location (in case it is behind a proxy, for example). This is primarily used to populate information in the Swagger specification."></app-single-line-text>
- 
-
     <div class="card">
       <div class="card-header">Data Store</div>
       <div class="card-body">
         <app-datastore [parentObject]="envService.apiConfig.api" propertyName="dataStore"></app-datastore>
       </div>
     </div>
-
     <app-single-line-text id="documentReferenceSystemField" [parentObject]="envService.apiConfig.api" propertyName="documentReferenceSystem" placeholder="https://nhsnlink.org" label="Document Reference System" (change)="envService.saveEnvEvent.next(null)" subText="The value used when populating DocumentReference.identifier.system"></app-single-line-text>
     <app-string-dropdown [parentObject]="envService.apiConfig.api" propertyName="patientIdResolver" label="Patient ID Resolver" [required]="true" [options]="patientIdResolverOptions" (change)="envService.saveEnvEvent.next(null)"></app-string-dropdown>
-
   </div>
   <div class="tab-pane fade" id="cors-tab-pane" role="tabpanel" aria-labelledby="cors-tab" tabindex="0">
     <app-api-cors [apiConfig]="envService.apiConfig.api"></app-api-cors>
@@ -59,7 +65,7 @@
   <div class="tab-pane fade" id="measures-tab-pane" role="tabpanel" aria-labelledby="measures-tab" tabindex="0">
     <app-single-line-text id="evaluationServiceInput" [parentObject]="envService.apiConfig.api" propertyName="evaluationService" placeholder="https://some-host/fhir" label="Evaluation Service" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
     <app-report-defs   [apiConfig]="envService.apiConfig.api"></app-report-defs>
-   
+
   </div>
   <div class="tab-pane fade" id="terminology-tab-pane" role="tabpanel" aria-labelledby="terminology-tab" tabindex="0">
     <app-single-line-text id="terminologyServiceInput" [parentObject]="envService.apiConfig.api" propertyName="terminologyService" [required]="true" placeholder="https://some-host/fhir" label="Terminology Service" subText="This can be the same as the evaluation service on the Measures & Evaluation tab" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
@@ -68,7 +74,7 @@
   <div class="tab-pane fade" id="query-tab-pane" role="tabpanel" aria-labelledby="query-tab" tabindex="0">
     <app-query *ngIf="envService.apiConfig.query" [queryConfig]="envService.apiConfig.query" [configWrapper]="envService.apiConfig"  (change)="envService.saveEnvEvent.next()"></app-query>
   </div>
-  
+
   <div class="tab-pane fade" id="submission-tab-pane" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
     <app-string-dropdown id="downloaderField" [parentObject]="envService.apiConfig.api" propertyName="downloader" label="Downloader" [required]="true" [options]="downloaderOptions" (change)="envService.saveEnvEvent.next(null)"></app-string-dropdown>
     <app-string-dropdown id="senderField" [parentObject]="envService.apiConfig.api" propertyName="sender" label="Sender" [required]="true" [options]="senderOptions" (change)="senderChanged()"></app-string-dropdown>
@@ -82,7 +88,9 @@
       <div class="row">
         <div class="col-sm-6 card" *ngFor="let eventName of eventNames">
           <div class="card-header">{{eventName}}</div>
-            <div class="card-body"><app-event  [apiConfig]="envService.apiConfig.api" eventName="{{eventName}}"></app-event></div>
+          <div class="card-body">
+            <app-event [apiConfig]="envService.apiConfig.api" eventName="{{eventName}}"></app-event>
+          </div>
         </div>
       </div>
     </div>
@@ -90,5 +98,9 @@
 
   <div class="tab-pane fade" id="yaml-tab-pane" role="tabpanel" aria-labelledby="yaml-tab" tabindex="0">
     <app-download-tab [config]="envService.apiConfig"></app-download-tab>
+  </div>
+
+  <div aria-labelledby="upload-tab" class="tab-pane fade" id="upload-tab-pane" role="tabpanel" tabindex="0">
+    <upload-file configType='api'></upload-file>
   </div>
 </div>

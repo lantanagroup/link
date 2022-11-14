@@ -33,6 +33,8 @@ import {EventComponent} from './api/events/event.component';
 import {BundlerComponent} from './bundler/bundler.component';
 import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component';
 import {APP_BASE_HREF} from '@angular/common';
+import {UploadFileComponent} from './uploadfile/uploadfile.component';
+import {FileUploadModule} from "ng2-file-upload";
 
 @NgModule({
   declarations: [
@@ -61,7 +63,8 @@ import {APP_BASE_HREF} from '@angular/common';
     DatastoreComponent,
     EventComponent,
     BundlerComponent,
-    MultiMeasureComponent
+    MultiMeasureComponent,
+    UploadFileComponent
   ],
   imports: [
     BrowserModule,
@@ -69,7 +72,8 @@ import {APP_BASE_HREF} from '@angular/common';
     FormsModule,
     HttpClientModule,
     NgbModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    FileUploadModule
   ],
   providers: [{provide: APP_BASE_HREF, useValue: '/configurer'}],
   bootstrap: [AppComponent]
