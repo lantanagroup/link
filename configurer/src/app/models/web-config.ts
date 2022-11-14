@@ -1,5 +1,5 @@
 export class WebConfig {
-  oauth: WebOAuthConfig;
+  oauth: WebOAuthConfig = new WebOAuthConfig();
   logoPath?: string
 }
 

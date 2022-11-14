@@ -9,6 +9,9 @@ import {ApiConfigWrapper, ConsumerConfigWrapper} from "./models/config-wrappers"
 import {YamlPipe} from './yaml.pipe';
 import {stringify} from 'yaml';
 
+
+const contextPath = "/configurer/api";
+
 @Injectable({
   providedIn: 'root'
 })
@@ -17,6 +20,7 @@ export class EnvironmentService {
   webConfig?: WebConfig;
   consumerConfig?: ConsumerConfigWrapper;
   saveEnvEvent = new Subject<void>();
+
 
 
   constructor(private router: Router, private http: HttpClient, private toastService: ToastService) {
@@ -41,7 +45,7 @@ export class EnvironmentService {
     let data
     switch (configType) {
       case 'api':
-        data = await this.http.get<ApiConfigWrapper>('/api/config/' + configType).toPromise();
+        data = await this.http.get<ApiConfigWrapper>(contextPath + '/config/' + configType).toPromise();
         if (data) {
           let filter = new YamlPipe();
           filter.objectToCamelCase(data);
@@ -49,7 +53,7 @@ export class EnvironmentService {
         }
        break;
       case 'consumer':
-        data = await this.http.get<ConsumerConfigWrapper>('/api/config/' + configType).toPromise();
+        data = await this.http.get<ConsumerConfigWrapper>(contextPath + '/config/' + configType).toPromise();
         if (data) {
           let filter = new YamlPipe();
           filter.objectToCamelCase(data);
@@ -57,7 +61,7 @@ export class EnvironmentService {
         }
         break;
       case 'web':
-        data = await this.http.get<WebConfig>('/api/config/' + configType).toPromise();
+        data = await this.http.get<WebConfig>(contextPath + '/config/' + configType).toPromise();
         if (data) {
           let filter = new YamlPipe();
           filter.objectToCamelCase(data);
@@ -107,12 +111,12 @@ export class EnvironmentService {
     const data = {
       api :  yamlApi
     }
-    await this.http.post('/api/config/' + configType, data).toPromise();
+    await this.http.post(contextPath + '/config/' + configType, data).toPromise();
   }
 
   async removeConfig(configType: ConfigTypes) {
     try {
-      await this.http.delete('/api/config/' + configType).toPromise();
+      await this.http.delete(contextPath + '/config/' + configType).toPromise();
       this.init();
     } catch (ex: any) {
       this.toastService.show('Error removing environment', ex);

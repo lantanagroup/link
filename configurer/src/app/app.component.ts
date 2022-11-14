@@ -32,7 +32,6 @@ export class AppComponent implements OnInit {
          break;
     }
     this.envService.removeConfig(configType);
- //   this.envService.saveEnvEvent.next(null);
     this.router.navigate(['/']);
   }
 

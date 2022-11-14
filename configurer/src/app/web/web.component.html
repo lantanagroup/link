@@ -1,20 +1,33 @@
-<div *ngIf="webConfig">
-  <ul ngbNav #webConfigNav="ngbNav" class="nav-tabs">
+<div>
+  <ul #nav="ngbNav" class="nav-tabs" ngbNav>
     <li ngbNavItem>
       <a ngbNavLink>General</a>
       <ng-template ngbNavContent>
-        <app-single-line-text [parentObject]="this" propertyName="oauthIssuer" label="Issuer" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
-        <app-single-line-text [parentObject]="this" propertyName="oauthClientId" label="Client ID" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
-        <app-single-line-text [parentObject]="this" propertyName="oauthScope" label="Scope" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+        <div>
+          <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
+                                [parentObject]="envService.webConfig.oauth" label="Issuer"
+                                propertyName="issuer"></app-single-line-text>
+          <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
+                                [parentObject]="envService.webConfig.oauth" label="Client ID"
+                                propertyName="clientId"></app-single-line-text>
+          <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
+                                [parentObject]="envService.webConfig.oauth" label="Scope"
+                                propertyName="scope"></app-single-line-text>
+        </div>
       </ng-template>
     </li>
     <li ngbNavItem>
       <a ngbNavLink>JSON</a>
       <ng-template ngbNavContent>
-        <app-download-tab [config]="webConfig" format="json"></app-download-tab>
+        <app-download-tab [config]="envService.webConfig" format="json"></app-download-tab>
+      </ng-template>
+    </li>
+    <li ngbNavItem>
+      <a ngbNavLink>Upload</a>
+      <ng-template ngbNavContent>
+        <upload-file configType='web'></upload-file>
       </ng-template>
     </li>
   </ul>
-
-  <div [ngbNavOutlet]="webConfigNav" class="mt-2"></div>
-</div>
+  <div [ngbNavOutlet]="nav" class="mt-2"></div>
+  <div>

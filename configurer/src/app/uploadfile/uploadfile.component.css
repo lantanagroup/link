@@ -1,0 +1,34 @@
+/* style.css */
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 500px;
+  margin: 60px auto;
+}
+
+.container h1 {
+  text-align: center;
+  color: black;
+}
+
+form {
+  background-color: white;
+  padding: 30px;
+}
+
+form .input-group {
+  margin-bottom: 15px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+form input {
+  padding: 12px 20px;
+  width: 100%;
+  border: 1px solid #ccc;
+}
