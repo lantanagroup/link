@@ -3,7 +3,7 @@ import {FileUploader} from 'ng2-file-upload';
 import {ToastService} from "../toast.service";
 import {EnvironmentService} from "../environment.service";
 
-const URL = 'http://localhost:8080/configurer/api/upload/';
+const URL = '/configurer/api/upload/';
 
 
 @Component({
