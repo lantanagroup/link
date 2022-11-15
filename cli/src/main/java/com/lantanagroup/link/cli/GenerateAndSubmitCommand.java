@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +30,8 @@ import java.util.*;
 
 @ShellComponent
 public class GenerateAndSubmitCommand {
-
-
   private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
   @Autowired
   @Setter
@@ -107,7 +107,32 @@ public class GenerateAndSubmitCommand {
         logger.error("The scope is required.");
         return;
       }
-      String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
+      //String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
+      if (configInfo.getAuth() == null && configInfo.getAuth().getCredentialMode() == null) {
+        logger.error("Invalid authorization configuration.");
+        System.exit(1);
+      }
+
+      String token = null;
+
+      if(configInfo.getAuth().getCredentialMode() == "password") {
+        token = OAuth2Helper.getPasswordCredentialsToken(
+                httpClient,
+                configInfo.getAuth().getTokenUrl(),
+                configInfo.getAuth().getUser(),
+                configInfo.getAuth().getPass(),
+                configInfo.getAuth().getClientId(),
+                configInfo.getAuth().getScope());
+      }
+      else if (configInfo.getAuth().getCredentialMode() == "client") {
+        token = OAuth2Helper.getClientCredentialsToken(
+                httpClient,
+                configInfo.getAuth().getTokenUrl(),
+                configInfo.getAuth().getUser(),
+                configInfo.getAuth().getPass(),
+                configInfo.getAuth().getScope());
+      }
+
       if (token == null) {
         client.close();
         logger.error("Authentication failed. Please contact the system administrator.");

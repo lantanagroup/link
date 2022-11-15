@@ -12,9 +12,9 @@ public class LinkOAuthConfig {
     //TODO - Add RequestType: Submitting, LoadingMeasureDef, QueryingEHR
 
     /**
-     * <strong>oauth.credential-mode</strong>
+     * <strong>oauth.credential-mode</strong> Either "client" or "password"
      */
-    private OAuthCredentialModes credentialMode;
+    private String credentialMode;
 
     /**
      * <strong>oauth.tokenUrl</strong><br>
@@ -44,12 +44,12 @@ public class LinkOAuthConfig {
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
             switch (this.credentialMode) {
-                case Client:
+                case "password":
                     return Strings.isNotEmpty(this.tokenUrl) &&
                             Strings.isNotEmpty(this.username) &&
                             Strings.isNotEmpty(this.password) &&
                             Strings.isNotEmpty(this.scope);
-                case Password:
+                case "client":
                     return Strings.isNotEmpty(this.tokenUrl) &&
                             Strings.isNotEmpty(this.username) &&
                             Strings.isNotEmpty(this.password) &&

@@ -72,10 +72,10 @@ public class OAuth2Helper {
 
     //get token based on credential mode
     switch(config.getCredentialMode()) {
-      case Client: {
+      case "client": {
         return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
       }
-      case Password: {
+      case "password": {
         return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
       }
       default:
@@ -450,7 +450,7 @@ public class OAuth2Helper {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
       switch (authConfig.getCredentialMode()) {
-        case Client:
+        case "client":
           token = OAuth2Helper.getClientCredentialsToken(
                   client,
                   authConfig.getTokenUrl(),
@@ -458,7 +458,7 @@ public class OAuth2Helper {
                   authConfig.getPassword(),
                   authConfig.getScope());
           break;
-        case Password:
+        case "password":
           token = OAuth2Helper.getPasswordCredentialsToken(
                   client,
                   authConfig.getTokenUrl(),

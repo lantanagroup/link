@@ -133,14 +133,27 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     String url = String.format("%s/poi/fhir/List", config.getApiUrl());
     logger.info("Submitting to {}", url);
     HttpPost request = new HttpPost(url);
-    if (config.getAuth() != null) {
-      String token = OAuth2Helper.getPasswordCredentialsToken(
-              httpClient,
-              config.getAuth().getTokenUrl(),
-              config.getAuth().getUser(),
-              config.getAuth().getPass(),
-              config.getAuth().getClientId(),
-              config.getAuth().getScope());
+    if (config.getAuth() != null && config.getAuth().getCredentialMode() != null) {
+      String token = null;
+
+      if(config.getAuth().getCredentialMode() == "password") {
+        token = OAuth2Helper.getPasswordCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getUser(),
+                config.getAuth().getPass(),
+                config.getAuth().getClientId(),
+                config.getAuth().getScope());
+      }
+      else if (config.getAuth().getCredentialMode() == "client") {
+        token = OAuth2Helper.getClientCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getUser(),
+                config.getAuth().getPass(),
+                config.getAuth().getScope());
+      }
+
       if (token == null) {
         throw new Exception("Authorization failed");
       }
