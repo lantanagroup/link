@@ -7,10 +7,10 @@ import {HomeComponent} from "./home/home.component";
 import {UploadFileComponent} from "./uploadfile/uploadfile.component";
 
 const routes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'api', component: ApiComponent },
-  { path: 'web', component: WebComponent },
-  { path: 'consumer', component: ConsumerComponent },
+  {path: 'home', component: HomeComponent},
+  {path: 'apiConfig', component: ApiComponent},
+  {path: 'webConfig', component: WebComponent},
+  {path: 'consumerConfig', component: ConsumerComponent},
   {path: 'upload', component: UploadFileComponent}
 ];
 

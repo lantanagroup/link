@@ -77,17 +77,17 @@ export class EnvironmentService {
         case 'api':
           this.apiConfig = new ApiConfigWrapper();
           await this.saveConfig('api');
-          await this.router.navigate(['/api']);
+          await this.router.navigate(['/apiConfig']);
           break;
         case 'web':
          this.webConfig = new WebConfig();
-         await this.saveConfig('web');
-          await this.router.navigate(['/web']);
+          await this.saveConfig('web');
+          await this.router.navigate(['/webConfig']);
           break;
         case 'consumer':
           this.consumerConfig = new ConsumerConfigWrapper();
           await this.saveConfig('consumer');
-          await this.router.navigate(['/consumer']);
+          await this.router.navigate(['/consumerConfig']);
           break;
       }
   }

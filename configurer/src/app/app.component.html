@@ -10,21 +10,24 @@
         <li class="nav-item">
           <a class="nav-link" [class.active]="router.url === '/'" aria-current="page" href="javascript:void(0)" routerLink="/">Home</a>
         </li>
-        <li class="nav-item" [class.active]="router.url === '/api'" *ngIf="envService.apiConfig">
+        <li *ngIf="envService.apiConfig" [class.active]="router.url === '/apiConfig'" class="nav-item">
           <span class="nav-link" aria-current="page">
-            <a href="javascript:void(0)" routerLink="/api">API</a>&nbsp;<a href="javascript:void(0)" (click)="remove('api')">[X]</a>
+            <a href="javascript:void(0)" routerLink="/apiConfig">API</a>&nbsp;<a (click)="remove('api')"
+                                                                                 href="javascript:void(0)">[X]</a>
           </span>
         </li>
-        <li class="nav-item" [class.active]="router.url === '/web'" *ngIf="envService.webConfig">
+        <li *ngIf="envService.webConfig" [class.active]="router.url === '/webConfig'" class="nav-item">
           <span class="nav-link" aria-current="page">
-            <a href="javascript:void(0)" routerLink="/web">WEB</a>&nbsp;<a href="javascript:void(0)" (click)="remove('web')">[X]</a>
+            <a href="javascript:void(0)" routerLink="/webConfig">WEB</a>&nbsp;<a (click)="remove('web')"
+                                                                                 href="javascript:void(0)">[X]</a>
           </span>
         </li>
-        <li class="nav-item" [class.active]="router.url === '/consumer'"  *ngIf="envService.consumerConfig" >
+        <li *ngIf="envService.consumerConfig" [class.active]="router.url === '/consumerConfig'" class="nav-item">
           <span class="nav-link" aria-current="page">
-            <a href="javascript:void(0)" routerLink="/consumer">Consumer</a>&nbsp;<a href="javascript:void(0)" (click)="remove('consumer')">[X]</a>
+            <a href="javascript:void(0)" routerLink="/consumerConfig">Consumer</a>&nbsp;<a (click)="remove('consumer')"
+                                                                                           href="javascript:void(0)">[X]</a>
           </span>
-        </li> 
+        </li>
         <li class="nav-item">
           <div class="dropdown">
             <button class="btn btn-secondary dropdown-toggle" type="button" id="addConfigMenuButton" data-bs-toggle="dropdown" aria-expanded="false">Add Config</button>

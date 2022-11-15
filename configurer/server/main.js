@@ -2,6 +2,7 @@
 var express = require("express");
 const jsyaml = require('js-yaml');
 
+
 // Use body-parser
 var bodyParser = require("body-parser");
 var fs = require('fs');
@@ -62,14 +63,19 @@ function updateData(data, dataPath) {
   }
   // let yamlStr = jsyaml.safeDump(data);
   console.log(data);
-  fs.writeFileSync(dataPath,  data);
+  fs.writeFileSync(dataPath, data);
 }
 
+
+app.get('/configurer/api', function (req, res) {
+  let data = "Up and Running";
+  res.send(data);
+});
 
 app.get('/configurer/api/config/:configType', function (req, res) {
   let dataPath = DIRECTORY + req.params.configType + '.yml';
   console.log(dataPath);
-  var data = getData(dataPath);
+  let data = getData(dataPath);
   console.log(data);
   res.send(data);
 });
