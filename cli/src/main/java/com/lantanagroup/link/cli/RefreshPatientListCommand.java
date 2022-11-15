@@ -136,6 +136,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     if (config.getAuth() != null && config.getAuth().getCredentialMode() != null) {
       String token = null;
 
+      ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
       if(config.getAuth().getCredentialMode() == "password") {
         token = OAuth2Helper.getPasswordCredentialsToken(
                 httpClient,

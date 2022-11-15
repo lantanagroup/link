@@ -115,6 +115,7 @@ public class GenerateAndSubmitCommand {
 
       String token = null;
 
+      ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
       if(configInfo.getAuth().getCredentialMode() == "password") {
         token = OAuth2Helper.getPasswordCredentialsToken(
                 httpClient,
