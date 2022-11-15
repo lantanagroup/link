@@ -51,13 +51,15 @@ public class SamsTokenValidator implements  ITokenValidator {
      */
 
     try (httpClient) {
+      logger.info("Requesting token verification from SAMS");
       HttpResponse result = httpClient.execute(request);
       String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+      logger.info("SAMS verification response: " + content);
 
       if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error requesting token validation, failed server response.");      }
+        logger.error("Error requesting token validation, failed server response.");
+      }
 
-      JSONObject jsonObject = new JSONObject(content);
       ObjectMapper mapper = new ObjectMapper();
       SamsTokenResult tokenResult = mapper.readValue(content, SamsTokenResult.class);
       return tokenResult.status == "ok";
