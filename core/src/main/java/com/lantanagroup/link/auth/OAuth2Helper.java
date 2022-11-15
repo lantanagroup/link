@@ -162,10 +162,10 @@ public class OAuth2Helper {
     request.addHeader("Cache-Control", "no-cache");
 
     StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=client_credentials&");
-    sb.append("client_id=" + clientId + "&");
-    sb.append("client_secret=" + clientId + "&");
-    sb.append("scope=" + scope);
+    sb.append("grant_type=client_credentials");
+    sb.append("&client_id=" + clientId);
+    sb.append("&client_secret=" + clientSecret);
+    sb.append("&scope=" + scope);
 
     try {
       request.setEntity(new StringEntity(sb.toString()));
