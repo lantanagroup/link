@@ -78,6 +78,10 @@ public class OAuth2Helper {
       case "password": {
         return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
       }
+      case "sams-password": {
+        return getSamsPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getClientSecret(), config.getScope());
+      }
+
       default:
         throw new AuthenticationException("Invalid credential mode.");
     }
@@ -106,6 +110,63 @@ public class OAuth2Helper {
     sb.append("username=" + username + "&");
     sb.append("password=" + password + "&");
     sb.append("client_id=" + clientId);
+
+    try {
+      request.setEntity(new StringEntity(sb.toString()));
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
+      return null;
+    }
+
+    try {
+      if (httpClient == null) {
+        httpClient = HttpClientBuilder.create().build();
+      }
+
+      HttpResponse result = httpClient.execute(request);
+
+      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+
+      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
+      }
+
+      JSONObject jsonObject = new JSONObject(content);
+
+      if (jsonObject.has("access_token")) {
+        return jsonObject.getString("access_token");
+      }
+
+      return null;
+    } catch (IOException ex) {
+      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
+      return null;
+    }
+  }
+
+  public static String getSamsPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getSamsPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, clientSecret, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
+  }
+
+  public static String getSamsPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
+    HttpPost request = new HttpPost(tokenUrl);
+
+    request.addHeader("Accept", "application/json");
+    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("grant_type=password");
+    sb.append("&scope=" + scope);
+    sb.append("&username=" + username);
+    sb.append("&password=" + password);
+    sb.append("&client_id=" + clientId);
+    sb.append("&client_secret" + clientSecret);
 
     try {
       request.setEntity(new StringEntity(sb.toString()));
@@ -467,6 +528,15 @@ public class OAuth2Helper {
                   authConfig.getUsername(),
                   authConfig.getPassword(),
                   authConfig.getClientId(),
+                  authConfig.getScope());
+        case "sams-password":
+          token = OAuth2Helper.getSamsPasswordCredentialsToken(
+                  client,
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getClientId(),
+                  authConfig.getClientSecret(),
                   authConfig.getScope());
       }
     } else {

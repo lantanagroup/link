@@ -124,6 +124,16 @@ public class GenerateAndSubmitCommand {
                 configInfo.getAuth().getClientId(),
                 configInfo.getAuth().getScope());
       }
+      else if(configInfo.getAuth().getCredentialMode() == "sams-password") {
+        token = OAuth2Helper.getSamsPasswordCredentialsToken(
+                httpClient,
+                configInfo.getAuth().getTokenUrl(),
+                configInfo.getAuth().getUser(),
+                configInfo.getAuth().getPass(),
+                configInfo.getAuth().getClientId(),
+                configInfo.getAuth().getClientSecret(),
+                configInfo.getAuth().getScope());
+      }
       else if (configInfo.getAuth().getCredentialMode() == "client") {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,

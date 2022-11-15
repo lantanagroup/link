@@ -145,6 +145,16 @@ public class RefreshPatientListCommand extends BaseShellCommand {
                 config.getAuth().getClientId(),
                 config.getAuth().getScope());
       }
+      else if(config.getAuth().getCredentialMode() == "sams-password") {
+        token = OAuth2Helper.getSamsPasswordCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getUser(),
+                config.getAuth().getPass(),
+                config.getAuth().getClientId(),
+                config.getAuth().getClientSecret(),
+                config.getAuth().getScope());
+      }
       else if (config.getAuth().getCredentialMode() == "client") {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,

@@ -12,7 +12,7 @@ public class LinkOAuthConfig {
     //TODO - Add RequestType: Submitting, LoadingMeasureDef, QueryingEHR
 
     /**
-     * <strong>oauth.credential-mode</strong> Either "client" or "password"
+     * <strong>oauth.credential-mode</strong> Either "client", "password", or "sams-password"
      */
     private String credentialMode;
 
@@ -25,6 +25,11 @@ public class LinkOAuthConfig {
      * <strong>oauth.clientId</strong><br>
      */
     private String clientId;
+
+    /**
+     * <strong>oauth.clientSecret</strong><br>
+     */
+    private String clientSecret;
 
     /**
      * <strong>oauth.username</strong><br>
@@ -48,6 +53,13 @@ public class LinkOAuthConfig {
                     return Strings.isNotEmpty(this.tokenUrl) &&
                             Strings.isNotEmpty(this.username) &&
                             Strings.isNotEmpty(this.password) &&
+                            Strings.isNotEmpty(this.scope);
+                case "sams-password":
+                    return Strings.isNotEmpty(this.tokenUrl) &&
+                            Strings.isNotEmpty(this.username) &&
+                            Strings.isNotEmpty(this.password) &&
+                            Strings.isNotEmpty(this.clientId) &&
+                            Strings.isNotEmpty(this.clientSecret) &&
                             Strings.isNotEmpty(this.scope);
                 case "client":
                     return Strings.isNotEmpty(this.tokenUrl) &&
