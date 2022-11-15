@@ -128,7 +128,7 @@ public class GenerateAndSubmitCommand {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),
-                configInfo.getAuth().getUser(),
+                configInfo.getAuth().getClientId(),
                 configInfo.getAuth().getPass(),
                 configInfo.getAuth().getScope());
       }

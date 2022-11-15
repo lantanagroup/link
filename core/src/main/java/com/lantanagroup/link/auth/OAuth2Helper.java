@@ -73,7 +73,7 @@ public class OAuth2Helper {
     //get token based on credential mode
     switch(config.getCredentialMode()) {
       case "client": {
-        return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+        return getClientCredentialsToken(config.getTokenUrl(), config.getClientId(), config.getPassword(), config.getScope());
       }
       case "password": {
         return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
@@ -140,9 +140,9 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
+  public static String getClientCredentialsToken(String tokenUrl, String clientId, String clientSecret, String scope) {
     try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+      return getClientCredentialsToken(httpClient, tokenUrl, clientId, clientSecret, scope);
     }
     catch(IOException ex) {
       logger.error(ex.getMessage());
@@ -150,19 +150,21 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String scope) {
+  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String clientId, String clientSecret, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
 
-    String userPassCombo = username + ":" + password;
-    String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
+    //String userPassCombo = username + ":" + password;
+    //String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
 
     request.addHeader("Accept", "application/json");
     request.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    request.addHeader("Authorization", "Basic " + authorization);
+    //request.addHeader("Authorization", "Basic " + authorization);
     request.addHeader("Cache-Control", "no-cache");
 
     StringBuilder sb = new StringBuilder();
     sb.append("grant_type=client_credentials&");
+    sb.append("client_id=" + clientId + "&");
+    sb.append("client_secret=" + clientId + "&");
     sb.append("scope=" + scope);
 
     try {
@@ -454,7 +456,7 @@ public class OAuth2Helper {
           token = OAuth2Helper.getClientCredentialsToken(
                   client,
                   authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
+                  authConfig.getClientId(),
                   authConfig.getPassword(),
                   authConfig.getScope());
           break;

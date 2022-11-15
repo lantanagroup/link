@@ -149,7 +149,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,
                 config.getAuth().getTokenUrl(),
-                config.getAuth().getUser(),
+                config.getAuth().getClientId(),
                 config.getAuth().getPass(),
                 config.getAuth().getScope());
       }
