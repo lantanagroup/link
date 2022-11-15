@@ -5,4 +5,5 @@ export interface IConfig {
   getHelpUrl?: string;
   oauth?: IOAuthConfig;
   logoPath?: string;
+  faviconName?: string;
 }

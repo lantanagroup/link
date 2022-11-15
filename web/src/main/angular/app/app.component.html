@@ -4,10 +4,16 @@
     <div class="jumbotron">
         <div class="top-bar">
             <div class="main-logo">
-                <img [src]="configService.config?.logoPath?configService.config?.logoPath:'assets/nhsn_logo.png'"
+                <img [src]="configService.config.logoPath?configService.config.logoPath:'assets/nhsn_logo.png'"
                      class="main-logo"/>
-                <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
-                <span *ngIf="!authService.user">NHSNLink</span>
+                <span *ngIf="!configService.config.logoPath">
+                    <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
+                    <span *ngIf="!authService.user">NHSNLink</span>
+                </span>
+                <span *ngIf="configService.config.logoPath">
+                    <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover"></span>
+                    <span *ngIf="!authService.user"></span>
+                </span>
             </div>
 
             <div class="auth-info">
