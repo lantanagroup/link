@@ -12,7 +12,7 @@ import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ public class QueryCommand extends BaseShellCommand {
   private static final Logger logger = LoggerFactory.getLogger(QueryCommand.class);
 
   @Override
-  protected List<Class> getBeanClasses() {
+  protected List<Class<?>> getBeanClasses() {
     return List.of(
             Query.class,
             QueryConfig.class,
@@ -90,7 +90,7 @@ public class QueryCommand extends BaseShellCommand {
           String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(masterReportid, patientsOfInterest.get(i).getId());
           IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
           String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString((Bundle) patientBundle);
-          if (Strings.isNotEmpty(output)) {
+          if (StringUtils.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
             try (FileOutputStream fos = new FileOutputStream(file)) {
               fos.write(patientDataXml.getBytes(StandardCharsets.UTF_8));

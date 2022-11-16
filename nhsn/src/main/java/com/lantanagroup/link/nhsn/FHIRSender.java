@@ -5,6 +5,7 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DocumentReference;
@@ -25,8 +26,8 @@ public class FHIRSender extends GenericSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, boolean sendWholeBundle, boolean removeContainedResources) throws Exception {
-    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, sendWholeBundle, removeContainedResources);
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
+    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
     String location = this.sendContent(bundle, documentReference, fhirDataProvider);
 
     if (StringUtils.isNotEmpty(location)) {

@@ -1,0 +1,24 @@
+<div *ngIf="format === 'yaml'">
+  <code>
+    <pre #preElement>{{config | yaml}}</pre>
+  </code>
+
+
+  <button type="button" class="btn btn-primary" (click)="download(preElement.innerText)">
+    <fa-icon [icon]="faDownload"></fa-icon>
+    Download
+  </button>
+  <button type="button" class="btn btn-primary" (click)="copyToClipboard(preElement.innerText)">
+    <fa-icon [icon]="faCopy"></fa-icon>
+    Copy to Clipboard
+  </button>
+</div>
+
+<div *ngIf="format === 'json'">
+  <code>
+    <pre #preElement>{{config | jsonConfig}}</pre>
+  </code>
+
+  <button type="button" class="btn btn-primary" (click)="download(preElement.innerText)">Download</button>
+  <button type="button" class="btn btn-primary" (click)="copyToClipboard(preElement.innerText)">Copy to Clipboard</button>
+</div>

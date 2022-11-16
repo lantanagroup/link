@@ -1,0 +1,8 @@
+<app-string-dropdown [parentObject]="authConfig" propertyName="credentialMode" [options]="['Client','Password']" [required]="false" selectLabel="NONE" label="Credential Mode" (change)="onChange()"></app-string-dropdown>
+<div *ngIf="authConfig.credentialMode">
+  <app-single-line-text [parentObject]="authConfig" propertyName="tokenUrl" label="Token URL" (change)="onChange()" [requireUrl]="true"></app-single-line-text>
+  <app-single-line-text [parentObject]="authConfig" propertyName="clientId" label="Client ID" (change)="onChange()"></app-single-line-text>
+  <app-single-line-text [parentObject]="authConfig" propertyName="username" label="Username" (change)="onChange()"></app-single-line-text>
+  <app-single-line-text [parentObject]="authConfig" propertyName="password" label="Password" (change)="onChange()"></app-single-line-text>
+  <app-single-line-text [parentObject]="authConfig" propertyName="scope" label="Scope" (change)="onChange()"></app-single-line-text>
+</div>

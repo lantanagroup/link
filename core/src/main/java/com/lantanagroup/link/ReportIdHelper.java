@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.model.ReportCriteria;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,4 +46,10 @@ public class ReportIdHelper {
   public static String getPatientDataBundleId(String masterIdentifierValue, String patientId) {
     return combine(masterIdentifierValue, hash(patientId));
   }
+
+  public static String getPatientDataBundleId(String patientReportId) {
+    String[] ids = patientReportId.split("-");
+    return ids.length == 3 ? combine(ids[0], ids[2]) : "";
+  }
+
 }

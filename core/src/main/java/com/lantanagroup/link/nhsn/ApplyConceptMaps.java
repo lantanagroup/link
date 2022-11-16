@@ -76,8 +76,10 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   private void displayTransformation(Resource resource, List<Coding> codingList) {
     StringBuilder builder = new StringBuilder();
     builder.append("Transformation for resource:  " + resource.getResourceType() + "/" + resource.getIdElement().getIdPart());
-    String message = codingList.stream().map(coding -> "From : " + ((Coding) coding.getExtension().get(0).getValue()).getSystem() + ":" + ((Coding) coding.getExtension().get(0).getValue()).getCode() +
-            " To: " + coding.getSystem() + ":" + coding.getCode()).collect(Collectors.joining("\n"));
+    String message = codingList.stream().map(coding -> (coding.getExtension().size() > 0 ?
+            "From : " + ((Coding) coding.getExtension().get(0).getValue()).getSystem() + ":"
+                    + ((Coding) coding.getExtension().get(0).getValue()).getCode() +
+            " To: " + coding.getSystem() + ":" + coding.getCode() : "No extensions in coding list")).collect(Collectors.joining("\n"));
     builder.append(message);
     if (!StringUtils.isBlank(builder.toString())) {
       logger.info(builder.toString());
@@ -89,12 +91,12 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
    */
   public List<Coding> filterCodingsByPathList(DomainResource resource, List<String> pathList) {
     List<Base> resources = filterResourcesByPathList(resource, pathList);
-    List codingList = new ArrayList();
+    List<Coding> codingList = new ArrayList<>();
     for (Base element : resources) {
       if (element instanceof CodeableConcept) {
         codingList.add(((CodeableConcept) element).getCoding().get(0));
       } else if (element instanceof Coding) {
-        codingList.add(element);
+        codingList.add((Coding) element);
       } else if (element instanceof CodeType) {
         CodeableConcept cc = new CodeableConcept();
         cc.addCoding().setCode(((CodeType) element).asStringValue());
@@ -117,7 +119,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   }
 
   public List<Coding> applyTransformation(ConceptMap conceptMap, List<Coding> codingList) {
-    List<Coding> changedCodes = new ArrayList();
+    List<Coding> changedCodes = new ArrayList<>();
     codingList.stream().forEach(coding -> {
       this.translateCoding(conceptMap, coding);
       if (coding.getExtension() != null) {
@@ -136,18 +138,20 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
 
   public void execute(List<DomainResource> resourceList) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
-    Map<String, ConceptMap> conceptMaps = getConceptMaps(fhirDataProvider);
-    if (!conceptMaps.isEmpty()) {
-      applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
-        ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());
-        resourceList.stream().forEach(resource -> {
-          List<Coding> codingList = filterCodingsByPathList(resource, conceptMapConfig.getFhirPathContexts());
-          applyTransformation(conceptMap, codingList);
-          if (!codingList.isEmpty()) {
-            displayTransformation(resource, codingList);
-          }
+    if(resourceList.size() > 0){
+      Map<String, ConceptMap> conceptMaps = getConceptMaps(fhirDataProvider);
+      if (!conceptMaps.isEmpty()) {
+        applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
+          ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());
+          resourceList.stream().forEach(resource -> {
+            List<Coding> codingList = filterCodingsByPathList(resource, conceptMapConfig.getFhirPathContexts());
+            if (!codingList.isEmpty()) {
+              applyTransformation(conceptMap, codingList);
+              displayTransformation(resource, codingList);
+            }
+          });
         });
-      });
+      }
     }
   }
 }

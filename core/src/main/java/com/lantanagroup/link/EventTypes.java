@@ -14,5 +14,7 @@ public enum EventTypes {
   BeforeMeasureEval,
   AfterMeasureEval,
   BeforeReportStore,
-  AfterReportStore;
+  AfterReportStore,
+  BeforeBundling,
+  AfterBundling
 }

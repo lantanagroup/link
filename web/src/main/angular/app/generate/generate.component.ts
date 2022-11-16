@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {formatDateToISO, getFhirDate, getFhirYesterday} from '../helper';
+import {formatDateToISO, getFhirDate, getFhirNow, getFhirYesterday} from '../helper';
 import {StoredReportDefinition} from '../model/stored-report-definition';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
@@ -54,6 +54,12 @@ export class GenerateComponent implements OnInit {
     this.endDate = getFhirDate(this.criteria.periodEnd);
   }
 
+  onDefaultTimeSelect() {
+    this.criteria.periodStart = getFhirDate({year: 1900, month: 1, day: 1});
+    this.onStartDateSelected();
+    this.criteria.periodEnd = getFhirDate(getFhirNow());
+    this.onEndDateSelected();
+  }
 
   async reload() {
     try {
@@ -88,13 +94,13 @@ export class GenerateComponent implements OnInit {
 
       try {
         const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
-        await this.router.navigate(['review', generateResponse.reportId]);
+        await this.router.navigate(['review', generateResponse.masterId]);
       } catch (ex) {
         if (ex.status === 409) {
           if (confirm('A report already exists for the selected criteria. Would you like to re-generate the report?')) {
             try {
               const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
-              await this.router.navigate(['review', generateResponse.reportId]);
+              await this.router.navigate(['review', generateResponse.masterId]);
             } catch (ex) {
               this.toastService.showException('Error generating report', ex);
             }

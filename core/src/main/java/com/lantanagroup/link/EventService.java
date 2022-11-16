@@ -5,7 +5,6 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -36,7 +35,7 @@ public class EventService {
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);
-    if (beans == null) return;
+    if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
@@ -48,18 +47,18 @@ public class EventService {
     triggerEvent(eventType, criteria, context, null);
   }
 
-  public void triggerPatientEvent(EventTypes eventType, Bundle patientBundle) throws Exception {
+  public void triggerDataEvent(EventTypes eventType, Bundle bundle) throws Exception {
     List<Object> beans = getBeans(eventType);
-    if (beans == null) return;
+    if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
-        ((IReportGenerationDataEvent) bean).execute(patientBundle);
+        ((IReportGenerationDataEvent) bean).execute(bundle);
       }
     }
   }
 
   public List<Object> getBeans(EventTypes eventType) throws Exception{
-    List<Class<?>> classes = new ArrayList();
+    List<Class<?>> classes = new ArrayList<>();
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
     if (classNames == null) {
@@ -80,7 +79,7 @@ public class EventService {
 
 
   public List<Object> getBeans(List<Class<?>> classes) {
-    ArrayList beans = new ArrayList();
+    ArrayList<Object> beans = new ArrayList<>();
     DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((ConfigurableApplicationContext) this.context).getBeanFactory();
 
     for (Class<?> beanClass : classes) {

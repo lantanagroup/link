@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Set;
 
 public class JpaRestfulServer extends RestfulServer {
+  private static final long serialVersionUID = 1L;
+
   @Autowired
   ApplicationContext applicationContext;
 
@@ -47,6 +49,7 @@ public class JpaRestfulServer extends RestfulServer {
   ISearchParamRegistry searchParamRegistry;
 
   @Autowired
+  @SuppressWarnings("rawtypes")
   IFhirSystemDao fhirSystemDao;
 
   @Autowired

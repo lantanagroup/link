@@ -1,0 +1,8 @@
+<div class="card">
+  <div class="card-header">MeasureReportSender</div>
+  <div class="card-body">
+    <app-single-line-text [parentObject]="senderConfigWrapper.fhir" propertyName="url" label="FHIR Server Base URL" [required]="true" [requireUrl]="true" (change)="envService.saveEnvEvent.next(null)"></app-single-line-text>
+    <app-boolean [parentObject]="senderConfigWrapper.fhir" propertyName="compress" label="Compress submission?" (change)="envService.saveEnvEvent.next(null)"></app-boolean>
+    <app-auth-config [parentObject]="senderConfigWrapper.fhir" propertyName="authConfig"></app-auth-config>
+  </div>
+</div>

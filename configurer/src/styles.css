@@ -1,0 +1,48 @@
+body {
+  min-height: 75rem;
+  padding-top: 4.5rem;
+}
+
+.modal.show {
+  display: block;
+}
+
+code > pre {
+  padding: 10px;
+  border: 1px solid lightgray;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.help-block {
+  font-style: italic;
+  color: darkgray;
+  font-size: 14px;
+  display: block;
+}
+
+.help-block.error {
+  color: red;
+  margin-left: 15px;
+}
+
+select.form-control {
+  -webkit-appearance: menulist;
+}
+
+label {
+  font-weight: bold;
+}
+
+.d-flex .tab-content {
+  width: 100%;
+}
+
+.d-flex .nav-pills {
+  padding-right: 15px;
+}
+
+.nav-link > a {
+  color: rgba(255,255,255,.55);
+  text-decoration: none;
+}

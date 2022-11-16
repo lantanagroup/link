@@ -7,13 +7,13 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +30,9 @@ import java.util.*;
 
 @ShellComponent
 public class GenerateAndSubmitCommand {
+
+
   private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
-  private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
   @Autowired
   @Setter
@@ -52,12 +53,13 @@ public class GenerateAndSubmitCommand {
     return cal.getTime();
   }
 
-  public static Date getEndOfDay(int adjustDays, boolean endOfDay) {
+  public static Date getEndOfDay(int adjustHours, int adjustMonths, boolean endOfDay) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
-    cal.add(Calendar.HOUR, adjustDays);
+    cal.add(Calendar.HOUR, adjustHours);
+    cal.add(Calendar.MONTH, adjustMonths);
     if (endOfDay) {
-      cal.set(Calendar.HOUR, 23);
+      cal.set(Calendar.HOUR_OF_DAY, 23);
       cal.set(Calendar.MINUTE, 59);
       cal.set(Calendar.SECOND, 59);
       cal.set(Calendar.MILLISECOND, 0);
@@ -71,39 +73,35 @@ public class GenerateAndSubmitCommand {
     try {
       RestTemplate restTemplate = new RestTemplate();
 
-      if (Strings.isBlank(configInfo.getApiUrl())) {
+      if (StringUtils.isBlank(configInfo.getApiUrl())) {
         logger.error("The api-url parameter is required.");
         return;
       }
-      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
+      if (StringUtils.isBlank(String.valueOf(this.configInfo.getPeriodStart().getAdjustDay()))) {
         logger.error("The period-start parameter is required.");
         return;
       }
-      if (Strings.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
+      if (StringUtils.isBlank(String.valueOf(this.configInfo.getPeriodEnd().getAdjustDay()))) {
         logger.error("The period-start parameter is required.");
-        return;
-      }
-      if (Strings.isBlank(configInfo.getReportTypeId())) {
-        logger.error("The report-type-is is required.");
         return;
       }
       if (configInfo.getAuth() == null) {
         logger.error("Auth is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getTokenUrl())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getTokenUrl())) {
         logger.error("The token-url is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getUser())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getUser())) {
         logger.error("The user is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getPass())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getPass())) {
         logger.error("The password is required.");
         return;
       }
-      if (Strings.isBlank(configInfo.getAuth().getScope())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getScope())) {
         logger.error("The scope is required.");
         return;
       }
@@ -158,15 +156,17 @@ public class GenerateAndSubmitCommand {
       // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day
       Date startDate = getStartDate(this.configInfo.getPeriodStart().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodStart().isStartOfDay());
       String startDateFormatted = Helper.getFhirDate(startDate);
-      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay() * 24, this.configInfo.getPeriodEnd().isEndOfDay()));
+      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodEnd().isEndOfDay()));
 
-      UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
-              // Add query parameter
-              .queryParam("reportDefIdentifier", configInfo.getReportTypeId())
-              .queryParam("periodStart", startDateFormatted)
-              .queryParam("periodEnd", endDateFormatted)
-              .queryParam("regenerate", false);
+      UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
+
       Map<String, String> uriParams = new HashMap<>();
+      GenerateRequest generateRequest = new GenerateRequest();
+      generateRequest.setPeriodEnd(endDateFormatted);
+      generateRequest.setPeriodStart(startDateFormatted);
+      generateRequest.setRegenerate(true);
+      generateRequest.setBundleIds(configInfo.getBundleIds());
+
       URI urlWithParameters = builder.buildAndExpand(uriParams).toUri();
 
       // create headers
@@ -186,12 +186,12 @@ public class GenerateAndSubmitCommand {
       headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
       // build the request
-      HttpEntity<Map<String, Object>> entity = new HttpEntity<>(headers);
+      HttpEntity<GenerateRequest> entity = new HttpEntity<>(generateRequest, headers);
 
       // send POST request
       ResponseEntity<GenerateResponse> response = restTemplate.postForEntity(urlWithParameters, entity, GenerateResponse.class);
 
-      String reportId = response.getBody() != null ? response.getBody().getReportId() : null;
+      String reportId = response.getBody() != null ? response.getBody().getMasterId() : null;
       if (reportId == null) {
         logger.error("Error generating report. Please contact the system administrator.");
         client.close();

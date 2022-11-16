@@ -25,16 +25,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
 
 public class ReportControllerTests {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
 //  private void mockSearchMeasure(IUntypedQuery untypedQuery, Measure measure) {
 //
 //
@@ -247,7 +244,7 @@ public class ReportControllerTests {
   }
 
   @Ignore
-  public void excludePatientsTest() throws HttpResponseException {
+  public void excludePatientsTest() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -302,7 +299,7 @@ public class ReportControllerTests {
 
 
   @Ignore
-  public void excludePatientsTestException() throws HttpResponseException {
+  public void excludePatientsTestException() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -351,9 +348,9 @@ public class ReportControllerTests {
 
 
     //Assert.assertEquals(4, model.getMeasureReport().getEvaluatedResource().size());
-    thrown.expect(HttpResponseException.class);
-    thrown.expectMessage("Patient testPatient4 is not included in report testReportId");
-    ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    Assert.assertThrows("Patient testPatient4 is not included in report testReportId", HttpResponseException.class, () -> {
+      ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    });
   }
 
 

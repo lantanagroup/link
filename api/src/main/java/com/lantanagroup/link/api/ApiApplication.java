@@ -29,6 +29,7 @@ import java.util.TimeZone;
         "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
         "com.lantanagroup.link.config.api",
+        "com.lantanagroup.link.mhl",
         "com.lantanagroup.link.nhsn",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.spring",

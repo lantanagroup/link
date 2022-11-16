@@ -4,7 +4,7 @@ package com.lantanagroup.link.config.auth;
 import com.lantanagroup.link.config.OAuthCredentialModes;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.logging.log4j.util.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 @Getter @Setter
 public class LinkOAuthConfig {
@@ -49,24 +49,17 @@ public class LinkOAuthConfig {
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
             switch (this.credentialMode) {
-                case "password":
-                    return Strings.isNotEmpty(this.tokenUrl) &&
-                            Strings.isNotEmpty(this.username) &&
-                            Strings.isNotEmpty(this.password) &&
-                            Strings.isNotEmpty(this.scope);
-                case "sams-password":
-                    return Strings.isNotEmpty(this.tokenUrl) &&
-                            Strings.isNotEmpty(this.username) &&
-                            Strings.isNotEmpty(this.password) &&
-                            Strings.isNotEmpty(this.clientId) &&
-                            Strings.isNotEmpty(this.clientSecret) &&
-                            Strings.isNotEmpty(this.scope);
-                case "client":
-                    return Strings.isNotEmpty(this.tokenUrl) &&
-                            Strings.isNotEmpty(this.username) &&
-                            Strings.isNotEmpty(this.password) &&
-                            Strings.isNotEmpty(this.clientId) &&
-                            Strings.isNotEmpty(this.scope);
+                case Client:
+                    return StringUtils.isNotEmpty(this.tokenUrl) &&
+                            StringUtils.isNotEmpty(this.username) &&
+                            StringUtils.isNotEmpty(this.password) &&
+                            StringUtils.isNotEmpty(this.scope);
+                case Password:
+                    return StringUtils.isNotEmpty(this.tokenUrl) &&
+                            StringUtils.isNotEmpty(this.username) &&
+                            StringUtils.isNotEmpty(this.password) &&
+                            StringUtils.isNotEmpty(this.clientId) &&
+                            StringUtils.isNotEmpty(this.scope);
             }
         }
 

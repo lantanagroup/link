@@ -13,11 +13,28 @@
     <div class="card-header">Report Generation Criteria</div>
     <div class="card-body">
         <div class="row">
+            <div class="col-md-1">
+                <p><strong>
+                    All historical
+                </strong>
+                </p>
+                <div class="input-group">
+                    <input
+                        #checkbox
+                        (change)="onDefaultTimeSelect()"
+                        class="form-check-input"
+                        id="DefaultTime"
+                        ngbCheckbox
+                        type="checkbox"
+                        value=""/>
+                </div>
+            </div>
             <div class="col-md-2">
                 <p><strong>Report Start Date</strong></p>
                 <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
                 <div class="input-group">
-                    <input   [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
+                    <input [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
+                           [disabled]="checkbox.checked"
                            class="form-control" name="dp" ngbDatepicker #d="ngbDatepicker"
                            placeholder="{{startDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
@@ -25,6 +42,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-md-2">
                 <p><strong>Report End Date</strong></p>
                 <div class="input-group">
@@ -53,6 +71,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
     <div class="card-footer">

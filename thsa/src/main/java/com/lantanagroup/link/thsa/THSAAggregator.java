@@ -67,8 +67,8 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   @Override
   public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
 
-    HashMap usedInventoryMap = new HashMap();
-    HashMap totalInventoryMap = new HashMap();
+    HashMap<String, Integer> usedInventoryMap = new HashMap<>();
+    HashMap<String, Integer> totalInventoryMap = new HashMap<>();
     // store the used counts
     MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
@@ -101,19 +101,19 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
         if (populationCode.equals(NumTotBedsOcc)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumICUBedsOcc)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumVentUse)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? (Integer) usedInventoryMap.get(populationCode) : 0);
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumTotBedsAvail)) {
-          int available = (totalInventoryMap.get(NumTotBeds) != null ? (Integer) totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? (Integer) usedInventoryMap.get(NumTotBedsOcc) : 0);
+          int available = (totalInventoryMap.get(NumTotBeds) != null ? totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? usedInventoryMap.get(NumTotBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumICUBedsAvail)) {
-          int available = (totalInventoryMap.get(NumICUBeds) != null ? (Integer) totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? (Integer) usedInventoryMap.get(NumICUBedsOcc) : 0);
+          int available = (totalInventoryMap.get(NumICUBeds) != null ? totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? usedInventoryMap.get(NumICUBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumVentAvail)) {
-          int available = (totalInventoryMap.get(NumVent) != null ? (Integer) totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? (Integer) usedInventoryMap.get(NumVentUse) : 0);
+          int available = (totalInventoryMap.get(NumVent) != null ? totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? usedInventoryMap.get(NumVentUse) : 0);
           population.setCount(available);
         }
       }
