@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +31,8 @@ import java.util.*;
 
 @ShellComponent
 public class GenerateAndSubmitCommand {
-
-
   private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
+  private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
   @Autowired
   @Setter
@@ -114,7 +114,7 @@ public class GenerateAndSubmitCommand {
       String token = null;
 
       ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
-      if(configInfo.getAuth().getCredentialMode() == "password") {
+      if(Objects.equals(configInfo.getAuth().getCredentialMode(), "password")) {
         token = OAuth2Helper.getPasswordCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),
@@ -123,7 +123,7 @@ public class GenerateAndSubmitCommand {
                 configInfo.getAuth().getClientId(),
                 configInfo.getAuth().getScope());
       }
-      else if(configInfo.getAuth().getCredentialMode() == "sams-password") {
+      else if(Objects.equals(configInfo.getAuth().getCredentialMode(), "sams-password")) {
         token = OAuth2Helper.getSamsPasswordCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),
@@ -133,7 +133,7 @@ public class GenerateAndSubmitCommand {
                 configInfo.getAuth().getClientSecret(),
                 configInfo.getAuth().getScope());
       }
-      else if (configInfo.getAuth().getCredentialMode() == "client") {
+      else if (Objects.equals(configInfo.getAuth().getCredentialMode(), "client")) {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),

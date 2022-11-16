@@ -5,6 +5,7 @@ import com.lantanagroup.link.config.OAuthCredentialModes;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 
 @Getter @Setter
 public class LinkOAuthConfig {
@@ -49,16 +50,23 @@ public class LinkOAuthConfig {
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
             switch (this.credentialMode) {
-                case Client:
+                case "clilent":
                     return StringUtils.isNotEmpty(this.tokenUrl) &&
                             StringUtils.isNotEmpty(this.username) &&
                             StringUtils.isNotEmpty(this.password) &&
                             StringUtils.isNotEmpty(this.scope);
-                case Password:
+                case "password":
                     return StringUtils.isNotEmpty(this.tokenUrl) &&
                             StringUtils.isNotEmpty(this.username) &&
                             StringUtils.isNotEmpty(this.password) &&
                             StringUtils.isNotEmpty(this.clientId) &&
+                            StringUtils.isNotEmpty(this.scope);
+                case "sams-password":
+                    return StringUtils.isNotEmpty(this.tokenUrl) &&
+                            StringUtils.isNotEmpty(this.username) &&
+                            StringUtils.isNotEmpty(this.password) &&
+                            StringUtils.isNotEmpty(this.clientId) &&
+                            StringUtils.isNotEmpty(this.clientSecret) &&
                             StringUtils.isNotEmpty(this.scope);
             }
         }
