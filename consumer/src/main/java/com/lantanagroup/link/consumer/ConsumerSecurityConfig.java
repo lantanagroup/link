@@ -29,7 +29,7 @@ public class ConsumerSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization");
-    authFilter.setAuthenticationManager(new LinkAuthManager(this.config.getIssuer(), this.config.getAuthJwksUrl(), null));
+    authFilter.setAuthenticationManager(new LinkAuthManager(this.config.getIssuer(), this.config.getAlgorithm(), this.config.getAuthJwksUrl(), this.config.getTokenVerificationClass(),null, config.getTokenValidationEndpoint()));
     http
             .csrf().disable()
             .cors()

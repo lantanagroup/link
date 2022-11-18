@@ -29,9 +29,29 @@ public class ConsumerConfig {
    */
   @Getter
   private String issuer;
+
+  /**
+   * <strong>consumer.oauth.algorithm</strong><br>The algorithm used by the identity provider to sign the jwt token
+   */
+  @Getter
+  private String algorithm;
+
+  /**
+   * <strong>consumer.oauth.tokenVerificationClass</strong><br>The class configured to verify a jwt token in the api
+   */
+  @Getter
+  private String tokenVerificationClass;
+
   /***
    <strong>consumer.authJwksUrl</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
    */
   @Getter
   private String authJwksUrl;
+
+  /**
+   * <strong>consumer.tokenValidationEndpoint</strong><br>The url for the identity provider's token validation endpoint
+   */
+  @Getter
+  private String tokenValidationEndpoint;
+
 }

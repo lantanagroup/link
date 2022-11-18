@@ -53,7 +53,7 @@ public class GenericSenderTests {
 
     config.setUrl("http://test.com/fhir");
     config.setAuthConfig(new LinkOAuthConfig());
-    config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getAuthConfig().setCredentialMode("client");
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");
     config.getAuthConfig().setPassword("some-pass");
@@ -76,7 +76,7 @@ public class GenericSenderTests {
     FHIRSenderConfig config = new FHIRSenderConfig();
     config.setUrl("http://test.com/fhir");
     config.setAuthConfig(new LinkOAuthConfig());
-    config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getAuthConfig().setCredentialMode("client");
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");
     config.getAuthConfig().setPassword("some-pass");
