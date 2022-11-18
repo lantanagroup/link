@@ -47,7 +47,7 @@ public class DataStoreApplication extends SpringBootServletInitializer {
   @Bean
   public ModelConfig modelConfig() {
     ModelConfig modelConfig = new ModelConfig();
-    modelConfig.setAutoSupportDefaultSearchParams(false);
+    modelConfig.setAutoSupportDefaultSearchParams(true);
     modelConfig.setDefaultSearchParamsCanBeOverridden(true);
     return modelConfig;
   }
