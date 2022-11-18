@@ -119,6 +119,13 @@ public class ApiConfig {
   private String tokenVerificationClass;
 
   /**
+   * <strong>api.tokenValidationEndpoint</strong><br>The url for the identity provider's token validation endpoint
+   */
+  @Getter
+  @Setter
+  private String tokenValidationEndpoint;
+
+  /**
    * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request
    */
   @Getter

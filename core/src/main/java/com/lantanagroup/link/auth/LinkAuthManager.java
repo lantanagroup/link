@@ -26,6 +26,7 @@ public class LinkAuthManager implements AuthenticationManager {
   private final String jwksUrl;
   private final String tokenVerificationClass;
   private final HashMap<String, String> basicUsers;
+  private final String tokenValidationEndpoint;
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -50,8 +51,7 @@ public class LinkAuthManager implements AuthenticationManager {
       Boolean hasBasic = authHeader.toLowerCase(Locale.ROOT).startsWith("basic" );
 
       if (allowBearer && hasBearer) {
-        //authentication.setAuthenticated(OAuth2Helper.verifyToken(authHeader, OAuth2Helper.TokenAlgorithmsEnum.RSA256, this.issuer, this.jwksUrl) != null ? true : false);
-        authentication.setAuthenticated(tokenVerifierClass.verifyToken(authHeader, alogrithm, issuer, jwksUrl));
+         authentication.setAuthenticated(tokenVerifierClass.verifyToken(authHeader, alogrithm, issuer, jwksUrl, tokenValidationEndpoint));
       } else if (allowBasic && hasBasic) {
         BasicAuthModel basicAuthModel = BasicAuthModel.getBasicAuth(authHeader);
         String p = this.basicUsers.get(basicAuthModel.getUsername());

@@ -28,4 +28,11 @@ public class DataStoreOAuthConfig {
    */
   @Getter
   private String authJwksUrl;
+
+  /**
+   * <strong>datastore.oauth.tokenValidationEndpoint</strong><br>The class configured to verify a jwt token in the api
+   */
+  @Getter
+  private String tokenValidationEndpoint;
+
 }

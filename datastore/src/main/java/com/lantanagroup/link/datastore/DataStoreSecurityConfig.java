@@ -38,8 +38,9 @@ public class DataStoreSecurityConfig extends WebSecurityConfigurerAdapter {
     String algorithm = this.config.getOauth() != null ? this.config.getOauth().getAlgorithm() : null;
     String authJwksUrl = this.config.getOauth() != null ? this.config.getOauth().getAuthJwksUrl() : null;
     String tokenVerificationClass = this.config.getOauth() != null ? this.config.getOauth().getTokenVerificationClass() : null;
+    String tokenValidationEndpoint = this.config.getOauth() != null ? this.config.getOauth().getTokenValidationEndpoint() : null;
 
-    authFilter.setAuthenticationManager(new LinkAuthManager(issuer, algorithm, authJwksUrl, tokenVerificationClass, this.config.getBasicAuthUsers()));
+    authFilter.setAuthenticationManager(new LinkAuthManager(issuer, algorithm, authJwksUrl, tokenVerificationClass, this.config.getBasicAuthUsers(), tokenValidationEndpoint));
     http
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

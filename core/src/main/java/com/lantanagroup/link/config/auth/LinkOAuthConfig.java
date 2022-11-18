@@ -50,9 +50,9 @@ public class LinkOAuthConfig {
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
             switch (this.credentialMode) {
-                case "clilent":
+                case "client":
                     return StringUtils.isNotEmpty(this.tokenUrl) &&
-                            StringUtils.isNotEmpty(this.username) &&
+                            StringUtils.isNotEmpty(this.clientId) &&
                             StringUtils.isNotEmpty(this.password) &&
                             StringUtils.isNotEmpty(this.scope);
                 case "password":

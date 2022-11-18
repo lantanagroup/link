@@ -34,7 +34,9 @@ public class OAuthTokenValidator implements ITokenValidator {
   private final static ObjectReader reader = (new ObjectMapper()).readerFor(Map.class);
 
   @Override
-  public boolean verifyToken(String authHeader, String algo, String issuer, String jwksUrl) {
+  public boolean verifyToken(String authHeader, String algo, String issuer, String jwksUrl, String validationEndpoint) {
+
+    ///TODO: Determine if there is a generic way that identity providers implementing ouath set up validation endpoints, if so check if not null and use the expected response for verification.
 
     //get token from auth header
     String token = authHeader.substring("Bearer ".length());

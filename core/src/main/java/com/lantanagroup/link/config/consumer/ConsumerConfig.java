@@ -47,4 +47,11 @@ public class ConsumerConfig {
    */
   @Getter
   private String authJwksUrl;
+
+  /**
+   * <strong>consumer.tokenValidationEndpoint</strong><br>The url for the identity provider's token validation endpoint
+   */
+  @Getter
+  private String tokenValidationEndpoint;
+
 }

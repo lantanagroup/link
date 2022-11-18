@@ -18,11 +18,10 @@ import java.io.UnsupportedEncodingException;
 @Component
 public class SamsTokenValidator implements  ITokenValidator {
   private static final Logger logger = LoggerFactory.getLogger(SamsTokenValidator.class);
-  String tokenValidationUrl = ""; //get from config
 
   @Override
-  public boolean verifyToken(String authHeader, String algorithm, String issuer, String jwksUrl) {
-    HttpPost request = new HttpPost(tokenValidationUrl);
+  public boolean verifyToken(String authHeader, String algorithm, String issuer, String jwksUrl, String validationEndpoint) {
+    HttpPost request = new HttpPost(validationEndpoint);
     CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
     //get token from auth header
