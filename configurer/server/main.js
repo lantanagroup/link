@@ -39,8 +39,9 @@ app.use(bodyParser.json());
 // Create link to Angular build directory
 // The `ng build` command will save the result
 // under the `dist` folder.
-var distDir = __dirname + "/client-dist/";
-app.use(express.static(distDir));
+// var distDir = __dirname + "/client-dist/";
+app.use('/', express.static(path.join(__dirname + "/client-dist/")));
+app.use('/configurer', express.static(path.join(__dirname + "/client-dist/")));
 
 // Init the server
 var main = app.listen(process.env.PORT || 8080, function () {
@@ -148,6 +149,7 @@ app.post('/configurer/api/upload/consumer', upload.single('consumer'), function 
 });
 
 app.get('*', (req, res) => {
+  console.log("Request URL: " + req.url)
   res.sendFile(path.join(__dirname, '/client-dist/index.html'));
 });
 
