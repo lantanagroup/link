@@ -17,7 +17,7 @@ export interface IUserConfig {
 export class SwaggerConfig {
   authUrl?: string;
   tokenUrl?: string;
-  scope?: string[];
+  scope?: string[] = [];
 }
 
 export class AgentConfig {
@@ -141,8 +141,6 @@ export class MeasurePackagesConfig {
   bundleIds: string[];
 }
 
-
-
 export class DataSourceConfig {
   url = 'jdbc:h2:file:./target/database/h2';
   username = 'sa';
@@ -213,7 +211,18 @@ export class USCoreConfig {
   fhirServerBase?: string;
   patientResourceTypes?: string[];
   otherResourceTypes?: string[];
+  queryParameters?: Map<string, any>;
   parallelPatients = 10;
+}
+
+export class QueryResourceParams {
+  resourceType?: string;
+  parameters?: Parameter[];
+}
+
+export class Parameter {
+  name?: string;
+  values?: string[];
 }
 
 export class FHIRSenderConfig {

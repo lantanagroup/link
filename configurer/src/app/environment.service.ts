@@ -97,7 +97,7 @@ export class EnvironmentService {
     let clone;
     switch (configType) {
       case 'api':
-        clone = JSON.parse(JSON.stringify(this.apiConfig));
+        clone = JSON.parse(JSON.stringify(this.apiConfig, filter.replacer));
         break;
       case 'consumer':
         clone = JSON.parse(JSON.stringify(this.consumerConfig));
@@ -119,7 +119,7 @@ export class EnvironmentService {
       await this.http.delete(contextPath + '/config/' + configType).toPromise();
       this.init();
     } catch (ex: any) {
-      this.toastService.show('Error removing environment', ex);
+      this.toastService.show('Error removing config', ex);
     }
   }
 }
