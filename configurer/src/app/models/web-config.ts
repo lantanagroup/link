@@ -1,6 +1,7 @@
 export class WebConfig {
   oauth: WebOAuthConfig = new WebOAuthConfig();
   logoPath?: string
+  faviconName?: string
 }
 
 export class WebOAuthConfig {

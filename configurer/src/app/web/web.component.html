@@ -13,6 +13,12 @@
           <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
                                 [parentObject]="envService.webConfig.oauth" label="Scope"
                                 propertyName="scope"></app-single-line-text>
+          <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
+                                [parentObject]="envService.webConfig" label="Logo path"
+                                propertyName="logoPath"></app-single-line-text>
+          <app-single-line-text (change)="envService.saveEnvEvent.next(null)"
+                                [parentObject]="envService.webConfig" label="Favicon Name"
+                                propertyName="faviconName"></app-single-line-text>
         </div>
       </ng-template>
     </li>
