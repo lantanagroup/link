@@ -77,13 +77,24 @@ export class YamlPipe implements PipeTransform {
     }
   }
 
+  public replacer(key: string, value: any) {
+    if (value instanceof Map) {
+      return Array.from(value).reduce((obj: any, [key, value]) => {
+        obj[key] = value;
+        return obj;
+      }, {});
+    } else {
+      return value;
+    }
+  }
+
 
   transform(value: any, ...args: unknown[]): string {
-    const clone = JSON.parse(JSON.stringify(value));
+    const clone = JSON.parse(JSON.stringify(value, this.replacer));
     delete clone.configType;
 
     this.objectToSnakeCase(clone);
 
-    return stringify(clone, { version: '1.2' });
+    return stringify(clone, {version: '1.2'});
   }
 }

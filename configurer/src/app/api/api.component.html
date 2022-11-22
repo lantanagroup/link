@@ -29,6 +29,12 @@
     </button>
   </li>
   <li class="nav-item" role="presentation">
+    <button aria-controls="swagger-tab-pane" aria-selected="false" class="nav-link" data-bs-target="#swagger-tab-pane"
+            data-bs-toggle="tab" id="swagger-tab" role="tab" type="button">Swagger
+    </button>
+  </li>
+
+  <li class="nav-item" role="presentation">
     <button class="nav-link" id="yaml-tab" data-bs-toggle="tab" data-bs-target="#yaml-tab-pane" type="button" role="tab"
             aria-controls="yaml-tab-pane" aria-selected="false">YAML
     </button>
@@ -38,6 +44,7 @@
             data-bs-toggle="tab" id="uploadfile-tab" role="tab" type="button">Upload
     </button>
   </li>
+
 </ul>
 
 <div class="tab-content" id="myTabContent">
@@ -103,4 +110,9 @@
   <div aria-labelledby="upload-tab" class="tab-pane fade" id="upload-tab-pane" role="tabpanel" tabindex="0">
     <upload-file configType='api'></upload-file>
   </div>
+
+  <div aria-labelledby="swagger-tab" class="tab-pane fade" id="swagger-tab-pane" role="tabpanel" tabindex="0">
+    <app-swagger [apiConfig]="envService.apiConfig"></app-swagger>
+  </div>
+
 </div>

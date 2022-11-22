@@ -34,6 +34,7 @@ import {BundlerComponent} from './bundler/bundler.component';
 import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component';
 import {UploadFileComponent} from './uploadfile/uploadfile.component';
 import {FileUploadModule} from "ng2-file-upload";
+import {SwaggerComponent} from './swagger/swagger.component';
 
 @NgModule({
   declarations: [
@@ -63,7 +64,8 @@ import {FileUploadModule} from "ng2-file-upload";
     EventComponent,
     BundlerComponent,
     MultiMeasureComponent,
-    UploadFileComponent
+    UploadFileComponent,
+    SwaggerComponent
   ],
   imports: [
     BrowserModule,
