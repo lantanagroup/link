@@ -73,6 +73,25 @@ export class UscoreComponent implements OnInit {
     this.envService.saveEnvEvent.next(null);
   }
 
+  deleteResource(resource: QueryResourceParams[], index: number) {
+    resource.splice(index, 1);
+    this.usCoreConfig.queryParameters = new Map(this.entries.map(key => [key[0], key[1]]));
+    this.envService.saveEnvEvent.next(null);
+  }
+
+  deleteParameter(resource: Parameter[], index: number) {
+    resource.splice(index, 1);
+    this.usCoreConfig.queryParameters = new Map(this.entries.map(key => [key[0], key[1]]));
+    this.envService.saveEnvEvent.next(null);
+  }
+
+  deleteValue(resource: string[], index: number) {
+    resource.splice(index, 1);
+    this.usCoreConfig.queryParameters = new Map(this.entries.map(key => [key[0], key[1]]));
+    this.envService.saveEnvEvent.next(null);
+  }
+
+
   onChange() {
     this.usCoreConfig.queryParameters = new Map(this.entries.map(key => [key[0], key[1]]));
     this.envService.saveEnvEvent.next(null);
