@@ -35,6 +35,7 @@ import {MultiMeasureComponent} from './api/multi-measure/multi-measure.component
 import {UploadFileComponent} from './uploadfile/uploadfile.component';
 import {FileUploadModule} from "ng2-file-upload";
 import {SwaggerComponent} from './swagger/swagger.component';
+import {APP_BASE_HREF} from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -76,6 +77,7 @@ import {SwaggerComponent} from './swagger/swagger.component';
     FontAwesomeModule,
     FileUploadModule
   ],
+  providers: [{provide: APP_BASE_HREF, useValue: '/configurer'}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
