@@ -102,7 +102,7 @@
                              [(ngModel)]="entry[1][rt1Index].parameters[rt2Index].values[rt3Index]" class="form-control"
                              placeholder="values" type="text"/>
                       <button
-                        (click)="entry[1][rt1Index].parameters[rt2Index].values.splice(rt3Index, 1); envService.saveEnvEvent.next(null)"
+                        (click)="deleteValue(entry[1][rt1Index].parameters[rt2Index].values, rt3Index)"
                         class="btn btn-primary removeBtn" title="Remove Value" type="button">
                         <fa-icon [icon]="faRemove"></fa-icon>
                       </button>
@@ -113,7 +113,7 @@
                     </button>
                   </div>
                   <button
-                    (click)="entry[1][rt1Index].parameters.splice(rt2Index, 1); envService.saveEnvEvent.next(null)"
+                    (click)="deleteParameter(entry[1][rt1Index].parameters, rt2Index)"
                     class="btn btn-primary removeBtn" title="Remove Parameter" type="button">
                     <fa-icon [icon]="faRemove"></fa-icon>
                   </button>
@@ -122,7 +122,7 @@
                         class="btn btn-primary addBtn" title="Add Parameter" type="button">Add Parameter
                 </button>
               </div>
-              <button (click)="entry[1].splice(rt1Index, 1); envService.saveEnvEvent.next(null)"
+              <button (click)="deleteResource(entry[1], rt1Index)"
                       class="btn btn-primary removeBtn" title="Remove Resource" type="button">
                 <fa-icon [icon]="faRemove"></fa-icon>
               </button>
