@@ -235,7 +235,8 @@ export class BundlerConfig {
   includeCensuses: boolean;
   mergeCensuses: boolean;
   includeIndividualMeasureReports: boolean;
-  promoteContainedResources: boolean;
+  reifyLineLevelResources: boolean;
+  promoteLineLevelResources: boolean;
 }
 
 

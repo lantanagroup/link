@@ -35,7 +35,12 @@ public class BundlerConfig {
   private boolean includeIndividualMeasureReports = true;
 
   /**
-   * Whether to move contained resources from the individual measure reports to the submission bundle.
+   * Whether to copy line-level resources from the patient data bundle to the individual measure report's contained resources.
    */
-  private boolean promoteContainedResources = true;
+  private boolean reifyLineLevelResources = false;
+
+  /**
+   * Whether to move line-level resources from the individual measure report's contained resources to the top level of the submission bundle.
+   */
+  private boolean promoteLineLevelResources = false;
 }
