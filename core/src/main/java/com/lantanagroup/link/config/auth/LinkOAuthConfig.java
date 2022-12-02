@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 
+import java.util.Locale;
+
 @Getter @Setter
 public class LinkOAuthConfig {
 
@@ -49,7 +51,7 @@ public class LinkOAuthConfig {
 
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
-            switch (this.credentialMode) {
+            switch (this.credentialMode.toLowerCase(Locale.ROOT)) {
                 case "client":
                     return StringUtils.isNotEmpty(this.tokenUrl) &&
                             StringUtils.isNotEmpty(this.clientId) &&
