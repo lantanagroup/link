@@ -114,7 +114,7 @@ public class GenerateAndSubmitCommand {
       String token = null;
 
       ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
-      if(Objects.equals(configInfo.getAuth().getCredentialMode(), "password")) {
+      if(StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "password")) {
         token = OAuth2Helper.getPasswordCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),
@@ -123,7 +123,7 @@ public class GenerateAndSubmitCommand {
                 configInfo.getAuth().getClientId(),
                 configInfo.getAuth().getScope());
       }
-      else if(Objects.equals(configInfo.getAuth().getCredentialMode(), "sams-password")) {
+      else if(StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "sams-password")) {
         token = OAuth2Helper.getSamsPasswordCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),
@@ -133,7 +133,7 @@ public class GenerateAndSubmitCommand {
                 configInfo.getAuth().getClientSecret(),
                 configInfo.getAuth().getScope());
       }
-      else if (Objects.equals(configInfo.getAuth().getCredentialMode(), "client")) {
+      else if (StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "client")) {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,
                 configInfo.getAuth().getTokenUrl(),

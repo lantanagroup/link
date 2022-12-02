@@ -71,7 +71,7 @@ public class OAuth2Helper {
     //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
 
     //get token based on credential mode
-    switch(config.getCredentialMode()) {
+    switch(config.getCredentialMode().toLowerCase(Locale.ROOT)) {
       case "client": {
         return getClientCredentialsToken(config.getTokenUrl(), config.getClientId(), config.getPassword(), config.getScope());
       }
@@ -512,7 +512,7 @@ public class OAuth2Helper {
     if (authConfig != null && authConfig.hasCredentialProperties()) {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
-      switch (authConfig.getCredentialMode()) {
+      switch (authConfig.getCredentialMode().toLowerCase(Locale.ROOT)) {
         case "client":
           token = OAuth2Helper.getClientCredentialsToken(
                   client,
@@ -529,6 +529,7 @@ public class OAuth2Helper {
                   authConfig.getPassword(),
                   authConfig.getClientId(),
                   authConfig.getScope());
+          break;
         case "sams-password":
           token = OAuth2Helper.getSamsPasswordCredentialsToken(
                   client,
@@ -538,6 +539,7 @@ public class OAuth2Helper {
                   authConfig.getClientId(),
                   authConfig.getClientSecret(),
                   authConfig.getScope());
+          break;
       }
     } else {
       throw new Exception("Authentication is required to submit");

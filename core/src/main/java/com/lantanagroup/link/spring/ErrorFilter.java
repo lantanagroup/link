@@ -1,5 +1,6 @@
 package com.lantanagroup.link.spring;
 
+import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.apache.http.client.HttpResponseException;
@@ -55,6 +56,11 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
     Integer statusCode = getStatusCode(throwable);
     if (statusCode != null) {
       response.sendError(statusCode, throwable.getMessage());
+      return true;
+    }
+    if (throwable instanceof BaseServerResponseException) {
+      BaseServerResponseException exception = (BaseServerResponseException) throwable;
+      response.sendError(exception.getStatusCode(), exception.getMessage());
       return true;
     }
     if (throwable instanceof ResponseStatusException) {

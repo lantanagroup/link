@@ -137,7 +137,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
       String token = null;
 
       ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
-      if(config.getAuth().getCredentialMode() == "password") {
+      if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "password")) {
         token = OAuth2Helper.getPasswordCredentialsToken(
                 httpClient,
                 config.getAuth().getTokenUrl(),
@@ -146,7 +146,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
                 config.getAuth().getClientId(),
                 config.getAuth().getScope());
       }
-      else if(config.getAuth().getCredentialMode() == "sams-password") {
+      else if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "sams-password")) {
         token = OAuth2Helper.getSamsPasswordCredentialsToken(
                 httpClient,
                 config.getAuth().getTokenUrl(),
@@ -156,7 +156,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
                 config.getAuth().getClientSecret(),
                 config.getAuth().getScope());
       }
-      else if (config.getAuth().getCredentialMode() == "client") {
+      else if (StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "client")) {
         token = OAuth2Helper.getClientCredentialsToken(
                 httpClient,
                 config.getAuth().getTokenUrl(),
