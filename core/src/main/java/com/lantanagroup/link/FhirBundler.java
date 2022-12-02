@@ -1,7 +1,9 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,19 @@ public class FhirBundler {
       eventService.triggerDataEvent(eventType, bundle);
     } catch (Exception e) {
       logger.error(String.format("Error occurred in %s handler", eventType), e);
+    }
+  }
+
+  private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
+    String resourceId = getNonLocalId(resource);
+    Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
+            .filter(_entry -> getNonLocalId(_entry.getResource()).equals(resourceId))
+            .findFirst()
+            .orElse(null);
+    if (entry == null) {
+      bundle.addEntry().setResource(resource);
+    } else if (overwrite) {
+      entry.setResource(resource);
     }
   }
 
@@ -133,58 +148,52 @@ public class FhirBundler {
     bundle.addEntry().setResource(individualMeasureReport);
 
     // Identify line-level resources
-    Map<String, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
+    Map<IIdType, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
 
     // If reifying, retrieve the patient data bundle
-    Bundle patientDataBundle;
+    Bundle patientDataBundle = null;
     if (config.isReifyLineLevelResources()) {
       String individualMeasureReportId = individualMeasureReport.getIdElement().getIdPart();
       String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(individualMeasureReportId);
-      patientDataBundle = fhirDataProvider.getBundleById(patientDataBundleId);
-    } else {
-      patientDataBundle = null;
+      try {
+        patientDataBundle = fhirDataProvider.getBundleById(patientDataBundleId);
+      } catch (ResourceNotFoundException e) {
+        logger.warn("Patient data bundle not found");
+      }
     }
 
     // As specified in configuration, move/copy line-level resources
-    for (Map.Entry<String, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
-      String resourceId = lineLevelResource.getKey();
-      boolean isLocal = resourceId.startsWith("#");
+    for (Map.Entry<IIdType, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
+      IIdType resourceId = lineLevelResource.getKey();
 
       // Reify non-contained, non-patient line-level resources
-      if (!isLocal && config.isReifyLineLevelResources()) {
-        if (patientDataBundle == null || resourceId.startsWith("Patient/")) {
+      if (!resourceId.isLocal() && config.isReifyLineLevelResources()) {
+        if (patientDataBundle == null) {
           continue;
         }
         Resource resource = patientDataBundle.getEntry().stream()
                 .map(Bundle.BundleEntryComponent::getResource)
-                .filter(_resource -> _resource.getId().equals(resourceId))
+                .filter(_resource -> _resource.getResourceType() != ResourceType.Patient)
+                .filter(_resource -> _resource.getIdElement().equals(resourceId))
                 .findFirst()
                 .orElse(null);
         if (resource == null) {
           continue;
         }
-        if (config.isPromoteLineLevelResources()) {
-          bundle.addEntry().setResource(resource);
-        } else {
-          resource.setId(getLocalId(resource));
-          individualMeasureReport.addContained(resource);
-          for (Reference reference : lineLevelResource.getValue()) {
-            reference.setReference(getLocalId(resource));
-          }
-        }
+        addEntry(bundle, resource, false);
       }
 
       // Promote contained line-level resources
-      if (isLocal && config.isPromoteLineLevelResources()) {
+      if (resourceId.isLocal() && config.isPromoteLineLevelResources()) {
         Resource resource = individualMeasureReport.getContained().stream()
-                .filter(_resource -> _resource.getId().equals(resourceId))
+                .filter(_resource -> _resource.getIdElement().equals(resourceId))
                 .findFirst()
                 .orElse(null);
         if (resource == null) {
           continue;
         }
         individualMeasureReport.getContained().remove(resource);
-        bundle.addEntry().setResource(resource);
+        addEntry(bundle, resource, true);
         for (Reference reference : lineLevelResource.getValue()) {
           reference.setReference(getNonLocalId(resource));
         }
@@ -192,7 +201,7 @@ public class FhirBundler {
     }
   }
 
-  private Map<String, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
+  private Map<IIdType, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
     Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
     Stream<Reference> supplementalDataReferences =
             individualMeasureReport.getExtension().stream()
@@ -202,7 +211,7 @@ public class FhirBundler {
                     .map(value -> (Reference) value);
     return Stream.concat(supplementalDataReferences, evaluatedResources)
             .filter(reference -> reference.hasExtension(Constants.ExtensionCriteriaReference))
-            .collect(Collectors.groupingBy(Reference::getReference, LinkedHashMap::new, Collectors.toList()));
+            .collect(Collectors.groupingBy(Reference::getReferenceElement, LinkedHashMap::new, Collectors.toList()));
   }
 
   private String getLocalId(IBaseResource resource) {
