@@ -195,7 +195,8 @@ public class FhirBundler {
   private Map<String, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
     Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
     Stream<Reference> supplementalDataReferences =
-            individualMeasureReport.getExtensionsByUrl(Constants.ExtensionSupplementalData).stream()
+            individualMeasureReport.getExtension().stream()
+                    .filter(extension -> Constants.ExtensionSupplementalData.contains(extension.getUrl()))
                     .map(Extension::getValue)
                     .filter(value -> value instanceof Reference)
                     .map(value -> (Reference) value);
