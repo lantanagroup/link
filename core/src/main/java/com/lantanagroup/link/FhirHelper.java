@@ -462,9 +462,14 @@ public class FhirHelper {
             .collect(Collectors.toSet());
   }
 
-  public static boolean validLibraries(Bundle reportRefBundle) {
+  public static boolean validLibraries(Bundle reportRefBundle) throws Exception {
+
+    Measure measure = FhirHelper.getMeasure(reportRefBundle);
+    List<String> measureIncludedLibraries = measure.getLibrary().stream().map(canonUrl -> canonUrl.getValue()).collect(Collectors.toList());
+
+    // get only the "primary" libraries from the bundle - the ones that have the url included in the Measure resource under "Library" section
     List<Library> libraryList = reportRefBundle.getEntry().stream()
-            .filter(e -> e.getResource() instanceof Library)
+            .filter(e -> e.getResource() instanceof Library && measureIncludedLibraries.contains(((Library) e.getResource()).getUrl()))
             .map(e -> (Library) e.getResource()).collect(Collectors.toList());
 
     List<Library> libraryEmptyList = libraryList.stream().filter(library -> library.getDataRequirement().isEmpty()).collect(Collectors.toList());
