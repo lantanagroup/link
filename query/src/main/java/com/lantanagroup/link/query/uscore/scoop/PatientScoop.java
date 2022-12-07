@@ -109,15 +109,8 @@ public class PatientScoop extends Scoop {
         }
 
 
-        // TODO: Should we really be swallowing all exceptions here?
-        //       And if so, do we need three separate catch blocks with nearly identical behavior?
-      } catch (ResourceNotFoundException ex) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to resource not found errors: \n" + ex.getResponseBody());
-      } catch (AuthenticationException ex) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
       } catch (Exception e) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to unexpected exception");
-        e.printStackTrace();
+        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
       }
     });
     ForkJoinPool forkJoinPool = null;
