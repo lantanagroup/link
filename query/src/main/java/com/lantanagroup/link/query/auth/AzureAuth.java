@@ -31,8 +31,8 @@ public class AzureAuth implements ICustomAuth {
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();
 
-    HttpResponse response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    String responseBody = (String) response.body();
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    String responseBody = response.body();
     Object responseObj = new Gson().fromJson(responseBody, Object.class);
 
     if (responseObj != null) {
@@ -46,6 +46,11 @@ public class AzureAuth implements ICustomAuth {
         logger.error("Response from Azure for auth token request does not include an 'access_token' property");
       }
     }
+    return null;
+  }
+
+  @Override
+  public String getApiKeyHeader() throws Exception {
     return null;
   }
 }

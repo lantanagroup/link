@@ -147,7 +147,5 @@
       ]
     }
   },
-  "rulesDirectory": [
-    "codelyzer"
-  ]
+  "rulesDirectory": []
 }

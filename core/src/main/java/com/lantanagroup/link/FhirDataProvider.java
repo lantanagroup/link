@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.model.api.IQueryParameterType;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
@@ -9,6 +10,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.param.TokenParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ctc.wstx.util.StringUtil;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
@@ -24,7 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class FhirDataProvider {
@@ -94,15 +99,18 @@ public class FhirDataProvider {
     return outcome;
   }
 
-  public DocumentReference findDocRefByMeasureAndPeriod(Identifier identifier, String periodStart, String periodEnd) throws Exception {
+  public DocumentReference findDocRefByMeasuresAndPeriod(Collection<Identifier> identifiers, String periodStart, String periodEnd) throws Exception {
     DocumentReference documentReference = null;
     DateClientParam periodStartParam = new DateClientParam(PeriodStartParamName);
     DateClientParam periodEndParam = new DateClientParam(PeriodEndParamName);
+    List<IQueryParameterType> identifierParams = identifiers.stream()
+            .map(identifier -> new TokenParam(identifier.getSystem(), identifier.getValue()))
+            .collect(Collectors.toList());
 
     Bundle bundle = this.client
             .search()
             .forResource(DocumentReference.class)
-            .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
+            .where(Map.of(DocumentReference.SP_IDENTIFIER, identifierParams))
             .and(periodStartParam.exactly().second(periodStart))
             .and(periodEndParam.exactly().second(periodEnd))
             .returnBundle(Bundle.class)
@@ -114,7 +122,7 @@ public class FhirDataProvider {
       if (size == 1) {
         documentReference = (DocumentReference) bundle.getEntry().get(0).getResource();
       } else {
-        throw new Exception("We have more than 1 report for the selected measure and report date.");
+        throw new Exception("We have more than 1 report for the selected measures and report date.");
       }
     }
 
@@ -185,6 +193,10 @@ public class FhirDataProvider {
   }
 
   public Bundle getMeasureReportsByIds(List<String> reportIds) {
+    // TODO: Is there a practical limit to the number of report IDs we can send here?
+    //       E.g., a maximum query string length that HAPI will accept?
+    //       If so, modify this logic to use multiple requests
+    //       Limit the number of report IDs (based on total query string length?) sent in any single request
     Bundle response = this.client
             .search()
             .forResource(MeasureReport.class)
@@ -251,7 +263,7 @@ public class FhirDataProvider {
     this.createResource(auditEvent);
   }
 
-  public Bundle getResources(ICriterion criterion, String resourceType) {
+  public Bundle getResources(ICriterion<?> criterion, String resourceType) {
     return this.client
             .search()
             .forResource(resourceType)
@@ -370,6 +382,14 @@ public class FhirDataProvider {
             .resource(resourceType)
             .withId(resourceId)
             .cacheControl(new CacheControlDirective().setNoCache(true))
+            .execute();
+  }
+
+  public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
+    return client
+            .search()
+            .forResource(classType)
+            .returnBundle(Bundle.class)
             .execute();
   }
 

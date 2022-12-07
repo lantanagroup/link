@@ -370,7 +370,7 @@ public class YamlUtils {
         case "json":
             return r4.newJsonParser();
         case "rdf":
-            return r4.newRDFParser();
+            throw new IllegalArgumentException("RDF parser implementation is not yet complete");
         default:
             throw new IllegalArgumentException("Unrecognized format: " + ext);
         }

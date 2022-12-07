@@ -1,3 +1,14 @@
+<!-- TODO: Move nav bar into into a reusable component -->
+<ul ngbNav #nav="ngbNav" class="nav-tabs">
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla.isActive" #rla="routerLinkActive"
+           routerLink="/generate">Generate</a>
+    </li>
+    <li role="presentation" ngbNavItem>
+        <a ngbNavLink routerLinkActive [class.active]="rla1.isActive" #rla1="routerLinkActive"
+           routerLink="/review">Review</a>
+    </li>
+</ul>
 <div class="card">
     <div class="card-header">Report Generation Criteria</div>
     <div class="card-body">
@@ -7,6 +18,7 @@
                 <!--p class="help-block">For which patient impact and hospital capacity counts are reported.</p-->
                 <div class="input-group">
                     <input   [(ngModel)]="criteria.periodStart" (ngModelChange)="onStartDateSelected()"
+                             [disabled]="checkbox.checked"
                            class="form-control" name="dp" ngbDatepicker #d="ngbDatepicker"
                            placeholder="{{startDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
@@ -19,6 +31,7 @@
                 <div class="input-group">
                     <input   [(ngModel)]="criteria.periodEnd" (ngModelChange)="onEndDateSelected()"
                              class="form-control" name="dp" ngbDatepicker #d1="ngbDatepicker"
+                             [disabled]="checkbox.checked"
                              placeholder="{{endDate | date: 'yyyy-MM-dd'}}">
                     <div class="input-group-append">
                         <button (click)="d1.toggle()" class="btn btn-outline-secondary calendar" type="button"></button>
@@ -41,6 +54,19 @@
                         <button class="dropdown-item">No Reports</button>
                     </div>
                 </div>
+            </div>
+            <div>
+                <input
+                        ngbCheckbox
+                        class="form-check-input"
+                        type="checkbox"
+                        value=""
+                        id="DefaultTime"
+                        (change)="onDefaultTimeSelect()"
+                #checkbox/>
+                <label class="form-check-label" for="DefaultTime">
+                    Default Time
+                </label>
             </div>
         </div>
     </div>

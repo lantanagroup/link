@@ -72,7 +72,7 @@ public class CustomUrlJwkProvider implements JwkProvider {
       InputStream inputStream = c.getInputStream();
       Throwable var3 = null;
 
-      Map var4;
+      Map<String, Object> var4;
       try {
         var4 = (Map) this.reader.readValue(inputStream);
       } catch (Throwable var14) {
@@ -104,7 +104,7 @@ public class CustomUrlJwkProvider implements JwkProvider {
     List<Map<String, Object>> keys = (List) this.getJwks().get("keys");
     if (keys != null && !keys.isEmpty()) {
       try {
-        Iterator var3 = keys.iterator();
+        Iterator<Map<String, Object>> var3 = keys.iterator();
 
         while (var3.hasNext()) {
           Map<String, Object> values = (Map) var3.next();
@@ -123,13 +123,13 @@ public class CustomUrlJwkProvider implements JwkProvider {
   public Jwk get(String keyId) throws JwkException {
     List<Jwk> jwks = this.getAll();
     if (keyId == null && jwks.size() == 1) {
-      return (Jwk) jwks.get(0);
+      return jwks.get(0);
     } else {
       if (keyId != null) {
-        Iterator var3 = jwks.iterator();
+        Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
-          Jwk jwk = (Jwk) var3.next();
+          Jwk jwk = var3.next();
           if (keyId.equals(jwk.getId())) {
             return jwk;
           }

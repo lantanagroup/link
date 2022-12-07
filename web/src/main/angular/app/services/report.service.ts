@@ -16,20 +16,17 @@ export class ReportService {
   constructor(private http: HttpClient, private configService: ConfigService) {
   }
 
-  async generate(reportDefIdentifier: string, periodStart: string, periodEnd: string, regenerate = false) {
-    let url = 'report/$generate?';
-    url += `reportDefIdentifier=${encodeURIComponent(reportDefIdentifier)}&`;
-    url += `periodStart=${encodeURIComponent(periodStart)}&`;
-    url += `periodEnd=${encodeURIComponent(periodEnd)}&`;
-    url += 'regenerate=' + (regenerate ? 'true' : 'false');
-    url = this.configService.getApiUrl(url);
 
-    return await this.http.post<GenerateResponse>(url, null).toPromise();
+  async generate(bundleIds: string, periodStart: string, periodEnd: string, regenerate = false) {
+    let url = 'report/$generate?';
+    url = this.configService.getApiUrl(url);
+    const generateRequest = {bundleIds, periodStart,  periodEnd, regenerate: (regenerate ? 'true' : 'false') };
+    return await this.http.post<GenerateResponse>(url, generateRequest).toPromise();
   }
 
   getReports(queryParams) {
     let url = this.configService.getApiUrl('report?');
-    if (queryParams != undefined && queryParams != "") {
+    if (queryParams !== undefined && queryParams !== '') {
       url += queryParams;
     }
     return this.http.get<ReportBundle>(url).toPromise();
@@ -45,8 +42,8 @@ export class ReportService {
     return this.http.post(url, null).toPromise();
   }
 
-  async download(reportId: string) {
-    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download`);
+  async download(reportId: string, type: string) {
+    const url = this.configService.getApiUrl(`report/${encodeURIComponent(reportId)}/$download/${type}`);
     const downloadResponse = await this.http.get(url, {observe: 'response', responseType: 'blob'}).toPromise();
     const contentType = downloadResponse.headers.get('Content-Type');
 

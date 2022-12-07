@@ -14,4 +14,9 @@ public class TokenAuth implements ICustomAuth {
   public String getAuthHeader() {
     return this.config.getToken();
   }
+
+  @Override
+  public String getApiKeyHeader() throws Exception {
+    return null;
+  }
 }

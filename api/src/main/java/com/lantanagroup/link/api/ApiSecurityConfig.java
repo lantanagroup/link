@@ -16,6 +16,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 /**
  * Sets the security for the API component, requiring authentication for most methods using `PreAuthTokenHeaderFilter`
@@ -48,7 +51,15 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .csrf().disable()
 //            .csrf().csrfTokenRepository(customCsrfTokenRepository) //.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
 //            .and()
-            .cors()
+            //.cors()
+            .cors().configurationSource(request -> {
+                      var cors = new CorsConfiguration();
+                      cors.setAllowedOrigins(List.of(config.getCors().getAllowedOrigins()));
+                      cors.setAllowedMethods(List.of(config.getCors().getAllowedMethods()));
+                      cors.setAllowedHeaders(List.of(config.getCors().getAllowedHeaders()));
+                      cors.setAllowCredentials(config.getCors().getAllowedCredentials());
+                      return cors;
+                    })
             .and()
             .authorizeRequests()
             .antMatchers(HttpMethod.OPTIONS, "/**")
@@ -67,4 +78,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
     http.headers().contentSecurityPolicy(csp);
 
   }
+
 }
+
+

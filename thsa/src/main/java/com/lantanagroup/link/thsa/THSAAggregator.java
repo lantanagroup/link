@@ -1,11 +1,12 @@
 package com.lantanagroup.link.thsa;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.*;
-import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.GenericAggregator;
+import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -33,6 +33,9 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
 
   @Autowired
   private FhirDataProvider provider;
+
+  @Autowired
+  private THSAConfig thsaConfig;
 
   private CodeableConcept getTranslatedPopulationCoding(String groupCode) {
     // get the alias populationcode
@@ -62,20 +65,22 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext context) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
 
-    HashMap usedInventoryMap = new HashMap();
-    HashMap totalInventoryMap = new HashMap();
+    HashMap<String, Integer> usedInventoryMap = new HashMap<>();
+    HashMap<String, Integer> totalInventoryMap = new HashMap<>();
     // store the used counts
-    MeasureReport measureReport = super.generate(criteria, context);
+    MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
         usedInventoryMap.put(populationCode, population.getCount());
       }
     }
-    // look up the inventory on the Fhir Server
-    MeasureReport masterMeasureReport = provider.getMeasureReportById(context.getInventoryId());
+    // look up the inventory on the Fhir Server but save the original ID before to restore it
+    String id = measureReport.getId();
+    MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
+    masterMeasureReport.setId(id);
 
     //store the total inventory
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
@@ -87,8 +92,6 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           totalInventoryMap.put(NumICUBeds, population.getCount());
         } else if (populationCode.equals(NumVent)) {
           totalInventoryMap.put(NumVent, population.getCount());
-        } else if (populationCode.equals(NumVentUse)) {
-          usedInventoryMap.put(NumVentUse, population.getCount());
         }
       }
     }
@@ -98,19 +101,19 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
         if (populationCode.equals(NumTotBedsOcc)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumICUBedsOcc)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumVentUse)) {
-          population.setCount((Integer) usedInventoryMap.get(populationCode));
+          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
         } else if (populationCode.equals(NumTotBedsAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumTotBeds) - (Integer) usedInventoryMap.get(NumTotBedsOcc);
+          int available = (totalInventoryMap.get(NumTotBeds) != null ? totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? usedInventoryMap.get(NumTotBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumICUBedsAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumICUBeds) - (Integer) usedInventoryMap.get(NumICUBedsOcc);
+          int available = (totalInventoryMap.get(NumICUBeds) != null ? totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? usedInventoryMap.get(NumICUBedsOcc) : 0);
           population.setCount(available);
         } else if (populationCode.equals(NumVentAvail)) {
-          int available = (Integer) totalInventoryMap.get(NumVent) - (Integer) usedInventoryMap.get(NumVentUse);
+          int available = (totalInventoryMap.get(NumVent) != null ? totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? usedInventoryMap.get(NumVentUse) : 0);
           population.setCount(available);
         }
       }
@@ -163,10 +166,10 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext context) {
+  protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
     // if there are no groups generated then gets them from the measure
     if (masterMeasureReport.getGroup().size() == 0) {
-      Bundle bundle = context.getReportDefBundle();
+      Bundle bundle = measureContext.getReportDefBundle();
       Optional<Bundle.BundleEntryComponent> measureEntry = bundle.getEntry().stream()
               .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
               .findFirst();
@@ -179,9 +182,11 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           group.getPopulation().forEach(population -> {
             MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
             if (!population.getCode().equals("numerator")) {
-              populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
-              populationComponent.setCount(0);
-              groupComponent.addPopulation(populationComponent);
+              if (group.getCode().getCoding() != null && group.getCode().getCoding().size() > 0) {
+                populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
+                populationComponent.setCount(0);
+                groupComponent.addPopulation(populationComponent);
+              }
             }
 
           });
@@ -192,12 +197,9 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
   }
 
   @Override
-  protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<PatientOfInterestModel> patientOfInterestModelList) {
-    List<String> reportIds = patientOfInterestModelList.stream().map(patient -> masterMeasureReport.getId() + "-" + patient.getId().hashCode()).collect(Collectors.toList());
-    Bundle patientMeasureReportsBundle = provider.getMeasureReportsByIds(reportIds);
-    List<IBaseResource> bundles = FhirHelper.getAllPages(patientMeasureReportsBundle, provider, FhirContextProvider.getFhirContext());
-    for (IBaseResource patientMeasureReportResource : bundles) {
-      for (MeasureReport.MeasureReportGroupComponent group : ((MeasureReport) patientMeasureReportResource).getGroup()) {
+  protected void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports) {
+    for (MeasureReport patientMeasureReportResource : measureReports) {
+      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReportResource.getGroup()) {
         for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
           // Check if group and population code exist in master, if not create
           MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);

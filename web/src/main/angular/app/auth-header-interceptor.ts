@@ -59,12 +59,12 @@ export class AddHeaderInterceptor implements HttpInterceptor {
             catchError((error) => {
               if (error.status === 401) {
                 this.toastService.showException('Unauthorized', error);
-                //this.router.navigate(['']) //<-- nav to custom error page/login
+                this.router.navigate(['/unauthorized']);
                 throw error;
               }
               else if (error.status === 403) {
                 this.toastService.showException('Access Forbidden', error);
-                //this.router.navigate() <-- nav to custom error page/login
+                this.router.navigate(['/unauthorized']);
                 throw error;
               }
               else{

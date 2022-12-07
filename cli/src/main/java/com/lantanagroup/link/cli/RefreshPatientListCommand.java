@@ -8,16 +8,15 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -25,74 +24,70 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
+import org.springframework.shell.standard.ShellOption;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ShellComponent
 public class RefreshPatientListCommand extends BaseShellCommand {
-  private RefreshPatientListConfig config;
-  private QueryConfig queryConfig;
-  private ApiConfig apiConfig;
+  private static final Logger logger = LoggerFactory.getLogger(RefreshPatientListCommand.class);
 
   private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
+  private RefreshPatientListConfig config;
+  private QueryConfig queryConfig;
+  private USCoreConfig usCoreConfig;
+
 
   @Override
-  protected List<Class> getBeanClasses() {
+  protected List<Class<?>> getBeanClasses() {
+
     return List.of(
-            ApiConfig.class,
             QueryConfig.class,
+            USCoreConfig.class,
             EpicAuth.class,
             EpicAuthConfig.class);
   }
 
   @ShellMethod(
           key = "refresh-patient-list",
-          value = "Read an Epic patient list and update the corresponding census in Link.")
-  public void execute() throws Exception {
+          value = "Read patient lists and update the corresponding census in Link.")
+  public void execute(@ShellOption(defaultValue = "") String[] patientListPath) throws Exception {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
-    apiConfig = applicationContext.getBean(ApiConfig.class);
-    if (config.getApiUrl() == null) {
-      throw new IllegalArgumentException("api-url may not be null");
-    }
-    if (config.getPatientListId() == null) {
-      throw new IllegalArgumentException("patient-list-id may not be null");
-    }
-    ApiReportDefsUrlConfig urlConfig = getUrlConfig();
-    if (urlConfig.getCensusIdentifier() == null) {
-      throw new IllegalArgumentException("census-identifier may not be null");
-    }
-    ListResource source = readList();
-    ListResource target = transformList(source, urlConfig.getCensusIdentifier());
-    updateList(target);
-  }
+    usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
-  private ApiReportDefsUrlConfig getUrlConfig() {
-    for (ApiReportDefsUrlConfig urlConfig : apiConfig.getReportDefs().getUrls()) {
-      if (config.getPatientListId().equals(urlConfig.getPatientListId())) {
-        return urlConfig;
+    List<RefreshPatientListConfig.PatientList> filteredList = config.getPatientList();
+    // if patientListPath argument is not passed to the command then load all the lists defined in the configuration file
+    if (patientListPath.length > 0) {
+      filteredList = config.getPatientList().stream().filter(item -> List.of(patientListPath).contains(item.getPatientListPath())).collect(Collectors.toList());
+    }
+    for (RefreshPatientListConfig.PatientList listResource : filteredList) {
+      ListResource source = readList(listResource.getPatientListPath());
+      for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
+        ListResource target = transformList(source, listResource.getCensusIdentifier().get(j));
+        updateList(target);
       }
     }
-    throw new IllegalArgumentException("patient-list-id not found");
   }
 
-  private ListResource readList() throws ClassNotFoundException {
+  private ListResource readList(String patientListId) throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-    IGenericClient client = fhirContext.newRestfulGenericClient(queryConfig.getFhirServerBase());
+    IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
-    return client.fetchResourceFromUrl(
-            ListResource.class,
-            URLEncodedUtils.formatSegments("STU3", "List", config.getPatientListId()));
+    return client.fetchResourceFromUrl(ListResource.class, patientListId);
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
+    logger.info("Transforming");
     ListResource target = new ListResource();
     Period period = new Period();
 
@@ -115,7 +110,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     target.setTitle(String.format("Census List for %s", censusIdentifier));
     target.setCode(source.getCode());
     target.setDate(source.getDate());
-    URI baseUrl = new URI(queryConfig.getFhirServerBase());
+    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
       target.addEntry(transformListEntry(sourceEntry, baseUrl));
     }
@@ -134,8 +129,10 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     return target;
   }
 
-  private void updateList(ListResource target) throws IOException {
-    HttpPost request = new HttpPost(String.format("%s/poi/fhir/List", config.getApiUrl()));
+  private void updateList(ListResource target) throws Exception {
+    String url = String.format("%s/poi/fhir/List", config.getApiUrl());
+    logger.info("Submitting to {}", url);
+    HttpPost request = new HttpPost(url);
     if (config.getAuth() != null) {
       String token = OAuth2Helper.getPasswordCredentialsToken(
               httpClient,
@@ -145,13 +142,12 @@ public class RefreshPatientListCommand extends BaseShellCommand {
               config.getAuth().getClientId(),
               config.getAuth().getScope());
       if (token == null) {
-        throw new IOException("Authorization failed");
+        throw new Exception("Authorization failed");
       }
 
-      if(OAuth2Helper.validateHeaderJwtToken(token)) {
+      if (OAuth2Helper.validateHeaderJwtToken(token)) {
         request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
-      }
-      else {
+      } else {
         throw new JWTVerificationException("Invalid token format");
       }
 
@@ -159,10 +155,13 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
     httpClient.execute(request, response -> {
-      System.out.println(response);
+      logger.info("Response: {}", response.getStatusLine());
       HttpEntity entity = response.getEntity();
       if (entity != null) {
-        System.out.println(EntityUtils.toString(entity));
+        String body = EntityUtils.toString(entity);
+        if (StringUtils.isNotEmpty(body)) {
+          logger.debug(body);
+        }
       }
       return null;
     });

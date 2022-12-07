@@ -18,7 +18,7 @@ public class MockHelper {
   public static IQuery<IBaseBundle> mockSearchForResource(
           IUntypedQuery<IBaseBundle> untypedQuery,
           String resourceType,
-          ArgumentMatcher<ICriterion> argumentMatcher,
+          ArgumentMatcher<ICriterion<?>> argumentMatcher,
           Resource... resResources) {
     IQuery<IBaseBundle> subBundleIntQuery = mock(IQuery.class);
     IQuery<Bundle> subBundleQuery = mock(IQuery.class);
@@ -75,7 +75,7 @@ public class MockHelper {
 
   public static void mockTransaction(ITransaction transaction, TransactionMock ...transactionMocks) {
     for (TransactionMock transactionMock : transactionMocks) {
-      ITransactionTyped transactionTyped = mock(ITransactionTyped.class);
+      ITransactionTyped<Bundle> transactionTyped = mock(ITransactionTyped.class);
       transactionMock.setTransactionTyped(transactionTyped);
 
       if (transactionMock.getArgumentMatcher() != null) {
@@ -124,6 +124,7 @@ public class MockHelper {
     when(createTyped.execute()).thenReturn(createMethod);
   }
 
+  @SuppressWarnings("rawtypes")
   public static void mockInstanceOperation(IGenericClient client, String opName, ArgumentMatcher<IIdType> onInstanceMatcher, ArgumentMatcher<Parameters> parametersMatcher, Object mockResponseObj) {
     IOperation operation = mock(IOperation.class);
     IOperationUnnamed operationUnnamed = mock(IOperationUnnamed.class);

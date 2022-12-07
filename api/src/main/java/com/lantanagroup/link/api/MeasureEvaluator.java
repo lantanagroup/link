@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -14,20 +15,22 @@ import org.slf4j.LoggerFactory;
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
   private ReportCriteria criteria;
-  private ReportContext context;
+  private ReportContext reportContext;
+  private ReportContext.MeasureContext measureContext;
   private ApiConfig config;
   private String patientId;
 
 
-  private MeasureEvaluator(ReportCriteria criteria, ReportContext context, ApiConfig config, String patientId) {
+  private MeasureEvaluator(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.criteria = criteria;
-    this.context = context;
+    this.reportContext = reportContext;
+    this.measureContext = measureContext;
     this.config = config;
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext context, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, context, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
@@ -44,13 +47,15 @@ public class MeasureEvaluator {
 
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
+    String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
 
     try {
-      logger.info(String.format("Executing $evaluate-measure for %s", this.context.getMeasureId()));
+      String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
+      logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
       // get patient bundle from the fhirserver
       FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
-      IBaseResource patientBundle = fhirStoreProvider.getBundleById(context.getReportId() + "-" + patientId.hashCode());
+      IBaseResource patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
@@ -63,9 +68,9 @@ public class MeasureEvaluator {
       }
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-      measureReport = fhirDataProvider.getMeasureReport(this.context.getMeasureId(), parameters);
+      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
 
-      logger.info(String.format("Done executing $evaluate-measure for %s", this.context.getMeasureId()));
+      logger.info(String.format("Done executing $evaluate-measure for %s", measureId));
 
       // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
       // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
@@ -82,12 +87,16 @@ public class MeasureEvaluator {
           }
         }
 
-        logger.info(String.format("Done generating measure report for %s-%s", this.context.getReportId(), this.patientId.hashCode()));
-        measureReport.setId(this.context.getReportId());
-        this.context.setMeasureReport(measureReport);
+        logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
+        // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
+        measureReport.setId(this.measureContext.getReportId());
+        // TODO: Remove this; it's expected to be the summary report, not an individual report
+        //       Though maybe it would be helpful to collect the individual reports in the context as well
+        //       That way, we wouldn't have to retrieve them from the data store service during aggregation
+        this.measureContext.setMeasureReport(measureReport);
       }
     } catch (Exception e) {
-      logger.error(String.format("Error evaluating Measure Report for patient bundle %s-%s: %s", this.context.getReportId(), this.patientId.hashCode(), e.getMessage()));
+      logger.error(String.format("Error evaluating Measure Report for patient bundle %s", patientDataBundleId));
       throw e;
     }
 

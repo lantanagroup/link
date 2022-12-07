@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -27,11 +28,13 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig config;
 
-  public Bundle generateBundle(DocumentReference documentReference, MeasureReport masterMeasureReport, FhirDataProvider fhirProvider, boolean sendWholeBundle, boolean removeGeneratedObservations) {
+  @Autowired
+  private EventService eventService;
+
+  public Bundle generateBundle(DocumentReference documentReference, List<MeasureReport> masterMeasureReports, FhirDataProvider fhirProvider, BundlerConfig bundlerConfig) {
     logger.info("Building Bundle for MeasureReport to send...");
-    FhirBundler bundler = new FhirBundler(fhirProvider);
-    Bundle bundle = bundler.generateBundle(sendWholeBundle, removeGeneratedObservations, masterMeasureReport, documentReference);
-    return bundle;
+    FhirBundler bundler = new FhirBundler(bundlerConfig, fhirProvider, eventService);
+    return bundler.generateBundle(masterMeasureReports, documentReference);
   }
 
   public CloseableHttpClient getHttpClient() {
@@ -43,7 +46,7 @@ public abstract class GenericSender {
   public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getUrl())) {
-      throw new Exception("Not configured with any locations to send");
+      throw new IllegalStateException("Not configured with any locations to send");
     }
 
     Resource copy = resourceToSend.copy();

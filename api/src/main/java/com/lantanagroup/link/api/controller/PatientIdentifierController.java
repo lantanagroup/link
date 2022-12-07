@@ -1,9 +1,8 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.google.common.annotations.VisibleForTesting;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.model.CsvEntry;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -44,29 +43,21 @@ public class PatientIdentifierController extends BaseController {
           @RequestBody() String csvContent,
           @RequestParam String reportTypeId) throws Exception {
     logger.debug("Receiving RR FHIR CSV. Parsing...");
-    try {
-      if (reportTypeId == null || reportTypeId.isBlank()) {
-        String msg = "Report Type should be provided.";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-      if (!reportTypeId.contains("|")) {
-        String msg = "Report type should be of format: system|value";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-      List<CsvEntry> list = this.getCsvEntries(csvContent);
-        Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
-      for (String key : csvMap.keySet()) {
-        ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
-        this.receiveFHIR(listResource);
-      }
-    } catch (ResponseStatusException ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
-    } catch (Exception ex) {
-      logger.error(String.format("Error on storeCSV %s", ex.getMessage()), ex);
-      throw ex;
+    if (reportTypeId == null || reportTypeId.isBlank()) {
+      String msg = "Report Type should be provided.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    if (!reportTypeId.contains("|")) {
+      String msg = "Report type should be of format: system|value";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    List<CsvEntry> list = this.getCsvEntries(csvContent);
+      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
+    for (String key : csvMap.keySet()) {
+      ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
+      this.receiveFHIR(listResource);
     }
   }
 
@@ -90,14 +81,20 @@ public class PatientIdentifierController extends BaseController {
     this.receiveFHIR(list);
   }
 
+
   private void checkMeasureIdentifier(ListResource list) {
-    String system = list.getIdentifier().get(0).getSystem();
-    String value = list.getIdentifier().get(0).getValue();
-    Bundle bundle = this.getFhirDataProvider().searchReportDefinition(system, value);
-    if(bundle.getEntry().size() < 1) {
-      String msg = String.format("Measure %s (%s) not found on data store", value, system);
+    if (list.getIdentifier().size() < 1) {
+      String msg = "Census list should have an identifier.";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+    Identifier measureIdentifier = list.getIdentifier().get(0);
+    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    Measure measure = evaluationDataProvider.findMeasureByIdentifier(measureIdentifier);
+    if (measure == null) {
+      String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
   }
 
@@ -168,7 +165,7 @@ public class PatientIdentifierController extends BaseController {
     if (resource instanceof ListResource) {
       ListResource list = (ListResource) resource;
 
-      List<Identifier> identifierList = ((ListResource) resource).getIdentifier();
+      List<Identifier> identifierList = list.getIdentifier();
 
       if (identifierList.isEmpty()) {
         String msg = "Census List is missing identifier";
@@ -176,7 +173,7 @@ public class PatientIdentifierController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
       }
 
-      // TODO: Check that the identifier matches a measure loaded in the system
+      // TODO: Call checkMeasureIdentifier here; remove the calls in getPatientIdentifierListXML/JSON
 
       Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
 
@@ -207,8 +204,8 @@ public class PatientIdentifierController extends BaseController {
       }
 
       //system and value represents the measure intended for this patient id list
-      String system = ((ListResource) resource).getIdentifier().get(0).getSystem();
-      String value = ((ListResource) resource).getIdentifier().get(0).getValue();
+      String system = identifierList.get(0).getSystem();
+      String value = identifierList.get(0).getValue();
       DateTimeType startDate = applicablePeriod.getStartElement();
       DateTimeType endDate = applicablePeriod.getEndElement();
       String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
@@ -218,34 +215,10 @@ public class PatientIdentifierController extends BaseController {
       if (bundle.getEntry().size() == 0) {
         applicablePeriod.setStartElement(new DateTimeType(start));
         applicablePeriod.setEndElement(new DateTimeType(end));
-        this.getFhirDataProvider().createResource(resource);
+        this.getFhirDataProvider().createResource(list);
       } else {
         ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
-        // filter out duplicates
-        List<ListResource.ListEntryComponent> uniqueEntries = ((ListResource) resource).getEntry().parallelStream()
-                .filter(e -> {
-
-                  //check if reference or identifier exists, give priority to reference
-                  String reference = e.getItem().getReference();
-                  if(reference != null && !reference.isEmpty() && !reference.isBlank()) {
-                    return !existingList.getEntry().stream().anyMatch(s -> reference.equals(s.getItem().getReference()));
-                  }
-                  else if(e.getItem().getIdentifier() != null) {
-                    String systemA = e.getItem().getIdentifier().getSystem();
-                    String valueA = e.getItem().getIdentifier().getValue();
-                    return !existingList.getEntry().stream().anyMatch(s -> systemA.equals(s.getItem().getIdentifier().getSystem()) && valueA.equals(s.getItem().getIdentifier().getValue()));
-                  }
-                  else {
-                    //log that no reference or id for patient
-                    logger.info("No reference or identifier present for patient in provided resource.");
-                    return false;
-                  }
-                }).collect(Collectors.toList());
-
-        // merge lists into existingList
-        uniqueEntries.parallelStream().forEach(entry -> {
-          existingList.getEntry().add(entry);
-        });
+        FhirHelper.mergeCensusLists(existingList, list);
         this.getFhirDataProvider().updateResource(existingList);
       }
     } else {
@@ -259,11 +232,7 @@ public class PatientIdentifierController extends BaseController {
 
   private ListResource getListResource(String reportTypeId, List<CsvEntry> csvList) {
     ListResource list = new ListResource();
-    List<Identifier> identifierList = new ArrayList<>();
-    identifierList.add(new Identifier());
-    identifierList.get(0).setSystem(reportTypeId.substring(0, reportTypeId.indexOf("|")));
-    identifierList.get(0).setValue(reportTypeId.substring(reportTypeId.indexOf("|") + 1));
-    list.setIdentifier(identifierList);
+    list.addIdentifier(IdentifierHelper.fromString(reportTypeId));
     List<Extension> applicablePeriodExtensionUrl = new ArrayList<>();
     applicablePeriodExtensionUrl.add(new Extension(Constants.ApplicablePeriodExtensionUrl));
     applicablePeriodExtensionUrl.get(0).setValue(csvList.get(0).getPeriod());
@@ -275,9 +244,7 @@ public class PatientIdentifierController extends BaseController {
       if (csvEntry.getPatientLogicalID() != null && !csvEntry.getPatientLogicalID().isBlank()) {
         reference.setReference("Patient/" + csvEntry.getPatientLogicalID());
       }
-      reference.setIdentifier(new Identifier());
-      reference.getIdentifier().setSystemElement(new UriType(csvEntry.getPatientIdentifier().substring(0, csvEntry.getPatientIdentifier().indexOf("|"))));
-      reference.getIdentifier().setValueElement(new StringType(csvEntry.getPatientIdentifier().substring(csvEntry.getPatientIdentifier().indexOf("|") + 1)));
+      reference.setIdentifier(IdentifierHelper.fromString(csvEntry.getPatientIdentifier()));
       listEntry.setItem(reference);
 
       list.addEntry(listEntry);

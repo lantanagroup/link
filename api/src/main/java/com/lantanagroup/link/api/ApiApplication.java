@@ -1,8 +1,6 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
@@ -16,12 +14,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.util.TimeZone;
 
 /**
@@ -29,10 +24,12 @@ import java.util.TimeZone;
  * hosts controllers defined within the project.
  */
 @SpringBootApplication(scanBasePackages = {
+        "com.lantanagroup.link",
         "com.lantanagroup.link.api",
         "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
         "com.lantanagroup.link.config.api",
+        "com.lantanagroup.link.mhl",
         "com.lantanagroup.link.nhsn",
         "com.lantanagroup.link.query",
         "com.lantanagroup.link.spring",
@@ -63,21 +60,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public void afterPropertiesSet() throws Exception {
 
   }
-
-  /**
-   * Triggered during SpringBoot application's startup. Adds to the security filter chain.
-   * @param servletContext
-   * @throws ServletException
-   */
-  @Override
-  public void onStartup(ServletContext servletContext) throws ServletException {
-    servletContext
-            .addFilter("securityFilter", new DelegatingFilterProxy("springSecurityFilterChain"))
-            .addMappingForUrlPatterns(null, false, "/*");
-
-    super.onStartup(servletContext);
-  }
-
 
   /**
    * Sets the CORS configuration based on the api.yml (or its override)

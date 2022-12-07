@@ -119,7 +119,7 @@ public class UserControllerTest extends BaseController{
     return Name;
   }
 
-  public Practitioner createPractitioner(String id, List Name) {
+  public Practitioner createPractitioner(String id, List<HumanName> Name) {
     Practitioner practitioner = new Practitioner();
     practitioner.setId(id);
     practitioner.setName(Name);

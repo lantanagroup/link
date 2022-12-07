@@ -12,6 +12,7 @@ import ca.uhn.fhir.jpa.provider.IJpaSystemProvider;
 import ca.uhn.fhir.jpa.provider.JpaCapabilityStatementProvider;
 import ca.uhn.fhir.jpa.searchparam.matcher.InMemoryResourceMatcher;
 import ca.uhn.fhir.jpa.searchparam.registry.SearchParamRegistryImpl;
+import ca.uhn.fhir.rest.server.HardcodedServerAddressStrategy;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.LoggingInterceptor;
 import ca.uhn.fhir.rest.server.provider.ResourceProviderFactory;
@@ -19,9 +20,11 @@ import ca.uhn.fhir.rest.server.util.ISearchParamRegistry;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import com.lantanagroup.link.datastore.auth.UserInterceptor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
+import org.hibernate.internal.util.config.ConfigurationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -30,12 +33,15 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.servlet.ServletException;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Set;
 
 public class JpaRestfulServer extends RestfulServer {
+  private static final long serialVersionUID = 1L;
+
   @Autowired
   ApplicationContext applicationContext;
 
@@ -43,6 +49,7 @@ public class JpaRestfulServer extends RestfulServer {
   ISearchParamRegistry searchParamRegistry;
 
   @Autowired
+  @SuppressWarnings("rawtypes")
   IFhirSystemDao fhirSystemDao;
 
   @Autowired
@@ -87,6 +94,10 @@ public class JpaRestfulServer extends RestfulServer {
     this.registerProviders(this.resourceProviders.createProviders());
     this.registerProvider(jpaSystemProvider);
 
+    if (StringUtils.isNotEmpty(this.dataStoreConfig.getPublicAddress())) {
+      this.setServerAddressStrategy(new HardcodedServerAddressStrategy(this.dataStoreConfig.getPublicAddress()));
+    }
+
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
 
@@ -112,12 +123,16 @@ public class JpaRestfulServer extends RestfulServer {
   @Primary
   @Bean
   public HibernatePropertiesProvider jpaStarterDialectProvider(LocalContainerEntityManagerFactoryBean myEntityManagerFactory) throws SQLException {
-    DatabaseMetaData metaData = this.dataSource.getConnection().getMetaData();
-    return new HibernatePropertiesProvider() {
-      @Override
-      public Dialect getDialect() {
-        return new StandardDialectResolver().resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(metaData));
-      }
-    };
+    try(Connection conn = this.dataSource.getConnection()) {
+      DatabaseMetaData metaData = conn.getMetaData();
+      return new HibernatePropertiesProvider() {
+        @Override
+        public Dialect getDialect() {
+          return new StandardDialectResolver().resolveDialect(new DatabaseMetaDataDialectResolutionInfoAdapter(metaData));
+        }
+      };
+    } catch (SQLException sqlException) {
+      throw new ConfigurationException(sqlException.getMessage(), sqlException);
+    }
   }
 }

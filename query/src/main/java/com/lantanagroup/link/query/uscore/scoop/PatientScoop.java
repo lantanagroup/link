@@ -3,9 +3,7 @@ package com.lantanagroup.link.query.uscore.scoop;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -43,20 +41,26 @@ public class PatientScoop extends Scoop {
   @Autowired
   protected FhirDataProvider fhirDataProvider;
 
-  public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, String measureId) throws Exception {
+  @Setter
+  @Autowired
+  private EventService eventService;
+
+
+
+  public void execute(List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(pois, reportId, resourceTypes, measureId);
+    this.loadPatientData(pois, reportId, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(Patient patient, String reportId, List<String> resourceTypes, String measureId) {
+  private synchronized PatientData loadPatientData(Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
       PatientData patientData = new PatientData(this.getFhirQueryServer(), patient, this.usCoreConfig, resourceTypes);
-      patientData.loadData(measureId);
+      patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -65,7 +69,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public PatientData loadPatientData(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, String measureId) {
+  public PatientData loadPatientData(List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -90,6 +94,7 @@ public class PatientScoop extends Scoop {
           String searchUrl = "Patient?identifier=" + poi.getIdentifier();
 
           logger.debug("Searching for patient at index " + poiIndex);
+          // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
           Bundle response = this.fhirQueryServer.search()
                   .byUrl(searchUrl)
                   .returnBundle(Bundle.class)
@@ -103,8 +108,11 @@ public class PatientScoop extends Scoop {
           }
         }
 
+
+        // TODO: Should we really be swallowing all exceptions here?
+        //       And if so, do we need three separate catch blocks with nearly identical behavior?
       } catch (ResourceNotFoundException ex) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
+        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to resource not found errors: \n" + ex.getResponseBody());
       } catch (AuthenticationException ex) {
         logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()) + " from FHIR server " + this.fhirQueryServer.getServerBase() + " due to authentication errors: \n" + ex.getResponseBody());
       } catch (Exception e) {
@@ -123,10 +131,14 @@ public class PatientScoop extends Scoop {
       forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureId);
+        PatientData patientData = this.loadPatientData(patient, reportId, resourceTypes, measureIds);
+
         Bundle patientBundle = patientData.getBundleTransaction();
         // store the data
         try {
+
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle);
+
           patientBundle.setType(Bundle.BundleType.BATCH);
 
           patientBundle.getEntry().forEach(entry ->
@@ -136,14 +148,20 @@ public class PatientScoop extends Scoop {
           );
 
           // Make sure the patient bundle returned by query component has an ID in the correct format
-          patientBundle.setId(reportId + "-" + patient.getIdElement().getIdPart().hashCode());
+          patientBundle.setId(ReportIdHelper.getPatientDataBundleId(reportId, patient.getIdElement().getIdPart()));
 
           // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
           patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
-          // Store the data
+
+          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore,  patientBundle);
+
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
+
+          // staore data
           this.fhirDataProvider.updateResource(patientBundle);
+
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());
@@ -158,6 +176,7 @@ public class PatientScoop extends Scoop {
       }
     }
 
+    // TODO: Change method return type to void
     return null;
   }
 }

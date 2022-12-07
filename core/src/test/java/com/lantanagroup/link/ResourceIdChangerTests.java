@@ -59,13 +59,13 @@ public class ResourceIdChangerTests {
     ResourceIdChanger.changeIds(bundle);
 
     // Make sure the Condition's ID was changed
-    Assert.assertEquals("HASH-530656147", cond1.getIdElement().getIdPart());
+    Assert.assertEquals("hash-e05ed46d", cond1.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was changed
     Assert.assertEquals("987654321", cond2.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was changed
-    Assert.assertEquals("HASH460725003", cond3.getIdElement().getIdPart());
+    Assert.assertEquals("hash-1b761b0b", cond3.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was not changed
     Assert.assertEquals("correctOne", cond4.getIdElement().getIdPart());
@@ -85,11 +85,11 @@ public class ResourceIdChangerTests {
 
 
     // Make sure the reference to the Condition has an extension to track the original reference
-    Assert.assertEquals("Condition/HASH-530656147", enc1.getDiagnosisFirstRep().getCondition().getReference());
+    Assert.assertEquals("Condition/hash-e05ed46d", enc1.getDiagnosisFirstRep().getCondition().getReference());
     Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
-    Assert.assertEquals("Condition/HASH460725003", enc1.getDiagnosis().get(1).getCondition().getReference());
+    Assert.assertEquals("Condition/hash-1b761b0b", enc1.getDiagnosis().get(1).getCondition().getReference());
     Assert.assertNotNull(enc1.getDiagnosis().get(1).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
@@ -130,12 +130,12 @@ public class ResourceIdChangerTests {
     location.setType(codeableConceptList);
     location.setName("Some Location");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(location));
-    List codings = ResourceIdChanger.findCodings(bundle);
+    List<Coding> codings = ResourceIdChanger.findCodings(bundle);
     Assert.assertEquals(2, codings.size());
-    Coding codingTarget = (Coding) codings.get(0);
+    Coding codingTarget = codings.get(0);
     Assert.assertEquals("some-type1", codingTarget.getCode());
     Assert.assertEquals("http://some-system.com", codingTarget.getSystem());
-    Coding codingTarget2 = (Coding) codings.get(1);
+    Coding codingTarget2 = codings.get(1);
     Assert.assertEquals("some-type2", codingTarget2.getCode());
     Assert.assertEquals("http://some-system2.com", codingTarget2.getSystem());
   }

@@ -42,4 +42,7 @@ public class ApiConfigEvents {
 
   List<String> AfterReportStore;
 
+  List<String> BeforeBundling;
+
+  List<String> AfterBundling;
 }

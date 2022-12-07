@@ -36,10 +36,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class JpaRestfulServer extends RestfulServer {
+  private static final long serialVersionUID = 1L;
+
   @Autowired
   ApplicationContext applicationContext;
 
   @Autowired
+  @SuppressWarnings("rawtypes")
   IFhirSystemDao fhirSystemDao;
 
   @Autowired

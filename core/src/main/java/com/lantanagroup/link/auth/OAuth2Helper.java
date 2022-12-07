@@ -63,31 +63,23 @@ public class OAuth2Helper {
 
   public static String getToken(LinkOAuthConfig config) throws Exception {
 
-    try{
-
-      //ensure authentication properties have been set
-      if(!config.hasCredentialProperties()) {
-        throw new AuthenticationException("Authentication credentials were not supplied.");
-      }
-
-      //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
-
-      //get token based on credential mode
-      switch(config.getCredentialMode()) {
-        case Client: {
-          return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
-        }
-        case Password: {
-          return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
-        }
-        default:
-          throw new AuthenticationException("Invalid credential mode.");
-      }
-    } catch(AuthenticationException e) {
-      throw e; // rethrowing the exception
+    //ensure authentication properties have been set
+    if(!config.hasCredentialProperties()) {
+      throw new AuthenticationException("Authentication credentials were not supplied.");
     }
-    catch(Exception e){
-      throw e; // rethrowing the exception
+
+    //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
+
+    //get token based on credential mode
+    switch(config.getCredentialMode()) {
+      case Client: {
+        return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+      }
+      case Password: {
+        return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
+      }
+      default:
+        throw new AuthenticationException("Invalid credential mode.");
     }
 
   }
@@ -221,7 +213,7 @@ public class OAuth2Helper {
       InputStream inputStream = c.getInputStream();
       Throwable var3 = null;
 
-      Map var4;
+      Map<String, Object> var4;
       try {
         var4 = (Map) reader.readValue(inputStream);
       } catch (Throwable var14) {
@@ -253,7 +245,7 @@ public class OAuth2Helper {
     List<Map<String, Object>> keys = (List) getJwks().get("keys");
     if (keys != null && !keys.isEmpty()) {
       try {
-        Iterator var3 = keys.iterator();
+        Iterator<Map<String, Object>> var3 = keys.iterator();
 
         while (var3.hasNext()) {
           Map<String, Object> values = (Map) var3.next();
@@ -272,13 +264,13 @@ public class OAuth2Helper {
   private static Jwk get(String keyId) throws JwkException {
     List<Jwk> jwks = getAll();
     if (keyId == null && jwks.size() == 1) {
-      return (Jwk) jwks.get(0);
+      return jwks.get(0);
     } else {
       if (keyId != null) {
-        Iterator var3 = jwks.iterator();
+        Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
-          Jwk jwk = (Jwk) var3.next();
+          Jwk jwk = var3.next();
           if (keyId.equals(jwk.getId())) {
             return jwk;
           }

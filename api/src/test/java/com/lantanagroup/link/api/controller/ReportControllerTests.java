@@ -25,16 +25,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
 
 public class ReportControllerTests {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
 //  private void mockSearchMeasure(IUntypedQuery untypedQuery, Measure measure) {
 //
 //
@@ -143,10 +140,8 @@ public class ReportControllerTests {
     encounter1.getSubject().setReference("Patient/patient1");
     MeasureReport measureReport1 = new MeasureReport();
     MeasureReport measureReport2 = new MeasureReport();
-    int patient1Hash = "patient1".hashCode();
-    int patient2Hash = "patient2".hashCode();
-    measureReport1.setId("MeasureReport/" + patient1Hash);
-    measureReport2.setId("MeasureReport/" + patient2Hash);
+    measureReport1.setId("MeasureReport/patient1");
+    measureReport2.setId("MeasureReport/patient2");
     measureReport1.addEvaluatedResource(new Reference("Patient/patient1"));
     measureReport1.addEvaluatedResource(new Reference("MedicationRequest/patient1"));
     measureReport1.addEvaluatedResource(new Reference("Encounter/patient1"));
@@ -163,8 +158,8 @@ public class ReportControllerTests {
     controller.setCtx(cxt);
     when(fhirDataProvider.findDocRefForReport("report1")).thenReturn(docRef);
     MeasureReport MasterMeasureReport = new MeasureReport();
-    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient1Hash));;
-    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient2Hash));
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/patient1"));
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/patient2"));
     when(fhirDataProvider.getMeasureReportById("report1")).thenReturn(MasterMeasureReport);
     Bundle bundle = new Bundle();
     bundle.addEntry().setResource(measureReport1);
@@ -207,10 +202,8 @@ public class ReportControllerTests {
     encounter1.getSubject().setReference("Patient/patient1");
     MeasureReport measureReport1 = new MeasureReport();
     MeasureReport measureReport2 = new MeasureReport();
-    int patient1Hash = "patient1".hashCode();
-    int patient2Hash = "patient2".hashCode();
-    measureReport1.setId("MeasureReport/" + patient1Hash);
-    measureReport2.setId("MeasureReport/" + patient2Hash);
+    measureReport1.setId("MeasureReport/patient1");
+    measureReport2.setId("MeasureReport/patient2");
     measureReport1.addEvaluatedResource(new Reference("Patient/patient1"));
     measureReport1.addEvaluatedResource(new Reference("MedicationRequest/patient1"));
     measureReport1.addEvaluatedResource(new Reference("Encounter/patient1"));
@@ -229,8 +222,8 @@ public class ReportControllerTests {
     controller.setCtx(cxt);
     when(fhirDataProvider.findDocRefForReport("report1")).thenReturn(docRef);
     MeasureReport MasterMeasureReport = new MeasureReport();
-    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient1Hash));;
-    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/" + patient2Hash));
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/patient1"));
+    MasterMeasureReport.addEvaluatedResource(new Reference("MeasureReport/patient2"));
     when(fhirDataProvider.getMeasureReportById("report1")).thenReturn(MasterMeasureReport);
     Bundle bundle = new Bundle();
     bundle.addEntry().setResource(measureReport1);
@@ -251,7 +244,7 @@ public class ReportControllerTests {
   }
 
   @Ignore
-  public void excludePatientsTest() throws HttpResponseException {
+  public void excludePatientsTest() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -300,13 +293,13 @@ public class ReportControllerTests {
     when(fhirDataProvider.getMeasureReport(eq("the-measure"), any(Parameters.class))).thenReturn(measureReport);
 
     ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
-    Assert.assertEquals(4, model.getMeasureReport().getEvaluatedResource().size());
-    Assert.assertEquals(2, model.getMeasureReport().getExtension().size());
+    Assert.assertEquals(4, model.getReportMeasureList().get(0).getMeasureReport().getEvaluatedResource().size());
+    Assert.assertEquals(2, model.getReportMeasureList().get(0).getMeasureReport().getExtension().size());
   }
 
 
-  @Test
-  public void excludePatientsTestException() throws HttpResponseException {
+  @Ignore
+  public void excludePatientsTestException() throws Exception {
 
     IGenericClient fhirStoreClient = mock(IGenericClient.class);
     AuthMockInfo authMock = MockHelper.mockAuth(fhirStoreClient);
@@ -355,29 +348,10 @@ public class ReportControllerTests {
 
 
     //Assert.assertEquals(4, model.getMeasureReport().getEvaluatedResource().size());
-    thrown.expect(HttpResponseException.class);
-    thrown.expectMessage("Patient testPatient4 is not included in report testReportId");
-    ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    Assert.assertThrows("Patient testPatient4 is not included in report testReportId", HttpResponseException.class, () -> {
+      ReportModel model = controller.excludePatients(authMock.getAuthentication(), request, authMock.getUser(), "testReportId", excludedPatients);
+    });
   }
 
-
-  @Test
-  public void triggerEvent() throws Exception {
-
-    ReportController controller = new ReportController();
-    ApiConfigEvents apiConfigEvents = new ApiConfigEvents();
-
-    controller.setApiConfigEvents(apiConfigEvents);
-    FhirDataProvider fhirDataProvider = mock(FhirDataProvider.class);
-    ReportCriteria reportCriteria = mock(ReportCriteria.class);
-    controller.setFhirStoreProvider(fhirDataProvider);
-    Method mockMethod = ApiConfigEvents.class.getMethod("getBeforePatientDataStore");
-    List<String> classes = new ArrayList();
-    classes.add("com.lantanagroup.link.nhsn.ApplyConceptMaps");
-    apiConfigEvents.setBeforeReportStore(classes);
-    when(apiConfigEvents.getBeforePatientDataStore()).thenCallRealMethod();
-    ReflectionTestUtils.setField(apiConfigEvents, "BeforePatientDataStore", classes);
-    controller.triggerEvent(EventTypes.BeforePatientDataStore, reportCriteria, new ReportContext(fhirDataProvider));
-  }
 
 }
