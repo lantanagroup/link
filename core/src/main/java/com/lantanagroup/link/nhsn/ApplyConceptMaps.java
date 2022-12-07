@@ -130,10 +130,8 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   }
 
   public void execute(Bundle bundle) {
-    logger.info("Before applying transformation for bundle " + FhirContextProvider.getFhirContext().newXmlParser().setPrettyPrint(true).encodeResourceToString(bundle));
     List<DomainResource> resourceList = BundleUtil.toListOfResourcesOfType(FhirContextProvider.getFhirContext(), bundle, DomainResource.class);
     execute(resourceList);
-    logger.info("After applying transformation for bundle " + FhirContextProvider.getFhirContext().newXmlParser().setPrettyPrint(true).encodeResourceToString(bundle));
   }
 
   public void execute(List<DomainResource> resourceList) {
