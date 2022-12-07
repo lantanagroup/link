@@ -62,30 +62,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   }
 
   /**
-   * Sets the CORS configuration based on the api.yml (or its override)
-   * @return WebMvcConfigurer
-   */
-  @Bean
-  public WebMvcConfigurer corsConfigurer() {
-    String allowsOrigins = this.config.getCors().getAllowedOrigins();
-    String[] allowedMethods = this.config.getCors().getAllowedMethods();
-    String allowedHeaders = this.config.getCors().getAllowedHeaders();
-    Boolean allowCredentials = this.config.getCors().getAllowedCredentials();
-
-    return new WebMvcConfigurer() {
-      @Override
-      public void addCorsMappings(CorsRegistry registry) {
-        registry
-                .addMapping("/**")
-                .allowedOrigins(allowsOrigins)
-                .allowedMethods(allowedMethods)
-                .allowedHeaders(allowedHeaders)
-                .allowCredentials(allowCredentials);
-      }
-    };
-  }
-
-  /**
    * Bean injection for the ApiInit class, which causes the ApiInit class to be executed during SpringBoot startup.
    * @return
    */
