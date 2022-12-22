@@ -25,9 +25,6 @@ public class Constants {
   public static final String ExtensionCriteriaReference = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference";
   public static final String MeasuredValues = "http://hl7.org/fhir/uv/saner/CodeSystem/MeasuredValues";
   public static final String OriginalEncounterStatus = "https://www.lantanagroup.com/fhir/StructureDefinition/nhsn-encounter-original-status";
-  public static final List<String> ExtensionSupplementalData = List.of(
-          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
-          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
-  public static final String UMichLocationTypeExtensionUrl = "https://open.epic.com/fhir/extensions/specialty";
+  public static final String ExtensionSupplementalData = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData";
   public static final String patientDataTag = "patient-data";
 }
