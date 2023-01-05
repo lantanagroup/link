@@ -14,6 +14,9 @@ import java.util.stream.Stream;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
+  private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
+          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
+          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
   private final BundlerConfig config;
   private final FhirDataProvider fhirDataProvider;
   private final EventService eventService;
@@ -205,7 +208,7 @@ public class FhirBundler {
     Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
     Stream<Reference> supplementalDataReferences =
             individualMeasureReport.getExtension().stream()
-                    .filter(extension -> Constants.ExtensionSupplementalData.contains(extension.getUrl()))
+                    .filter(extension -> SUPPLEMENTAL_DATA_EXTENSION_URLS.contains(extension.getUrl()))
                     .map(Extension::getValue)
                     .filter(value -> value instanceof Reference)
                     .map(value -> (Reference) value);
