@@ -59,7 +59,7 @@ public class ReportGenerator {
                 MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
                 patientMeasureReport.setId(ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId()));
                 return patientMeasureReport;
-              })).get().collect(Collectors.toList());
+              }).collect(Collectors.toList())).get();
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
       // pass them to aggregators using measureContext
       measureContext.setPatientReports(patientMeasureReports);
