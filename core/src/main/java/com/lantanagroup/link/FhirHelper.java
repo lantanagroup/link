@@ -592,8 +592,13 @@ public class FhirHelper {
       Reference item2 = entry2.getItem();
       boolean exists = list1.getEntry().stream().anyMatch(entry1 -> {
         Reference item1 = entry1.getItem();
-        return StringUtils.equals(item1.getReference(), item2.getReference())
-                || item1.getIdentifier().equalsShallow(item2.getIdentifier());
+        if (item1.hasReference() && StringUtils.equals(item1.getReference(), item2.getReference())) {
+          return true;
+        }
+        if (item1.hasIdentifier() && item1.getIdentifier().equalsShallow(item2.getIdentifier())) {
+          return true;
+        }
+        return false;
       });
       if (!exists) {
         list1.addEntry(entry2.copy());
