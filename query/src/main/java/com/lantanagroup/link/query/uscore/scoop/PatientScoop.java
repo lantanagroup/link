@@ -160,7 +160,7 @@ public class PatientScoop extends Scoop {
           logger.info("Exception is: " + ex.getMessage());
         }
         return patientData;
-      })).get().collect(Collectors.toList());
+      }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error(e.getMessage());
     } finally {
