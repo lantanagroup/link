@@ -84,8 +84,10 @@ public class PatientData {
     if(!queryString.isEmpty()) {
       try {
         queryString.parallelStream().forEach(query -> {
-          Bundle bundle = PatientScoop.rawSearch(this.fhirQueryServer, query);
-          this.bundles.add(bundle);
+          List<Bundle> bundles = PatientScoop.rawSearch(this.fhirQueryServer, query);
+          if (bundles != null) {
+            this.bundles.addAll(bundles);
+          }
         });
       }
       catch(Exception ex) {
