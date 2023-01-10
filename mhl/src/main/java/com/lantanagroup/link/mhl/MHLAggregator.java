@@ -32,6 +32,8 @@ public class MHLAggregator extends ReportAggregator {
   private static final String INITIAL_POPULATION_CHILDREN_SYSTEM =
           String.format("%s/measure-population", Constants.MainSystem);
   private static final String INITIAL_POPULATION_CHILDREN_CODE = "initial-population-children";
+  private static final String TOTAL_NUMBER_OF_RECORDS_QUERIED_SYSTEM =   String.format("%s/CodeSystem/measure-population", Constants.MainSystem);;
+  private static final String TOTAL_NUMBER_OF_RECORDS_QUERIED_CODE = "total-queried-records";
   private static final Logger logger = LoggerFactory.getLogger(MHLAggregator.class);
 
   @Autowired
@@ -78,6 +80,14 @@ public class MHLAggregator extends ReportAggregator {
           MeasureReport.MeasureReportGroupPopulationComponent childrenPopulation = group.addPopulation();
           childrenPopulation.getCode().addCoding(childrenCoding);
           childrenPopulation.setCount(population.getCount() == 0 ? 0 : storeSupplementalData(measureReport));
+
+          Coding totalRecordsCoding = new Coding()
+                  .setSystem(TOTAL_NUMBER_OF_RECORDS_QUERIED_SYSTEM)
+                  .setCode(TOTAL_NUMBER_OF_RECORDS_QUERIED_CODE)
+                  .setDisplay("Total number of records queried");
+          MeasureReport.MeasureReportGroupPopulationComponent totalPopulation = group.addPopulation();
+          totalPopulation.getCode().addCoding(totalRecordsCoding);
+          totalPopulation.setCount(1);
           break;
         }
       }
