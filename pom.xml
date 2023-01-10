@@ -59,11 +59,6 @@
             <version>${hapi.lib.version}</version>
         </dependency>
         <dependency>
-            <groupId>ca.uhn.hapi.fhir</groupId>
-            <artifactId>hapi-fhir-validation-resources-r4</artifactId>
-            <version>${hapi.lib.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.4.1</version>
