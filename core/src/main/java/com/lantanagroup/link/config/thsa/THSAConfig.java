@@ -11,7 +11,7 @@ import org.springframework.context.annotation.PropertySource;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "thsa")
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class THSAConfig {
   /**
    * The id of the MeasureReport for inventory data

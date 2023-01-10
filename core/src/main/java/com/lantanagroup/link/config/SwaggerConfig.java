@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "swagger")
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class SwaggerConfig {
     @Getter
     private String authUrl;

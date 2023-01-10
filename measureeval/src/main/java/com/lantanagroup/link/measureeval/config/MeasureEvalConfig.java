@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 @Configuration
 @ConfigurationProperties(prefix = "measure-eval")
 @Validated
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class MeasureEvalConfig {
   /**
    * The file path location where measure definitions should be stored

@@ -13,7 +13,7 @@ import org.springframework.validation.annotation.Validated;
 @Configuration
 @ConfigurationProperties(prefix = "data-governance")
 @Validated
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class DataGovernanceConfig {
   /**
    * <strong>data-governance.retention-period.census-list-retention</strong><br>Contains the retention periods for the census list.

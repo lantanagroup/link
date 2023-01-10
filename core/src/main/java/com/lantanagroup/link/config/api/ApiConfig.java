@@ -19,7 +19,7 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "api")
 @Validated
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
 
   /**

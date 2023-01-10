@@ -14,7 +14,7 @@ import java.util.List;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "applyconceptmaps")
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
 public class ApplyConceptMapsConfig {
   private List<ApplyConceptMapConfig> conceptMaps;
 }
