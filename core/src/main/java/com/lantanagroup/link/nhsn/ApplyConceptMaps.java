@@ -111,7 +111,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
    */
   public List<Base> filterResourcesByPathList(DomainResource resource, List<String> pathList) {
     List<Base> results = new ArrayList<>();
-    logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
+    // logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
     pathList.stream().forEach(path -> {
       results.addAll(getFhirPathEngine().evaluate(resource, path));
     });
@@ -145,7 +145,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
             List<Coding> codingList = filterCodingsByPathList(resource, conceptMapConfig.getFhirPathContexts());
             if (!codingList.isEmpty()) {
               applyTransformation(conceptMap, codingList);
-              displayTransformation(resource, codingList);
+              // displayTransformation(resource, codingList);
             }
           });
         });

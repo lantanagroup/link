@@ -24,7 +24,7 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
     logger.info("Called: " + EncounterStatusTransformer.class.getName());
     for(Bundle.BundleEntryComponent patientResource : bundle.getEntry()) {
       if(patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
-        logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
+        // logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
         Encounter patientEncounter = (Encounter)patientResource.getResource();
         if(patientEncounter.getPeriod().hasEnd()) {
           Extension previous = new Extension();
