@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource;
 @Getter @Setter
 @Configuration
 @ConfigurationProperties(prefix = "query.auth.cerner")
-@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class CernerAuthConfig {
   private String tokenUrl;
   private String clientId;

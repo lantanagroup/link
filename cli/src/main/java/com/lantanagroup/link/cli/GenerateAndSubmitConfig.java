@@ -16,7 +16,7 @@ import javax.validation.constraints.Size;
 @Configuration
 @ConfigurationProperties(prefix = "cli.generate-and-submit")
 @Validated
-@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class GenerateAndSubmitConfig {
 
   private String apiUrl;

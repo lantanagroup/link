@@ -17,7 +17,7 @@ import java.util.List;
 @Configuration
 @ConfigurationProperties(prefix = "query")
 @Validated
-@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 /**
  * See the Link WIKI - <a href="https://github.com/lantanagroup/link/wiki/Configuration#query-api">Configuration &gt; Query-API</a>
  */

@@ -16,7 +16,7 @@ import javax.validation.constraints.NotNull;
 @Validated
 @Configuration
 @ConfigurationProperties(prefix = "cli.query")
-@PropertySource(value = {"classpath:application.yml", "classpath:application-site.yml"}, factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class QueryCliConfig {
   @NotNull
   private ApiDataStoreConfig dataStore;
