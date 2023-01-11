@@ -1,11 +1,8 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-    <property name="LOG_FILE" value="target/link-api.log"/>
-    <include resource="org/springframework/boot/logging/logback/file-appender.xml"/>
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
     </root>
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
