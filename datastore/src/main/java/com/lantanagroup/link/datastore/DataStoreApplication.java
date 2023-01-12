@@ -5,7 +5,6 @@ import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
 import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
-import org.apache.jena.rdf.model.ModelCon;
 import org.h2.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;

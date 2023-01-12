@@ -1,0 +1,146 @@
+<div class="card">
+  <div class="card-header">US Core</div>
+  <div class="card-body">
+    <app-single-line-text (change)="onChange()" [parentObject]="usCoreConfig" [required]="true"
+                          label="FHIR Server Base URL" propertyName="fhirServerBase"></app-single-line-text>
+
+    <div class="mb-3">
+      <label>Parallel Patients</label>
+      <span class="help-block">The number of patients that should be queried in parallel.</span>
+      <input [(ngModel)]="usCoreConfig.parallelPatients" class="form-control" type="number"/>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <label>
+          Patient Resource Types
+          <button
+            (click)="usCoreConfig.patientResourceTypes = usCoreConfig.patientResourceTypes || []; usCoreConfig.patientResourceTypes.push(''); envService.saveEnvEvent.next(null);"
+            class="btn btn-primary btn-sm"
+            title="Add patient resource type"
+            type="button">
+            <fa-icon [icon]="faAdd"></fa-icon>
+          </button>
+        </label>
+        <span class="help-block">This indicates what patient-based resources are supported by the EHR that is being queried. Patient-based resources are resources that can be queried with the <i>patient</i> search parameter. The Patient resource <strong>should not</strong> be included in this list, as it is automatically queried as part of the US Core engine.</span>
+        <div *ngFor="let rt of usCoreConfig.patientResourceTypes || []; let rtIndex = index; trackBy: trackByFn"
+             class="input-group">
+          <input (change)="envService.saveEnvEvent.next(null)" [(ngModel)]="usCoreConfig.patientResourceTypes[rtIndex]"
+                 class="form-control"
+                 placeholder="Resource Type"
+                 type="text"/>
+          <button (click)="usCoreConfig.patientResourceTypes.splice(rtIndex, 1); envService.saveEnvEvent.next(null)"
+                  class="btn btn-primary"
+                  title="Remove patient resource type"
+                  type="button">
+            <fa-icon [icon]="faRemove"></fa-icon>
+          </button>
+        </div>
+        <p *ngIf="!usCoreConfig.patientResourceTypes?.length">No patient resource types</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <label>
+          Other Resource Types
+          <button
+            (click)="usCoreConfig.otherResourceTypes = usCoreConfig.otherResourceTypes || []; usCoreConfig.otherResourceTypes.push(''); envService.saveEnvEvent.next(null)"
+            class="btn btn-primary btn-sm"
+            title="Add other resource type"
+            type="button">
+            <fa-icon [icon]="faAdd"></fa-icon>
+          </button>
+        </label>
+        <span class="help-block">This indicates what non-patient resources are supported by the EHR that is being queried; resources that do <i>not</i> support the patient search parameter, are referenced patient-based resources, and must be retrieved individually.</span>
+        <div *ngFor="let rt of usCoreConfig.otherResourceTypes || []; let rtIndex = index; trackBy: trackByFn"
+             class="input-group">
+          <input (change)="envService.saveEnvEvent.next(null)" [(ngModel)]="usCoreConfig.otherResourceTypes[rtIndex]"
+                 class="form-control"
+                 placeholder="Resource Type" type="text"/>
+          <button (click)="usCoreConfig.otherResourceTypes.splice(rtIndex, 1); envService.saveEnvEvent.next(null);"
+                  class="btn btn-primary"
+                  type="button">
+            <fa-icon [icon]="faRemove"></fa-icon>
+          </button>
+        </div>
+        <p *ngIf="!usCoreConfig.otherResourceTypes?.length">No other resource types</p>
+      </div>
+    </div>
+    <div class="card">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Bundle IDs</th>
+          <th>Resources</th>
+          <th>
+            <button (click)="addBundle(); envService.saveEnvEvent.next(null)" class="btn btn-primary float-end"
+                    title="Add Bundle" type="button">Add
+            </button>
+          </th>
+        </tr>
+        </thead>
+        <tbody *ngIf="usCoreConfig.queryParameters?.size">
+        <tr *ngFor="let entry of entries;  let rtIndex = index; trackBy: trackByFn">
+          <td style="width: 250px"><input (change)="onChange()" [(ngModel)]="entry[0]" [class.is-invalid]="!entry[0]"
+                                          class="form-control"
+                                          placeholder="Bundle ID" type="text"/></td>
+          <td>
+            <div *ngFor="let rt of entry[1] || []; let rt1Index = index; trackBy: trackByFn" class="input-group">
+              <input (change)="onChange()" [(ngModel)]="entry[1][rt1Index].resourceType" class="form-control"
+                     placeholder="Resource Type" type="text"/>
+              <div class="input-group-append">
+                <div *ngFor="let pm of entry[1][rt1Index].parameters || []; let rt2Index = index; trackBy: trackByFn"
+                     class="input-group">
+                  <input (change)="onChange()" [(ngModel)]="entry[1][rt1Index].parameters[rt2Index].name"
+                         class="form-control" placeholder="Parameters" type="text"/>
+                  <div class="input-group-append">
+                    <div
+                      *ngFor="let vm of entry[1][rt1Index].parameters[rt2Index].values || []; let rt3Index = index; trackBy: trackByFn"
+                      class="input-group">
+                      <input (change)="onChange()"
+                             [(ngModel)]="entry[1][rt1Index].parameters[rt2Index].values[rt3Index]" class="form-control"
+                             placeholder="values" type="text"/>
+                      <button
+                        (click)="deleteValue(entry[1][rt1Index].parameters[rt2Index].values, rt3Index)"
+                        class="btn btn-primary removeBtn" title="Remove Value" type="button">
+                        <fa-icon [icon]="faRemove"></fa-icon>
+                      </button>
+                    </div>
+                    <button
+                      (click)="addValue(entry[1][rt1Index].parameters[rt2Index].values); envService.saveEnvEvent.next(null)"
+                      class="btn btn-primary addBtn" title="Add Value" type="button">Add Value
+                    </button>
+                  </div>
+                  <button
+                    (click)="deleteParameter(entry[1][rt1Index].parameters, rt2Index)"
+                    class="btn btn-primary removeBtn" title="Remove Parameter" type="button">
+                    <fa-icon [icon]="faRemove"></fa-icon>
+                  </button>
+                </div>
+                <button (click)="addParameter(entry[1][rt1Index].parameters); envService.saveEnvEvent.next(null)"
+                        class="btn btn-primary addBtn" title="Add Parameter" type="button">Add Parameter
+                </button>
+              </div>
+              <button (click)="deleteResource(entry[1], rt1Index)"
+                      class="btn btn-primary removeBtn" title="Remove Resource" type="button">
+                <fa-icon [icon]="faRemove"></fa-icon>
+              </button>
+            </div>
+            <button (click)="addResource(entry[1]); envService.saveEnvEvent.next(null)" class="btn btn-primary addBtn"
+                    title="Add Resource" type="button">Add Resource
+            </button>
+          </td>
+          <td>
+            <button (click)="deleteBundle(rtIndex)" class="btn btn-primary float-end" style="height: 50px"
+                    title="Remove Bundle" type="button">
+              <fa-icon [icon]="faRemove"></fa-icon>
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<div class="d-flex">
+    <ul ngbNav #nav="ngbNav" class="nav-pills" orientation="vertical">
+      <li ngbNavItem>
+        <ng-template ngbNavContent>
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th></th>
+              <th>
+                <button type="button" class="btn btn-primary" (click)="classes = classes  || []; classes.push(''); onChange()" title="Add classes">
+                  <fa-icon [icon]="faAdd"></fa-icon>
+                </button>
+              </th>
+            </tr>
+            </thead>
+            <tbody *ngIf="classes?.length">
+            <tr *ngFor="let class of classes || []; let rdIndex = index; trackBy: trackByIndex">
+              <td><input type="text"  class="form-control" [(ngModel)]="classes[rdIndex]" (change)="onChange()"  /></td>
+              <td class="removeBtn">
+                <button type="button" class="btn btn-primary" (click)="classes.splice(rdIndex, 1); onChange()" title="Remove class">
+                  <fa-icon [icon]="faRemove"></fa-icon>
+                </button>
+              </td>
+            </tr>
+            </tbody>
+            <tbody *ngIf="!classes?.length">
+            <tr>
+              <td colspan="4">No class</td>
+            </tr>
+            </tbody>
+          </table>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class=""></div>
+  </div>
+  

@@ -1,0 +1,27 @@
+<div>
+  <app-single-line-text (change)="onChange()" [parentObject]="swagger" [requireUrl]="true" label="Auth  URL"
+                        propertyName="authUrl"></app-single-line-text>
+  <app-single-line-text (change)="onChange()" [parentObject]="swagger" [required]="true" label="Token Url"
+                        placeholder='' propertyName="tokenUrl"></app-single-line-text>
+  <div class="card">
+    <div class="card-body">
+      <label>
+        Scope
+      </label>
+      <button
+        (click)="envService.apiConfig.swagger.scope = envService.apiConfig.swagger.scope  || [];   envService.apiConfig.swagger.scope.push(''); envService.saveEnvEvent.next(null);"
+        class="btn btn-primary btn-sm" title="Add scope" type="button">
+        <fa-icon [icon]="faAdd"></fa-icon>
+      </button>
+      <div *ngFor="let cm of swagger.scope; let fpIndex = index; trackBy: trackByIndex" class="input-group">
+        <input (change)="envService.saveEnvEvent.next(null)" [(ngModel)]="swagger.scope[fpIndex]" class="form-control"
+               type="text"/>
+        <button (click)="envService.apiConfig.swagger.scope.splice(fpIndex, 1); envService.saveEnvEvent.next(null)"
+                class="btn btn-primary btn-sm" title="Remove scope" type="button">
+          <fa-icon [icon]="faRemove"></fa-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

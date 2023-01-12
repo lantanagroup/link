@@ -1,0 +1,23 @@
+<div class="container">
+  <h1>File Upload</h1>
+  <form id="form">
+    <div class="input-group">
+      <label for='files'>Select files</label>
+      <input
+        [uploader]="uploader"
+        id="files"
+        name="config"
+        ng2FileSelect
+        type="file"
+      />
+    </div>
+    <button
+      (click)="uploader.uploadAll()"
+      [disabled]="!uploader.getNotUploadedItems().length"
+      type="button"
+    >
+      Upload
+    </button>
+  </form>
+</div>
+

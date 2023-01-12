@@ -29,8 +29,15 @@ export class AppComponent implements OnInit {
     document.body.removeChild(selBox);
   }
 
+  setFavicon() {
+    const favIcon: HTMLLinkElement = document.querySelector('#favIcon');
+    favIcon.href = `assets/${this.configService.config.faviconName !== undefined ? this.configService.config.faviconName : ''}favicon.ico`;
+  }
+
   async ngOnInit() {
+    this.setFavicon();
     this.configService.getApiInfo()
         .then((apiInfo: ApiInfoModel) => this.apiInfo = apiInfo);
   }
+
 }
