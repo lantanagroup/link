@@ -26,6 +26,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
   Map<String, ConceptMap> conceptMaps = new HashMap<>();
+  DefaultProfileValidationSupport validationSupport;
 
   @Autowired
   @Setter
@@ -34,6 +35,11 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   @Autowired
   @Setter
   private FhirDataProvider fhirDataProvider;
+
+  public ApplyConceptMaps() {
+    validationSupport = new DefaultProfileValidationSupport();
+    validationSupport.fetchAllStructureDefinitions(FhirContextProvider.getFhirContext());
+  }
 
   private Map<String, ConceptMap> getConceptMaps(FhirDataProvider fhirDataProvider) {
     if (applyConceptMapConfig != null && applyConceptMapConfig.getConceptMaps() != null) {
@@ -50,7 +56,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   }
 
   private FHIRPathEngine getFhirPathEngine() {
-    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), new DefaultProfileValidationSupport());
+    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
     return new FHIRPathEngine(workerContext);
   }
 
