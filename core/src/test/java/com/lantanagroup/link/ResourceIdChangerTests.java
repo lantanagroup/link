@@ -4,8 +4,13 @@ import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ResourceIdChangerTests {
   @Test
@@ -140,4 +145,31 @@ public class ResourceIdChangerTests {
     Assert.assertEquals("http://some-system2.com", codingTarget2.getSystem());
   }
 
+  @Test
+  public void stressTest() {
+    Random random = new Random();
+    String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    List<String> ids = Stream.generate(() -> {
+              StringBuilder builder = new StringBuilder();
+              while (builder.length() < 100) {
+                builder.append(characters.charAt(random.nextInt(characters.length())));
+              }
+              return builder.toString();
+            })
+            .limit(100000)
+            .collect(Collectors.toList());
+    Bundle bundle = new Bundle();
+    for (String id : ids) {
+      Basic resource = new Basic();
+      resource.setId(id);
+      String subjectId = ids.get(random.nextInt(ids.size()));
+      resource.setSubject(new Reference(String.format("Basic/%s", subjectId)));
+      bundle.addEntry().setResource(resource);
+    }
+    Instant start = Instant.now();
+    ResourceIdChanger.changeIds(bundle);
+    Instant end = Instant.now();
+    // Should take less than ten seconds
+    Assert.assertTrue(Duration.between(start, end).compareTo(Duration.ofSeconds(10L)) < 0);
+  }
 }
