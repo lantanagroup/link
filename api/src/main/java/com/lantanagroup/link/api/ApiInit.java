@@ -62,7 +62,7 @@ public class ApiInit {
 
   private boolean checkPrerequisites() {
 
-    logger.info("Checking that API prerequisite services are available. maxRetry: %d, retryWait: %d", config.getMaxRetry(), config.getRetryWait());
+    logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
 
     boolean allServicesAvailable = false;
     boolean dataStoreAvailable = false;

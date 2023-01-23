@@ -68,7 +68,7 @@ public class PatientData {
             }
           }
           else {
-            logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));
+            logger.warn("No observations found in US Core Config for {}, loading patient data without observations.", Helper.encodeLogging(measureId));
             // TODO: Fall back to a query with the patient parameter only?
             //       I.e., uncomment the following line and remove the category parameter?
             //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
@@ -91,7 +91,7 @@ public class PatientData {
         });
       }
       catch(Exception ex) {
-        logger.error("Error while parallel processing patient data queries: %s", Helper.encodeLogging(ex.getMessage()));
+        logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
       }
     }
     else{

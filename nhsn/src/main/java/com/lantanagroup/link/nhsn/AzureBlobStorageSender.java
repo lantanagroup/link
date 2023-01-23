@@ -91,7 +91,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       BlobContainerAsyncClient client = getAbsClientConnection();
       if(client == null) {
         String errorMessage = String.format("Failed to create blob async client.");
-        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful: {}", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
         throw new IOException(errorMessage);
       }
 
@@ -118,7 +118,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       BlobContainerAsyncClient client = getAbsClientConnection();
       if(client == null) {
         String errorMessage = String.format("Failed to create blob async client.");
-        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
+        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful: {}", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
         throw new IOException(errorMessage);
       }
 
