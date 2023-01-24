@@ -7,18 +7,22 @@ import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
+import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PatientData {
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
 
+  private final ReportCriteria criteria;
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
@@ -28,8 +32,9 @@ public class PatientData {
   private List<Bundle> bundles = new ArrayList<>();
 
 
-  public PatientData(IGenericClient fhirQueryServer, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(IGenericClient fhirQueryServer, ReportCriteria criteria, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
+    this.criteria = criteria;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
     this.usCoreConfig = usCoreConfig;
@@ -45,6 +50,17 @@ public class PatientData {
     //Loop through resource types specified. If observation, use config to add individual category queries
     Set<String> queryString = new HashSet<>();
     for (String resource: this.resourceTypes) {
+
+      String dateParameters;
+      if (usCoreConfig.getLookbackPeriod() != null) {
+        Instant start = Instant.parse(criteria.getPeriodStart()).minus(usCoreConfig.getLookbackPeriod());
+        Instant end = Instant.parse(criteria.getPeriodEnd());
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+        dateParameters = String.format("&date=ge%s&date=le%s", formatter.format(start), formatter.format(end));
+      } else {
+        dateParameters = "";
+      }
+
       if(resource.equals("Observation")) {
 
         HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
@@ -61,14 +77,15 @@ public class PatientData {
                 for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
                   for (String paramValue : param.getValues()) {
                     // TODO: Use Apache's URLEncodedUtils or similar to encode query string components
-                    queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId);
+                    queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId
+                            + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
                   }
                 }
               });
             }
           }
           else {
-            logger.warn("No observations found in US Core Config for %s, loading patient data without observations.", Helper.encodeLogging(measureId));
+            logger.warn("No observations found in US Core Config for {}, loading patient data without observations.", Helper.encodeLogging(measureId));
             // TODO: Fall back to a query with the patient parameter only?
             //       I.e., uncomment the following line and remove the category parameter?
             //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
@@ -77,7 +94,7 @@ public class PatientData {
 
       }
       else {
-        queryString.add(resource + "?patient=Patient/" + this.patientId);
+        queryString.add(resource + "?patient=Patient/" + this.patientId + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
       }
     }
 
@@ -91,7 +108,7 @@ public class PatientData {
         });
       }
       catch(Exception ex) {
-        logger.error("Error while parallel processing patient data queries: %s", Helper.encodeLogging(ex.getMessage()));
+        logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
       }
     }
     else{
@@ -140,6 +157,7 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
+        logger.info("Loading other {} resources for patient {}", resourceType, patientId);
         resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
           try {
             Resource resource = (Resource) this.fhirQueryServer.read()

@@ -144,13 +144,12 @@ public class ResourceIdChanger {
   public void changeIds() {
 
     // Find resources that have invalid IDs
-    List<Resource> invalidResourceIds = this.bundle.getEntry().stream()
+    List<Bundle.BundleEntryComponent> invalidEntries = this.bundle.getEntry().stream()
             .filter(e -> e.getResource() != null && e.getResource().getIdElement() != null && e.getResource().getIdElement().getIdPart() != null &&
                     (e.getResource().getIdElement().getIdPart().length() > 64 || e.getResource().getIdElement().getIdPart().contains(Constants.UuidPrefix)))
-            .map(e -> e.getResource())
             .collect(Collectors.toList());
     // Create a map where key = old id, value = new id (a hash of the old id)
-    Map<IdType, IdType> newIds = invalidResourceIds.stream().map(res -> {
+    Map<IdType, IdType> newIds = invalidEntries.stream().map(Bundle.BundleEntryComponent::getResource).map(res -> {
       IdType rId = res.getIdElement();
 
       String newId = getNewId(rId.getIdPart());
@@ -160,7 +159,8 @@ public class ResourceIdChanger {
 
     // For each resource with an invalid id, update the resource with the new hashed id
     // and find any references to the old id and update those
-    invalidResourceIds.forEach(res -> {
+    invalidEntries.forEach(entry -> {
+      Resource res = entry.getResource();
       IdType invalidId = res.getIdElement();
       String invalidIdRef = res.getResourceType().toString() + "/" + invalidId.getIdPart();
       IdType newId = newIds.get(invalidId);
@@ -174,13 +174,10 @@ public class ResourceIdChanger {
 
       resource.addExtension(ORIG_ID_EXT_URL, new StringType(invalidId.getIdPart()));
 
-      // Update bundle entry's that have a request/url that matches the old ID to reference the new ID
-      this.bundle.getEntry().stream()
-              .filter(entry ->
-                      entry.getRequest() != null &&
-                              entry.getRequest().getUrl() != null &&
-                              entry.getRequest().getUrl().equals(invalidIdRef))
-              .forEach(entry -> entry.getRequest().setUrl(newIdRef));
+      // Update bundle entry if it has a request/url that matches the old ID to reference the new ID
+      if (entry.hasRequest() && entry.getRequest().hasUrl() && entry.getRequest().getUrl().equals(invalidIdRef)) {
+        entry.getRequest().setUrl(newIdRef);
+      }
     });
 
     List<Reference> references = findReferences(bundle);

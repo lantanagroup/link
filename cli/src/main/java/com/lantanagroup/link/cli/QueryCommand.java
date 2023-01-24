@@ -7,6 +7,7 @@ import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
@@ -80,8 +81,9 @@ public class QueryCommand extends BaseShellCommand {
       }
 
       logger.info("Executing query");
+      ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
       String masterReportid = "1847296839";  // TODO: Why is this hard-coded?
-      query.execute(patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
+      query.execute(criteria, patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
       FhirDataProvider fhirDataProvider = this.applicationContext.getBean(FhirDataProvider.class);
 
       for (int i = 0; i < patientsOfInterest.size(); i++) {

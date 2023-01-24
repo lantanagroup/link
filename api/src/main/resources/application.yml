@@ -60,16 +60,7 @@ query:
 uscore:
   fhir-server-base:
   patient-resource-types:
-    - Encounter?patient=Patient/{{patientId}}
-    - Condition?patient=Patient/{{patientId}}
-    - MedicationRequest?patient=Patient/{{patientId}}
-    - Observation?category=laboratory&patient=Patient/{{patientId}}
-    - Procedure?patient=Patient/{{patientId}}
-    - ServiceRequest?patient=Patient/{{patientId}}
-    - Coverage?patient=Patient/{{patientId}}
-  additional-resources:
-    - Location/{{locationId}}
-    - Medication/{{medicationId}}
+  other-resource-types:
   parallel-patients: 10
 data-governance:
   census-list-retention:

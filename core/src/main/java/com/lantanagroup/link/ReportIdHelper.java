@@ -20,7 +20,7 @@ public class ReportIdHelper {
     return Integer.toHexString(combine(components).hashCode());
   }
 
-  private static String hash(String... components) {
+  public static String hash(String... components) {
     return hash(List.of(components));
   }
 
