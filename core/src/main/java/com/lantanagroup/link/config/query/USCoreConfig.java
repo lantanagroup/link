@@ -10,6 +10,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
+import java.time.Period;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,7 +26,6 @@ public class USCoreConfig {
   /**
    * <strong>uscore.patient-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are specific to a patient (support the 'patient' search parameter)
    */
-  @Getter
   private List<String> patientResourceTypes;
 
   /**
@@ -37,20 +38,26 @@ public class USCoreConfig {
   /**
    * <strong>uscore.other-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are NOT specific to a patient. These are queried via references from patient resources.
    */
-  @Getter
   private List<String> otherResourceTypes;
 
   /**
    * <strong>uscore.parallel-patients</strong><br>The number of patients to query for at a single time.
    */
-  @Getter
   private int parallelPatients = 10;
 
   /**
    * <strong>uscore.query-parameters</strong><br>Query parameters for individual measures.
    */
-  @Getter
   private HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters;
 
+  /**
+   * <strong>uscore.lookback-period</strong><br>For date-constrained searches, the length of time to search before the beginning of the reporting period
+   */
+  private Period lookbackPeriod;
+
+  /**
+   * <strong>uscore.lookback-resource-types</strong><br>Resource types to apply date-constrained searches to based on the lookback period
+   */
+  private List<String> lookbackResourceTypes = new ArrayList<>();
 }
 

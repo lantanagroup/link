@@ -135,7 +135,7 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(List<String> resourceTypes, ReportContext context) throws Exception {
+  private void queryAndStorePatientData(List<String> resourceTypes, ReportCriteria criteria, ReportContext context) throws Exception {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
     List<String> measureIds = context.getMeasureContexts().stream()
             .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
@@ -145,7 +145,7 @@ public class ReportController extends BaseController {
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(patientsOfInterest, context.getMasterIdentifierValue(), resourceTypes, measureIds);
+      query.execute(criteria, patientsOfInterest, context.getMasterIdentifierValue(), resourceTypes, measureIds);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
@@ -271,7 +271,7 @@ public class ReportController extends BaseController {
     resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
 
     // Scoop the data for the patients and store it
-    this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), reportContext);
+    this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
 
     // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
     if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {

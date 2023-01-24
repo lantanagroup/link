@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -238,9 +239,10 @@ public class QueryTests {
 
     // Execute the query
     Query theQuery = new Query();
+    ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    theQuery.execute(patientsOfInterest, "report1", queries, List.of(measureId));
+    theQuery.execute(criteria, patientsOfInterest, "report1", queries, List.of(measureId));
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");
