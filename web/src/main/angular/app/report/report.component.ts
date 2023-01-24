@@ -115,7 +115,7 @@ export class ReportComponent implements OnInit, OnDestroy {
   async download(type: string) {
     try {
       this.downloading = true;
-      await this.reportService.download(this.masterId.split('-')[0], type);
+      await this.reportService.download(this.masterId, type);
       this.toastService.showInfo('Report downloaded!');
     } catch (ex) {
       this.toastService.showException('Error downloading report: ' + this.masterId, ex);
@@ -139,7 +139,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     try {
-      this.reportModel = await this.reportService.getReport(this.masterId);
+      this.reportModel = await this.reportService.getReport(this.masterId.split('-')[0]);
       const reportBundle = await this.reportModel;
       this.reportMeasureList = reportBundle.reportMeasureList || [];
     } catch (ex) {

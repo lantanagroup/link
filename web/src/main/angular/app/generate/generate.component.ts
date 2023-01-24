@@ -100,7 +100,7 @@ export class GenerateComponent implements OnInit {
           if (confirm('A report already exists for the selected criteria. Would you like to re-generate the report?')) {
             try {
               const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
-              await this.router.navigate(['review', generateResponse.masterId]);
+              await this.router.navigate(['review', generateResponse.masterId + '-' + generateResponse.measureHashId]);
             } catch (ex) {
               this.toastService.showException('Error generating report', ex);
             }

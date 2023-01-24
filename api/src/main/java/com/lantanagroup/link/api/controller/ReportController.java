@@ -290,6 +290,8 @@ public class ReportController extends BaseController {
 
       measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
 
+      response.setMeasureHashId(ReportIdHelper.hash(measureContext.getBundleId()));
+
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
