@@ -110,9 +110,9 @@ public class MHLAggregator extends ReportAggregator {
       supplementalData.setId(UUID.randomUUID().toString());
       supplementalData.setType(Bundle.BundleType.COLLECTION);
       IIdType motherId = measureReport.getSubject().getReferenceElement();
-      supplementalData.addEntry().setResource(getMother(motherId));
       Collection<RelatedPerson> children = getChildren(motherId);
       for (RelatedPerson child : children) {
+        supplementalData.addEntry().setResource(child);
         IIdType childId = child.getPatient().getReferenceElement();
         for (Resource resource : getEverything(childId)) {
           supplementalData.addEntry().setResource(resource);
@@ -141,7 +141,7 @@ public class MHLAggregator extends ReportAggregator {
     Bundle bundle = query.getFhirQueryClient()
             .search()
             .byUrl(String.format(
-                    "RelatedPerson?_has:Patient:link:_id=%s&relationship=MTH,GESTM",
+                    "RelatedPerson?_has:Patient:link:_id=%s&relationship=MTH,GESTM,NMTH",
                     UrlUtil.escapeUrlParam(motherId.getValue())))
             .returnBundle(Bundle.class)
             .execute();
