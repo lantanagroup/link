@@ -2,7 +2,11 @@ package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.model.ReportContext;
+import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -135,14 +139,14 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     return changedCodes;
   }
 
-  public void execute(Bundle bundle) {
+  public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     List<DomainResource> resourceList = BundleUtil.toListOfResourcesOfType(FhirContextProvider.getFhirContext(), bundle, DomainResource.class);
-    execute(resourceList);
+    this.execute(resourceList, criteria, context, measureContext);
   }
 
-  public void execute(List<DomainResource> resourceList) {
+  public void execute(List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
-    if(resourceList.size() > 0){
+    if (resourceList.size() > 0) {
       Map<String, ConceptMap> conceptMaps = getConceptMaps(fhirDataProvider);
       if (!conceptMaps.isEmpty()) {
         applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {

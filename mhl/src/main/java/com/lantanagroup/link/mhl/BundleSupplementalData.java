@@ -2,6 +2,8 @@ package com.lantanagroup.link.mhl;
 
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.model.ReportContext;
+import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DomainResource;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -19,7 +21,7 @@ public class BundleSupplementalData implements IReportGenerationDataEvent {
   private FhirDataProvider fhirDataProvider;
 
   @Override
-  public void execute(Bundle data) {
+  public void execute(Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
 
     // Get references to supplemental data bundles
     Collection<Reference> references = data.getEntry().stream()
@@ -42,6 +44,6 @@ public class BundleSupplementalData implements IReportGenerationDataEvent {
   }
 
   @Override
-  public void execute(List<DomainResource> data) {
+  public void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
   }
 }

@@ -63,7 +63,7 @@ public class FhirBundler {
       return;
     }
     try {
-      eventService.triggerDataEvent(eventType, bundle);
+      eventService.triggerDataEvent(eventType, bundle, null, null, null);
     } catch (Exception e) {
       logger.error(String.format("Error occurred in %s handler", eventType), e);
     }

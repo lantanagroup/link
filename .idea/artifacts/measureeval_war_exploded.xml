@@ -6,7 +6,6 @@
         <exploded>true</exploded>
         <module>measureeval</module>
         <packaging>war</packaging>
-        <unpackNestedArchives>false</unpackNestedArchives>
       </options>
     </properties>
     <root id="root">
@@ -41,7 +40,7 @@
           <element id="library" level="project" name="Maven: com.google.errorprone:error_prone_annotations:2.5.1" />
           <element id="library" level="project" name="Maven: org.springframework:spring-test:5.3.10" />
           <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
-          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.12.6.1" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.11.1" />
           <element id="library" level="project" name="Maven: org.json:json:20200518" />
           <element id="library" level="project" name="Maven: org.mockito:mockito-core:3.12.4" />
           <element id="library" level="project" name="Maven: net.bytebuddy:byte-buddy:1.10.22" />
