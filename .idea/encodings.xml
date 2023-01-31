@@ -10,6 +10,8 @@
     <file url="file://$PROJECT_DIR$/mhl/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/nhsn/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/query/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/thsa/src/main/java" charset="UTF-8" />
   </component>
 </project>

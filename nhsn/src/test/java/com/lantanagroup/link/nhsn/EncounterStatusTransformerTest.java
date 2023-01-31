@@ -1,6 +1,5 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
@@ -17,11 +16,8 @@ import org.junit.Test;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -70,7 +66,7 @@ public class EncounterStatusTransformerTest {
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
     when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
-    encounterStatusTransformer.execute(bundle);
+    encounterStatusTransformer.execute(bundle, new ReportCriteria(new ArrayList<>(), start, end), new ReportContext(fhirProvider), new ReportContext.MeasureContext());
 
     Encounter encounterTest1 = (Encounter)bundle.getEntry().get(1).getResource();
     Encounter encounterTest2 = (Encounter)bundle.getEntry().get(2).getResource();

@@ -1,12 +1,11 @@
 package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
@@ -47,16 +46,15 @@ public class PatientScoop extends Scoop {
   private EventService eventService;
 
 
-
-  public void execute(ReportCriteria criteria, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
+  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(criteria, pois, reportId, resourceTypes, measureIds);
+    this.loadPatientData(criteria, context, pois, reportId, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(ReportCriteria criteria, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
@@ -70,7 +68,7 @@ public class PatientScoop extends Scoop {
     return null;
   }
 
-  public PatientData loadPatientData(ReportCriteria criteria, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  public PatientData loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
@@ -125,13 +123,13 @@ public class PatientScoop extends Scoop {
       forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = this.loadPatientData(criteria, patient, reportId, resourceTypes, measureIds);
+        PatientData patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
 
         Bundle patientBundle = patientData.getBundleTransaction();
         // store the data
         try {
 
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle);
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
 
           patientBundle.setType(Bundle.BundleType.BATCH);
 
@@ -148,14 +146,14 @@ public class PatientScoop extends Scoop {
           patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
 
 
-          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore,  patientBundle);
+          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
           // staore data
           this.fhirDataProvider.updateResource(patientBundle);
 
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle);
+          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());

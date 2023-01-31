@@ -2,9 +2,11 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -156,7 +158,6 @@ public class QueryTests {
     medicalRequestBundle3.addEntry().setResource(medicalRequest3);
     medicalRequestBundle3.addEntry().setResource(medicalRequest4);
 
-
     Medication medication1 = new Medication();
     medication1.setId("medication1");
     Medication medication2 = new Medication();
@@ -240,9 +241,10 @@ public class QueryTests {
     // Execute the query
     Query theQuery = new Query();
     ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
+    ReportContext context = new ReportContext(new FhirDataProvider(fhirQueryClient));
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    theQuery.execute(criteria, patientsOfInterest, "report1", queries, List.of(measureId));
+    theQuery.execute(criteria, context, patientsOfInterest, "report1", queries, List.of(measureId));
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");

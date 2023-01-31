@@ -7,6 +7,7 @@ import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
@@ -50,7 +51,7 @@ public class QueryCommand extends BaseShellCommand {
 
 
   @ShellMethod(value = "Query for patient data from the configured FHIR server")
-  public void query(String patient, String resourceTypes, String[] measureId, @ShellOption(defaultValue = "") String output) {
+  public void query(String patient, String resourceTypes, String[] measureId, String start, String end, @ShellOption(defaultValue = "") String output) {
     try {
       this.registerBeans();
 
@@ -81,9 +82,10 @@ public class QueryCommand extends BaseShellCommand {
       }
 
       logger.info("Executing query");
-      ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
+      ReportCriteria criteria = new ReportCriteria(List.of(), start, end);
+      ReportContext context = new ReportContext(new FhirDataProvider(cliConfig.getFhirServerBase()));
       String masterReportid = "1847296839";  // TODO: Why is this hard-coded?
-      query.execute(criteria, patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
+      query.execute(criteria, context, patientsOfInterest, masterReportid, resourceTypesList, List.of(measureId));
       FhirDataProvider fhirDataProvider = this.applicationContext.getBean(FhirDataProvider.class);
 
       for (int i = 0; i < patientsOfInterest.size(); i++) {
