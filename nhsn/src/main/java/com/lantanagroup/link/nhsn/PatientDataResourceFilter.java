@@ -19,20 +19,68 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   @Autowired
   private USCoreConfig usCoreConfig;
 
-  private boolean shouldRemove(ReportCriteria criteria, Resource resource) {
+  private static boolean isWithin(Instant target, Instant start, Instant end) {
+    boolean isAfter = target.isAfter(start);
+    boolean isBefore = target.isBefore(end);
+    return isAfter && isBefore;
+  }
+
+  private static boolean periodOverlaps(Period period, Instant start, Instant end) {
+    if (period.hasStart() && !period.hasEnd()) {
+      Instant targetStart = period.getStart().toInstant();
+
+      if (isWithin(targetStart, start, end)) {
+        return true;
+      }
+    } else if (!period.hasStart() && period.hasEnd()) {
+      Instant targetEnd = period.getEnd().toInstant();
+
+      if (isWithin(targetEnd, start, end)) {
+        return true;
+      }
+    } else if (period.hasStart() && period.hasEnd()) {
+      Instant targetStart = period.getStart().toInstant();
+      Instant targetEnd = period.getEnd().toInstant();
+
+      boolean startsWithin = isWithin(targetStart, start, end);
+      boolean endsWithin = isWithin(targetEnd, start, end);
+      return startsWithin || endsWithin;
+    } else {
+      logger.error("Period does not have either a start or end date");
+    }
+
+    return false;
+  }
+
+  public static boolean shouldRemove(ReportCriteria criteria, java.time.Period lookBackPeriod, Resource resource) {
+    Instant start = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
+    Instant end = new DateTimeType(criteria.getPeriodEnd()).getValue().toInstant();
+
     switch (resource.getResourceType()) {
       case Condition:
         Condition condition = (Condition) resource;
-        Instant start = Instant.parse(criteria.getPeriodStart()).minus(this.usCoreConfig.getLookbackPeriod());
-        Instant end = Instant.parse(criteria.getPeriodEnd());
 
-        if (condition.getOnsetDateTimeType() != null && condition.getOnsetDateTimeType().hasValue()) {
-          Instant onset = condition.getOnsetDateTimeType().getValue().toInstant();
-          boolean isAfter = onset.isAfter(start);
-          boolean isBefore = onset.isBefore(end);
-          boolean isWithin = isAfter && isBefore;
+        if (condition.getOnset() != null) {
+          if (condition.getOnset() instanceof DateTimeType) {
+            Instant onset = condition.getOnsetDateTimeType().getValue().toInstant();
 
-          if (!isWithin) {
+            if (!isWithin(onset, start, end)) {
+              return true;
+            }
+          } else if (condition.getOnset() instanceof Period) {
+            boolean overlaps = periodOverlaps(condition.getOnsetPeriod(), start, end);
+
+            if (!overlaps) {
+              return true;
+            }
+          }
+        }
+        break;
+      case ServiceRequest:
+        ServiceRequest serviceRequest = (ServiceRequest) resource;
+
+        if (serviceRequest.getAuthoredOn() != null) {
+          if (!isWithin(serviceRequest.getAuthoredOn().toInstant(), start, end)) {
             return true;
           }
         }
@@ -77,7 +125,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       Bundle.BundleEntryComponent entry = bundle.getEntry().get(i);
 
       if (entry.getResource() != null) {
-        if (this.shouldRemove(criteria, entry.getResource())) {
+        if (shouldRemove(criteria, this.usCoreConfig.getLookbackPeriod(), entry.getResource())) {
           bundle.getEntry().remove(i);
           filtered++;
         }
