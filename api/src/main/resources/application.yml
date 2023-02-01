@@ -21,9 +21,6 @@ api:
     csv: com.lantanagroup.link.thsa.GenericCSVProcessor
     xlsx: com.lantanagroup.link.thsa.GenericXLSXProcessor
   events:
-    before-patient-data-store:
-      - com.lantanagroup.link.nhsn.ApplyConceptMaps
-      - com.lantanagroup.link.nhsn.FixResourceId
   cors:
     allowed-origins: '*'
     allowed-headers: '*'
