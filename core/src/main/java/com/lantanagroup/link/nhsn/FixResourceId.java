@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DomainResource;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +35,12 @@ public class FixResourceId implements IReportGenerationEvent, IReportGenerationD
     }
   }
 
-  public void execute(Bundle data) {
+  public void execute(Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     logger.info("Called: " + FixResourceId.class.getName());
     ResourceIdChanger.changeIds(data);
   }
 
-  public void execute(List<DomainResource> resourceList) {
+  public void execute(List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     throw new RuntimeException("Not Implemented yet.");
   }
 }

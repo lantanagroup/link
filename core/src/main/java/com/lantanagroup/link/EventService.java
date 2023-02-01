@@ -47,12 +47,12 @@ public class EventService {
     triggerEvent(eventType, criteria, context, null);
   }
 
-  public void triggerDataEvent(EventTypes eventType, Bundle bundle) throws Exception {
+  public void triggerDataEvent(EventTypes eventType, Bundle bundle, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
-        ((IReportGenerationDataEvent) bean).execute(bundle);
+        ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
       }
     }
   }

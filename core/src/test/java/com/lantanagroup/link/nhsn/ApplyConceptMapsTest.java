@@ -1,7 +1,5 @@
 package com.lantanagroup.link.nhsn;
 
-import ca.uhn.fhir.util.BundleUtil;
-import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -9,7 +7,6 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -112,7 +109,7 @@ public class ApplyConceptMapsTest {
     codes.add(getLocation().getType().get(0).getCoding().get(0));
     Mockito.doReturn(codes).when(applyConceptMaps).filterCodingsByPathList(any(), any());
 
-    applyConceptMaps.execute(patientBundle);
+    applyConceptMaps.execute(patientBundle, reportCriteria, context, new ReportContext.MeasureContext());
 
     List<Coding> codes2 = ResourceIdChanger.findCodings(patientBundle);
     Coding changedCoding = codes.get(0);
