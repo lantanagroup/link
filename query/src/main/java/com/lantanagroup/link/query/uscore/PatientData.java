@@ -157,7 +157,9 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
-        logger.info("Loading other {} resources for patient {}", resourceType, patientId);
+        Set<String> resourceIds = new HashSet<>(resourcesToGet.get(resourceType));
+        logger.info("Loading {} other {} resources for patient {}", resourceIds.size(), resourceType, patientId);
+        // TODO: Instead of reading resources individually, search for batches using `_id`?
         resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
           try {
             Resource resource = (Resource) this.fhirQueryServer.read()
