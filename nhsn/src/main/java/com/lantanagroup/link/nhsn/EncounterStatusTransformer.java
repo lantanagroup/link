@@ -38,8 +38,8 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
       }
     }
 
-    fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Transformation, "Successfully transformed encounters with an end date to finished.");
-    fhirDataProvider.updateResource(bundle);
+//    fhirDataProvider.audit(context.getRequest(), context.getUser().getJwt(), FhirHelper.AuditEventTypes.Transformation, "Successfully transformed encounters with an end date to finished.");
+//    fhirDataProvider.updateResource(bundle);
   }
 
   @Override
