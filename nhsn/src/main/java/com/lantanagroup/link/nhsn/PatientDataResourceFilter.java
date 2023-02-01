@@ -85,6 +85,14 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
           }
         }
         break;
+      case Specimen:
+        Specimen specimen = (Specimen) resource;
+
+        if (specimen.getReceivedTime() != null) {
+          if (!isWithin(specimen.getReceivedTime().toInstant(), start, end)) {
+            return true;
+          }
+        }
     }
 
     return false;
