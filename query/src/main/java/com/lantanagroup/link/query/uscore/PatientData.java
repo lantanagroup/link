@@ -157,7 +157,8 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
-        logger.info("Loading other {} resources for patient {}", resourceType, patientId);
+        List<String> resourceIds = resourcesToGet.get(resourceType);
+        logger.info("Loading {} other {} resources for patient {}", resourceIds.size(), resourceType, patientId);
         resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
           try {
             Resource resource = (Resource) this.fhirQueryServer.read()
