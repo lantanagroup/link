@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,9 +55,16 @@ public class PatientData {
     return value;
   }
 
-  public static String getQueryParamValue(String value, ReportCriteria criteria) {
+  public static String getQueryParamValue(String value, ReportCriteria criteria, java.time.Period lookBackPeriod) {
+    String lookBackStart = criteria.getPeriodStart();
+
+    if (lookBackPeriod != null) {
+      Instant lookBackStartInstant = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
+      lookBackStart = DateTimeFormatter.ISO_INSTANT.format(lookBackStartInstant);
+    }
+
     String ret = value
-            //.replace("${periodLookbackStart}", )
+            .replace("${lookBackStart}", getDateTimeString(lookBackStart))
             .replace("${periodStart}", getDateTimeString(criteria.getPeriodStart()))
             .replace("${periodEnd}", getDateTimeString(criteria.getPeriodEnd()));
     return URLEncoder.encode(ret, StandardCharsets.UTF_8);
@@ -81,12 +90,12 @@ public class PatientData {
           for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
             for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
               if (param.getSingleParam() != null && param.getSingleParam() == true) {
-                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, criteria)).collect(Collectors.toList());
+                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, criteria, usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
                 String paramValue = String.join(",", values);
                 params.add(param.getName() + "=" + paramValue);
               } else {
                 for (String paramValue : param.getValues()) {
-                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria));
+                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, usCoreConfig.getLookbackPeriod()));
                 }
               }
             }

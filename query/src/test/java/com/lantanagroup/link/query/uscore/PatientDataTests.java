@@ -15,7 +15,6 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_ObservationWithCategoryAndDate() {
     USCoreConfig config = new USCoreConfig();
-    config.setLookbackPeriod(Period.ofDays(1));
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
             List.of(new USCoreQueryParametersResourceConfig("Observation",
@@ -30,9 +29,37 @@ public class PatientDataTests {
   }
 
   @Test
+  public void getQueryTest_ObservationWithLookBackDate() {
+    USCoreConfig config = new USCoreConfig();
+    config.setLookbackPeriod(Period.ofDays(14));
+    config.setQueryParameters(new HashMap<>());
+    config.getQueryParameters().put("measure1",
+            List.of(new USCoreQueryParametersResourceConfig("Observation",
+                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
+
+    ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
+
+    String queryString = PatientData.getQuery(config, List.of("measure1"), criteria, "Observation", "patient1");
+    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2021-12-18T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryString);
+  }
+
+  @Test
+  public void getQueryTest_ObservationWithLookBackDate_NoLookBackConfig() {
+    USCoreConfig config = new USCoreConfig();
+    config.setQueryParameters(new HashMap<>());
+    config.getQueryParameters().put("measure1",
+            List.of(new USCoreQueryParametersResourceConfig("Observation",
+                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
+
+    ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
+
+    String queryString = PatientData.getQuery(config, List.of("measure1"), criteria, "Observation", "patient1");
+    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2022-01-01T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryString);
+  }
+
+  @Test
   public void getQueryTest_MedicationRequest() {
     USCoreConfig config = new USCoreConfig();
-    config.setLookbackPeriod(Period.ofDays(1));
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
             List.of(new USCoreQueryParametersResourceConfig("Observation",
@@ -47,7 +74,6 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_EncounterWithDate() {
     USCoreConfig config = new USCoreConfig();
-    config.setLookbackPeriod(Period.ofDays(1));
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
             List.of(new USCoreQueryParametersResourceConfig("Encounter",
@@ -62,7 +88,6 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_Condition_NoConfig() {
     USCoreConfig config = new USCoreConfig();
-    config.setLookbackPeriod(Period.ofDays(1));
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
             List.of(new USCoreQueryParametersResourceConfig("Encounter",
