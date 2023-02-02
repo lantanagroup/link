@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -54,10 +53,5 @@ public class USCoreConfig {
    * <strong>uscore.lookback-period</strong><br>For date-constrained searches, the length of time to search before the beginning of the reporting period
    */
   private Period lookbackPeriod;
-
-  /**
-   * <strong>uscore.lookback-resource-types</strong><br>Resource types to apply date-constrained searches to based on the lookback period
-   */
-  private List<String> lookbackResourceTypes = new ArrayList<>();
 }
 
