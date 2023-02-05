@@ -24,9 +24,10 @@ import java.util.stream.Collectors;
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
 
+  // TODO: This should be re-factored out of this GenericSender class
   @Autowired
   @Setter
-  private FHIRSenderConfig config;
+  private FHIRSenderConfig fhirSenderConfig;
 
   @Autowired
   private EventService eventService;
@@ -34,7 +35,9 @@ public abstract class GenericSender {
   public Bundle generateBundle(DocumentReference documentReference, List<MeasureReport> masterMeasureReports, FhirDataProvider fhirProvider, BundlerConfig bundlerConfig) {
     logger.info("Building Bundle for MeasureReport to send...");
     FhirBundler bundler = new FhirBundler(bundlerConfig, fhirProvider, eventService);
-    return bundler.generateBundle(masterMeasureReports, documentReference);
+    Bundle bundle = bundler.generateBundle(masterMeasureReports, documentReference);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
   }
 
   public CloseableHttpClient getHttpClient() {
@@ -45,15 +48,15 @@ public abstract class GenericSender {
 
   public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
 
-    if (StringUtils.isEmpty(this.config.getUrl())) {
+    if (StringUtils.isEmpty(this.fhirSenderConfig.getUrl())) {
       throw new IllegalStateException("Not configured with any locations to send");
     }
 
     Resource copy = resourceToSend.copy();
-    IGenericClient client = fhirStoreProvider.ctx.newRestfulGenericClient(this.config.getUrl());
+    IGenericClient client = fhirStoreProvider.ctx.newRestfulGenericClient(this.fhirSenderConfig.getUrl());
     client.registerInterceptor(new GZipContentInterceptor());
 
-    String token = OAuth2Helper.getToken(this.config.getAuthConfig(), getHttpClient());
+    String token = OAuth2Helper.getToken(this.fhirSenderConfig.getAuthConfig(), getHttpClient());
 
     if (StringUtils.isNotEmpty(token)) {
       BearerTokenAuthInterceptor authInterceptor = new BearerTokenAuthInterceptor(token);
@@ -66,12 +69,12 @@ public abstract class GenericSender {
             documentReference.getContent().stream().filter(c -> c.hasAttachment() && c.getAttachment().hasUrl()).collect(Collectors.toList()).stream().findFirst();
 
     // If we've already submitted to the server and the base url of where it was submitted hasn't changed
-    if (content.isPresent() && content.get().getAttachment().getUrl().toLowerCase(Locale.ENGLISH).startsWith(this.config.getUrl().toLowerCase(Locale.ENGLISH))) {
+    if (content.isPresent() && content.get().getAttachment().getUrl().toLowerCase(Locale.ENGLISH).startsWith(this.fhirSenderConfig.getUrl().toLowerCase(Locale.ENGLISH))) {
       String location = locationCleaner(content.get().getAttachment().getUrl());
       copy.setId(location);
     }
 
-    logger.info("Sending MeasureReport bundle to URL " + this.config.getUrl());
+    logger.info("Sending MeasureReport bundle to URL " + this.fhirSenderConfig.getUrl());
 
     MethodOutcome outcome;
 
