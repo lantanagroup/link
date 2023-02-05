@@ -32,6 +32,7 @@ public class PatientData {
   // private final QueryConfig queryConfig;
   private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
+  private List<String> encounterReferences = new ArrayList<>();
 
   public PatientData(IGenericClient fhirQueryServer, ReportCriteria criteria, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
@@ -70,18 +71,18 @@ public class PatientData {
     return URLEncoder.encode(ret, StandardCharsets.UTF_8);
   }
 
-  public static String getQuery(USCoreConfig usCoreConfig, List<String> measureIds, ReportCriteria criteria, String resourceType, String patientId) {
+  public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
     String finalResourceType = resourceType;
     ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
-    HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = usCoreConfig.getQueryParameters();
+    HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
 
     //check if queryParameters exist in config, if not just load patient without observations
     for (String measureId : measureIds) {
       if (queryParameters != null && !queryParameters.isEmpty()) {
-        if (usCoreConfig.getQueryParameters() != null && usCoreConfig.getQueryParameters().containsKey(measureId)) {
+        if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
 
           List<USCoreQueryParametersResourceConfig> resourceQueryParams =
-                  usCoreConfig.getQueryParameters()
+                  this.usCoreConfig.getQueryParameters()
                           .get(measureId)
                           .stream()
                           .filter(queryParams -> queryParams.getResourceType().equals(finalResourceType))
@@ -90,12 +91,12 @@ public class PatientData {
           for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
             for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
               if (param.getSingleParam() != null && param.getSingleParam() == true) {
-                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, criteria, usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
+                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
                 String paramValue = String.join(",", values);
                 params.add(param.getName() + "=" + paramValue);
               } else {
                 for (String paramValue : param.getValues()) {
-                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, usCoreConfig.getLookbackPeriod()));
+                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
                 }
               }
             }
@@ -104,7 +105,48 @@ public class PatientData {
       }
     }
 
-    return resourceType += "?" + String.join("&", params);
+    String query = resourceType += "?" + String.join("&", params);
+
+    // %24%7Bencounter%7D is encoded for "${encounter}" by getQueryParamValue()
+    if (query.indexOf("%24%7Bencounter%7D") >= 0) {
+      if (resourceType.equals("Encounter")) {
+        throw new IllegalArgumentException("Cannot create a query for Encounter that filters by encounter");
+      }
+
+      // Create a separate query for each encounter
+      List<String> encQueries = this.encounterReferences.stream().map(encRef -> {
+        return query.replace("%24%7Bencounter%7D", URLEncoder.encode(encRef, StandardCharsets.UTF_8));
+      }).collect(Collectors.toList());
+      return encQueries;
+    }
+
+    return List.of(query);
+  }
+
+  /**
+   * Loads encounters for the patient first and populates encounterReferences
+   * So that encounterReferences may be used to filter queries using ${encounter}
+   *
+   * @param measureIds
+   */
+  private void loadEncounters(List<String> measureIds) {
+    if (this.resourceTypes.indexOf("Encounter") < 0) {
+      return;
+    }
+
+    List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
+    List<Bundle> encounterBundles = PatientScoop.rawSearch(this.fhirQueryServer, encounterQuery.get(0));
+    this.bundles.addAll(encounterBundles);
+
+    encounterBundles.forEach(encBundle -> {
+      encBundle.getEntry().forEach(encEntry -> {
+        if (encEntry.getResource() == null || encEntry.getResource().getResourceType() != ResourceType.Encounter) {
+          return;
+        }
+
+        this.encounterReferences.add("Encounter/" + encEntry.getResource().getIdElement().getIdPart());
+      });
+    });
   }
 
   public void loadData(List<String> measureIds) {
@@ -113,13 +155,18 @@ public class PatientData {
       return;
     }
 
+    // Load all encounters first to populate this.encounterReferences
+    // so that the encounter ids may be used by getQuery()
+    this.loadEncounters(measureIds);
+
     //Loop through resource types specified. If observation, use config to add individual category queries
     Set<String> queryString = new HashSet<>();
     for (String resource : this.resourceTypes) {
-      queryString.add(getQuery(this.usCoreConfig, measureIds, criteria, resource, patientId));
+      if (resource.equals("Encounter")) continue;   // Skip encounters because they were loaded earlier
+      queryString.addAll(this.getQuery(measureIds, resource, this.patientId));
     }
 
-    if(!queryString.isEmpty()) {
+    if (!queryString.isEmpty()) {
       try {
         queryString.parallelStream().forEach(query -> {
           List<Bundle> bundles = PatientScoop.rawSearch(this.fhirQueryServer, query);
