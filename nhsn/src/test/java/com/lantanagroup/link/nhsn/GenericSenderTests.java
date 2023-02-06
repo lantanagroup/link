@@ -4,7 +4,6 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.config.OAuthCredentialModes;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import org.apache.commons.io.IOUtils;
@@ -104,10 +103,10 @@ public class GenericSenderTests {
     FHIRSender sender = mock(FHIRSender.class);
 
     // Use Mockito for the FHIRSender because we need to mock the getHttpClient method
-    doCallRealMethod().when(sender).setConfig(any());
+    doCallRealMethod().when(sender).setFhirSenderConfig(any());
     // doCallRealMethod().when(sender).sendContent(any(), any(), any(), any());
     doCallRealMethod().when(sender).updateDocumentLocation(any(), any(), any());
-    sender.setConfig(config);
+    sender.setFhirSenderConfig(config);
 
     return sender;
   }
