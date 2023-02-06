@@ -53,5 +53,10 @@ public class USCoreConfig {
    * <strong>uscore.lookback-period</strong><br>For date-constrained searches, the length of time to search before the beginning of the reporting period
    */
   private Period lookbackPeriod;
+
+  /**
+   * <strong>uscore.encounter-based</strong><br>Whether to exit immediately from the query phase if no encounters are found
+   */
+  private boolean encounterBased = true;
 }
 

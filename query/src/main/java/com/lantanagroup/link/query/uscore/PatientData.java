@@ -158,6 +158,10 @@ public class PatientData {
     // Load all encounters first to populate this.encounterReferences
     // so that the encounter ids may be used by getQuery()
     this.loadEncounters(measureIds);
+    if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
+      logger.info("No encounters found; exiting query phase");
+      return;
+    }
 
     //Loop through resource types specified. If observation, use config to add individual category queries
     Set<String> queryString = new HashSet<>();
