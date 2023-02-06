@@ -7,7 +7,6 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,9 +54,15 @@ public class ReportGenerator {
     try {
       List<MeasureReport> patientMeasureReports = forkJoinPool.submit(() ->
               measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
-                logger.info("Patient is: " + patient);
+
+                logger.info("Generating measure report for patient " + patient);
                 MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
-                patientMeasureReport.setId(ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId()));
+                String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
+                patientMeasureReport.setId(measureReportId);
+
+                logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
+                this.reportContext.getFhirProvider().updateResource(patientMeasureReport);
+
                 return patientMeasureReport;
               }).collect(Collectors.toList())).get();
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
@@ -78,48 +83,6 @@ public class ReportGenerator {
    **/
   public void store() {
 
-    storeIndividualReports(measureContext.getPatientReports());
-
     this.reportContext.getFhirProvider().updateResource(measureContext.getMeasureReport());
-  }
-
-  /**
-   * Stores the individual measure report on the Fhir Server.
-   * batch it like 50 at a time to increase performance
-   **/
-  private void storeIndividualReports(List<MeasureReport> patientMeasureReports) {
-    int maxCount = 50;
-    Bundle updateBundle = new Bundle();
-    updateBundle.setType(Bundle.BundleType.BATCH);
-
-    patientMeasureReports.stream().map(patientMeasureReport -> {
-      updateBundle.addEntry()
-              .setResource(patientMeasureReport)
-              .setRequest(new Bundle.BundleEntryRequestComponent()
-                      .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("MeasureReport/" + patientMeasureReport.getIdElement().getIdPart()));
-
-      return patientMeasureReport;
-    }).collect(Collectors.toList());
-
-    int transactionCount = (int) Math.ceil(updateBundle.getEntry().size() / ((double) maxCount));
-
-    logger.debug("Storing measure reports and updated document reference in internal FHIR Server. " + transactionCount + " bundles total.");
-
-    for (int i = 0; i < transactionCount; i++) {
-      Bundle updateBundleCopy = new Bundle();
-      updateBundleCopy.setType(Bundle.BundleType.BATCH);
-
-      List<Bundle.BundleEntryComponent> nextEntries = updateBundle.getEntry().subList(0, updateBundle.getEntry().size() >= maxCount ? maxCount : updateBundle.getEntry().size());
-      updateBundleCopy.getEntry().addAll(nextEntries);
-      updateBundle.getEntry().removeAll(nextEntries);
-
-      logger.debug("Processing bundle " + (i + 1));
-
-      // Execute the transaction of updates on the internal FHIR server for MeasureReports and doc ref
-      this.reportContext.getFhirProvider().transaction(updateBundleCopy);
-
-      logger.debug("Done processing bundle " + (i + 1));
-    }
   }
 }
