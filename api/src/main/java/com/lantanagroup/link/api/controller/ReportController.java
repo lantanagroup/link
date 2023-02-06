@@ -343,6 +343,7 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().updateResource(documentReference);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+    logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
 
     return response;
   }
