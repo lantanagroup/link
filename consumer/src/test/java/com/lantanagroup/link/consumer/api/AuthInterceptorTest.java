@@ -37,7 +37,7 @@ public class AuthInterceptorTest {
     //setUp Bundle configuration
     Permission permission = new Permission();
     permission.setResourceType("Bundle");
-    List<Role> roles = new ArrayList();
+    List<Role> roles = new ArrayList<>();
     Role role = new Role();
     role.setName("admin");
     String[] rights = {"read", "write", "create"};
@@ -53,7 +53,7 @@ public class AuthInterceptorTest {
     //setUp MeasureReport configuration
     Permission permission = new Permission();
     permission.setResourceType("MeasureReport");
-    List<Role> roles = new ArrayList();
+    List<Role> roles = new ArrayList<>();
     Role role = new Role();
     role.setName("admin");
     String[] rights = {"read", "write", "delete"};

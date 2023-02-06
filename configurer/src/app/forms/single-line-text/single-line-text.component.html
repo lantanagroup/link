@@ -1,0 +1,7 @@
+<div class="mb-3">
+  <label for="{{id}}" class="form-label">{{label}}</label>
+  <span *ngIf="subText" class="help-block">{{subText}}</span>
+  <input type="{{type}}" *ngIf="type === 'text' || type === 'email'" class="form-control"  [class.is-invalid]="isInvalid" id="{{id}}" placeholder="{{placeholder}}" [(ngModel)]="parentObject[propertyName]" (change)="change.next(parentObject[propertyName])" />
+  <input type="number" *ngIf="type === 'number'" class="form-control" id="{{id}}" placeholder="{{placeholder}}" [(ngModel)]="valueAsNumber" (change)="change.next(valueAsNumber)" />
+  <span class="help-block error" *ngIf="requireUrl && !isUri(parentObject[propertyName])">Must be a valid URL</span>
+</div>

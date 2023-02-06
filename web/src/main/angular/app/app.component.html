@@ -4,9 +4,16 @@
     <div class="jumbotron">
         <div class="top-bar">
             <div class="main-logo">
-                <img class="main-logo" src="assets/THSALink.png"/>
-                <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
-                <span *ngIf="!authService.user">NHSNLink</span>
+                <img [src]="configService.config.logoPath?configService.config.logoPath:'assets/nhsn_logo.png'"
+                     class="main-logo"/>
+                <span *ngIf="!configService.config.logoPath">
+                    <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover">Link</span>
+                    <span *ngIf="!authService.user">NHSNLink</span>
+                </span>
+                <span *ngIf="configService.config.logoPath">
+                    <span *ngIf="authService.user" [ngbPopover]="accessTokenPopover"></span>
+                    <span *ngIf="!authService.user"></span>
+                </span>
             </div>
 
             <div class="auth-info">
@@ -16,11 +23,11 @@
                             <span>{{authService.user.name}}</span>
                         </button>
                         <div ngbDropdownMenu aria-labelledby="userDropDown">
-<!--                           <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
-                                <i class="fa fa-info-circle"></i> About THSNLink
-                            </a>-->
-                            <a href="https://github.com/AudaciousInquiry/THSAlink/" target="_new" ngbDropdownItem>
-                                <i class="fa fa-github"></i> THSALink GitHub
+                            <a href="http://www.lantanagroup.com/our-software-products/nandina/" target="_new" ngbDropdownItem>
+                                <i class="fa fa-info-circle"></i> About NHSNLink
+                            </a>
+                            <a href="https://github.com/lantanagroup/link" target="_new" ngbDropdownItem>
+                                <i class="fa fa-github"></i> GitHub
                             </a>
                             <a [href]="configService.config.getHelpUrl" *ngIf="configService.config?.getHelpUrl" target="_blank" ngbDropdownItem>
                                 <i class="fa fa-question-circle"></i> Get Help

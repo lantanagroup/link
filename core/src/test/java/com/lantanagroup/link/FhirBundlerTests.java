@@ -31,7 +31,12 @@ public class FhirBundlerTests {
     // Mock up the transaction request to the FHIR server
     when(fhirDataProvider.transaction(any())).thenReturn(patientMeasureReports);
 
-    FhirBundler bundler = new FhirBundler(new BundlerConfig(), fhirDataProvider);
+    // Use legacy behavior of reifying/promoting line-level resources
+    BundlerConfig config = new BundlerConfig();
+    config.setReifyLineLevelResources(true);
+    config.setPromoteLineLevelResources(true);
+
+    FhirBundler bundler = new FhirBundler(config, fhirDataProvider);
 
     // Generate the bundle
     Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), new DocumentReference());
@@ -46,18 +51,18 @@ public class FhirBundlerTests {
     Assert.assertNotNull(bundle.getTimestamp());
     Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(0).getResource().getResourceType());
     Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829", bundle.getEntry().get(0).getFullUrl());
-    Assert.assertEquals(ResourceType.Patient, bundle.getEntry().get(1).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906", bundle.getEntry().get(1).getFullUrl());
-    Assert.assertEquals(ResourceType.MedicationRequest, bundle.getEntry().get(2).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationRequest/075add36-e219-2327-d31b-75c5f5f12b85", bundle.getEntry().get(2).getFullUrl());
-    Assert.assertEquals(ResourceType.MedicationRequest, bundle.getEntry().get(3).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationRequest/04760a73-a327-05b6-9b56-344854451f60", bundle.getEntry().get(3).getFullUrl());
-    Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(4).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationAdministration/d2f3c47c-da31-d748-9a83-e006d0f67a8b", bundle.getEntry().get(4).getFullUrl());
-    Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(5).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationAdministration/7ef24f94-9148-aa29-8ed9-005693571001", bundle.getEntry().get(5).getFullUrl());
-    Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(6).getResource().getResourceType());
-    Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829-8d99279b", bundle.getEntry().get(6).getFullUrl());
+    Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(1).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MeasureReport/1847296829-8d99279b", bundle.getEntry().get(1).getFullUrl());
+    Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(2).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationAdministration/d2f3c47c-da31-d748-9a83-e006d0f67a8b", bundle.getEntry().get(2).getFullUrl());
+    Assert.assertEquals(ResourceType.MedicationAdministration, bundle.getEntry().get(3).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationAdministration/7ef24f94-9148-aa29-8ed9-005693571001", bundle.getEntry().get(3).getFullUrl());
+    Assert.assertEquals(ResourceType.MedicationRequest, bundle.getEntry().get(4).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationRequest/075add36-e219-2327-d31b-75c5f5f12b85", bundle.getEntry().get(4).getFullUrl());
+    Assert.assertEquals(ResourceType.MedicationRequest, bundle.getEntry().get(5).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/MedicationRequest/04760a73-a327-05b6-9b56-344854451f60", bundle.getEntry().get(5).getFullUrl());
+    Assert.assertEquals(ResourceType.Patient, bundle.getEntry().get(6).getResource().getResourceType());
+    Assert.assertEquals("http://nhsnlink.org/fhir/Patient/57f91b28-7fd4-bec8-aa69-c655e42a7906", bundle.getEntry().get(6).getFullUrl());
   }
 
   /**

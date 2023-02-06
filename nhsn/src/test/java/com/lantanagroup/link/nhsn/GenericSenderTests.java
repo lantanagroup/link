@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class GenericSenderTests {
 
     config.setUrl("http://test.com/fhir");
     config.setAuthConfig(new LinkOAuthConfig());
-    config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getAuthConfig().setCredentialMode("client");
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");
     config.getAuthConfig().setPassword("some-pass");
@@ -75,7 +76,7 @@ public class GenericSenderTests {
     FHIRSenderConfig config = new FHIRSenderConfig();
     config.setUrl("http://test.com/fhir");
     config.setAuthConfig(new LinkOAuthConfig());
-    config.getAuthConfig().setCredentialMode(OAuthCredentialModes.Client);
+    config.getAuthConfig().setCredentialMode("client");
     config.getAuthConfig().setTokenUrl("http://test.com/auth");
     config.getAuthConfig().setUsername("some-user");
     config.getAuthConfig().setPassword("some-pass");
@@ -112,7 +113,7 @@ public class GenericSenderTests {
   }
 
   private MeasureReport getMasterMeasureReport() throws IOException {
-    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"));
+    String measureReportJson = IOUtils.toString(this.getClass().getClassLoader().getResourceAsStream("fhir-sender-master-measure-report.json"), Charset.defaultCharset());
     FhirContext ctx = FhirContextProvider.getFhirContext();
     return ctx.newJsonParser().parseResource(MeasureReport.class, measureReportJson);
   }

@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {formatDateToISO, getFhirDate, getFhirYesterday} from '../helper';
+import {formatDateToISO, getFhirDate, getFhirNow, getFhirYesterday} from '../helper';
 import {StoredReportDefinition} from '../model/stored-report-definition';
 import {ToastService} from '../toast.service';
 import {ReportService} from '../services/report.service';
@@ -54,6 +54,12 @@ export class GenerateComponent implements OnInit {
     this.endDate = getFhirDate(this.criteria.periodEnd);
   }
 
+  onDefaultTimeSelect() {
+    this.criteria.periodStart = getFhirDate({year: 1900, month: 1, day: 1});
+    this.onStartDateSelected();
+    this.criteria.periodEnd = getFhirDate(getFhirNow());
+    this.onEndDateSelected();
+  }
 
   async reload() {
     try {

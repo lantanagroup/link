@@ -1,0 +1,19 @@
+.table {
+    margin-top: 10px;
+  }
+
+th {
+  text-align: right;
+  vertical-align: top;
+}
+
+td {
+  text-align: left;
+  vertical-align: top;
+}
+
+.removeBtn {
+  text-align: right;
+  width: 0.5rem;
+}
+

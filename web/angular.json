@@ -19,7 +19,8 @@
             "polyfills": "src/main/angular/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
             "assets": [
-              "src/main/angular/favicon.ico",
+              "src/main/angular/assets/favicon.ico",
+              "src/main/angular/assets/mhlfavicon.ico",
               "src/main/angular/assets"
             ],
             "styles": [

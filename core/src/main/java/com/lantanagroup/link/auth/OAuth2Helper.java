@@ -71,13 +71,17 @@ public class OAuth2Helper {
     //TODO - Add request type to LinkOAuthConfig and use in switch, RequestType: Submitting, LoadingMeasureDef, QueryingEHR
 
     //get token based on credential mode
-    switch(config.getCredentialMode()) {
-      case Client: {
-        return getClientCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getScope());
+    switch(config.getCredentialMode().toLowerCase(Locale.ROOT)) {
+      case "client": {
+        return getClientCredentialsToken(config.getTokenUrl(), config.getClientId(), config.getPassword(), config.getScope());
       }
-      case Password: {
+      case "password": {
         return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
       }
+      case "sams-password": {
+        return getSamsPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getClientSecret(), config.getScope());
+      }
+
       default:
         throw new AuthenticationException("Invalid credential mode.");
     }
@@ -140,9 +144,9 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getClientCredentialsToken(String tokenUrl, String username, String password, String scope) {
+  public static String getSamsPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
     try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getClientCredentialsToken(httpClient, tokenUrl, username, password, scope);
+      return getSamsPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, clientSecret, scope);
     }
     catch(IOException ex) {
       logger.error(ex.getMessage());
@@ -150,20 +154,79 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String scope) {
+  public static String getSamsPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
     HttpPost request = new HttpPost(tokenUrl);
-
-    String userPassCombo = username + ":" + password;
-    String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
 
     request.addHeader("Accept", "application/json");
     request.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    request.addHeader("Authorization", "Basic " + authorization);
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("grant_type=password");
+    sb.append("&scope=" + scope);
+    sb.append("&username=" + username);
+    sb.append("&password=" + password);
+    sb.append("&client_id=" + clientId);
+    sb.append("&client_secret" + clientSecret);
+
+    try {
+      request.setEntity(new StringEntity(sb.toString()));
+    } catch (Exception ex) {
+      logger.error(ex.getMessage());
+      return null;
+    }
+
+    try {
+      if (httpClient == null) {
+        httpClient = HttpClientBuilder.create().build();
+      }
+
+      HttpResponse result = httpClient.execute(request);
+
+      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+
+      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
+      }
+
+      JSONObject jsonObject = new JSONObject(content);
+
+      if (jsonObject.has("access_token")) {
+        return jsonObject.getString("access_token");
+      }
+
+      return null;
+    } catch (IOException ex) {
+      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
+      return null;
+    }
+  }
+
+  public static String getClientCredentialsToken(String tokenUrl, String clientId, String clientSecret, String scope) {
+    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+      return getClientCredentialsToken(httpClient, tokenUrl, clientId, clientSecret, scope);
+    }
+    catch(IOException ex) {
+      logger.error(ex.getMessage());
+      return "";
+    }
+  }
+
+  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String clientId, String clientSecret, String scope) {
+    HttpPost request = new HttpPost(tokenUrl);
+
+    //String userPassCombo = username + ":" + password;
+    //String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes());
+
+    request.addHeader("Accept", "application/json");
+    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    //request.addHeader("Authorization", "Basic " + authorization);
     request.addHeader("Cache-Control", "no-cache");
 
     StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=client_credentials&");
-    sb.append("scope=" + scope);
+    sb.append("grant_type=client_credentials");
+    sb.append("&client_id=" + clientId);
+    sb.append("&client_secret=" + clientSecret);
+    sb.append("&scope=" + scope);
 
     try {
       request.setEntity(new StringEntity(sb.toString()));
@@ -213,7 +276,7 @@ public class OAuth2Helper {
       InputStream inputStream = c.getInputStream();
       Throwable var3 = null;
 
-      Map var4;
+      Map<String, Object> var4;
       try {
         var4 = (Map) reader.readValue(inputStream);
       } catch (Throwable var14) {
@@ -245,7 +308,7 @@ public class OAuth2Helper {
     List<Map<String, Object>> keys = (List) getJwks().get("keys");
     if (keys != null && !keys.isEmpty()) {
       try {
-        Iterator var3 = keys.iterator();
+        Iterator<Map<String, Object>> var3 = keys.iterator();
 
         while (var3.hasNext()) {
           Map<String, Object> values = (Map) var3.next();
@@ -264,13 +327,13 @@ public class OAuth2Helper {
   private static Jwk get(String keyId) throws JwkException {
     List<Jwk> jwks = getAll();
     if (keyId == null && jwks.size() == 1) {
-      return (Jwk) jwks.get(0);
+      return jwks.get(0);
     } else {
       if (keyId != null) {
-        Iterator var3 = jwks.iterator();
+        Iterator<Jwk> var3 = jwks.iterator();
 
         while (var3.hasNext()) {
-          Jwk jwk = (Jwk) var3.next();
+          Jwk jwk = var3.next();
           if (keyId.equals(jwk.getId())) {
             return jwk;
           }
@@ -449,16 +512,16 @@ public class OAuth2Helper {
     if (authConfig != null && authConfig.hasCredentialProperties()) {
       logger.info("Configured to authentication when submitting. Requesting a token from configured token URL");
 
-      switch (authConfig.getCredentialMode()) {
-        case Client:
+      switch (authConfig.getCredentialMode().toLowerCase(Locale.ROOT)) {
+        case "client":
           token = OAuth2Helper.getClientCredentialsToken(
                   client,
                   authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
+                  authConfig.getClientId(),
                   authConfig.getPassword(),
                   authConfig.getScope());
           break;
-        case Password:
+        case "password":
           token = OAuth2Helper.getPasswordCredentialsToken(
                   client,
                   authConfig.getTokenUrl(),
@@ -466,6 +529,17 @@ public class OAuth2Helper {
                   authConfig.getPassword(),
                   authConfig.getClientId(),
                   authConfig.getScope());
+          break;
+        case "sams-password":
+          token = OAuth2Helper.getSamsPasswordCredentialsToken(
+                  client,
+                  authConfig.getTokenUrl(),
+                  authConfig.getUsername(),
+                  authConfig.getPassword(),
+                  authConfig.getClientId(),
+                  authConfig.getClientSecret(),
+                  authConfig.getScope());
+          break;
       }
     } else {
       throw new Exception("Authentication is required to submit");

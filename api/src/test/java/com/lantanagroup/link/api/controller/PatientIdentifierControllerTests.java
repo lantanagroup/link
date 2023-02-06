@@ -9,9 +9,7 @@ import com.lantanagroup.link.model.CsvEntry;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,10 +19,6 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 public class PatientIdentifierControllerTests {
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-
   private void mockCreateResource(ICreate create) {
     ICreateTyped createTyped = mock(ICreateTyped.class);
     MethodOutcome createMethod = mock(MethodOutcome.class);
@@ -58,18 +52,20 @@ public class PatientIdentifierControllerTests {
   public void testStoreCSVInvalidReportTypeException() throws Exception {
     String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
 
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org");
+    });
   }
 
   @Test
   public void testStoreCSVMissingReportTypeException() throws Exception {
     String csvContent = "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-12-12,2021-12-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "");
+    });
   }
 
   @Test
@@ -78,18 +74,20 @@ public class PatientIdentifierControllerTests {
             "urn:oid:2.16.840.1.113883.6.1000,2021-12-12,2021-12-12,121,12742537" +
             "urn:oid:2.16.840.1.113883.6.1000,303061395,2021-12-12,2021-12-12,121,12742538";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    });
   }
 
   @Test
   public void testStoreCSVWithNoLinesException() throws Exception {
     String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    });
   }
 
   @Test
@@ -97,9 +95,10 @@ public class PatientIdentifierControllerTests {
     String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061395,2021-14-12,121,2021-14-12,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    });
   }
 
   @Test
@@ -107,18 +106,20 @@ public class PatientIdentifierControllerTests {
     String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" +
             "urn:oid:2.16.840.1.113883.6.1000|303061395,,,121,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    });
   }
 
   @Test
   public void testStoreCSVWithMissingPatientException() throws Exception {
     String csvContent = "PatientIdentifier,Start,End,EncounterID,PatientLogicalID\n" + ",2021-14-12,2021-14-12,,12742537";
     HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
-    thrown.expect(ResponseStatusException.class);
-    PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
-    patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    Assert.assertThrows(ResponseStatusException.class, () -> {
+      PatientIdentifierController patientIdentifierController = new PatientIdentifierController();
+      patientIdentifierController.storeCSV(csvContent, "https://nshnlink.org|covid-min");
+    });
   }
 
   @Test
@@ -194,8 +195,9 @@ public class PatientIdentifierControllerTests {
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
-    thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    Assert.assertThrows(Exception.class, () -> {
+      patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    });
   }
 
   @Test
@@ -213,8 +215,9 @@ public class PatientIdentifierControllerTests {
 
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
-    thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
+    Assert.assertThrows(Exception.class, () -> {
+      patientIdentifierController.getPatientIdentifierListJSON(jsonContent);
+    });
   }
 
   @Test
@@ -230,8 +233,9 @@ public class PatientIdentifierControllerTests {
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
     when(fhirDataProvider.findListByIdentifierAndDate("https://nhsnlink.org", "covid-min", "2021-11-02T20:00:00.000Z", "2021-11-02T20:00:00.000Z")).thenReturn(bundle);
-    thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    Assert.assertThrows(Exception.class, () -> {
+      patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    });
   }
 
   private Bundle getListBundle(String system, String value, String date) {
@@ -263,8 +267,9 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    Assert.assertThrows(Exception.class, () -> {
+      patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    });
   }
 
   @Test
@@ -277,8 +282,9 @@ public class PatientIdentifierControllerTests {
     repDefBundle.setEntry(new ArrayList<>());
     repDefBundle.getEntry().add(new Bundle.BundleEntryComponent());
     when(fhirDataProvider.searchReportDefinition(anyString(), anyString())).thenReturn(repDefBundle);
-    thrown.expect(Exception.class);
-    patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    Assert.assertThrows(Exception.class, () -> {
+      patientIdentifierController.getPatientIdentifierListXML(xmlContent);
+    });
   }
 }
 

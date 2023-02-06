@@ -63,8 +63,10 @@ public class FhirHelper {
         break;
       case InitiateQuery:
         auditEvent.setType(new Coding(null, "initiate-query", null));
+        break;
       case SearchReports:
         auditEvent.setType(new Coding(null, "search-reports", null));
+        break;
     }
 
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
@@ -79,7 +81,7 @@ public class FhirHelper {
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);
 
-    JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
+    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
     if (jsonObject.has(NAME)) {
       agent.setName(jsonObject.get(NAME).toString());
     }
@@ -294,7 +296,7 @@ public class FhirHelper {
   public static Practitioner toPractitioner(DecodedJWT jwt) {
     Practitioner practitioner = new Practitioner();
     practitioner.getMeta().addTag(Constants.MainSystem, Constants.LinkUserTag, null);
-    List identifiers = new ArrayList();
+    List<Identifier> identifiers = new ArrayList<>();
     Identifier identifier = new Identifier();
     identifier.setSystem(Constants.MainSystem);
     identifier.setValue(jwt.getSubject());
@@ -303,21 +305,21 @@ public class FhirHelper {
     String payload = jwt.getPayload();
     byte[] decodedBytes = Base64.getDecoder().decode(payload);
     String decodedString = new String(decodedBytes);
-    JsonObject jsonObject = new JsonParser().parse(decodedString).getAsJsonObject();
+    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
     List<HumanName> list = new ArrayList<>();
     HumanName dst = new HumanName();
     if (jsonObject.has("family_name")) {
       dst.setFamily(jsonObject.get("family_name").toString());
     }
     if (jsonObject.has("given_name")) {
-      ArrayList givenNames = new ArrayList();
+      ArrayList<StringType> givenNames = new ArrayList<>();
       givenNames.add(new StringType(jsonObject.get("given_name").toString()));
       dst.setGiven(givenNames);
     }
     list.add(dst);
     practitioner.setName(list);
     if (jsonObject.has("email")) {
-      ArrayList contactPointList = new ArrayList();
+      ArrayList<ContactPoint> contactPointList = new ArrayList<>();
       ContactPoint email = new ContactPoint();
       email.setSystem(ContactPoint.ContactPointSystem.EMAIL);
       email.setValue(jsonObject.get("email").toString());
@@ -536,9 +538,9 @@ public class FhirHelper {
     List.of("Account", "ActivityDefinition", "AdverseEvent", "AllergyIntolerance", "Appointment", "AppointmentResponse", "AuditEvent", "Basic", "Binary", "BiologicallyDerivedProduct", "BodyStructure", "Bundle", "CapabilityStatement", "CarePlan", "CareTeam", "CatalogEntry", "ChargeItem", "ChargeItemDefinition", "Claim", "ClaimResponse", "ClinicalImpression", "CodeSystem", "Communication", "CommunicationRequest", "CompartmentDefinition", "Composition", "ConceptMap", "Condition", "Consent", "Contract", "Coverage", "CoverageEligibilityRequest", "CoverageEligibilityResponse", "DetectedIssue", "Device", "DeviceDefinition", "DeviceMetric", "DeviceRequest", "DeviceUseStatement", "DiagnosticReport", "DocumentManifest", "DocumentReference", "EffectEvidenceSynthesis", "Encounter", "Endpoint", "EnrollmentRequest", "EnrollmentResponse", "EpisodeOfCare", "EventDefinition", "Evidence", "EvidenceVariable", "ExampleScenario", "ExplanationOfBenefit", "FamilyMemberHistory", "Flag", "Goal", "GraphDefinition", "Group", "GuidanceResponse", "HealthcareService", "ImagingStudy", "Immunization", "ImmunizationEvaluation", "ImmunizationRecommendation", "ImplementationGuide", "InsurancePlan", "Invoice", "Library", "Linkage", "ListResource", "Location", "Measure", "MeasureReport", "Media", "Medication", "MedicationAdministration", "MedicationDispense", "MedicationKnowledge", "MedicationRequest", "MedicationStatement", "MedicinalProduct", "MedicinalProductAuthorization", "MedicinalProductContraindication", "MedicinalProductIndication", "MedicinalProductIngredient", "MedicinalProductInteraction", "MedicinalProductManufactured", "MedicinalProductPackaged", "MedicinalProductPharmaceutical", "MedicinalProductUndesirableEffect", "MessageDefinition", "MessageHeader", "MolecularSequence", "NamingSystem", "NutritionOrder", "Observation", "ObservationDefinition", "OperationDefinition", "OperationOutcome", "Organization", "OrganizationAffiliation", "Parameters", "Patient", "PaymentNotice", "PaymentReconciliation", "Person", "PlanDefinition", "Practitioner", "PractitionerRole", "Procedure", "Provenance", "Questionnaire", "QuestionnaireResponse", "RelatedPerson", "RequestGroup", "ResearchDefinition", "ResearchElementDefinition", "ResearchStudy", "ResearchSubject", "RiskAssessment", "RiskEvidenceSynthesis", "Schedule", "SearchParameter", "ServiceRequest", "Slot", "Specimen", "SpecimenDefinition", "StructureDefinition", "StructureMap", "Subscription", "Substance", "SubstancePolymer", "SubstanceProtein", "SubstanceReferenceInformation", "SubstanceSpecification", "SubstanceSourceMaterial", "SupplyDelivery", "SupplyRequest", "Task", "TerminologyCapabilities", "TestReport", "TestScript", "ValueSet", "VerificationResult", "VisionPrescription")
             .forEach(e -> {
               try {
-                Class theClass = Class.forName("org.hl7.fhir.r4.model." + e);
-                module.addSerializer(new FhirJsonSerializer(jsonParser, theClass));
-                module.addDeserializer(theClass, new FhirJsonDeserializer(jsonParser));
+                Class<? extends IBaseResource> theClass = Class.forName("org.hl7.fhir.r4.model." + e).asSubclass(IBaseResource.class);
+                module.addSerializer(new FhirJsonSerializer<>(jsonParser, theClass));
+                module.addDeserializer(theClass, new FhirJsonDeserializer<>(jsonParser));
               } catch (ClassNotFoundException ex) {
                 ex.printStackTrace();
               }

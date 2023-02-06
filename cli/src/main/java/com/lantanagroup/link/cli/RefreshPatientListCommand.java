@@ -47,7 +47,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
 
   @Override
-  protected List<Class> getBeanClasses() {
+  protected List<Class<?>> getBeanClasses() {
 
     return List.of(
             QueryConfig.class,
@@ -65,12 +65,12 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     queryConfig = applicationContext.getBean(QueryConfig.class);
     usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
-    List<PatientList> filteredList = config.getPatientList();
+    List<RefreshPatientListConfig.PatientList> filteredList = config.getPatientList();
     // if patientListPath argument is not passed to the command then load all the lists defined in the configuration file
     if (patientListPath.length > 0) {
       filteredList = config.getPatientList().stream().filter(item -> List.of(patientListPath).contains(item.getPatientListPath())).collect(Collectors.toList());
     }
-    for (PatientList listResource : filteredList) {
+    for (RefreshPatientListConfig.PatientList listResource : filteredList) {
       ListResource source = readList(listResource.getPatientListPath());
       for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
         ListResource target = transformList(source, listResource.getCensusIdentifier().get(j));
@@ -133,14 +133,38 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     String url = String.format("%s/poi/fhir/List", config.getApiUrl());
     logger.info("Submitting to {}", url);
     HttpPost request = new HttpPost(url);
-    if (config.getAuth() != null) {
-      String token = OAuth2Helper.getPasswordCredentialsToken(
-              httpClient,
-              config.getAuth().getTokenUrl(),
-              config.getAuth().getUser(),
-              config.getAuth().getPass(),
-              config.getAuth().getClientId(),
-              config.getAuth().getScope());
+    if (config.getAuth() != null && config.getAuth().getCredentialMode() != null) {
+      String token = null;
+
+      ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
+      if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "password")) {
+        token = OAuth2Helper.getPasswordCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getUser(),
+                config.getAuth().getPass(),
+                config.getAuth().getClientId(),
+                config.getAuth().getScope());
+      }
+      else if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "sams-password")) {
+        token = OAuth2Helper.getSamsPasswordCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getUser(),
+                config.getAuth().getPass(),
+                config.getAuth().getClientId(),
+                config.getAuth().getClientSecret(),
+                config.getAuth().getScope());
+      }
+      else if (StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "client")) {
+        token = OAuth2Helper.getClientCredentialsToken(
+                httpClient,
+                config.getAuth().getTokenUrl(),
+                config.getAuth().getClientId(),
+                config.getAuth().getPass(),
+                config.getAuth().getScope());
+      }
+
       if (token == null) {
         throw new Exception("Authorization failed");
       }

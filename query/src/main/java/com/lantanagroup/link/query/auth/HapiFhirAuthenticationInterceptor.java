@@ -22,7 +22,7 @@ public class HapiFhirAuthenticationInterceptor implements IClientInterceptor {
     }
 
     // Get the Class definition of the auth class specified in config
-    Class authClass = Class.forName(queryConfig.getAuthClass());
+    Class<?> authClass = Class.forName(queryConfig.getAuthClass());
 
     // Get an instance of the class using Spring so that it injects/autowires
     logger.debug(String.format("Getting an instance of the auth class \"%s\" from Spring", queryConfig.getAuthClass()));

@@ -8,7 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,6 +27,12 @@ public class ApiConfig {
    */
   @Getter
   private Boolean validateFhirServer;
+
+  /**
+   *<strong>api.tenant-id<strong/><br>Tenant ID for the facility
+   */
+  @Getter
+  private String tenantID;
 
   /**
    * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
@@ -48,6 +56,19 @@ public class ApiConfig {
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
    */
   private Boolean skipInit = false;
+
+  /**
+   * <strong>api.max-retry</strong><br>The number of times the API should try to check that prerequisite services are available. If the retry value is null the check will run indefinitely.
+   */
+  @PositiveOrZero
+  public Integer maxRetry;
+
+  /**
+   * <strong>api.retry-wait</strong><br>The number of milliseconds the API should wait in between attempts at checking that prerequisite services are available.
+   */
+  @PositiveOrZero
+  public int retryWait = 5000;
+
 
   /**
    * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
@@ -82,6 +103,27 @@ public class ApiConfig {
   @Getter
   @Setter
   private String issuer;
+
+  /**
+   * <strong>api.algorithm</strong><br>The algorithm used by the identity provider to sign the jwt token
+   */
+  @Getter
+  @Setter
+  private String algorithm;
+
+  /**
+   * <strong>api.tokenVerificationClass</strong><br>The class configured to verify a jwt token in the api
+   */
+  @Getter
+  @Setter
+  private String tokenVerificationClass;
+
+  /**
+   * <strong>api.tokenValidationEndpoint</strong><br>The url for the identity provider's token validation endpoint
+   */
+  @Getter
+  @Setter
+  private String tokenValidationEndpoint;
 
   /**
    * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request

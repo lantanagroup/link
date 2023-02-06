@@ -1,0 +1,12 @@
+<div class="card">
+    <div class="card-header">Bundler</div>
+    <div class="card-body">
+        <app-string-dropdown [parentObject]="envService.apiConfig.bundler" propertyName="bundleType" label="Bundle Type" (change)="envService.saveEnvEvent.next(null)" [options]="['TRANSACTION', 'BATCH']"></app-string-dropdown>
+        <app-boolean id="includeCensuses" [parentObject]="envService.apiConfig.bundler" propertyName="includeCensuses" (change)="envService.saveEnvEvent.next(null)" label="Include Censuses?" [defaultValue]="true"></app-boolean>
+        <app-boolean id="mergeCensuses" [parentObject]="envService.apiConfig.bundler" propertyName="mergeCensuses" (change)="envService.saveEnvEvent.next(null)" label="Merge Censuses?" [defaultValue]="true"></app-boolean>  
+        <app-boolean id="includeIndividualMeasureReports" [parentObject]="envService.apiConfig.bundler" propertyName="includeIndividualMeasureReports" (change)="envService.saveEnvEvent.next(null)" label="Include Individual Measure Reports?" [defaultValue]="true"></app-boolean>
+        <app-boolean id="reifyLineLevelResources" [parentObject]="envService.apiConfig.bundler" propertyName="reifyLineLevelResources" (change)="envService.saveEnvEvent.next(null)" label="Reify line-level resources" [defaultValue]="true"></app-boolean>
+        <app-boolean id="promoteLineLevelResources" [parentObject]="envService.apiConfig.bundler" propertyName="promoteLineLevelResources" (change)="envService.saveEnvEvent.next(null)" label="Promote line-level resources" [defaultValue]="true"></app-boolean>
+    </div>
+</div>
+  

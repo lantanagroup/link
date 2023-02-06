@@ -1,14 +1,16 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
@@ -27,6 +29,20 @@ public class FhirBundler {
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, DocumentReference documentReference) {
+    Bundle bundle = createBundle();
+    triggerEvent(EventTypes.BeforeBundling, bundle);
+    if (config.isIncludeCensuses()) {
+      addCensuses(bundle, documentReference);
+    }
+    for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
+      addMeasureReports(bundle, aggregateMeasureReport);
+    }
+    triggerEvent(EventTypes.AfterBundling, bundle);
+    cleanEntries(bundle);
+    return bundle;
+  }
+
+  private Bundle createBundle() {
     Bundle bundle = new Bundle();
     bundle.getMeta()
             .addProfile(Constants.MeasureReportBundleProfileUrl)
@@ -36,25 +52,6 @@ public class FhirBundler {
             .setValue(UUID.randomUUID().toString());
     bundle.setType(config.getBundleType());
     bundle.setTimestamp(new Date());
-    triggerEvent(EventTypes.BeforeBundling, bundle);
-    if (config.isIncludeCensuses()) {
-      addCensuses(bundle, documentReference);
-    }
-    for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
-      addMeasureReports(bundle, aggregateMeasureReport);
-    }
-    triggerEvent(EventTypes.AfterBundling, bundle);
-    for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-      Resource resource = entry.getResource();
-      String resourceId = String.format("%s/%s", resource.getResourceType(), resource.getIdElement().getIdPart());
-      entry.setFullUrl(String.format("http://nhsnlink.org/fhir/%s", resourceId));
-      if (config.getBundleType() == Bundle.BundleType.TRANSACTION
-              || config.getBundleType() == Bundle.BundleType.BATCH) {
-        entry.getRequest()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(resourceId);
-      }
-    }
     return bundle;
   }
 
@@ -69,23 +66,36 @@ public class FhirBundler {
     }
   }
 
-  private Bundle.BundleEntryComponent addOrGetEntry(Bundle bundle, Resource resource) {
-    IdType copiedResourceId = new IdType(
-            resource.getResourceType().name(),
-            resource.getIdElement().getIdPart().replaceAll("^#", ""));
-    Optional<Bundle.BundleEntryComponent> existingEntry = bundle.getEntry().stream()
-            .filter(entry -> entry.getResource().getIdElement().equals(copiedResourceId))
-            .findFirst();
-    if (existingEntry.isPresent()) {
-      return existingEntry.get();
+  private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
+    String resourceId = getNonLocalId(resource);
+    Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
+            .filter(_entry -> getNonLocalId(_entry.getResource()).equals(resourceId))
+            .findFirst()
+            .orElse(null);
+    if (entry == null) {
+      bundle.addEntry().setResource(resource);
+    } else if (overwrite) {
+      entry.setResource(resource);
     }
-    Resource copiedResource = resource.copy();
-    copiedResource.setId(copiedResourceId);
-    copiedResource.setMeta(null);
-    if (copiedResource instanceof DomainResource) {
-      ((DomainResource) copiedResource).setText(null);
+  }
+
+  private void cleanEntries(Bundle bundle) {
+    for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+      Resource resource = entry.getResource();
+      String resourceId = getNonLocalId(resource);
+      resource.setId(resourceId);
+      resource.setMeta(null);
+      if (resource instanceof DomainResource) {
+        ((DomainResource) resource).setText(null);
+      }
+      entry.setFullUrl(String.format("http://nhsnlink.org/fhir/%s", resourceId));
+      if (config.getBundleType() == Bundle.BundleType.TRANSACTION
+              || config.getBundleType() == Bundle.BundleType.BATCH) {
+        entry.getRequest()
+                .setMethod(Bundle.HTTPVerb.PUT)
+                .setUrl(resourceId);
+      }
     }
-    return bundle.addEntry().setResource(copiedResource);
   }
 
   private void addCensuses(Bundle bundle, DocumentReference documentReference) {
@@ -102,11 +112,11 @@ public class FhirBundler {
       for (ListResource census : censuses) {
         FhirHelper.mergeCensusLists(mergedCensus, census);
       }
-      addOrGetEntry(bundle, mergedCensus);
+      bundle.addEntry().setResource(mergedCensus);
     } else {
       for (ListResource census : censuses) {
         logger.debug("Adding census: {}", census.getId());
-        addOrGetEntry(bundle, census);
+        bundle.addEntry().setResource(census);
       }
     }
   }
@@ -130,23 +140,89 @@ public class FhirBundler {
 
   private void addAggregateMeasureReport(Bundle bundle, MeasureReport aggregateMeasureReport) {
     logger.debug("Adding aggregate measure report: {}", aggregateMeasureReport.getId());
-    addOrGetEntry(bundle, aggregateMeasureReport);
+    bundle.addEntry().setResource(aggregateMeasureReport);
   }
 
   private void addIndividualMeasureReport(Bundle bundle, MeasureReport individualMeasureReport) {
     logger.debug("Adding individual measure report: {}", individualMeasureReport.getId());
-    individualMeasureReport.getEvaluatedResource().clear();
-    if (config.isPromoteContainedResources()) {
-      for (Resource containedResource : individualMeasureReport.getContained()) {
-        Bundle.BundleEntryComponent entry = addOrGetEntry(bundle, containedResource);
-        individualMeasureReport.addEvaluatedResource().setReferenceElement(entry.getResource().getIdElement());
-      }
-      individualMeasureReport.getContained().clear();
-    } else {
-      for (Resource containedResource : individualMeasureReport.getContained()) {
-        individualMeasureReport.addEvaluatedResource().setReferenceElement(containedResource.getIdElement());
+    bundle.addEntry().setResource(individualMeasureReport);
+
+    // Identify line-level resources
+    Map<IIdType, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
+
+    // If reifying, retrieve the patient data bundle
+    Bundle patientDataBundle = null;
+    if (config.isReifyLineLevelResources()) {
+      String individualMeasureReportId = individualMeasureReport.getIdElement().getIdPart();
+      String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(individualMeasureReportId);
+      try {
+        patientDataBundle = fhirDataProvider.getBundleById(patientDataBundleId);
+      } catch (ResourceNotFoundException e) {
+        logger.warn("Patient data bundle not found");
       }
     }
-    addOrGetEntry(bundle, individualMeasureReport);
+
+    // As specified in configuration, move/copy line-level resources
+    for (Map.Entry<IIdType, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
+      IIdType resourceId = lineLevelResource.getKey();
+
+      // Reify non-contained, non-patient line-level resources
+      if (!resourceId.isLocal() && config.isReifyLineLevelResources()) {
+        if (patientDataBundle == null) {
+          continue;
+        }
+        Resource resource = patientDataBundle.getEntry().stream()
+                .map(Bundle.BundleEntryComponent::getResource)
+                .filter(_resource -> _resource.getResourceType() != ResourceType.Patient)
+                .filter(_resource -> _resource.getIdElement().equals(resourceId))
+                .findFirst()
+                .orElse(null);
+        if (resource == null) {
+          continue;
+        }
+        addEntry(bundle, resource, false);
+      }
+
+      // Promote contained line-level resources
+      if (resourceId.isLocal() && config.isPromoteLineLevelResources()) {
+        Resource resource = individualMeasureReport.getContained().stream()
+                .filter(_resource -> _resource.getIdElement().equals(resourceId))
+                .findFirst()
+                .orElse(null);
+        if (resource == null) {
+          continue;
+        }
+        individualMeasureReport.getContained().remove(resource);
+        addEntry(bundle, resource, true);
+        for (Reference reference : lineLevelResource.getValue()) {
+          reference.setReference(getNonLocalId(resource));
+        }
+      }
+    }
+  }
+
+  private Map<IIdType, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
+    Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
+    Stream<Reference> supplementalDataReferences =
+            individualMeasureReport.getExtension().stream()
+                    .filter(extension -> Constants.ExtensionSupplementalData.contains(extension.getUrl()))
+                    .map(Extension::getValue)
+                    .filter(value -> value instanceof Reference)
+                    .map(value -> (Reference) value);
+    return Stream.concat(supplementalDataReferences, evaluatedResources)
+            .filter(reference -> reference.hasExtension(Constants.ExtensionCriteriaReference))
+            .collect(Collectors.groupingBy(Reference::getReferenceElement, LinkedHashMap::new, Collectors.toList()));
+  }
+
+  private String getLocalId(IBaseResource resource) {
+    return String.format("#%s", getIdPart(resource));
+  }
+
+  private String getNonLocalId(IBaseResource resource) {
+    return String.format("%s/%s", resource.fhirType(), getIdPart(resource));
+  }
+
+  private String getIdPart(IBaseResource resource) {
+    return resource.getIdElement().getIdPart().replaceAll("^#", "");
   }
 }

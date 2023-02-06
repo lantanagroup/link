@@ -502,7 +502,7 @@ public class ReportController extends BaseController {
   public List<PatientReportModel> getReportPatients(
           @PathVariable("reportId") String reportId) {
 
-    List<PatientReportModel> patientsReportModelList = new ArrayList();
+    List<PatientReportModel> patientsReportModelList = new ArrayList<>();
 
     List<Bundle> patientBundles = getPatientBundles(reportId);
 
@@ -564,7 +564,7 @@ public class ReportController extends BaseController {
     data.setProcedures(new ArrayList<>());
     data.setObservations(new ArrayList<>());
     data.setEncounters(new ArrayList<>());
-    data.setServiceRequests(new ArrayList());
+    data.setServiceRequests(new ArrayList<>());
 
     List<Bundle> patientBundles = getPatientBundles(reportId, patientId);
     if (patientBundles == null || patientBundles.size() < 1) {
