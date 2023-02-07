@@ -74,11 +74,17 @@ public class PatientData {
                 // TODO: Verify that we're dealing with the correct resource type
                 //       I.e., the resource type of queryParams must be equal to resource (the outer loop variable)
                 //       Could make that check here (within the forEach) or in a filter before the forEach
-                for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
-                  for (String paramValue : param.getValues()) {
-                    // TODO: Use Apache's URLEncodedUtils or similar to encode query string components
-                    queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId
-                            + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
+                if(queryParams.getParameters() == null){
+                  queryString.add(queryParams.getResourceType() + "?patient=Patient/" + this.patientId
+                          + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
+                }
+                else {
+                  for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
+                    for (String paramValue : param.getValues()) {
+                      // TODO: Use Apache's URLEncodedUtils or similar to encode query string components
+                      queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId
+                              + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
+                    }
                   }
                 }
               });
