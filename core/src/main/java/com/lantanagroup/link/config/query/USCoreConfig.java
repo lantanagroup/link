@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,8 +55,8 @@ public class USCoreConfig {
   private Period lookbackPeriod;
 
   /**
-   * <strong>uscore.lookback-resource-types</strong><br>Resource types to apply date-constrained searches to based on the lookback period
+   * <strong>uscore.encounter-based</strong><br>Whether to exit immediately from the query phase if no encounters are found
    */
-  private List<String> lookbackResourceTypes = new ArrayList<>();
+  private boolean encounterBased = true;
 }
 

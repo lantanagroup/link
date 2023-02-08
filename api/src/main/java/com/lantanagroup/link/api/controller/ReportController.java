@@ -268,7 +268,16 @@ public class ReportController extends BaseController {
     resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
 
     // Scoop the data for the patients and store it
-    this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+    if (config.isSkipQuery()) {
+      logger.info("Skipping query and store");
+      for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
+        if (patient.getReference() != null) {
+          patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+        }
+      }
+    } else {
+      this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+    }
 
     // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
     if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
@@ -334,6 +343,7 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().updateResource(documentReference);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+    logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
 
     return response;
   }

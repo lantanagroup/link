@@ -14,6 +14,8 @@ import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,7 +32,7 @@ public class PatientData {
   // private final QueryConfig queryConfig;
   private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
-
+  private List<String> encounterReferences = new ArrayList<>();
 
   public PatientData(IGenericClient fhirQueryServer, ReportCriteria criteria, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
     this.fhirQueryServer = fhirQueryServer;
@@ -41,70 +43,134 @@ public class PatientData {
     this.resourceTypes = resourceTypes;
   }
 
+  /**
+   * Only return the ISO time precise to the second
+   *
+   * @param value
+   * @return
+   */
+  public static String getDateTimeString(String value) {
+    if (value != null && value.length() > 19) {
+      return value.substring(0, 19);
+    }
+    return value;
+  }
+
+  public static String getQueryParamValue(String value, ReportCriteria criteria, java.time.Period lookBackPeriod) {
+    String lookBackStart = criteria.getPeriodStart();
+
+    if (lookBackPeriod != null) {
+      Instant lookBackStartInstant = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
+      lookBackStart = DateTimeFormatter.ISO_INSTANT.format(lookBackStartInstant);
+    }
+
+    String ret = value
+            .replace("${lookBackStart}", getDateTimeString(lookBackStart))
+            .replace("${periodStart}", getDateTimeString(criteria.getPeriodStart()))
+            .replace("${periodEnd}", getDateTimeString(criteria.getPeriodEnd()));
+    return URLEncoder.encode(ret, StandardCharsets.UTF_8);
+  }
+
+  public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
+    String finalResourceType = resourceType;
+    ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
+    HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
+
+    //check if queryParameters exist in config, if not just load patient without observations
+    for (String measureId : measureIds) {
+      if (queryParameters != null && !queryParameters.isEmpty()) {
+        if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
+
+          List<USCoreQueryParametersResourceConfig> resourceQueryParams =
+                  this.usCoreConfig.getQueryParameters()
+                          .get(measureId)
+                          .stream()
+                          .filter(queryParams -> queryParams.getResourceType().equals(finalResourceType))
+                          .collect(Collectors.toList());
+
+          for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
+            for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
+              if (param.getSingleParam() != null && param.getSingleParam() == true) {
+                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
+                String paramValue = String.join(",", values);
+                params.add(param.getName() + "=" + paramValue);
+              } else {
+                for (String paramValue : param.getValues()) {
+                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    String query = resourceType += "?" + String.join("&", params);
+
+    // %24%7Bencounter%7D is encoded for "${encounter}" by getQueryParamValue()
+    if (query.indexOf("%24%7Bencounter%7D") >= 0) {
+      if (resourceType.equals("Encounter")) {
+        throw new IllegalArgumentException("Cannot create a query for Encounter that filters by encounter");
+      }
+
+      // Create a separate query for each encounter
+      List<String> encQueries = this.encounterReferences.stream().map(encRef -> {
+        return query.replace("%24%7Bencounter%7D", URLEncoder.encode(encRef, StandardCharsets.UTF_8));
+      }).collect(Collectors.toList());
+      return encQueries;
+    }
+
+    return List.of(query);
+  }
+
+  /**
+   * Loads encounters for the patient first and populates encounterReferences
+   * So that encounterReferences may be used to filter queries using ${encounter}
+   *
+   * @param measureIds
+   */
+  private void loadEncounters(List<String> measureIds) {
+    if (this.resourceTypes.indexOf("Encounter") < 0) {
+      return;
+    }
+
+    List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
+    List<Bundle> encounterBundles = PatientScoop.rawSearch(this.fhirQueryServer, encounterQuery.get(0));
+    this.bundles.addAll(encounterBundles);
+
+    encounterBundles.forEach(encBundle -> {
+      encBundle.getEntry().forEach(encEntry -> {
+        if (encEntry.getResource() == null || encEntry.getResource().getResourceType() != ResourceType.Encounter) {
+          return;
+        }
+
+        this.encounterReferences.add("Encounter/" + encEntry.getResource().getIdElement().getIdPart());
+      });
+    });
+  }
+
   public void loadData(List<String> measureIds) {
     if (resourceTypes.size() == 0) {
       logger.error("Not querying for any patient data.");
       return;
     }
 
-    //Loop through resource types specified. If observation, use config to add individual category queries
-    Set<String> queryString = new HashSet<>();
-    for (String resource: this.resourceTypes) {
-
-      String dateParameters;
-      if (usCoreConfig.getLookbackPeriod() != null) {
-        Instant start = Instant.parse(criteria.getPeriodStart()).minus(usCoreConfig.getLookbackPeriod());
-        Instant end = Instant.parse(criteria.getPeriodEnd());
-        DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
-        dateParameters = String.format("&date=ge%s&date=le%s", formatter.format(start), formatter.format(end));
-      } else {
-        dateParameters = "";
-      }
-
-      if(resource.equals("Observation")) {
-
-        HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
-
-        //check if queryParameters exist in config, if not just load patient without observations
-        for (String measureId : measureIds) {
-          if (queryParameters != null && !queryParameters.isEmpty()) {
-            if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
-              //this was written in a way that if the resource equals check was removed, it would work for other resource types
-              this.usCoreConfig.getQueryParameters().get(measureId).stream().forEach(queryParams -> {
-                // TODO: Verify that we're dealing with the correct resource type
-                //       I.e., the resource type of queryParams must be equal to resource (the outer loop variable)
-                //       Could make that check here (within the forEach) or in a filter before the forEach
-                if(queryParams.getParameters() == null){
-                  queryString.add(queryParams.getResourceType() + "?patient=Patient/" + this.patientId
-                          + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
-                }
-                else {
-                  for (USCoreQueryParametersResourceParameterConfig param : queryParams.getParameters()) {
-                    for (String paramValue : param.getValues()) {
-                      // TODO: Use Apache's URLEncodedUtils or similar to encode query string components
-                      queryString.add(queryParams.getResourceType() + "?" + param.getName() + "=" + paramValue + "&patient=Patient/" + this.patientId
-                              + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
-                    }
-                  }
-                }
-              });
-            }
-          }
-          else {
-            logger.warn("No observations found in US Core Config for {}, loading patient data without observations.", Helper.encodeLogging(measureId));
-            // TODO: Fall back to a query with the patient parameter only?
-            //       I.e., uncomment the following line and remove the category parameter?
-            //queryString.add(resource + "?category=laboratory&?patient=Patient/" + this.patientId);
-          }
-        }
-
-      }
-      else {
-        queryString.add(resource + "?patient=Patient/" + this.patientId + (usCoreConfig.getLookbackResourceTypes().contains(resource) ? dateParameters : ""));
-      }
+    // Load all encounters first to populate this.encounterReferences
+    // so that the encounter ids may be used by getQuery()
+    this.loadEncounters(measureIds);
+    if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
+      logger.info("No encounters found; exiting query phase");
+      return;
     }
 
-    if(!queryString.isEmpty()) {
+    //Loop through resource types specified. If observation, use config to add individual category queries
+    Set<String> queryString = new HashSet<>();
+    for (String resource : this.resourceTypes) {
+      if (resource.equals("Encounter")) continue;   // Skip encounters because they were loaded earlier
+      queryString.addAll(this.getQuery(measureIds, resource, this.patientId));
+    }
+
+    if (!queryString.isEmpty()) {
       try {
         queryString.parallelStream().forEach(query -> {
           List<Bundle> bundles = PatientScoop.rawSearch(this.fhirQueryServer, query);

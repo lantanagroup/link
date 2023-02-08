@@ -166,7 +166,7 @@ public class ResourceIdChanger {
       IdType newId = newIds.get(invalidId);
       String newIdRef = res.getResourceType().toString() + "/" + newId.getIdPart();
 
-      logger.debug(String.format("Updating invalid %s ID from %s to %s", res.getResourceType(), invalidId.getIdPart(), newId.getIdPart()));
+      // logger.debug(String.format("Updating invalid %s ID from %s to %s", res.getResourceType(), invalidId.getIdPart(), newId.getIdPart()));
 
       // Update resource with the new hashed id
       res.setIdElement(newId);

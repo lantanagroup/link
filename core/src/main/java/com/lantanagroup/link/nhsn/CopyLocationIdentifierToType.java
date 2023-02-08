@@ -31,7 +31,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
         List<CodeableConcept> types = locationResource.getType();
         if (identifiers.size() > 0) {
           for (Identifier identifier : identifiers) {
-            logger.debug("Moving identifier code to type in Location: " + locationResource.getId());
+            // logger.debug("Moving identifier code to type in Location: " + locationResource.getId());
             List<Coding> codings = new ArrayList<>();
             CodeableConcept type = new CodeableConcept();
 

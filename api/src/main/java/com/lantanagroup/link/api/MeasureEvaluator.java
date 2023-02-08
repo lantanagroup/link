@@ -12,6 +12,8 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
+
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
   private ReportCriteria criteria;
@@ -67,10 +69,13 @@ public class MeasureEvaluator {
         logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
       }
 
+      logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
+      Date measureEvalStartTime = new Date();
+
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
 
-      logger.info(String.format("Done executing $evaluate-measure for %s", measureId));
+      logger.info(String.format("Done evaluating measure for patient %s and measure %s, took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
 
       // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
       // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
