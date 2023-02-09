@@ -72,6 +72,7 @@ public class MeasureEvaluator {
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
       Date measureEvalStartTime = new Date();
 
+      Date measureEvalStartTime = new Date();
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
 
