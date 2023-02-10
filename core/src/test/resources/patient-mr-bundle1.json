@@ -26,6 +26,50 @@
             "birthDate": "1999-07-27"
           },
           {
+            "resourceType": "Encounter",
+            "id": "30620cdf-186c-dc76-47f0-a04f8a60830d",
+            "period": {
+              "start": "2022-01-01",
+              "end": "2022-01-03"
+            }
+          },
+          {
+            "resourceType": "Medication",
+            "id": "f1223a39-0b00-a43c-76ac-9c24b5449fe6",
+            "code": {
+              "coding": [
+                {
+                  "code": "test-med",
+                  "system": "http://rxnorm"
+                }
+              ]
+            }
+          },
+          {
+            "resourceType": "Condition",
+            "id": "f1223a39-0b00-a43c-76ac-9c24b5444329",
+            "code": {
+              "coding": [
+                {
+                  "code": "test-condition",
+                  "system": "http://loinc"
+                }
+              ]
+            }
+          },
+          {
+            "resourceType": "Observation",
+            "id": "f1223a39-0b00-a43c-76ac-43298dkj3984",
+            "code": {
+              "coding": [
+                {
+                  "code": "test-obs",
+                  "system": "http://rxnorm"
+                }
+              ]
+            }
+          },
+          {
             "resourceType": "MedicationRequest",
             "id": "075add36-e219-2327-d31b-75c5f5f12b85",
             "meta": {
