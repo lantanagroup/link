@@ -42,6 +42,12 @@
                     <classPatterns>
                         <pattern>com.lantanagroup.link.config.**</pattern>
                     </classPatterns>
+                    <customTypeNaming>
+                        <customTypeNaming>org.hl7.fhir.r4.model.Period:FHIRPeriod</customTypeNaming>
+                        <customTypeNaming>
+                            com.lantanagroup.link.config.bundler.BundlerConfig$Address:BundleConfigAddress
+                        </customTypeNaming>
+                    </customTypeNaming>
                     <outputFile>target/config.ts</outputFile>
                     <outputKind>module</outputKind>
                     <outputFileType>implementationFile</outputFileType>
