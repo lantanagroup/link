@@ -83,6 +83,10 @@ public class ReportGenerator {
    **/
   public void store() {
 
+    this.measureContext.getPatientReports().parallelStream().forEach(report -> {
+      this.reportContext.getFhirProvider().updateResource(report);
+    });
+
     this.reportContext.getFhirProvider().updateResource(measureContext.getMeasureReport());
   }
 }

@@ -89,14 +89,16 @@ public class PatientData {
                           .collect(Collectors.toList());
 
           for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
-            for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
-              if (param.getSingleParam() != null && param.getSingleParam() == true) {
-                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
-                String paramValue = String.join(",", values);
-                params.add(param.getName() + "=" + paramValue);
-              } else {
-                for (String paramValue : param.getValues()) {
-                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
+            if(resourceQueryParam.getParameters() != null){
+              for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
+                if (param.getSingleParam() != null && param.getSingleParam() == true) {
+                  List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
+                  String paramValue = String.join(",", values);
+                  params.add(param.getName() + "=" + paramValue);
+                } else {
+                  for (String paramValue : param.getValues()) {
+                    params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
+                  }
                 }
               }
             }
