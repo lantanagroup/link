@@ -106,7 +106,7 @@ public class PatientData {
       }
     }
 
-    String query = resourceType += "?" + String.join("&", params);
+    String query = resourceType + "?" + String.join("&", params);
 
     // %24%7Bencounter%7D is encoded for "${encounter}" by getQueryParamValue()
     if (query.indexOf("%24%7Bencounter%7D") >= 0) {
