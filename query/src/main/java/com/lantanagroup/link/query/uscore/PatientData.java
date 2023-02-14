@@ -173,7 +173,7 @@ public class PatientData {
 
     if (!queryString.isEmpty()) {
       try {
-        queryString.parallelStream().forEach(query -> {
+        queryString.forEach(query -> {
           List<Bundle> bundles = PatientScoop.rawSearch(this.fhirQueryServer, query);
           if (bundles != null) {
             this.bundles.addAll(bundles);
@@ -231,12 +231,12 @@ public class PatientData {
         }
       }
 
-      resourcesToGet.keySet().stream().forEach(resourceType -> {
+      resourcesToGet.keySet().forEach(resourceType -> {
         Stopwatch stopwatch = Stopwatch.start(String.format("query-resources-other-%s", resourceType));
         Set<String> resourceIds = new HashSet<>(resourcesToGet.get(resourceType));
         logger.info("Loading {} other {} resources for patient {}", resourceIds.size(), resourceType, patientId);
         // TODO: Instead of reading resources individually, search for batches using `_id`?
-        resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
+        resourcesToGet.get(resourceType).forEach(resourceId -> {
           try {
             Resource resource = (Resource) this.fhirQueryServer.read()
                     .resource(resourceType)
