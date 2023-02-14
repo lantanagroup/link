@@ -24,7 +24,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static com.lantanagroup.link.Constants.MeasureReportBundleProfileUrl;
+import static com.lantanagroup.link.Constants.ReportBundleProfileUrl;
 
 @Component
 public class ReportCsvOperationProvider {
@@ -169,7 +169,7 @@ public class ReportCsvOperationProvider {
 
     // Create and store bundle
     Bundle bundle = new Bundle();
-    bundle.getMeta().addProfile(MeasureReportBundleProfileUrl);
+    bundle.getMeta().addProfile(ReportBundleProfileUrl);
     bundle.getIdentifier()
             .setSystem("urn:ietf:rfc:3986")
             .setValue(String.format("urn:uuid:%s", UUID.randomUUID()));

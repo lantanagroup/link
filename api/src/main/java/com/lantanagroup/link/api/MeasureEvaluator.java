@@ -70,12 +70,13 @@ public class MeasureEvaluator {
       }
 
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
+      Date measureEvalStartTime = new Date();
 
       Date measureEvalStartTime = new Date();
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
 
-      logger.info(String.format("Done evaluating measure for patient %s and measure %s, it took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
+      logger.info(String.format("Done evaluating measure for patient %s and measure %s, took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
 
       // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
       // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
