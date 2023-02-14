@@ -1,8 +1,8 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.google.common.base.Strings;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
@@ -58,7 +58,7 @@ public class FhirBundler {
     Organization org = new Organization();
     org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
 
-    if (!Strings.isNullOrEmpty(this.config.getOrgNpi())) {
+    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
       org.setId("" + this.config.getOrgNpi().hashCode());
     } else {
       org.setId(UUID.randomUUID().toString());
@@ -70,23 +70,23 @@ public class FhirBundler {
             .setCode("prov")
             .setDisplay("Healthcare Provider");
 
-    if (!Strings.isNullOrEmpty(this.config.getOrgName())) {
+    if (!StringUtils.isEmpty(this.config.getOrgName())) {
       org.setName(this.config.getOrgName());
     }
 
-    if (!Strings.isNullOrEmpty(this.config.getOrgNpi())) {
+    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
       org.addIdentifier()
               .setSystem(Constants.NationalProviderIdentifierSystemUrl)
               .setValue(this.config.getOrgNpi());
     }
 
-    if (!Strings.isNullOrEmpty(this.config.getOrgPhone())) {
+    if (!StringUtils.isEmpty(this.config.getOrgPhone())) {
       org.addTelecom()
               .setSystem(ContactPoint.ContactPointSystem.PHONE)
               .setValue(this.config.getOrgPhone());
     }
 
-    if (!Strings.isNullOrEmpty(this.config.getOrgEmail())) {
+    if (!StringUtils.isEmpty(this.config.getOrgEmail())) {
       org.addTelecom()
               .setSystem(ContactPoint.ContactPointSystem.EMAIL)
               .setValue(this.config.getOrgEmail());
@@ -147,7 +147,7 @@ public class FhirBundler {
         break;
     }
 
-    if (!Strings.isNullOrEmpty(profile)) {
+    if (!StringUtils.isEmpty(profile)) {
       String finalProfile = profile;
       if (!resource.getMeta().getProfile().stream().anyMatch(p -> p.getValue().equals(finalProfile))) {   // Don't duplicate profile if it already exists
         resource.getMeta().addProfile(profile);
