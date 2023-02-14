@@ -9,4 +9,5 @@
     </root>
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="ca.uhn.fhir.context.ModelScanner" level="INFO"/>
 </configuration>
