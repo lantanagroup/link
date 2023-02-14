@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ResourceIdChanger;
+import com.lantanagroup.link.Stopwatch;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
@@ -199,7 +200,9 @@ public class PatientData {
       FhirHelper.addEntriesToBundle(next, bundle);
     }
 
+    Stopwatch stopwatch = Stopwatch.start("query-resources-other");
     this.getAdditionalResources(bundle, ResourceIdChanger.findReferences(bundle));
+    stopwatch.stop();
 
     return bundle;
   }
@@ -229,6 +232,7 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
+        Stopwatch stopwatch = Stopwatch.start(String.format("query-resources-other-%s", resourceType));
         Set<String> resourceIds = new HashSet<>(resourcesToGet.get(resourceType));
         logger.info("Loading {} other {} resources for patient {}", resourceIds.size(), resourceType, patientId);
         // TODO: Instead of reading resources individually, search for batches using `_id`?
@@ -243,6 +247,7 @@ public class PatientData {
             logger.debug("Can't find resource of type: " + resourceType + " and id: " + resourceId);
           }
         });
+        stopwatch.stop();
       });
     }
   }

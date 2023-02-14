@@ -3,6 +3,7 @@ package com.lantanagroup.link.api;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.ReportIdHelper;
+import com.lantanagroup.link.Stopwatch;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -74,7 +75,9 @@ public class MeasureEvaluator {
 
       Date measureEvalStartTime = new Date();
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+      Stopwatch stopwatch = Stopwatch.start("evaluate-measure");
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
+      stopwatch.stop();
 
       logger.info(String.format("Done evaluating measure for patient %s and measure %s, took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
 

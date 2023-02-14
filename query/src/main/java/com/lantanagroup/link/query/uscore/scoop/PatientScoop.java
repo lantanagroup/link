@@ -59,7 +59,9 @@ public class PatientScoop extends Scoop {
 
     try {
       PatientData patientData = new PatientData(this.getFhirQueryServer(), criteria, patient, this.usCoreConfig, resourceTypes);
+      Stopwatch stopwatch = Stopwatch.start("query-resources-patient");
       patientData.loadData(measureIds);
+      stopwatch.stop();
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -72,6 +74,7 @@ public class PatientScoop extends Scoop {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     patientsOfInterest.forEach(poi -> {
+      Stopwatch stopwatch = Stopwatch.start("query-patient");
       int poiIndex = patientsOfInterest.indexOf(poi);
 
       try {
@@ -111,6 +114,7 @@ public class PatientScoop extends Scoop {
       } catch (Exception e) {
         logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
       }
+      stopwatch.stop();
     });
     ForkJoinPool forkJoinPool = null;
     try {
@@ -123,9 +127,11 @@ public class PatientScoop extends Scoop {
       forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
+        Stopwatch stopwatch = Stopwatch.start("query-resources");
         PatientData patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
 
         Bundle patientBundle = patientData.getBundleTransaction();
+        stopwatch.stop();
         // store the data
         try {
 
@@ -150,8 +156,9 @@ public class PatientScoop extends Scoop {
 
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
-          // staore data
+          stopwatch = Stopwatch.start("store-patient-data");
           this.fhirDataProvider.updateResource(patientBundle);
+          stopwatch.stop();
 
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");

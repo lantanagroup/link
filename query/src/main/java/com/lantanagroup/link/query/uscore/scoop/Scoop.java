@@ -1,6 +1,7 @@
 package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.Stopwatch;
 import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -21,6 +22,8 @@ public abstract class Scoop {
 	protected Date reportDate = null;
 
 	public static List<Bundle> rawSearch(IGenericClient fhirClient, String query) {
+		String resourceType = query.replaceAll("\\?.+$", "");
+		Stopwatch stopwatch = Stopwatch.start(String.format("query-resources-patient-%s", resourceType));
 		int interceptors = 0;
 
 		if (fhirClient.getInterceptorService() != null) {
@@ -53,6 +56,8 @@ public abstract class Scoop {
 			return retBundles;
 		} catch (Exception ex) {
 			logger.error("Could not retrieve \"" + query + "\" from FHIR server " + fhirClient.getServerBase() + " with " + interceptors + ": " + ex.getMessage(), ex);
+		} finally {
+			stopwatch.stop();
 		}
 
 		return null;
