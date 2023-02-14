@@ -30,7 +30,7 @@ public class Stopwatch {
     }
     stopTime = Instant.now();
     long millis = Duration.between(startTime, stopTime).toMillis();
-    String duration = DurationFormatUtils.formatDuration(millis, "s.SSS");
-    logger.debug("{}: {}", name, duration);
+    String duration = DurationFormatUtils.formatDurationHMS(millis);
+    logger.debug("{} --- [{}]", duration, name);
   }
 }
