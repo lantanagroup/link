@@ -38,7 +38,9 @@ public class EventService {
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
+        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+        stopwatch.stop();
       }
     }
   }
@@ -52,7 +54,9 @@ public class EventService {
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
+        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+        stopwatch.stop();
       }
     }
   }
