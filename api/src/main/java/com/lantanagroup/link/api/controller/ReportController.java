@@ -209,12 +209,12 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
     this.resolveMeasures(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
@@ -246,17 +246,17 @@ public class ReportController extends BaseController {
       reportContext.setMasterIdentifierValue(masterIdentifierValue);
     } else {
       reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
-      eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+      this.eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
 
-    eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
     this.getPatientIdentifiers(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Get the resource types to query
     Set<String> resourceTypesToQuery = new HashSet<>();
@@ -286,7 +286,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     response.setMasterId(reportContext.getMasterIdentifierValue());
 
@@ -304,17 +304,17 @@ public class ReportController extends BaseController {
 
       ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
 
-      eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
       generator.generate();
 
-      eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
-      eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
 
       generator.store();
 
-      eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
 
     }
 

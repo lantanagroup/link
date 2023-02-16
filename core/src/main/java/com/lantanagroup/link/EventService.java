@@ -38,7 +38,10 @@ public class EventService {
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+      } else {
+        logger.error(bean.toString() + " does not implement the IReportGenerationEvent interface");
       }
     }
   }
@@ -52,7 +55,10 @@ public class EventService {
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
         ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+      } else {
+        logger.error(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
       }
     }
   }
@@ -61,10 +67,6 @@ public class EventService {
     List<Class<?>> classes = new ArrayList<>();
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
-    if (classNames == null) {
-      logger.debug(String.format("No class set-up for event %s", eventType.toString()));
-      return null;
-    }
     for (String className : classNames) {
       try {
         Class<?> aClass = Class.forName(className);

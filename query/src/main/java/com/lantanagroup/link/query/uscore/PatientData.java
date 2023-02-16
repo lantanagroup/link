@@ -1,14 +1,13 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.ResourceIdChanger;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
+import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ public class PatientData {
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
 
   private final ReportCriteria criteria;
+  private final ReportContext context;
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
@@ -33,10 +33,13 @@ public class PatientData {
   private List<String> resourceTypes;
   private List<Bundle> bundles = new ArrayList<>();
   private List<String> encounterReferences = new ArrayList<>();
+  private EventService eventService;
 
-  public PatientData(IGenericClient fhirQueryServer, ReportCriteria criteria, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+    this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
+    this.context = context;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
     this.usCoreConfig = usCoreConfig;
@@ -123,6 +126,56 @@ public class PatientData {
     return List.of(query);
   }
 
+  private Bundle rawSearch(String query) {
+    int interceptors = 0;
+
+    if (this.fhirQueryServer.getInterceptorService() != null) {
+      interceptors = this.fhirQueryServer.getInterceptorService().getAllRegisteredInterceptors().size();
+    }
+
+    try {
+      logger.info("Executing query: " + query);
+
+      if (this.fhirQueryServer == null) {
+        logger.error("Client is null");
+      }
+
+      Bundle retBundle = new Bundle();
+      Bundle nextBundle = this.fhirQueryServer.search()
+              .byUrl(query)
+              .returnBundle(Bundle.class)
+              .execute();
+      retBundle.setEntry(nextBundle.getEntry().stream().map(e -> {
+        return new Bundle.BundleEntryComponent()
+                .setResource(e.getResource());
+      }).collect(Collectors.toList()));
+
+      while (nextBundle.getLink(IBaseBundle.LINK_NEXT) != null) {
+        nextBundle = this.fhirQueryServer.loadPage()
+                .next(nextBundle)
+                .execute();
+
+        retBundle.getEntry().addAll(nextBundle.getEntry().stream().map(e -> {
+          return new Bundle.BundleEntryComponent()
+                  .setResource(e.getResource());
+        }).collect(Collectors.toList()));
+        retBundle.setTotal(retBundle.getEntry().size());
+      }
+
+      logger.info(query + " Found " + retBundle.getTotal() + " resources for query " + query);
+
+      if (this.eventService != null) {
+        this.eventService.triggerDataEvent(EventTypes.AfterPatientResourceQuery, retBundle, this.criteria, this.context, null);
+      }
+
+      return retBundle;
+    } catch (Exception ex) {
+      logger.error("Could not retrieve \"" + query + "\" from FHIR server " + this.fhirQueryServer.getServerBase() + " with " + interceptors + ": " + ex.getMessage(), ex);
+    }
+
+    return null;
+  }
+
   /**
    * Loads encounters for the patient first and populates encounterReferences
    * So that encounterReferences may be used to filter queries using ${encounter}
@@ -135,18 +188,19 @@ public class PatientData {
     }
 
     List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
-    List<Bundle> encounterBundles = PatientScoop.rawSearch(this.fhirQueryServer, encounterQuery.get(0));
-    this.bundles.addAll(encounterBundles);
+    Bundle encounterBundle = this.rawSearch(encounterQuery.get(0));
+    this.bundles.add(encounterBundle);
 
-    encounterBundles.forEach(encBundle -> {
-      encBundle.getEntry().forEach(encEntry -> {
+    // Create references to all of the encounters found
+    if (encounterBundle != null) {
+      encounterBundle.getEntry().forEach(encEntry -> {
         if (encEntry.getResource() == null || encEntry.getResource().getResourceType() != ResourceType.Encounter) {
           return;
         }
 
         this.encounterReferences.add("Encounter/" + encEntry.getResource().getIdElement().getIdPart());
       });
-    });
+    }
   }
 
   public void loadData(List<String> measureIds) {
@@ -163,6 +217,7 @@ public class PatientData {
       return;
     }
 
+
     //Loop through resource types specified. If observation, use config to add individual category queries
     Set<String> queryString = new HashSet<>();
     for (String resource : this.resourceTypes) {
@@ -173,10 +228,8 @@ public class PatientData {
     if (!queryString.isEmpty()) {
       try {
         queryString.parallelStream().forEach(query -> {
-          List<Bundle> bundles = PatientScoop.rawSearch(this.fhirQueryServer, query);
-          if (bundles != null) {
-            this.bundles.addAll(bundles);
-          }
+          Bundle bundle = this.rawSearch(query);
+          this.bundles.add(bundle);
         });
       }
       catch(Exception ex) {

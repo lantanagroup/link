@@ -1,4 +1,4 @@
-package com.lantanagroup.link.query.uscore.scoop;
+package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
@@ -7,11 +7,12 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.query.uscore.PatientData;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,9 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Component
-public class PatientScoop extends Scoop {
+public class PatientScoop {
+  protected static final Logger logger = LoggerFactory.getLogger(PatientScoop.class);
+
   protected IGenericClient fhirQueryServer;
 
   @Autowired
@@ -45,7 +48,6 @@ public class PatientScoop extends Scoop {
   @Autowired
   private EventService eventService;
 
-
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
@@ -58,7 +60,7 @@ public class PatientScoop extends Scoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.getFhirQueryServer(), criteria, patient, this.usCoreConfig, resourceTypes);
+      PatientData patientData = new PatientData(this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
