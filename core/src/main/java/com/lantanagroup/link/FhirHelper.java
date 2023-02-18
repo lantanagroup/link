@@ -510,6 +510,8 @@ public class FhirHelper {
       return responseBundle.getEntry().stream()
               .map(entry -> (ListResource) entry.getResource())
               .collect(Collectors.toList());
+    } else {
+      logger.warn("The DocumentReference does not have a context/related census associated with it");
     }
 
     return new ArrayList<>();

@@ -39,7 +39,9 @@ public class EventService {
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+        stopwatch.stop();
       } else {
         logger.error(bean.toString() + " does not implement the IReportGenerationEvent interface");
       }
@@ -56,7 +58,9 @@ public class EventService {
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+        stopwatch.stop();
       } else {
         logger.error(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
       }

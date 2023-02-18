@@ -21,8 +21,8 @@
         <module name="cli" />
         <module name="thsa" />
         <module name="measureeval" />
-        <module name="datastore" />
         <module name="nhsn" />
+        <module name="datastore" />
         <module name="query" />
         <module name="api" />
         <module name="consumer" />

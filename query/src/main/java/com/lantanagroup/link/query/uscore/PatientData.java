@@ -5,6 +5,7 @@ import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.EventTypes;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ResourceIdChanger;
+import com.lantanagroup.link.Stopwatch;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
@@ -126,7 +127,7 @@ public class PatientData {
       }
     }
 
-    String query = resourceType += "?" + String.join("&", params);
+    String query = resourceType + "?" + String.join("&", params);
 
     // %24%7Bencounter%7D is encoded for "${encounter}" by getQueryParamValue()
     if (query.indexOf("%24%7Bencounter%7D") >= 0) {
@@ -244,7 +245,7 @@ public class PatientData {
 
     if (!queryString.isEmpty()) {
       try {
-        queryString.parallelStream().forEach(query -> {
+        queryString.forEach(query -> {
           Bundle bundle = this.rawSearch(query);
           this.bundle.getEntry().addAll(bundle.getEntry());
         });
@@ -256,7 +257,9 @@ public class PatientData {
       logger.warn("No queries generated based on resource types and configuration");
     }
 
+    Stopwatch stopwatch = Stopwatch.start("query-resources-other");
     this.getOtherResources();
+    stopwatch.stop();
   }
 
   private List<List<String>> separateByCount(List<String> resourceIds, Integer max) {
@@ -306,6 +309,7 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
+        Stopwatch stopwatch = Stopwatch.start(String.format("query-resources-other-%s", resourceType));
         List<String> allResourceIds = resourcesToGet.get(resourceType);
 
         // Determine if other resource was already retrieved by as part of another patient query
@@ -353,6 +357,8 @@ public class PatientData {
             }
           });
         }
+
+        stopwatch.stop();
       });
     }
   }
