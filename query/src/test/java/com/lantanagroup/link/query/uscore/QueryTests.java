@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -34,9 +35,9 @@ public class QueryTests {
     USCoreConfig usCoreConfig = new USCoreConfig();
     usCoreConfig.setPatientResourceTypes(queries);
     usCoreConfig.getPatientResourceTypes();
-    List<String> extraResources = new ArrayList<>();
-    extraResources.add("Location");
-    extraResources.add("Medication");
+    List<USCoreOtherResourceTypeConfig> extraResources = new ArrayList<>();
+    extraResources.add(new USCoreOtherResourceTypeConfig("Location", false, null));
+    extraResources.add(new USCoreOtherResourceTypeConfig("Medication", false, null));
     usCoreConfig.setOtherResourceTypes(extraResources);
     usCoreConfig.getOtherResourceTypes();
 

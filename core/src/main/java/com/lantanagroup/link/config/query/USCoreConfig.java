@@ -37,7 +37,7 @@ public class USCoreConfig {
   /**
    * <strong>uscore.other-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are NOT specific to a patient. These are queried via references from patient resources.
    */
-  private List<String> otherResourceTypes;
+  private List<USCoreOtherResourceTypeConfig> otherResourceTypes;
 
   /**
    * <strong>uscore.parallel-patients</strong><br>The number of patients to query for at a single time.

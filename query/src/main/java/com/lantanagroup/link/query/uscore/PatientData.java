@@ -1,8 +1,12 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.EventService;
+import com.lantanagroup.link.EventTypes;
+import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -31,11 +35,13 @@ public class PatientData {
   private final USCoreConfig usCoreConfig;
   // private final QueryConfig queryConfig;
   private List<String> resourceTypes;
-  private List<Bundle> bundles = new ArrayList<>();
+  private Bundle bundle = new Bundle();
   private List<String> encounterReferences = new ArrayList<>();
   private EventService eventService;
+  private HashMap<String, Resource> otherResources;
 
-  public PatientData(EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+    this.otherResources = otherResources;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
@@ -44,6 +50,18 @@ public class PatientData {
     this.patientId = patient.getIdElement().getIdPart();
     this.usCoreConfig = usCoreConfig;
     this.resourceTypes = resourceTypes;
+
+    this.bundle.setType(BundleType.TRANSACTION);
+    this.bundle.setIdentifier(new Identifier().setValue(this.patientId));
+    this.bundle.addEntry()
+            .setResource(this.patient)
+            .getRequest()
+            .setMethod(Bundle.HTTPVerb.PUT)
+            .setUrl("Patient/" + patient.getIdElement().getIdPart());
+  }
+
+  public Bundle getBundle() {
+    return this.bundle;
   }
 
   /**
@@ -189,9 +207,9 @@ public class PatientData {
 
     List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
     Bundle encounterBundle = this.rawSearch(encounterQuery.get(0));
-    this.bundles.add(encounterBundle);
+    this.bundle.getEntry().addAll(encounterBundle.getEntry());
 
-    // Create references to all of the encounters found
+    // Create references to all the encounters found
     if (encounterBundle != null) {
       encounterBundle.getEntry().forEach(encEntry -> {
         if (encEntry.getResource() == null || encEntry.getResource().getResourceType() != ResourceType.Encounter) {
@@ -217,7 +235,6 @@ public class PatientData {
       return;
     }
 
-
     //Loop through resource types specified. If observation, use config to add individual category queries
     Set<String> queryString = new HashSet<>();
     for (String resource : this.resourceTypes) {
@@ -229,45 +246,52 @@ public class PatientData {
       try {
         queryString.parallelStream().forEach(query -> {
           Bundle bundle = this.rawSearch(query);
-          this.bundles.add(bundle);
+          this.bundle.getEntry().addAll(bundle.getEntry());
         });
       }
       catch(Exception ex) {
         logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
       }
-    }
-    else{
+    } else {
       logger.warn("No queries generated based on resource types and configuration");
     }
 
+    this.getOtherResources();
   }
 
-  public Bundle getBundleTransaction() {
-    Bundle bundle = new Bundle();
-    bundle.setType(BundleType.TRANSACTION);
-    bundle.setIdentifier(new Identifier().setValue(this.patientId));
-    bundle.addEntry().setResource(this.patient).getRequest().setMethod(Bundle.HTTPVerb.PUT).setUrl("Patient/" + patient.getIdElement().getIdPart());
+  private List<List<String>> separateByCount(List<String> resourceIds, Integer max) {
+    List<String> queue = List.copyOf(resourceIds); // So we don't modify the original List by ref
+    List<List<String>> ret = new Stack<>();
+    List<String> next = new Stack<>();
 
-    for (Bundle next : this.bundles) {
-      FhirHelper.addEntriesToBundle(next, bundle);
+    for (int i = 0; i < queue.size(); i++) {
+      next.add(queue.get(i));
+
+      if (next.size() >= max || i == queue.size() - 1) {
+        ret.add(next);
+        next = new Stack<>();
+      }
     }
 
-    this.getAdditionalResources(bundle, ResourceIdChanger.findReferences(bundle));
-
-    return bundle;
+    return ret;
   }
 
-  private void getAdditionalResources(Bundle bundle, List<Reference> resourceReferences){
+  private void getOtherResources() {
+    List<Reference> references = ResourceIdChanger.findReferences(this.bundle);
+
     if (this.usCoreConfig.getOtherResourceTypes() != null) {
       HashMap<String, List<String>> resourcesToGet = new HashMap<>();
 
-      for (Reference reference : resourceReferences) {
+      for (Reference reference : references) {
         if (!reference.hasReference()) {
           continue;
         }
 
         String[] refParts = reference.getReference().split("/");
-        List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes();
+        List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes().stream()
+                .map(ort -> ort.getResourceType())
+                .collect(Collectors.toList());
+
         if (otherResourceTypes.contains(refParts[0])) {
           if (!resourcesToGet.containsKey(refParts[0])) {
             resourcesToGet.put(refParts[0], new ArrayList<>());
@@ -282,20 +306,53 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
-        Set<String> resourceIds = new HashSet<>(resourcesToGet.get(resourceType));
-        logger.info("Loading {} other {} resources for patient {}", resourceIds.size(), resourceType, patientId);
-        // TODO: Instead of reading resources individually, search for batches using `_id`?
-        resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
-          try {
-            Resource resource = (Resource) this.fhirQueryServer.read()
-                    .resource(resourceType)
-                    .withId(resourceId)
-                    .execute();
-            bundle.addEntry().setResource(resource);
-          }catch(Exception e){
-            logger.debug("Can't find resource of type: " + resourceType + " and id: " + resourceId);
+        List<String> allResourceIds = resourcesToGet.get(resourceType);
+
+        // Determine if other resource was already retrieved by as part of another patient query
+        for (int i = allResourceIds.size() - 1; i >= 0; i--) {
+          String reference = resourceType + "/" + allResourceIds.get(i);
+          if (this.otherResources.containsKey(reference)) {
+            this.bundle.getEntry().add(new Bundle.BundleEntryComponent().setResource(this.otherResources.get(reference)));
+            allResourceIds.remove(i);
           }
-        });
+        }
+
+        logger.info("Loading {} other {} resources for patient {}", allResourceIds.size(), resourceType, patientId);
+        USCoreOtherResourceTypeConfig otherResourceTypeConfig = this.usCoreConfig.getOtherResourceTypes().stream()
+                .filter(ort -> ort.getResourceType().equals(resourceType))    // If we got to this point, we know a resourceType exists in the config that matches
+                .findFirst().get();
+
+        if (otherResourceTypeConfig.getSupportsSearch()) {
+          Integer countPerSearch = otherResourceTypeConfig.getCountPerSearch() != null ? otherResourceTypeConfig.getCountPerSearch() : 100;
+          List<List<String>> dividedQueries = this.separateByCount(allResourceIds, countPerSearch);
+
+          for (List<String> resourceIds : dividedQueries) {
+            Bundle otherResources = this.fhirQueryServer.search()
+                    .forResource(resourceType)
+                    .where(Resource.RES_ID.exactly().codes(resourceIds))
+                    .returnBundle(Bundle.class)
+                    .execute();
+
+            otherResources.getEntry().forEach(e -> {
+              this.otherResources.put(e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart(), e.getResource());
+              this.bundle.addEntry().setResource(e.getResource());
+            });
+          }
+        } else {
+          resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
+            try {
+              Resource resource = (Resource) this.fhirQueryServer.read()
+                      .resource(resourceType)
+                      .withId(resourceId)
+                      .execute();
+
+              this.otherResources.put(resource.getResourceType().toString() + "/" + resource.getIdElement().getIdPart(), resource);
+              this.bundle.addEntry().setResource(resource);
+            } catch (Exception e) {
+              logger.debug("Can't find resource of type: " + resourceType + " and id: " + resourceId);
+            }
+          });
+        }
       });
     }
   }

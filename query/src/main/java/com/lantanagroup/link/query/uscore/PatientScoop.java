@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,8 @@ public class PatientScoop {
   @Autowired
   private EventService eventService;
 
+  private HashMap<String, Resource> otherResources = new HashMap<>();
+
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
@@ -60,7 +63,7 @@ public class PatientScoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
+      PatientData patientData = new PatientData(this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
@@ -70,67 +73,88 @@ public class PatientScoop {
     return null;
   }
 
-  public PatientData loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
-    patientsOfInterest.forEach(poi -> {
-      int poiIndex = patientsOfInterest.indexOf(poi);
+    int threshold = usCoreConfig.getParallelPatients();
+    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
+    ForkJoinPool patientFork = new ForkJoinPool(threshold);
 
-      try {
-        if (poi.getReference() != null) {
-          String id = poi.getReference();
+    try {
+      patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        int poiIndex = patientsOfInterest.indexOf(poi);
 
-          if (id.indexOf("/") > 0) {
-            id = id.substring(id.indexOf("/") + 1);
-          }
+        try {
+          if (poi.getReference() != null) {
+            String id = poi.getReference();
 
-          logger.debug("Retrieving patient at index " + poiIndex);
-          Patient patient = this.fhirQueryServer.read()
-                  .resource(Patient.class)
-                  .withId(id)
-                  .execute();
-          patientMap.put(poi.getReference(), patient);
-          poi.setId(patient.getIdElement().getIdPart());
-        } else if (poi.getIdentifier() != null) {
-          String searchUrl = "Patient?identifier=" + poi.getIdentifier();
+            if (id.indexOf("/") > 0) {
+              id = id.substring(id.indexOf("/") + 1);
+            }
 
-          logger.debug("Searching for patient at index " + poiIndex);
-          // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
-          Bundle response = this.fhirQueryServer.search()
-                  .byUrl(searchUrl)
-                  .returnBundle(Bundle.class)
-                  .execute();
-          if (response.getEntry().size() != 1) {
-            logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
-          } else {
-            Patient patient = (Patient) response.getEntryFirstRep().getResource();
-            patientMap.put(poi.getIdentifier(), patient);
+            logger.debug("Retrieving patient at index " + poiIndex);
+            Patient patient = this.fhirQueryServer.read()
+                    .resource(Patient.class)
+                    .withId(id)
+                    .execute();
+            patientMap.put(poi.getReference(), patient);
             poi.setId(patient.getIdElement().getIdPart());
+            return patient;
+          } else if (poi.getIdentifier() != null) {
+            String searchUrl = "Patient?identifier=" + poi.getIdentifier();
+
+            logger.debug("Searching for patient at index " + poiIndex);
+            // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
+            Bundle response = this.fhirQueryServer.search()
+                    .byUrl(searchUrl)
+                    .returnBundle(Bundle.class)
+                    .execute();
+            if (response.getEntry().size() != 1) {
+              logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
+              return null;
+            } else {
+              Patient patient = (Patient) response.getEntryFirstRep().getResource();
+              patientMap.put(poi.getIdentifier(), patient);
+              poi.setId(patient.getIdElement().getIdPart());
+              return patient;
+            }
           }
+        } catch (Exception e) {
+          logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
         }
 
-
-      } catch (Exception e) {
-        logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
+        return null;
+      }).collect(Collectors.toList())).get();
+    } catch (Exception e) {
+      logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
+      return;
+    } finally {
+      if (patientFork != null) {
+        patientFork.shutdown();
       }
-    });
-    ForkJoinPool forkJoinPool = null;
+    }
+
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
-      int threshold = usCoreConfig.getParallelPatients();
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
-      forkJoinPool = new ForkJoinPool(threshold);
 
-      forkJoinPool.submit(() -> patients.parallelStream().map(patient -> {
+      patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
+        PatientData patientData = null;
 
-        Bundle patientBundle = patientData.getBundleTransaction();
+        try {
+          patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
+        } catch (Exception ex) {
+          logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
+          return null;
+        }
+
+        Bundle patientBundle = patientData.getBundle();
+
         // store the data
         try {
-
           eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
 
           patientBundle.setType(Bundle.BundleType.BATCH);
@@ -152,7 +176,7 @@ public class PatientScoop {
 
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
-          // staore data
+          // store data
           this.fhirDataProvider.updateResource(patientBundle);
 
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
@@ -160,17 +184,15 @@ public class PatientScoop {
         } catch (Exception ex) {
           logger.info("Exception is: " + ex.getMessage());
         }
-        return patientData;
+
+        return patient.getId();
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
-      logger.error(e.getMessage());
+      logger.error("Error scooping data for patients {}", e.getMessage(), e);
     } finally {
-      if (forkJoinPool != null) {
-        forkJoinPool.shutdown();
+      if (patientDataFork != null) {
+        patientDataFork.shutdown();
       }
     }
-
-    // TODO: Change method return type to void
-    return null;
   }
 }

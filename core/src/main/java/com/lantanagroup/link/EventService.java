@@ -67,12 +67,14 @@ public class EventService {
     List<Class<?>> classes = new ArrayList<>();
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
-    for (String className : classNames) {
-      try {
-        Class<?> aClass = Class.forName(className);
-        classes.add(aClass);
-      } catch (ClassNotFoundException ex) {
-        logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType.toString(), className));
+    if (classNames != null) {
+      for (String className : classNames) {
+        try {
+          Class<?> aClass = Class.forName(className);
+          classes.add(aClass);
+        } catch (ClassNotFoundException ex) {
+          logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType.toString(), className));
+        }
       }
     }
     List<Object> beans = getBeans(classes);

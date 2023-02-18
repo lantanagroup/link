@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
@@ -488,10 +487,6 @@ public class FhirHelper {
     Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
     // get all resources types that are in data requirements but missing from query properties
     return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
-  }
-
-  public static List<String> getQueryConfigurationResourceTypes(USCoreConfig usCoreConfig) {
-    return Helper.concatenate(usCoreConfig.getPatientResourceTypes(), usCoreConfig.getOtherResourceTypes());
   }
 
   public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
