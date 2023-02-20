@@ -25,17 +25,41 @@ public class StopwatchManager {
     StringBuilder output = new StringBuilder();
     output.append("\n");
 
+    output.append("Report generation statistics:\n");
+    output.append("Category\tTotal (s)\tTotal (ms)\tMean (s)\tMean (ms)\tMin (s)\tMin (ms)\tMax (s)\tMax (ms)\n");
+
     this.categories.keySet().forEach(c -> {
-      output.append(String.format("Category \"%s\":\n", c));
-      output.append(String.format("\tCount: %s\n", this.categories.get(c).size()));
 
-      double totalMilliseconds = 0;
+      double totalMillis = 0;
+      Long minMillis = null;
+      Long maxMillis = null;
       for (long duration : this.categories.get(c)) {
-        totalMilliseconds += duration;
-      }
-      double totalSeconds = totalMilliseconds / 1000;
+        totalMillis += duration;
 
-      output.append(String.format("\tTotal Time: %s (secs) %s (millis)\n", totalSeconds, totalMilliseconds));
+        if (minMillis == null || minMillis > duration) {
+          minMillis = duration;
+        }
+        if (maxMillis == null || maxMillis < duration) {
+          maxMillis = duration;
+        }
+      }
+
+      double totalSeconds = totalMillis / 1000;
+      double meanMillis = totalMillis / this.categories.get(c).size();
+      double meanSeconds = meanMillis / 1000;
+      double minSeconds = minMillis / 1000;
+      double maxSeconds = maxMillis / 1000;
+
+      output.append(String.format("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+              c,
+              totalSeconds,
+              totalMillis,
+              meanSeconds,
+              meanMillis,
+              minSeconds,
+              minMillis,
+              maxSeconds,
+              maxMillis));
     });
 
     logger.info(output.toString());
