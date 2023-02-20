@@ -1,11 +1,7 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.EventService;
-import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.ResourceIdChanger;
-import com.lantanagroup.link.Stopwatch;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
@@ -40,8 +36,10 @@ public class PatientData {
   private List<String> encounterReferences = new ArrayList<>();
   private EventService eventService;
   private HashMap<String, Resource> otherResources;
+  private StopwatchManager stopwatchManager;
 
-  public PatientData(HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+    this.stopwatchManager = stopwatchManager;
     this.otherResources = otherResources;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
@@ -257,7 +255,7 @@ public class PatientData {
       logger.warn("No queries generated based on resource types and configuration");
     }
 
-    Stopwatch stopwatch = Stopwatch.start("query-resources-other");
+    Stopwatch stopwatch = this.stopwatchManager.start("query-resources-other");
     this.getOtherResources();
     stopwatch.stop();
   }
@@ -309,7 +307,7 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
-        Stopwatch stopwatch = Stopwatch.start(String.format("query-resources-other-%s", resourceType));
+        Stopwatch stopwatch = this.stopwatchManager.start(String.format("query-resources-other-%s", resourceType));
         List<String> allResourceIds = resourcesToGet.get(resourceType);
 
         // Determine if other resource was already retrieved by as part of another patient query

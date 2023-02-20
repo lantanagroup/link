@@ -6,24 +6,22 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Stopwatch {
   private static final Logger logger = LoggerFactory.getLogger(Stopwatch.class);
-
+  private final StopwatchManager manager;
   private final String name;
   private final Instant startTime;
   private Instant stopTime;
 
-  private Stopwatch(String name) {
+  public Stopwatch(StopwatchManager manager, String name) {
+    this.manager = manager;
     this.name = name;
-    startTime = Instant.now();
+    this.startTime = Instant.now();
   }
 
-  public static Stopwatch start(String name) {
-    return new Stopwatch(name);
-  }
-
-  public void stop() {
+  public synchronized void stop() {
     if (stopTime != null) {
       logger.warn("Stopwatch is already stopped");
       return;
@@ -32,5 +30,13 @@ public class Stopwatch {
     long millis = Duration.between(startTime, stopTime).toMillis();
     String duration = DurationFormatUtils.formatDurationHMS(millis);
     logger.debug("{} --- [{}]", duration, name);
+
+    if (!this.manager.getCategories().containsKey(this.name)) {
+      ConcurrentLinkedQueue<Long> list = new ConcurrentLinkedQueue<Long>();
+      list.add(millis);
+      this.manager.getCategories().put(this.name, list);
+    } else {
+      this.manager.getCategories().get(this.name).add(millis);
+    }
   }
 }

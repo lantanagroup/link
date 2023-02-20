@@ -1,9 +1,7 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.Stopwatch;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -22,9 +20,10 @@ public class MeasureEvaluator {
   private ReportContext.MeasureContext measureContext;
   private ApiConfig config;
   private String patientId;
+  private StopwatchManager stopwatchManager;
 
-
-  private MeasureEvaluator(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+  private MeasureEvaluator(StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+    this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
     this.reportContext = reportContext;
     this.measureContext = measureContext;
@@ -32,8 +31,8 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
@@ -74,7 +73,7 @@ public class MeasureEvaluator {
       Date measureEvalStartTime = new Date();
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-      Stopwatch stopwatch = Stopwatch.start("evaluate-measure");
+      Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure");
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
       stopwatch.stop();
 

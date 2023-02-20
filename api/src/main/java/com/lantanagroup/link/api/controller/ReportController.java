@@ -66,6 +66,9 @@ public class ReportController extends BaseController {
   @Autowired
   private ApiInit apiInit;
 
+  @Autowired
+  private StopwatchManager stopwatchManager;
+
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
@@ -163,14 +166,12 @@ public class ReportController extends BaseController {
     return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
-
   /**
    * to be invoked when only a multiMeasureBundleId is provided
    *
    * @return Returns a GenerateResponse
    * @throws Exception
    */
-
   @PostMapping("/$generateMultiMeasure")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
@@ -302,7 +303,7 @@ public class ReportController extends BaseController {
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(this.stopwatchManager, reportContext, measureContext, criteria, config, user, reportAggregator);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
@@ -344,6 +345,9 @@ public class ReportController extends BaseController {
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
+
+    this.stopwatchManager.print();
+    this.stopwatchManager.reset();
 
     return response;
   }

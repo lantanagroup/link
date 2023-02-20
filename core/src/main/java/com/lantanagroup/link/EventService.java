@@ -33,13 +33,16 @@ public class EventService {
   @Setter
   private ApiConfigEvents apiConfigEvents;
 
+  @Autowired
+  private StopwatchManager stopwatchManager;
+
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
-        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
+        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
         stopwatch.stop();
       } else {
@@ -58,7 +61,7 @@ public class EventService {
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
-        Stopwatch stopwatch = Stopwatch.start(String.format("event-%s", bean.getClass().getSimpleName()));
+        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
         stopwatch.stop();
       } else {

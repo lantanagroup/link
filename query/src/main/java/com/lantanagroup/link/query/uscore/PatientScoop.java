@@ -49,6 +49,9 @@ public class PatientScoop {
   @Autowired
   private EventService eventService;
 
+  @Autowired
+  private StopwatchManager stopwatchManager;
+
   private HashMap<String, Resource> otherResources = new HashMap<>();
 
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
@@ -62,10 +65,10 @@ public class PatientScoop {
   private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
-    Stopwatch stopwatch = Stopwatch.start("query-resources-patient");
+    Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient");
 
     try {
-      PatientData patientData = new PatientData(this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
@@ -86,7 +89,7 @@ public class PatientScoop {
 
     try {
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
-        Stopwatch stopwatch = Stopwatch.start("query-patient");
+        Stopwatch stopwatch = this.stopwatchManager.start("query-patient");
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         try {
@@ -152,7 +155,7 @@ public class PatientScoop {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = null;
-        Stopwatch stopwatch = Stopwatch.start("query-resources");
+        Stopwatch stopwatch = this.stopwatchManager.start("query-resources");
 
         try {
           patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
@@ -189,7 +192,7 @@ public class PatientScoop {
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
           // store data
-          stopwatch = Stopwatch.start("store-patient-data");
+          stopwatch = this.stopwatchManager.start("store-patient-data");
           this.fhirDataProvider.updateResource(patientBundle);
           stopwatch.stop();
 
