@@ -67,7 +67,7 @@ public class ReportDefinitionController extends BaseController {
       return storedMeasure;
     }).collect(Collectors.toList());
     //  add the multi-measure reports
-    if(!config.getMeasurePackages().isEmpty()) {
+    if(config.getMeasurePackages() != null && !config.getMeasurePackages().isEmpty()) {
       config.getMeasurePackages().forEach(apiMeasurePackage -> {
         String[] bundleIds = apiMeasurePackage.getBundleIds();
         List<StoredMeasure> multiStoredMeasures = storedMeasures.stream().filter(storedMeasure -> List.of(bundleIds).contains(storedMeasure.getId())).collect(Collectors.toList());
