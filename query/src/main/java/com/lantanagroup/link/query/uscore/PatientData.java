@@ -251,7 +251,9 @@ public class PatientData {
       try {
         queryString.forEach(query -> {
           Bundle bundle = this.rawSearch(query);
-          this.bundle.getEntry().addAll(bundle.getEntry());
+          if (bundle != null) {
+            this.bundle.getEntry().addAll(bundle.getEntry());
+          }
         });
       }
       catch(Exception ex) {
