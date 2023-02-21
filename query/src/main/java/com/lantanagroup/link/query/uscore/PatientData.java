@@ -1,5 +1,6 @@
 package com.lantanagroup.link.query.uscore;
 
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -162,23 +163,16 @@ public class PatientData {
               .byUrl(query)
               .returnBundle(Bundle.class)
               .execute();
-      retBundle.setEntry(nextBundle.getEntry().stream().map(e -> {
-        return new Bundle.BundleEntryComponent()
-                .setResource(e.getResource());
-      }).collect(Collectors.toList()));
+      addSearchResults(nextBundle, retBundle);
 
       while (nextBundle.getLink(IBaseBundle.LINK_NEXT) != null) {
         nextBundle = this.fhirQueryServer.loadPage()
                 .next(nextBundle)
                 .execute();
-
-        retBundle.getEntry().addAll(nextBundle.getEntry().stream().map(e -> {
-          return new Bundle.BundleEntryComponent()
-                  .setResource(e.getResource());
-        }).collect(Collectors.toList()));
-        retBundle.setTotal(retBundle.getEntry().size());
+        addSearchResults(nextBundle, retBundle);
       }
 
+      retBundle.setTotal(retBundle.getEntry().size());
       logger.info(query + " Found " + retBundle.getTotal() + " resources for query " + query);
 
       if (this.eventService != null) {
@@ -191,6 +185,18 @@ public class PatientData {
     }
 
     return null;
+  }
+
+  private void addSearchResults(Bundle searchset, Bundle patientData) {
+    IParser parser = FhirContextProvider.getFhirContext().newXmlParser();
+    for (Bundle.BundleEntryComponent entry : searchset.getEntry()) {
+      Resource resource = entry.getResource();
+      if (resource instanceof OperationOutcome) {
+        logger.warn(parser.encodeResourceToString(resource));
+        continue;
+      }
+      patientData.addEntry().setResource(resource);
+    }
   }
 
   /**
