@@ -56,7 +56,7 @@ public class EpicAuth implements ICustomAuth {
             .setAudience(config.getAudience())
             .claim("jti", UUID.randomUUID().toString())
             .setExpiration(exp)
-            .signWith(SignatureAlgorithm.RS256, key)
+            .signWith(SignatureAlgorithm.RS384, key)  // was RS256 -- KWB
             .compact();
     return jwt;
   }

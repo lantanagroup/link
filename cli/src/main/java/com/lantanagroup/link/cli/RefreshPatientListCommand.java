@@ -1,8 +1,12 @@
 package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.model.api.IResource;
+import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
+import ca.uhn.fhir.rest.client.impl.BaseClient;
+
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
@@ -24,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
@@ -82,8 +87,19 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private ListResource readList(String patientListId) throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
+    if (client instanceof BaseClient) {
+        ((BaseClient) client).setKeepResponses(true);
+    }
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
-    return client.fetchResourceFromUrl(ListResource.class, patientListId);
+    IResource r = client.fetchResourceFromUrl(IResource.class, patientListId);
+    if (r instanceof ListResource) {
+        return (ListResource)r;
+    } else {
+        IParser p = fhirContext.newJsonParser();
+        p.setPrettyPrint(true);
+        System.out.printf("%s%n", p.encodeResourceToString(r));
+        throw new IllegalArgumentException("Expected ListResource, but got " +  r.fhirType());
+    }
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
