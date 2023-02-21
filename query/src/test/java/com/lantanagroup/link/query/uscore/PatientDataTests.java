@@ -29,7 +29,7 @@ public class PatientDataTests {
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
-    Assert.assertEquals("Observation?patient=Patient/patient1&category=labs,vital-signs&date=ge2022-01-01T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryStrings.get(0));
+    Assert.assertEquals("Observation?patient=Patient/patient1&category=labs,vital-signs&date=ge2022-01-01&date=le2022-01-31", queryStrings.get(0));
   }
 
   @Test
@@ -46,7 +46,7 @@ public class PatientDataTests {
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
-    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2021-12-18T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryStrings.get(0));
+    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2021-12-18&date=le2022-01-31", queryStrings.get(0));
   }
 
   @Test
@@ -62,7 +62,7 @@ public class PatientDataTests {
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
-    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2022-01-01T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryStrings.get(0));
+    Assert.assertEquals("Observation?patient=Patient/patient1&date=ge2022-01-01&date=le2022-01-31", queryStrings.get(0));
   }
 
   @Test
@@ -94,7 +94,7 @@ public class PatientDataTests {
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Encounter", "patient1");
     Assert.assertEquals(1, queryStrings.size());
-    Assert.assertEquals("Encounter?patient=Patient/patient1&date=ge2022-01-01T00%3A00%3A00&date=le2022-01-31T23%3A59%3A59", queryStrings.get(0));
+    Assert.assertEquals("Encounter?patient=Patient/patient1&date=ge2022-01-01&date=le2022-01-31", queryStrings.get(0));
   }
 
   @Test

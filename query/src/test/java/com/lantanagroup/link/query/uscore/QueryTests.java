@@ -3,6 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.StopwatchManager;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
@@ -42,6 +43,7 @@ public class QueryTests {
     usCoreConfig.getOtherResourceTypes();
 
     PatientScoop patientScoop = new PatientScoop();
+    patientScoop.setStopwatchManager(new StopwatchManager());
     patientScoop.setUsCoreConfig(usCoreConfig);
     patientScoop.setQueryConfig(queryConfig);
     patientScoop.setFhirQueryServer(fhirQueryClient);

@@ -65,14 +65,14 @@ public class PatientData {
   }
 
   /**
-   * Only return the ISO time precise to the second
+   * Only return the ISO time precise to the day
    *
    * @param value
    * @return
    */
   public static String getDateTimeString(String value) {
-    if (value != null && value.length() > 19) {
-      return value.substring(0, 19);
+    if (value != null && value.length() > 10) {
+      return value.substring(0, 10);
     }
     return value;
   }
