@@ -51,7 +51,7 @@
       <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
       <module name="datastore" options="-parameters" />
-      <module name="link" options="" />
+      <module name="link" options="-parameters" />
       <module name="measureeval" options="-parameters" />
       <module name="mhl" options="-parameters" />
       <module name="nhsn" options="-parameters" />

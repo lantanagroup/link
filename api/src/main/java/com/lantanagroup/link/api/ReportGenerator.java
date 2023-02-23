@@ -2,6 +2,8 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
+import com.lantanagroup.link.Stopwatch;
+import com.lantanagroup.link.StopwatchManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -29,9 +31,10 @@ public class ReportGenerator {
   private LinkCredentials user;
   private ApiConfig config;
   private IReportAggregator reportAggregator;
+  private StopwatchManager stopwatchManager;
 
-
-  public ReportGenerator(ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+  public ReportGenerator(StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+    this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
     this.measureContext = measureContext;
     this.criteria = criteria;
@@ -56,12 +59,14 @@ public class ReportGenerator {
               measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
 
                 logger.info("Generating measure report for patient " + patient);
-                MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(criteria, reportContext, measureContext, config, patient);
+                MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
                 String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
                 patientMeasureReport.setId(measureReportId);
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
+                Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report");
                 this.reportContext.getFhirProvider().updateResource(patientMeasureReport);
+                stopwatch.stop();
 
                 return patientMeasureReport;
               }).collect(Collectors.toList())).get();

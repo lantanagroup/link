@@ -66,6 +66,9 @@ public class ReportController extends BaseController {
   @Autowired
   private ApiInit apiInit;
 
+  @Autowired
+  private StopwatchManager stopwatchManager;
+
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
@@ -163,14 +166,12 @@ public class ReportController extends BaseController {
     return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
-
   /**
    * to be invoked when only a multiMeasureBundleId is provided
    *
    * @return Returns a GenerateResponse
    * @throws Exception
    */
-
   @PostMapping("/$generateMultiMeasure")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
@@ -209,12 +210,12 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
     this.resolveMeasures(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
@@ -246,17 +247,17 @@ public class ReportController extends BaseController {
       reportContext.setMasterIdentifierValue(masterIdentifierValue);
     } else {
       reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
-      eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+      this.eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
 
-    eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
     this.getPatientIdentifiers(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Get the resource types to query
     Set<String> resourceTypesToQuery = new HashSet<>();
@@ -286,7 +287,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     response.setMasterId(reportContext.getMasterIdentifierValue());
 
@@ -302,19 +303,19 @@ public class ReportController extends BaseController {
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(this.stopwatchManager, reportContext, measureContext, criteria, config, user, reportAggregator);
 
-      eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
       generator.generate();
 
-      eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
-      eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
 
       generator.store();
 
-      eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
 
     }
 
@@ -344,6 +345,9 @@ public class ReportController extends BaseController {
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
+
+    this.stopwatchManager.print();
+    this.stopwatchManager.reset();
 
     return response;
   }
