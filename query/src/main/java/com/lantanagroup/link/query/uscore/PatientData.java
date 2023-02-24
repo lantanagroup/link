@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PatientData {
+  //List of resources that don't use "patient" as a way to reference the subject of the resource in the query
+  private static final List<String> epicExceptions = Arrays.asList("Specimen");
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
 
   private final ReportCriteria criteria;
@@ -94,7 +96,8 @@ public class PatientData {
 
   public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
     String finalResourceType = resourceType;
-    ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
+    ArrayList<String> params = new ArrayList<>(List.of((epicExceptions.contains(resourceType) ? "subject=" : "patient=")
+            + "Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
     HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
 
     //check if queryParameters exist in config, if not just load patient without observations
@@ -112,7 +115,7 @@ public class PatientData {
           for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
             if(resourceQueryParam.getParameters() != null){
               for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
-                if (param.getSingleParam() != null && param.getSingleParam() == true) {
+                if (param.getSingleParam() != null && param.getSingleParam()) {
                   List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
                   String paramValue = String.join(",", values);
                   params.add(param.getName() + "=" + paramValue);
