@@ -147,13 +147,15 @@ public class PatientData {
   }
 
   private Bundle rawSearch(String query) {
+    String resourceType = query.replaceAll("\\?.+$", "");
+
     int interceptors = 0;
 
     if (this.fhirQueryServer.getInterceptorService() != null) {
       interceptors = this.fhirQueryServer.getInterceptorService().getAllRegisteredInterceptors().size();
     }
 
-    try {
+    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-resources-patient-%s", resourceType))) {
       logger.info("Executing query: " + query);
 
       if (this.fhirQueryServer == null) {
