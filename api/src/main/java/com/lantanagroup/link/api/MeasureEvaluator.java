@@ -6,6 +6,8 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -73,9 +75,9 @@ public class MeasureEvaluator {
       Date measureEvalStartTime = new Date();
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-      Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure");
-      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
-      stopwatch.stop();
+      try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
+        measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
+      }
 
       logger.info(String.format("Done evaluating measure for patient %s and measure %s, took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
 

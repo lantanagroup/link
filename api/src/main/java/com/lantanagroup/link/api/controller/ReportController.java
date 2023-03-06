@@ -13,6 +13,7 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -346,7 +347,7 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
 
-    this.stopwatchManager.print();
+    logger.info("Statistics:\n" + this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
     return response;

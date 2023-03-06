@@ -3,6 +3,8 @@ package com.lantanagroup.link;
 import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -42,9 +44,9 @@ public class EventService {
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
-        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
-        ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
-        stopwatch.stop();
+        try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
+          ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+        }
       } else {
         logger.error(bean.toString() + " does not implement the IReportGenerationEvent interface");
       }
@@ -61,9 +63,9 @@ public class EventService {
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
-        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
-        ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
-        stopwatch.stop();
+        try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
+          ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+        }
       } else {
         logger.error(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
       }

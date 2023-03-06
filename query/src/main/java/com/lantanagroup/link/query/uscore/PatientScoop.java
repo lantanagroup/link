@@ -7,6 +7,8 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
@@ -65,16 +67,12 @@ public class PatientScoop {
   private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
-    Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient");
-
-    try {
+    try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient")) {
       PatientData patientData = new PatientData(this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
-    } finally {
-      stopwatch.stop();
     }
 
     return null;
@@ -89,10 +87,9 @@ public class PatientScoop {
 
     try {
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
-        Stopwatch stopwatch = this.stopwatchManager.start("query-patient");
         int poiIndex = patientsOfInterest.indexOf(poi);
 
-        try {
+        try (Stopwatch stopwatch = this.stopwatchManager.start("query-patient")) {
           if (poi.getReference() != null) {
             String id = poi.getReference();
 
@@ -134,7 +131,6 @@ public class PatientScoop {
           logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
         }
 
-        stopwatch.stop();
         return null;
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
@@ -155,15 +151,12 @@ public class PatientScoop {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = null;
-        Stopwatch stopwatch = this.stopwatchManager.start("query-resources");
 
-        try {
+        try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources")) {
           patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
-        } finally {
-          stopwatch.stop();
         }
 
         Bundle patientBundle = patientData.getBundle();
@@ -192,9 +185,9 @@ public class PatientScoop {
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
           // store data
-          stopwatch = this.stopwatchManager.start("store-patient-data");
-          this.fhirDataProvider.updateResource(patientBundle);
-          stopwatch.stop();
+          try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
+            this.fhirDataProvider.updateResource(patientBundle);
+          }
 
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");

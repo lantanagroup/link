@@ -1,6 +1,6 @@
 package com.lantanagroup.link.query.uscore;
 
-import com.lantanagroup.link.StopwatchManager;
+import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;

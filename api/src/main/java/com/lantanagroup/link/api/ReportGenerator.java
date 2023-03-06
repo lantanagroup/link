@@ -2,8 +2,8 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.Stopwatch;
-import com.lantanagroup.link.StopwatchManager;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -64,9 +64,9 @@ public class ReportGenerator {
                 patientMeasureReport.setId(measureReportId);
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
-                Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report");
-                this.reportContext.getFhirProvider().updateResource(patientMeasureReport);
-                stopwatch.stop();
+                try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
+                  this.reportContext.getFhirProvider().updateResource(patientMeasureReport);
+                }
 
                 return patientMeasureReport;
               }).collect(Collectors.toList())).get();
