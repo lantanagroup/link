@@ -35,7 +35,7 @@ steps:
 
     inlineScript: |
       export PGPASSWORD=$(db_pass)
-      psql --host=nhsnlink-db.postgres.database.azure.com --username=$(db_user) --no-password --dbname=$(db) --set=sslmode=require << EOF
+      psql --host=nhsnlink-db.postgres.database.azure.com --username=$(db_user) --no-password --dbname=$(db) << EOF
       DROP SCHEMA public CASCADE;
       CREATE SCHEMA public;
       GRANT ALL ON SCHEMA public TO it;
