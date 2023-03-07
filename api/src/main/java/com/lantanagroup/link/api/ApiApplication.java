@@ -7,6 +7,8 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
+import com.lantanagroup.link.nhsn.ReportingPlanService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -14,8 +16,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.TimeZone;
 
@@ -41,6 +41,9 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Autowired
   private ApiConfig config;
+
+  @Autowired
+  private ReportingPlanConfig reportingPlanConfig;
 
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.
@@ -87,5 +90,14 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     SimpleModule module = new SimpleModule();
     FhirHelper.initSerializers(module, fhirContext.newJsonParser());
     return module;
+  }
+
+  @Bean
+  public ReportingPlanService reportingPlanService() {
+    if (!reportingPlanConfig.isEnabled()) {
+      return null;
+    }
+    logger.info("Initializing MRP service");
+    return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
   }
 }
