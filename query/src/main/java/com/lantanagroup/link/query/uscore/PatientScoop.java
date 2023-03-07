@@ -104,7 +104,6 @@ public class PatientScoop {
                     .execute();
             patientMap.put(poi.getReference(), patient);
             poi.setId(patient.getIdElement().getIdPart());
-            stopwatch.stop();
             return patient;
           } else if (poi.getIdentifier() != null) {
             String searchUrl = "Patient?identifier=" + poi.getIdentifier();
@@ -117,13 +116,11 @@ public class PatientScoop {
                     .execute();
             if (response.getEntry().size() != 1) {
               logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
-              stopwatch.stop();
               return null;
             } else {
               Patient patient = (Patient) response.getEntryFirstRep().getResource();
               patientMap.put(poi.getIdentifier(), patient);
               poi.setId(patient.getIdElement().getIdPart());
-              stopwatch.stop();
               return patient;
             }
           }
