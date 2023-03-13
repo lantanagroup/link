@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
@@ -59,12 +62,12 @@ public class MeasureEvaluator {
 
       // get patient bundle from the fhirserver
       FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
-      IBaseResource patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
+      Bundle patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
       parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-      parameters.addParameter().setName("additionalData").setResource((Bundle) patientBundle);
+      parameters.addParameter().setName("additionalData").setResource(patientBundle);
       if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
         Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
         parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
@@ -72,14 +75,19 @@ public class MeasureEvaluator {
       }
 
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
-      Date measureEvalStartTime = new Date();
+
+      String distribution = patientBundle.getEntry().stream()
+              .collect(Collectors.groupingBy(entry -> entry.getResource().getResourceType(), Collectors.counting()))
+              .entrySet().stream()
+              .sorted(Map.Entry.comparingByKey())
+              .map(entry -> String.format("%-40s  %6d", entry.getKey(), entry.getValue()))
+              .collect(Collectors.joining("\n"));
+      logger.info("Resource type distribution:\n{}", distribution);
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
         measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
       }
-
-      logger.info(String.format("Done evaluating measure for patient %s and measure %s, took %s milliseconds", patientId, measureId, (new Date()).getTime() - measureEvalStartTime.getTime()));
 
       // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
       // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
