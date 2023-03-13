@@ -76,6 +76,14 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
           }
         }
         break;
+      case MedicationRequest:
+        MedicationRequest medicationRequest = (MedicationRequest) resource;
+        if (medicationRequest.getAuthoredOn() != null) {
+          if (!isWithin(medicationRequest.getAuthoredOn().toInstant(), start, end)) {
+            return true;
+          }
+        }
+        break;
       case ServiceRequest:
         ServiceRequest serviceRequest = (ServiceRequest) resource;
 
