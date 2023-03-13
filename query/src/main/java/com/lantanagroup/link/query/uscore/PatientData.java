@@ -341,16 +341,20 @@ public class PatientData {
             List<List<String>> dividedQueries = this.separateByCount(allResourceIds, countPerSearch);
 
             for (List<String> resourceIds : dividedQueries) {
-              Bundle otherResources = this.fhirQueryServer.search()
-                      .forResource(resourceType)
-                      .where(Resource.RES_ID.exactly().codes(resourceIds))
-                      .returnBundle(Bundle.class)
-                      .execute();
+              try {
+                Bundle otherResources = this.fhirQueryServer.search()
+                        .forResource(resourceType)
+                        .where(Resource.RES_ID.exactly().codes(resourceIds))
+                        .returnBundle(Bundle.class)
+                        .execute();
 
-              otherResources.getEntry().forEach(e -> {
-                this.otherResources.put(e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart(), e.getResource());
-                this.bundle.addEntry().setResource(e.getResource());
-              });
+                otherResources.getEntry().forEach(e -> {
+                  this.otherResources.put(e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart(), e.getResource());
+                  this.bundle.addEntry().setResource(e.getResource());
+                });
+              } catch (Exception e) {
+                logger.error("Can't find resources of type: " + resourceType + " and ids: " + String.join(",", resourceIds), e);
+              }
             }
           } else {
             resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
@@ -363,7 +367,7 @@ public class PatientData {
                 this.otherResources.put(resource.getResourceType().toString() + "/" + resource.getIdElement().getIdPart(), resource);
                 this.bundle.addEntry().setResource(resource);
               } catch (Exception e) {
-                logger.debug("Can't find resource of type: " + resourceType + " and id: " + resourceId);
+                logger.error("Can't find resource of type: " + resourceType + " and id: " + resourceId, e);
               }
             });
           }
