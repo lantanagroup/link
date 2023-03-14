@@ -23,8 +23,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PatientData {
-  //List of resources that don't use "patient" as a way to reference the subject of the resource in the query
-  private static final List<String> epicExceptions = Arrays.asList("Specimen");
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
 
   private final ReportCriteria criteria;
@@ -96,8 +94,7 @@ public class PatientData {
 
   public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
     String finalResourceType = resourceType;
-    ArrayList<String> params = new ArrayList<>(List.of((epicExceptions.contains(resourceType) ? "subject=" : "patient=")
-            + "Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
+    ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
     HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
 
     //check if queryParameters exist in config, if not just load patient without observations
