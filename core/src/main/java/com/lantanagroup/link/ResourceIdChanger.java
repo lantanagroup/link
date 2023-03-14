@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,7 @@ public class ResourceIdChanger {
   private String getNewId(String rId) {
     String newId = rId.replace(Constants.UuidPrefix, "");
     if (newId.length() > 64) {
-      newId = "hash-" + Integer.toHexString(newId.hashCode());
+      newId = "hash-" + DigestUtils.sha1Hex(newId);
     }
     return newId;
   }

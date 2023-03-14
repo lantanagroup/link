@@ -64,13 +64,13 @@ public class ResourceIdChangerTests {
     ResourceIdChanger.changeIds(bundle);
 
     // Make sure the Condition's ID was changed
-    Assert.assertEquals("hash-e05ed46d", cond1.getIdElement().getIdPart());
+    Assert.assertEquals("hash-6d21d51b109afcf4a65ca7bae1019699c62aa2a3", cond1.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was changed
     Assert.assertEquals("987654321", cond2.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was changed
-    Assert.assertEquals("hash-1b761b0b", cond3.getIdElement().getIdPart());
+    Assert.assertEquals("hash-a00fb8db0da7b8287ff9ee01cdfcf39adb1e866f", cond3.getIdElement().getIdPart());
 
     // Make sure the Condition's ID was not changed
     Assert.assertEquals("correctOne", cond4.getIdElement().getIdPart());
@@ -90,11 +90,11 @@ public class ResourceIdChangerTests {
 
 
     // Make sure the reference to the Condition has an extension to track the original reference
-    Assert.assertEquals("Condition/hash-e05ed46d", enc1.getDiagnosisFirstRep().getCondition().getReference());
+    Assert.assertEquals("Condition/hash-6d21d51b109afcf4a65ca7bae1019699c62aa2a3", enc1.getDiagnosisFirstRep().getCondition().getReference());
     Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
-    Assert.assertEquals("Condition/hash-1b761b0b", enc1.getDiagnosis().get(1).getCondition().getReference());
+    Assert.assertEquals("Condition/hash-a00fb8db0da7b8287ff9ee01cdfcf39adb1e866f", enc1.getDiagnosis().get(1).getCondition().getReference());
     Assert.assertNotNull(enc1.getDiagnosis().get(1).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
