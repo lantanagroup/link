@@ -67,7 +67,7 @@ public class PatientScoop {
   private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
-    try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient")) {
+    try {
       PatientData patientData = new PatientData(this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;

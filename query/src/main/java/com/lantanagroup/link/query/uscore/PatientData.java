@@ -236,35 +236,37 @@ public class PatientData {
       return;
     }
 
-    // Load all encounters first to populate this.encounterReferences
-    // so that the encounter ids may be used by getQuery()
-    this.loadEncounters(measureIds);
-    if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
-      logger.info("No encounters found; exiting query phase");
-      return;
-    }
-
-    //Loop through resource types specified. If observation, use config to add individual category queries
-    Set<String> queryString = new HashSet<>();
-    for (String resource : this.resourceTypes) {
-      if (resource.equals("Encounter")) continue;   // Skip encounters because they were loaded earlier
-      queryString.addAll(this.getQuery(measureIds, resource, this.patientId));
-    }
-
-    if (!queryString.isEmpty()) {
-      try {
-        queryString.forEach(query -> {
-          Bundle bundle = this.rawSearch(query);
-          if (bundle != null) {
-            this.bundle.getEntry().addAll(bundle.getEntry());
-          }
-        });
+    try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient")) {
+      // Load all encounters first to populate this.encounterReferences
+      // so that the encounter ids may be used by getQuery()
+      this.loadEncounters(measureIds);
+      if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
+        logger.info("No encounters found; exiting query phase");
+        return;
       }
-      catch(Exception ex) {
-        logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
+
+      //Loop through resource types specified. If observation, use config to add individual category queries
+      Set<String> queryString = new HashSet<>();
+      for (String resource : this.resourceTypes) {
+        if (resource.equals("Encounter")) continue;   // Skip encounters because they were loaded earlier
+        queryString.addAll(this.getQuery(measureIds, resource, this.patientId));
       }
-    } else {
-      logger.warn("No queries generated based on resource types and configuration");
+
+      if (!queryString.isEmpty()) {
+        try {
+          queryString.forEach(query -> {
+            Bundle bundle = this.rawSearch(query);
+            if (bundle != null) {
+              this.bundle.getEntry().addAll(bundle.getEntry());
+            }
+          });
+        }
+        catch (Exception ex) {
+          logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
+        }
+      } else {
+        logger.warn("No queries generated based on resource types and configuration");
+      }
     }
 
     try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-other")) {
