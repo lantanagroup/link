@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
@@ -58,6 +60,15 @@ public class MeasureEvaluator {
       // get patient bundle from the fhirserver
       FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
       IBaseResource patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
+
+      logger.info("Removing any non-Patient resource with the same ID as the Patient");
+      //Filter all resources that aren't the Patient and don't have the same ID as the Patient but also the Patient resource
+      ((Bundle) patientBundle).setEntry(((Bundle) patientBundle).getEntry().stream().filter(entry ->
+              (!entry.getResource().getIdElement().getIdPart().equals(patientId)
+                      && !entry.getResource().getResourceType().toString().equals("Patient"))
+                      || (entry.getResource().getIdElement().getIdPart().equals(patientId)
+                      && entry.getResource().getResourceType().toString().equals("Patient"))).collect(Collectors.toList()));
+      
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
