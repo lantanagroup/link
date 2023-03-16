@@ -1,6 +1,7 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.SearchStyleEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -346,6 +347,7 @@ public class PatientData {
               try {
                 Bundle otherResources = this.fhirQueryServer.search()
                         .forResource(resourceType)
+                        .usingStyle(SearchStyleEnum.POST)
                         .where(Resource.RES_ID.exactly().codes(resourceIds))
                         .returnBundle(Bundle.class)
                         .execute();
