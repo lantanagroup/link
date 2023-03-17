@@ -102,8 +102,8 @@ public class FhirBundler {
   private Bundle createBundle() {
     Bundle bundle = new Bundle();
     bundle.getMeta()
-            .addProfile(Constants.ReportBundleProfileUrl)
-            .addTag(Constants.MainSystem, "report", "Report");
+            .addProfile(config.isMHL() ? Constants.MHLReportBundleProfileUrl : Constants.ReportBundleProfileUrl)
+            .addTag((config.isMHL() ? Constants.MHLSystem : Constants.MainSystem), "report", "Report");
     bundle.getIdentifier()
             .setSystem(Constants.IdentifierSystem)
             .setValue("urn:uuid:" + UUID.randomUUID().toString());
@@ -185,7 +185,8 @@ public class FhirBundler {
       if (resource instanceof DomainResource) {
         ((DomainResource) resource).setText(null);
       }
-      entry.setFullUrl(String.format("http://lantanagroup.com/fhir/nhsn-measures/%s", resourceId));
+      entry.setFullUrl(String.format("http://lantanagroup.com/fhir/" +
+              (config.isMHL() ? "nih-measures" : "nhsn-measures") + "/%s", resourceId));
       if (config.getBundleType() == Bundle.BundleType.TRANSACTION
               || config.getBundleType() == Bundle.BundleType.BATCH) {
         entry.getRequest()
@@ -210,7 +211,7 @@ public class FhirBundler {
       mergedCensus.getEntry().clear();
       for (ListResource census : censuses) {
         census.setMeta(new Meta());
-        census.getMeta().addProfile(Constants.CensusProfileUrl);
+        census.getMeta().addProfile(config.isMHL() ? Constants.MHLCensusProfileUrl : Constants.CensusProfileUrl);
         FhirHelper.mergeCensusLists(mergedCensus, census);
       }
       bundle.addEntry().setResource(mergedCensus);
@@ -218,7 +219,7 @@ public class FhirBundler {
       for (ListResource census : censuses) {
         logger.debug("Adding census: {}", census.getId());
         census.setMeta(new Meta());
-        census.getMeta().addProfile(Constants.CensusProfileUrl);
+        census.getMeta().addProfile(config.isMHL() ? Constants.MHLCensusProfileUrl : Constants.CensusProfileUrl);
         bundle.addEntry().setResource(census);
       }
     }
@@ -261,7 +262,8 @@ public class FhirBundler {
 
     // Set the reporter to the facility/org
     individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.org.getIdElement().getIdPart()));
-    individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
+    individualMeasureReport.getMeta().addProfile(config.isMHL() ?
+            Constants.MHLIndividualMeasureReportProfileUrl : Constants.IndividualMeasureReportProfileUrl);
 
     bundle.addEntry().setResource(individualMeasureReport);
 

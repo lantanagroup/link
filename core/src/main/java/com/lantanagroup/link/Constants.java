@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 public class Constants {
   public static final String MainSystem = "https://nhsnlink.org";
+  public static final String MHLSystem = "https://mhl.lantanagroup.com";
   public static final String ReportDefinitionTag = "report-definition";
   public static final String LoincSystemUrl = "http://loinc.org";
   public static final String DocRefCode = "55186-1";
@@ -25,6 +26,9 @@ public class Constants {
   public static final String ReportBundleProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/individual-measure-report";
   public static final String CensusProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/poi-list";
+  public static final String MHLReportBundleProfileUrl = "http://lantanagroup.com/fhir/nih-measures/StructureDefinition/nih-measurereport-bundle";
+  public static final String MHLIndividualMeasureReportProfileUrl = "http://lantanagroup.com/fhir/nih-measures/StructureDefinition/individual-measure-report";
+  public static final String MHLCensusProfileUrl = "http://lantanagroup.com/fhir/nih-measures/StructureDefinition/poi-list";
   public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org.fhir/sid/us-npi";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";

@@ -9,13 +9,20 @@ import org.hl7.fhir.r4.model.StringType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.validation.annotation.Validated;
 
 @Getter
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "bundler")
+@Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class BundlerConfig {
+  /**
+   * Indicates whether the bundle is being created for MHL or not.
+   */
+  private boolean MHL = false;
+
   /**
    * The type of submission bundle to create.
    */
