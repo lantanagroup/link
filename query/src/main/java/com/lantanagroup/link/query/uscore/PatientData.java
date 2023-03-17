@@ -361,7 +361,7 @@ public class PatientData {
               }
             }
           } else {
-            resourcesToGet.get(resourceType).parallelStream().forEach(resourceId -> {
+            resourcesToGet.get(resourceType).forEach(resourceId -> {
               try {
                 Resource resource = (Resource) this.fhirQueryServer.read()
                         .resource(resourceType)
