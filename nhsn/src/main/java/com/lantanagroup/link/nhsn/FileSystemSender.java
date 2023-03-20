@@ -29,7 +29,7 @@ import java.util.Map;
 
 @Component
 public class FileSystemSender extends GenericSender implements IReportSender {
-  protected static Logger logger = LoggerFactory.getLogger(AzureBlobStorageSender.class);
+  protected static Logger logger = LoggerFactory.getLogger(FileSystemSender.class);
 
   @Autowired
   @Setter
