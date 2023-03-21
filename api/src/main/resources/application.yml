@@ -38,9 +38,23 @@ api:
   report-defs:
     max-retry: 5
     retry-wait: 5000
-  query:
-    mode: Local
   measure-evaluation-threads: 10
+
+# For scheduled tasks
+# CRON format is "<sec> <min> <hour> <day of month> <month> <day of week - 0 index>" and expects UTC
+# Examples:
+# 3rd day of month: "0 0 0 3 * *"
+# every 3 hours: "0 */3 * * * *"
+# every 2 minutes: */30 * * * * *"
+# 21st day of month at 1:11p PT: "0 11 20 3 * *"
+schedule:
+#  acquire-census-cron: '0 */3 * * * *'  # every three hours
+#  generate-report:
+#    - measure-ids:
+#        - NHSNGlycemicControlHypoglycemicInitialPopulation
+#      reporting-period-method: LastMonth
+#      cron: '0 * * * * *'
+#      regenerate-if-exists: false
 thsa:
   dataMeasureReportId: inventorydata
 query:
