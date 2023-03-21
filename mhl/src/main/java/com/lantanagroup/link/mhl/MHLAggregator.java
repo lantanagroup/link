@@ -43,17 +43,16 @@ public class MHLAggregator extends ReportAggregator {
   private FhirDataProvider fhirDataProvider;
 
   /**
-   * Suppresses adding subject results to the "initial population children" population.
+   * Suppresses adding subject results to populations other than "initial population."
    * Otherwise, delegates to the superclass implementation.
    */
   @Override
   protected void addSubjectResult(
           MeasureReport individualMeasureReport,
           MeasureReport.MeasureReportGroupPopulationComponent aggregatePopulation) {
-    if (aggregatePopulation.getCode().hasCoding(INITIAL_POPULATION_CHILDREN_SYSTEM, INITIAL_POPULATION_CHILDREN_CODE)) {
-      return;
+    if (aggregatePopulation.getCode().hasCoding(INITIAL_POPULATION_SYSTEM, INITIAL_POPULATION_CODE)) {
+      super.addSubjectResult(individualMeasureReport, aggregatePopulation);
     }
-    super.addSubjectResult(individualMeasureReport, aggregatePopulation);
   }
 
   /**
