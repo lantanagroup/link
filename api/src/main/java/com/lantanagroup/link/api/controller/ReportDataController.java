@@ -2,7 +2,6 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +15,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.constraints.NotNull;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
@@ -42,23 +43,10 @@ public class ReportDataController extends BaseController {
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
+
   @InitBinder
   public void initBinder(WebDataBinder binder) {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
-  }
-
-  @PostMapping(value = "/data/{type}")
-  public void retrieveData(@RequestBody() byte[] content, @PathVariable("type") String type) throws Exception {
-    if (config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
-      throw new IllegalStateException("Cannot find data processor.");
-    }
-
-    logger.debug("Receiving " + type + " data. Parsing...");
-
-    Class<?> dataProcessorClass = Class.forName(this.config.getDataProcessor().get(type));
-    IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
-
-    dataProcessor.process(content, getFhirDataProvider());
   }
 
   /**
