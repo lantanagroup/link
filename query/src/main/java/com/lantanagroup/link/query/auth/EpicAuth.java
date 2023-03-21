@@ -48,6 +48,8 @@ public class EpicAuth implements ICustomAuth {
       logger.error("Error loading private key from config for Epic auth: " + ex.getMessage());
     }
 
+    logger.debug("Generating JWT for client id " + config.getClientId() + " and key that starts with " + config.getKey().substring(0, 10) + "...");
+
     Date exp = new Date(System.currentTimeMillis() + (1000 * 60 * 4));  // extend 4 minutes
     String jwt = Jwts.builder()
             .setHeaderParam("typ", "JWT")
@@ -68,6 +70,8 @@ public class EpicAuth implements ICustomAuth {
     String jwt = getJwt(this.config);
     String requestBody = String.format("grant_type=client_credentials&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=%s", jwt);
 
+    logger.debug("Requesting token from " + this.config.getTokenUrl() + " with JWT:\n" + jwt);
+
     HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder(new URI(this.config.getTokenUrl()))
             .header("Content-Type", "application/x-www-form-urlencoded")
@@ -87,7 +91,7 @@ public class EpicAuth implements ICustomAuth {
           logger.debug("Acquired access token for Epic");
           return "Bearer " + accessToken;
         } else {
-          logger.error("Response from auth token request does not include an 'access_token' property");
+          logger.error("Response from auth token request does not include an 'access_token' property:\n" + responseBody);
         }
       }
     } catch (Exception ex) {

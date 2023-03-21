@@ -7,28 +7,15 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.xml.datatype.DatatypeConfigurationException;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ReportDataControllerTest {
-
-  @Ignore
-  public void csvEndPoint() throws Exception {
-    // TODO: Remove @Ignore and add unit testing logic
-    // TODO: Mock out the ReportDataController so that the config can be set
-    ReportDataController reportDataController = new ReportDataController();
-    reportDataController.retrieveData("csv content".getBytes(StandardCharsets.UTF_8), "csv");
-    reportDataController.retrieveData("csv content".getBytes(StandardCharsets.UTF_8), "csv");
-  }
-
   @Test
   public void expungeDataTest() throws DatatypeConfigurationException {
     ReportDataController reportDataController = new ReportDataController();
