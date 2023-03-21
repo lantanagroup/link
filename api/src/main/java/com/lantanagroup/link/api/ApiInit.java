@@ -58,7 +58,6 @@ public class ApiInit {
   @Value("classpath:fhir/*")
   private Resource[] resources;
 
-
   private boolean checkPrerequisites() {
 
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());

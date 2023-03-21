@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
@@ -35,6 +36,7 @@ import java.util.TimeZone;
         "com.lantanagroup.link.spring",
         "com.lantanagroup.link.thsa"
 })
+@EnableScheduling
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
