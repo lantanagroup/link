@@ -17,6 +17,6 @@ import java.util.List;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ScheduleConfig {
-  private String acquireCensusCron;
+  private String queryPatientListCron;
   private List<GenerateReportConfig> generateReport;
 }

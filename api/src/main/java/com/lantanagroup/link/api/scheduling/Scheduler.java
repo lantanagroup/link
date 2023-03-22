@@ -28,18 +28,18 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
-    if (StringUtils.isNotEmpty(this.config.getAcquireCensusCron())) {
-      AcquireCensusTask acquireCensusTask = this.context.getBean(AcquireCensusTask.class);
-      this.taskScheduler.schedule(acquireCensusTask, new CronTrigger(this.config.getAcquireCensusCron()));
-      logger.info("Scheduled census acquisition with CRON \"" + this.config.getAcquireCensusCron() + "\"");
+    if (StringUtils.isNotEmpty(this.config.getQueryPatientListCron())) {
+      QueryPatientListTask queryPatientListTask = this.context.getBean(QueryPatientListTask.class);
+      this.taskScheduler.schedule(queryPatientListTask, new CronTrigger(this.config.getQueryPatientListCron()));
+      logger.info("Scheduled querying patient list with CRON \"" + this.config.getQueryPatientListCron() + "\"");
     }
 
     if (this.config.getGenerateReport() != null) {
       for (GenerateReportConfig generateReportConfig : this.config.getGenerateReport()) {
-        GenerateReportTask generateReportTask = this.context.getBean(GenerateReportTask.class);
-        generateReportTask.setMeasureIds(generateReportConfig.getMeasureIds());
-        generateReportTask.setReportingPeriodMethod(generateReportConfig.getReportingPeriodMethod());
-        this.taskScheduler.schedule(generateReportTask, new CronTrigger(generateReportConfig.getCron()));
+        GenerateAndSubmitReportTask generateAndSubmitReportTask = this.context.getBean(GenerateAndSubmitReportTask.class);
+        generateAndSubmitReportTask.setMeasureIds(generateReportConfig.getMeasureIds());
+        generateAndSubmitReportTask.setReportingPeriodMethod(generateReportConfig.getReportingPeriodMethod());
+        this.taskScheduler.schedule(generateAndSubmitReportTask, new CronTrigger(generateReportConfig.getCron()));
         logger.info("Scheduled report generation for " + String.join(",", generateReportConfig.getMeasureIds()) + " with CRON \"" + generateReportConfig.getCron() + "\"");
       }
     }

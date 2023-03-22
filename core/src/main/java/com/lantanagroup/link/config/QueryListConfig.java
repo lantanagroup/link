@@ -1,6 +1,5 @@
-package com.lantanagroup.link.cli;
+package com.lantanagroup.link.config;
 
-import com.lantanagroup.link.config.YamlPropertySourceFactory;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,22 +16,21 @@ import java.util.List;
 @Setter
 @Validated
 @Configuration
-@ConfigurationProperties(prefix = "cli.refresh-patient-list")
+@ConfigurationProperties(prefix = "query-list")
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
-public class RefreshPatientListConfig {
-  @NotBlank
-  private String apiUrl;
-  private AuthConfig auth;
+public class QueryListConfig {
+  private String fhirServerBase;
+
   @NotNull
   @Size(min = 1)
-  private List<PatientList> patientList;
-  private CensusReportingPeriods censusReportingPeriod;
+  private List<PatientList> lists;
 
   @Getter
   @Setter
   public static class PatientList {
     @NotBlank
-    private String patientListPath;
+    private String listId;
+
     @NotNull
     @Size(min = 1)
     private List<@NotBlank String> censusIdentifier;
