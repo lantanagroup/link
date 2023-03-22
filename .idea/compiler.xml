@@ -18,7 +18,6 @@
         </processorPath>
         <module name="mhl" />
         <module name="core" />
-        <module name="cli" />
         <module name="thsa" />
         <module name="measureeval" />
         <module name="nhsn" />

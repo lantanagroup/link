@@ -48,26 +48,29 @@ api:
 # every 2 minutes: */30 * * * * *"
 # 21st day of month at 1:11p PT: "0 11 20 3 * *"
 schedule:
-#  acquire-census-cron: '0 */3 * * * *'  # every three hours
+#  query-patient-list-cron: '0 */3 * * * *'  # every three hours
 #  generate-report:
 #    - measure-ids:
 #        - NHSNGlycemicControlHypoglycemicInitialPopulation
 #      reporting-period-method: LastMonth
 #      cron: '0 * * * * *'
 #      regenerate-if-exists: false
+
+# For querying one or more List resources from the FHIR server to use as a patient list for one or more census'
+#query-list:
+#  fhir-server-base: 'http://test.com/fhir/STU3'       # optional. if not specified, uses us-core's fhir-server-base
+#  lists:
+#    - list-id: 1234
+#      census-identifier: NHSNGlycemicControlHypoglycemicInitialPopulation
 thsa:
   dataMeasureReportId: inventorydata
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
-  proxy-address: 23i90u4akdjsf
+  #  proxy-address: ''
   allowed-remote:
-    - testbadip
     - 0:0:0:0:0:0:0:1
     - 127.0.0.1
-    - dev-api.nhsnlink.org
-    - test-api.nhsnlink.org
-  api-key: 89a83764-9530-4340-9a14-1058b9e84f84c977f983-46e3-4e49-9c3b-869bb2b0f5328ba571b9-e785-4a0b-9fdd-5ff34b8125c47859d241-4ccc-406a-96b6-6fdc918a05e6f3288ebd-927c-4db5
 uscore:
   fhir-server-base:
   patient-resource-types:

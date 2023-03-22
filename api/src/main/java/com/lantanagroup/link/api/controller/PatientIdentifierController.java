@@ -1,12 +1,22 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.*;
+import com.lantanagroup.link.api.scheduling.ReportingPeriodCalculator;
+import com.lantanagroup.link.config.QueryListConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
+import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +37,80 @@ import java.util.List;
 @RequestMapping("/api/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
+
+  private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
+  @Autowired
+  private USCoreConfig usCoreConfig;
+  @Autowired
+  private QueryConfig queryConfig;
+  @Autowired
+  private ApplicationContext applicationContext;
+  @Autowired
+  private QueryListConfig queryListConfig;
+
+  @PostMapping("/$query-list")
+  public void queryPatientList() throws Exception {
+    List<QueryListConfig.PatientList> filteredList = this.queryListConfig.getLists();
+
+    for (QueryListConfig.PatientList listResource : filteredList) {
+      ListResource source = this.readList(listResource.getListId());
+
+      for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
+        ListResource target = this.transformList(source, listResource.getCensusIdentifier().get(j));
+
+        this.receiveFHIR(target);
+      }
+    }
+  }
+
+  private ListResource readList(String patientListId) throws ClassNotFoundException {
+    this.fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+    IGenericClient client = this.fhirContext.newRestfulGenericClient(
+            StringUtils.isNotEmpty(this.queryListConfig.getFhirServerBase()) ?
+                    this.queryListConfig.getFhirServerBase() :
+                    this.usCoreConfig.getFhirServerBase());
+
+    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
+    return client.fetchResourceFromUrl(ListResource.class, patientListId);
+  }
+
+  private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
+    logger.info("Transforming");
+    ListResource target = new ListResource();
+    Period period = new Period();
+
+    // TODO: Make ReportingPeriodMethods configurable
+    ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth);
+    period.setStartElement(new DateTimeType(calculator.getStart()));
+    period.setEndElement(new DateTimeType(calculator.getEnd()));
+
+    target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
+    target.addIdentifier()
+            .setSystem(Constants.MainSystem)
+            .setValue(censusIdentifier);
+    target.setStatus(ListResource.ListStatus.CURRENT);
+    target.setMode(ListResource.ListMode.WORKING);
+    target.setTitle(String.format("Census List for %s", censusIdentifier));
+    target.setCode(source.getCode());
+    target.setDate(source.getDate());
+    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
+    for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
+      target.addEntry(transformListEntry(sourceEntry, baseUrl));
+    }
+    return target;
+  }
+
+  private ListResource.ListEntryComponent transformListEntry(ListResource.ListEntryComponent source, URI baseUrl)
+          throws URISyntaxException {
+    ListResource.ListEntryComponent target = source.copy();
+    if (target.getItem().hasReference()) {
+      URI referenceUrl = new URI(target.getItem().getReference());
+      if (referenceUrl.isAbsolute()) {
+        target.getItem().setReference(baseUrl.relativize(referenceUrl).toString());
+      }
+    }
+    return target;
+  }
 
   @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
   public void getPatientIdentifierListXML(

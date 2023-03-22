@@ -3,6 +3,7 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.api.controller.ReportController;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import com.lantanagroup.link.model.GenerateRequest;
+import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class GenerateReportTask implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(GenerateReportTask.class);
+public class GenerateAndSubmitReportTask implements Runnable {
+  private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitReportTask.class);
 
   @Setter
   private List<String> measureIds;
@@ -41,6 +42,7 @@ public class GenerateReportTask implements Runnable {
 
     logger.info("Starting scheduled task to generate a report");
     ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
+    GenerateResponse generateResponse;
 
     try {
       GenerateRequest generateRequest = new GenerateRequest();
@@ -48,9 +50,16 @@ public class GenerateReportTask implements Runnable {
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
-      reportController.generateReport(null, null, generateRequest);
+      generateResponse = this.reportController.generateReport(null, null, generateRequest);
     } catch (Exception e) {
-      logger.error("Error generating reporting", e);
+      logger.error("Error generating report", e);
+      return;
+    }
+
+    try {
+      this.reportController.send(null, generateResponse.getMasterId(), null);
+    } catch (Exception ex) {
+      logger.error("Error submitting report", ex);
     }
   }
 }
