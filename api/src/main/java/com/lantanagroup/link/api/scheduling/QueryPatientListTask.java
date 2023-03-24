@@ -19,6 +19,7 @@ public class QueryPatientListTask implements Runnable {
 
     try {
       this.patientIdentifierController.queryPatientList();
+      logger.info("Done executing query patient list scheduled task");
     } catch (Exception ex) {
       logger.error("Error querying patient list(s)", ex);
     }

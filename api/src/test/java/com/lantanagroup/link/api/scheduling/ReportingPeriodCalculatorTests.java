@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.scheduling;
 
+import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import org.junit.Assert;
 import org.junit.Test;

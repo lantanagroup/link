@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.HashMap;
@@ -172,12 +171,6 @@ public class ApiConfig {
    */
   @Getter
   private List<ApiMeasurePackage> measurePackages;
-
-  /**
-   * <strong>api.user</strong><br>Configuration related to the user that is responsible for running the installation of Link, such as timezone settings.
-   */
-  @Getter
-  private UserConfig user;
 
 
   /**
