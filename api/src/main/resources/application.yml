@@ -46,6 +46,7 @@ api:
 # 21st day of month at 1:11p PT: "0 11 20 3 * *"
 schedule:
 #  query-patient-list-cron: '0 0 */3 * * *'  # every three hours
+#  data-retention-check-cron: '0 0 0 1 * *'   # first day of each month
 #  generate-and-submit-report:
 #    - measure-ids:
 #        - NHSNGlycemicControlHypoglycemicInitialPopulation
