@@ -42,6 +42,7 @@ public class ReportingPeriodCalculator {
         break;
       case CurrentWeek:
         cal.add(Calendar.DATE, -startOfWeek);
+        break;
       default:
         throw new IllegalArgumentException("method");
     }
@@ -64,6 +65,23 @@ public class ReportingPeriodCalculator {
       case LastMonth:
         cal.set(Calendar.DATE, 1);
         cal.add(Calendar.SECOND, -1);
+        break;
+      case CurrentMonth:
+        cal.set(Calendar.DATE, cal.getActualMaximum(Calendar.DATE));
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        break;
+      case LastWeek:
+        cal.add(Calendar.DATE, -startOfWeek);
+        cal.add(Calendar.SECOND, -1);
+        break;
+      case CurrentWeek:
+        cal.add(Calendar.DATE, -startOfWeek + 7);
+        cal.add(Calendar.SECOND, -1);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
         break;
       default:
         throw new IllegalArgumentException("method");
