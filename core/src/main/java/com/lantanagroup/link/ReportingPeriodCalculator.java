@@ -1,4 +1,4 @@
-package com.lantanagroup.link.api.scheduling;
+package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import lombok.Setter;

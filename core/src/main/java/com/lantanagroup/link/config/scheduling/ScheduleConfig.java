@@ -18,5 +18,6 @@ import java.util.List;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ScheduleConfig {
   private String queryPatientListCron;
+  private String dataRetentionCheckCron;
   private List<GenerateReportConfig> generateReport;
 }

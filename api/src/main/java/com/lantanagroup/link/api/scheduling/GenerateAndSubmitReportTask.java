@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.scheduling;
 
+import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.api.controller.ReportController;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import com.lantanagroup.link.model.GenerateRequest;
@@ -61,5 +62,7 @@ public class GenerateAndSubmitReportTask implements Runnable {
     } catch (Exception ex) {
       logger.error("Error submitting report", ex);
     }
+
+    logger.info("Done executing generate and submit report scheduled task");
   }
 }

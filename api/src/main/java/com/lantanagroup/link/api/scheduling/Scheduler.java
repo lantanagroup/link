@@ -28,6 +28,12 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
+    if (StringUtils.isNotEmpty(this.config.getDataRetentionCheckCron())) {
+      DataRetentionCheckTask dataRetentionCheckTask = this.context.getBean(DataRetentionCheckTask.class);
+      this.taskScheduler.schedule(dataRetentionCheckTask, new CronTrigger(this.config.getDataRetentionCheckCron()));
+      logger.info("Scheduled data retention check with CRON \"" + this.config.getDataRetentionCheckCron() + "\"");
+    }
+
     if (StringUtils.isNotEmpty(this.config.getQueryPatientListCron())) {
       QueryPatientListTask queryPatientListTask = this.context.getBean(QueryPatientListTask.class);
       this.taskScheduler.schedule(queryPatientListTask, new CronTrigger(this.config.getQueryPatientListCron()));
