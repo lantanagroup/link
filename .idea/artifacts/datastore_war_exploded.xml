@@ -291,6 +291,7 @@
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.12.6.1" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.13.2" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.13.2" />
+          <element id="library" level="project" name="Maven: org.mongodb:mongo-java-driver:3.12.12" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-validation:2.5.5" />
           <element id="library" level="project" name="Maven: org.apache.tomcat.embed:tomcat-embed-el:9.0.53" />
           <element id="library" level="project" name="Maven: org.hibernate.validator:hibernate-validator:6.2.0.Final" />

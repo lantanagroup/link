@@ -292,6 +292,7 @@
           <element id="library" level="project" name="Maven: com.auth0:java-jwt:3.8.3" />
           <element id="library" level="project" name="Maven: com.auth0:jwks-rsa:0.9.0" />
           <element id="library" level="project" name="Maven: org.json:json:20200518" />
+          <element id="library" level="project" name="Maven: org.mongodb:mongo-java-driver:3.12.12" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-validation:2.5.5" />
           <element id="library" level="project" name="Maven: org.apache.tomcat.embed:tomcat-embed-el:9.0.53" />
           <element id="library" level="project" name="Maven: org.postgresql:postgresql:42.4.1" />

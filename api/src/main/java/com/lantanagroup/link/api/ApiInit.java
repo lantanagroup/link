@@ -4,7 +4,6 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.OAuth2Helper;
@@ -13,13 +12,14 @@ import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.MeasureDefinition;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.Meta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +57,9 @@ public class ApiInit {
 
   @Value("classpath:fhir/*")
   private Resource[] resources;
+
+  @Autowired
+  private MongoService mongoService;
 
   private boolean checkPrerequisites() {
 
@@ -127,38 +130,32 @@ public class ApiInit {
   private void loadMeasureDefinitions() {
     HttpClient client = HttpClient.newHttpClient();
     config.getReportDefs().getUrls().parallelStream().forEach(urlConfig -> {
-      String bundleId = urlConfig.getBundleId();
-      logger.info(String.format("Loading report def for %s", bundleId));
-      Bundle localBundle = null;
+      String measureId = urlConfig.getBundleId();
+      logger.info(String.format("Loading report def for %s", measureId));
+
       try {
-        localBundle = provider.getBundleById(bundleId);
-      } catch (ResourceNotFoundException ignored) {
-      }
-      try {
-        loadMeasureDefinition(client, urlConfig, localBundle);
+        MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(measureId);
+        Date lastUpdated = measureDefinition != null ? measureDefinition.getLastUpdated() : null;
+
+        loadMeasureDefinition(client, urlConfig, lastUpdated);
       } catch (Exception e) {
-        logger.error(String.format("Error loading report def for %s", bundleId), e);
+        logger.error(String.format("Error loading report def for %s", measureId), e);
       }
     });
   }
 
-  public Bundle loadMeasureDefinition(
-          HttpClient client,
-          ApiReportDefsUrlConfig urlConfig,
-          Bundle localBundle)
-          throws Exception {
-
+  public void loadMeasureDefinition(HttpClient client, ApiReportDefsUrlConfig urlConfig, Date lastUpdated) throws Exception {
     // Check that URL is HTTPS if required
     URI uri = new URI(urlConfig.getUrl());
     if (config.isRequireHttps() && !"https".equalsIgnoreCase(uri.getScheme())) {
       throw new IllegalStateException("URL is not HTTPS");
     }
+
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
 
     // Add If-Modified-Since header based on local bundle
-    if (localBundle != null && localBundle.getMeta().hasLastUpdated()) {
+    if (lastUpdated != null) {
       SimpleDateFormat format = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
-      Date lastUpdated = localBundle.getMeta().getLastUpdated();
       requestBuilder.setHeader("If-Modified-Since", format.format(lastUpdated));
     }
 
@@ -198,7 +195,7 @@ public class ApiInit {
     // Return local bundle if up to date
     if (response.statusCode() == 304) {
       logger.debug("Report def is up to date; not storing");
-      return localBundle;
+      return;
     }
 
     // Parse and validate remote bundle
@@ -227,10 +224,6 @@ public class ApiInit {
 
     // Set ID, meta
     String bundleId = urlConfig.getBundleId();
-    evaluationBundle.setId(bundleId);
-    evaluationBundle.setMeta(localBundle != null
-            ? localBundle.getMeta()
-            : new Meta().addTag(Constants.MainSystem, Constants.ReportDefinitionTag, null));
 
     Measure measure = FhirHelper.getMeasure(remoteBundle);
     if (!measure.hasIdentifier()) {
@@ -242,9 +235,12 @@ public class ApiInit {
     logger.debug("Storing to evaluation service");
     FhirDataProvider evaluationProvider = new FhirDataProvider(config.getEvaluationService());
     evaluationProvider.transaction(evaluationBundle);
-    logger.debug("Storing to internal data store");
-    provider.updateResource(evaluationBundle);
-    return evaluationBundle;
+
+    // Store to db
+    MeasureDefinition measureDefinition = new MeasureDefinition();
+    measureDefinition.setMeasureId(bundleId);
+    measureDefinition.setBundle(remoteBundle);
+    this.mongoService.saveMeasureDefinition(measureDefinition);
   }
 
   private void loadSearchParameters() {

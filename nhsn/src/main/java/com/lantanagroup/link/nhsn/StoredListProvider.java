@@ -1,19 +1,18 @@
 package com.lantanagroup.link.nhsn;
 
-import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IPatientIdProvider;
-import com.lantanagroup.link.IdentifierHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.r4.model.Bundle;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Identifier;
-import org.hl7.fhir.r4.model.ListResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,45 +21,41 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+@Component
 public class StoredListProvider implements IPatientIdProvider {
+  @Autowired
+  private MongoService mongoService;
+
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
   public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
-    FhirContext ctx = FhirContextProvider.getFhirContext();
-    context.getPatientCensusLists().clear();
+    context.getPatientLists().clear();
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
       Identifier measureIdentifier = measureContext.getMeasure().getIdentifier().get(0);
-      String system = measureIdentifier.getSystem();
-      String value = measureIdentifier.getValue();
+      String measureId = measureIdentifier.getValue();
 
-      logger.info("Searching for patient census lists with identifier {}|{} and applicable period {}-{}", system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
-      Bundle bundle = context.getFhirProvider().findListByIdentifierAndDate(system, value, criteria.getPeriodStart(), criteria.getPeriodEnd());
-      if (bundle.getEntry().size() == 0) {
+      PatientList found = this.mongoService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureId);
+
+      if (found == null) {
         logger.warn("No patient census lists found");
         continue;
       }
 
-      List<ListResource> lists = FhirHelper.getAllPages(bundle, context.getFhirProvider(), ctx, ListResource.class);
-      for (ListResource list : lists) {
-        List<PatientOfInterestModel> pois = list.getEntry().stream().map(patient -> {
+      List<PatientOfInterestModel> patientsOfInterest = found.getPatients().stream().map((patientListId) -> {
+        PatientOfInterestModel poi = new PatientOfInterestModel();
+        if (StringUtils.isNotEmpty(patientListId.getReference())) {
+          poi.setReference(patientListId.getReference());
+        } else if (StringUtils.isNotEmpty(patientListId.getIdentifier())) {
+          poi.setIdentifier(patientListId.getIdentifier());
+        }
+        return poi;
+      }).collect(Collectors.toList());
 
-          PatientOfInterestModel poi = new PatientOfInterestModel();
-          if (patient.getItem().hasIdentifier()) {
-            poi.setIdentifier(IdentifierHelper.toString(patient.getItem().getIdentifier()));
-          }
-          if (patient.getItem().hasReference()) {
-            poi.setReference(patient.getItem().getReference());
-          }
-          return poi;
-        }).collect(Collectors.toList());
-
-        measureContext.getPatientsOfInterest().addAll(pois);
-        context.getPatientCensusLists().add(list);
-        context.getPatientsOfInterest().addAll(pois);
-      }
+      context.getPatientLists().add(found);
+      context.getPatientsOfInterest().addAll(patientsOfInterest);
     }
 
     // Deduplicate POIs, ensuring that ReportContext and MeasureContext POI lists refer to the same objects
@@ -76,7 +71,7 @@ public class StoredListProvider implements IPatientIdProvider {
               .collect(Collectors.toList()));
     }
 
-    logger.info("Loaded {} patients from {} census lists", context.getPatientsOfInterest().size(), context.getPatientCensusLists().size());
+    logger.info("Loaded {} patients from {} census lists", context.getPatientsOfInterest().size(), context.getPatientLists().size());
     return context.getPatientsOfInterest();
   }
 }

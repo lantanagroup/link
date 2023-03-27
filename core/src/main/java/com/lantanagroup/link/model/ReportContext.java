@@ -2,10 +2,10 @@ package com.lantanagroup.link.model;
 
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.db.model.PatientList;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 
@@ -20,12 +20,18 @@ public class ReportContext {
   private HttpServletRequest request;
   private LinkCredentials user;
   private String masterIdentifierValue;
-  private List<ListResource> patientCensusLists = new ArrayList<>();
+  private List<PatientList> patientLists = new ArrayList<>();
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<MeasureContext> measureContexts = new ArrayList<>();
 
   public ReportContext(FhirDataProvider fhirProvider) {
     this.fhirProvider = fhirProvider;
+  }
+
+  public ReportContext(FhirDataProvider fhirProvider, HttpServletRequest request, LinkCredentials user) {
+    this.fhirProvider = fhirProvider;
+    this.request = request;
+    this.user = user;
   }
 
 

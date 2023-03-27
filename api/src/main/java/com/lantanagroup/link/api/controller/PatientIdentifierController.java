@@ -9,6 +9,9 @@ import com.lantanagroup.link.config.QueryListConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientId;
+import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
@@ -27,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,18 +50,19 @@ public class PatientIdentifierController extends BaseController {
   private ApplicationContext applicationContext;
   @Autowired
   private QueryListConfig queryListConfig;
+  @Autowired
+  private MongoService mongoService;
 
   @PostMapping("/$query-list")
   public void queryPatientList() throws Exception {
     List<QueryListConfig.PatientList> filteredList = this.queryListConfig.getLists();
 
-    for (QueryListConfig.PatientList listResource : filteredList) {
-      ListResource source = this.readList(listResource.getListId());
+    for (QueryListConfig.PatientList patientListConfig : filteredList) {
+      ListResource source = this.readList(patientListConfig.getListId());
 
-      for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
-        ListResource target = this.transformList(source, listResource.getCensusIdentifier().get(j));
-
-        this.receiveFHIR(target);
+      for (int j = 0; j < patientListConfig.getCensusIdentifier().size(); j++) {
+        PatientList patientList = this.convert(source, patientListConfig.getCensusIdentifier().get(j));
+        this.storePatientList(patientList);
       }
     }
   }
@@ -78,42 +83,50 @@ public class PatientIdentifierController extends BaseController {
             .execute();
   }
 
-  private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
-    logger.info("Transforming");
-    ListResource target = new ListResource();
-    Period period = new Period();
+  private PatientList convert(ListResource source, String identifier) throws URISyntaxException {
+    logger.info("Converting List resource from source into DB PatientList");
+    PatientList patientList = new PatientList();
 
     // TODO: Make ReportingPeriodMethods configurable
     ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth);
-    period.setStartElement(new DateTimeType(calculator.getStart()));
-    period.setEndElement(new DateTimeType(calculator.getEnd()));
 
-    target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
-    target.addIdentifier()
-            .setSystem(Constants.MainSystem)
-            .setValue(censusIdentifier);
-    target.setStatus(ListResource.ListStatus.CURRENT);
-    target.setMode(ListResource.ListMode.WORKING);
-    target.setTitle(String.format("Census List for %s", censusIdentifier));
-    target.setCode(source.getCode());
-    target.setDate(source.getDate());
-    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
+    patientList.setLastUpdated(new Date());
+    patientList.setPeriodStart(calculator.getStart());
+    patientList.setPeriodEnd(calculator.getEnd());
+    patientList.setMeasureId(identifier);
+
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-      target.addEntry(transformListEntry(sourceEntry, baseUrl));
-    }
-    return target;
-  }
+      PatientId patientId = this.convertListItem(sourceEntry);
 
-  private ListResource.ListEntryComponent transformListEntry(ListResource.ListEntryComponent source, URI baseUrl)
-          throws URISyntaxException {
-    ListResource.ListEntryComponent target = source.copy();
-    if (target.getItem().hasReference()) {
-      URI referenceUrl = new URI(target.getItem().getReference());
-      if (referenceUrl.isAbsolute()) {
-        target.getItem().setReference(baseUrl.relativize(referenceUrl).toString());
+      if (patientId != null) {
+        patientList.getPatients().add(patientId);
       }
     }
-    return target;
+
+    return patientList;
+  }
+
+  private PatientId convertListItem(ListResource.ListEntryComponent listEntry) throws URISyntaxException {
+    URI baseUrl = new URI(this.queryListConfig.getFhirServerBase());
+    if (listEntry.getItem().hasReference()) {
+      URI referenceUrl = new URI(listEntry.getItem().getReference());
+      String reference;
+
+      if (referenceUrl.isAbsolute()) {
+        reference = baseUrl.relativize(referenceUrl).toString();
+      } else {
+        reference = listEntry.getItem().getReference();
+      }
+
+      return new PatientId(reference);
+    } else if (listEntry.getItem().hasIdentifier()) {
+      PatientId patientId = new PatientId();
+      patientId.setIdentifier(listEntry.getItem().getIdentifier().getSystem() + "|" + listEntry.getItem().getIdentifier().getValue());
+      return patientId;
+    } else {
+      logger.warn("List entry has does not have reference or identifier");
+      return null;
+    }
   }
 
   @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
@@ -152,75 +165,83 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
-  private void receiveFHIR(Resource resource) throws Exception {
+  private void storePatientList(PatientList patientList) throws Exception {
+    logger.info("Storing patient list");
+    PatientList found = this.mongoService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
+
+    // Merge the list of patients found with the new list
+    if (found != null) {
+      logger.info("Merging with pre-existing patient list that has {} (measure) {} (start) and {} (end)",
+              patientList.getMeasureId(),
+              patientList.getPeriodStart(),
+              patientList.getPeriodEnd());
+      found.merge(patientList);
+    }
+
+    this.mongoService.savePatientList(patientList);
+  }
+
+  private void receiveFHIR(ListResource listResource) throws Exception {
+    List<Identifier> identifierList = listResource.getIdentifier();
+    Extension applicablePeriodExt = listResource.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
+
     logger.info("Storing patient identifiers");
-    resource.setId((String) null);
 
-    if (resource instanceof ListResource) {
-      ListResource list = (ListResource) resource;
-
-      List<Identifier> identifierList = list.getIdentifier();
-
-      if (identifierList.isEmpty()) {
-        String msg = "Census List is missing identifier";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-
-      // TODO: Call checkMeasureIdentifier here; remove the calls in getPatientIdentifierListXML/JSON
-
-      Extension applicablePeriodExt = list.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
-
-      if (applicablePeriodExt == null) {
-        String msg = "Census list applicable-period extension is required";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-
-      Period applicablePeriod = applicablePeriodExt.getValue().castToPeriod(applicablePeriodExt.getValue());
-
-      if (applicablePeriod == null) {
-        String msg = "applicable-period extension must have a value of type Period";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-
-      if (!applicablePeriod.hasStart()) {
-        String msg = "applicable-period.start must have start";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-
-      if (!applicablePeriod.hasEnd()) {
-        String msg = "applicable-period.start must have end";
-        logger.error(msg);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-      }
-
-      //system and value represents the measure intended for this patient id list
-      String system = identifierList.get(0).getSystem();
-      String value = identifierList.get(0).getValue();
-      DateTimeType startDate = applicablePeriod.getStartElement();
-      DateTimeType endDate = applicablePeriod.getEndElement();
-      String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
-      String end = Helper.getFhirDate(LocalDateTime.of(endDate.getYear(), endDate.getMonth() + 1, endDate.getDay(), endDate.getHour(), endDate.getMinute(), endDate.getSecond()));
-      Bundle bundle = this.getFhirDataProvider().findListByIdentifierAndDate(system, value, start, end);
-
-      if (bundle.getEntry().size() == 0) {
-        applicablePeriod.setStartElement(new DateTimeType(start));
-        applicablePeriod.setEndElement(new DateTimeType(end));
-        this.getFhirDataProvider().createResource(list);
-      } else {
-        ListResource existingList = (ListResource) bundle.getEntry().get(0).getResource();
-        FhirHelper.mergeCensusLists(existingList, list);
-        this.getFhirDataProvider().updateResource(existingList);
-      }
-    } else {
-      String msg = "Only \"List\" resources are allowed";
+    if (identifierList.isEmpty()) {
+      String msg = "Census List is missing identifier";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
-    } /* else {
-      this.getFhirDataProvider().createResource(resource);
-    } */
+    }
+
+    // TODO: Call checkMeasureIdentifier here; remove the calls in getPatientIdentifierListXML/JSON
+
+    if (applicablePeriodExt == null) {
+      String msg = "Census list applicable-period extension is required";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+
+    Period applicablePeriod = applicablePeriodExt.getValue().castToPeriod(applicablePeriodExt.getValue());
+
+    if (applicablePeriod == null) {
+      String msg = "applicable-period extension must have a value of type Period";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+
+    if (!applicablePeriod.hasStart()) {
+      String msg = "applicable-period.start must have start";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+
+    if (!applicablePeriod.hasEnd()) {
+      String msg = "applicable-period.start must have end";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+    }
+
+    //system and value represents the measure intended for this patient id list
+    String value = identifierList.get(0).getValue();
+    DateTimeType startDate = applicablePeriod.getStartElement();
+    DateTimeType endDate = applicablePeriod.getEndElement();
+    String start = Helper.getFhirDate(LocalDateTime.of(startDate.getYear(), startDate.getMonth() + 1, startDate.getDay(), startDate.getHour(), startDate.getMinute(), startDate.getSecond()));
+    String end = Helper.getFhirDate(LocalDateTime.of(endDate.getYear(), endDate.getMonth() + 1, endDate.getDay(), endDate.getHour(), endDate.getMinute(), endDate.getSecond()));
+
+    PatientList patientList = new PatientList();
+    patientList.setLastUpdated(new Date());
+    patientList.setPeriodStart(start);
+    patientList.setPeriodEnd(end);
+    patientList.setMeasureId(value);
+
+    for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
+      PatientId patientId = this.convertListItem(sourceEntry);
+
+      if (patientId != null) {
+        patientList.getPatients().add(patientId);
+      }
+    }
+
+    this.storePatientList(patientList);
   }
 }

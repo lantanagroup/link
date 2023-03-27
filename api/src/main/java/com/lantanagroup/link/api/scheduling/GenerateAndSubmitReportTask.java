@@ -3,8 +3,8 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.api.controller.ReportController;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
-import com.lantanagroup.link.model.GenerateResponse;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ public class GenerateAndSubmitReportTask implements Runnable {
 
     logger.info("Starting scheduled task to generate a report");
     ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
-    GenerateResponse generateResponse;
+    Report report;
 
     try {
       GenerateRequest generateRequest = new GenerateRequest();
@@ -51,14 +51,14 @@ public class GenerateAndSubmitReportTask implements Runnable {
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
-      generateResponse = this.reportController.generateReport(null, null, generateRequest);
+      report = this.reportController.generateReport(null, null, generateRequest);
     } catch (Exception e) {
       logger.error("Error generating report", e);
       return;
     }
 
     try {
-      this.reportController.send(null, generateResponse.getMasterId(), null);
+      this.reportController.send(null, report.getId(), null);
     } catch (Exception ex) {
       logger.error("Error submitting report", ex);
     }

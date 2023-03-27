@@ -2,12 +2,12 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.time.Stopwatch;
-import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -72,14 +72,14 @@ public class ReportGenerator {
               }).collect(Collectors.toList())).get();
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
       // pass them to aggregators using measureContext
-      measureContext.setPatientReports(patientMeasureReports);
+      this.measureContext.setPatientReports(patientMeasureReports);
     } finally {
       if (forkJoinPool != null) {
         forkJoinPool.shutdown();
       }
     }
-    MeasureReport masterMeasureReport = reportAggregator.generate(criteria, reportContext, measureContext);
-    measureContext.setMeasureReport(masterMeasureReport);
+    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.reportContext, this.measureContext);
+    this.measureContext.setMeasureReport(masterMeasureReport);
   }
 
   /**
@@ -87,7 +87,10 @@ public class ReportGenerator {
    * Stores the master measure report on the Fhir Server.
    **/
   public void store() {
+    this.reportContext.getFhirProvider().updateResource(this.measureContext.getMeasureReport());
+  }
 
-    this.reportContext.getFhirProvider().updateResource(measureContext.getMeasureReport());
+  public MeasureReport getMeasureReport() {
+    return this.measureContext.getMeasureReport();
   }
 }

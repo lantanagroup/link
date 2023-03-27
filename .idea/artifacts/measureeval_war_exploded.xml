@@ -92,6 +92,7 @@
           <element id="library" level="project" name="Maven: org.springframework:spring-webmvc:5.3.10" />
           <element id="library" level="project" name="Maven: jakarta.xml.bind:jakarta.xml.bind-api:2.3.3" />
           <element id="library" level="project" name="Maven: jakarta.activation:jakarta.activation-api:1.2.2" />
+          <element id="library" level="project" name="Maven: org.mongodb:mongo-java-driver:3.12.12" />
           <element id="library" level="project" name="Maven: org.springframework.boot:spring-boot-starter-validation:2.5.5" />
           <element id="library" level="project" name="Maven: org.hibernate.validator:hibernate-validator:6.2.0.Final" />
           <element id="library" level="project" name="Maven: jakarta.validation:jakarta.validation-api:2.0.2" />
