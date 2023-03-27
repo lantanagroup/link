@@ -13,7 +13,6 @@ import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,7 +25,7 @@ public class FHIRSender extends GenericSender implements IReportSender {
   protected static final Logger logger = LoggerFactory.getLogger(FHIRSender.class);
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, LinkCredentials user, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
     Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
     String location = this.sendContent(bundle, documentReference, fhirDataProvider);
 

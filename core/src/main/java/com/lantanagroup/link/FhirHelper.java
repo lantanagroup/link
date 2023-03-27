@@ -8,6 +8,7 @@ import ca.uhn.fhir.util.BundleUtil;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.gson.*;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.model.PatientReportModel;
@@ -32,8 +33,8 @@ public class FhirHelper {
   private static final String SUBJECT = "sub";
   private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
 
-  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
-    AuditEvent auditEvent = createAuditEvent(request, jwt, type, outcomeDescription);
+  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, LinkCredentials user, AuditEventTypes type, String outcomeDescription) {
+    AuditEvent auditEvent = createAuditEvent(request, user, type, outcomeDescription);
 
     try {
       MethodOutcome outcome = fhirDataProvider.createOutcome(auditEvent);
@@ -44,7 +45,7 @@ public class FhirHelper {
     }
   }
 
-  public static AuditEvent createAuditEvent(HttpServletRequest request, DecodedJWT jwt, AuditEventTypes type, String outcomeDescription) {
+  public static AuditEvent createAuditEvent(HttpServletRequest request, LinkCredentials user, AuditEventTypes type, String outcomeDescription) {
     AuditEvent auditEvent = new AuditEvent();
 
     switch (type) {
@@ -72,47 +73,59 @@ public class FhirHelper {
     auditEvent.setRecorded(new Date());
     auditEvent.setOutcome(AuditEvent.AuditEventOutcome._0);
     auditEvent.setOutcomeDesc(outcomeDescription);
+
     List<AuditEvent.AuditEventAgentComponent> agentList = new ArrayList<>();
-    AuditEvent.AuditEventAgentComponent agent = new AuditEvent.AuditEventAgentComponent();
-    agent.setRequestor(false);
-
-    String payload = jwt.getPayload();
-    byte[] decodedBytes = Base64.getDecoder().decode(payload);
-    String decodedString = new String(decodedBytes);
-
-    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
-    if (jsonObject.has(NAME)) {
-      agent.setName(jsonObject.get(NAME).toString());
-    }
-    if (jsonObject.has(SUBJECT)) {
-      agent.setAltId(jsonObject.get(SUBJECT).toString());
-    }
-
-    String remoteAddress;
-    remoteAddress = getRemoteAddress(request);
-
-    if (remoteAddress != null) {
-      agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
-    }
-
-    if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
-      logger.info(String.format("Aud is : " + jsonObject.get("aud").toString()));
-      JsonElement aud = jsonObject.get("aud");
-      String identifierValue = "";
-      if (aud instanceof JsonPrimitive) {
-        identifierValue = aud.getAsString();
-      } else if (aud instanceof JsonArray) {
-        for (int i = 0; i < ((JsonArray) aud).size(); i++) {
-          identifierValue += ((JsonArray) aud).get(i).getAsString();
-        }
-      }
-      Identifier identifier = new Identifier().setValue(identifierValue);
-      agent.setLocation(new Reference().setIdentifier(identifier));
-    }
-    agentList.add(agent);
+    agentList.add(getAuditEventAgent(request, user));
     auditEvent.setAgent(agentList);
 
     return auditEvent;
+  }
+
+  private static AuditEvent.AuditEventAgentComponent getAuditEventAgent(HttpServletRequest request, LinkCredentials user) {
+    AuditEvent.AuditEventAgentComponent agent = new AuditEvent.AuditEventAgentComponent();
+    agent.setRequestor(false);
+
+    if (user != null) {
+      String payload = user.getJwt().getPayload();
+      byte[] decodedBytes = Base64.getDecoder().decode(payload);
+      String decodedString = new String(decodedBytes);
+
+      JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
+      if (jsonObject.has(NAME)) {
+        agent.setName(jsonObject.get(NAME).toString());
+      }
+      if (jsonObject.has(SUBJECT)) {
+        agent.setAltId(jsonObject.get(SUBJECT).toString());
+      }
+
+      if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
+        logger.info(String.format("Aud is : " + jsonObject.get("aud").toString()));
+        JsonElement aud = jsonObject.get("aud");
+        String identifierValue = "";
+        if (aud instanceof JsonPrimitive) {
+          identifierValue = aud.getAsString();
+        } else if (aud instanceof JsonArray) {
+          for (int i = 0; i < ((JsonArray) aud).size(); i++) {
+            identifierValue += ((JsonArray) aud).get(i).getAsString();
+          }
+        }
+        Identifier identifier = new Identifier().setValue(identifierValue);
+        agent.setLocation(new Reference().setIdentifier(identifier));
+      }
+    } else {
+      agent.setName("Link System");
+    }
+
+    if (request != null) {
+      String remoteAddress;
+      remoteAddress = getRemoteAddress(request);
+
+      if (remoteAddress != null) {
+        agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
+      }
+    }
+
+    return agent;
   }
 
   public static String getRemoteAddress(HttpServletRequest request) {

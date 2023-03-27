@@ -21,7 +21,6 @@ import java.util.List;
 public class QueryListConfig {
   private String fhirServerBase;
 
-  @NotNull
   @Size(min = 1)
   private List<PatientList> lists;
 

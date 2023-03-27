@@ -19,5 +19,5 @@ import java.util.List;
 public class ScheduleConfig {
   private String queryPatientListCron;
   private String dataRetentionCheckCron;
-  private List<GenerateReportConfig> generateReport;
+  private List<GenerateReportConfig> generateAndSubmitReports;
 }

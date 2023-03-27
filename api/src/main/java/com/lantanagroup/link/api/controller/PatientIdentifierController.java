@@ -70,7 +70,12 @@ public class PatientIdentifierController extends BaseController {
                     this.usCoreConfig.getFhirServerBase());
 
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
-    return client.fetchResourceFromUrl(ListResource.class, patientListId);
+
+    return client
+            .read()
+            .resource(ListResource.class)
+            .withId(patientListId)
+            .execute();
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
