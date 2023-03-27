@@ -40,11 +40,12 @@ public class Scheduler {
       logger.info("Scheduled querying patient list with CRON \"" + this.config.getQueryPatientListCron() + "\"");
     }
 
-    if (this.config.getGenerateReport() != null) {
-      for (GenerateReportConfig generateReportConfig : this.config.getGenerateReport()) {
+    if (this.config.getGenerateAndSubmitReports() != null) {
+      for (GenerateReportConfig generateReportConfig : this.config.getGenerateAndSubmitReports()) {
         GenerateAndSubmitReportTask generateAndSubmitReportTask = this.context.getBean(GenerateAndSubmitReportTask.class);
         generateAndSubmitReportTask.setMeasureIds(generateReportConfig.getMeasureIds());
         generateAndSubmitReportTask.setReportingPeriodMethod(generateReportConfig.getReportingPeriodMethod());
+        generateAndSubmitReportTask.setRegenerateIfExists(generateReportConfig.getRegenerateIfExists());
         this.taskScheduler.schedule(generateAndSubmitReportTask, new CronTrigger(generateReportConfig.getCron()));
         logger.info("Scheduled report generation for " + String.join(",", generateReportConfig.getMeasureIds()) + " with CRON \"" + generateReportConfig.getCron() + "\"");
       }

@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -288,7 +287,7 @@ public class ReportController extends BaseController {
 
     response.setMasterId(reportContext.getMasterIdentifierValue());
 
-    this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
+    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
@@ -340,7 +339,7 @@ public class ReportController extends BaseController {
 
     this.getFhirDataProvider().updateResource(documentReference);
 
-    this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
     logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
 
     this.stopwatchManager.print();
@@ -418,7 +417,7 @@ public class ReportController extends BaseController {
    */
   @PostMapping("/{reportId}/$send")
   public void send(
-          Authentication authentication,
+          @AuthenticationPrincipal LinkCredentials user,
           @PathVariable String reportId,
           HttpServletRequest request) throws Exception {
 
@@ -439,15 +438,15 @@ public class ReportController extends BaseController {
     documentReference.setDate(new Date());
     documentReference = FhirHelper.incrementMajorVersion(documentReference);
 
-    sender.send(reports, documentReference, request, authentication, this.getFhirDataProvider(), bundlerConfig);
+    sender.send(reports, documentReference, request, user, this.getFhirDataProvider(), bundlerConfig);
 
     // Now that we've submitted (successfully), update the doc ref with the status and date
     this.getFhirDataProvider().updateResource(documentReference);
 
-    String submitterName = FhirHelper.getName(((LinkCredentials) authentication.getPrincipal()).getPractitioner().getName());
+    String submitterName = user != null ? FhirHelper.getName(user.getPractitioner().getName()) : "Link System";
 
     logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
-    this.getFhirDataProvider().audit(request, ((LinkCredentials) authentication.getPrincipal()).getJwt(), FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
+    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
   }
 }

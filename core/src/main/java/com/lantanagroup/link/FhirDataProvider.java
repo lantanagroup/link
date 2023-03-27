@@ -4,17 +4,13 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.IQueryParameterType;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
-import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.param.TokenParam;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ctc.wstx.util.StringUtil;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
-import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -145,20 +141,6 @@ public class FhirDataProvider {
     return (DocumentReference) bundle.getEntryFirstRep().getResource();
   }
 
-  public Bundle findBundleByIdentifier(String system, String value) {
-    Bundle bundle = (Bundle) this.client
-            .search()
-            .forResource(Bundle.class)
-            .where(Bundle.IDENTIFIER.exactly().systemAndValues(system, value))
-            .execute();
-
-    if (bundle.getEntry().size() != 1) {
-      return null;
-    }
-
-    return (Bundle) bundle.getEntryFirstRep().getResource();
-  }
-
   public Bundle findListByIdentifierAndDate(String system, String value, String start, String end) {
     Bundle bundle = this.client
             .search()
@@ -192,46 +174,6 @@ public class FhirDataProvider {
     return report;
   }
 
-  public Bundle getMeasureReportsByIds(List<String> reportIds) {
-    // TODO: Is there a practical limit to the number of report IDs we can send here?
-    //       E.g., a maximum query string length that HAPI will accept?
-    //       If so, modify this logic to use multiple requests
-    //       Limit the number of report IDs (based on total query string length?) sent in any single request
-    Bundle response = this.client
-            .search()
-            .forResource(MeasureReport.class)
-            .where(Resource.RES_ID.exactly().codes(reportIds))
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-
-    return response;
-  }
-
-  public Measure getMeasureForReport(DocumentReference docRef) {
-    logger.debug(String.format("Getting Measure for DocumentReference %s", docRef.getId()));
-
-    if (docRef.getIdentifier().size() > 0) {
-      for (Identifier identifier : docRef.getIdentifier()) {
-        Bundle matchingMeasures = this.client
-                .search()
-                .forResource(Measure.class)
-                .where(DocumentReference.IDENTIFIER.exactly().systemAndValues(identifier.getSystem(), identifier.getValue()))
-                .returnBundle(Bundle.class)
-                .summaryMode(SummaryEnum.FALSE)
-                .execute();
-
-        if (matchingMeasures.getEntry().size() == 1) {
-          return (Measure) matchingMeasures.getEntry().get(0).getResource();
-        }
-      }
-    } else {
-      logger.warn("No identifier specified on DocumentReference");
-    }
-
-    return null;
-  }
-
   public Bundle transaction(Bundle txBundle) {
     logger.trace("Executing transaction on " + this.client.getServerBase());
 
@@ -258,39 +200,14 @@ public class FhirDataProvider {
     return (Measure) measureBundle.getEntryFirstRep().getResource();
   }
 
-  public void audit(HttpServletRequest request, DecodedJWT jwt, FhirHelper.AuditEventTypes type, String outcomeDescription) {
-    AuditEvent auditEvent = FhirHelper.createAuditEvent(request, jwt, type, outcomeDescription);
+  public void audit(HttpServletRequest request, LinkCredentials user, FhirHelper.AuditEventTypes type, String outcomeDescription) {
+    AuditEvent auditEvent = FhirHelper.createAuditEvent(request, user, type, outcomeDescription);
     this.createResource(auditEvent);
-  }
-
-  public Bundle getResources(ICriterion<?> criterion, String resourceType) {
-    return this.client
-            .search()
-            .forResource(resourceType)
-            .where(criterion)
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
-
-  /**
-   * Gets a resource by type and ID only including the id property to check if the resource exists
-   * @param resourceType
-   * @param resourceId
-   * @return
-   */
-  public IBaseResource tryGetResource(String resourceType, String resourceId) {
-    return this.client
-            .read()
-            .resource(resourceType)
-            .withId(resourceId)
-            .elementsSubset("id")
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
   }
 
   /**
    * Gets a complete resource by retrieving it based on type and id
+   *
    * @param resourceType
    * @param resourceId
    * @return
@@ -315,16 +232,6 @@ public class FhirDataProvider {
     return measureReport;
   }
 
-  public Bundle searchPractitioner(String tagSystem, String tagValue) {
-    return this.client
-            .search()
-            .forResource(Practitioner.class)
-            .withTag(tagSystem, tagValue)
-            .returnBundle(Bundle.class)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
-
   public MethodOutcome createOutcome(IBaseResource resource) {
     return this.client
             .create()
@@ -332,10 +239,6 @@ public class FhirDataProvider {
             .prettyPrint()
             .encodedJson()
             .execute();
-  }
-
-  public Bundle fetchResourceFromUrl(String url) {
-    return this.client.fetchResourceFromUrl(Bundle.class, url);
   }
 
   public String bundleToXml(Bundle bundle) {
@@ -364,15 +267,6 @@ public class FhirDataProvider {
             .where(Practitioner.IDENTIFIER.exactly().systemAndValues(Constants.MainSystem, practitionerId))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
-
-  public Bundle searchBundleByTag(String system, String value) {
-    return client
-            .search()
-            .forResource(Bundle.class)
-            .withTag(system, value)
-            .returnBundle(Bundle.class)
             .execute();
   }
 

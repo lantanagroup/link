@@ -5,6 +5,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import lombok.Setter;
@@ -14,7 +15,6 @@ import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -75,7 +75,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   }
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, Authentication auth, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
+  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, LinkCredentials user, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
     Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
 
     FileSystemSenderConfig.Formats format = this.getFormat();

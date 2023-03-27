@@ -3,6 +3,7 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
@@ -78,7 +79,10 @@ public class FhirHelperTests {
     when(decodedJWTTest.getPayload()).thenReturn("e30");
     when(fhirDataProviderTest.createOutcome(any())).thenReturn(outcomeTest);
 
-    FhirHelper.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, decodedJWTTest, FhirHelper.AuditEventTypes.Generate, "Testing String");
+    LinkCredentials user = new LinkCredentials();
+    user.setJwt(decodedJWTTest);
+
+    FhirHelper.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, user, FhirHelper.AuditEventTypes.Generate, "Testing String");
   }
   
   @Test

@@ -47,7 +47,7 @@ api:
 schedule:
 #  query-patient-list-cron: '0 0 */3 * * *'  # every three hours
 #  data-retention-check-cron: '0 0 0 1 * *'   # first day of each month
-#  generate-and-submit-report:
+#  generate-and-submit-reports:
 #    - measure-ids:
 #        - NHSNGlycemicControlHypoglycemicInitialPopulation
 #      reporting-period-method: LastMonth
@@ -61,8 +61,6 @@ schedule:
 #    - list-id: 1234
 #      census-identifier: NHSNGlycemicControlHypoglycemicInitialPopulation
 
-thsa:
-  dataMeasureReportId: inventorydata
 query:
   require-https: true
   query-class: com.lantanagroup.link.query.uscore.Query
