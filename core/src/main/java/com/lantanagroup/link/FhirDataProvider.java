@@ -5,10 +5,7 @@ import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
-import com.lantanagroup.link.config.api.ApiDataStoreConfig;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -23,15 +20,6 @@ public class FhirDataProvider {
   private IGenericClient client;
 
   public FhirDataProvider(IGenericClient client) {
-    this.client = client;
-  }
-
-  public FhirDataProvider(ApiDataStoreConfig config) {
-    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(config.getBaseUrl());
-    if (StringUtils.isNotEmpty(config.getUsername()) && StringUtils.isNotEmpty(config.getPassword())) {
-      BasicAuthInterceptor authInterceptor = new BasicAuthInterceptor(config.getUsername(), config.getPassword());
-      client.registerInterceptor(authInterceptor);
-    }
     this.client = client;
   }
 
