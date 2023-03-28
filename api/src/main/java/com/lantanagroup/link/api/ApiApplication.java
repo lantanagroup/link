@@ -94,10 +94,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
   @Bean
   public ReportingPlanService reportingPlanService() {
-    if (!reportingPlanConfig.isEnabled()) {
-      return null;
-    }
-    logger.info("Initializing MRP service");
-    return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
+    return new ReportingPlanService(reportingPlanConfig);
   }
 }

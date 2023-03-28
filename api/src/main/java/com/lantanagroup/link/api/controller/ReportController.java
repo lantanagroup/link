@@ -76,7 +76,7 @@ public class ReportController extends BaseController {
   private ReportingPlanConfig reportingPlanConfig;
 
   @Autowired
-  private Optional<ReportingPlanService> reportingPlanService;
+  private ReportingPlanService reportingPlanService;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -212,18 +212,16 @@ public class ReportController extends BaseController {
    * generates a response with one or multiple reports
    */
   private GenerateResponse generateResponse(LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
-    if (reportingPlanService.isPresent()) {
-      logger.info("Checking MRP");
-      Date date = Helper.parseFhirDate(periodStart);
-      int year = date.getYear() + 1900;
-      int month = date.getMonth() + 1;
-      for (String bundleId : bundleIds) {
-        String planName = reportingPlanConfig.getPlanNames().get(bundleId);
-        if (!reportingPlanService.get().isReporting(planName, year, month)) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
-        }
+    Date date = Helper.parseFhirDate(periodStart);
+    int year = date.getYear() + 1900;
+    int month = date.getMonth() + 1;
+    for (String bundleId : bundleIds) {
+      String planName = reportingPlanConfig.getPlanNames().get(bundleId);
+      if (!reportingPlanService.isReporting(planName, year, month)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
       }
     }
+
     GenerateResponse response = new GenerateResponse();
     ReportCriteria criteria = new ReportCriteria(List.of(bundleIds), periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(this.getFhirDataProvider());

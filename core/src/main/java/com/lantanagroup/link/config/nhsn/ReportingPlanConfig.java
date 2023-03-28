@@ -13,7 +13,19 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "nhsn.reporting-plan")
 public class ReportingPlanConfig {
   private boolean enabled;
+  private SamsAuth samsAuth = new SamsAuth();
   private String url;
   private String nhsnOrgId;
   private Map<String, String> planNames = Map.of();
+
+  @Getter
+  @Setter
+  public static class SamsAuth {
+    private String tokenUrl;
+    private String username;
+    private String password;
+    private String emailAddress;
+    private String clientId;
+    private String clientSecret;
+  }
 }

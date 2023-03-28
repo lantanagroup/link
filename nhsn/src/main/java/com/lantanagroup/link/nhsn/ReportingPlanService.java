@@ -1,40 +1,53 @@
 package com.lantanagroup.link.nhsn;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReportingPlanService {
-  private final String url;
-  private final String nhsnOrgId;
+  private static final Logger logger = LoggerFactory.getLogger(ReportingPlanService.class);
+
+  private final ReportingPlanConfig config;
+  private final HttpClient httpClient = HttpClients.createDefault();
   private final ObjectMapper objectMapper = new ObjectMapper()
           .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-  public ReportingPlanService(String url, String nhsnOrgId) {
-    this.url = url;
-    this.nhsnOrgId = nhsnOrgId;
+  public ReportingPlanService(ReportingPlanConfig config) {
+    this.config = config;
   }
 
   public boolean isReporting(String name, int year, int month) throws URISyntaxException, IOException {
-    URIBuilder builder = new URIBuilder(url);
-    builder.addParameter("nhsnorgid", nhsnOrgId);
-    builder.addParameter("name", name);
-    builder.addParameter("year", Integer.toString(year));
-    builder.addParameter("month", Integer.toString(month));
-    URL url = builder.build().toURL();
-    Response response = objectMapper.reader().readValue(url, Response.class);
-    for (Plan plan : response.getPlans()) {
-      if (!StringUtils.equals(plan.getNhsnOrgId(), nhsnOrgId)) {
+    if (!config.isEnabled()) {
+      logger.info("MRP is disabled; not checking");
+      return true;
+    }
+    logger.info("Checking MRP");
+    String accessToken = getAccessToken();
+    for (Plan plan : getPlans(name, year, month, accessToken)) {
+      if (!StringUtils.equals(plan.getNhsnOrgId(), config.getNhsnOrgId())) {
         continue;
       }
       if (!StringUtils.equals(plan.getName(), name)) {
@@ -49,6 +62,45 @@ public class ReportingPlanService {
       return StringUtils.equalsIgnoreCase(plan.getReporting(), "Y");
     }
     return false;
+  }
+
+  private String getAccessToken() throws IOException {
+    logger.info("Retrieving access token from SAMS");
+    ReportingPlanConfig.SamsAuth samsAuth = config.getSamsAuth();
+    HttpPost request = new HttpPost(samsAuth.getTokenUrl());
+    List<NameValuePair> parameters = new ArrayList<>();
+    parameters.add(new BasicNameValuePair("grant_type", "password"));
+    parameters.add(new BasicNameValuePair("username", samsAuth.getUsername()));
+    parameters.add(new BasicNameValuePair("password", samsAuth.getPassword()));
+    parameters.add(new BasicNameValuePair("client_id", samsAuth.getClientId()));
+    parameters.add(new BasicNameValuePair("client_secret", samsAuth.getClientSecret()));
+    parameters.add(new BasicNameValuePair("scope", "profile email"));
+    request.setEntity(new UrlEncodedFormEntity(parameters));
+    return httpClient.execute(request, response -> {
+      logger.info("Response: {}", response.getStatusLine());
+      String body = EntityUtils.toString(response.getEntity());
+      return objectMapper.reader().readValue(body, JsonNode.class)
+              .get("access_token")
+              .asText();
+    });
+  }
+
+  private List<Plan> getPlans(String name, int year, int month, String accessToken)
+          throws URISyntaxException, IOException {
+    logger.info("Retrieving plans from NHSN");
+    URIBuilder builder = new URIBuilder(config.getUrl());
+    builder.addParameter("nhsnorgid", config.getNhsnOrgId());
+    builder.addParameter("name", name);
+    builder.addParameter("year", Integer.toString(year));
+    builder.addParameter("month", Integer.toString(month));
+    HttpGet request = new HttpGet(builder.build());
+    request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", accessToken));
+    request.addHeader("Access-Token", config.getSamsAuth().getEmailAddress());
+    return httpClient.execute(request, response -> {
+      logger.info("Response: {}", response.getStatusLine());
+      String body = EntityUtils.toString(response.getEntity());
+      return objectMapper.reader().readValue(body, Response.class).getPlans();
+    });
   }
 
   @Getter
