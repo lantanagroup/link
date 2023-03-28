@@ -157,6 +157,7 @@ public class ResourceIdChanger {
       return new IdType[]{rId, new IdType(res.getResourceType().toString(), newId)};
     }).collect(Collectors.toMap(e -> e[0], e -> e[1]));
 
+    logger.debug("Found {} invalid entries", invalidEntries.size());
 
     // For each resource with an invalid id, update the resource with the new hashed id
     // and find any references to the old id and update those

@@ -5,7 +5,10 @@ import com.lantanagroup.link.db.model.*;
 import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.*;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
@@ -16,6 +19,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ConceptMap;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +46,10 @@ public class MongoService {
   public static final String USER_COLLECTION = "user";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   private static final Logger logger = LoggerFactory.getLogger(MongoService.class);
+  public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
 
   private MongoClient client;
   private MongoDatabase database;
-  private static final String NAME = "name";
 
   public MongoDatabase getDatabase() {
     if (this.database == null) {
@@ -70,7 +74,9 @@ public class MongoService {
     return this.getDatabase().getCollection(USER_COLLECTION, User.class);
   }
 
-  private static final String SUBJECT = "sub";
+  public MongoCollection<ConceptMap> getConceptMapCollection() {
+    return this.getDatabase().getCollection(CONCEPT_MAP_COLLECTION, ConceptMap.class);
+  }
 
   public static String getRemoteAddress(HttpServletRequest request) {
     String remoteAddress;
@@ -93,9 +99,10 @@ public class MongoService {
       CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
       CodecRegistry codecRegistry = fromRegistries(
               fromCodecs(
+                      new BaseCodec<>(IBaseResource.class),
                       new BaseCodec<>(Bundle.class),
                       new BaseCodec<>(MeasureReport.class),
-                      new BaseCodec<>(IBaseResource.class)),
+                      new BaseCodec<>(ConceptMap.class)),
               MongoClientSettings.getDefaultCodecRegistry(),
               pojoCodecRegistry);
       MongoClientSettings clientSettings = MongoClientSettings.builder()
@@ -119,8 +126,12 @@ public class MongoService {
     this.getCensusCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 
-  public FindIterable<PatientData> findPatientData(String patientId) {
-    return this.getPatientDataCollection().find(eq("patientId", patientId));
+  public List<PatientData> findPatientData(String patientId) {
+    List<PatientData> patientData = new ArrayList<>();
+    this.getPatientDataCollection()
+            .find(eq("patientId", patientId))
+            .into(patientData);
+    return patientData;
   }
 
   public List<PatientData> getAllPatientData() {
@@ -192,9 +203,13 @@ public class MongoService {
     return this.getPatientMeasureReportCollection().find(eq("_id", id)).first();
   }
 
-  public FindIterable<PatientMeasureReport> getPatientMeasureReports(List<String> ids) {
+  public List<PatientMeasureReport> getPatientMeasureReports(List<String> ids) {
+    List<PatientMeasureReport> patientMeasureReports = new ArrayList<>();
     Bson criteria = in("_id", ids);
-    return this.getPatientMeasureReportCollection().find(criteria);
+    this.getPatientMeasureReportCollection()
+            .find(criteria)
+            .into(patientMeasureReports);
+    return patientMeasureReports;
   }
 
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {
@@ -246,5 +261,17 @@ public class MongoService {
   public User getUser(String id) {
     Bson criteria = eq("_id", id);
     return this.getUserCollection().find(criteria).first();
+  }
+
+  public ConceptMap getConceptMap(String id) {
+    Bson criteria = eq("_id", id);
+    return this.getConceptMapCollection().find(criteria).first();
+  }
+
+  public void saveConceptMap(ConceptMap conceptMap) {
+    Bson criteria = eq("_id", conceptMap.getId());
+    BasicDBObject update = new BasicDBObject();
+    update.put("$set", conceptMap);
+    this.getConceptMapCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 }

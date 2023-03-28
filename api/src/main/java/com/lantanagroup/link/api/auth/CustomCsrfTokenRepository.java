@@ -25,9 +25,7 @@ public class CustomCsrfTokenRepository implements CsrfTokenRepository {
   private String cookieName = DEFAULT_CSRF_COOKIE_NAME;
   private boolean cookieHttpOnly = true;
   private String cookiePath;
-  private String cookieDomain;
   private Boolean secure;
-  private int cookieMaxAge = -1;
 
   public CustomCsrfTokenRepository() {
   }

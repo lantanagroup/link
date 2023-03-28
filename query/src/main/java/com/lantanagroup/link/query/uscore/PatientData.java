@@ -156,6 +156,7 @@ public class PatientData {
       interceptors = this.fhirQueryServer.getInterceptorService().getAllRegisteredInterceptors().size();
     }
 
+    //noinspection unused
     try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-resources-patient-%s", resourceType))) {
       logger.info("Executing query: " + query);
 
@@ -237,6 +238,7 @@ public class PatientData {
       return;
     }
 
+    //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient")) {
       // Load all encounters first to populate this.encounterReferences
       // so that the encounter ids may be used by getQuery()
@@ -270,6 +272,7 @@ public class PatientData {
       }
     }
 
+    //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-other")) {
       this.getOtherResources();
     }
@@ -322,6 +325,7 @@ public class PatientData {
       }
 
       resourcesToGet.keySet().stream().forEach(resourceType -> {
+        //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("query-resources-other-%s", resourceType))) {
           List<String> allResourceIds = resourcesToGet.get(resourceType);
 

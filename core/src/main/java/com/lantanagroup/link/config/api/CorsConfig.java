@@ -3,6 +3,7 @@ package com.lantanagroup.link.config.api;
 import lombok.Getter;
 import lombok.Setter;
 
+@SuppressWarnings("unused")
 @Getter @Setter
 public class CorsConfig {
   /**

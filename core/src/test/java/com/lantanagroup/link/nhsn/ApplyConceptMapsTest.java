@@ -1,7 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.ResourceIdChanger;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -15,6 +14,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ApplyConceptMapsTest {
 
@@ -71,16 +71,15 @@ public class ApplyConceptMapsTest {
 
   @Test
   public void testExecute() {
-
     Bundle patientBundle = getPatienBundle();
     ReportCriteria reportCriteria = mock(ReportCriteria.class);
+    MongoService mongoService = mock(MongoService.class);
 
-    FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
     ReportContext context = new ReportContext();
     context.setMasterIdentifierValue("test");
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
+    applyConceptMaps.setMongoService(mongoService);
 
     List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList<>();
     ApplyConceptMapConfig applyConceptMapConfig = new ApplyConceptMapConfig();
@@ -102,16 +101,14 @@ public class ApplyConceptMapsTest {
     context.setPatientsOfInterest(patientOfInterestModel);
 
     ConceptMap conceptMap = getConceptMap();
-    Mockito.when(fhirDataProviderMock.getResourceByTypeAndId(any(), any())).thenReturn(conceptMap);
+    when(mongoService.getConceptMap(any())).thenReturn(conceptMap);
 
-    Mockito.when(fhirDataProviderMock.getBundleById(any())).thenReturn(patientBundle);
     List<Coding> codes = new ArrayList<>();
     codes.add(getLocation().getType().get(0).getCoding().get(0));
     Mockito.doReturn(codes).when(applyConceptMaps).filterCodingsByPathList(any(), any());
 
     applyConceptMaps.execute(patientBundle, reportCriteria, context, new ReportContext.MeasureContext());
 
-    List<Coding> codes2 = ResourceIdChanger.findCodings(patientBundle);
     Coding changedCoding = codes.get(0);
     Assert.assertEquals(changedCoding.getExtension().size(), 1);
     Assert.assertEquals(changedCoding.getCode(), "1027-2");
@@ -120,18 +117,13 @@ public class ApplyConceptMapsTest {
 
   @Test
   public void testFindCodings() {
-
-    FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
-    ReportContext context = new ReportContext();
-
+    MongoService mongoService = mock(MongoService.class);
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
+    applyConceptMaps.setMongoService(mongoService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
-    ConceptMap conceptMap = getConceptMap();
-    Mockito.when(fhirDataProviderMock.getResourceByTypeAndId(any(), any())).thenReturn(conceptMap);
-    Mockito.when(fhirDataProviderMock.getBundleById(any())).thenReturn(getPatienBundle());
+    when(mongoService.getConceptMap(any())).thenReturn(getConceptMap());
     List<Coding> list = applyConceptMaps.filterCodingsByPathList((DomainResource)getPatienBundle().getEntry().get(0).getResource(), pathList);
 
     Assert.assertEquals(list.get(0).getCode(), "some-type");
@@ -139,11 +131,9 @@ public class ApplyConceptMapsTest {
 
   @Test
   public void testApplyTransformation() {
-
-    FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
-
+    MongoService mongoService = mock(MongoService.class);
     ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
-    applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);
+    applyConceptMaps.setMongoService(mongoService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");

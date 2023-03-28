@@ -57,6 +57,7 @@ public class ReportingPlanService {
     private List<Plan> plans = List.of();
   }
 
+  @SuppressWarnings("unused")
   @Getter
   @Setter
   private static class Plan {

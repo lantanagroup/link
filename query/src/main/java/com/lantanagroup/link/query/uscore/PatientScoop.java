@@ -59,15 +59,15 @@ public class PatientScoop {
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
 
-  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
+  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(criteria, context, pois, reportId, resourceTypes, measureIds);
+    this.loadPatientData(criteria, context, pois, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
@@ -81,7 +81,7 @@ public class PatientScoop {
     return null;
   }
 
-  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     int threshold = usCoreConfig.getParallelPatients();
@@ -92,6 +92,7 @@ public class PatientScoop {
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
         int poiIndex = patientsOfInterest.indexOf(poi);
 
+        //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start("query-patient")) {
           if (poi.getReference() != null) {
             String id = poi.getReference();
@@ -157,8 +158,9 @@ public class PatientScoop {
 
         PatientData patientData = null;
 
+        //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources")) {
-          patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
+          patientData = this.loadPatientData(criteria, context, patient, resourceTypes, measureIds);
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -182,6 +184,7 @@ public class PatientScoop {
           logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
           // store data
+          //noinspection unused
           try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
             this.mongoService.savePatientData(dbPatientData);
           }

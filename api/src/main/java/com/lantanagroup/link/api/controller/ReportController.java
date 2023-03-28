@@ -140,7 +140,7 @@ public class ReportController extends BaseController {
 
     Class<?> patientIdResolverClass = Class.forName(this.config.getPatientIdResolver());
     IPatientIdProvider provider = (IPatientIdProvider) this.context.getBean(patientIdResolverClass);
-    patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context, this.config);
+    patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context);
 
     return patientOfInterestModelList;
   }
@@ -299,7 +299,7 @@ public class ReportController extends BaseController {
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, user, reportAggregator, report);
+      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 

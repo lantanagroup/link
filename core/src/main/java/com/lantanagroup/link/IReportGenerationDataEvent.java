@@ -7,6 +7,7 @@ import org.hl7.fhir.r4.model.DomainResource;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 public interface IReportGenerationDataEvent {
 
   void execute(Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext);

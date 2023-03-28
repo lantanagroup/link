@@ -1,23 +1,17 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 public class EncounterStatusTransformer implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
-
-  @Autowired
-  private FhirDataProvider fhirDataProvider;
 
   @Override
   public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {

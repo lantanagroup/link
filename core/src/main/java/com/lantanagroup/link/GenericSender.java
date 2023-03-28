@@ -50,8 +50,6 @@ public abstract class GenericSender {
     return HttpClientBuilder.create().build();
   }
 
-  public abstract String bundle(Bundle bundle, FhirDataProvider fhirProvider, String type);
-
   public String sendContent(Resource resourceToSend, Report report) throws Exception {
     if (StringUtils.isEmpty(this.fhirSenderConfig.getUrl())) {
       throw new IllegalStateException("Not configured with any locations to send");

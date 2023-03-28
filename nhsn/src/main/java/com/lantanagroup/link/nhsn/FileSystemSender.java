@@ -2,7 +2,6 @@ package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -71,6 +70,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     return Paths.get(path, fileName);
   }
 
+  @SuppressWarnings("unused")
   @Override
   public void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
     Bundle bundle = this.generateBundle(report);
@@ -102,11 +102,5 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     Files.write(filePath, content.getBytes(StandardCharsets.UTF_8));
 
     logger.info(String.format("Done saving submission bundle/report to %s", filePath.toString()));
-  }
-
-  @Override
-  public String bundle(Bundle bundle, FhirDataProvider fhirProvider, String type) {
-    // TODO: Not sure why this override is required by GenericSender if its not always used
-    return null;
   }
 }

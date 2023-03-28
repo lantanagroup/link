@@ -4,7 +4,6 @@ import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
-import com.mongodb.client.FindIterable;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -247,7 +246,7 @@ public class FhirBundler {
               });
             });
 
-    FindIterable<PatientMeasureReport> individualMeasureReports =
+    List<PatientMeasureReport> individualMeasureReports =
             this.mongoService.getPatientMeasureReports(individualMeasureReportIds);
 
     for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
@@ -311,10 +310,6 @@ public class FhirBundler {
     return Stream.concat(supplementalDataReferences, evaluatedResources)
             .filter(reference -> reference.hasExtension(Constants.ExtensionCriteriaReference))
             .collect(Collectors.groupingBy(Reference::getReferenceElement, LinkedHashMap::new, Collectors.toList()));
-  }
-
-  private String getLocalId(IBaseResource resource) {
-    return String.format("#%s", getIdPart(resource));
   }
 
   private String getNonLocalId(IBaseResource resource) {

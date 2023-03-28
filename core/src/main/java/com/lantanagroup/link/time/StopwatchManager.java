@@ -1,8 +1,6 @@
 package com.lantanagroup.link.time;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -15,7 +13,6 @@ import java.util.Map;
 public class StopwatchManager {
   private static final int COUNT_WIDTH = 6;
   private static final int DURATION_WIDTH = 11;
-  private static final Logger logger = LoggerFactory.getLogger(StopwatchManager.class);
 
   private final Map<String, List<Duration>> durationsByTask = new LinkedHashMap<>();
 

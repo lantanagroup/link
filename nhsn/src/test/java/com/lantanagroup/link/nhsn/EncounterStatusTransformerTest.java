@@ -1,6 +1,5 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -17,9 +16,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class EncounterStatusTransformerTest {
 
   @Test
@@ -28,7 +24,6 @@ public class EncounterStatusTransformerTest {
     String end = "2022-01-31T23:59:59.000Z";
     String reportID = "testID";
     String patientID = "testPatient";
-    FhirDataProvider fhirProvider = mock(FhirDataProvider.class);
     ReportContext context = new ReportContext();
     EncounterStatusTransformer encounterStatusTransformer = new EncounterStatusTransformer();
     Patient patient = new Patient();
@@ -61,7 +56,6 @@ public class EncounterStatusTransformerTest {
     context.setPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue(reportID);
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
-    when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
     encounterStatusTransformer.execute(bundle, new ReportCriteria(new ArrayList<>(), start, end), new ReportContext(), new ReportContext.MeasureContext());
 

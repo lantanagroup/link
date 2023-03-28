@@ -5,12 +5,14 @@ import com.google.gson.internal.LinkedTreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+@Component
 public class AzureAuth implements ICustomAuth {
   private static final Logger logger = LoggerFactory.getLogger(AzureAuth.class);
 
@@ -50,7 +52,7 @@ public class AzureAuth implements ICustomAuth {
   }
 
   @Override
-  public String getApiKeyHeader() throws Exception {
+  public String getApiKeyHeader() {
     return null;
   }
 }

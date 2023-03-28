@@ -1,7 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IPatientIdProvider;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -28,7 +27,7 @@ public class StoredListProvider implements IPatientIdProvider {
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context, ApiConfig config) {
+  public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context) {
     context.getPatientLists().clear();
     context.getPatientsOfInterest().clear();
 

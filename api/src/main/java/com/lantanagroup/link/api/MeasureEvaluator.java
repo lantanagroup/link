@@ -11,12 +11,11 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
-import com.mongodb.Block;
-import com.mongodb.client.FindIterable;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -56,12 +55,14 @@ public class MeasureEvaluator {
   }
 
   private Bundle getPatientBundle() {
-    FindIterable<PatientData> patientData = this.mongoService.findPatientData(this.patientId);
+    List<PatientData> patientData = this.mongoService.findPatientData(this.patientId);
     Bundle patientBundle = new Bundle();
 
-    patientData.forEach((Block<? super PatientData>) pd -> {
-      patientBundle.addEntry().setResource((Resource) pd.getResource());
-    });
+    patientBundle.setEntry(patientData.stream().map(pd -> {
+      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
+      newEntry.setResource((Resource) pd.getResource());
+      return newEntry;
+    }).collect(Collectors.toList()));
 
     return patientBundle;
   }
@@ -98,6 +99,7 @@ public class MeasureEvaluator {
       logger.info("Resource type distribution:\n{}", distribution);
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+      //noinspection unused
       try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
         measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
       }

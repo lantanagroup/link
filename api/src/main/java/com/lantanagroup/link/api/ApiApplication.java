@@ -4,7 +4,6 @@ import ca.uhn.fhir.context.FhirContext;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
@@ -30,11 +29,9 @@ import java.util.TimeZone;
         "com.lantanagroup.link.auth",
         "com.lantanagroup.link.config",
         "com.lantanagroup.link.config.api",
-        "com.lantanagroup.link.mhl",
         "com.lantanagroup.link.nhsn",
         "com.lantanagroup.link.query",
-        "com.lantanagroup.link.spring",
-        "com.lantanagroup.link.thsa"
+        "com.lantanagroup.link.spring"
 })
 @EnableScheduling
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
@@ -74,11 +71,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public ApiInit apiInit() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
-  }
-
-  @Bean()
-  public FhirDataProvider getProvider() {
-    return new FhirDataProvider(config.getDataStore());
   }
 
   /**

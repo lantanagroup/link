@@ -32,9 +32,6 @@
         <module>core</module>
         <module>api</module>
         <module>query</module>
-        <module>consumer</module>
-        <module>datastore</module>
-        <module>measureeval</module>
         <module>nhsn</module>
     </modules>
 

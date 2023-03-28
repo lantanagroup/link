@@ -264,7 +264,7 @@ public class QueryTests {
     verify(read, times(1)).resource(Patient.class);
     verify(readTyped, times(1)).withId("patient3");
 
-    int entryCount = 0;
+//    int entryCount = 0;
 //    for (QueryResponse patientQueryResponse : patientQueryResponses) {
 //      entryCount += patientQueryResponse.getBundle().getEntry().size();
 //    }

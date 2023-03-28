@@ -122,6 +122,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     return "<unknown>";
   }
 
+  @SuppressWarnings("unused")
   @Override
   public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     if (bundle == null || !bundle.hasEntry()) {
@@ -154,6 +155,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     logger.info(String.format("Filtered out %s resources of patient %s for a total of %s", filtered, patientResourceId, bundle.getEntry().size()));
   }
 
+  @SuppressWarnings("unused")
   @Override
   public void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     throw new RuntimeException("Not yet implemented");

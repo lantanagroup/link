@@ -1,11 +1,9 @@
 package com.lantanagroup.link.config.auth;
 
 
-import com.lantanagroup.link.config.OAuthCredentialModes;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
 
 import java.util.Locale;
 

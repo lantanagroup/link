@@ -85,22 +85,6 @@ public class FhirDataProvider {
     return responseBundle;
   }
 
-  /**
-   * Gets a complete resource by retrieving it based on type and id
-   *
-   * @param resourceType
-   * @param resourceId
-   * @return
-   */
-  public IBaseResource getResourceByTypeAndId(String resourceType, String resourceId) {
-    return this.client
-            .read()
-            .resource(resourceType)
-            .withId(resourceId)
-            .cacheControl(new CacheControlDirective().setNoCache(true))
-            .execute();
-  }
-
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
     MeasureReport measureReport = client.operation()
             .onInstance(new IdType("Measure", measureId))
@@ -118,22 +102,6 @@ public class FhirDataProvider {
             .resource(resource)
             .prettyPrint()
             .encodedJson()
-            .execute();
-  }
-
-  public String bundleToXml(Bundle bundle) {
-    return client.getFhirContext().newXmlParser().encodeResourceToString(bundle);
-  }
-
-  public String bundleToJson(Bundle bundle) {
-    return client.getFhirContext().newJsonParser().encodeResourceToString(bundle);
-  }
-
-  public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
-    return client
-            .search()
-            .forResource(classType)
-            .returnBundle(Bundle.class)
             .execute();
   }
 }

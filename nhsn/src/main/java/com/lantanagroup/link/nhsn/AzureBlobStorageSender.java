@@ -1,7 +1,9 @@
 package com.lantanagroup.link.nhsn;
 
-import com.azure.core.util.BinaryData;
-import com.azure.storage.blob.*;
+import com.azure.storage.blob.BlobAsyncClient;
+import com.azure.storage.blob.BlobContainerAsyncClient;
+import com.azure.storage.blob.BlobServiceAsyncClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -69,81 +71,6 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
   }
 
-  /**
-   * Uploads a file to an Azure container using a file path.
-   *
-   * @param filename - name of file to add to the Azure container
-   * @param filepath - local filepath to the file to be uploaded
-   */
-  @Override
-  public void upload(String filename, String filepath) throws IOException {
-    try {
-      BlobContainerAsyncClient client = getAbsClientConnection();
-      if(client == null) {
-        String errorMessage = String.format("Failed to create blob async client.");
-        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful: {}", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
-        throw new IOException(errorMessage);
-      }
-
-      BlobAsyncClient blobAsyncClient = client.getBlobAsyncClient(filename);
-      blobAsyncClient.uploadFromFile(filepath, true).block();
-    } catch (Exception ex) {
-      logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
-      throw new IOException(errorMessage);
-    }
-
-    logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
-  }
-
-  /**
-   * Uploads a file to an Azure container using BinaryData
-   *
-   * @param filename - name of file to add to the Azure container
-   * @param data - file data to be uploaded
-   */
-  @Override
-  public void upload(String filename, BinaryData data) throws IOException {
-    try {
-      BlobContainerAsyncClient client = getAbsClientConnection();
-      if(client == null) {
-        String errorMessage = String.format("Failed to create blob async client.");
-        logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful: {}", filename, this.absConfig.getAzureStorageContainerName(), errorMessage);
-        throw new IOException(errorMessage);
-      }
-
-      BlobAsyncClient blobAsyncClient = client.getBlobAsyncClient(filename);
-      blobAsyncClient.upload(data, true).block();
-    } catch (Exception ex) {
-      logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
-      throw new IOException(errorMessage);
-    }
-
-    logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
-  }
-
-  public void upload(String filename, String serializedData, boolean replaceExistingBlob) throws IOException {
-    logger.info("Sending MeasureReport bundle to blob storage container {}.", this.absConfig.getAzureStorageContainerName());
-
-    BlobClient blobClient = new BlobClientBuilder()
-            .endpoint(this.absConfig.getAddress())
-            .sasToken(this.absConfig.getSecret())
-            .containerName(this.absConfig.getAzureStorageContainerName())
-            .blobName(filename)
-            .buildClient();
-
-    try(InputStream dataStream = new ByteArrayInputStream(serializedData.getBytes(StandardCharsets.UTF_8))) {
-      blobClient.upload(dataStream, serializedData.length(), replaceExistingBlob);
-      logger.info("Blob upload ({}) to container '{}' was successful.", filename, this.absConfig.getAzureStorageContainerName());
-    } catch (Exception ex) {
-      logger.error("Error: Blob upload ({}) to container '{}' was unsuccessful\n", filename, this.absConfig.getAzureStorageContainerName(), ex);
-      String errorMessage = String.format("Failed to send measure report: {}", ex.getMessage());
-      throw new IOException(errorMessage);
-    }
-
-  }
-
   @Override
   public String sendContent(Resource resourceToSend, Report report) throws Exception {
     logger.info("Sending MeasureReport bundle to blob storage container {}.", this.absConfig.getAzureStorageContainerName());
@@ -170,11 +97,6 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
     }
 
     return "MeasureReport sent successfully to blob storage";
-  }
-
-  @Override
-  public String bundle(Bundle bundle, FhirDataProvider fhirProvider, String type) {
-    return  null;
   }
 
   @Override

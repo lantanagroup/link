@@ -12,12 +12,13 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/measureeval/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/cli/pom.xml" />
+        <option value="$PROJECT_DIR$/consumer/pom.xml" />
+        <option value="$PROJECT_DIR$/datastore/pom.xml" />
         <option value="$PROJECT_DIR$/mhl/pom.xml" />
         <option value="$PROJECT_DIR$/thsa/pom.xml" />
       </set>

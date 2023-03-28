@@ -10,7 +10,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
-import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -46,12 +45,6 @@ public class ApiConfig {
   private boolean requireHttps;
 
   /**
-   * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
-   */
-  @Getter
-  private ApiMeasureLocationConfig measureLocation;
-
-  /**
    * <strong>api.skip-init</strong><br>If true, init processes (loading measure bundles and resources into the internal FHIR server) should be skipped
    */
   private Boolean skipInit = false;
@@ -67,13 +60,6 @@ public class ApiConfig {
    */
   @PositiveOrZero
   public int retryWait = 5000;
-
-
-  /**
-   * <strong>api.data-store</strong><br>Required. Defines the location and authentication for the data storage service.
-   */
-  @Getter @NotNull
-  private ApiDataStoreConfig dataStore;
 
   /**
    * <strong>evaluation-service</strong><br>The measure evaluation service (CQF-Ruler) installation that is to be used to evaluate patient data against measure logic.
@@ -132,12 +118,6 @@ public class ApiConfig {
   private Boolean checkIpAddress = true;
 
   /**
-   * <strong>api.downloader</strong><br>The class used to download reports
-   */
-  @NotNull
-  private String downloader;
-
-  /**
    * <strong>api.sender</strong><br>The class used to send reports
    */
   @NotNull
@@ -148,11 +128,6 @@ public class ApiConfig {
    * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
    */
   private String patientIdResolver;
-
-  /**
-   * <strong>api.document-reference-system</strong><br>The "system" value of identifiers for DocumentReference resources created to index reports generated
-   */
-  private String documentReferenceSystem;
 
   /**
    * <strong>api.cors</strong><br>CORS configuration used for browser interaction with the API
@@ -171,19 +146,6 @@ public class ApiConfig {
    */
   @Getter
   private List<ApiMeasurePackage> measurePackages;
-
-
-  /**
-   * The key represents the “type” of data source (csv, excel, etc.) and the value represents the class to use to process the data.
-   */
-  @Getter
-  private HashMap<String, String> dataProcessor;
-
-  /**
-   * The string represents the data measure report id that gets continuously updated.
-   */
-  @Getter
-  private String dataMeasureReportId;
 
   @Getter
   private String reportAggregator;

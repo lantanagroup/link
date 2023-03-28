@@ -2,10 +2,10 @@ package com.lantanagroup.link.config.api;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.format.annotation.NumberFormat;
 
 import java.math.BigDecimal;
 
+@SuppressWarnings("unused")
 @Getter @Setter
 public class ApiMeasureLocationConfig {
   /**

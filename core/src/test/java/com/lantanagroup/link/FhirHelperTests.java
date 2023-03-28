@@ -1,38 +1,18 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.rest.api.MethodOutcome;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.HumanName;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class FhirHelperTests {
-
-  private FhirDataProvider fhirDataProviderTest;
-  private FhirHelper fhirHelperTest;
-  private FhirContext ctxTest;
-  private Bundle bundleTest;
-  private Bundle bundleTransactionTest;
-  private Bundle bundleMeasureReportTrueTest;
-  private Bundle bundleMeasureReportFalseTest;
-  private MeasureReport measureReportTest;
-  private MeasureReport measureReportTest2;
-  private HttpServletRequest httpServletRequestTest;
-  private DecodedJWT decodedJWTTest;
-  private MethodOutcome outcomeTest;
-  private IIdType iIdType;
 
   @Test
   public void getNameTest() {

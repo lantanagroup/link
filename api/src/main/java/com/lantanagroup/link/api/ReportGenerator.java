@@ -2,7 +2,6 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
@@ -31,20 +30,18 @@ public class ReportGenerator {
   private ReportContext reportContext;
   private ReportContext.MeasureContext measureContext;
   private ReportCriteria criteria;
-  private LinkCredentials user;
   private ApiConfig config;
   private IReportAggregator reportAggregator;
   private StopwatchManager stopwatchManager;
   private MongoService mongoService;
   private Report report;
 
-  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator, Report report) {
+  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
     this.mongoService = mongoService;
     this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
     this.measureContext = measureContext;
     this.criteria = criteria;
-    this.user = user;
     this.config = config;
     this.reportAggregator = reportAggregator;
     this.report = report;
@@ -80,6 +77,7 @@ public class ReportGenerator {
                 patientMeasureReport.setMeasureReport(measureReport);
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
+                //noinspection unused
                 try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
                   this.mongoService.savePatientMeasureReport(patientMeasureReport);
                 }
@@ -95,12 +93,8 @@ public class ReportGenerator {
       }
     }
 
-    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.reportContext, this.measureContext);
+    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
     this.measureContext.setMeasureReport(masterMeasureReport);
     this.report.getAggregates().add(masterMeasureReport);
-  }
-
-  public MeasureReport getMeasureReport() {
-    return this.measureContext.getMeasureReport();
   }
 }

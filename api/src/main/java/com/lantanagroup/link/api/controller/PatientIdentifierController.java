@@ -63,8 +63,8 @@ public class PatientIdentifierController extends BaseController {
     for (QueryListConfig.PatientList patientListConfig : filteredList) {
       ListResource source = this.readList(patientListConfig.getListId());
 
-      for (int j = 0; j < patientListConfig.getCensusIdentifier().size(); j++) {
-        PatientList patientList = this.convert(source, patientListConfig.getCensusIdentifier().get(j));
+      for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
+        PatientList patientList = this.convert(source, patientListConfig.getMeasureId().get(j));
         this.storePatientList(patientList);
       }
     }

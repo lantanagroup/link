@@ -1,13 +1,11 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericAggregator;
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.model.ReportContext;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +16,6 @@ import java.util.Optional;
 @Primary
 public class ReportAggregator extends GenericAggregator implements IReportAggregator {
   private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
-
-  @Autowired
-  private FhirDataProvider provider;
 
   protected void addSubjectResult(
           MeasureReport individualMeasureReport,

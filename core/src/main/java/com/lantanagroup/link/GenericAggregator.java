@@ -3,7 +3,8 @@ package com.lantanagroup.link;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,41 +21,8 @@ public abstract class GenericAggregator implements IReportAggregator {
 
   protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports);
 
-  private void setSubject(MeasureReport masterMeasureReport) {
-    if (this.config.getMeasureLocation() != null) {
-      logger.debug("Creating MeasureReport.subject based on config");
-      Reference subjectRef = masterMeasureReport.getSubject() != null && masterMeasureReport.getSubject().getReference() != null
-              ? masterMeasureReport.getSubject() : new Reference();
-      if (this.config.getMeasureLocation().getSystem() != null || this.config.getMeasureLocation().getValue() != null) {
-        subjectRef.setIdentifier(new Identifier()
-                .setSystem(this.config.getMeasureLocation().getSystem())
-                .setValue(this.config.getMeasureLocation().getValue()));
-      }
-
-      if (this.config.getMeasureLocation().getLatitude() != null || this.config.getMeasureLocation().getLongitude() != null) {
-        Extension positionExt = new Extension(Constants.ReportPositionExtUrl);
-
-        if (this.config.getMeasureLocation().getLongitude() != null) {
-          Extension longExt = new Extension("longitude");
-          longExt.setValue(new DecimalType(this.config.getMeasureLocation().getLongitude()));
-          positionExt.addExtension(longExt);
-        }
-
-        if (this.config.getMeasureLocation().getLatitude() != null) {
-          Extension latExt = new Extension("latitude");
-          latExt.setValue(new DecimalType(this.config.getMeasureLocation().getLatitude()));
-          positionExt.addExtension(latExt);
-        }
-
-        subjectRef.addExtension(positionExt);
-      }
-
-      masterMeasureReport.setSubject(subjectRef);
-    }
-  }
-
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
+  public MeasureReport generate(ReportCriteria criteria, ReportContext.MeasureContext measureContext) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
     masterMeasureReport.setId(measureContext.getReportId());
@@ -69,8 +37,6 @@ public abstract class GenericAggregator implements IReportAggregator {
     this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
 
     this.createGroupsFromMeasure(masterMeasureReport, measureContext);
-
-    this.setSubject(masterMeasureReport);
 
     return masterMeasureReport;
   }

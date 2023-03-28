@@ -3,13 +3,11 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.hapi.ctx.DefaultProfileValidationSupport;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;
@@ -27,32 +25,31 @@ import java.util.stream.Collectors;
 
 @Component
 public class ApplyConceptMaps implements IReportGenerationDataEvent {
-
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
   Map<String, ConceptMap> conceptMaps = new HashMap<>();
   DefaultProfileValidationSupport validationSupport;
 
   @Autowired
   @Setter
-  private ApplyConceptMapsConfig applyConceptMapConfig;
+  private MongoService mongoService;
 
   @Autowired
   @Setter
-  private FhirDataProvider fhirDataProvider;
+  private ApplyConceptMapsConfig applyConceptMapConfig;
 
   public ApplyConceptMaps() {
     validationSupport = new DefaultProfileValidationSupport();
     validationSupport.fetchAllStructureDefinitions(FhirContextProvider.getFhirContext());
   }
 
-  private Map<String, ConceptMap> getConceptMaps(FhirDataProvider fhirDataProvider) {
-    if (applyConceptMapConfig != null && applyConceptMapConfig.getConceptMaps() != null) {
-      applyConceptMapConfig.getConceptMaps().stream().forEach(concepMap -> {
+  private Map<String, ConceptMap> getConceptMaps() {
+    if (this.applyConceptMapConfig != null && this.applyConceptMapConfig.getConceptMaps() != null) {
+      this.applyConceptMapConfig.getConceptMaps().stream().forEach(cm -> {
         try {
-          IBaseResource conceptMap = fhirDataProvider.getResourceByTypeAndId("ConceptMap", concepMap.getConceptMapId());
-          conceptMaps.put(concepMap.getConceptMapId(), (ConceptMap) conceptMap);
+          ConceptMap conceptMap = this.mongoService.getConceptMap(cm.getConceptMapId());
+          this.conceptMaps.put(cm.getConceptMapId(), conceptMap);
         } catch (Exception ex) {
-          logger.error(String.format("ConceptMap %s not found", concepMap.getConceptMapId()));
+          logger.error(String.format("ConceptMap %s not found", cm.getConceptMapId()));
         }
       });
     }
@@ -63,7 +60,6 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
     return new FHIRPathEngine(workerContext);
   }
-
 
   private void translateCoding(ConceptMap map, Coding code) {
     map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
@@ -83,20 +79,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     });
   }
 
-  private void displayTransformation(Resource resource, List<Coding> codingList) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("Transformation for resource:  " + resource.getResourceType() + "/" + resource.getIdElement().getIdPart());
-    String message = codingList.stream().map(coding -> (coding.getExtension().size() > 0 ?
-            "From : " + ((Coding) coding.getExtension().get(0).getValue()).getSystem() + ":"
-                    + ((Coding) coding.getExtension().get(0).getValue()).getCode() +
-            " To: " + coding.getSystem() + ":" + coding.getCode() : "No extensions in coding list")).collect(Collectors.joining("\n"));
-    builder.append(message);
-    if (!StringUtils.isBlank(builder.toString())) {
-      logger.info(builder.toString());
-    }
-  }
-
-  /* TO-DO
+  /* TODO
      Move them to a resource filter
    */
   public List<Coding> filterCodingsByPathList(DomainResource resource, List<String> pathList) {
@@ -116,7 +99,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     return codingList;
   }
 
-  /* TO-DO
+  /* TODO
      Move them to a resource filter
    */
   public List<Base> filterResourcesByPathList(DomainResource resource, List<String> pathList) {
@@ -147,7 +130,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
   public void execute(List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
     if (resourceList.size() > 0) {
-      Map<String, ConceptMap> conceptMaps = getConceptMaps(fhirDataProvider);
+      Map<String, ConceptMap> conceptMaps = this.getConceptMaps();
       if (!conceptMaps.isEmpty()) {
         applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
           ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());

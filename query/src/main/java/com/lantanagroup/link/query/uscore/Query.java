@@ -18,7 +18,6 @@ public class Query extends BaseQuery implements IQuery {
   @Override
   public void execute(ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds) {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
-    String reportId = context.getMasterIdentifierValue();
 
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
@@ -32,7 +31,7 @@ public class Query extends BaseQuery implements IQuery {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
-        scoop.execute(criteria, context, patientsOfInterest, reportId, resourceTypes, measureIds);
+        scoop.execute(criteria, context, patientsOfInterest, resourceTypes, measureIds);
       } catch (Exception ex) {
         logger.error("Error scooping data for patients: " + ex.getMessage());
         ex.printStackTrace();

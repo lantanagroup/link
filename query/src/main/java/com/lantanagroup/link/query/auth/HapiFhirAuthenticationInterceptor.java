@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
 
+@SuppressWarnings("unused")
 @Interceptor
 public class HapiFhirAuthenticationInterceptor {
   private static final Logger logger = LoggerFactory.getLogger(HapiFhirAuthenticationInterceptor.class);

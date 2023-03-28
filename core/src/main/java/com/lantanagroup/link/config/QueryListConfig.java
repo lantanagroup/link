@@ -32,6 +32,6 @@ public class QueryListConfig {
 
     @NotNull
     @Size(min = 1)
-    private List<@NotBlank String> censusIdentifier;
+    private List<@NotBlank String> measureId;
   }
 }

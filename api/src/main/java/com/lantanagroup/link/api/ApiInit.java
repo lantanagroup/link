@@ -53,23 +53,10 @@ public class ApiInit {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
 
     boolean allServicesAvailable = false;
-    boolean dataStoreAvailable = false;
     boolean terminologyServiceAvailable = false;
     boolean evaluationServiceAvailable = false;
 
     for (int retry = 0; config.getMaxRetry() == null || retry <= config.getMaxRetry(); retry++) {
-
-      // Check data store availability
-      if (!dataStoreAvailable) {
-        try {
-          CapabilityStatement cs = new FhirDataProvider(config.getDataStore()).getClient().capabilities().ofType(CapabilityStatement.class).execute();
-          logger.info(String.format("CapabilityStatement: %s -- %d", cs.getUrl(), cs.getRest().size()));
-          dataStoreAvailable = true;
-        } catch (BaseServerResponseException e) {
-          logger.error(String.format("Could not connect to data store %s (%s)", config.getDataStore().getBaseUrl(), e));
-        }
-      }
-
       // Check terminology service availability
       if (!terminologyServiceAvailable) {
         try {
@@ -92,7 +79,7 @@ public class ApiInit {
 
 
       // Check if all services are now available
-      allServicesAvailable = dataStoreAvailable && terminologyServiceAvailable && evaluationServiceAvailable;
+      allServicesAvailable = terminologyServiceAvailable && evaluationServiceAvailable;
       if (allServicesAvailable) {
         logger.info("All prerequisite services in API init are available.");
         break;
@@ -106,8 +93,8 @@ public class ApiInit {
 
     // Not all prerequisite services are available... cannot continue
     if (!allServicesAvailable) {
-      logger.error(String.format("API prerequisite services are not available.  Availability: data-store: %s, terminology-service: %s, evaluation-service: %s",
-              dataStoreAvailable, terminologyServiceAvailable, evaluationServiceAvailable));
+      logger.error("API prerequisite services are not available. Availability: terminology-service: {}, evaluation-service: {}",
+              terminologyServiceAvailable, evaluationServiceAvailable);
       return false;
     }
 
