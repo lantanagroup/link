@@ -14,9 +14,15 @@ import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.io.StringWriter;
 
-public class BaseCodec implements Codec<IBaseResource> {
+public class BaseCodec<T extends IBaseResource> implements Codec<T> {
+  private Class<T> type;
+
+  public BaseCodec(Class<T> type) {
+    this.type = type;
+  }
+
   @Override
-  public IBaseResource decode(BsonReader bsonReader, DecoderContext decoderContext) {
+  public T decode(BsonReader bsonReader, DecoderContext decoderContext) {
     StringWriter stringWriter = new StringWriter();
     JsonWriterSettings writerSettings = JsonWriterSettings
             .builder()
@@ -27,17 +33,17 @@ public class BaseCodec implements Codec<IBaseResource> {
             .build();
     new JsonWriter(stringWriter, writerSettings).pipe(bsonReader);
     String json = stringWriter.toString();
-    return (IBaseResource) FhirContextProvider.getFhirContext().newJsonParser().parseResource(json);
+    return (T) FhirContextProvider.getFhirContext().newJsonParser().parseResource(json);
   }
 
   @Override
-  public void encode(BsonWriter bsonWriter, IBaseResource resource, EncoderContext encoderContext) {
+  public void encode(BsonWriter bsonWriter, T resource, EncoderContext encoderContext) {
     String json = FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(resource);
     bsonWriter.pipe(new JsonReader(json));
   }
 
   @Override
-  public Class<IBaseResource> getEncoderClass() {
-    return IBaseResource.class;
+  public Class<T> getEncoderClass() {
+    return this.type;
   }
 }

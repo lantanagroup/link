@@ -12,6 +12,7 @@ import java.util.Date;
 public class PatientData {
   private String id = (new ObjectId()).toString();
   private String patientId;
+  private String resourceType;
   private String resourceId;
   private Date retrieved;
   private IBaseResource resource;

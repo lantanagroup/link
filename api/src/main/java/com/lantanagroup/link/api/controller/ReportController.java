@@ -11,6 +11,7 @@ import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.AuditTypes;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
@@ -137,7 +138,7 @@ public class ReportController extends BaseController {
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(criteria, context, patientsOfInterest, context.getMasterIdentifierValue(), resourceTypes, measureIds);
+      query.execute(criteria, context, resourceTypes, measureIds);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
@@ -302,8 +303,6 @@ public class ReportController extends BaseController {
       report.setVersion(existingReport.getVersion());
     }
 
-    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.InitiateQuery, "Successfully Initiated Query");
-
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
 
       measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
@@ -312,7 +311,7 @@ public class ReportController extends BaseController {
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.stopwatchManager, reportContext, measureContext, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, user, reportAggregator);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
@@ -332,7 +331,7 @@ public class ReportController extends BaseController {
 
     this.mongoService.saveReport(report);
 
-    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+    this.mongoService.audit(user, request, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
     logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
@@ -440,6 +439,6 @@ public class ReportController extends BaseController {
 
     logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
 
-    this.getFhirDataProvider().audit(request, user, FhirHelper.AuditEventTypes.Send, "Successfully Sent Report");
+    this.mongoService.audit(user, request, AuditTypes.Submit, String.format("Submitted report %s", reportId));
   }
 }

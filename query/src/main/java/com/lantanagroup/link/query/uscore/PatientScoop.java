@@ -1,9 +1,12 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.EventService;
+import com.lantanagroup.link.EventTypes;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -36,6 +39,9 @@ public class PatientScoop {
   protected IGenericClient fhirQueryServer;
 
   @Autowired
+  private MongoService mongoService;
+
+  @Autowired
   private ApplicationContext context;
 
   @Autowired
@@ -43,9 +49,6 @@ public class PatientScoop {
 
   @Autowired
   private USCoreConfig usCoreConfig;
-
-  @Autowired
-  protected FhirDataProvider fhirDataProvider;
 
   @Setter
   @Autowired
@@ -160,22 +163,14 @@ public class PatientScoop {
 
         // store the data
         try {
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
-
-          patientBundle.setType(Bundle.BundleType.BATCH);
-
-          patientBundle.getEntry().forEach(entry ->
-                  entry.getRequest()
-                          .setMethod(Bundle.HTTPVerb.PUT)
-                          .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
-          );
-
-          // Make sure the patient bundle returned by query component has an ID in the correct format
-          patientBundle.setId(ReportIdHelper.getPatientDataBundleId(reportId, patient.getIdElement().getIdPart()));
-
-          // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
-          patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
-
+          List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientData.getBundle().getEntry().stream().map(entry -> {
+            com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
+            dbpd.setPatientId(patient.getIdElement().getIdPart());
+            dbpd.setResourceType(entry.getResource().getResourceType().toString());
+            dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
+            dbpd.setResource(entry.getResource());
+            return dbpd;
+          }).collect(Collectors.toList());
 
           eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
@@ -183,7 +178,7 @@ public class PatientScoop {
 
           // store data
           try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-            this.fhirDataProvider.updateResource(patientBundle);
+            this.mongoService.savePatientData(dbPatientData);
           }
 
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
@@ -192,7 +187,7 @@ public class PatientScoop {
           logger.info("Exception is: " + ex.getMessage());
         }
 
-        return patient.getId();
+        return patient.getIdElement().getIdPart();
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);

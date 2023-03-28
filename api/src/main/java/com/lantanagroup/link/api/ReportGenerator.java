@@ -4,6 +4,8 @@ import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
@@ -32,8 +34,10 @@ public class ReportGenerator {
   private ApiConfig config;
   private IReportAggregator reportAggregator;
   private StopwatchManager stopwatchManager;
+  private MongoService mongoService;
 
-  public ReportGenerator(StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+    this.mongoService = mongoService;
     this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
     this.measureContext = measureContext;
@@ -56,19 +60,28 @@ public class ReportGenerator {
             : ForkJoinPool.commonPool();
     try {
       List<MeasureReport> patientMeasureReports = forkJoinPool.submit(() ->
-              measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
+              measureContext.getPatientsOfInterest().parallelStream().filter(patient -> {
+                return StringUtils.isNotEmpty(patient.getReference()) || StringUtils.isNotEmpty(patient.getIdentifier());
+              }).map(patient -> {
+                String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
+                PatientMeasureReport patientMeasureReport = new PatientMeasureReport();
+                patientMeasureReport.setId(measureReportId);
+                patientMeasureReport.setPeriodStart(criteria.getPeriodStart());
+                patientMeasureReport.setPeriodEnd(criteria.getPeriodEnd());
+                patientMeasureReport.setMeasureId(measureContext.getBundleId());
+                patientMeasureReport.setPatientId(patient.getId());
 
                 logger.info("Generating measure report for patient " + patient);
-                MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
-                String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
-                patientMeasureReport.setId(measureReportId);
+                MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+                measureReport.setId(measureReportId);
+                patientMeasureReport.setMeasureReport(measureReport);
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
                 try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
-                  this.reportContext.getFhirProvider().updateResource(patientMeasureReport);
+                  this.mongoService.savePatientMeasureReport(patientMeasureReport);
                 }
 
-                return patientMeasureReport;
+                return measureReport;
               }).collect(Collectors.toList())).get();
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
       // pass them to aggregators using measureContext

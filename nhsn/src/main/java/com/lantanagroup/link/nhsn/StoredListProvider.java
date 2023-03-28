@@ -55,6 +55,7 @@ public class StoredListProvider implements IPatientIdProvider {
       }).collect(Collectors.toList());
 
       context.getPatientLists().add(found);
+      measureContext.getPatientsOfInterest().addAll(patientsOfInterest);
       context.getPatientsOfInterest().addAll(patientsOfInterest);
     }
 

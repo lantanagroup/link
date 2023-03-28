@@ -16,7 +16,10 @@ public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  public void execute(ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds) {
+    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
+    String reportId = context.getMasterIdentifierValue();
+
     if (patientsOfInterest == null) {
       throw new IllegalArgumentException("patientsOfInterest");
     }
