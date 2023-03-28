@@ -48,7 +48,7 @@ public class EventService {
           ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
         }
       } else {
-        logger.error(bean.toString() + " does not implement the IReportGenerationEvent interface");
+        logger.warn(bean.toString() + " does not implement the IReportGenerationEvent interface");
       }
     }
   }
@@ -67,7 +67,7 @@ public class EventService {
           ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
         }
       } else {
-        logger.error(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
+        logger.warn(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
       }
     }
   }

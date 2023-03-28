@@ -1,132 +1,28 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.EncodingEnum;
-import ca.uhn.fhir.rest.api.MethodOutcome;
-import ca.uhn.fhir.util.BundleUtil;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.gson.*;
-import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.model.PatientReportModel;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
-  private static final String NAME = "name";
-  private static final String SUBJECT = "sub";
-  private static final String DOCUMENT_REFERENCE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/nhsnlink-report-version";
-
-  public static void recordAuditEvent(HttpServletRequest request, FhirDataProvider fhirDataProvider, LinkCredentials user, AuditEventTypes type, String outcomeDescription) {
-    AuditEvent auditEvent = createAuditEvent(request, user, type, outcomeDescription);
-
-    try {
-      MethodOutcome outcome = fhirDataProvider.createOutcome(auditEvent);
-      IIdType id = outcome.getId();
-      logger.info("AuditEvent LOGGED: " + id.getValue());
-    } catch (Exception ex) {
-      logger.error("Failed to record AuditEvent", ex);
-    }
-  }
-
-  public static AuditEvent createAuditEvent(HttpServletRequest request, LinkCredentials user, AuditEventTypes type, String outcomeDescription) {
-    AuditEvent auditEvent = new AuditEvent();
-
-    switch (type) {
-      case Export:
-        auditEvent.setType(new Coding(null, "export", null));
-        break;
-      case Generate:
-        auditEvent.setType(new Coding(null, "generate", null));
-        break;
-      case Send:
-        auditEvent.setType(new Coding(null, "send", null));
-        break;
-      case SearchLocations:
-        auditEvent.setType(new Coding(null, "search-locations", null));
-        break;
-      case InitiateQuery:
-        auditEvent.setType(new Coding(null, "initiate-query", null));
-        break;
-      case SearchReports:
-        auditEvent.setType(new Coding(null, "search-reports", null));
-        break;
-    }
-
-    auditEvent.setAction(AuditEvent.AuditEventAction.E);
-    auditEvent.setRecorded(new Date());
-    auditEvent.setOutcome(AuditEvent.AuditEventOutcome._0);
-    auditEvent.setOutcomeDesc(outcomeDescription);
-
-    List<AuditEvent.AuditEventAgentComponent> agentList = new ArrayList<>();
-    agentList.add(getAuditEventAgent(request, user));
-    auditEvent.setAgent(agentList);
-
-    return auditEvent;
-  }
-
-  private static AuditEvent.AuditEventAgentComponent getAuditEventAgent(HttpServletRequest request, LinkCredentials user) {
-    AuditEvent.AuditEventAgentComponent agent = new AuditEvent.AuditEventAgentComponent();
-    agent.setRequestor(false);
-
-    if (user != null) {
-      String payload = user.getJwt().getPayload();
-      byte[] decodedBytes = Base64.getDecoder().decode(payload);
-      String decodedString = new String(decodedBytes);
-
-      JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
-      if (jsonObject.has(NAME)) {
-        agent.setName(jsonObject.get(NAME).toString());
-      }
-      if (jsonObject.has(SUBJECT)) {
-        agent.setAltId(jsonObject.get(SUBJECT).toString());
-      }
-
-      if (jsonObject.has("aud") && !jsonObject.get("aud").isJsonNull()) {
-        logger.info(String.format("Aud is : " + jsonObject.get("aud").toString()));
-        JsonElement aud = jsonObject.get("aud");
-        String identifierValue = "";
-        if (aud instanceof JsonPrimitive) {
-          identifierValue = aud.getAsString();
-        } else if (aud instanceof JsonArray) {
-          for (int i = 0; i < ((JsonArray) aud).size(); i++) {
-            identifierValue += ((JsonArray) aud).get(i).getAsString();
-          }
-        }
-        Identifier identifier = new Identifier().setValue(identifierValue);
-        agent.setLocation(new Reference().setIdentifier(identifier));
-      }
-    } else {
-      agent.setName("Link System");
-    }
-
-    if (request != null) {
-      String remoteAddress;
-      remoteAddress = getRemoteAddress(request);
-
-      if (remoteAddress != null) {
-        agent.setNetwork(new AuditEvent.AuditEventAgentNetworkComponent().setAddress(remoteAddress));
-      }
-    }
-
-    return agent;
-  }
 
   public static String getRemoteAddress(HttpServletRequest request) {
     String remoteAddress;
@@ -142,16 +38,6 @@ public class FhirHelper {
       remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     }
     return remoteAddress;
-  }
-
-  /**
-   * Retrieves the relevant ID portion of the version of a resource
-   *
-   * @param version A resource's version URI
-   * @return The ID portion of the resource's version
-   */
-  public static String getIdFromVersion(String version) {
-    return version.substring(version.lastIndexOf("fhir/") + 5, version.indexOf("/_history"));
   }
 
   public static String getName(List<HumanName> names) {
@@ -181,234 +67,23 @@ public class FhirHelper {
     return "Unknown";
   }
 
-  public static Extension createVersionExtension(String value) {
-    return new Extension(DOCUMENT_REFERENCE_VERSION_URL, new StringType(value));
-  }
-
   /**
-   * @param documentReference - DocumentReference whose major version is to be incremented
-   * @return - the DocumentReference with the major version incremented by 1
+   * @param report
    */
-  public static DocumentReference incrementMajorVersion(DocumentReference documentReference) {
-    if (documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL) == null) {
-      documentReference.addExtension(createVersionExtension("1.0"));
+  public static void incrementMajorVersion(Report report) {
+    if (StringUtils.isEmpty(report.getVersion())) {
+      report.setVersion("1.0");
     } else {
-      String version = documentReference
-              .getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-              .getValue().toString();
-
+      String version = report.getVersion();
       version = version.substring(0, version.indexOf("."));
-      documentReference.getExtensionByUrl(DOCUMENT_REFERENCE_VERSION_URL)
-              .setValue(new StringType((Integer.parseInt(version) + 1) + ".0"));
+      report.setVersion((Integer.parseInt(version) + 1) + ".0");
     }
-    return documentReference;
-  }
-
-  public static <T extends IBaseResource> List<T> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx, Class<T> resourceType) {
-    List<T> resources = new ArrayList<>(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
-
-    // Load the subsequent pages
-    while (bundle.getLink(IBaseBundle.LINK_NEXT) != null) {
-      bundle = fhirDataProvider
-              .getClient()
-              .loadPage()
-              .next(bundle)
-              .execute();
-      logger.info("Adding next page of resources...");
-      resources.addAll(BundleUtil.toListOfResourcesOfType(ctx, bundle, resourceType));
-    }
-    return resources;
-  }
-
-  public static List<IBaseResource> getAllPages(Bundle bundle, FhirDataProvider fhirDataProvider, FhirContext ctx) {
-    return getAllPages(bundle, fhirDataProvider, ctx, IBaseResource.class);
-  }
-
-  public static PatientReportModel setPatientFields(Patient patient, Boolean excluded) {
-    PatientReportModel report = new PatientReportModel();
-    report.setName(FhirHelper.getName(patient.getName()));
-
-    if (patient.getBirthDate() != null) {
-      report.setDateOfBirth(Helper.getFhirDate(patient.getBirthDate()));
-    }
-
-    if (patient.getGender() != null) {
-      report.setSex(patient.getGender().toString());
-    }
-
-    if (patient.getId() != null) {
-      report.setId(patient.getIdElement().getIdPart());
-    }
-
-    report.setExcluded(excluded);
-
-    return report;
-  }
-
-  public static void addEntriesToBundle(Bundle source, Bundle destination) {
-    if (source == null) return;
-
-    List<Bundle.BundleEntryComponent> sourceEntries = source.getEntry();
-
-    for (Bundle.BundleEntryComponent sourceEntry : sourceEntries) {
-      if (sourceEntry.getResource() == null || sourceEntry.getResource().getIdElement() == null || sourceEntry.getResource().getId() == null)
-        continue;
-
-      List<Bundle.BundleEntryComponent> destEntries = new ArrayList<>(destination.getEntry());
-      Optional<Bundle.BundleEntryComponent> found =
-              destEntries.stream()
-                      .filter(n ->
-                              n.getResource().getResourceType() == sourceEntry.getResource().getResourceType() &&
-                                      n.getResource().getIdElement().getIdPart() == sourceEntry.getResource().getIdElement().getIdPart())
-                      .findFirst();
-
-      // Only add the resource to the bundle if it doesn't already exist
-      if (found.isPresent()) {
-        logger.debug(String.format("Resource %s/%s is a duplicate, skipping...", sourceEntry.getResource().getResourceType(), sourceEntry.getResource().getIdElement().getIdPart()));
-      } else {
-        destination.addEntry()
-                .setResource(sourceEntry.getResource())
-                .getRequest()
-                .setMethod(Bundle.HTTPVerb.PUT)
-                .setUrl(sourceEntry.getResource().getResourceType().toString() + "/" + sourceEntry.getResource().getIdElement().getIdPart());
-      }
-    }
-  }
-
-  public static Bundle.BundleEntryComponent findEntry(Bundle bundle, ResourceType resourceType, String id) {
-    Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream().filter(e ->
-            e.getResource().getResourceType() == resourceType &&
-                    e.getResource().getIdElement().getIdPart().equals(id))
-            .findFirst();
-    return found.isPresent() ? found.get() : null;
-  }
-
-  public static Practitioner toPractitioner(DecodedJWT jwt) {
-    Practitioner practitioner = new Practitioner();
-    practitioner.getMeta().addTag(Constants.MainSystem, Constants.LinkUserTag, null);
-    List<Identifier> identifiers = new ArrayList<>();
-    Identifier identifier = new Identifier();
-    identifier.setSystem(Constants.MainSystem);
-    identifier.setValue(jwt.getSubject());
-    identifiers.add(identifier);
-    practitioner.setIdentifier(identifiers);
-    String payload = jwt.getPayload();
-    byte[] decodedBytes = Base64.getDecoder().decode(payload);
-    String decodedString = new String(decodedBytes);
-    JsonObject jsonObject = JsonParser.parseString(decodedString).getAsJsonObject();
-    List<HumanName> list = new ArrayList<>();
-    HumanName dst = new HumanName();
-    if (jsonObject.has("family_name")) {
-      dst.setFamily(jsonObject.get("family_name").toString());
-    }
-    if (jsonObject.has("given_name")) {
-      ArrayList<StringType> givenNames = new ArrayList<>();
-      givenNames.add(new StringType(jsonObject.get("given_name").toString()));
-      dst.setGiven(givenNames);
-    }
-    list.add(dst);
-    practitioner.setName(list);
-    if (jsonObject.has("email")) {
-      ArrayList<ContactPoint> contactPointList = new ArrayList<>();
-      ContactPoint email = new ContactPoint();
-      email.setSystem(ContactPoint.ContactPointSystem.EMAIL);
-      email.setValue(jsonObject.get("email").toString());
-      contactPointList.add(email);
-      practitioner.setTelecom(contactPointList);
-    }
-    return practitioner;
   }
 
   public static <T extends IBaseResource> T parseResource(Class<T> resourceType, String string) {
     return EncodingEnum.detectEncoding(string)
             .newParser(FhirContextProvider.getFhirContext())
             .parseResource(resourceType, string);
-  }
-
-  /**
-   * Creates a Bundle of type "batch" with an entry for each resource provided. Expects that each resource
-   * have an id, so that it can create a "request" with a method of "PUT resourceType/id"
-   * Example: createUpdateBatch(List.of(resource1, resource2, resource3))
-   *
-   * @param resources The list of resources to be added to the batch
-   * @return Bundle that can be executed as a transaction on the FHIR server
-   */
-  public static Bundle createUpdateBatch(List<DomainResource> resources) {
-    Bundle newBundle = new Bundle();
-    newBundle.setType(Bundle.BundleType.BATCH);
-
-    for (DomainResource resource : resources) {
-      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-      newEntry
-              .setResource(resource)
-              .getRequest()
-              .setMethod(Bundle.HTTPVerb.PUT)
-              .setUrl(resource.getResourceType().toString() + "/" + resource.getIdElement().getIdPart());
-    }
-
-    return newBundle;
-  }
-
-  /**
-   * Traverse each population in the measure report and find the subject results of the population,
-   * which is a reference to a contained List resource. The contained List resource contains each of the
-   * individual patient measure reports that is used to calculate the aggregate value of the population.
-   *
-   * @param masterMeasureReport The master measure report to search for lists of individual reports
-   * @return The list of unique references to individual patient MeasureReport resources that comprise the master
-   */
-  public static List<String> getPatientMeasureReportReferences(MeasureReport masterMeasureReport) {
-    List<String> references = new ArrayList<>();
-
-    // Loop through the groups and populations within each group
-    // Look for a reference to a contained List resource representing the measure reports
-    // that comprise the group/population's aggregate
-    for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
-      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-        String populateListRef = population.getSubjectResults().getReference();
-        Optional<ListResource> populationList = masterMeasureReport
-                .getContained().stream()
-                .filter(c -> c.getIdElement().getIdPart().equals(populateListRef))
-                .map(c -> (ListResource) c)
-                .findFirst();
-
-        // If a contained List resource was found, extract each MeasureReport reference from the list
-        if (populationList.isPresent()) {
-          for (ListResource.ListEntryComponent listEntry : populationList.get().getEntry()) {
-            String individualReportRef = listEntry.getItem().getReference();
-
-            // Should only be references to MeasureReport. Skip if not.
-            if (!individualReportRef.startsWith("MeasureReport/")) {
-              continue;
-            }
-
-            // Only add the references to the list of it is not already in the list (create a unique list of MR references)
-            if (!references.contains(listEntry.getItem().getReference())) {
-              references.add(listEntry.getItem().getReference());
-            }
-          }
-        }
-      }
-    }
-
-    return references;
-  }
-
-  public static List<MeasureReport> getPatientReports(List<String> patientMeasureReportReferences, FhirDataProvider fhirDataProvider) {
-    Bundle patientReportsReqBundle = new Bundle();
-    patientReportsReqBundle.setType(Bundle.BundleType.TRANSACTION);
-
-    for (String patientMeasureReportReference : patientMeasureReportReferences) {
-      patientReportsReqBundle.addEntry().getRequest()
-              .setMethod(Bundle.HTTPVerb.GET)
-              .setUrl(patientMeasureReportReference);
-    }
-
-    // Get each of the individual patient measure reports
-    return fhirDataProvider.transaction(patientReportsReqBundle)
-            .getEntry().stream()
-            .map(e -> (MeasureReport) e.getResource())
-            .collect(Collectors.toList());
   }
 
   /**
@@ -473,58 +148,36 @@ public class FhirHelper {
     return reportDefBundleDataReqSet.stream().filter(e -> !e.equals("Patient") && !properties.contains(e)).collect(Collectors.toList());
   }
 
-  public static List<String> getQueryConfigurationDataReqCommonResourceTypes(List<String> properties, Bundle measureDefBundle) {
-    // get data requirements
-    Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
-    // get all resources types that are in data requirements but missing from query properties
-    return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
-  }
+  public static List<ListResource> getPatientLists(Report report) {
+    return report.getPatientLists().stream().map(pl -> {
+      ListResource listResource = new ListResource();
+      listResource.setId(pl.getId());
 
-  public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
-    if (documentReference != null && documentReference.getContext() != null && documentReference.getContext().hasRelated()) {
-      Bundle requestBundle = new Bundle();
-      requestBundle.setType(Bundle.BundleType.TRANSACTION);
+      listResource.setEntry(pl.getPatients().stream().map(pid -> {
+        ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();
 
-      // Add each census list reference to the batch bundle as a GET
-      requestBundle.getEntry().addAll(documentReference.getContext().getRelated().stream().map(related -> {
-        Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-        newEntry.getRequest()
-                .setMethod(Bundle.HTTPVerb.GET)
-                .setUrl(related.getReference());
-        return newEntry;
+        if (StringUtils.isNotEmpty(pid.getIdentifier())) {
+          String[] identifierSplit = pid.getIdentifier().split("|");
+          Identifier identifier = new Identifier();
+          entry.getItem().setIdentifier(identifier);
+
+          if (identifierSplit.length == 2) {
+            identifier.setSystem(identifierSplit[0]);
+            identifier.setValue(identifierSplit[1]);
+          } else if (identifierSplit.length == 1) {
+            identifier.setValue(identifierSplit[0]);
+          } else {
+            logger.error("Expected one or two parts to the identifier, but got {}", identifierSplit.length);
+          }
+        } else if (StringUtils.isNotEmpty(pid.getReference())) {
+          entry.getItem().setReference(pid.getReference());
+        }
+
+        return entry;
       }).collect(Collectors.toList()));
 
-      // Execute the batch/transaction to retrieve each census list
-      Bundle responseBundle = fhirDataProvider.transaction(requestBundle);
-
-      // Return a list of the census retrieved as part of the batch/transaction
-      return responseBundle.getEntry().stream()
-              .map(entry -> (ListResource) entry.getResource())
-              .collect(Collectors.toList());
-    } else {
-      logger.warn("The DocumentReference does not have a context/related census associated with it");
-    }
-
-    return new ArrayList<>();
-  }
-
-  public static String getSubmittedLocation(DocumentReference documentReference) {
-    String bundleLocation = "";
-    for (DocumentReference.DocumentReferenceContentComponent content : documentReference.getContent()) {
-      if (content.hasAttachment() && content.getAttachment().hasUrl()) {
-        bundleLocation = content.getAttachment().getUrl();
-      }
-    }
-    return bundleLocation;
-  }
-
-  // TODO: This typically creates a second content element, which I don't think we want
-  //       The one initially created in ReportGenerator.generateDocumentReference has a creation date but no URL
-  public static void setSubmissionLocation(DocumentReference documentReference, String location) {
-    documentReference.getContent().removeIf(c -> c.hasAttachment() && c.getAttachment().hasUrl());
-    DocumentReference.DocumentReferenceContentComponent newContent = new DocumentReference.DocumentReferenceContentComponent();
-    newContent.getAttachment().setUrl(location);
-    documentReference.getContent().add(newContent);
+      return listResource;
+    }).collect(Collectors.toList());
   }
 
   public static void initSerializers(SimpleModule module, IParser jsonParser) {
@@ -575,7 +228,7 @@ public class FhirHelper {
    * Copies entries from {@code list2} into {@code list1} that are not already present in {@code list1}.
    * Entries are considered equal if their items' references or identifiers are equal.
    */
-  public static void mergeCensusLists(ListResource list1, ListResource list2) {
+  public static void mergePatientLists(ListResource list1, ListResource list2) {
     for (ListResource.ListEntryComponent entry2 : list2.getEntry()) {
       Reference item2 = entry2.getItem();
       boolean exists = list1.getEntry().stream().anyMatch(entry1 -> {
@@ -592,18 +245,6 @@ public class FhirHelper {
         list1.addEntry(entry2.copy());
       }
     }
-  }
-
-
-  public enum AuditEventTypes {
-    Generate,
-    ExcludePatients,
-    Export,
-    Send,
-    SearchLocations,
-    InitiateQuery,
-    SearchReports,
-    Transformation
   }
 }
 

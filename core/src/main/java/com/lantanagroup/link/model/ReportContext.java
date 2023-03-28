@@ -1,6 +1,5 @@
 package com.lantanagroup.link.model;
 
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.model.PatientList;
 import lombok.Getter;
@@ -16,7 +15,6 @@ import java.util.List;
 @Getter
 @Setter
 public class ReportContext {
-  private FhirDataProvider fhirProvider;
   private HttpServletRequest request;
   private LinkCredentials user;
   private String masterIdentifierValue;
@@ -24,12 +22,10 @@ public class ReportContext {
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<MeasureContext> measureContexts = new ArrayList<>();
 
-  public ReportContext(FhirDataProvider fhirProvider) {
-    this.fhirProvider = fhirProvider;
+  public ReportContext() {
   }
 
-  public ReportContext(FhirDataProvider fhirProvider, HttpServletRequest request, LinkCredentials user) {
-    this.fhirProvider = fhirProvider;
+  public ReportContext(HttpServletRequest request, LinkCredentials user) {
     this.request = request;
     this.user = user;
   }

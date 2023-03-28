@@ -2,7 +2,6 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
@@ -243,7 +242,7 @@ public class QueryTests {
     // Execute the query
     Query theQuery = new Query();
     ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
-    ReportContext context = new ReportContext(new FhirDataProvider(fhirQueryClient));
+    ReportContext context = new ReportContext();
     context.setPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue("report1");
     theQuery.setApplicationContext(applicationContext);

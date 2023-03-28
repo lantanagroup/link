@@ -6,6 +6,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
@@ -35,8 +36,9 @@ public class ReportGenerator {
   private IReportAggregator reportAggregator;
   private StopwatchManager stopwatchManager;
   private MongoService mongoService;
+  private Report report;
 
-  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator) {
+  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, LinkCredentials user, IReportAggregator reportAggregator, Report report) {
     this.mongoService = mongoService;
     this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
@@ -45,6 +47,7 @@ public class ReportGenerator {
     this.user = user;
     this.config = config;
     this.reportAggregator = reportAggregator;
+    this.report = report;
   }
 
   /**
@@ -72,7 +75,7 @@ public class ReportGenerator {
                 patientMeasureReport.setPatientId(patient.getId());
 
                 logger.info("Generating measure report for patient " + patient);
-                MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+                MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.mongoService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
                 measureReport.setId(measureReportId);
                 patientMeasureReport.setMeasureReport(measureReport);
 
@@ -91,16 +94,10 @@ public class ReportGenerator {
         forkJoinPool.shutdown();
       }
     }
+
     MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.reportContext, this.measureContext);
     this.measureContext.setMeasureReport(masterMeasureReport);
-  }
-
-  /**
-   * Stores the individual patient reports on the Fhir Server in batches of 50 for performance reasons
-   * Stores the master measure report on the Fhir Server.
-   **/
-  public void store() {
-    this.reportContext.getFhirProvider().updateResource(this.measureContext.getMeasureReport());
+    this.report.getAggregates().add(masterMeasureReport);
   }
 
   public MeasureReport getMeasureReport() {

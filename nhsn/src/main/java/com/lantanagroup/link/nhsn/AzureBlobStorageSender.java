@@ -5,14 +5,10 @@ import com.azure.storage.blob.*;
 import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
+import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DocumentReference;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +25,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
 @Component
 public class AzureBlobStorageSender extends GenericSender implements IReportSender, IAzureBlobStorageSender {
@@ -37,10 +32,6 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   @Autowired
   @Setter
   private AzureBlobStorageConfig absConfig;
-
-  @Autowired
-  @Setter
-  private ApiConfig apiConfig;
 
   // **********************************
   // * Constants
@@ -154,45 +145,26 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   @Override
-  public String sendContent(Resource resourceToSend, DocumentReference documentReference, FhirDataProvider fhirStoreProvider) throws Exception {
-
+  public String sendContent(Resource resourceToSend, Report report) throws Exception {
     logger.info("Sending MeasureReport bundle to blob storage container {}.", this.absConfig.getAzureStorageContainerName());
 
     String bundleSerialization;
-    if(absConfig.getFormat() == AzureBlobStorageSenderFormats.JSON) {
-      bundleSerialization = fhirStoreProvider.bundleToJson((Bundle)resourceToSend);
-    }
-    else if(absConfig.getFormat() == AzureBlobStorageSenderFormats.XML) {
-      bundleSerialization = fhirStoreProvider.bundleToXml((Bundle)resourceToSend);
-    }
-    else {
+    if (absConfig.getFormat() == AzureBlobStorageSenderFormats.JSON) {
+      bundleSerialization = FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(resourceToSend);
+    } else if (absConfig.getFormat() == AzureBlobStorageSenderFormats.XML) {
+      bundleSerialization = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(resourceToSend);
+    } else {
       logger.info("Missing format in abs configuration.");
       throw new ConfigurationException("Missing abs format configuration, needs to be json or xml.");
     }
 
-    ///set file name
-    String fileName;
-    Date bundleDate = documentReference.getDate();
-    String measureName = documentReference.getIdentifier().get(0).getValue();
+    // set file name
+    String fileName = report.getId() + "_" + new SimpleDateFormat("yyyyMMdd'T'HH_mm_ss").format(new Date());
 
-    if(bundleDate == null) {
-      logger.debug("No date found in document reference, generating timestamp at time of this check.");
-      bundleDate = new Date();
-    }
-
-    if(StringUtils.isEmpty(measureName)) {
-      fileName = new SimpleDateFormat("yyyyMMdd'T'HH_mm_ss").format(documentReference.getDate()) + "_" + apiConfig.getMeasureLocation() + "_" + measureName;
-    }
-    else {
-      logger.debug("No measure name found in configuration, excluding it from file name.");
-      fileName = new SimpleDateFormat("yyyyMMdd'T'HH_mm_ss").format(documentReference.getDate()) + "_" + measureName;
-    }
-
-    try(ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
+    try (ByteArrayInputStream stream = new ByteArrayInputStream(bundleSerialization.getBytes(StandardCharsets.UTF_8))) {
       this.upload(fileName, stream);
       logger.info("Send to upload here");
-    }
-    catch(Exception ex) {
+    } catch (Exception ex) {
       logger.error("Failed to send measure report to blob storage: {}", Helper.encodeLogging(ex.getMessage()));
       throw new Exception(ex.getMessage());
     }
@@ -206,10 +178,10 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, LinkCredentials user, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
-    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
+  public void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
+    Bundle bundle = this.generateBundle(report);
 
-    this.sendContent(bundle, documentReference, fhirDataProvider);
+    this.sendContent(bundle, report);
   }
 
   /**

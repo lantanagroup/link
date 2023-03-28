@@ -1,21 +1,23 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientData;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
-import org.hl7.fhir.instance.model.api.IBaseResource;
+import com.mongodb.Block;
+import com.mongodb.client.FindIterable;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MeasureEvaluator {
@@ -26,8 +28,10 @@ public class MeasureEvaluator {
   private ApiConfig config;
   private String patientId;
   private StopwatchManager stopwatchManager;
+  private MongoService mongoService;
 
-  private MeasureEvaluator(StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+  private MeasureEvaluator(MongoService mongoService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+    this.mongoService = mongoService;
     this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
     this.reportContext = reportContext;
@@ -36,8 +40,8 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(MongoService mongoService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(mongoService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
@@ -51,6 +55,16 @@ public class MeasureEvaluator {
     return terminologyEndpoint;
   }
 
+  private Bundle getPatientBundle() {
+    FindIterable<PatientData> patientData = this.mongoService.findPatientData(this.patientId);
+    Bundle patientBundle = new Bundle();
+
+    patientData.forEach((Block<? super PatientData>) pd -> {
+      patientBundle.addEntry().setResource((Resource) pd.getResource());
+    });
+
+    return patientBundle;
+  }
 
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
@@ -60,9 +74,8 @@ public class MeasureEvaluator {
       String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
       logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
-      // get patient bundle from the fhirserver
-      FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.config.getDataStore());
-      Bundle patientBundle = fhirStoreProvider.getBundleById(patientDataBundleId);
+      Bundle patientBundle = this.getPatientBundle();
+
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));

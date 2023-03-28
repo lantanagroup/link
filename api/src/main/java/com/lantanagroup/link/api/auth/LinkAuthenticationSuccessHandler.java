@@ -1,14 +1,11 @@
 package com.lantanagroup.link.api.auth;
 
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.User;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.ContactPoint;
 import org.hl7.fhir.r4.model.Practitioner;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -19,43 +16,35 @@ import javax.servlet.http.HttpServletResponse;
 
 public class LinkAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
   private static final Logger logger = LoggerFactory.getLogger(LinkAuthenticationSuccessHandler.class);
-  private ApiConfig config;
+  private MongoService mongoService;
 
-  private FhirDataProvider provider;
-
-  public LinkAuthenticationSuccessHandler(ApiConfig config) {
-    this.config = config;
-    this.provider = new FhirDataProvider(config.getDataStore());
+  public LinkAuthenticationSuccessHandler(MongoService mongoService) {
+    this.mongoService = mongoService;
   }
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
-    Practitioner practitioner = ((LinkCredentials) authentication.getPrincipal()).getPractitioner();
+    LinkCredentials credentials = (LinkCredentials) authentication.getPrincipal();
+    User found = this.mongoService.getUser(credentials.getJwt().getSubject());
 
-    try {
+    if (found == null) {
+      logger.info("User in JWT not found, creating user id {}", credentials.getJwt().getSubject());
 
-      Bundle bundle = provider.searchPractitioner(practitioner.getIdentifier().get(0).getValue());
+      User user = new User();
+      user.setId(credentials.getJwt().getSubject());
 
-      int size = bundle.getEntry().size();
-      if (size == 0) {
-        Resource resource = provider.createResource(practitioner);
-        practitioner.setId(resource.getIdElement().getIdPart());
-
-      } else {
-        Practitioner foundPractitioner = ((Practitioner) bundle.getEntry().get(0).getResource());
-        practitioner.setId(foundPractitioner.getId());
-        if (!isSamePractitioner(practitioner, foundPractitioner)) {
-          provider.updateResource(practitioner);
-        }
+      if (credentials.getJwt().getClaim("name") != null) {
+        user.setName(credentials.getJwt().getClaim("name").asString());
       }
-    } catch (ResourceNotFoundException ex) {
-      String msg = String.format("Practitioner Resource with identifier \"%s\"  was not found on the data store. It will be created.", practitioner.getId());
-      logger.debug(msg);
-      provider.updateResource(practitioner);
-    } catch (Exception ex) {
-      String msg = String.format("Unable to retrieve practitioner with identifier \"%s\" from the data store", practitioner.getId());
-      logger.error(msg);
-      ex.printStackTrace();
+
+      if (credentials.getJwt().getClaim("email") != null) {
+        user.setEmail(credentials.getJwt().getClaim("email").asString());
+      }
+
+      this.mongoService.saveUser(user);
+      credentials.setUser(user);
+    } else {
+      credentials.setUser(found);
     }
   }
 

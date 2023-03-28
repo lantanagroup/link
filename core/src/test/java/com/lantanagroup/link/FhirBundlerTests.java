@@ -1,6 +1,10 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientId;
+import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.Report;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,26 +58,26 @@ public class FhirBundlerTests {
    */
   @Test
   public void testBundleWithReify() {
-    FhirDataProvider fhirDataProvider = this.getFhirDataProvider();
+    MongoService mongoService = mock(MongoService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
     // Use legacy behavior of reifying/promoting line-level resources
     BundlerConfig config = new BundlerConfig();
     config.setIncludeCensuses(true);
-    config.setReifyLineLevelResources(true);
     config.setPromoteLineLevelResources(true);
     config.setOrgNpi("test-org-npi");
 
-    FhirBundler bundler = new FhirBundler(config, fhirDataProvider);
+    FhirBundler bundler = new FhirBundler(config, mongoService);
 
-    DocumentReference docRef = new DocumentReference();
-    docRef.getContext().getRelated().add(new Reference("List/test-census"));
+    Report report = new Report();
+    report.getPatientLists().add(new PatientList());
+    report.getPatientLists().get(0).getPatients().add(new PatientId("Patient/test-patient"));
 
     // Generate the bundle
-    Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), docRef);
+    Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), report);
 
     // Ensure that transaction and getResourceByTypeAndId were called the expected number of times
-    verify(fhirDataProvider, times(2)).transaction(any());
+    verify(mongoService, times(1)).getPatientMeasureReports(any());
 
     // Ensure that the returned bundle meets minimum expectations for having included the patient data we expected
     Assert.assertNotNull(bundle);
@@ -135,23 +139,23 @@ public class FhirBundlerTests {
 
   @Test
   public void testBundleWithoutReify() {
-    FhirDataProvider fhirDataProvider = this.getFhirDataProvider();
+    MongoService mongoService = mock(MongoService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
     // Use legacy behavior of reifying/promoting line-level resources
     BundlerConfig config = new BundlerConfig();
     config.setIncludeCensuses(true);
-    config.setReifyLineLevelResources(false);
     config.setPromoteLineLevelResources(false);
     config.setOrgNpi("test-org-npi");
 
-    FhirBundler bundler = new FhirBundler(config, fhirDataProvider);
+    FhirBundler bundler = new FhirBundler(config, mongoService);
 
-    DocumentReference docRef = new DocumentReference();
-    docRef.getContext().getRelated().add(new Reference("List/test-census"));
+    Report report = new Report();
+    report.getPatientLists().add(new PatientList());
+    report.getPatientLists().get(0).getPatients().add(new PatientId("Patient/test-patient"));
 
     // Generate the bundle
-    Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), docRef);
+    Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), report);
 
     Assert.assertNotNull(bundle);
     Assert.assertEquals(4, bundle.getEntry().size());

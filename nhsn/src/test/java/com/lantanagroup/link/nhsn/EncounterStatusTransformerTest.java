@@ -3,7 +3,6 @@ package com.lantanagroup.link.nhsn;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -30,9 +29,7 @@ public class EncounterStatusTransformerTest {
     String reportID = "testID";
     String patientID = "testPatient";
     FhirDataProvider fhirProvider = mock(FhirDataProvider.class);
-    ReportCriteria reportCriteria = new ReportCriteria(List.of(reportID), start, end);
-    ApiConfig config = new ApiConfig();
-    ReportContext context = new ReportContext(fhirProvider);
+    ReportContext context = new ReportContext();
     EncounterStatusTransformer encounterStatusTransformer = new EncounterStatusTransformer();
     Patient patient = new Patient();
     patient.setId(patientID);
@@ -66,7 +63,7 @@ public class EncounterStatusTransformerTest {
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
     when(fhirProvider.getBundleById(bundleId)).thenReturn(bundle);
 
-    encounterStatusTransformer.execute(bundle, new ReportCriteria(new ArrayList<>(), start, end), new ReportContext(fhirProvider), new ReportContext.MeasureContext());
+    encounterStatusTransformer.execute(bundle, new ReportCriteria(new ArrayList<>(), start, end), new ReportContext(), new ReportContext.MeasureContext());
 
     Encounter encounterTest1 = (Encounter)bundle.getEntry().get(1).getResource();
     Encounter encounterTest2 = (Encounter)bundle.getEntry().get(2).getResource();

@@ -60,9 +60,7 @@
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.12.5" />
           <element id="library" level="project" name="Maven: io.projectreactor:reactor-core:3.4.10" />
           <element id="library" level="project" name="Maven: org.reactivestreams:reactive-streams:1.0.3" />
-          <element id="archive" name="thsa-1.0.0-SNAPSHOT.jar">
-            <element id="module-output" name="thsa" />
-          </element>
+          <element id="library" level="project" name="Maven: com.lantanagroup.link:thsa:1.0.0-SNAPSHOT" />
           <element id="archive" name="query-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="query" />
           </element>

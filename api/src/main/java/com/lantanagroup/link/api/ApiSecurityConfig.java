@@ -5,6 +5,7 @@ import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
 import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.MongoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -14,8 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -31,6 +30,9 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   private ApiConfig config;
 
   @Autowired
+  private MongoService mongoService;
+
+  @Autowired
   private LinkCredentials linkCredentials;
 
 //  @Autowired
@@ -43,7 +45,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config);
     authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAlgorithm(), config.getAuthJwksUrl(), config.getTokenVerificationClass(), null, config.getTokenValidationEndpoint()));
-    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
+    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.mongoService));
     http
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -53,7 +55,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 //            .and()
             //.cors()
             .cors().configurationSource(request -> {
-                      var cors = new CorsConfiguration();
+              var cors = new CorsConfiguration();
                       cors.setAllowedOrigins(List.of(config.getCors().getAllowedOrigins()));
                       cors.setAllowedMethods(List.of(config.getCors().getAllowedMethods()));
                       cors.setAllowedHeaders(List.of(config.getCors().getAllowedHeaders()));

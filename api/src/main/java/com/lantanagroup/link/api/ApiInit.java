@@ -1,7 +1,6 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -16,20 +15,14 @@ import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.hl7.fhir.r4.model.Measure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -51,12 +44,6 @@ public class ApiInit {
 
   @Autowired
   private USCoreConfig usCoreConfig;
-
-  @Autowired
-  private FhirDataProvider provider;
-
-  @Value("classpath:fhir/*")
-  private Resource[] resources;
 
   @Autowired
   private MongoService mongoService;
@@ -243,27 +230,6 @@ public class ApiInit {
     this.mongoService.saveMeasureDefinition(measureDefinition);
   }
 
-  private void loadSearchParameters() {
-    try {
-      FhirContext ctx = FhirContextProvider.getFhirContext();
-      IParser xmlParser = ctx.newXmlParser();
-      logger.info(String.format("Resources count: %d", resources.length));
-      for (final Resource res : resources) {
-        try (InputStream inputStream = res.getInputStream();) {
-          IBaseResource resource = readFileAsFhirResource(xmlParser, inputStream);
-          provider.updateResource(resource);
-        }
-      }
-    } catch (Exception ex) {
-      logger.error(String.format("Error in loadSearchParameters due to %s", ex.getMessage()));
-    }
-  }
-
-  private IBaseResource readFileAsFhirResource(IParser xmlParser, InputStream file) {
-    String resourceString = new BufferedReader(new InputStreamReader(file)).lines().parallel().collect(Collectors.joining("\n"));
-    return xmlParser.parseResource(resourceString);
-  }
-
   private int getSocketTimout() {
     int socketTimeout = 30 * 1000; // 30 sec // 200 * 5000
     if (config.getSocketTimeout() != null) {
@@ -307,8 +273,5 @@ public class ApiInit {
     }
 
     this.loadMeasureDefinitions();
-    this.loadSearchParameters();
-
   }
-
 }

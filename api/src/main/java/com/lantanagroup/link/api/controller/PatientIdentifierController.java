@@ -4,12 +4,15 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.config.QueryListConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
@@ -156,9 +159,10 @@ public class PatientIdentifierController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
-    FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-    Measure measure = evaluationDataProvider.findMeasureByIdentifier(measureIdentifier);
-    if (measure == null) {
+
+    MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(measureIdentifier.getValue());
+
+    if (measureDefinition == null) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);

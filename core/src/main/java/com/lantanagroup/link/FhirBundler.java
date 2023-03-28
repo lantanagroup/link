@@ -1,7 +1,10 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
+import com.mongodb.client.FindIterable;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -19,29 +22,29 @@ public class FhirBundler {
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
   private final BundlerConfig config;
-  private final FhirDataProvider fhirDataProvider;
+  private final MongoService mongoService;
   private final EventService eventService;
   private Organization org;
 
-  public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider, EventService eventService) {
+  public FhirBundler(BundlerConfig config, MongoService mongoService, EventService eventService) {
     this.config = config;
-    this.fhirDataProvider = fhirDataProvider;
+    this.mongoService = mongoService;
     this.eventService = eventService;
     this.org = this.createOrganization();
   }
 
-  public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider) {
-    this(config, fhirDataProvider, null);
+  public FhirBundler(BundlerConfig config, MongoService mongoService) {
+    this(config, mongoService, null);
   }
 
-  public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, DocumentReference documentReference) {
+  public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.org);
 
     triggerEvent(EventTypes.BeforeBundling, bundle);
 
     if (this.config.isIncludeCensuses()) {
-      this.addCensuses(bundle, documentReference);
+      this.addCensuses(bundle, report);
     }
 
     for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
@@ -195,27 +198,27 @@ public class FhirBundler {
     }
   }
 
-  private void addCensuses(Bundle bundle, DocumentReference documentReference) {
+  private void addCensuses(Bundle bundle, Report report) {
     logger.debug("Adding censuses");
-    Collection<ListResource> censuses = FhirHelper.getCensusLists(documentReference, fhirDataProvider);
+    Collection<ListResource> patientLists = FhirHelper.getPatientLists(report);
 
-    if (censuses.isEmpty()) {
+    if (patientLists.isEmpty()) {
       return;
     }
 
-    if (censuses.size() > 1 && config.isMergeCensuses()) {
+    if (patientLists.size() > 1 && config.isMergeCensuses()) {
       logger.debug("Merging censuses");
-      ListResource mergedCensus = censuses.iterator().next().copy();
+      ListResource mergedCensus = patientLists.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
       mergedCensus.getEntry().clear();
-      for (ListResource census : censuses) {
+      for (ListResource census : patientLists) {
         census.setMeta(new Meta());
         census.getMeta().addProfile(Constants.CensusProfileUrl);
-        FhirHelper.mergeCensusLists(mergedCensus, census);
+        FhirHelper.mergePatientLists(mergedCensus, census);
       }
       bundle.addEntry().setResource(mergedCensus);
     } else {
-      for (ListResource census : censuses) {
+      for (ListResource census : patientLists) {
         logger.debug("Adding census: {}", census.getId());
         census.setMeta(new Meta());
         census.getMeta().addProfile(Constants.CensusProfileUrl);
@@ -233,15 +236,22 @@ public class FhirBundler {
       return;
     }
 
-    Collection<MeasureReport> individualMeasureReports = FhirHelper.getPatientReports(
-            FhirHelper.getPatientMeasureReportReferences(aggregateMeasureReport),
-            fhirDataProvider);
+    List<String> individualMeasureReportIds = new ArrayList<>();
+    aggregateMeasureReport.getContained()
+            .stream().filter(c -> c.getResourceType() == ResourceType.List)
+            .forEach(c -> {
+              ListResource listResource = (ListResource) c;
+              listResource.getEntry().forEach(e -> {
+                String[] referenceSplit = e.getItem().getReference().split("/");
+                individualMeasureReportIds.add(referenceSplit[1]);
+              });
+            });
 
-    for (MeasureReport individualMeasureReport : individualMeasureReports) {
-      if (individualMeasureReport == null) {
-        continue;
-      }
+    FindIterable<PatientMeasureReport> individualMeasureReports =
+            this.mongoService.getPatientMeasureReports(individualMeasureReportIds);
 
+    for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
+      MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(c -> this.setProfile(c));  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
     }
@@ -268,38 +278,9 @@ public class FhirBundler {
     // Identify line-level resources
     Map<IIdType, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
 
-    // If reifying, retrieve the patient data bundle
-    Bundle patientDataBundle = null;
-    if (config.isReifyLineLevelResources()) {
-      String individualMeasureReportId = individualMeasureReport.getIdElement().getIdPart();
-      String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(individualMeasureReportId);
-      try {
-        patientDataBundle = fhirDataProvider.getBundleById(patientDataBundleId);
-      } catch (ResourceNotFoundException e) {
-        logger.warn("Patient data bundle not found");
-      }
-    }
-
     // As specified in configuration, move/copy line-level resources
     for (Map.Entry<IIdType, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
       IIdType resourceId = lineLevelResource.getKey();
-
-      // Reify non-contained, non-patient line-level resources
-      if (!resourceId.isLocal() && config.isReifyLineLevelResources()) {
-        if (patientDataBundle == null) {
-          continue;
-        }
-        Resource resource = patientDataBundle.getEntry().stream()
-                .map(Bundle.BundleEntryComponent::getResource)
-                .filter(_resource -> _resource.getResourceType() != ResourceType.Patient)
-                .filter(_resource -> _resource.getIdElement().equals(resourceId))
-                .findFirst()
-                .orElse(null);
-        if (resource == null) {
-          continue;
-        }
-        addEntry(bundle, resource, false);
-      }
 
       // Promote contained line-level resources
       if (resourceId.isLocal() && config.isPromoteLineLevelResources()) {

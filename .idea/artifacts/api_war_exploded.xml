@@ -14,17 +14,13 @@
           <element id="module-output" name="api" />
         </element>
         <element id="directory" name="lib">
-          <element id="archive" name="mhl-1.0.0-SNAPSHOT.jar">
-            <element id="module-output" name="mhl" />
-          </element>
+          <element id="library" level="project" name="Maven: com.lantanagroup.link:mhl:1.0.0-SNAPSHOT" />
           <element id="archive" name="nhsn-1.0.0-SNAPSHOT.jar">
             <element id="module-output" name="nhsn" />
           </element>
           <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.32" />
           <element id="library" level="project" name="Maven: ca.uhn.hapi.fhir:hapi-fhir-validation-resources-r4:4.2.0" />
-          <element id="archive" name="thsa-1.0.0-SNAPSHOT.jar">
-            <element id="module-output" name="thsa" />
-          </element>
+          <element id="library" level="project" name="Maven: com.lantanagroup.link:thsa:1.0.0-SNAPSHOT" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.11.1" />
           <element id="library" level="project" name="Maven: org.apache.poi:poi:5.2.2" />
           <element id="library" level="project" name="Maven: org.apache.commons:commons-math3:3.6.1" />

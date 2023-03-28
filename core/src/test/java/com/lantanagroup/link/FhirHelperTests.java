@@ -3,16 +3,13 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.Resource;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,10 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class FhirHelperTests {
 
@@ -62,40 +55,6 @@ public class FhirHelperTests {
     Assert.assertEquals(actual4, "Joe Sombody");
     Assert.assertEquals(actual5, "Unknown");
     Assert.assertEquals(actual6, "Unknown");
-  }
-
-  @Test
-  public void recordAuditEventTest(){
-
-    fhirDataProviderTest = mock(FhirDataProvider.class);
-    fhirHelperTest = new FhirHelper();
-    httpServletRequestTest = mock(HttpServletRequest.class);
-    decodedJWTTest = mock(DecodedJWT.class);
-    iIdType = mock(IIdType.class);
-    iIdType.setValue("Test Audit Event");
-    outcomeTest = new MethodOutcome();
-    outcomeTest.setId(iIdType);
-
-    when(decodedJWTTest.getPayload()).thenReturn("e30");
-    when(fhirDataProviderTest.createOutcome(any())).thenReturn(outcomeTest);
-
-    LinkCredentials user = new LinkCredentials();
-    user.setJwt(decodedJWTTest);
-
-    FhirHelper.recordAuditEvent(httpServletRequestTest, fhirDataProviderTest, user, FhirHelper.AuditEventTypes.Generate, "Testing String");
-  }
-  
-  @Test
-  public void getAllPagesTest(){
-
-    fhirDataProviderTest = mock(FhirDataProvider.class);
-    ctxTest = FhirContextProvider.getFhirContext();
-    bundleTest = new Bundle();
-
-    Resource resourceTest = mock(Resource.class);
-    bundleTest.addEntry().setResource(resourceTest);
-    List<IBaseResource> bundles = FhirHelper.getAllPages(bundleTest, fhirDataProviderTest, ctxTest);
-    Assert.assertEquals(1, bundles.size());
   }
 
   @Test

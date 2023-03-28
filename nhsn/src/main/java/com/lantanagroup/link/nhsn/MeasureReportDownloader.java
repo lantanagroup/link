@@ -1,46 +1,45 @@
 package com.lantanagroup.link.nhsn;
 
 import ca.uhn.fhir.context.FhirContext;
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.EventService;
+import com.lantanagroup.link.FhirBundler;
+import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.IReportDownloader;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.Report;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DocumentReference;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.transform.TransformerException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
+@Component
 public class MeasureReportDownloader implements IReportDownloader {
   protected static final Logger logger = LoggerFactory.getLogger(MeasureReportDownloader.class);
 
+  @Autowired
+  private MongoService mongoService;
+
   @Override
-  public void download(String reportId, String downloadType, FhirDataProvider fhirDataProvider, HttpServletResponse response, FhirContext ctx, BundlerConfig config, EventService eventService) throws IOException, TransformerException {
+  public void download(String reportId, String downloadType, HttpServletResponse response, FhirContext ctx, BundlerConfig config, EventService eventService) throws IOException {
+    Report report = this.mongoService.findReport(reportId);
 
-    DocumentReference docRefBundle = fhirDataProvider.findDocRefForReport(reportId.contains("-") ? reportId.substring(0, reportId.indexOf('-')) : reportId);
-
-    if (docRefBundle == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not exist.");
-    }
-
-    MeasureReport measureReport = fhirDataProvider.getMeasureReportById(reportId);
-    // MeasureReport measureReport = fhirStoreClient.read().resource(MeasureReport.class).withId(reportId).execute();
-
-    if (measureReport == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The report does not have a MeasureReport");
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
     logger.info("Building Bundle for MeasureReport...");
-    FhirBundler bundler = new FhirBundler(config, fhirDataProvider, eventService);
-    Bundle bundle = bundler.generateBundle(List.of(measureReport), docRefBundle);
+    FhirBundler bundler = new FhirBundler(config, this.mongoService, eventService);
+    Bundle bundle = bundler.generateBundle(report.getAggregates(), report);
 
     logger.info("Bundle created for MeasureReport including " + bundle.getEntry().size() + " entries");
     String responseBody = "";

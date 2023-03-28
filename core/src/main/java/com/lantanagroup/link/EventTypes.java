@@ -14,8 +14,6 @@ public enum EventTypes {
   AfterPatientDataStore,
   BeforeMeasureEval,
   AfterMeasureEval,
-  BeforeReportStore,
-  AfterReportStore,
   BeforeBundling,
   AfterBundling
 }

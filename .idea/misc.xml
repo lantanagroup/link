@@ -18,6 +18,8 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/cli/pom.xml" />
+        <option value="$PROJECT_DIR$/mhl/pom.xml" />
+        <option value="$PROJECT_DIR$/thsa/pom.xml" />
       </set>
     </option>
   </component>

@@ -8,7 +8,6 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +33,7 @@ public class StoredListProvider implements IPatientIdProvider {
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      Identifier measureIdentifier = measureContext.getMeasure().getIdentifier().get(0);
-      String measureId = measureIdentifier.getValue();
-
-      PatientList found = this.mongoService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureId);
+      PatientList found = this.mongoService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
 
       if (found == null) {
         logger.warn("No patient census lists found");

@@ -117,10 +117,15 @@ public class PatientScoop {
                     .byUrl(searchUrl)
                     .returnBundle(Bundle.class)
                     .execute();
-            if (response.getEntry().size() != 1) {
-              logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
+
+            if (response.getEntry().size() > 1) {
+              logger.error("Found {} (more than one) Patient with identifier {}", response.getEntry().size(), Helper.encodeLogging(poi.getIdentifier()));
+            } else if (response.getEntry().size() == 0) {
+              logger.error("Did not find any Patient with identifier {}", Helper.encodeLogging(poi.getIdentifier()));
               return null;
-            } else {
+            }
+
+            if (response.getEntry().size() > 0) {
               Patient patient = (Patient) response.getEntryFirstRep().getResource();
               patientMap.put(poi.getIdentifier(), patient);
               poi.setId(patient.getIdElement().getIdPart());
@@ -184,7 +189,7 @@ public class PatientScoop {
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");
         } catch (Exception ex) {
-          logger.info("Exception is: " + ex.getMessage());
+          logger.error("Exception is: " + ex.getMessage());
         }
 
         return patient.getIdElement().getIdPart();

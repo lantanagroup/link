@@ -76,7 +76,7 @@ public class ApplyConceptMapsTest {
     ReportCriteria reportCriteria = mock(ReportCriteria.class);
 
     FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
-    ReportContext context = new ReportContext(fhirDataProviderMock);
+    ReportContext context = new ReportContext();
     context.setMasterIdentifierValue("test");
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
@@ -122,7 +122,7 @@ public class ApplyConceptMapsTest {
   public void testFindCodings() {
 
     FhirDataProvider fhirDataProviderMock = mock(FhirDataProvider.class);
-    ReportContext context = new ReportContext(fhirDataProviderMock);
+    ReportContext context = new ReportContext();
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
     applyConceptMaps.setFhirDataProvider(fhirDataProviderMock);

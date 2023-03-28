@@ -6,12 +6,10 @@ import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
+import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DocumentReference;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Component
@@ -75,8 +72,8 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   }
 
   @Override
-  public void send(List<MeasureReport> masterMeasureReports, DocumentReference documentReference, HttpServletRequest request, LinkCredentials user, FhirDataProvider fhirDataProvider, BundlerConfig bundlerConfig) throws Exception {
-    Bundle bundle = this.generateBundle(documentReference, masterMeasureReports, fhirDataProvider, bundlerConfig);
+  public void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
+    Bundle bundle = this.generateBundle(report);
 
     FileSystemSenderConfig.Formats format = this.getFormat();
     String content;

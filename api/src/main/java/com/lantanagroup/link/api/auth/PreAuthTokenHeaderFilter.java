@@ -6,7 +6,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
-import org.hl7.fhir.r4.model.Practitioner;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
@@ -51,8 +50,6 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       DecodedJWT jwt = JWT.decode(authHeader.substring(7));
       linkCredentials.setJwt(jwt);
-      Practitioner practitioner = FhirHelper.toPractitioner(jwt);
-      linkCredentials.setPractitioner(practitioner);
       return linkCredentials;
     }
     return null;

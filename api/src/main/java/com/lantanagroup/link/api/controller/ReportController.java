@@ -1,9 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.api.ApiInit;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
@@ -14,6 +11,7 @@ import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.AuditTypes;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.ReportStatuses;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -24,7 +22,7 @@ import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Measure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +35,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.InvocationTargetException;
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,8 +43,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
-  private static final String PeriodStartParamName = "periodStart";
-  private static final String PeriodEndParamName = "periodEnd";
+
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
@@ -61,12 +57,6 @@ public class ReportController extends BaseController {
   @Autowired
   @Setter
   private ApplicationContext context;
-
-  @Autowired
-  private QueryConfig queryConfig;
-
-  @Autowired
-  private ApiInit apiInit;
 
   @Autowired
   private StopwatchManager stopwatchManager;
@@ -221,7 +211,7 @@ public class ReportController extends BaseController {
     }
 
     ReportCriteria criteria = new ReportCriteria(List.of(bundleIds), periodStart, periodEnd);
-    ReportContext reportContext = new ReportContext(this.getFhirDataProvider(), request, user);
+    ReportContext reportContext = new ReportContext(request, user);
 
     this.eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
@@ -256,6 +246,12 @@ public class ReportController extends BaseController {
     // Get the patient identifiers for the given date
     this.getPatientIdentifiers(criteria, reportContext);
 
+    if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
+      String msg = "A census for the specified criteria was not found.";
+      logger.error(msg);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
+    }
+
     this.eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
     this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
@@ -282,13 +278,6 @@ public class ReportController extends BaseController {
       this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
     }
 
-    // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
-    if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
-      String msg = "A census for the specified criteria was not found.";
-      logger.error(msg);
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
-    }
-
     this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     Report report = new Report();
@@ -308,25 +297,15 @@ public class ReportController extends BaseController {
       measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
 
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
-
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, user, reportAggregator, report);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
       generator.generate();
 
       this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
-
-      this.eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
-
-      generator.store();
-
-      this.eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
-
-      String measureReportId = generator.getMeasureReport().getIdElement().getIdPart();
-      report.getMeasureReports().add(measureReportId);
     }
 
     this.mongoService.saveReport(report);
@@ -338,66 +317,6 @@ public class ReportController extends BaseController {
     this.stopwatchManager.reset();
 
     return report;
-  }
-
-  private DocumentReference generateDocumentReference(ReportCriteria reportCriteria, ReportContext reportContext) throws ParseException {
-    DocumentReference documentReference = new DocumentReference();
-    Identifier identifier = new Identifier();
-    identifier.setSystem(config.getDocumentReferenceSystem());
-    identifier.setValue(reportContext.getMasterIdentifierValue());
-
-    documentReference.setMasterIdentifier(identifier);
-    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      documentReference.addIdentifier().setSystem(Constants.MainSystem).setValue(measureContext.getBundleId());
-    }
-
-    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-
-    List<Reference> list = new ArrayList<>();
-    Reference reference = new Reference();
-    if (reportContext.getUser() != null && reportContext.getUser().getPractitioner() != null) {
-      String practitionerId = reportContext.getUser().getPractitioner().getId();
-      if (StringUtils.isNotEmpty(practitionerId)) {
-        reference.setReference(practitionerId.substring(practitionerId.indexOf("Practitioner"), practitionerId.indexOf("_history") - 1));
-        list.add(reference);
-        documentReference.setAuthor(list);
-      }
-    }
-
-    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.PRELIMINARY);
-
-    CodeableConcept type = new CodeableConcept();
-    List<Coding> codings = new ArrayList<>();
-    Coding coding = new Coding();
-    coding.setCode(Constants.DocRefCode);
-    coding.setSystem(Constants.LoincSystemUrl);
-    coding.setDisplay(Constants.DocRefDisplay);
-    codings.add(coding);
-    type.setCoding(codings);
-    documentReference.setType(type);
-
-    List<DocumentReference.DocumentReferenceContentComponent> listDoc = new ArrayList<>();
-    DocumentReference.DocumentReferenceContentComponent doc = new DocumentReference.DocumentReferenceContentComponent();
-    Attachment attachment = new Attachment();
-    attachment.setCreation(new Date());
-    doc.setAttachment(attachment);
-    listDoc.add(doc);
-    documentReference.setContent(listDoc);
-
-    DocumentReference.DocumentReferenceContextComponent docReference = new DocumentReference.DocumentReferenceContextComponent();
-    Period period = new Period();
-    Date startDate = Helper.parseFhirDate(reportCriteria.getPeriodStart());
-    Date endDate = Helper.parseFhirDate(reportCriteria.getPeriodEnd());
-    period.setStartElement(new DateTimeType(startDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-    period.setEndElement(new DateTimeType(endDate, TemporalPrecisionEnum.MILLI, TimeZone.getDefault()));
-
-    docReference.setPeriod(period);
-
-    documentReference.setContext(docReference);
-
-    documentReference.addExtension(FhirHelper.createVersionExtension("0.1"));
-
-    return documentReference;
   }
 
   /**
@@ -416,28 +335,17 @@ public class ReportController extends BaseController {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new IllegalStateException("Not configured for sending");
 
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(reportId);
-    List<MeasureReport> reports = documentReference.getIdentifier().stream()
-            .map(identifier -> ReportIdHelper.getMasterMeasureReportId(reportId, identifier.getValue()))
-            .map(id -> this.getFhirDataProvider().getMeasureReportById(id))
-            .collect(Collectors.toList());
-
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
-    // update the DocumentReference's status and date
-    documentReference.setDocStatus(DocumentReference.ReferredDocumentStatus.FINAL);
-    documentReference.setDate(new Date());
-    documentReference = FhirHelper.incrementMajorVersion(documentReference);
+    Report report = this.mongoService.findReport(reportId);
 
-    sender.send(reports, documentReference, request, user, this.getFhirDataProvider(), bundlerConfig);
+    sender.send(report, request, user);
 
-    // Now that we've submitted (successfully), update the doc ref with the status and date
-    this.getFhirDataProvider().updateResource(documentReference);
+    FhirHelper.incrementMajorVersion(report);
+    report.setStatus(ReportStatuses.Submitted);
 
-    String submitterName = user != null ? FhirHelper.getName(user.getPractitioner().getName()) : "Link System";
-
-    logger.info("MeasureReport with ID " + documentReference.getMasterIdentifier().getValue() + " submitted by " + (Helper.validateLoggerValue(submitterName) ? submitterName : "") + " on " + new Date());
+    this.mongoService.saveReport(report);
 
     this.mongoService.audit(user, request, AuditTypes.Submit, String.format("Submitted report %s", reportId));
   }

@@ -2,6 +2,7 @@ package com.lantanagroup.link.db.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.r4.model.MeasureReport;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,5 +20,5 @@ public class Report {
   private Date generatedTime = new Date();
   private String version = "0.1";
   private List<PatientList> patientLists = new ArrayList<>();
-  private List<String> measureReports = new ArrayList<>();
+  private List<MeasureReport> aggregates = new ArrayList<>();
 }
