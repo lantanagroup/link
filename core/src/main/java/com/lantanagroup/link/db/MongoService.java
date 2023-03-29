@@ -1,6 +1,7 @@
 package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.*;
 import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
@@ -23,6 +24,7 @@ import org.hl7.fhir.r4.model.ConceptMap;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,9 +53,12 @@ public class MongoService {
   private MongoClient client;
   private MongoDatabase database;
 
+  @Autowired
+  private MongoConfig config;
+
   public MongoDatabase getDatabase() {
     if (this.database == null) {
-      this.database = getClient().getDatabase("link");
+      this.database = getClient().getDatabase(this.config.getDatabase());
     }
     return this.database;
   }
@@ -106,11 +111,12 @@ public class MongoService {
               MongoClientSettings.getDefaultCodecRegistry(),
               pojoCodecRegistry);
       MongoClientSettings clientSettings = MongoClientSettings.builder()
-              .applyConnectionString(new ConnectionString("mongodb://root:Temp123@localhost:27017"))
+              .applyConnectionString(new ConnectionString(this.config.getConnectionString()))
               .codecRegistry(codecRegistry)
               .build();
       this.client = MongoClients.create(clientSettings);
     }
+
     return this.client;
   }
 
