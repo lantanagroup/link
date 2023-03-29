@@ -71,5 +71,5 @@ uscore:
   parallel-patients: 10
 data-governance:
   census-list-retention:
-  patient-data-retention:
+  patient-data-retention: P0Y3M     # default of three months
   report-retention:

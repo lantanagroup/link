@@ -72,15 +72,14 @@ public class ReportDataController extends BaseController {
   }
 
   /**
-   * @throws DatatypeConfigurationException
-   * Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
-   * has been reached.
+   * @throws DatatypeConfigurationException Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
+   *                                        has been reached.
    */
   @DeleteMapping(value = "/data/expunge")
-  public void expungeData() throws DatatypeConfigurationException {
+  public Integer expungeData() throws DatatypeConfigurationException {
     if (this.dataGovernanceConfig == null) {
       logger.error("Data governance not configured");
-      return;
+      return 0;
     }
 
     List<PatientData> allPatientData = this.mongoService.getAllPatientData();
@@ -93,6 +92,11 @@ public class ReportDataController extends BaseController {
             })
             .map(pd -> pd.getId())
             .collect(Collectors.toList());
-    this.mongoService.deletePatientData(patientDataToDelete);
+
+    if (patientDataToDelete.size() > 0) {
+      this.mongoService.deletePatientData(patientDataToDelete);
+    }
+
+    return patientDataToDelete.size();
   }
 }
