@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 
 public class ApplyConceptMapsTest {
 
-  private ConceptMap getConceptMap() {
+  private com.lantanagroup.link.db.model.ConceptMap getConceptMap() {
     List<ConceptMap> conceptMaps = new ArrayList<>();
     ConceptMap conceptMap = new ConceptMap();
     // set group
@@ -42,8 +42,8 @@ public class ApplyConceptMapsTest {
     conceptMap.addGroup(conceptMapGroupComponent);
 
     conceptMaps.add(conceptMap);
-    //context.setConceptMaps(conceptMaps);
-    return conceptMap;
+
+    return new com.lantanagroup.link.db.model.ConceptMap(conceptMap);
   }
 
 
@@ -100,7 +100,7 @@ public class ApplyConceptMapsTest {
 
     context.setPatientsOfInterest(patientOfInterestModel);
 
-    ConceptMap conceptMap = getConceptMap();
+    com.lantanagroup.link.db.model.ConceptMap conceptMap = getConceptMap();
     when(mongoService.getConceptMap(any())).thenReturn(conceptMap);
 
     List<Coding> codes = new ArrayList<>();
@@ -139,7 +139,8 @@ public class ApplyConceptMapsTest {
     pathList.add("Location.type");
 
     Coding coding = getLocation().getType().get(0).getCoding().get(0);
-    applyConceptMaps.applyTransformation(getConceptMap(), List.of(coding));
+    com.lantanagroup.link.db.model.ConceptMap dbConceptMap = getConceptMap();
+    applyConceptMaps.applyTransformation(dbConceptMap.getResource(), List.of(coding));
 
     Assert.assertEquals(coding.getCode(), "1027-2");
     Assert.assertEquals(coding.getExtension().size(), 1);

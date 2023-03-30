@@ -46,8 +46,8 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     if (this.applyConceptMapConfig != null && this.applyConceptMapConfig.getConceptMaps() != null) {
       this.applyConceptMapConfig.getConceptMaps().stream().forEach(cm -> {
         try {
-          ConceptMap conceptMap = this.mongoService.getConceptMap(cm.getConceptMapId());
-          this.conceptMaps.put(cm.getConceptMapId(), conceptMap);
+          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = this.mongoService.getConceptMap(cm.getConceptMapId());
+          this.conceptMaps.put(cm.getConceptMapId(), dbConceptMap.getResource());
         } catch (Exception ex) {
           logger.error(String.format("ConceptMap %s not found", cm.getConceptMapId()));
         }

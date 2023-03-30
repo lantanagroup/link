@@ -20,7 +20,6 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.ConceptMap;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +106,7 @@ public class MongoService {
                       new BaseCodec<>(IBaseResource.class),
                       new BaseCodec<>(Bundle.class),
                       new BaseCodec<>(MeasureReport.class),
-                      new BaseCodec<>(ConceptMap.class)),
+                      new BaseCodec<>(org.hl7.fhir.r4.model.ConceptMap.class)),
               MongoClientSettings.getDefaultCodecRegistry(),
               pojoCodecRegistry);
       MongoClientSettings clientSettings = MongoClientSettings.builder()
@@ -272,6 +271,17 @@ public class MongoService {
   public ConceptMap getConceptMap(String id) {
     Bson criteria = eq("_id", id);
     return this.getConceptMapCollection().find(criteria).first();
+  }
+
+  public List<ConceptMap> getAllConceptMaps() {
+    List<ConceptMap> conceptMaps = new ArrayList<>();
+
+    // resourceType is needed in the projection for HAPI to deserialize it
+    this.getConceptMapCollection()
+            .find()
+            .projection(include("_id", "resource.name", "resource.resourceType", "resource.id"))
+            .into(conceptMaps);
+    return conceptMaps;
   }
 
   public void saveConceptMap(ConceptMap conceptMap) {
