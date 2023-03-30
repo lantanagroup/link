@@ -11,7 +11,7 @@ COPY . .
 #RUN echo "version: $version\nbuild: $build" > api/src/main/resources/build.yml
 
 WORKDIR /tmp
-RUN mvn -pl api -am install -DskipTests
+RUN mvn clean install -pl api -am '-Dmaven.test.skip=true'
 
 FROM tomcat:9.0.65-jre17-temurin-jammy
 RUN useradd -U -d ${CATALINA_HOME} -s /bin/bash tomcat && chown -R tomcat:tomcat ${CATALINA_HOME}
