@@ -2,7 +2,6 @@ package com.lantanagroup.link;
 
 public class Constants {
   public static final String MainSystem = "https://nhsnlink.org";
-  public static final String ReportPositionExtUrl = "http://hl7.org/fhir/uv/saner/StructureDefinition/GeoLocation";
   public static final String UuidPrefix = "urn:uuid:";
   public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
   public static final String QiCoreOrganizationProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-organization";
