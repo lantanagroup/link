@@ -27,12 +27,6 @@ public class ApiConfig {
   private Boolean validateFhirServer;
 
   /**
-   *<strong>api.tenant-id<strong/><br>Tenant ID for the facility
-   */
-  @Getter
-  private String tenantID;
-
-  /**
    * <strong>api.public-address</strong><br>The public endpoint address for the API (i.e. https://dev.nhsnlink.org/api)
    */
   @Getter
