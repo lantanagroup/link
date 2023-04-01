@@ -14,6 +14,7 @@ import com.lantanagroup.link.model.TestResponse;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.uscore.PatientScoop;
+import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -136,6 +137,8 @@ public class DataController extends BaseController {
 
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
       patientScoop.setFhirQueryServer(query.getFhirQueryClient());
+      patientScoop.setShouldPersist(false);
+      patientScoop.setStopwatchManager(new StopwatchManager());
 
       PatientOfInterestModel poi = new PatientOfInterestModel();
       poi.setReference(patientId);
@@ -143,6 +146,8 @@ public class DataController extends BaseController {
       ReportCriteria criteria = new ReportCriteria(List.of(measureId), periodStart, periodEnd);
 
       patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
+      String stats = patientScoop.getStopwatchManager().getStatistics();
+      logger.info(stats);
     } catch (Exception ex) {
       testResponse.setSuccess(false);
       testResponse.setMessage(ex.getMessage());

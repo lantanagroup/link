@@ -184,12 +184,16 @@ public class PatientScoop {
 
           eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
-          logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
+          if (this.shouldPersist) {
+            logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
 
-          // store data
-          //noinspection unused
-          try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-            this.mongoService.savePatientData(dbPatientData);
+            // store data
+            //noinspection unused
+            try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
+              this.mongoService.savePatientData(dbPatientData);
+            }
+          } else {
+            logger.info("Not storing patient data bundle");
           }
 
           eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
