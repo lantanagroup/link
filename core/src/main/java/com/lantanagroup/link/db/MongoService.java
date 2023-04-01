@@ -38,15 +38,14 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 
 @Component
 public class MongoService {
+  private static final Logger logger = LoggerFactory.getLogger(MongoService.class);
   public static final String AUDIT_COLLECTION = "audit";
-
   public static final String PATIENT_LIST_COLLECTION = "patientList";
   public static final String PATIENT_DATA_COLLECTION = "patientData";
   public static final String MEASURE_DEF_COLLECTION = "measureDef";
   public static final String REPORT_COLLECTION = "report";
   public static final String USER_COLLECTION = "user";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
-  private static final Logger logger = LoggerFactory.getLogger(MongoService.class);
   public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
 
   private MongoClient client;
@@ -57,6 +56,7 @@ public class MongoService {
 
   public MongoDatabase getDatabase() {
     if (this.database == null) {
+      logger.info("Using database {}", this.config.getDatabase());
       this.database = getClient().getDatabase(this.config.getDatabase());
     }
     return this.database;
@@ -109,6 +109,9 @@ public class MongoService {
                       new BaseCodec<>(org.hl7.fhir.r4.model.ConceptMap.class)),
               MongoClientSettings.getDefaultCodecRegistry(),
               pojoCodecRegistry);
+
+      logger.info("Connecting to mongo database with connection string {}", this.config.getConnectionString());
+
       MongoClientSettings clientSettings = MongoClientSettings.builder()
               .applyConnectionString(new ConnectionString(this.config.getConnectionString()))
               .codecRegistry(codecRegistry)
