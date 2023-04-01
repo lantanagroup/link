@@ -8,7 +8,7 @@ WORKDIR /tmp
 # Copy code and compile
 COPY . .
 
-#RUN echo "version: $version\nbuild: $build" > api/src/main/resources/build.yml
+RUN echo "version: $version\nbuild: $build" > api/src/main/resources/build.yml
 
 WORKDIR /tmp
 RUN mvn clean install -pl api -am '-Dmaven.test.skip=true'
