@@ -1,44 +1,28 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.lantanagroup.link.*;
-import com.lantanagroup.link.auth.OAuth2Helper;
+import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.MeasureDefinition;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
-import org.hl7.fhir.r4.model.Measure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ApiInit {
   private static final Logger logger = LoggerFactory.getLogger(ApiInit.class);
-  @Setter
-  protected FhirContext ctx = FhirContextProvider.getFhirContext();
+
   @Autowired
   private ApiConfig config;
+
   @Autowired
   private QueryConfig queryConfig;
 
@@ -49,7 +33,6 @@ public class ApiInit {
   private MongoService mongoService;
 
   private boolean checkPrerequisites() {
-
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
 
     boolean allServicesAvailable = false;
@@ -101,122 +84,6 @@ public class ApiInit {
     return true;
   }
 
-  private void loadMeasureDefinitions() {
-    HttpClient client = HttpClient.newHttpClient();
-    config.getReportDefs().getUrls().parallelStream().forEach(urlConfig -> {
-      String measureId = urlConfig.getBundleId();
-      logger.info(String.format("Loading report def for %s", measureId));
-
-      try {
-        MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(measureId);
-        Date lastUpdated = measureDefinition != null ? measureDefinition.getLastUpdated() : null;
-
-        loadMeasureDefinition(client, urlConfig, lastUpdated);
-      } catch (Exception e) {
-        logger.error(String.format("Error loading report def for %s", measureId), e);
-      }
-    });
-  }
-
-  public void loadMeasureDefinition(HttpClient client, ApiReportDefsUrlConfig urlConfig, Date lastUpdated) throws Exception {
-    // Check that URL is HTTPS if required
-    URI uri = new URI(urlConfig.getUrl());
-    if (config.isRequireHttps() && !"https".equalsIgnoreCase(uri.getScheme())) {
-      throw new IllegalStateException("URL is not HTTPS");
-    }
-
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
-
-    // Add If-Modified-Since header based on local bundle
-    if (lastUpdated != null) {
-      SimpleDateFormat format = new SimpleDateFormat(Helper.RFC_1123_DATE_TIME_FORMAT);
-      requestBuilder.setHeader("If-Modified-Since", format.format(lastUpdated));
-    }
-
-    // Add Authorization header if configured
-    LinkOAuthConfig authConfig = config.getReportDefs().getAuth();
-    if (authConfig != null) {
-      String token = OAuth2Helper.getToken(authConfig);
-      if (OAuth2Helper.validateHeaderJwtToken(token)) {
-        requestBuilder.setHeader("Authorization", "Bearer " + token);
-      } else {
-        throw new JWTVerificationException("Invalid token format");
-      }
-    }
-
-    // Retrieve remote bundle, retrying if necessary
-    HttpRequest request = requestBuilder.build();
-    HttpResponse<String> response = null;
-    for (int retry = 1; retry <= config.getReportDefs().getMaxRetry(); retry++) {
-      logger.debug("Retrieving report def");
-      try {
-        response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        break;
-      } catch (IOException e) {
-        logger.warn(String.format("Error retrieving report def: %s", e.getMessage()));
-      }
-      int retryWait = config.getReportDefs().getRetryWait();
-      logger.debug(String.format("Retrying in %d milliseconds", retryWait));
-      try {
-        Thread.sleep(retryWait);
-      } catch (InterruptedException ignored) {
-      }
-    }
-    if (response == null || (response.statusCode() != 200 && response.statusCode() != 304)) {
-      throw new Exception("Failed to retrieve report def");
-    }
-
-    // Return local bundle if up to date
-    if (response.statusCode() == 304) {
-      logger.debug("Report def is up to date; not storing");
-      return;
-    }
-
-    // Parse and validate remote bundle
-    Bundle remoteBundle = FhirHelper.parseResource(Bundle.class, response.body());
-    if (!FhirHelper.validLibraries(remoteBundle)) {
-      throw new Exception("Report def contains libraries without data requirements");
-    }
-
-    List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes().stream()
-            .map(ort -> ort.getResourceType())
-            .collect(Collectors.toList());
-    List<String> allResourceTypes = Helper.concatenate(this.usCoreConfig.getPatientResourceTypes(), otherResourceTypes);
-    List<String> missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(
-            allResourceTypes,
-            remoteBundle);
-
-    if (!missingResourceTypes.isEmpty()) {
-      logger.warn(String.format(
-              "Report def contains data requirements that are not configured for querying: %s",
-              String.join(", ", missingResourceTypes)));
-    }
-
-    // Store to terminology service
-    logger.debug("Storing to terminology service");
-    Bundle evaluationBundle = FhirHelper.storeTerminologyAndReturnOther(remoteBundle, config);
-
-    // Set ID, meta
-    String bundleId = urlConfig.getBundleId();
-
-    Measure measure = FhirHelper.getMeasure(remoteBundle);
-    if (!measure.hasIdentifier()) {
-      logger.error(String.format("Measure : %s does not have an identifier.", measure.getId()));
-      measure.addIdentifier().setSystem(Constants.MainSystem).setValue(bundleId);
-    }
-
-    // Store to evaluation service and internal data store
-    logger.debug("Storing to evaluation service");
-    FhirDataProvider evaluationProvider = new FhirDataProvider(config.getEvaluationService());
-    evaluationProvider.transaction(evaluationBundle);
-
-    // Store to db
-    MeasureDefinition measureDefinition = new MeasureDefinition();
-    measureDefinition.setMeasureId(bundleId);
-    measureDefinition.setBundle(remoteBundle);
-    this.mongoService.saveMeasureDefinition(measureDefinition);
-  }
-
   private int getSocketTimout() {
     int socketTimeout = 30 * 1000; // 30 sec // 200 * 5000
     if (config.getSocketTimeout() != null) {
@@ -230,7 +97,7 @@ public class ApiInit {
   }
 
   public void init() {
-    this.ctx.getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+    FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
     Optional<ApiReportDefsUrlConfig> measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
     if (StringUtils.isEmpty(config.getReportAggregator()) && !measureReportAggregator.isEmpty()) {
@@ -249,16 +116,13 @@ public class ApiInit {
     }
 
     if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
-      this.ctx.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+      FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
       logger.info("Setting client to never query for metadata");
     }
-
 
     // check that prerequisite services are available
     if (!this.checkPrerequisites()) {
       throw new IllegalStateException("Prerequisite services check failed. Cannot continue API initialization.");
     }
-
-    this.loadMeasureDefinitions();
   }
 }

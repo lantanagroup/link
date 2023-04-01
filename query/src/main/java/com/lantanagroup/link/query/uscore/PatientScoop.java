@@ -59,6 +59,9 @@ public class PatientScoop {
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
 
+  @Setter
+  private Boolean shouldPersist = true;
+
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");

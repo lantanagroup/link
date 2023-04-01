@@ -1,18 +1,27 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
+import com.lantanagroup.link.config.query.QueryConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientData;
+import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportContext;
+import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.model.TestResponse;
+import com.lantanagroup.link.query.IQuery;
+import com.lantanagroup.link.query.QueryFactory;
+import com.lantanagroup.link.query.uscore.PatientScoop;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -23,14 +32,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api")
-public class ReportDataController extends BaseController {
-  private static final Logger logger = LoggerFactory.getLogger(ReportDataController.class);
+@RequestMapping("/api/data")
+public class DataController extends BaseController {
+  private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
   @Autowired
   @Setter
   @Getter
   private DataGovernanceConfig dataGovernanceConfig;
+
+  @Autowired
+  private ApplicationContext applicationContext;
+
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   @Autowired
   private MongoService mongoService;
@@ -75,7 +90,7 @@ public class ReportDataController extends BaseController {
    * @throws DatatypeConfigurationException Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
    *                                        has been reached.
    */
-  @DeleteMapping(value = "/data/expunge")
+  @DeleteMapping(value = "/expunge")
   public Integer expungeData() throws DatatypeConfigurationException {
     if (this.dataGovernanceConfig == null) {
       logger.error("Data governance not configured");
@@ -98,5 +113,41 @@ public class ReportDataController extends BaseController {
     }
 
     return patientDataToDelete.size();
+  }
+
+  /**
+   * @return
+   */
+  @GetMapping("/$test")
+  public TestResponse test(@RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
+    TestResponse testResponse = new TestResponse();
+
+    try {
+      // Get the data
+      logger.info("Testing querying/scooping data for the patient {}", patientId);
+      QueryConfig queryConfig = this.applicationContext.getBean(QueryConfig.class);
+      IQuery query = QueryFactory.getQueryInstance(this.applicationContext, queryConfig.getQueryClass());
+
+      MeasureDefinition measureDef = this.mongoService.findMeasureDefinition(measureId);
+      List<String> resourceTypes = FhirHelper.getDataRequirementTypes(measureDef.getBundle())
+              .stream()
+              .collect(Collectors.toList());
+      resourceTypes.retainAll(this.usCoreConfig.getPatientResourceTypes());
+
+      PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
+      patientScoop.setFhirQueryServer(query.getFhirQueryClient());
+
+      PatientOfInterestModel poi = new PatientOfInterestModel();
+      poi.setReference(patientId);
+
+      ReportCriteria criteria = new ReportCriteria(List.of(measureId), periodStart, periodEnd);
+
+      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
+    } catch (Exception ex) {
+      testResponse.setSuccess(false);
+      testResponse.setMessage(ex.getMessage());
+    }
+
+    return testResponse;
   }
 }

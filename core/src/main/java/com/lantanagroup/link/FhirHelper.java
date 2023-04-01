@@ -1,7 +1,6 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.rest.api.EncodingEnum;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
@@ -80,45 +79,6 @@ public class FhirHelper {
     }
   }
 
-  public static <T extends IBaseResource> T parseResource(Class<T> resourceType, String string) {
-    return EncodingEnum.detectEncoding(string)
-            .newParser(FhirContextProvider.getFhirContext())
-            .parseResource(resourceType, string);
-  }
-
-  /**
-   * Creates a bundle of the same type as the measure definition bundle and another bundle of type batch,
-   * Then traverses the measure definition bundle, adding all the ValueSet and CodeSystem resources to the
-   * batch bundle and stores them on the configured TX server while all the other resources are added to the
-   * new measure definition bundle to be returned.
-   *
-   * @param bundle measure definition bundle
-   * @param config contains Api configurations
-   * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
-   */
-  public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
-    if (bundle.hasEntry()) {
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
-      Bundle txBundle = new Bundle();
-      Bundle returnBundle = new Bundle();
-      txBundle.setType(Bundle.BundleType.BATCH);
-      returnBundle.setType(bundle.getType());
-      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-        entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-        if (entry.getResource() instanceof ValueSet || entry.getResource() instanceof CodeSystem) {
-          txBundle.addEntry(entry);
-        } else {
-          returnBundle.addEntry(entry);
-        }
-      }
-      if (txBundle.hasEntry()) {
-        fhirDataProvider.transaction(txBundle);
-      }
-      return returnBundle;
-    }
-    return bundle;
-  }
-
   public static Set<String> getDataRequirementTypes(Bundle reportDefBundle) {
     return reportDefBundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -128,7 +88,6 @@ public class FhirHelper {
   }
 
   public static boolean validLibraries(Bundle reportRefBundle) throws Exception {
-
     Measure measure = FhirHelper.getMeasure(reportRefBundle);
     List<String> measureIncludedLibraries = measure.getLibrary().stream().map(canonUrl -> canonUrl.getValue()).collect(Collectors.toList());
 
@@ -139,13 +98,6 @@ public class FhirHelper {
 
     List<Library> libraryEmptyList = libraryList.stream().filter(library -> library.getDataRequirement().isEmpty()).collect(Collectors.toList());
     return libraryEmptyList.isEmpty();
-  }
-
-  public static List<String> getQueryConfigurationDataReqMissingResourceTypes(List<String> properties, Bundle measureDefBundle) {
-    // get data requirements
-    Set<String> reportDefBundleDataReqSet = getDataRequirementTypes(measureDefBundle);
-    // get all resources types that are in data requirements but missing from query properties
-    return reportDefBundleDataReqSet.stream().filter(e -> !e.equals("Patient") && !properties.contains(e)).collect(Collectors.toList());
   }
 
   public static List<ListResource> getPatientLists(Report report) {

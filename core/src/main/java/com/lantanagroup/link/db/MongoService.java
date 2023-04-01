@@ -165,6 +165,15 @@ public class MongoService {
     return this.getMeasureDefinitionCollection().find(eq("measureId", measureId)).first();
   }
 
+  public List<MeasureDefinition> getAllMeasureDefinitions() {
+    List<MeasureDefinition> measureDefinitions = new ArrayList<>();
+    this.getMeasureDefinitionCollection()
+            .find()
+            .projection(include("measureId", "lastUpdated"))
+            .into(measureDefinitions);
+    return measureDefinitions;
+  }
+
   public void saveMeasureDefinition(MeasureDefinition measureDefinition) {
     Bson criteria = eq("measureId", measureDefinition.getMeasureId());
     BasicDBObject update = new BasicDBObject();

@@ -41,7 +41,7 @@ public class BaseQuery {
     return this.fhirContext;
   }
 
-  public IGenericClient getFhirQueryClient() throws ClassNotFoundException {
+  public IGenericClient getFhirQueryClient() {
     if (this.fhirQueryClient != null) {
       return this.fhirQueryClient;
     }
@@ -58,7 +58,12 @@ public class BaseQuery {
 
     if (StringUtils.isNotEmpty(this.queryConfig.getAuthClass())) {
       logger.debug(String.format("Authenticating queries using %s", this.queryConfig.getAuthClass()));
-      fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
+
+      try {
+        fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
+      } catch (ClassNotFoundException e) {
+        logger.error("Error registering authentication interceptor", e);
+      }
     } else {
       logger.warn("No authentication is configured for the FHIR server being queried");
     }

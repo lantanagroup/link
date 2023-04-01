@@ -17,29 +17,22 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.22/lombok-1.18.22.jar" />
         </processorPath>
         <module name="core" />
+        <module name="api" />
         <module name="nhsn" />
         <module name="query" />
-        <module name="api" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="11">
-      <module name="agent" target="11" />
-      <module name="api" target="11" />
       <module name="cli" target="11" />
       <module name="consumer" target="11" />
-      <module name="core" target="11" />
       <module name="datastore" target="11" />
-      <module name="link" target="11" />
       <module name="measureeval" target="11" />
       <module name="mhl" target="11" />
-      <module name="nhsn" target="11" />
-      <module name="query" target="11" />
       <module name="thsa" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="agent" options="-parameters" />
       <module name="api" options="-parameters" />
       <module name="cli" options="-parameters" />
       <module name="consumer" options="-parameters" />
