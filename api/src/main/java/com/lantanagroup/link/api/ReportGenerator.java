@@ -4,6 +4,7 @@ import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.ReportContext;
@@ -95,6 +96,9 @@ public class ReportGenerator {
 
     MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
     this.measureContext.setMeasureReport(masterMeasureReport);
-    this.report.getAggregates().add(masterMeasureReport);
+
+    Aggregate aggregateReport = new Aggregate(masterMeasureReport);
+    this.mongoService.saveAggregate(aggregateReport);
+    this.report.getAggregates().add(aggregateReport.getId());
   }
 }

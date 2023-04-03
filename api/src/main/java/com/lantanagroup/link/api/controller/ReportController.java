@@ -8,10 +8,7 @@ import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.AuditTypes;
-import com.lantanagroup.link.db.model.MeasureDefinition;
-import com.lantanagroup.link.db.model.Report;
-import com.lantanagroup.link.db.model.ReportStatuses;
+import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -23,6 +20,7 @@ import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -221,7 +219,7 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
-    Report existingReport = this.mongoService.findReport(masterIdentifierValue);
+    Report existingReport = this.mongoService.getReport(masterIdentifierValue);
 
     // Search the reference document by measure criteria and reporting period
     if (existingReport != null && !regenerate) {
@@ -338,7 +336,7 @@ public class ReportController extends BaseController {
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
-    Report report = this.mongoService.findReport(reportId);
+    Report report = this.mongoService.getReport(reportId);
 
     sender.send(report, request, user);
 
@@ -348,5 +346,29 @@ public class ReportController extends BaseController {
     this.mongoService.saveReport(report);
 
     this.mongoService.audit(user, request, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+  }
+
+  @GetMapping("/{reportId}/aggregate")
+  public List<MeasureReport> getAggregates(@PathVariable String reportId) {
+    Report report = this.mongoService.getReport(reportId);
+    List<Aggregate> aggregates = this.mongoService.getAggregates(report.getAggregates());
+    return aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
+  }
+
+  @GetMapping("/{reportId}/patientList")
+  public List<PatientList> getReportPatientLists(@PathVariable String reportId) {
+    Report report = this.mongoService.getReport(reportId);
+    return this.mongoService.getPatientLists(report.getPatientLists());
+  }
+
+  @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
+  public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId) {
+    PatientMeasureReport patientMeasureReport = this.mongoService.getPatientMeasureReport(patientMeasureReportId);
+
+    if (patientMeasureReport == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+
+    return patientMeasureReport.getMeasureReport();
   }
 }

@@ -8,18 +8,21 @@ import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class GenericSender {
   protected static final Logger logger = LoggerFactory.getLogger(GenericSender.class);
@@ -41,7 +44,9 @@ public abstract class GenericSender {
   public Bundle generateBundle(Report report) {
     logger.info("Building Bundle for MeasureReport to send...");
     FhirBundler bundler = new FhirBundler(this.bundlerConfig, this.mongoService, this.eventService);
-    Bundle bundle = bundler.generateBundle(report.getAggregates(), report);
+    List<Aggregate> aggregates = this.mongoService.getAggregates(report.getAggregates());
+    List<MeasureReport> aggregateReports = aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
+    Bundle bundle = bundler.generateBundle(aggregateReports, report);
     logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
     return bundle;
   }

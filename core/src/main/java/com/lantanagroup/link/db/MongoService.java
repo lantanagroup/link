@@ -43,6 +43,7 @@ public class MongoService {
   public static final String PATIENT_LIST_COLLECTION = "patientList";
   public static final String PATIENT_DATA_COLLECTION = "patientData";
   public static final String MEASURE_DEF_COLLECTION = "measureDef";
+  public static final String AGGREGATE_COLLECTION = "aggregate";
   public static final String REPORT_COLLECTION = "report";
   public static final String USER_COLLECTION = "user";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
@@ -80,6 +81,10 @@ public class MongoService {
 
   public MongoCollection<ConceptMap> getConceptMapCollection() {
     return this.getDatabase().getCollection(CONCEPT_MAP_COLLECTION, ConceptMap.class);
+  }
+
+  public MongoCollection<Aggregate> getAggregateCollection() {
+    return this.getDatabase().getCollection(AGGREGATE_COLLECTION, Aggregate.class);
   }
 
   public static String getRemoteAddress(HttpServletRequest request) {
@@ -209,7 +214,7 @@ public class MongoService {
     this.getMeasureDefinitionCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 
-  public Report findReport(String id) {
+  public Report getReport(String id) {
     return this.getReportCollection().find(eq("_id", id)).first();
   }
 
@@ -326,5 +331,22 @@ public class MongoService {
     BasicDBObject update = new BasicDBObject();
     update.put("$set", conceptMap);
     this.getConceptMapCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+  }
+
+  public List<Aggregate> getAggregates(List<String> ids) {
+    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
+    Bson criteria = or(matchIds);
+    List<Aggregate> aggregates = new ArrayList<>();
+    this.getAggregateCollection()
+            .find(criteria)
+            .into(aggregates);
+    return aggregates;
+  }
+
+  public void saveAggregate(Aggregate aggregate) {
+    Bson criteria = eq("_id", aggregate.getId());
+    BasicDBObject update = new BasicDBObject();
+    update.put("$set", aggregate);
+    this.getAggregateCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 }
