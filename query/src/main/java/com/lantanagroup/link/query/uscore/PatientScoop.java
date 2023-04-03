@@ -185,7 +185,7 @@ public class PatientScoop {
           eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
           if (this.shouldPersist) {
-            logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
+            logger.info("Storing patient data for patient {}", patient.getIdElement().getIdPart());
 
             // store data
             //noinspection unused
