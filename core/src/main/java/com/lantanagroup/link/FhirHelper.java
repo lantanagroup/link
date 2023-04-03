@@ -100,38 +100,6 @@ public class FhirHelper {
     return libraryEmptyList.isEmpty();
   }
 
-  public static List<ListResource> getPatientLists(Report report) {
-    return report.getPatientLists().stream().map(pl -> {
-      ListResource listResource = new ListResource();
-      listResource.setId(pl.getId());
-
-      listResource.setEntry(pl.getPatients().stream().map(pid -> {
-        ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();
-
-        if (StringUtils.isNotEmpty(pid.getIdentifier())) {
-          String[] identifierSplit = pid.getIdentifier().split("|");
-          Identifier identifier = new Identifier();
-          entry.getItem().setIdentifier(identifier);
-
-          if (identifierSplit.length == 2) {
-            identifier.setSystem(identifierSplit[0]);
-            identifier.setValue(identifierSplit[1]);
-          } else if (identifierSplit.length == 1) {
-            identifier.setValue(identifierSplit[0]);
-          } else {
-            logger.error("Expected one or two parts to the identifier, but got {}", identifierSplit.length);
-          }
-        } else if (StringUtils.isNotEmpty(pid.getReference())) {
-          entry.getItem().setReference(pid.getReference());
-        }
-
-        return entry;
-      }).collect(Collectors.toList()));
-
-      return listResource;
-    }).collect(Collectors.toList());
-  }
-
   public static void initSerializers(SimpleModule module, IParser jsonParser) {
     List.of("Account", "ActivityDefinition", "AdverseEvent", "AllergyIntolerance", "Appointment", "AppointmentResponse", "AuditEvent", "Basic", "Binary", "BiologicallyDerivedProduct", "BodyStructure", "Bundle", "CapabilityStatement", "CarePlan", "CareTeam", "CatalogEntry", "ChargeItem", "ChargeItemDefinition", "Claim", "ClaimResponse", "ClinicalImpression", "CodeSystem", "Communication", "CommunicationRequest", "CompartmentDefinition", "Composition", "ConceptMap", "Condition", "Consent", "Contract", "Coverage", "CoverageEligibilityRequest", "CoverageEligibilityResponse", "DetectedIssue", "Device", "DeviceDefinition", "DeviceMetric", "DeviceRequest", "DeviceUseStatement", "DiagnosticReport", "DocumentManifest", "DocumentReference", "EffectEvidenceSynthesis", "Encounter", "Endpoint", "EnrollmentRequest", "EnrollmentResponse", "EpisodeOfCare", "EventDefinition", "Evidence", "EvidenceVariable", "ExampleScenario", "ExplanationOfBenefit", "FamilyMemberHistory", "Flag", "Goal", "GraphDefinition", "Group", "GuidanceResponse", "HealthcareService", "ImagingStudy", "Immunization", "ImmunizationEvaluation", "ImmunizationRecommendation", "ImplementationGuide", "InsurancePlan", "Invoice", "Library", "Linkage", "ListResource", "Location", "Measure", "MeasureReport", "Media", "Medication", "MedicationAdministration", "MedicationDispense", "MedicationKnowledge", "MedicationRequest", "MedicationStatement", "MedicinalProduct", "MedicinalProductAuthorization", "MedicinalProductContraindication", "MedicinalProductIndication", "MedicinalProductIngredient", "MedicinalProductInteraction", "MedicinalProductManufactured", "MedicinalProductPackaged", "MedicinalProductPharmaceutical", "MedicinalProductUndesirableEffect", "MessageDefinition", "MessageHeader", "MolecularSequence", "NamingSystem", "NutritionOrder", "Observation", "ObservationDefinition", "OperationDefinition", "OperationOutcome", "Organization", "OrganizationAffiliation", "Parameters", "Patient", "PaymentNotice", "PaymentReconciliation", "Person", "PlanDefinition", "Practitioner", "PractitionerRole", "Procedure", "Provenance", "Questionnaire", "QuestionnaireResponse", "RelatedPerson", "RequestGroup", "ResearchDefinition", "ResearchElementDefinition", "ResearchStudy", "ResearchSubject", "RiskAssessment", "RiskEvidenceSynthesis", "Schedule", "SearchParameter", "ServiceRequest", "Slot", "Specimen", "SpecimenDefinition", "StructureDefinition", "StructureMap", "Subscription", "Substance", "SubstancePolymer", "SubstanceProtein", "SubstanceReferenceInformation", "SubstanceSpecification", "SubstanceSourceMaterial", "SupplyDelivery", "SupplyRequest", "Task", "TerminologyCapabilities", "TestReport", "TestScript", "ValueSet", "VerificationResult", "VisionPrescription")
             .forEach(e -> {

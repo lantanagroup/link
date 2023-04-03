@@ -285,7 +285,7 @@ public class ReportController extends BaseController {
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(Arrays.asList(bundleIds));
-    report.setPatientLists(reportContext.getPatientLists());
+    report.setPatientLists(reportContext.getPatientLists().stream().map(pl -> pl.getId()).collect(Collectors.toList()));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {

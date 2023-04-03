@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import org.apache.commons.lang3.StringUtils;
@@ -197,9 +198,43 @@ public class FhirBundler {
     }
   }
 
+  public List<ListResource> getPatientLists(Report report) {
+    List<PatientList> patientLists = this.mongoService.getPatientLists(report.getPatientLists());
+
+    return patientLists.stream().map(pl -> {
+      ListResource listResource = new ListResource();
+      listResource.setId(pl.getId());
+
+      listResource.setEntry(pl.getPatients().stream().map(pid -> {
+        ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();
+
+        if (StringUtils.isNotEmpty(pid.getIdentifier())) {
+          String[] identifierSplit = pid.getIdentifier().split("|");
+          Identifier identifier = new Identifier();
+          entry.getItem().setIdentifier(identifier);
+
+          if (identifierSplit.length == 2) {
+            identifier.setSystem(identifierSplit[0]);
+            identifier.setValue(identifierSplit[1]);
+          } else if (identifierSplit.length == 1) {
+            identifier.setValue(identifierSplit[0]);
+          } else {
+            logger.error("Expected one or two parts to the identifier, but got {}", identifierSplit.length);
+          }
+        } else if (StringUtils.isNotEmpty(pid.getReference())) {
+          entry.getItem().setReference(pid.getReference());
+        }
+
+        return entry;
+      }).collect(Collectors.toList()));
+
+      return listResource;
+    }).collect(Collectors.toList());
+  }
+
   private void addCensuses(Bundle bundle, Report report) {
     logger.debug("Adding censuses");
-    Collection<ListResource> patientLists = FhirHelper.getPatientLists(report);
+    Collection<ListResource> patientLists = this.getPatientLists(report);
 
     if (patientLists.isEmpty()) {
       return;

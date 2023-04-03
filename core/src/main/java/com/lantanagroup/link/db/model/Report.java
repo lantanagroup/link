@@ -21,6 +21,6 @@ public class Report {
   private Date submittedTime;
   private Date generatedTime = new Date();
   private String version = "0.1";
-  private List<PatientList> patientLists = new ArrayList<>();
+  private List<String> patientLists = new ArrayList<>();
   private List<MeasureReport> aggregates = new ArrayList<>();
 }

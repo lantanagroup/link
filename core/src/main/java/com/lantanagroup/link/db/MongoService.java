@@ -62,7 +62,7 @@ public class MongoService {
     return this.database;
   }
 
-  public MongoCollection<PatientList> getCensusCollection() {
+  public MongoCollection<PatientList> getPatientListCollection() {
     return this.getDatabase().getCollection(PATIENT_LIST_COLLECTION, PatientList.class);
   }
 
@@ -122,16 +122,41 @@ public class MongoService {
     return this.client;
   }
 
+  public List<PatientList> getPatientLists(List<String> ids) {
+    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
+    Bson criteria = or(matchIds);
+    List<PatientList> patientLists = new ArrayList<>();
+    this.getPatientListCollection()
+            .find(criteria)
+            .into(patientLists);
+    return patientLists;
+  }
+
+  public List<PatientList> getAllPatientLists() {
+    List<PatientList> patientLists = new ArrayList<>();
+    this.getPatientListCollection()
+            .find()
+            .projection(include("measureId", "_id", "periodStart", "periodEnd"))
+            .into(patientLists);
+    return patientLists;
+  }
+
+  public PatientList getPatientList(String id) {
+    return this.getPatientListCollection()
+            .find(eq("_id", id))
+            .first();
+  }
+
   public PatientList findPatientList(String periodStart, String periodEnd, String measureId) {
     Bson criteria = and(eq("periodStart", periodStart), eq("periodEnd", periodEnd), eq("measureId", measureId));
-    return this.getCensusCollection().find(criteria).first();
+    return this.getPatientListCollection().find(criteria).first();
   }
 
   public void savePatientList(PatientList patientList) {
     Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
     BasicDBObject update = new BasicDBObject();
     update.put("$set", patientList);
-    this.getCensusCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getPatientListCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 
   public List<PatientData> findPatientData(String patientId) {

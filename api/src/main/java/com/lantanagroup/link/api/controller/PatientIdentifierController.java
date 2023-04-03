@@ -24,10 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -35,6 +32,7 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Reportability Response Controller
@@ -55,6 +53,21 @@ public class PatientIdentifierController extends BaseController {
   private QueryListConfig queryListConfig;
   @Autowired
   private MongoService mongoService;
+
+  @GetMapping
+  public List<PatientList> searchPatientLists() {
+    return this.mongoService.getAllPatientLists()
+            .stream().map(pl -> {
+              pl.setPatients(null);
+              return pl;
+            })
+            .collect(Collectors.toList());
+  }
+
+  @GetMapping("/{id}")
+  public PatientList getPatientList(@PathVariable String id) {
+    return this.mongoService.getPatientList(id);
+  }
 
   @PostMapping("/$query-list")
   public void queryPatientList() throws Exception {

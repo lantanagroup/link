@@ -14,6 +14,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -38,8 +39,12 @@ public class FhirBundlerTests {
     FhirBundler bundler = new FhirBundler(config, mongoService);
 
     Report report = new Report();
-    report.getPatientLists().add(new PatientList());
-    report.getPatientLists().get(0).getPatients().add(new PatientId("Patient/test-patient"));
+    report.getPatientLists().add("test-patient-list");
+
+    List<PatientList> patientLists = new ArrayList<>();
+    patientLists.add(new PatientList());
+    patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
+    when(mongoService.getPatientLists(any())).thenReturn(patientLists);
 
     PatientMeasureReport pmr1 = new PatientMeasureReport();
     pmr1.setMeasureReport(new MeasureReport());
