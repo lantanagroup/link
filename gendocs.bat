@@ -1,0 +1,1 @@
+mvn install javadoc:aggregate -DskipTests
