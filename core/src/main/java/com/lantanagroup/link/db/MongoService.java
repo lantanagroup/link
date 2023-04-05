@@ -2,6 +2,7 @@ package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
+import com.lantanagroup.link.config.TenantConfig;
 import com.lantanagroup.link.db.model.*;
 import com.mongodb.BasicDBObject;
 import com.mongodb.ConnectionString;
@@ -13,6 +14,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.result.DeleteResult;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -48,6 +50,7 @@ public class MongoService {
   public static final String USER_COLLECTION = "user";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
+  public static final String TENANT_CONFIG_COLLECTION = "tenantConfig";
 
   private MongoClient client;
   private MongoDatabase database;
@@ -61,6 +64,10 @@ public class MongoService {
       this.database = getClient().getDatabase(this.config.getDatabase());
     }
     return this.database;
+  }
+
+  public MongoCollection<TenantConfig> getTenantConfigCollection() {
+    return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, TenantConfig.class);
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {
@@ -125,6 +132,33 @@ public class MongoService {
     }
 
     return this.client;
+  }
+
+  public TenantConfig getTenantConfig(String id) {
+    return this.getTenantConfigCollection()
+            .find(eq("_id", id))
+            .first();
+  }
+
+  public List<TenantConfig> searchTenantConfigs() {
+    List<TenantConfig> tenantConfigs = new ArrayList<>();
+    this.getTenantConfigCollection()
+            .find()
+            .projection(include("_id", "name", "description"))
+            .into(tenantConfigs);
+    return tenantConfigs;
+  }
+
+  public long deleteTenantConfig(String tenantId) {
+    DeleteResult result = this.getTenantConfigCollection().deleteOne(eq("_id", tenantId));
+    return result.getDeletedCount();
+  }
+
+  public void saveTenantConfig(TenantConfig tenantConfig) {
+    Bson criteria = eq("_id", tenantConfig.getId());
+    BasicDBObject update = new BasicDBObject();
+    update.put("$set", tenantConfig);
+    this.getTenantConfigCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
   }
 
   public List<PatientList> getPatientLists(List<String> ids) {

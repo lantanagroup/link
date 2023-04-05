@@ -5,9 +5,14 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.config.TenantConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
+import com.mongodb.client.MongoDatabase;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -17,8 +22,14 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerMapping;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -47,8 +58,12 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   @Autowired
   private ReportingPlanConfig reportingPlanConfig;
 
+  @Autowired
+  private MongoService mongoService;
+
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.
+   *
    * @param args
    */
   public static void main(String[] args) {
@@ -96,5 +111,25 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     }
     logger.info("Initializing MRP service");
     return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
+  }
+
+  @Bean
+  @RequestScope
+  public TenantService tenantService(HttpServletRequest request, MongoService mongoService) {
+    Map map = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+    String tenantId = (String) map.get("tenantId");
+
+    if (StringUtils.isEmpty(tenantId)) {
+      return null;
+    }
+
+    TenantConfig tenantConfig = this.mongoService.getTenantConfig(tenantId);
+
+    if (tenantConfig == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    MongoDatabase database = this.mongoService.getClient().getDatabase(tenantConfig.getDatabase());
+    return new TenantService(database, tenantConfig);
   }
 }

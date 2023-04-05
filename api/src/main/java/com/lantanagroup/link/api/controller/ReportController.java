@@ -38,9 +38,12 @@ import java.util.stream.Collectors;
 
 
 @RestController
-@RequestMapping("/api/report")
+@RequestMapping("/api/{tenantId}/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+
+  @Autowired
+  private TenantService tenantService;
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
