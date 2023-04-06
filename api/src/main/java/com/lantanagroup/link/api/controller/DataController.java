@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/data")
+@RequestMapping("/api/{tenantId}/data")
 public class DataController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
 
@@ -50,6 +51,9 @@ public class DataController extends BaseController {
 
   @Autowired
   private MongoService mongoService;
+
+  @Autowired
+  private TenantService tenantService;
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -92,13 +96,13 @@ public class DataController extends BaseController {
    *                                        has been reached.
    */
   @DeleteMapping(value = "/expunge")
-  public Integer expungeData() throws DatatypeConfigurationException {
+  public Integer expungeData() {
     if (this.dataGovernanceConfig == null) {
       logger.error("Data governance not configured");
       return 0;
     }
 
-    List<PatientData> allPatientData = this.mongoService.getAllPatientData();
+    List<PatientData> allPatientData = this.tenantService.getAllPatientData();
     List<String> patientDataToDelete = allPatientData.stream().filter(pd -> {
               try {
                 return shouldDelete(this.dataGovernanceConfig.getPatientDataRetention(), pd.getRetrieved());
@@ -110,7 +114,7 @@ public class DataController extends BaseController {
             .collect(Collectors.toList());
 
     if (patientDataToDelete.size() > 0) {
-      this.mongoService.deletePatientData(patientDataToDelete);
+      this.tenantService.deletePatientData(patientDataToDelete);
     }
 
     return patientDataToDelete.size();

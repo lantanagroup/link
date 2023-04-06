@@ -11,6 +11,7 @@ import java.util.Date;
 public class Audit {
   private String id = (new ObjectId()).toString();
   private Date timestamp = new Date();
+  private String tenantId;
   private String userId;
   private String name;
   private String network;

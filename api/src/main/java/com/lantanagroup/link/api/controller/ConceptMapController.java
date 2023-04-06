@@ -1,7 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/conceptMap")
+@RequestMapping("/api/{tenantId}/conceptMap")
 public class ConceptMapController extends BaseController {
   @Autowired
-  private MongoService mongoService;
+  private TenantService tenantService;
 
   @PutMapping
   public void createOrUpdateConceptMap(@RequestBody org.hl7.fhir.r4.model.ConceptMap conceptMap) {
@@ -28,12 +28,12 @@ public class ConceptMapController extends BaseController {
     dbConceptMap.setName(conceptMap.getName());
     dbConceptMap.setResource(conceptMap);
 
-    this.mongoService.saveConceptMap(dbConceptMap);
+    this.tenantService.saveConceptMap(dbConceptMap);
   }
 
   @GetMapping
   public List<org.hl7.fhir.r4.model.ConceptMap> searchConceptMap() {
-    return this.mongoService.getAllConceptMaps()
+    return this.tenantService.getAllConceptMaps()
             .stream()
             .map(dbConceptMap -> dbConceptMap.getResource())
             .collect(Collectors.toList());

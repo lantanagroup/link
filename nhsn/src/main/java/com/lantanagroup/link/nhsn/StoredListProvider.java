@@ -1,7 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IPatientIdProvider;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @Component
 public class StoredListProvider implements IPatientIdProvider {
   @Autowired
-  private MongoService mongoService;
+  private TenantService tenantService;
 
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
@@ -32,7 +32,7 @@ public class StoredListProvider implements IPatientIdProvider {
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      PatientList found = this.mongoService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
+      PatientList found = this.tenantService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
 
       if (found == null) {
         logger.warn("No patient census lists found");

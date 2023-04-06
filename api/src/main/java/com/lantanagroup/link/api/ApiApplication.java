@@ -22,10 +22,13 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerMapping;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,6 +51,7 @@ import java.util.TimeZone;
 })
 @EnableScheduling
 @EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class})
+@EnableAsync
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
   private ApplicationContext context;
@@ -114,7 +118,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   }
 
   @Bean
-  @RequestScope
+  @Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
   public TenantService tenantService(HttpServletRequest request, MongoService mongoService) {
     Map map = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
     String tenantId = (String) map.get("tenantId");
@@ -131,5 +135,12 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
 
     MongoDatabase database = this.mongoService.getClient().getDatabase(tenantConfig.getDatabase());
     return new TenantService(database, tenantConfig);
+  }
+
+  @Bean
+  public DispatcherServlet dispatcherServlet() {
+    DispatcherServlet servlet = new DispatcherServlet();
+    servlet.setThreadContextInheritable(true);
+    return servlet;
   }
 }

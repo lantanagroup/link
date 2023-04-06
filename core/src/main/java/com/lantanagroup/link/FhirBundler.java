@@ -24,17 +24,19 @@ public class FhirBundler {
   private final BundlerConfig config;
   private final MongoService mongoService;
   private final EventService eventService;
+  private final TenantService tenantService;
   private Organization org;
 
-  public FhirBundler(BundlerConfig config, MongoService mongoService, EventService eventService) {
+  public FhirBundler(BundlerConfig config, MongoService mongoService, TenantService tenantService, EventService eventService) {
     this.config = config;
     this.mongoService = mongoService;
+    this.tenantService = tenantService;
     this.eventService = eventService;
     this.org = this.createOrganization();
   }
 
-  public FhirBundler(BundlerConfig config, MongoService mongoService) {
-    this(config, mongoService, null);
+  public FhirBundler(BundlerConfig config, MongoService mongoService, TenantService tenantService) {
+    this(config, mongoService, tenantService, null);
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
@@ -199,7 +201,7 @@ public class FhirBundler {
   }
 
   public List<ListResource> getPatientLists(Report report) {
-    List<PatientList> patientLists = this.mongoService.getPatientLists(report.getPatientLists());
+    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getPatientLists());
 
     return patientLists.stream().map(pl -> {
       ListResource listResource = new ListResource();
@@ -282,7 +284,7 @@ public class FhirBundler {
             });
 
     List<PatientMeasureReport> individualMeasureReports =
-            this.mongoService.getPatientMeasureReports(individualMeasureReportIds);
+            this.tenantService.getPatientMeasureReports(individualMeasureReportIds);
 
     for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();

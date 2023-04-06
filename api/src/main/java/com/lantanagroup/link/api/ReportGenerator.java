@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.Aggregate;
@@ -35,10 +36,12 @@ public class ReportGenerator {
   private IReportAggregator reportAggregator;
   private StopwatchManager stopwatchManager;
   private MongoService mongoService;
+  private TenantService tenantService;
   private Report report;
 
-  public ReportGenerator(MongoService mongoService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
+  public ReportGenerator(MongoService mongoService, TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
     this.mongoService = mongoService;
+    this.tenantService = tenantService;
     this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
     this.measureContext = measureContext;
@@ -73,14 +76,14 @@ public class ReportGenerator {
                 patientMeasureReport.setPatientId(patient.getId());
 
                 logger.info("Generating measure report for patient " + patient);
-                MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.mongoService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+                MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.mongoService, this.tenantService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
                 measureReport.setId(measureReportId);
                 patientMeasureReport.setMeasureReport(measureReport);
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
                 //noinspection unused
                 try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
-                  this.mongoService.savePatientMeasureReport(patientMeasureReport);
+                  this.tenantService.savePatientMeasureReport(patientMeasureReport);
                 }
 
                 return measureReport;
@@ -98,7 +101,7 @@ public class ReportGenerator {
     this.measureContext.setMeasureReport(masterMeasureReport);
 
     Aggregate aggregateReport = new Aggregate(masterMeasureReport);
-    this.mongoService.saveAggregate(aggregateReport);
+    this.tenantService.saveAggregate(aggregateReport);
     this.report.getAggregates().add(aggregateReport.getId());
   }
 }

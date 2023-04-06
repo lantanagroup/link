@@ -222,7 +222,7 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
-    Report existingReport = this.mongoService.getReport(masterIdentifierValue);
+    Report existingReport = this.tenantService.getReport(masterIdentifierValue);
 
     // Search the reference document by measure criteria and reporting period
     if (existingReport != null && !regenerate) {
@@ -300,7 +300,7 @@ public class ReportController extends BaseController {
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+      ReportGenerator generator = new ReportGenerator(this.mongoService, this.tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
@@ -309,9 +309,9 @@ public class ReportController extends BaseController {
       this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
     }
 
-    this.mongoService.saveReport(report);
+    this.tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+    this.mongoService.audit(user, request, this.tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
     logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
@@ -339,34 +339,34 @@ public class ReportController extends BaseController {
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
-    Report report = this.mongoService.getReport(reportId);
+    Report report = this.tenantService.getReport(reportId);
 
     sender.send(report, request, user);
 
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
 
-    this.mongoService.saveReport(report);
+    this.tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+    this.mongoService.audit(user, request, this.tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
   }
 
   @GetMapping("/{reportId}/aggregate")
   public List<MeasureReport> getAggregates(@PathVariable String reportId) {
-    Report report = this.mongoService.getReport(reportId);
-    List<Aggregate> aggregates = this.mongoService.getAggregates(report.getAggregates());
+    Report report = this.tenantService.getReport(reportId);
+    List<Aggregate> aggregates = this.tenantService.getAggregates(report.getAggregates());
     return aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
   }
 
   @GetMapping("/{reportId}/patientList")
   public List<PatientList> getReportPatientLists(@PathVariable String reportId) {
-    Report report = this.mongoService.getReport(reportId);
-    return this.mongoService.getPatientLists(report.getPatientLists());
+    Report report = this.tenantService.getReport(reportId);
+    return this.tenantService.getPatientLists(report.getPatientLists());
   }
 
   @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
   public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId) {
-    PatientMeasureReport patientMeasureReport = this.mongoService.getPatientMeasureReport(patientMeasureReportId);
+    PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(patientMeasureReportId);
 
     if (patientMeasureReport == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);

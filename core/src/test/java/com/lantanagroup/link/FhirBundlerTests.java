@@ -28,6 +28,7 @@ public class FhirBundlerTests {
   @Test
   public void testBundle() {
     MongoService mongoService = mock(MongoService.class);
+    TenantService tenantService = mock(TenantService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
     // Use legacy behavior of reifying/promoting line-level resources
@@ -36,7 +37,7 @@ public class FhirBundlerTests {
     config.setPromoteLineLevelResources(false);
     config.setOrgNpi("test-org-npi");
 
-    FhirBundler bundler = new FhirBundler(config, mongoService);
+    FhirBundler bundler = new FhirBundler(config, mongoService, tenantService);
 
     Report report = new Report();
     report.getPatientLists().add("test-patient-list");
@@ -44,13 +45,13 @@ public class FhirBundlerTests {
     List<PatientList> patientLists = new ArrayList<>();
     patientLists.add(new PatientList());
     patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
-    when(mongoService.getPatientLists(any())).thenReturn(patientLists);
+    when(tenantService.getPatientLists(any())).thenReturn(patientLists);
 
     PatientMeasureReport pmr1 = new PatientMeasureReport();
     pmr1.setMeasureReport(new MeasureReport());
     pmr1.getMeasureReport().setId("test-mr");
     pmr1.getMeasureReport().setType(MeasureReport.MeasureReportType.INDIVIDUAL);
-    when(mongoService.getPatientMeasureReports(any())).thenReturn(List.of(pmr1));
+    when(tenantService.getPatientMeasureReports(any())).thenReturn(List.of(pmr1));
 
     // Generate the bundle
     Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), report);

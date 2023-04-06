@@ -4,6 +4,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.EventTypes;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
@@ -21,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -55,6 +58,9 @@ public class PatientScoop {
   private EventService eventService;
 
   @Autowired
+  private TenantService tenantService;
+
+  @Autowired
   private StopwatchManager stopwatchManager;
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
@@ -82,6 +88,11 @@ public class PatientScoop {
     }
 
     return null;
+  }
+
+  @Async
+  private AsyncResult<Void> findPatient(PatientOfInterestModel poi) {
+    return new AsyncResult<>(null);
   }
 
   public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
@@ -190,7 +201,7 @@ public class PatientScoop {
             // store data
             //noinspection unused
             try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-              this.mongoService.savePatientData(dbPatientData);
+              this.tenantService.savePatientData(dbPatientData);
             }
           } else {
             logger.info("Not storing patient data bundle");

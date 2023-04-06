@@ -1,12 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.ReportingPeriodCalculator;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.QueryListConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
@@ -38,25 +35,31 @@ import java.util.stream.Collectors;
  * Reportability Response Controller
  */
 @RestController
-@RequestMapping("/api/poi")
+@RequestMapping("/api/{tenantId}/poi")
 public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
 
-  private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   @Autowired
   private USCoreConfig usCoreConfig;
+
   @Autowired
   private QueryConfig queryConfig;
+
   @Autowired
   private ApplicationContext applicationContext;
+
   @Autowired
   private QueryListConfig queryListConfig;
+
   @Autowired
   private MongoService mongoService;
 
+  @Autowired
+  private TenantService tenantService;
+
   @GetMapping
   public List<PatientList> searchPatientLists() {
-    return this.mongoService.getAllPatientLists()
+    return this.tenantService.getAllPatientLists()
             .stream().map(pl -> {
               pl.setPatients(null);
               return pl;
@@ -66,7 +69,7 @@ public class PatientIdentifierController extends BaseController {
 
   @GetMapping("/{id}")
   public PatientList getPatientList(@PathVariable String id) {
-    return this.mongoService.getPatientList(id);
+    return this.tenantService.getPatientList(id);
   }
 
   @PostMapping("/$query-list")
@@ -84,8 +87,8 @@ public class PatientIdentifierController extends BaseController {
   }
 
   private ListResource readList(String patientListId) throws ClassNotFoundException {
-    this.fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-    IGenericClient client = this.fhirContext.newRestfulGenericClient(
+    FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
             StringUtils.isNotEmpty(this.queryListConfig.getFhirServerBase()) ?
                     this.queryListConfig.getFhirServerBase() :
                     this.usCoreConfig.getFhirServerBase());
@@ -184,7 +187,7 @@ public class PatientIdentifierController extends BaseController {
 
   private void storePatientList(PatientList patientList) throws Exception {
     logger.info("Storing patient list");
-    PatientList found = this.mongoService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
+    PatientList found = this.tenantService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
 
     // Merge the list of patients found with the new list
     if (found != null) {
@@ -195,7 +198,7 @@ public class PatientIdentifierController extends BaseController {
       found.merge(patientList);
     }
 
-    this.mongoService.savePatientList(patientList);
+    this.tenantService.savePatientList(patientList);
   }
 
   private void receiveFHIR(ListResource listResource) throws Exception {

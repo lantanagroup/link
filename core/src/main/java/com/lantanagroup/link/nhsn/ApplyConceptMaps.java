@@ -4,7 +4,7 @@ import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.IReportGenerationDataEvent;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import lombok.Setter;
@@ -31,7 +31,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
 
   @Autowired
   @Setter
-  private MongoService mongoService;
+  private TenantService tenantService;
 
   @Autowired
   @Setter
@@ -46,7 +46,7 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     if (this.applyConceptMapConfig != null && this.applyConceptMapConfig.getConceptMaps() != null) {
       this.applyConceptMapConfig.getConceptMaps().stream().forEach(cm -> {
         try {
-          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = this.mongoService.getConceptMap(cm.getConceptMapId());
+          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = this.tenantService.getConceptMap(cm.getConceptMapId());
           this.conceptMaps.put(cm.getConceptMapId(), dbConceptMap.getResource());
         } catch (Exception ex) {
           logger.error(String.format("ConceptMap %s not found", cm.getConceptMapId()));

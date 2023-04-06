@@ -1,6 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -73,13 +73,13 @@ public class ApplyConceptMapsTest {
   public void testExecute() {
     Bundle patientBundle = getPatienBundle();
     ReportCriteria reportCriteria = mock(ReportCriteria.class);
-    MongoService mongoService = mock(MongoService.class);
+    TenantService tenantService = mock(TenantService.class);
 
     ReportContext context = new ReportContext();
     context.setMasterIdentifierValue("test");
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setMongoService(mongoService);
+    applyConceptMaps.setTenantService(tenantService);
 
     List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList<>();
     ApplyConceptMapConfig applyConceptMapConfig = new ApplyConceptMapConfig();
@@ -101,7 +101,7 @@ public class ApplyConceptMapsTest {
     context.setPatientsOfInterest(patientOfInterestModel);
 
     com.lantanagroup.link.db.model.ConceptMap conceptMap = getConceptMap();
-    when(mongoService.getConceptMap(any())).thenReturn(conceptMap);
+    when(tenantService.getConceptMap(any())).thenReturn(conceptMap);
 
     List<Coding> codes = new ArrayList<>();
     codes.add(getLocation().getType().get(0).getCoding().get(0));
@@ -117,13 +117,13 @@ public class ApplyConceptMapsTest {
 
   @Test
   public void testFindCodings() {
-    MongoService mongoService = mock(MongoService.class);
+    TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setMongoService(mongoService);
+    applyConceptMaps.setTenantService(tenantService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
-    when(mongoService.getConceptMap(any())).thenReturn(getConceptMap());
+    when(tenantService.getConceptMap(any())).thenReturn(getConceptMap());
     List<Coding> list = applyConceptMaps.filterCodingsByPathList((DomainResource)getPatienBundle().getEntry().get(0).getResource(), pathList);
 
     Assert.assertEquals(list.get(0).getCode(), "some-type");
@@ -131,9 +131,9 @@ public class ApplyConceptMapsTest {
 
   @Test
   public void testApplyTransformation() {
-    MongoService mongoService = mock(MongoService.class);
+    TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
-    applyConceptMaps.setMongoService(mongoService);
+    applyConceptMaps.setTenantService(tenantService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
