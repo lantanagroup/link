@@ -1,11 +1,7 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.PatientId;
-import com.lantanagroup.link.db.model.PatientList;
-import com.lantanagroup.link.db.model.PatientMeasureReport;
-import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.*;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
@@ -27,17 +23,20 @@ public class FhirBundlerTests {
 
   @Test
   public void testBundle() {
+    // Use legacy behavior of reifying/promoting line-level resources
+    TenantBundlingConfig bundlingConfig = new TenantBundlingConfig();
+    bundlingConfig.setIncludeCensuses(true);
+    bundlingConfig.setPromoteLineLevelResources(false);
+    bundlingConfig.setNpi("test-org-npi");
+
+    TenantConfig tenantConfig = new TenantConfig();
+    tenantConfig.setBundling(bundlingConfig);
+
     MongoService mongoService = mock(MongoService.class);
     TenantService tenantService = mock(TenantService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
-    // Use legacy behavior of reifying/promoting line-level resources
-    BundlerConfig config = new BundlerConfig();
-    config.setIncludeCensuses(true);
-    config.setPromoteLineLevelResources(false);
-    config.setOrgNpi("test-org-npi");
-
-    FhirBundler bundler = new FhirBundler(config, mongoService, tenantService);
+    FhirBundler bundler = new FhirBundler(mongoService, tenantService);
 
     Report report = new Report();
     report.getPatientLists().add("test-patient-list");
@@ -45,6 +44,8 @@ public class FhirBundlerTests {
     List<PatientList> patientLists = new ArrayList<>();
     patientLists.add(new PatientList());
     patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
+
+    when(tenantService.getConfig()).thenReturn(tenantConfig);
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);
 
     PatientMeasureReport pmr1 = new PatientMeasureReport();

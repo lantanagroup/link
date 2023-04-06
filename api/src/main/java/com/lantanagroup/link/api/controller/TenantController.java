@@ -1,7 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
-import com.lantanagroup.link.config.TenantConfig;
 import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.TenantConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;

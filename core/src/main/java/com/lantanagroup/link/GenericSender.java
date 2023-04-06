@@ -5,7 +5,6 @@ import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BearerTokenAuthInterceptor;
 import com.lantanagroup.link.auth.OAuth2Helper;
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.config.sender.FHIRSenderConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.Aggregate;
@@ -39,14 +38,11 @@ public abstract class GenericSender {
   private MongoService mongoService;
 
   @Autowired
-  private BundlerConfig bundlerConfig;
-
-  @Autowired
   private TenantService tenantService;
 
   public Bundle generateBundle(Report report) {
     logger.info("Building Bundle for MeasureReport to send...");
-    FhirBundler bundler = new FhirBundler(this.bundlerConfig, this.mongoService, this.tenantService, this.eventService);
+    FhirBundler bundler = new FhirBundler(this.mongoService, this.tenantService, this.eventService);
     List<Aggregate> aggregates = this.tenantService.getAggregates(report.getAggregates());
     List<MeasureReport> aggregateReports = aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
     Bundle bundle = bundler.generateBundle(aggregateReports, report);

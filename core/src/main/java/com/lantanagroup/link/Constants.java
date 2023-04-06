@@ -21,4 +21,5 @@ public class Constants {
   public static final String ConceptMappingExtension = "https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept";
   public static final String ExtensionCriteriaReference = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference";
   public static final String OriginalEncounterStatus = "https://www.lantanagroup.com/fhir/StructureDefinition/nhsn-encounter-original-status";
+  public static final String BundlingFullUrlFormat = "http://lantanagroup.com/fhir/nhsn-measures/%s";
 }

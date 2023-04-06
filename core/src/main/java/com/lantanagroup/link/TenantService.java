@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.TenantConfig;
 import com.lantanagroup.link.db.model.*;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;

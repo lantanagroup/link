@@ -1,47 +1,64 @@
-package com.lantanagroup.link.config;
+package com.lantanagroup.link.db.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.r4.model.Bundle;
 
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class TenantConfig {
-  private String id;
+public class TenantBundlingConfig {
+  /**
+   * The type of submission bundle to create.
+   */
+  private Bundle.BundleType bundleType = Bundle.BundleType.COLLECTION;
 
-  private String name;
+  /**
+   * Whether to include censuses in the submission bundle.
+   */
+  private boolean includeCensuses = true;
 
-  private String database;
+  /**
+   * Whether to merge multiple censuses into a single list.
+   */
+  private boolean mergeCensuses = true;
+
+  /**
+   * Whether to include individual measure reports in the submission bundle.
+   */
+  private boolean includeIndividualMeasureReports = true;
+
+  /**
+   * Whether to move contained line-level resources to the top level of the submission bundle.
+   */
+  private boolean promoteLineLevelResources = false;
 
   /**
    * The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be
    * used in the submission Bundle's Organization.identifier field
    */
-  private String orgNpi;
+  private String npi;
 
   /**
    * The name of the organization/facility the system is bundling/submitting for, to be used in the submission
    * Bundle's Organization.name field
    */
-  private String orgName;
+  private String name;
 
   /**
    * The phone of the organization/facility the system is bundling/submitting for, to be used in the submission
    * Bundle's Organization.name field
    */
-  private String orgPhone;
+  private String phone;
 
   /**
    * The email of the organization/facility the system is bundling/submitting for, to be used in the submission
    * Bundle's Organization.name field
    */
-  private String orgEmail;
+  private String email;
 
   /**
    * The address of the organization/facility the system is bundling/submitting for, to be used in the submission
    * Bundle's Organization.name field
    */
-  private BundlerConfig.Address orgAddress;
+  private TenantAddressConfig address;
 }

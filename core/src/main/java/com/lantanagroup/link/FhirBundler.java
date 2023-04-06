@@ -1,10 +1,10 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.bundler.BundlerConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.TenantBundlingConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -21,31 +21,42 @@ public class FhirBundler {
   private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
-  private final BundlerConfig config;
   private final MongoService mongoService;
   private final EventService eventService;
   private final TenantService tenantService;
   private Organization org;
 
-  public FhirBundler(BundlerConfig config, MongoService mongoService, TenantService tenantService, EventService eventService) {
-    this.config = config;
+  public FhirBundler(MongoService mongoService, TenantService tenantService, EventService eventService) {
     this.mongoService = mongoService;
     this.tenantService = tenantService;
     this.eventService = eventService;
-    this.org = this.createOrganization();
   }
 
-  public FhirBundler(BundlerConfig config, MongoService mongoService, TenantService tenantService) {
-    this(config, mongoService, tenantService, null);
+  public FhirBundler(MongoService mongoService, TenantService tenantService) {
+    this(mongoService, tenantService, null);
+  }
+
+  private TenantBundlingConfig getBundlingConfig() {
+    return this.tenantService.getConfig().getBundling() != null ?
+            this.tenantService.getConfig().getBundling() :
+            new TenantBundlingConfig();
+  }
+
+  private Organization getOrg() {
+    if (this.org == null) {
+      this.org = this.createOrganization();
+    }
+
+    return this.org;
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
     Bundle bundle = this.createBundle();
-    bundle.addEntry().setResource(this.org);
+    bundle.addEntry().setResource(this.getOrg());
 
     triggerEvent(EventTypes.BeforeBundling, bundle);
 
-    if (this.config.isIncludeCensuses()) {
+    if (this.getBundlingConfig().isIncludeCensuses()) {
       this.addCensuses(bundle, report);
     }
 
@@ -63,8 +74,8 @@ public class FhirBundler {
     Organization org = new Organization();
     org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
 
-    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
-      org.setId("" + this.config.getOrgNpi().hashCode());
+    if (!StringUtils.isEmpty(this.getBundlingConfig().getNpi())) {
+      org.setId("" + this.getBundlingConfig().getNpi().hashCode());
     } else {
       org.setId(UUID.randomUUID().toString());
     }
@@ -75,30 +86,30 @@ public class FhirBundler {
             .setCode("prov")
             .setDisplay("Healthcare Provider");
 
-    if (!StringUtils.isEmpty(this.config.getOrgName())) {
-      org.setName(this.config.getOrgName());
+    if (!StringUtils.isEmpty(this.getBundlingConfig().getName())) {
+      org.setName(this.getBundlingConfig().getName());
     }
 
-    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
+    if (!StringUtils.isEmpty(this.getBundlingConfig().getNpi())) {
       org.addIdentifier()
               .setSystem(Constants.NationalProviderIdentifierSystemUrl)
-              .setValue(this.config.getOrgNpi());
+              .setValue(this.getBundlingConfig().getNpi());
     }
 
-    if (!StringUtils.isEmpty(this.config.getOrgPhone())) {
+    if (!StringUtils.isEmpty(this.getBundlingConfig().getPhone())) {
       org.addTelecom()
               .setSystem(ContactPoint.ContactPointSystem.PHONE)
-              .setValue(this.config.getOrgPhone());
+              .setValue(this.getBundlingConfig().getPhone());
     }
 
-    if (!StringUtils.isEmpty(this.config.getOrgEmail())) {
+    if (!StringUtils.isEmpty(this.getBundlingConfig().getEmail())) {
       org.addTelecom()
               .setSystem(ContactPoint.ContactPointSystem.EMAIL)
-              .setValue(this.config.getOrgEmail());
+              .setValue(this.getBundlingConfig().getEmail());
     }
 
-    if (this.config.getOrgAddress() != null) {
-      org.addAddress(this.config.getOrgAddress().getFHIRAddress());
+    if (this.getBundlingConfig().getAddress() != null) {
+      org.addAddress(this.getBundlingConfig().getAddress().getFHIRAddress());
     }
 
     return org;
@@ -112,7 +123,7 @@ public class FhirBundler {
     bundle.getIdentifier()
             .setSystem(Constants.IdentifierSystem)
             .setValue("urn:uuid:" + UUID.randomUUID().toString());
-    bundle.setType(config.getBundleType());
+    bundle.setType(this.getBundlingConfig().getBundleType());
     bundle.setTimestamp(new Date());
     return bundle;
   }
@@ -190,9 +201,9 @@ public class FhirBundler {
       if (resource instanceof DomainResource) {
         ((DomainResource) resource).setText(null);
       }
-      entry.setFullUrl(String.format("http://lantanagroup.com/fhir/nhsn-measures/%s", resourceId));
-      if (config.getBundleType() == Bundle.BundleType.TRANSACTION
-              || config.getBundleType() == Bundle.BundleType.BATCH) {
+      entry.setFullUrl(String.format(Constants.BundlingFullUrlFormat, resourceId));
+      if (this.getBundlingConfig().getBundleType() == Bundle.BundleType.TRANSACTION
+              || this.getBundlingConfig().getBundleType() == Bundle.BundleType.BATCH) {
         entry.getRequest()
                 .setMethod(Bundle.HTTPVerb.PUT)
                 .setUrl(resourceId);
@@ -242,7 +253,7 @@ public class FhirBundler {
       return;
     }
 
-    if (patientLists.size() > 1 && config.isMergeCensuses()) {
+    if (patientLists.size() > 1 && this.getBundlingConfig().isMergeCensuses()) {
       logger.debug("Merging censuses");
       ListResource mergedCensus = patientLists.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
@@ -268,7 +279,7 @@ public class FhirBundler {
 
     this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
 
-    if (!config.isIncludeIndividualMeasureReports()) {
+    if (!this.getBundlingConfig().isIncludeIndividualMeasureReports()) {
       return;
     }
 
@@ -297,7 +308,7 @@ public class FhirBundler {
     logger.debug("Adding aggregate measure report: {}", aggregateMeasureReport.getId());
 
     // Set the reporter to the facility/org
-    aggregateMeasureReport.setReporter(new Reference().setReference("Organization/" + this.org.getIdElement().getIdPart()));
+    aggregateMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));
 
     bundle.addEntry().setResource(aggregateMeasureReport);
   }
@@ -306,7 +317,7 @@ public class FhirBundler {
     logger.debug("Adding individual measure report: {}", individualMeasureReport.getId());
 
     // Set the reporter to the facility/org
-    individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.org.getIdElement().getIdPart()));
+    individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));
     individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
 
     bundle.addEntry().setResource(individualMeasureReport);
@@ -319,7 +330,7 @@ public class FhirBundler {
       IIdType resourceId = lineLevelResource.getKey();
 
       // Promote contained line-level resources
-      if (resourceId.isLocal() && config.isPromoteLineLevelResources()) {
+      if (resourceId.isLocal() && this.getBundlingConfig().isPromoteLineLevelResources()) {
         Resource resource = individualMeasureReport.getContained().stream()
                 .filter(_resource -> _resource.getIdElement().equals(resourceId))
                 .findFirst()
