@@ -8,7 +8,6 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.db.MongoService;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
@@ -17,6 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
+/**
+ * Automatically detected when the Spring Boot application starts up. Primary purpose is to validate configurations.
+ */
 public class ApiInit {
   private static final Logger logger = LoggerFactory.getLogger(ApiInit.class);
 
@@ -28,9 +30,6 @@ public class ApiInit {
 
   @Autowired
   private USCoreConfig usCoreConfig;
-
-  @Autowired
-  private MongoService mongoService;
 
   private boolean checkPrerequisites() {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());

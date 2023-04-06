@@ -13,6 +13,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+/**
+ * Automatically invoked by spring boot during application start up. Responsible for reading the config files and
+ * registering scheduled tasks with the TaskScheduler.
+ */
 @Component
 public class Scheduler {
   private static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
@@ -51,13 +55,4 @@ public class Scheduler {
       }
     }
   }
-
-  /*
-  @Scheduled(cron = "#{scheduleConfig.acquireCensusCron}")
-  @Async
-  public void scheduleAcquireCensus() {
-    logger.info("Starting scheduled task for acquiring census");
-  }
-
-   */
 }

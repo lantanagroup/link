@@ -36,8 +36,9 @@ import java.util.Map;
 import java.util.TimeZone;
 
 /**
- * Main REST API for NHSNLink. Entry point for SpringBoot. Initializes as a SpringBootApplication, which
- * hosts controllers defined within the project.
+ * Spring Boot application entry point for Link. Initializes as a SpringBootApplication, which
+ * hosts controllers, and services defined within the project. ApiInit class is automatically detected and
+ * invoked when the spring boot application starts up.
  */
 @SpringBootApplication(scanBasePackages = {
         "com.lantanagroup.link",
@@ -117,6 +118,15 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
   }
 
+  /**
+   * TenantService bean constructs a new instance for each REST request. Detects the id of the tenant based on a
+   * PathVariable ("{tenantId}") being present in the URL path. If path doesn't have tenantId, no TenantService can
+   * be constructed. If a tenantId exists in the path but isn't found in the database, exception is thrown.
+   *
+   * @param request
+   * @param mongoService
+   * @return
+   */
   @Bean
   @Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
   public TenantService tenantService(HttpServletRequest request, MongoService mongoService) {
@@ -137,6 +147,11 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     return new TenantService(database, tenantConfig);
   }
 
+  /**
+   * This bean is critical for TenantService to be able to auto-wire in sub-threads of controller requests
+   *
+   * @return
+   */
   @Bean
   public DispatcherServlet dispatcherServlet() {
     DispatcherServlet servlet = new DispatcherServlet();
