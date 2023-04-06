@@ -1,8 +1,10 @@
 package com.lantanagroup.link.api.scheduling;
 
 import com.lantanagroup.link.ReportingPeriodCalculator;
+import com.lantanagroup.link.ReportingPeriodMethods;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.api.controller.ReportController;
-import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -26,6 +28,12 @@ public class GenerateAndSubmitReportTask implements Runnable {
   @Setter
   private Boolean regenerateIfExists = false;
 
+  @Setter
+  private String tenantId;
+
+  @Autowired
+  private MongoService mongoService;
+
   @Autowired
   private ReportController reportController;
 
@@ -45,20 +53,22 @@ public class GenerateAndSubmitReportTask implements Runnable {
     ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
     Report report;
 
+    TenantService tenantService = TenantService.create(this.mongoService, this.tenantId);
+
     try {
       GenerateRequest generateRequest = new GenerateRequest();
       generateRequest.setBundleIds(this.measureIds.toArray(new String[0]));
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
-      report = this.reportController.generateReport(null, null, generateRequest);
+      report = this.reportController.generateReport(null, null, this.tenantId, generateRequest);
     } catch (Exception e) {
       logger.error("Error generating report", e);
       return;
     }
 
     try {
-      this.reportController.send(null, report.getId(), null);
+      this.reportController.send(null, report.getId(), this.tenantId, null);
     } catch (Exception ex) {
       logger.error("Error submitting report", ex);
     }

@@ -41,8 +41,10 @@ public class PatientData {
   private EventService eventService;
   private HashMap<String, Resource> otherResources;
   private StopwatchManager stopwatchManager;
+  private TenantService tenantService;
 
-  public PatientData(StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(TenantService tenantService, StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+    this.tenantService = tenantService;
     this.stopwatchManager = stopwatchManager;
     this.otherResources = otherResources;
     this.eventService = eventService;
@@ -147,7 +149,7 @@ public class PatientData {
     return List.of(query);
   }
 
-  private Bundle rawSearch(String query) {
+  private Bundle rawSearch(TenantService tenantService, String query) {
     String resourceType = query.replaceAll("\\?.+$", "");
 
     int interceptors = 0;
@@ -182,7 +184,7 @@ public class PatientData {
       logger.info(query + " Found " + retBundle.getTotal() + " resources for query " + query);
 
       if (this.eventService != null) {
-        this.eventService.triggerDataEvent(EventTypes.AfterPatientResourceQuery, retBundle, this.criteria, this.context, null);
+        this.eventService.triggerDataEvent(tenantService, EventTypes.AfterPatientResourceQuery, retBundle, this.criteria, this.context, null);
       }
 
       return retBundle;
@@ -217,7 +219,7 @@ public class PatientData {
     }
 
     List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
-    Bundle encounterBundle = this.rawSearch(encounterQuery.get(0));
+    Bundle encounterBundle = this.rawSearch(this.tenantService, encounterQuery.get(0));
     this.bundle.getEntry().addAll(encounterBundle.getEntry());
 
     // Create references to all the encounters found
@@ -258,7 +260,7 @@ public class PatientData {
       if (!queryString.isEmpty()) {
         try {
           queryString.forEach(query -> {
-            Bundle bundle = this.rawSearch(query);
+            Bundle bundle = this.rawSearch(this.tenantService, query);
             if (bundle != null) {
               this.bundle.getEntry().addAll(bundle.getEntry());
             }

@@ -42,9 +42,6 @@ import java.util.stream.Collectors;
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
 
-  @Autowired
-  private TenantService tenantService;
-
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
@@ -119,7 +116,7 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(List<String> resourceTypes, ReportCriteria criteria, ReportContext context) throws Exception {
+  private void queryAndStorePatientData(TenantService tenantService, List<String> resourceTypes, ReportCriteria criteria, ReportContext context) throws Exception {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
     List<String> measureIds = context.getMeasureContexts().stream()
             .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
@@ -129,19 +126,19 @@ public class ReportController extends BaseController {
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(criteria, context, resourceTypes, measureIds);
+      query.execute(tenantService, criteria, context, resourceTypes, measureIds);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
     }
   }
 
-  private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+  private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     List<PatientOfInterestModel> patientOfInterestModelList;
 
     Class<?> patientIdResolverClass = Class.forName(this.config.getPatientIdResolver());
     IPatientIdProvider provider = (IPatientIdProvider) this.context.getBean(patientIdResolverClass);
-    patientOfInterestModelList = provider.getPatientsOfInterest(criteria, context);
+    patientOfInterestModelList = provider.getPatientsOfInterest(tenantService, criteria, context);
 
     return patientOfInterestModelList;
   }
@@ -150,13 +147,16 @@ public class ReportController extends BaseController {
   public Report generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
+          @PathVariable String tenantId,
           @RequestBody GenerateRequest input)
           throws Exception {
 
     if (input.getBundleIds().length < 1) {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
-    return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
+
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    return generateResponse(tenantService, user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
   /**
@@ -172,6 +172,7 @@ public class ReportController extends BaseController {
           @RequestParam("multiMeasureBundleId") String multiMeasureBundleId,
           @RequestParam("periodStart") String periodStart,
           @RequestParam("periodEnd") String periodEnd,
+          @PathVariable String tenantId,
           boolean regenerate)
           throws Exception {
     String[] singleMeasureBundleIds = new String[]{};
@@ -190,14 +191,16 @@ public class ReportController extends BaseController {
       throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
     }
 
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+
     singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
-    return generateResponse(user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
+    return generateResponse(tenantService, user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
     if (reportingPlanService.isPresent()) {
       logger.info("Checking MRP");
       Date date = Helper.parseFhirDate(periodStart);
@@ -222,7 +225,7 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
-    Report existingReport = this.tenantService.getReport(masterIdentifierValue);
+    Report existingReport = tenantService.getReport(masterIdentifierValue);
 
     // Search the reference document by measure criteria and reporting period
     if (existingReport != null && !regenerate) {
@@ -245,7 +248,7 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
-    this.getPatientIdentifiers(criteria, reportContext);
+    this.getPatientIdentifiers(tenantService, criteria, reportContext);
 
     if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
       String msg = "A census for the specified criteria was not found.";
@@ -276,7 +279,7 @@ public class ReportController extends BaseController {
         }
       }
     } else {
-      this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+      this.queryAndStorePatientData(tenantService, new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
     }
 
     this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
@@ -300,7 +303,7 @@ public class ReportController extends BaseController {
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.mongoService, this.tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+      ReportGenerator generator = new ReportGenerator(this.mongoService, tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
@@ -309,9 +312,9 @@ public class ReportController extends BaseController {
       this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
     }
 
-    this.tenantService.saveReport(report);
+    tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, this.tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+    this.mongoService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
     logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
@@ -331,42 +334,47 @@ public class ReportController extends BaseController {
   public void send(
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable String reportId,
+          @PathVariable String tenantId,
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new IllegalStateException("Not configured for sending");
 
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
-    Report report = this.tenantService.getReport(reportId);
+    Report report = tenantService.getReport(reportId);
 
-    sender.send(report, request, user);
+    sender.send(tenantService, report, request, user);
 
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
 
-    this.tenantService.saveReport(report);
+    tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, this.tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+    this.mongoService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
   }
 
   @GetMapping("/{reportId}/aggregate")
-  public List<MeasureReport> getAggregates(@PathVariable String reportId) {
-    Report report = this.tenantService.getReport(reportId);
-    List<Aggregate> aggregates = this.tenantService.getAggregates(report.getAggregates());
+  public List<MeasureReport> getAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    Report report = tenantService.getReport(reportId);
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
     return aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
   }
 
   @GetMapping("/{reportId}/patientList")
-  public List<PatientList> getReportPatientLists(@PathVariable String reportId) {
-    Report report = this.tenantService.getReport(reportId);
-    return this.tenantService.getPatientLists(report.getPatientLists());
+  public List<PatientList> getReportPatientLists(@PathVariable String reportId, @PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    Report report = tenantService.getReport(reportId);
+    return tenantService.getPatientLists(report.getPatientLists());
   }
 
   @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
-  public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId) {
-    PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(patientMeasureReportId);
+  public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId, @PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    PatientMeasureReport patientMeasureReport = tenantService.getPatientMeasureReport(patientMeasureReportId);
 
     if (patientMeasureReport == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);

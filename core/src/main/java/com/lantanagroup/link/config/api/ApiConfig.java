@@ -117,7 +117,6 @@ public class ApiConfig {
   @NotNull
   private String sender;
 
-
   /**
    * <strong>api.patient-id-resolver</strong><br>The class used to determine the list of patient ids that should be queried for
    */

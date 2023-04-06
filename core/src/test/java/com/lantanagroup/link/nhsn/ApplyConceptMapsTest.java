@@ -79,7 +79,6 @@ public class ApplyConceptMapsTest {
     context.setMasterIdentifierValue("test");
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setTenantService(tenantService);
 
     List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList<>();
     ApplyConceptMapConfig applyConceptMapConfig = new ApplyConceptMapConfig();
@@ -107,7 +106,7 @@ public class ApplyConceptMapsTest {
     codes.add(getLocation().getType().get(0).getCoding().get(0));
     Mockito.doReturn(codes).when(applyConceptMaps).filterCodingsByPathList(any(), any());
 
-    applyConceptMaps.execute(patientBundle, reportCriteria, context, new ReportContext.MeasureContext());
+    applyConceptMaps.execute(tenantService, patientBundle, reportCriteria, context, new ReportContext.MeasureContext());
 
     Coding changedCoding = codes.get(0);
     Assert.assertEquals(changedCoding.getExtension().size(), 1);
@@ -119,7 +118,6 @@ public class ApplyConceptMapsTest {
   public void testFindCodings() {
     TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
-    applyConceptMaps.setTenantService(tenantService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");
@@ -133,7 +131,6 @@ public class ApplyConceptMapsTest {
   public void testApplyTransformation() {
     TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
-    applyConceptMaps.setTenantService(tenantService);
 
     List<String> pathList = new ArrayList<>();
     pathList.add("Location.type");

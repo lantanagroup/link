@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.TenantConfig;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/tenant")
 public class TenantController extends BaseController {
+  @Autowired
+  private Scheduler scheduler;
+
   @Autowired
   private MongoService mongoService;
 
@@ -47,6 +51,7 @@ public class TenantController extends BaseController {
 
     tenantConfig.setId(tenantId);
     this.mongoService.saveTenantConfig(tenantConfig);
+    this.scheduler.reset(tenantId);
   }
 
   @PostMapping
@@ -60,6 +65,7 @@ public class TenantController extends BaseController {
     }
 
     this.mongoService.saveTenantConfig(tenantConfig);
+    this.scheduler.reset(tenantConfig.getId());
 
     return tenantConfig;
   }
@@ -69,5 +75,7 @@ public class TenantController extends BaseController {
     if (this.mongoService.deleteTenantConfig(tenantId) == 0) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
+
+    this.scheduler.reset(tenantId);
   }
 }

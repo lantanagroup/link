@@ -5,14 +5,10 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.TenantConfig;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
-import com.mongodb.client.MongoDatabase;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -22,17 +18,9 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.DispatcherServlet;
-import org.springframework.web.servlet.HandlerMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -116,46 +104,5 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     }
     logger.info("Initializing MRP service");
     return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
-  }
-
-  /**
-   * TenantService bean constructs a new instance for each REST request. Detects the id of the tenant based on a
-   * PathVariable ("{tenantId}") being present in the URL path. If path doesn't have tenantId, no TenantService can
-   * be constructed. If a tenantId exists in the path but isn't found in the database, exception is thrown.
-   *
-   * @param request
-   * @param mongoService
-   * @return
-   */
-  @Bean
-  @Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
-  public TenantService tenantService(HttpServletRequest request, MongoService mongoService) {
-    Map map = (Map) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-    String tenantId = (String) map.get("tenantId");
-
-    if (StringUtils.isEmpty(tenantId)) {
-      return null;
-    }
-
-    TenantConfig tenantConfig = this.mongoService.getTenantConfig(tenantId);
-
-    if (tenantConfig == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-    }
-
-    MongoDatabase database = this.mongoService.getClient().getDatabase(tenantConfig.getDatabase());
-    return new TenantService(database, tenantConfig);
-  }
-
-  /**
-   * This bean is critical for TenantService to be able to auto-wire in sub-threads of controller requests
-   *
-   * @return
-   */
-  @Bean
-  public DispatcherServlet dispatcherServlet() {
-    DispatcherServlet servlet = new DispatcherServlet();
-    servlet.setThreadContextInheritable(true);
-    return servlet;
   }
 }

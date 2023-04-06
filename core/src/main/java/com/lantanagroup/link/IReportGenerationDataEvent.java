@@ -10,8 +10,8 @@ import java.util.List;
 @SuppressWarnings("unused")
 public interface IReportGenerationDataEvent {
 
-  void execute(Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext);
+  void execute(TenantService tenantService, Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext);
 
-  void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext);
+  void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext);
 
 }

@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 
 import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.ConceptMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,10 +16,10 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/{tenantId}/conceptMap")
 public class ConceptMapController extends BaseController {
   @Autowired
-  private TenantService tenantService;
+  private MongoService mongoService;
 
   @PutMapping
-  public void createOrUpdateConceptMap(@RequestBody org.hl7.fhir.r4.model.ConceptMap conceptMap) {
+  public void createOrUpdateConceptMap(@RequestBody org.hl7.fhir.r4.model.ConceptMap conceptMap, @PathVariable String tenantId) {
     if (!conceptMap.hasId()) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ConceptMap must have an id");
     }
@@ -28,12 +29,14 @@ public class ConceptMapController extends BaseController {
     dbConceptMap.setName(conceptMap.getName());
     dbConceptMap.setResource(conceptMap);
 
-    this.tenantService.saveConceptMap(dbConceptMap);
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    tenantService.saveConceptMap(dbConceptMap);
   }
 
   @GetMapping
-  public List<org.hl7.fhir.r4.model.ConceptMap> searchConceptMap() {
-    return this.tenantService.getAllConceptMaps()
+  public List<org.hl7.fhir.r4.model.ConceptMap> searchConceptMap(@PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    return tenantService.getAllConceptMaps()
             .stream()
             .map(dbConceptMap -> dbConceptMap.getResource())
             .collect(Collectors.toList());

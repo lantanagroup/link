@@ -2,6 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -14,7 +15,7 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
 
   @Override
-  public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     logger.info("Called: " + EncounterStatusTransformer.class.getName());
     for (Bundle.BundleEntryComponent patientResource : bundle.getEntry()) {
       if (patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
@@ -37,7 +38,7 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
   }
 
   @Override
-  public void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
 
   }
 }

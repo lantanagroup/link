@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -15,7 +16,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
   private static final Logger logger = LoggerFactory.getLogger(CopyLocationIdentifierToType.class);
 
   @Override
-  public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     //This is a specific transform to move data from an extension to the type of a Location resource for UMich
     //This must happen BEFORE ApplyConceptMaps as an event
     logger.info("Called: " + CopyLocationIdentifierToType.class.getName());
@@ -50,7 +51,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
   }
 
   @Override
-  public void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) throws RuntimeException {
+  public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) throws RuntimeException {
     throw new RuntimeException("Not yet implemented");
   }
 }

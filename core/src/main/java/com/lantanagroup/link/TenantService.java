@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.*;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
@@ -8,6 +9,7 @@ import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -36,9 +38,24 @@ public class TenantService {
   public static final String AGGREGATE_COLLECTION = "aggregate";
   public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
 
-  public TenantService(MongoDatabase database, TenantConfig config) {
+  protected TenantService(MongoDatabase database, TenantConfig config) {
     this.database = database;
     this.config = config;
+  }
+
+  public static TenantService create(MongoService mongoService, String tenantId) {
+    if (StringUtils.isEmpty(tenantId)) {
+      return null;
+    }
+
+    TenantConfig tenantConfig = mongoService.getTenantConfig(tenantId);
+
+    if (tenantConfig == null) {
+      logger.error("Tenant {} not found", tenantId);
+      return null;
+    }
+
+    return new TenantService(mongoService.getClient().getDatabase(tenantConfig.getDatabase()), tenantConfig);
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {

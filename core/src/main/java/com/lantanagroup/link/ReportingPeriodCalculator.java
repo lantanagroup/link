@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import lombok.Setter;
 
 import java.text.SimpleDateFormat;

@@ -9,7 +9,6 @@ import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -21,18 +20,15 @@ import java.util.stream.Collectors;
 
 @Component
 public class StoredListProvider implements IPatientIdProvider {
-  @Autowired
-  private TenantService tenantService;
-
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context) {
+  public List<PatientOfInterestModel> getPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context) {
     context.getPatientLists().clear();
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      PatientList found = this.tenantService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
+      PatientList found = tenantService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
 
       if (found == null) {
         logger.warn("No patient census lists found");

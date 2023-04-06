@@ -31,10 +31,6 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
 
   @Autowired
   @Setter
-  private TenantService tenantService;
-
-  @Autowired
-  @Setter
   private ApplyConceptMapsConfig applyConceptMapConfig;
 
   public ApplyConceptMaps() {
@@ -42,11 +38,11 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     validationSupport.fetchAllStructureDefinitions(FhirContextProvider.getFhirContext());
   }
 
-  private Map<String, ConceptMap> getConceptMaps() {
+  private Map<String, ConceptMap> getConceptMaps(TenantService tenantService) {
     if (this.applyConceptMapConfig != null && this.applyConceptMapConfig.getConceptMaps() != null) {
       this.applyConceptMapConfig.getConceptMaps().stream().forEach(cm -> {
         try {
-          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = this.tenantService.getConceptMap(cm.getConceptMapId());
+          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = tenantService.getConceptMap(cm.getConceptMapId());
           this.conceptMaps.put(cm.getConceptMapId(), dbConceptMap.getResource());
         } catch (Exception ex) {
           logger.error(String.format("ConceptMap %s not found", cm.getConceptMapId()));
@@ -122,15 +118,15 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     return changedCodes;
   }
 
-  public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     List<DomainResource> resourceList = BundleUtil.toListOfResourcesOfType(FhirContextProvider.getFhirContext(), bundle, DomainResource.class);
-    this.execute(resourceList, criteria, context, measureContext);
+    this.execute(tenantService, resourceList, criteria, context, measureContext);
   }
 
-  public void execute(List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     logger.info("Called: " + ApplyConceptMaps.class.getName());
     if (resourceList.size() > 0) {
-      Map<String, ConceptMap> conceptMaps = this.getConceptMaps();
+      Map<String, ConceptMap> conceptMaps = this.getConceptMaps(tenantService);
       if (!conceptMaps.isEmpty()) {
         applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
           ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());

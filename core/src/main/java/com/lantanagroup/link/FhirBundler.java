@@ -54,7 +54,7 @@ public class FhirBundler {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
 
-    triggerEvent(EventTypes.BeforeBundling, bundle);
+    triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
     if (this.getBundlingConfig().isIncludeCensuses()) {
       this.addCensuses(bundle, report);
@@ -64,7 +64,7 @@ public class FhirBundler {
       this.addMeasureReports(bundle, aggregateMeasureReport);
     }
 
-    triggerEvent(EventTypes.AfterBundling, bundle);
+    triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
 
     cleanEntries(bundle);
     return bundle;
@@ -128,12 +128,12 @@ public class FhirBundler {
     return bundle;
   }
 
-  private void triggerEvent(EventTypes eventType, Bundle bundle) {
+  private void triggerEvent(TenantService tenantService, EventTypes eventType, Bundle bundle) {
     if (eventService == null) {
       return;
     }
     try {
-      eventService.triggerDataEvent(eventType, bundle, null, null, null);
+      eventService.triggerDataEvent(tenantService, eventType, bundle, null, null, null);
     } catch (Exception e) {
       logger.error(String.format("Error occurred in %s handler", eventType), e);
     }

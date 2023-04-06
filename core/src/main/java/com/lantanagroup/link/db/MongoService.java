@@ -122,6 +122,15 @@ public class MongoService {
             .first();
   }
 
+  public List<TenantConfig> getTenantSchedules() {
+    List<TenantConfig> tenantConfigs = new ArrayList<>();
+    this.getTenantConfigCollection()
+            .find()
+            .projection(include("_id", "scheduling"))
+            .into(tenantConfigs);
+    return tenantConfigs;
+  }
+
   public List<TenantConfig> searchTenantConfigs() {
     List<TenantConfig> tenantConfigs = new ArrayList<>();
     this.getTenantConfigCollection()

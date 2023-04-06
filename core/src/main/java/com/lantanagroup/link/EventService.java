@@ -58,7 +58,7 @@ public class EventService {
     triggerEvent(eventType, criteria, context, null);
   }
 
-  public void triggerDataEvent(EventTypes eventType, Bundle bundle, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
+  public void triggerDataEvent(TenantService tenantService, EventTypes eventType, Bundle bundle, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
@@ -66,7 +66,7 @@ public class EventService {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
-          ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+          ((IReportGenerationDataEvent) bean).execute(tenantService, bundle, criteria, reportContext, measureContext);
         }
       } else {
         logger.warn(bean.toString() + " does not implement the IReportGenerationDataEvent interface");

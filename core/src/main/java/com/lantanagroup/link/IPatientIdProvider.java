@@ -7,5 +7,5 @@ import com.lantanagroup.link.model.ReportCriteria;
 import java.util.List;
 
 public interface IPatientIdProvider {
-  List<PatientOfInterestModel> getPatientsOfInterest(ReportCriteria criteria, ReportContext context);
+  List<PatientOfInterestModel> getPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context);
 }

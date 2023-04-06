@@ -52,9 +52,6 @@ public class DataController extends BaseController {
   @Autowired
   private MongoService mongoService;
 
-  @Autowired
-  private TenantService tenantService;
-
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
@@ -96,13 +93,14 @@ public class DataController extends BaseController {
    *                                        has been reached.
    */
   @DeleteMapping(value = "/expunge")
-  public Integer expungeData() {
+  public Integer expungeData(@PathVariable String tenantId) {
     if (this.dataGovernanceConfig == null) {
       logger.error("Data governance not configured");
       return 0;
     }
 
-    List<PatientData> allPatientData = this.tenantService.getAllPatientData();
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    List<PatientData> allPatientData = tenantService.getAllPatientData();
     List<String> patientDataToDelete = allPatientData.stream().filter(pd -> {
               try {
                 return shouldDelete(this.dataGovernanceConfig.getPatientDataRetention(), pd.getRetrieved());
@@ -114,7 +112,7 @@ public class DataController extends BaseController {
             .collect(Collectors.toList());
 
     if (patientDataToDelete.size() > 0) {
-      this.tenantService.deletePatientData(patientDataToDelete);
+      tenantService.deletePatientData(patientDataToDelete);
     }
 
     return patientDataToDelete.size();
@@ -124,8 +122,9 @@ public class DataController extends BaseController {
    * @return
    */
   @GetMapping("/$test")
-  public TestResponse test(@RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
+  public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
     TestResponse testResponse = new TestResponse();
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
 
     try {
       // Get the data
@@ -149,7 +148,7 @@ public class DataController extends BaseController {
 
       ReportCriteria criteria = new ReportCriteria(List.of(measureId), periodStart, periodEnd);
 
-      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
+      patientScoop.loadPatientData(tenantService, criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
       String stats = patientScoop.getStopwatchManager().getStatistics();
       logger.info(stats);
     } catch (Exception ex) {

@@ -2,6 +2,7 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
@@ -23,6 +24,7 @@ import static org.mockito.Mockito.*;
 public class QueryTests {
   @Test
   public void queryTest() {
+    TenantService tenantService = mock(TenantService.class);
     IGenericClient fhirQueryClient = mock(IGenericClient.class);
 
     // Configuration for which queries should be called for each patient
@@ -247,7 +249,7 @@ public class QueryTests {
     context.setMasterIdentifierValue("report1");
     theQuery.setApplicationContext(applicationContext);
     theQuery.setFhirQueryClient(fhirQueryClient);
-    theQuery.execute(criteria, context, queries, List.of(measureId));
+    theQuery.execute(tenantService, criteria, context, queries, List.of(measureId));
 
     // Make sure the correct queries to the FHIR server was performed
     verify(untypedQuery, times(1)).byUrl("Patient?identifier=patientIdentifier1");

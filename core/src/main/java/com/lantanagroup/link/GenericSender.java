@@ -37,13 +37,10 @@ public abstract class GenericSender {
   @Autowired
   private MongoService mongoService;
 
-  @Autowired
-  private TenantService tenantService;
-
-  public Bundle generateBundle(Report report) {
+  public Bundle generateBundle(TenantService tenantService, Report report) {
     logger.info("Building Bundle for MeasureReport to send...");
-    FhirBundler bundler = new FhirBundler(this.mongoService, this.tenantService, this.eventService);
-    List<Aggregate> aggregates = this.tenantService.getAggregates(report.getAggregates());
+    FhirBundler bundler = new FhirBundler(this.mongoService, tenantService, this.eventService);
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
     List<MeasureReport> aggregateReports = aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
     Bundle bundle = bundler.generateBundle(aggregateReports, report);
     logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));

@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -124,7 +125,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
 
   @SuppressWarnings("unused")
   @Override
-  public void execute(Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     if (bundle == null || !bundle.hasEntry()) {
       logger.trace("Bundle data is null or empty");
       return;
@@ -157,7 +158,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
 
   @SuppressWarnings("unused")
   @Override
-  public void execute(List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     throw new RuntimeException("Not yet implemented");
   }
 }

@@ -15,4 +15,6 @@ public class TenantConfig {
   private String database;
 
   private TenantBundlingConfig bundling;
+
+  private TenantScheduleConfig scheduling;
 }

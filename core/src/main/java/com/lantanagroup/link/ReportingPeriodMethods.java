@@ -1,4 +1,4 @@
-package com.lantanagroup.link.config.scheduling;
+package com.lantanagroup.link;
 
 public enum ReportingPeriodMethods {
   LastMonth,

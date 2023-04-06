@@ -7,5 +7,5 @@ import javax.servlet.http.HttpServletRequest;
 
 @SuppressWarnings("unused")
 public interface IReportSender {
-  void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception;
+  void send(TenantService tenantService, Report report, HttpServletRequest request, LinkCredentials user) throws Exception;
 }

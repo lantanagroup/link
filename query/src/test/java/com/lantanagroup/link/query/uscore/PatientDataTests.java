@@ -1,10 +1,11 @@
 package com.lantanagroup.link.query.uscore;
 
-import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
 import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.time.StopwatchManager;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,9 +14,12 @@ import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+
 public class PatientDataTests {
   @Test
   public void getQueryTest_ObservationWithCategoryAndDate() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
@@ -25,7 +29,7 @@ public class PatientDataTests {
                             new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
@@ -34,6 +38,7 @@ public class PatientDataTests {
 
   @Test
   public void getQueryTest_ObservationWithLookBackDate() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setLookbackPeriod(Period.ofDays(14));
     config.setQueryParameters(new HashMap<>());
@@ -42,7 +47,7 @@ public class PatientDataTests {
                     List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
@@ -51,6 +56,7 @@ public class PatientDataTests {
 
   @Test
   public void getQueryTest_ObservationWithLookBackDate_NoLookBackConfig() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
@@ -58,7 +64,7 @@ public class PatientDataTests {
                     List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Observation", "patient1");
     Assert.assertEquals(1, queryStrings.size());
@@ -67,6 +73,7 @@ public class PatientDataTests {
 
   @Test
   public void getQueryTest_MedicationRequest() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
@@ -74,7 +81,7 @@ public class PatientDataTests {
                     List.of(new USCoreQueryParametersResourceParameterConfig("category", true, List.of("labs"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "MedicationRequest", "patient1");
     Assert.assertEquals(1, queryStrings.size());
@@ -83,6 +90,7 @@ public class PatientDataTests {
 
   @Test
   public void getQueryTest_EncounterWithDate() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
@@ -90,7 +98,7 @@ public class PatientDataTests {
                     List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Encounter", "patient1");
     Assert.assertEquals(1, queryStrings.size());
@@ -99,6 +107,7 @@ public class PatientDataTests {
 
   @Test
   public void getQueryTest_Condition_NoConfig() {
+    TenantService tenantService = mock(TenantService.class);
     USCoreConfig config = new USCoreConfig();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
@@ -106,7 +115,7 @@ public class PatientDataTests {
                     List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    PatientData patientData = new PatientData(new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
+    PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
 
     List<String> queryStrings = patientData.getQuery(List.of("measure1"), "Condition", "patient1");
     Assert.assertEquals(1, queryStrings.size());

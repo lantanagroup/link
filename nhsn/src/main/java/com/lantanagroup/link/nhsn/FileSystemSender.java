@@ -4,6 +4,7 @@ import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.GenericSender;
 import com.lantanagroup.link.IReportSender;
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.model.Report;
@@ -72,8 +73,8 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
   @SuppressWarnings("unused")
   @Override
-  public void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
-    Bundle bundle = this.generateBundle(report);
+  public void send(TenantService tenantService, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
+    Bundle bundle = this.generateBundle(tenantService, report);
 
     FileSystemSenderConfig.Formats format = this.getFormat();
     String content;

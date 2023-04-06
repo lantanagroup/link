@@ -58,9 +58,6 @@ public class PatientScoop {
   private EventService eventService;
 
   @Autowired
-  private TenantService tenantService;
-
-  @Autowired
   private StopwatchManager stopwatchManager;
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
@@ -68,19 +65,19 @@ public class PatientScoop {
   @Setter
   private Boolean shouldPersist = true;
 
-  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
+  public void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(criteria, context, pois, resourceTypes, measureIds);
+    this.loadPatientData(tenantService, criteria, context, pois, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadPatientData(TenantService tenantService, ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
+      PatientData patientData = new PatientData(tenantService, this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
@@ -95,7 +92,7 @@ public class PatientScoop {
     return new AsyncResult<>(null);
   }
 
-  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
+  public void loadPatientData(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     int threshold = usCoreConfig.getParallelPatients();
@@ -174,7 +171,7 @@ public class PatientScoop {
 
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources")) {
-          patientData = this.loadPatientData(criteria, context, patient, resourceTypes, measureIds);
+          patientData = this.loadPatientData(tenantService, criteria, context, patient, resourceTypes, measureIds);
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -193,7 +190,7 @@ public class PatientScoop {
             return dbpd;
           }).collect(Collectors.toList());
 
-          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
+          eventService.triggerDataEvent(tenantService, EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
           if (this.shouldPersist) {
             logger.info("Storing patient data for patient {}", patient.getIdElement().getIdPart());
@@ -201,13 +198,13 @@ public class PatientScoop {
             // store data
             //noinspection unused
             try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-              this.tenantService.savePatientData(dbPatientData);
+              tenantService.savePatientData(dbPatientData);
             }
           } else {
             logger.info("Not storing patient data bundle");
           }
 
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
+          eventService.triggerDataEvent(tenantService, EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.error("Exception is: " + ex.getMessage());

@@ -7,7 +7,6 @@ import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.QueryListConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.scheduling.ReportingPeriodMethods;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
@@ -54,12 +53,10 @@ public class PatientIdentifierController extends BaseController {
   @Autowired
   private MongoService mongoService;
 
-  @Autowired
-  private TenantService tenantService;
-
   @GetMapping
-  public List<PatientList> searchPatientLists() {
-    return this.tenantService.getAllPatientLists()
+  public List<PatientList> searchPatientLists(@PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    return tenantService.getAllPatientLists()
             .stream().map(pl -> {
               pl.setPatients(null);
               return pl;
@@ -68,12 +65,14 @@ public class PatientIdentifierController extends BaseController {
   }
 
   @GetMapping("/{id}")
-  public PatientList getPatientList(@PathVariable String id) {
-    return this.tenantService.getPatientList(id);
+  public PatientList getPatientList(@PathVariable String id, @PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    return tenantService.getPatientList(id);
   }
 
   @PostMapping("/$query-list")
-  public void queryPatientList() throws Exception {
+  public void queryPatientList(@PathVariable String tenantId) throws Exception {
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     List<QueryListConfig.PatientList> filteredList = this.queryListConfig.getLists();
 
     for (QueryListConfig.PatientList patientListConfig : filteredList) {
@@ -81,7 +80,7 @@ public class PatientIdentifierController extends BaseController {
 
       for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
         PatientList patientList = this.convert(source, patientListConfig.getMeasureId().get(j));
-        this.storePatientList(patientList);
+        this.storePatientList(tenantService, patientList);
       }
     }
   }
@@ -150,22 +149,24 @@ public class PatientIdentifierController extends BaseController {
 
   @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
   public void getPatientIdentifierListXML(
-          @RequestBody() String body) throws Exception {
+          @RequestBody() String body, @PathVariable String tenantId) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in XML");
 
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
     checkMeasureIdentifier(list);
-    this.receiveFHIR(list);
+    this.receiveFHIR(tenantService, list);
   }
 
   @PostMapping(value = "/fhir/List", consumes = MediaType.APPLICATION_JSON_VALUE)
   public void getPatientIdentifierListJSON(
-          @RequestBody() String body) throws Exception {
+          @RequestBody() String body, @PathVariable String tenantId) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
+    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
     checkMeasureIdentifier(list);
-    this.receiveFHIR(list);
+    this.receiveFHIR(tenantService, list);
   }
 
   private void checkMeasureIdentifier(ListResource list) {
@@ -185,9 +186,9 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
-  private void storePatientList(PatientList patientList) throws Exception {
+  private void storePatientList(TenantService tenantService, PatientList patientList) throws Exception {
     logger.info("Storing patient list");
-    PatientList found = this.tenantService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
+    PatientList found = tenantService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
 
     // Merge the list of patients found with the new list
     if (found != null) {
@@ -198,10 +199,10 @@ public class PatientIdentifierController extends BaseController {
       found.merge(patientList);
     }
 
-    this.tenantService.savePatientList(patientList);
+    tenantService.savePatientList(patientList);
   }
 
-  private void receiveFHIR(ListResource listResource) throws Exception {
+  private void receiveFHIR(TenantService tenantService, ListResource listResource) throws Exception {
     List<Identifier> identifierList = listResource.getIdentifier();
     Extension applicablePeriodExt = listResource.getExtensionByUrl(Constants.ApplicablePeriodExtensionUrl);
 
@@ -262,6 +263,6 @@ public class PatientIdentifierController extends BaseController {
       }
     }
 
-    this.storePatientList(patientList);
+    this.storePatientList(tenantService, patientList);
   }
 }

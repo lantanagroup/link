@@ -1,5 +1,6 @@
 package com.lantanagroup.link.query.uscore;
 
+import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -16,7 +17,7 @@ public class Query extends BaseQuery implements IQuery {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
 
   @Override
-  public void execute(ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds) {
+  public void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds) {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
 
     if (patientsOfInterest == null) {
@@ -31,7 +32,7 @@ public class Query extends BaseQuery implements IQuery {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
-        scoop.execute(criteria, context, patientsOfInterest, resourceTypes, measureIds);
+        scoop.execute(tenantService, criteria, context, patientsOfInterest, resourceTypes, measureIds);
       } catch (Exception ex) {
         logger.error("Error scooping data for patients: " + ex.getMessage());
         ex.printStackTrace();

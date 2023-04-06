@@ -100,8 +100,8 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
   }
 
   @Override
-  public void send(Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
-    Bundle bundle = this.generateBundle(report);
+  public void send(TenantService tenantService, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
+    Bundle bundle = this.generateBundle(tenantService, report);
 
     this.sendContent(bundle, report);
   }
