@@ -181,7 +181,7 @@ public class PatientScoop {
 
         // store the data
         try {
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
+          eventService.triggerDataEvent(tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
 
           List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientData.getBundle().getEntry().stream().map(entry -> {
             com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
