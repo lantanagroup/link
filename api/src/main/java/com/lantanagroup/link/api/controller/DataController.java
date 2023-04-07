@@ -3,8 +3,6 @@ package com.lantanagroup.link.api.controller;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientData;
@@ -12,8 +10,6 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.model.TestResponse;
-import com.lantanagroup.link.query.IQuery;
-import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.uscore.PatientScoop;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
@@ -22,8 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -45,9 +43,6 @@ public class DataController extends BaseController {
 
   @Autowired
   private ApplicationContext applicationContext;
-
-  @Autowired
-  private USCoreConfig usCoreConfig;
 
   @Autowired
   private MongoService mongoService;
@@ -121,26 +116,28 @@ public class DataController extends BaseController {
   /**
    * @return
    */
-  @GetMapping("/$test")
+  @GetMapping("/$test-fhir")
   public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
     TestResponse testResponse = new TestResponse();
     TenantService tenantService = TenantService.create(this.mongoService, tenantId);
 
+    if (tenantService.getConfig().getFhirQuery() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant not configured to query FHIR");
+    }
+
     try {
       // Get the data
       logger.info("Testing querying/scooping data for the patient {}", patientId);
-      QueryConfig queryConfig = this.applicationContext.getBean(QueryConfig.class);
-      IQuery query = QueryFactory.getQueryInstance(this.applicationContext, queryConfig.getQueryClass());
 
       MeasureDefinition measureDef = this.mongoService.findMeasureDefinition(measureId);
       List<String> resourceTypes = FhirHelper.getDataRequirementTypes(measureDef.getBundle())
               .stream()
               .collect(Collectors.toList());
-      resourceTypes.retainAll(this.usCoreConfig.getPatientResourceTypes());
+      resourceTypes.retainAll(tenantService.getConfig().getFhirQuery().getPatientResourceTypes());
 
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
-      patientScoop.setFhirQueryServer(query.getFhirQueryClient());
       patientScoop.setShouldPersist(false);
+      patientScoop.setTenantService(tenantService);
       patientScoop.setStopwatchManager(new StopwatchManager());
 
       PatientOfInterestModel poi = new PatientOfInterestModel();
@@ -148,7 +145,7 @@ public class DataController extends BaseController {
 
       ReportCriteria criteria = new ReportCriteria(List.of(measureId), periodStart, periodEnd);
 
-      patientScoop.loadPatientData(tenantService, criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
+      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
       String stats = patientScoop.getStopwatchManager().getStatistics();
       logger.info(stats);
     } catch (Exception ex) {

@@ -38,6 +38,7 @@ public class TenantController extends BaseController {
   }
 
   private void validateTenantConfig(Tenant tenant) {
+
     // TODO
   }
 

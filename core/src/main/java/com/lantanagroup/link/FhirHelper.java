@@ -2,9 +2,11 @@ package com.lantanagroup.link;
 
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Strings;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.tenant.Address;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +24,32 @@ import java.util.stream.Collectors;
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
+
+  public static org.hl7.fhir.r4.model.Address getFHIRAddress(Address address) {
+    org.hl7.fhir.r4.model.Address ret = new org.hl7.fhir.r4.model.Address();
+
+    if (!Strings.isNullOrEmpty(address.getAddressLine())) {
+      ret.getLine().add(new StringType(address.getAddressLine()));
+    }
+
+    if (!Strings.isNullOrEmpty(address.getCity())) {
+      ret.setCity(address.getCity());
+    }
+
+    if (!Strings.isNullOrEmpty(address.getState())) {
+      ret.setState(address.getState());
+    }
+
+    if (!Strings.isNullOrEmpty(address.getPostalCode())) {
+      ret.setPostalCode(address.getPostalCode());
+    }
+
+    if (!Strings.isNullOrEmpty(address.getCountry())) {
+      ret.setCountry(address.getCountry());
+    }
+
+    return ret;
+  }
 
   public static String getRemoteAddress(HttpServletRequest request) {
     String remoteAddress;

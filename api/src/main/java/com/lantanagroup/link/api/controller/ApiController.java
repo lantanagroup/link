@@ -1,10 +1,13 @@
 package com.lantanagroup.link.api.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.victools.jsonschema.generator.*;
 import com.google.common.base.Strings;
 import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -29,6 +32,15 @@ public class ApiController {
 
   @Autowired
   private SwaggerConfig swaggerConfig;
+
+  @GetMapping(value = "/$tenant-schema", produces = {"text/plain"})
+  public String getTenantJsonSchema() {
+    SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_2020_12, OptionPreset.PLAIN_JSON);
+    SchemaGeneratorConfig config = configBuilder.build();
+    SchemaGenerator generator = new SchemaGenerator(config);
+    JsonNode jsonSchema = generator.generateSchema(Tenant.class);
+    return jsonSchema.toPrettyString();
+  }
 
   @GetMapping
   public ApiInfoModel getVersionInfo() {

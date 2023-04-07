@@ -6,14 +6,15 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -26,10 +27,7 @@ public class ApiInit {
   private ApiConfig config;
 
   @Autowired
-  private QueryConfig queryConfig;
-
-  @Autowired
-  private USCoreConfig usCoreConfig;
+  private MongoService mongoService;
 
   private boolean checkPrerequisites() {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
@@ -105,8 +103,14 @@ public class ApiInit {
       throw new IllegalStateException(msg);
     }
 
-    if (this.queryConfig.isRequireHttps() && !this.usCoreConfig.getFhirServerBase().toLowerCase().startsWith("https://")) {
-      throw new IllegalStateException("Error, Query URL requires https");
+    List<Tenant> tenants = this.mongoService.getTenantFhirQueries();
+
+    for (Tenant tenant : tenants) {
+      if (StringUtils.isEmpty(tenant.getFhirQuery().getFhirServerBase())) {
+        logger.error("Tenant {} does not specify FHIR server base", tenant.getId());
+      } else if (this.config.isRequireHttps() && !tenant.getFhirQuery().getFhirServerBase().toLowerCase().startsWith("https://")) {
+        logger.error("HTTPS is required, but tenant %s does not have an HTTPS FHIR server base", tenant.getId());
+      }
     }
 
     if (this.config.getSkipInit()) {

@@ -1,20 +1,17 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.EventService;
-import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.TenantService;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.nhsn.ApplyConceptMaps;
+import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
@@ -22,8 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -33,51 +28,84 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
 @Component
 public class PatientScoop {
   protected static final Logger logger = LoggerFactory.getLogger(PatientScoop.class);
-
-  protected IGenericClient fhirQueryServer;
-
-  @Autowired
-  private MongoService mongoService;
-
-  @Autowired
-  private ApplicationContext context;
-
-  @Autowired
-  private QueryConfig queryConfig;
-
-  @Autowired
-  private USCoreConfig usCoreConfig;
 
   @Setter
   @Autowired
   private EventService eventService;
 
   @Autowired
+  @Getter
+  @Setter
   private StopwatchManager stopwatchManager;
+
+  @Autowired
+  private ApplicationContext applicationContext;
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
 
   @Setter
   private Boolean shouldPersist = true;
 
-  public void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
+  private TenantService tenantService;
+
+  @Setter
+  private IGenericClient fhirQueryServer;
+
+  public void setTenantService(TenantService tenantService) {
+    this.tenantService = tenantService;
+
+    if (tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant is not configured for querying using USCore query method.");
+      return;
+    }
+
+    if (tenantService.getConfig().getFhirQuery().getFhirServerBase() == null) {
+      logger.error("Tenant is not configured with a FHIR server base");
+      return;
+    }
+
+    //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
+    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
+            tenantService.getConfig().getFhirQuery().getFhirServerBase());
+
+    /*
+    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
+    loggingInterceptor.setLogRequestSummary(true);
+    loggingInterceptor.setLogRequestBody(true);
+    fhirQueryClient.registerInterceptor(loggingInterceptor);
+     */
+
+    if (StringUtils.isNotEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
+      logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
+
+      try {
+        client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService.getConfig().getFhirQuery(), this.applicationContext));
+      } catch (ClassNotFoundException e) {
+        logger.error("Error registering authentication interceptor", e);
+      }
+    } else {
+      logger.warn("No authentication is configured for the FHIR server being queried");
+    }
+
+    this.fhirQueryServer = client;
+  }
+
+  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(tenantService, criteria, context, pois, resourceTypes, measureIds);
+    this.loadPatientData(criteria, context, pois, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(TenantService tenantService, ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(tenantService, this.stopwatchManager, this.otherResources, this.eventService, this.getFhirQueryServer(), criteria, context, patient, this.usCoreConfig, resourceTypes);
+      PatientData patientData = new PatientData(this.tenantService, this.stopwatchManager, this.otherResources, this.eventService, this.fhirQueryServer, criteria, context, patient, this.tenantService.getConfig().getFhirQuery(), resourceTypes);
       patientData.loadData(measureIds);
       return patientData;
     } catch (Exception e) {
@@ -87,15 +115,10 @@ public class PatientScoop {
     return null;
   }
 
-  @Async
-  private AsyncResult<Void> findPatient(PatientOfInterestModel poi) {
-    return new AsyncResult<>(null);
-  }
-
-  public void loadPatientData(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
+  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
-    int threshold = usCoreConfig.getParallelPatients();
+    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
     ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
     ForkJoinPool patientFork = new ForkJoinPool(threshold);
 
@@ -171,7 +194,7 @@ public class PatientScoop {
 
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources")) {
-          patientData = this.loadPatientData(tenantService, criteria, context, patient, resourceTypes, measureIds);
+          patientData = this.loadPatientData(criteria, context, patient, resourceTypes, measureIds);
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -181,7 +204,10 @@ public class PatientScoop {
 
         // store the data
         try {
-          eventService.triggerDataEvent(tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
+          ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
+          applyConceptMaps.execute(tenantService, patientBundle);
+
+          eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
 
           List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientData.getBundle().getEntry().stream().map(entry -> {
             com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
@@ -192,7 +218,7 @@ public class PatientScoop {
             return dbpd;
           }).collect(Collectors.toList());
 
-          eventService.triggerDataEvent(tenantService, EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
+          eventService.triggerDataEvent(this.tenantService, EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
 
           if (this.shouldPersist) {
             logger.info("Storing patient data for patient {}", patient.getIdElement().getIdPart());
@@ -200,13 +226,13 @@ public class PatientScoop {
             // store data
             //noinspection unused
             try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-              tenantService.savePatientData(dbPatientData);
+              this.tenantService.savePatientData(dbPatientData);
             }
           } else {
             logger.info("Not storing patient data bundle");
           }
 
-          eventService.triggerDataEvent(tenantService, EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
+          eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
           logger.debug("After patient data");
         } catch (Exception ex) {
           logger.error("Exception is: " + ex.getMessage());

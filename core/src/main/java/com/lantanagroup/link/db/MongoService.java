@@ -135,6 +135,15 @@ public class MongoService {
     return tenants;
   }
 
+  public List<Tenant> getTenantFhirQueries() {
+    List<Tenant> tenants = new ArrayList<>();
+    this.getTenantConfigCollection()
+            .find()
+            .projection(include("_id", "fhirQuery"))
+            .into(tenants);
+    return tenants;
+  }
+
   public List<Tenant> searchTenantConfigs() {
     List<Tenant> tenants = new ArrayList<>();
     this.getTenantConfigCollection()

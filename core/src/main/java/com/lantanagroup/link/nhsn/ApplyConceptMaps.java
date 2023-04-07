@@ -3,53 +3,25 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.TenantService;
-import com.lantanagroup.link.model.ReportContext;
-import com.lantanagroup.link.model.ReportCriteria;
-import lombok.Setter;
 import org.hl7.fhir.r4.hapi.ctx.DefaultProfileValidationSupport;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-@Component
-public class ApplyConceptMaps implements IReportGenerationDataEvent {
+public class ApplyConceptMaps {
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
-  Map<String, ConceptMap> conceptMaps = new HashMap<>();
   DefaultProfileValidationSupport validationSupport;
-
-  @Autowired
-  @Setter
-  private ApplyConceptMapsConfig applyConceptMapConfig;
 
   public ApplyConceptMaps() {
     validationSupport = new DefaultProfileValidationSupport();
     validationSupport.fetchAllStructureDefinitions(FhirContextProvider.getFhirContext());
-  }
-
-  private Map<String, ConceptMap> getConceptMaps(TenantService tenantService) {
-    if (this.applyConceptMapConfig != null && this.applyConceptMapConfig.getConceptMaps() != null) {
-      this.applyConceptMapConfig.getConceptMaps().stream().forEach(cm -> {
-        try {
-          com.lantanagroup.link.db.model.ConceptMap dbConceptMap = tenantService.getConceptMap(cm.getConceptMapId());
-          this.conceptMaps.put(cm.getConceptMapId(), dbConceptMap.getResource());
-        } catch (Exception ex) {
-          logger.error(String.format("ConceptMap %s not found", cm.getConceptMapId()));
-        }
-      });
-    }
-    return conceptMaps;
   }
 
   private FHIRPathEngine getFhirPathEngine() {
@@ -118,25 +90,25 @@ public class ApplyConceptMaps implements IReportGenerationDataEvent {
     return changedCodes;
   }
 
-  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle) {
     List<DomainResource> resourceList = BundleUtil.toListOfResourcesOfType(FhirContextProvider.getFhirContext(), bundle, DomainResource.class);
-    this.execute(tenantService, resourceList, criteria, context, measureContext);
+    this.execute(tenantService, resourceList);
   }
 
-  public void execute(TenantService tenantService, List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    logger.info("Called: " + ApplyConceptMaps.class.getName());
+  public void execute(TenantService tenantService, List<DomainResource> resourceList) {
     if (resourceList.size() > 0) {
-      Map<String, ConceptMap> conceptMaps = this.getConceptMaps(tenantService);
-      if (!conceptMaps.isEmpty()) {
-        applyConceptMapConfig.getConceptMaps().stream().forEach(conceptMapConfig -> {
-          ConceptMap conceptMap = conceptMaps.get(conceptMapConfig.getConceptMapId());
-          resourceList.stream().forEach(resource -> {
-            List<Coding> codingList = filterCodingsByPathList(resource, conceptMapConfig.getFhirPathContexts());
-            if (!codingList.isEmpty()) {
-              applyTransformation(conceptMap, codingList);
-              // displayTransformation(resource, codingList);
-            }
-          });
+      List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps = tenantService.getAllConceptMaps();
+
+      for (com.lantanagroup.link.db.model.ConceptMap dbConceptMap : conceptMaps) {
+        ConceptMap conceptMap = dbConceptMap.getConceptMap();
+
+        logger.debug("Applying concept map {} to {} resources", dbConceptMap.getId(), resourceList.size());
+
+        resourceList.stream().forEach(resource -> {
+          List<Coding> codingList = filterCodingsByPathList(resource, dbConceptMap.getContexts());
+          if (!codingList.isEmpty()) {
+            this.applyTransformation(conceptMap, codingList);
+          }
         });
       }
     }

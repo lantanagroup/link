@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>core</artifactId>
-    <name>Core (interfaces and shared logic)</name>
+    <name>Core</name>
+    <description>Interfaces and shared logic</description>
 
     <packaging>jar</packaging>
 

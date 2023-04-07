@@ -115,6 +115,7 @@ public class TenantService {
   }
 
   public void savePatientList(PatientList patientList) {
+    patientList.setId(null);
     Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
     this.getPatientListCollection().replaceOne(criteria, patientList, new ReplaceOptions().upsert(true));
   }
@@ -206,13 +207,23 @@ public class TenantService {
     return this.getConceptMapCollection().find(criteria).first();
   }
 
+  public List<ConceptMap> searchConceptMaps() {
+    List<ConceptMap> conceptMaps = new ArrayList<>();
+
+    // resourceType is needed in the projection for HAPI to deserialize it
+    this.getConceptMapCollection()
+            .find()
+            .projection(include("_id", "name", "contexts"))
+            .into(conceptMaps);
+    return conceptMaps;
+  }
+
   public List<ConceptMap> getAllConceptMaps() {
     List<ConceptMap> conceptMaps = new ArrayList<>();
 
     // resourceType is needed in the projection for HAPI to deserialize it
     this.getConceptMapCollection()
             .find()
-            .projection(include("_id", "resource.name", "resource.resourceType", "resource.id"))
             .into(conceptMaps);
     return conceptMaps;
   }

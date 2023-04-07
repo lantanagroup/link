@@ -19,4 +19,8 @@ public class Tenant {
   private Schedule scheduling;
 
   private Events events;
+
+  private QueryList queryList;
+
+  private FhirQuery fhirQuery;
 }

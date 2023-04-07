@@ -1,6 +1,5 @@
 package com.lantanagroup.link.query;
 
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -14,6 +13,4 @@ public interface IQuery {
   void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds);
 
   void setApplicationContext(ApplicationContext context);
-
-  IGenericClient getFhirQueryClient();
 }

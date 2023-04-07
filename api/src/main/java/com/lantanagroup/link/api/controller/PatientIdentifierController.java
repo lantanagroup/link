@@ -4,13 +4,11 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.config.QueryListConfig;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.tenant.EhrPatientList;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
@@ -39,16 +37,7 @@ public class PatientIdentifierController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(PatientIdentifierController.class);
 
   @Autowired
-  private USCoreConfig usCoreConfig;
-
-  @Autowired
-  private QueryConfig queryConfig;
-
-  @Autowired
   private ApplicationContext applicationContext;
-
-  @Autowired
-  private QueryListConfig queryListConfig;
 
   @Autowired
   private MongoService mongoService;
@@ -73,26 +62,33 @@ public class PatientIdentifierController extends BaseController {
   @PostMapping("/$query-list")
   public void queryPatientList(@PathVariable String tenantId) throws Exception {
     TenantService tenantService = TenantService.create(this.mongoService, tenantId);
-    List<QueryListConfig.PatientList> filteredList = this.queryListConfig.getLists();
 
-    for (QueryListConfig.PatientList patientListConfig : filteredList) {
-      ListResource source = this.readList(patientListConfig.getListId());
+    if (tenantService == null || tenantService.getConfig() == null) {
+      return;
+    } else if (tenantService.getConfig().getQueryList() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant is not configured to query the EHR for patient lists");
+    }
+
+    List<EhrPatientList> filteredList = tenantService.getConfig().getQueryList().getLists();
+
+    for (EhrPatientList patientListConfig : filteredList) {
+      ListResource source = this.readList(tenantService, patientListConfig.getListId());
 
       for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
-        PatientList patientList = this.convert(source, patientListConfig.getMeasureId().get(j));
+        PatientList patientList = this.convert(tenantService, source, patientListConfig.getMeasureId().get(j));
         this.storePatientList(tenantService, patientList);
       }
     }
   }
 
-  private ListResource readList(String patientListId) throws ClassNotFoundException {
+  private ListResource readList(TenantService tenantService, String patientListId) throws ClassNotFoundException {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
-            StringUtils.isNotEmpty(this.queryListConfig.getFhirServerBase()) ?
-                    this.queryListConfig.getFhirServerBase() :
-                    this.usCoreConfig.getFhirServerBase());
+            StringUtils.isNotEmpty(tenantService.getConfig().getQueryList().getFhirServerBase()) ?
+                    tenantService.getConfig().getQueryList().getFhirServerBase() :
+                    tenantService.getConfig().getFhirQuery().getFhirServerBase());
 
-    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(this.queryConfig, this.applicationContext));
+    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService.getConfig().getFhirQuery(), this.applicationContext));
 
     return client
             .read()
@@ -101,7 +97,7 @@ public class PatientIdentifierController extends BaseController {
             .execute();
   }
 
-  private PatientList convert(ListResource source, String identifier) throws URISyntaxException {
+  private PatientList convert(TenantService tenantService, ListResource source, String identifier) throws URISyntaxException {
     logger.info("Converting List resource from source into DB PatientList");
     PatientList patientList = new PatientList();
 
@@ -114,7 +110,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(identifier);
 
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-      PatientId patientId = this.convertListItem(sourceEntry);
+      PatientId patientId = this.convertListItem(tenantService, sourceEntry);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);
@@ -124,8 +120,8 @@ public class PatientIdentifierController extends BaseController {
     return patientList;
   }
 
-  private PatientId convertListItem(ListResource.ListEntryComponent listEntry) throws URISyntaxException {
-    URI baseUrl = new URI(this.queryListConfig.getFhirServerBase());
+  private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry) throws URISyntaxException {
+    URI baseUrl = new URI(tenantService.getConfig().getQueryList().getFhirServerBase());
     if (listEntry.getItem().hasReference()) {
       URI referenceUrl = new URI(listEntry.getItem().getReference());
       String reference;
@@ -256,7 +252,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(value);
 
     for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
-      PatientId patientId = this.convertListItem(sourceEntry);
+      PatientId patientId = this.convertListItem(tenantService, sourceEntry);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);

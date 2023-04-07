@@ -1,18 +1,16 @@
-package com.lantanagroup.link.config.query;
+package com.lantanagroup.link.db.model.tenant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class USCoreQueryParametersResourceConfig {
+public class FhirQueryOtherResourceType {
   private String resourceType;
-  private List<USCoreQueryParametersResourceParameterConfig> parameters;
+  private Boolean supportsSearch = false;
+  private Integer countPerSearch = 100;
 }
-

@@ -3,9 +3,9 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
 import com.lantanagroup.link.TenantService;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.FhirQueryOtherResourceType;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -21,7 +21,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-public class QueryTests {
+public class FhirQueryTests {
   @Test
   public void queryTest() {
     TenantService tenantService = mock(TenantService.class);
@@ -33,20 +33,22 @@ public class QueryTests {
     queries.add("Condition");
     queries.add("Encounter");
     queries.add("MedicationRequest");
-    QueryConfig queryConfig = new QueryConfig();
-    USCoreConfig usCoreConfig = new USCoreConfig();
-    usCoreConfig.setPatientResourceTypes(queries);
-    usCoreConfig.getPatientResourceTypes();
-    List<USCoreOtherResourceTypeConfig> extraResources = new ArrayList<>();
-    extraResources.add(new USCoreOtherResourceTypeConfig("Location", false, null));
-    extraResources.add(new USCoreOtherResourceTypeConfig("Medication", false, null));
-    usCoreConfig.setOtherResourceTypes(extraResources);
-    usCoreConfig.getOtherResourceTypes();
+    FhirQuery fhirQuery = new FhirQuery();
+    fhirQuery.setPatientResourceTypes(queries);
+    fhirQuery.getPatientResourceTypes();
+    List<FhirQueryOtherResourceType> extraResources = new ArrayList<>();
+    extraResources.add(new FhirQueryOtherResourceType("Location", false, null));
+    extraResources.add(new FhirQueryOtherResourceType("Medication", false, null));
+    fhirQuery.setOtherResourceTypes(extraResources);
+    fhirQuery.getOtherResourceTypes();
+
+    Tenant tenant = new Tenant();
+    tenant.setFhirQuery(fhirQuery);
+    when(tenantService.getConfig()).thenReturn(tenant);
 
     PatientScoop patientScoop = new PatientScoop();
     patientScoop.setStopwatchManager(new StopwatchManager());
-    patientScoop.setUsCoreConfig(usCoreConfig);
-    patientScoop.setQueryConfig(queryConfig);
+    patientScoop.setTenantService(tenantService);
     patientScoop.setFhirQueryServer(fhirQueryClient);
 
     ApplicationContext applicationContext = mock(ApplicationContext.class);
@@ -248,7 +250,6 @@ public class QueryTests {
     context.setPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue("report1");
     theQuery.setApplicationContext(applicationContext);
-    theQuery.setFhirQueryClient(fhirQueryClient);
     theQuery.execute(tenantService, criteria, context, queries, List.of(measureId));
 
     // Make sure the correct queries to the FHIR server was performed

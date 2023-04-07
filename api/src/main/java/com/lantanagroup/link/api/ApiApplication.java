@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
-import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -43,16 +40,7 @@ import java.util.TimeZone;
 @EnableAsync
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   @Autowired
-  private ApplicationContext context;
-
-  @Autowired
-  private ApiConfig config;
-
-  @Autowired
   private ReportingPlanConfig reportingPlanConfig;
-
-  @Autowired
-  private MongoService mongoService;
 
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.

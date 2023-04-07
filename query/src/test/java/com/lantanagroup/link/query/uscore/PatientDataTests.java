@@ -1,9 +1,9 @@
 package com.lantanagroup.link.query.uscore;
 
 import com.lantanagroup.link.TenantService;
-import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResource;
+import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResourceParameter;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.StopwatchManager;
 import org.hl7.fhir.r4.model.Patient;
@@ -20,13 +20,13 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_ObservationWithCategoryAndDate() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
+    FhirQuery config = new FhirQuery();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Observation",
+            List.of(new FhirQueryParametersResource("Observation",
                     List.of(
-                            new USCoreQueryParametersResourceParameterConfig("category", true, List.of("labs", "vital-signs")),
-                            new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
+                            new FhirQueryParametersResourceParameter("category", true, List.of("labs", "vital-signs")),
+                            new FhirQueryParametersResourceParameter("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
@@ -39,12 +39,12 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_ObservationWithLookBackDate() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
-    config.setLookbackPeriod(Period.ofDays(14));
+    FhirQuery config = new FhirQuery();
+    config.setLookbackPeriod(Period.ofDays(14).toString());   // TODO
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Observation",
-                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
+            List.of(new FhirQueryParametersResource("Observation",
+                    List.of(new FhirQueryParametersResourceParameter("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
@@ -57,11 +57,11 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_ObservationWithLookBackDate_NoLookBackConfig() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
+    FhirQuery config = new FhirQuery();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Observation",
-                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
+            List.of(new FhirQueryParametersResource("Observation",
+                    List.of(new FhirQueryParametersResourceParameter("date", false, List.of("ge${lookBackStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
@@ -74,11 +74,11 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_MedicationRequest() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
+    FhirQuery config = new FhirQuery();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Observation",
-                    List.of(new USCoreQueryParametersResourceParameterConfig("category", true, List.of("labs"))))));
+            List.of(new FhirQueryParametersResource("Observation",
+                    List.of(new FhirQueryParametersResourceParameter("category", true, List.of("labs"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
@@ -91,11 +91,11 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_EncounterWithDate() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
+    FhirQuery config = new FhirQuery();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Encounter",
-                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
+            List.of(new FhirQueryParametersResource("Encounter",
+                    List.of(new FhirQueryParametersResourceParameter("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));
@@ -108,11 +108,11 @@ public class PatientDataTests {
   @Test
   public void getQueryTest_Condition_NoConfig() {
     TenantService tenantService = mock(TenantService.class);
-    USCoreConfig config = new USCoreConfig();
+    FhirQuery config = new FhirQuery();
     config.setQueryParameters(new HashMap<>());
     config.getQueryParameters().put("measure1",
-            List.of(new USCoreQueryParametersResourceConfig("Encounter",
-                    List.of(new USCoreQueryParametersResourceParameterConfig("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
+            List.of(new FhirQueryParametersResource("Encounter",
+                    List.of(new FhirQueryParametersResourceParameter("date", false, List.of("ge${periodStart}", "le${periodEnd}"))))));
 
     ReportCriteria criteria = new ReportCriteria(List.of("measure1"), "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
     PatientData patientData = new PatientData(tenantService, new StopwatchManager(), new HashMap<>(), null, null, criteria, null, new Patient(), config, List.of("Patient", "Encounter", "MedicationRequest"));

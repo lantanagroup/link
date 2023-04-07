@@ -109,7 +109,7 @@ public class FhirBundler {
     }
 
     if (this.getBundlingConfig().getAddress() != null) {
-      org.addAddress(this.getBundlingConfig().getAddress().getFHIRAddress());
+      org.addAddress(FhirHelper.getFHIRAddress(this.getBundlingConfig().getAddress()));
     }
 
     return org;

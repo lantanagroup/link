@@ -18,32 +18,29 @@ import static org.mockito.Mockito.when;
 
 public class ApplyConceptMapsTest {
 
-  private com.lantanagroup.link.db.model.ConceptMap getConceptMap() {
-    List<ConceptMap> conceptMaps = new ArrayList<>();
-    ConceptMap conceptMap = new ConceptMap();
+  private ConceptMap getConceptMap() {
+    org.hl7.fhir.r4.model.ConceptMap conceptMap = new org.hl7.fhir.r4.model.ConceptMap();
     // set group
-    ConceptMap.ConceptMapGroupComponent conceptMapGroupComponent = new ConceptMap.ConceptMapGroupComponent();
+    org.hl7.fhir.r4.model.ConceptMap.ConceptMapGroupComponent conceptMapGroupComponent = new org.hl7.fhir.r4.model.ConceptMap.ConceptMapGroupComponent();
     conceptMapGroupComponent.setSource("http://some-system.com");
     conceptMapGroupComponent.setTarget("http://loinc.org");
 
-    ConceptMap.SourceElementComponent sourceElementComponent = new ConceptMap.SourceElementComponent();
+    org.hl7.fhir.r4.model.ConceptMap.SourceElementComponent sourceElementComponent = new org.hl7.fhir.r4.model.ConceptMap.SourceElementComponent();
     sourceElementComponent.setCode("some-type");
 
     // add target to source
-    ConceptMap.TargetElementComponent targetElementComponent = new ConceptMap.TargetElementComponent();
+    org.hl7.fhir.r4.model.ConceptMap.TargetElementComponent targetElementComponent = new org.hl7.fhir.r4.model.ConceptMap.TargetElementComponent();
     targetElementComponent.setDisplay("Medical Critical Care");
     targetElementComponent.setCode("1027-2");
     sourceElementComponent.getTarget().add(targetElementComponent);
 
     // add source to group
-    List<ConceptMap.SourceElementComponent> sourceElementComponents = new ArrayList<>();
+    List<org.hl7.fhir.r4.model.ConceptMap.SourceElementComponent> sourceElementComponents = new ArrayList<>();
     sourceElementComponents.add(sourceElementComponent);
     conceptMapGroupComponent.setElement(sourceElementComponents);
     conceptMap.addGroup(conceptMapGroupComponent);
 
-    conceptMaps.add(conceptMap);
-
-    return new com.lantanagroup.link.db.model.ConceptMap(conceptMap);
+    return conceptMap;
   }
 
 
@@ -80,16 +77,11 @@ public class ApplyConceptMapsTest {
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
 
-    List<ApplyConceptMapConfig> applyConceptMapConfigsList = new ArrayList<>();
-    ApplyConceptMapConfig applyConceptMapConfig = new ApplyConceptMapConfig();
-    applyConceptMapConfig.setConceptMapId("local-codes-cerner-test'");
-    List<String> fhirPathContexts = new ArrayList<>();
-    fhirPathContexts.add("Location.type");
-    applyConceptMapConfig.setFhirPathContexts(fhirPathContexts);
-    applyConceptMapConfigsList.add(applyConceptMapConfig);
-    ApplyConceptMapsConfig applyConceptMapsConfig = new ApplyConceptMapsConfig();
-    applyConceptMapsConfig.setConceptMaps(applyConceptMapConfigsList);
-    applyConceptMaps.setApplyConceptMapConfig(applyConceptMapsConfig);
+    com.lantanagroup.link.db.model.ConceptMap dbConceptMap = new com.lantanagroup.link.db.model.ConceptMap();
+    dbConceptMap.setId("local-codes-cerner-test'");
+    dbConceptMap.setContexts(List.of("Location.type"));
+    dbConceptMap.setConceptMap(getConceptMap());
+    when(tenantService.getAllConceptMaps()).thenReturn(List.of(dbConceptMap));
 
     List<PatientOfInterestModel> patientOfInterestModel = new ArrayList<>();
     PatientOfInterestModel model = new PatientOfInterestModel();
@@ -99,14 +91,11 @@ public class ApplyConceptMapsTest {
 
     context.setPatientsOfInterest(patientOfInterestModel);
 
-    com.lantanagroup.link.db.model.ConceptMap conceptMap = getConceptMap();
-    when(tenantService.getConceptMap(any())).thenReturn(conceptMap);
-
     List<Coding> codes = new ArrayList<>();
     codes.add(getLocation().getType().get(0).getCoding().get(0));
     Mockito.doReturn(codes).when(applyConceptMaps).filterCodingsByPathList(any(), any());
 
-    applyConceptMaps.execute(tenantService, patientBundle, reportCriteria, context, new ReportContext.MeasureContext());
+    applyConceptMaps.execute(tenantService, patientBundle);
 
     Coding changedCoding = codes.get(0);
     Assert.assertEquals(changedCoding.getExtension().size(), 1);
@@ -119,10 +108,13 @@ public class ApplyConceptMapsTest {
     TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
 
-    List<String> pathList = new ArrayList<>();
-    pathList.add("Location.type");
-    when(tenantService.getConceptMap(any())).thenReturn(getConceptMap());
-    List<Coding> list = applyConceptMaps.filterCodingsByPathList((DomainResource)getPatienBundle().getEntry().get(0).getResource(), pathList);
+    com.lantanagroup.link.db.model.ConceptMap dbConceptMap = new com.lantanagroup.link.db.model.ConceptMap();
+    dbConceptMap.setId("local-codes-cerner-test'");
+    dbConceptMap.setContexts(List.of("Location.type"));
+    dbConceptMap.setConceptMap(getConceptMap());
+    when(tenantService.getAllConceptMaps()).thenReturn(List.of(dbConceptMap));
+
+    List<Coding> list = applyConceptMaps.filterCodingsByPathList((DomainResource) getPatienBundle().getEntry().get(0).getResource(), dbConceptMap.getContexts());
 
     Assert.assertEquals(list.get(0).getCode(), "some-type");
   }
@@ -132,12 +124,15 @@ public class ApplyConceptMapsTest {
     TenantService tenantService = mock(TenantService.class);
     ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
 
-    List<String> pathList = new ArrayList<>();
-    pathList.add("Location.type");
-
     Coding coding = getLocation().getType().get(0).getCoding().get(0);
-    com.lantanagroup.link.db.model.ConceptMap dbConceptMap = getConceptMap();
-    applyConceptMaps.applyTransformation(dbConceptMap.getResource(), List.of(coding));
+
+    com.lantanagroup.link.db.model.ConceptMap dbConceptMap = new com.lantanagroup.link.db.model.ConceptMap();
+    dbConceptMap.setId("local-codes-cerner-test'");
+    dbConceptMap.setContexts(List.of("Location.type"));
+    dbConceptMap.setConceptMap(getConceptMap());
+    when(tenantService.getAllConceptMaps()).thenReturn(List.of(dbConceptMap));
+
+    applyConceptMaps.applyTransformation(dbConceptMap.getConceptMap(), List.of(coding));
 
     Assert.assertEquals(coding.getCode(), "1027-2");
     Assert.assertEquals(coding.getExtension().size(), 1);

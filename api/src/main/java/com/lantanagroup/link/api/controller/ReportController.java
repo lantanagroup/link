@@ -5,8 +5,6 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
-import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.model.GenerateRequest;
@@ -14,8 +12,7 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
-import com.lantanagroup.link.query.IQuery;
-import com.lantanagroup.link.query.QueryFactory;
+import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -45,8 +42,6 @@ public class ReportController extends BaseController {
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
   final String[] DISALLOWED_FIELDS = new String[]{};
-  @Autowired
-  private USCoreConfig usCoreConfig;
 
   @Setter
   @Autowired
@@ -116,16 +111,22 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(TenantService tenantService, List<String> resourceTypes, ReportCriteria criteria, ReportContext context) throws Exception {
+  private void queryFhir(TenantService tenantService, List<String> resourceTypes, ReportCriteria criteria, ReportContext context) {
+    if (tenantService.getConfig().getFhirQuery() == null) {
+      logger.debug("Tenant {} not configured to query FHIR", tenantService.getConfig().getId());
+      return;
+    }
+
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
     List<String> measureIds = context.getMeasureContexts().stream()
             .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
             .collect(Collectors.toList());
+
     try {
       // Get the data
-      logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
+      logger.info("Querying data from FHIR for the patients: " + StringUtils.join(patientsOfInterest, ", "));
+      Query query = new Query();
+      query.setApplicationContext(this.context);
       query.execute(tenantService, criteria, context, resourceTypes, measureIds);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
@@ -266,9 +267,17 @@ public class ReportController extends BaseController {
       resourceTypesToQuery.addAll(FhirHelper.getDataRequirementTypes(measureContext.getReportDefBundle()));
     }
 
+    // Never attempt to search for Patient resource... We already do that at the start of the process to ensure
+    // we know the Patient.id. Location and Medication are NOT patient resources and shouldn't be queried as patient resources
+    resourceTypesToQuery.remove("Patient");
+    resourceTypesToQuery.remove("Location");
+    resourceTypesToQuery.remove("Medication");
+
     // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
     //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
-    resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
+    if (tenantService.getConfig().getFhirQuery().getPatientResourceTypes() != null) {
+      resourceTypesToQuery.retainAll(tenantService.getConfig().getFhirQuery().getPatientResourceTypes());
+    }
 
     // Scoop the data for the patients and store it
     if (config.isSkipQuery()) {
@@ -279,7 +288,7 @@ public class ReportController extends BaseController {
         }
       }
     } else {
-      this.queryAndStorePatientData(tenantService, new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+      this.queryFhir(tenantService, new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
     }
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
@@ -360,6 +369,11 @@ public class ReportController extends BaseController {
   public List<MeasureReport> getAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
+    }
+
     List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
     return aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
   }
@@ -368,6 +382,11 @@ public class ReportController extends BaseController {
   public List<PatientList> getReportPatientLists(@PathVariable String reportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
+    }
+
     return tenantService.getPatientLists(report.getPatientLists());
   }
 

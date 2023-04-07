@@ -2,13 +2,11 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.TenantService;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,9 +14,6 @@ import java.util.Optional;
 
 public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(PatientDataResourceFilter.class);
-
-  @Autowired
-  private USCoreConfig usCoreConfig;
 
   private static boolean isWithin(Instant target, Instant start, Instant end) {
     boolean isAfter = target.isAfter(start);
@@ -54,7 +49,8 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   }
 
   public static boolean shouldRemove(ReportCriteria criteria, java.time.Period lookBackPeriod, Resource resource) {
-    Instant start = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
+    Instant start = new DateTimeType(
+            criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
     Instant end = new DateTimeType(criteria.getPeriodEnd()).getValue().toInstant();
 
     switch (resource.getResourceType()) {
@@ -127,12 +123,22 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
     if (bundle == null || !bundle.hasEntry()) {
-      logger.trace("Bundle data is null or empty");
+      logger.debug("Bundle data is null or empty");
       return;
     }
 
-    if (this.usCoreConfig.getLookbackPeriod() == null) {
-      logger.trace("US Core Config does not specify a lookback period");
+    if (tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant not configured for FHIR queries");
+      return;
+    } else if (tenantService.getConfig().getFhirQuery().getLookbackPeriod() == null) {
+      logger.debug("US Core Config does not specify a lookback period");
+      return;
+    }
+
+    java.time.Period lookbackPeriod = java.time.Period.parse(tenantService.getConfig().getFhirQuery().getLookbackPeriod());
+
+    if (lookbackPeriod == null) {
+      logger.error("Lookback period for tenant {} could not be parsed", tenantService.getConfig().getId());
       return;
     }
 
@@ -146,7 +152,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       Bundle.BundleEntryComponent entry = bundle.getEntry().get(i);
 
       if (entry.getResource() != null) {
-        if (shouldRemove(criteria, this.usCoreConfig.getLookbackPeriod(), entry.getResource())) {
+        if (shouldRemove(criteria, lookbackPeriod, entry.getResource())) {
           bundle.getEntry().remove(i);
           filtered++;
         }

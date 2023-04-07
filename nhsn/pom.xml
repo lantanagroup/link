@@ -10,7 +10,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>nhsn</artifactId>
-    <name>NHSN Customizations</name>
+    <name>NHSN</name>
+    <description>Customizations specific to NHSN</description>
 
     <packaging>jar</packaging>
 

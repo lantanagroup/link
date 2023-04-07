@@ -1,4 +1,4 @@
-package com.lantanagroup.link.config.query;
+package com.lantanagroup.link.db.model.tenant;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class USCoreQueryParametersResourceParameterConfig {
+public class FhirQueryParametersResourceParameter {
   private String name;
   private Boolean singleParam;
   private List<String> values;

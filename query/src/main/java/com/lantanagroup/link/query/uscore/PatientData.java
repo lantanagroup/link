@@ -4,10 +4,10 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.SearchStyleEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.FhirQueryOtherResourceType;
+import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResource;
+import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResourceParameter;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
@@ -33,7 +33,7 @@ public class PatientData {
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
-  private final USCoreConfig usCoreConfig;
+  private final FhirQuery fhirQuery;
   // private final QueryConfig queryConfig;
   private List<String> resourceTypes;
   private Bundle bundle = new Bundle();
@@ -43,7 +43,7 @@ public class PatientData {
   private StopwatchManager stopwatchManager;
   private TenantService tenantService;
 
-  public PatientData(TenantService tenantService, StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(TenantService tenantService, StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, FhirQuery fhirQuery, List<String> resourceTypes) {
     this.tenantService = tenantService;
     this.stopwatchManager = stopwatchManager;
     this.otherResources = otherResources;
@@ -53,7 +53,7 @@ public class PatientData {
     this.context = context;
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
-    this.usCoreConfig = usCoreConfig;
+    this.fhirQuery = fhirQuery;
     this.resourceTypes = resourceTypes;
 
     this.bundle.setType(BundleType.TRANSACTION);
@@ -82,11 +82,13 @@ public class PatientData {
     return value;
   }
 
-  public static String getQueryParamValue(String value, ReportCriteria criteria, java.time.Period lookBackPeriod) {
+  public static String getQueryParamValue(String value, ReportCriteria criteria, String lookBackPeriod) {
     String lookBackStart = criteria.getPeriodStart();
 
     if (lookBackPeriod != null) {
-      Instant lookBackStartInstant = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
+      Instant lookBackStartInstant = new DateTimeType(
+              criteria.getPeriodStart()).getValue().toInstant().minus(
+              java.time.Period.parse(lookBackPeriod));
       lookBackStart = DateTimeFormatter.ISO_INSTANT.format(lookBackStartInstant);
     }
 
@@ -100,29 +102,29 @@ public class PatientData {
   public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
     String finalResourceType = resourceType;
     ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
-    HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
+    HashMap<String, List<FhirQueryParametersResource>> queryParameters = this.fhirQuery.getQueryParameters();
 
     //check if queryParameters exist in config, if not just load patient without observations
     for (String measureId : measureIds) {
       if (queryParameters != null && !queryParameters.isEmpty()) {
-        if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
+        if (this.fhirQuery.getQueryParameters() != null && this.fhirQuery.getQueryParameters().containsKey(measureId)) {
 
-          List<USCoreQueryParametersResourceConfig> resourceQueryParams =
-                  this.usCoreConfig.getQueryParameters()
+          List<FhirQueryParametersResource> resourceQueryParams =
+                  this.fhirQuery.getQueryParameters()
                           .get(measureId)
                           .stream()
                           .filter(queryParams -> queryParams.getResourceType().equals(finalResourceType))
                           .collect(Collectors.toList());
 
-          for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
-            for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
+          for (FhirQueryParametersResource resourceQueryParam : resourceQueryParams) {
+            for (FhirQueryParametersResourceParameter param : resourceQueryParam.getParameters()) {
               if (param.getSingleParam() != null && param.getSingleParam() == true) {
-                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
+                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.fhirQuery.getLookbackPeriod())).collect(Collectors.toList());
                 String paramValue = String.join(",", values);
                 params.add(param.getName() + "=" + paramValue);
               } else {
                 for (String paramValue : param.getValues()) {
-                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
+                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.fhirQuery.getLookbackPeriod()));
                 }
               }
             }
@@ -245,7 +247,7 @@ public class PatientData {
       // Load all encounters first to populate this.encounterReferences
       // so that the encounter ids may be used by getQuery()
       this.loadEncounters(measureIds);
-      if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
+      if (this.encounterReferences.isEmpty() && fhirQuery.isEncounterBased()) {
         logger.info("No encounters found; exiting query phase");
         return;
       }
@@ -300,7 +302,7 @@ public class PatientData {
   private void getOtherResources() {
     List<Reference> references = ResourceIdChanger.findReferences(this.bundle);
 
-    if (this.usCoreConfig.getOtherResourceTypes() != null) {
+    if (this.fhirQuery.getOtherResourceTypes() != null) {
       HashMap<String, List<String>> resourcesToGet = new HashMap<>();
 
       for (Reference reference : references) {
@@ -309,7 +311,7 @@ public class PatientData {
         }
 
         String[] refParts = reference.getReference().split("/");
-        List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes().stream()
+        List<String> otherResourceTypes = this.fhirQuery.getOtherResourceTypes().stream()
                 .map(ort -> ort.getResourceType())
                 .collect(Collectors.toList());
 
@@ -341,7 +343,7 @@ public class PatientData {
           }
 
           logger.info("Loading {} other {} resources for patient {}", allResourceIds.size(), resourceType, patientId);
-          USCoreOtherResourceTypeConfig otherResourceTypeConfig = this.usCoreConfig.getOtherResourceTypes().stream()
+          FhirQueryOtherResourceType otherResourceTypeConfig = this.fhirQuery.getOtherResourceTypes().stream()
                   .filter(ort -> ort.getResourceType().equals(resourceType))    // If we got to this point, we know a resourceType exists in the config that matches
                   .findFirst().get();
 
