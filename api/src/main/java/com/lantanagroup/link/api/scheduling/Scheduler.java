@@ -1,9 +1,9 @@
 package com.lantanagroup.link.api.scheduling;
 
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.TenantConfig;
-import com.lantanagroup.link.db.model.TenantGenerateReportConfig;
-import com.lantanagroup.link.db.model.TenantScheduleConfig;
+import com.lantanagroup.link.db.model.tenant.GenerateReport;
+import com.lantanagroup.link.db.model.tenant.Schedule;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +48,13 @@ public class Scheduler {
       this.schedules.remove(tenantId);
     }
 
-    TenantConfig tenantConfig = this.mongoService.getTenantConfig(tenantId);
+    Tenant tenant = this.mongoService.getTenantConfig(tenantId);
 
-    if (tenantConfig == null) {
+    if (tenant == null) {
       logger.warn("Tenant {} no longer exists, not going to re-initialize schedules for tenant", tenantId);
-    } else if (tenantConfig.getScheduling() != null) {
+    } else if (tenant.getScheduling() != null) {
       logger.info("Re-initializing scheduled tasks for tenant {}", tenantId);
-      this.init(tenantConfig.getId(), tenantConfig.getScheduling());
+      this.init(tenant.getId(), tenant.getScheduling());
     }
   }
 
@@ -67,7 +67,7 @@ public class Scheduler {
     tenantSchedules.add(scheduledFuture);
   }
 
-  private void init(String tenantId, TenantScheduleConfig config) {
+  private void init(String tenantId, Schedule config) {
     // TODO: Make sure this.context.getBean() doesn't return a singleton
 
     if (StringUtils.isNotEmpty(config.getDataRetentionCheckCron())) {
@@ -87,7 +87,7 @@ public class Scheduler {
     }
 
     if (config.getGenerateAndSubmitReports() != null) {
-      for (TenantGenerateReportConfig generateReportConfig : config.getGenerateAndSubmitReports()) {
+      for (GenerateReport generateReportConfig : config.getGenerateAndSubmitReports()) {
         GenerateAndSubmitReportTask generateAndSubmitReportTask = this.context.getBean(GenerateAndSubmitReportTask.class);
         generateAndSubmitReportTask.setTenantId(tenantId);
         generateAndSubmitReportTask.setMeasureIds(generateReportConfig.getMeasureIds());
@@ -102,16 +102,16 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
-    List<TenantConfig> tenantConfigs = this.mongoService.getTenantSchedules();
+    List<Tenant> tenants = this.mongoService.getTenantSchedules();
 
     // Loop through each of the tenants and register their scheduled tasks
-    for (TenantConfig tenantConfig : tenantConfigs) {
-      if (tenantConfig.getScheduling() == null) {
-        logger.warn("No scheduled tasks setup for tenant {}", tenantConfig.getId());
+    for (Tenant tenant : tenants) {
+      if (tenant.getScheduling() == null) {
+        logger.warn("No scheduled tasks setup for tenant {}", tenant.getId());
         continue;
       }
 
-      this.init(tenantConfig.getId(), tenantConfig.getScheduling());
+      this.init(tenant.getId(), tenant.getScheduling());
     }
   }
 }

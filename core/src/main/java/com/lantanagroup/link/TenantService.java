@@ -2,9 +2,11 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.WriteModel;
@@ -27,7 +29,7 @@ public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
 
   @Getter
-  private TenantConfig config;
+  private Tenant config;
 
   private MongoDatabase database;
 
@@ -38,7 +40,7 @@ public class TenantService {
   public static final String AGGREGATE_COLLECTION = "aggregate";
   public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
 
-  protected TenantService(MongoDatabase database, TenantConfig config) {
+  protected TenantService(MongoDatabase database, Tenant config) {
     this.database = database;
     this.config = config;
   }
@@ -48,14 +50,14 @@ public class TenantService {
       return null;
     }
 
-    TenantConfig tenantConfig = mongoService.getTenantConfig(tenantId);
+    Tenant tenant = mongoService.getTenantConfig(tenantId);
 
-    if (tenantConfig == null) {
+    if (tenant == null) {
       logger.error("Tenant {} not found", tenantId);
       return null;
     }
 
-    return new TenantService(mongoService.getClient().getDatabase(tenantConfig.getDatabase()), tenantConfig);
+    return new TenantService(mongoService.getClient().getDatabase(tenant.getDatabase()), tenant);
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {
@@ -114,9 +116,7 @@ public class TenantService {
 
   public void savePatientList(PatientList patientList) {
     Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", patientList);
-    this.getPatientListCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getPatientListCollection().replaceOne(criteria, patientList, new ReplaceOptions().upsert(true));
   }
 
   public List<PatientData> findPatientData(String patientId) {
@@ -165,9 +165,7 @@ public class TenantService {
 
   public void saveReport(Report report) {
     Bson criteria = and(eq("periodStart", report.getPeriodStart()), eq("periodEnd", report.getPeriodEnd()), eq("measureIds", report.getMeasureIds()));
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", report);
-    this.getReportCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getReportCollection().replaceOne(criteria, report, new ReplaceOptions().upsert(true));
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
@@ -185,9 +183,7 @@ public class TenantService {
 
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {
     Bson criteria = eq("_id", patientMeasureReport.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", patientMeasureReport);
-    this.getPatientMeasureReportCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getPatientMeasureReportCollection().replaceOne(criteria, patientMeasureReport, new ReplaceOptions().upsert(true));
   }
 
   public List<Aggregate> getAggregates(List<String> ids) {
@@ -202,9 +198,7 @@ public class TenantService {
 
   public void saveAggregate(Aggregate aggregate) {
     Bson criteria = eq("_id", aggregate.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", aggregate);
-    this.getAggregateCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getAggregateCollection().replaceOne(criteria, aggregate, new ReplaceOptions().upsert(true));
   }
 
   public ConceptMap getConceptMap(String id) {
@@ -225,8 +219,6 @@ public class TenantService {
 
   public void saveConceptMap(ConceptMap conceptMap) {
     Bson criteria = eq("_id", conceptMap.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", conceptMap);
-    this.getConceptMapCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getConceptMapCollection().replaceOne(criteria, conceptMap, new ReplaceOptions().upsert(true));
   }
 }

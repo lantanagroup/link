@@ -3,14 +3,18 @@ package com.lantanagroup.link.db;
 import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
-import com.lantanagroup.link.db.model.*;
-import com.mongodb.BasicDBObject;
+import com.lantanagroup.link.db.model.Audit;
+import com.lantanagroup.link.db.model.AuditTypes;
+import com.lantanagroup.link.db.model.MeasureDefinition;
+import com.lantanagroup.link.db.model.User;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import org.apache.commons.lang3.StringUtils;
@@ -56,8 +60,8 @@ public class MongoService {
     return this.database;
   }
 
-  public MongoCollection<TenantConfig> getTenantConfigCollection() {
-    return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, TenantConfig.class);
+  public MongoCollection<Tenant> getTenantConfigCollection() {
+    return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
   }
 
   public MongoCollection<MeasureDefinition> getMeasureDefinitionCollection() {
@@ -116,28 +120,28 @@ public class MongoService {
     return this.client;
   }
 
-  public TenantConfig getTenantConfig(String id) {
+  public Tenant getTenantConfig(String id) {
     return this.getTenantConfigCollection()
             .find(eq("_id", id))
             .first();
   }
 
-  public List<TenantConfig> getTenantSchedules() {
-    List<TenantConfig> tenantConfigs = new ArrayList<>();
+  public List<Tenant> getTenantSchedules() {
+    List<Tenant> tenants = new ArrayList<>();
     this.getTenantConfigCollection()
             .find()
             .projection(include("_id", "scheduling"))
-            .into(tenantConfigs);
-    return tenantConfigs;
+            .into(tenants);
+    return tenants;
   }
 
-  public List<TenantConfig> searchTenantConfigs() {
-    List<TenantConfig> tenantConfigs = new ArrayList<>();
+  public List<Tenant> searchTenantConfigs() {
+    List<Tenant> tenants = new ArrayList<>();
     this.getTenantConfigCollection()
             .find()
             .projection(include("_id", "name", "description"))
-            .into(tenantConfigs);
-    return tenantConfigs;
+            .into(tenants);
+    return tenants;
   }
 
   public long deleteTenantConfig(String tenantId) {
@@ -145,11 +149,9 @@ public class MongoService {
     return result.getDeletedCount();
   }
 
-  public void saveTenantConfig(TenantConfig tenantConfig) {
-    Bson criteria = eq("_id", tenantConfig.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", tenantConfig);
-    this.getTenantConfigCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+  public void saveTenantConfig(Tenant tenant) {
+    Bson criteria = eq("_id", tenant.getId());
+    this.getTenantConfigCollection().replaceOne(criteria, tenant, new ReplaceOptions().upsert(true));
   }
 
   public List<MeasureDefinition> getAllMeasureDefinitions() {
@@ -163,9 +165,7 @@ public class MongoService {
 
   public void saveMeasureDefinition(MeasureDefinition measureDefinition) {
     Bson criteria = eq("measureId", measureDefinition.getMeasureId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", measureDefinition);
-    this.getMeasureDefinitionCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getMeasureDefinitionCollection().replaceOne(criteria, measureDefinition, new UpdateOptions().upsert(true));
   }
 
   public void audit(LinkCredentials credentials, HttpServletRequest request, TenantService tenantService, AuditTypes type, String notes) {
@@ -199,16 +199,12 @@ public class MongoService {
     audit.setNotes(notes);
 
     Bson criteria = eq("_id", audit.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", audit);
-    this.getAuditCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getAuditCollection().replaceOne(criteria, audit, new ReplaceOptions().upsert(true));
   }
 
   public void saveUser(User user) {
     Bson criteria = eq("_id", user.getId());
-    BasicDBObject update = new BasicDBObject();
-    update.put("$set", user);
-    this.getUserCollection().updateOne(criteria, update, new UpdateOptions().upsert(true));
+    this.getUserCollection().replaceOne(criteria, user, new ReplaceOptions().upsert(true));
   }
 
   public User getUser(String id) {

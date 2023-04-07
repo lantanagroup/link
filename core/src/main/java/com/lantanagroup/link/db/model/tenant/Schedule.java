@@ -1,4 +1,4 @@
-package com.lantanagroup.link.db.model;
+package com.lantanagroup.link.db.model.tenant;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,8 +7,8 @@ import java.util.List;
 
 @Getter
 @Setter
-public class TenantScheduleConfig {
+public class Schedule {
   private String queryPatientListCron;
   private String dataRetentionCheckCron;
-  private List<TenantGenerateReportConfig> generateAndSubmitReports;
+  private List<GenerateReport> generateAndSubmitReports;
 }

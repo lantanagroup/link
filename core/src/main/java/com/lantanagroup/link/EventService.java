@@ -1,6 +1,6 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.api.ApiConfigEvents;
+import com.lantanagroup.link.db.model.tenant.Events;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
@@ -24,7 +24,6 @@ import java.util.List;
 
 @Component
 public class EventService {
-
   private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 
   @Autowired
@@ -32,18 +31,14 @@ public class EventService {
   protected ApplicationContext context;
 
   @Autowired
-  @Setter
-  private ApiConfigEvents apiConfigEvents;
-
-  @Autowired
   private StopwatchManager stopwatchManager;
 
-  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
-    List<Object> beans = getBeans(eventType);
+  public void triggerEvent(TenantService tenantService, EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
+    List<Object> beans = this.getBeans(tenantService, eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
-        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean);
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
           ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
@@ -54,16 +49,16 @@ public class EventService {
     }
   }
 
-  public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext context) throws Exception {
-    triggerEvent(eventType, criteria, context, null);
+  public void triggerEvent(TenantService tenantService, EventTypes eventType, ReportCriteria criteria, ReportContext context) throws Exception {
+    triggerEvent(tenantService, eventType, criteria, context, null);
   }
 
   public void triggerDataEvent(TenantService tenantService, EventTypes eventType, Bundle bundle, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
-    List<Object> beans = getBeans(eventType);
+    List<Object> beans = this.getBeans(tenantService, eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
-        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean);
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
           ((IReportGenerationDataEvent) bean).execute(tenantService, bundle, criteria, reportContext, measureContext);
@@ -74,17 +69,21 @@ public class EventService {
     }
   }
 
-  public List<Object> getBeans(EventTypes eventType) throws Exception{
+  public List<Object> getBeans(TenantService tenantService, EventTypes eventType) throws Exception {
+    if (tenantService == null || tenantService.getConfig() == null || tenantService.getConfig().getEvents() == null) {
+      return new ArrayList<>();
+    }
+
     List<Class<?>> classes = new ArrayList<>();
-    Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
-    List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
+    Method eventMethodInvoked = Events.class.getMethod("get" + eventType.toString());
+    List<String> classNames = (List<String>) eventMethodInvoked.invoke(tenantService.getConfig().getEvents());
     if (classNames != null) {
       for (String className : classNames) {
         try {
           Class<?> aClass = Class.forName(className);
           classes.add(aClass);
         } catch (ClassNotFoundException ex) {
-          logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType.toString(), className));
+          logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType, className));
         }
       }
     }

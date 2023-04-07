@@ -4,7 +4,7 @@ import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
-import com.lantanagroup.link.db.model.TenantBundlingConfig;
+import com.lantanagroup.link.db.model.tenant.Bundling;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -36,10 +36,10 @@ public class FhirBundler {
     this(mongoService, tenantService, null);
   }
 
-  private TenantBundlingConfig getBundlingConfig() {
+  private Bundling getBundlingConfig() {
     return this.tenantService.getConfig().getBundling() != null ?
             this.tenantService.getConfig().getBundling() :
-            new TenantBundlingConfig();
+            new Bundling();
   }
 
   private Organization getOrg() {

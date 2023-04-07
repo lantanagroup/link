@@ -1,4 +1,4 @@
-package com.lantanagroup.link.db.model;
+package com.lantanagroup.link.db.model.tenant;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import org.hl7.fhir.r4.model.Bundle;
 
 @Getter
 @Setter
-public class TenantBundlingConfig {
+public class Bundling {
   /**
    * The type of submission bundle to create.
    */
@@ -60,5 +60,5 @@ public class TenantBundlingConfig {
    * The address of the organization/facility the system is bundling/submitting for, to be used in the submission
    * Bundle's Organization.name field
    */
-  private TenantAddressConfig address;
+  private Address address;
 }

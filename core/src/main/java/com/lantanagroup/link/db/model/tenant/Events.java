@@ -1,21 +1,13 @@
-package com.lantanagroup.link.config.api;
+package com.lantanagroup.link.db.model.tenant;
 
-import com.lantanagroup.link.config.YamlPropertySourceFactory;
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.validation.annotation.Validated;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
-@Data
-@Configuration
-@ConfigurationProperties(prefix = "api.events")
-@Validated
-@PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
-public class ApiConfigEvents {
-
+@Getter
+@Setter
+public class Events {
   List<String> BeforeMeasureResolution;
 
   List<String> AfterMeasureResolution;

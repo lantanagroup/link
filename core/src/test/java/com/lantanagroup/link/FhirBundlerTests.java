@@ -1,7 +1,12 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.PatientId;
+import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.hl7.fhir.r4.model.Resource;
@@ -24,13 +29,13 @@ public class FhirBundlerTests {
   @Test
   public void testBundle() {
     // Use legacy behavior of reifying/promoting line-level resources
-    TenantBundlingConfig bundlingConfig = new TenantBundlingConfig();
+    Bundling bundlingConfig = new Bundling();
     bundlingConfig.setIncludeCensuses(true);
     bundlingConfig.setPromoteLineLevelResources(false);
     bundlingConfig.setNpi("test-org-npi");
 
-    TenantConfig tenantConfig = new TenantConfig();
-    tenantConfig.setBundling(bundlingConfig);
+    Tenant tenant = new Tenant();
+    tenant.setBundling(bundlingConfig);
 
     MongoService mongoService = mock(MongoService.class);
     TenantService tenantService = mock(TenantService.class);
@@ -45,7 +50,7 @@ public class FhirBundlerTests {
     patientLists.add(new PatientList());
     patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
 
-    when(tenantService.getConfig()).thenReturn(tenantConfig);
+    when(tenantService.getConfig()).thenReturn(tenant);
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);
 
     PatientMeasureReport pmr1 = new PatientMeasureReport();

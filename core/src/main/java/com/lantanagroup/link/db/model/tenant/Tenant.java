@@ -1,4 +1,4 @@
-package com.lantanagroup.link.db.model;
+package com.lantanagroup.link.db.model.tenant;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
@@ -7,14 +7,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TenantConfig {
+public class Tenant {
   private String id;
 
   private String name;
 
   private String database;
 
-  private TenantBundlingConfig bundling;
+  private Bundling bundling;
 
-  private TenantScheduleConfig scheduling;
+  private Schedule scheduling;
+
+  private Events events;
 }

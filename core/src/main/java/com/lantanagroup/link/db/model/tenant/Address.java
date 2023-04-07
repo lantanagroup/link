@@ -1,4 +1,4 @@
-package com.lantanagroup.link.db.model;
+package com.lantanagroup.link.db.model.tenant;
 
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import org.hl7.fhir.r4.model.StringType;
 
 @Getter
 @Setter
-public class TenantAddressConfig {
+public class Address {
   private String addressLine;
   private String city;
   private String state;

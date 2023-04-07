@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/api/api.iml" filepath="$PROJECT_DIR$/api/api.iml" />
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/web/web.iml" filepath="$PROJECT_DIR$/web/web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nhsn/nhsn.iml" filepath="$PROJECT_DIR$/nhsn/nhsn.iml" />
+      <module fileurl="file://$PROJECT_DIR$/query/query.iml" filepath="$PROJECT_DIR$/query/query.iml" />
     </modules>
   </component>
 </project>

@@ -2,7 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.MongoService;
-import com.lantanagroup.link.db.model.TenantConfig;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,52 +22,52 @@ public class TenantController extends BaseController {
   private MongoService mongoService;
 
   @GetMapping
-  public List<TenantConfig> searchTenants() {
+  public List<Tenant> searchTenants() {
     return this.mongoService.searchTenantConfigs();
   }
 
   @GetMapping("{tenantId}")
-  public TenantConfig getTenant(@PathVariable String tenantId) {
-    TenantConfig tenantConfig = this.mongoService.getTenantConfig(tenantId);
+  public Tenant getTenant(@PathVariable String tenantId) {
+    Tenant tenant = this.mongoService.getTenantConfig(tenantId);
 
-    if (tenantConfig == null) {
+    if (tenant == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
-    return tenantConfig;
+    return tenant;
   }
 
-  private void validateTenantConfig(TenantConfig tenantConfig) {
+  private void validateTenantConfig(Tenant tenant) {
     // TODO
   }
 
   @PutMapping("/{tenantId}")
-  public void updateTenant(@RequestBody TenantConfig tenantConfig, @PathVariable String tenantId) {
+  public void updateTenant(@RequestBody Tenant tenant, @PathVariable String tenantId) {
     if (this.mongoService.getTenantConfig(tenantId) == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
-    this.validateTenantConfig(tenantConfig);
+    this.validateTenantConfig(tenant);
 
-    tenantConfig.setId(tenantId);
-    this.mongoService.saveTenantConfig(tenantConfig);
+    tenant.setId(tenantId);
+    this.mongoService.saveTenantConfig(tenant);
     this.scheduler.reset(tenantId);
   }
 
   @PostMapping
-  public TenantConfig createTenant(@RequestBody TenantConfig tenantConfig) {
-    this.validateTenantConfig(tenantConfig);
+  public Tenant createTenant(@RequestBody Tenant tenant) {
+    this.validateTenantConfig(tenant);
 
-    if (StringUtils.isNotEmpty(tenantConfig.getId()) && this.mongoService.getTenantConfig(tenantConfig.getId()) != null) {
+    if (StringUtils.isNotEmpty(tenant.getId()) && this.mongoService.getTenantConfig(tenant.getId()) != null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant already exists. Did you mean to PUT?");
-    } else if (StringUtils.isEmpty(tenantConfig.getId())) {
-      tenantConfig.setId((new ObjectId()).toString());
+    } else if (StringUtils.isEmpty(tenant.getId())) {
+      tenant.setId((new ObjectId()).toString());
     }
 
-    this.mongoService.saveTenantConfig(tenantConfig);
-    this.scheduler.reset(tenantConfig.getId());
+    this.mongoService.saveTenantConfig(tenant);
+    this.scheduler.reset(tenant.getId());
 
-    return tenantConfig;
+    return tenant;
   }
 
   @DeleteMapping("/{tenantId}")
