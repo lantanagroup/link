@@ -170,11 +170,11 @@ public class ReportController extends BaseController {
   public Report generateReport(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
-          @RequestParam("multiMeasureBundleId") String multiMeasureBundleId,
-          @RequestParam("periodStart") String periodStart,
-          @RequestParam("periodEnd") String periodEnd,
+          @RequestParam String multiMeasureBundleId,
+          @RequestParam String periodStart,
+          @RequestParam String periodEnd,
           @PathVariable String tenantId,
-          boolean regenerate)
+          @RequestParam boolean regenerate)
           throws Exception {
     String[] singleMeasureBundleIds = new String[]{};
 
@@ -366,7 +366,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/{reportId}/aggregate")
-  public List<MeasureReport> getAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
+  public List<MeasureReport> getReportAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.mongoService, tenantId);
     Report report = tenantService.getReport(reportId);
 

@@ -87,7 +87,7 @@ public class DataController extends BaseController {
    * @throws DatatypeConfigurationException Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
    *                                        has been reached.
    */
-  @DeleteMapping(value = "/expunge")
+  @DeleteMapping(value = "/$expunge")
   public Integer expungeData(@PathVariable String tenantId) {
     if (this.dataGovernanceConfig == null) {
       logger.error("Data governance not configured");

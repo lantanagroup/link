@@ -28,9 +28,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Reportability Response Controller
- */
 @RestController
 @RequestMapping("/api/{tenantId}/poi")
 public class PatientIdentifierController extends BaseController {
@@ -144,7 +141,7 @@ public class PatientIdentifierController extends BaseController {
   }
 
   @PostMapping(value = "/fhir/List", consumes = {MediaType.APPLICATION_XML_VALUE})
-  public void getPatientIdentifierListXML(
+  public void saveFhirList(
           @RequestBody() String body, @PathVariable String tenantId) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in XML");
 

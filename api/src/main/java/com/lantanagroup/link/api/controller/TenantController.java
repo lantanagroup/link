@@ -77,6 +77,8 @@ public class TenantController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
+    // TODO: Remove concept maps for the tenant
+
     this.scheduler.reset(tenantId);
   }
 }

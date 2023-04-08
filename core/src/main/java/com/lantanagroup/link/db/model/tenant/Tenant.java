@@ -12,6 +12,8 @@ public class Tenant {
 
   private String name;
 
+  private String description;
+
   private String database;
 
   private Bundling bundling;

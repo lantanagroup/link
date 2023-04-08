@@ -11,21 +11,6 @@ tags:
   - name: API Root
     description: The root endpoint of the API
 paths:
-  /api/docs:
-    get:
-      tags:
-        - API Root
-      summary: The swagger spec document for this Link's API
-      operationId: getDocs
-      responses:
-        '200':
-          description: default response
-          content:
-            text/yaml:
-              schema:
-                type: string
-      security:
-        - {}
   /api:
     get:
       tags:
@@ -34,42 +19,188 @@ paths:
       operationId: getVersionInfo
       responses:
         '200':
-          description: default response
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: string
+      security:
+        - { }
+  /api/$tenant-schema:
+    get:
+      tags:
+        - API Root
+      summary: Gets the JSON schema specification of the Tenant configuration
+      operationId: getTenantJsonSchema
+      responses:
+        '200':
+          description: successful response
           content:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApiInfoModel'
       security:
+        - { }
+  /api/docs:
+    get:
+      tags:
+        - API Root
+      summary: The swagger spec document for this Link's API
+      operationId: getDocs
+      responses:
+        '200':
+          description: successful response
+          content:
+            text/yaml:
+              schema:
+                type: string
+      security:
         - {}
-  /api/poi/csv:
+  /api/tenant:
+    get:
+      tags:
+        - Tenants
+      summary: Search all tenants
+      operationId: searchTenants
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TenantItem'
     post:
       tags:
-        - Patient Identification
-      summary: Submit a CSV of patients to be included in report generation
-      description: Extracts the patients id/identifier, date and report type, creates a List and persists the List resource in the internal FHIR server to be found/used in report generation
-      operationId: storeCSV
+        - Tenants
+      summary: Create a new tenant. If id is specified, will make sure that the tenant does not arleady exist and then create the tenant with the specified id
+      operationId: createTenant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tenant'
+      responses:
+        '200':
+          description: successful response
+  /api/tenant/{id}:
+    get:
+      tags:
+        - Tenants
+      summary: Get a single tenant
+      operationId: getTenant
       parameters:
-        - name: reportTypeId
-          in: query
-          description: The id of the report type (measure) that these patients should be considered for
+        - name: id
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Tenant'
+    put:
+      tags:
+        - Tenants
+      summary: Updates an existing tenant
+      operationId: updateTenant
+      parameters:
+        - name: id
+          in: path
+          description: The id of the tenant
           required: true
           schema:
             type: string
       requestBody:
         content:
-          text/csv:
+          application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/Tenant'
       responses:
         '200':
-          description: default response
-  /api/poi/fhir/List:
+          description: successful response
+    delete:
+      tags:
+        - Tenants
+      summary: Delete a tenant
+      operationId: deleteTenant
+      parameters:
+        - name: id
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+  /api/{tenantId}/poi:
+    get:
+      tags:
+        - Patient Identification
+      summary: Search patient lists
+      operationId: searchPatientLists
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientList'
+  /api/{tenantId}/poi/{id}:
+    get:
+      tags:
+        - Patient Identification
+      summary: Get one patient list
+      operationId: getPatientList
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: The id of the patient list to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PatientList'
+  /api/{tenantId}/poi/fhir/List:
     post:
       tags:
         - Patient Identification
       summary: Submit a FHIR List of patients to be included in report generation
-      description: Uses the List date and identifier (which indicates the report-type) to find an already-existing List for the date/report-type. If none exists, this List is persisted as-is. Otherwise, updates the existing List to include the patient id/identifier if the patient isn't already part of the List.
-      operationId: getPatientIdentifierListJSON_1
+      description: Measure and reporting period are derived from extensions in the List
+      operationId: saveFhirList
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -80,14 +211,36 @@ paths:
               type: string
       responses:
         '200':
-          description: default response
-  /api/report/{reportId}/$send:
+          description: successful response
+  /api/{tenantId}/poi/$query-list:
+    get:
+      tags:
+        - Patient Identification
+      summary: Query the EHR's FHIR API for a real-time patient list and persist the patient identifiers
+      operationId: queryPatientList
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+  /api/{tenantId}/report/{reportId}/$send:
     post:
       tags:
-        - Report Management
+        - Reports
       summary: Send/submit the specified report to the consumer/recipient
       operationId: send
       parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
         - name: reportId
           in: path
           description: The logical id of the report to submit
@@ -96,186 +249,18 @@ paths:
             type: string
       responses:
         '200':
-          description: default response
-  /api/report/$generate:
+          description: successful response
+  /api/{tenantId}/report/$generate:
     post:
       tags:
-        - Report Management
+        - Reports
       summary: Generate a report for given criteria
       description: Generates a report based on the specified measure and reporting period criteria. Report generation can take time to respond, as it involves querying the configured EHR for data related to the patients identified for the criteria.
-      operationId: generateReport
+      operationId: generateReport_1
       parameters:
-        - name: reportDefIdentifier
-          in: query
-          description: Measure identifier in SYSTEM|CODE format
-          required: true
-          schema:
-            type: string
-        - name: periodStart
-          in: query
-          description: The start date for the reporting period
-          required: true
-          schema:
-            type: string
-          example: YYYY-MM-DDTHH:MM:SS
-        - name: periodEnd
-          in: query
-          description: The end date for the reporting period
-          required: true
-          schema:
-            type: string
-          example: YYYY-MM-DDTHH:MM:SS
-        - name: regenerate
-          in: query
-          description: True to re-generate a report that has already been generated for the specified criteria
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: default response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/GenerateResponse'
-  /api/report/{reportId}:
-    get:
-      tags:
-        - Report Management
-      summary: Retrieve the specified report
-      operationId: getReport
-      parameters:
-        - name: reportId
+        - name: tenantId
           in: path
-          description: The logical id of the report to retrieve
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: default response
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/ReportModel'
-  /api/report/{reportId}/$download:
-    get:
-      tags:
-        - Report Management
-      summary: Download the specified report in XML format
-      operationId: download
-      parameters:
-        - name: reportId
-          in: path
-          description: The logical id of the report to download
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: default response
-  /api/report:
-    get:
-      tags:
-        - Report Management
-      summary: Search for previously generated reports
-      operationId: searchReports
-      parameters:
-        - name: bundleId
-          in: query
-          description: The paged search identifier
-          required: false
-          schema:
-            type: string
-        - name: author
-          in: query
-          description: The practitioner id of the author
-          required: false
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: The page number to request. Should include bundleId (from previous response) if greater than 1
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 1
-        - name: identifier
-          in: query
-          description: Filter results by measure's identifier in the format of SYSTEM|VALUE
-          required: false
-          schema:
-            type: string
-        - name: periodStartDate
-          in: query
-          description: Filter results to only include reports with a reporting period starting after this start date
-          required: false
-          schema:
-            type: string
-            example: YYYY-MM-DD
-        - name: periodEndDate
-          in: query
-          description: Filter results to only include reports with a reporting period starting before this end date
-          required: false
-          schema:
-            type: string
-            example: YYYY-MM-DD
-        - name: docStatus
-          in: query
-          description: Filter results to only include reports that have a specific status
-          required: false
-          schema:
-            type: string
-            enum:
-              - preliminary
-              - final
-        - name: submittedDate
-          in: query
-          description: Filter results to only include reports submitted on the specified date
-          required: false
-          schema:
-            type: string
-            example: YYYY-MM-DD
-      responses:
-        '200':
-          description: default response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReportBundle'
-  /api/report/{reportId}/patient/{patientId}:
-    get:
-      tags:
-        - Report Management
-      summary: Get data for the specified patient in the specified report
-      operationId: getPatientData
-      parameters:
-        - name: reportId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: patientId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: default response
-          content:
-            '*/*':
-              schema:
-                $ref: '#/components/schemas/PatientDataModel'
-  /api/report/{id}:
-    put:
-      tags:
-        - Report Management
-      summary: Update a report
-      operationId: saveReport
-      parameters:
-        - name: id
-          in: path
+          description: The id of the tenant
           required: true
           schema:
             type: string
@@ -283,33 +268,191 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReportSaveModel'
+              $ref: '#/components/schemas/GenerateRequest'
       responses:
         '200':
-          description: default response
-    delete:
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Report'
+  /api/{tenantId}/report/$generateMultiMeasure:
+    post:
       tags:
-        - Report Management
-      summary: Delete a report
-      operationId: deleteReport
+        - Reports
+      summary: Generate a report for given criteria
+      description: Generates a report based on the specified measure and reporting period criteria. Report generation can take time to respond, as it involves querying the configured EHR for data related to the patients identified for the criteria.
+      operationId: generateReport_2
       parameters:
-        - name: id
+        - name: tenantId
           in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: multiMeasureBundleId
+          in: query
+          description: The id of the multi measure package/bundle
+          required: true
+          schema:
+            type: string
+        - name: periodStart
+          in: query
+          description: The start date of the reporting period, formatted as a FHIR datetime
+          required: true
+          schema:
+            type: string
+        - name: periodEnd
+          in: query
+          description: The end date of the reporting period, formatted as a FHIR datetime
+          required: true
+          schema:
+            type: string
+        - name: regenerate
+          in: query
+          description: Whether to regenerate the report if a report with the same criteria already exists
+          required: true
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Report'
+  /api/{tenantId}/report/{reportId}/aggregate:
+    get:
+      tags:
+        - Reports
+      summary: Get the aggregate measure report(s) generated the specified report id
+      operationId: getReportAggregates
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: default response
-  /api/report/{reportId}/$exclude:
-    post:
+          description: A list of FHIR MeasureReports
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FHIR.MeasureReport'
+  /api/{tenantId}/report/{reportId}/patientList:
+    get:
       tags:
-        - Report Management
-      summary: Exclude one or more patients from a report
-      operationId: excludePatients
+        - Reports
+      summary: Get the patient list(s) used to generate the specified report id
+      operationId: getReportPatientLists
       parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
         - name: reportId
           in: path
+          description: The id of the report
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientList'
+  /api/{tenantId}/report/{reportId}/individual/{patientMeasureReportId}:
+    get:
+      tags:
+        - Reports
+      summary: Get an individual's patient measure report generated for the specified report id
+      operationId: getPatientMeasureReport
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report
+          required: true
+          schema:
+            type: string
+        - name: patientMeasureReportId
+          in: path
+          description: The id of the patient measure report
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A individual's FHIR MeasureReport
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.MeasureReport'
+  /api/measureDef:
+    get:
+      tags:
+        - Measure Definitions
+      summary: Search measure definitions loaded in Link
+      operationId: searchMeasureDefinitions
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MeasureDefinition'
+    put:
+      tags:
+        - Measure Definitions
+      summary: Loads the measure bundle from the request into Link. Either the request body must have a FHIR Bundle, or the url parameter must be specified.
+      operationId: createOrUpdateMeasureDef
+      parameters:
+        - name: url
+          in: query
+          description: A url reference to the measure definition bundle that should be loaded
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+  /api/{tenantId}/conceptMap:
+    put:
+      tags:
+        - Concept Maps
+      summary: Creates or updates a concept map
+      operationId: createOrUpdateConceptMap
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
           required: true
           schema:
             type: string
@@ -317,90 +460,94 @@ paths:
         content:
           'application/json':
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ExcludedPatientModel'
+              $ref: '#/components/schemas/ConceptMap'
       responses:
         '200':
-          description: default response
+          description: successful response
+    get:
+      tags:
+        - Concept Maps
+      summary: Searches concept maps for the specified tenant
+      operationId: searchConceptMap
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ReportModel'
-  /api/report/{id}/patient:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConceptMapItem'
+  /api/{tenantId}/conceptMap/{id}:
     get:
       tags:
-        - Report Management
-      summary: Get a list of the patients in a report
-      operationId: getReportPatients
+        - Concept Maps
+      summary: Retrievse a specific concept map from the tenant
+      operationId: getConceptMap
       parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
         - name: id
           in: path
+          description: The id of the concept map to retrieve
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: default response
+          description: successful response
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PatientReportModel'
-  /api/fhir/api/data/csv:
-    post:
+                $ref: '#/components/schemas/ConceptMap'
+  /api/{tenantId}/data/$expunge:
+    delete:
       tags:
-        - Report Data Submission
-      summary: Submit inventory data in the form of a CSV to be included in future report generation
-      operationId: retrieveCSVData
+        - Data
+      summary: Expunges/deletes any data that has passed the tenant's configured retention
+      operationId: expungeData
       parameters:
-        - name: type
-          in: query
+        - name: tenantId
+          in: path
+          description: The id of the tenant
           required: true
           schema:
             type: string
-            enum:
-              - bed
-              - ventilator
-      requestBody:
-        content:
-          text/csv:
-            schema:
-              type: string
       responses:
         '200':
-          description: default response
-  /api/measure:
+          description: successful response
+  /api/{tenantId}/data/$test-fhir:
     get:
       tags:
-        - Measure Management
-      summary: Gets a list of measures that have been loaded into the installation of Link
-      operationId: getMeasures
+        - Data
+      summary: Tests the connectivity to the tenant's configured fhir server
+      operationId: test
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: default response
+          description: successful response
           content:
             'application/json':
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StoredMeasure'
-  /api/user:
-    get:
-      tags:
-        - User Management
-      summary: Retrieves a list of users who have accessed Link
-      operationId: getUsers
-      responses:
-        '200':
-          description: default response
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserModel'
+                $ref: '#/components/schemas/TestResponse'
+
 components:
   schemas:
     ApiInfoModel:
@@ -410,147 +557,370 @@ components:
           type: string
         version:
           type: string
-    GenerateResponse:
+    PatientId:
       type: object
       properties:
-        reportId:
+        reference:
           type: string
-    ReportModel:
-      type: object
-      properties:
         identifier:
           type: string
-        version:
+    PatientList:
+      type: object
+      properties:
+        id:
           type: string
-        status:
+        periodStart:
           type: string
-        date:
+        periodEnd:
           type: string
-          format: date-time
-        measure:
+        measureId:
           type: string
-        measureReport:
+        lastUpdated:
+          type: string
+        patients:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientId'
+    GenerateRequest:
+      type: object
+      properties:
+        regenerate:
+          type: boolean
+        bundleIds:
+          type: array
+          items:
+            type: string
+        periodStart:
+          type: string
+        periodEnd:
           type: string
     Report:
       type: object
       properties:
         id:
           type: string
-        measureIdentifier:
+        measureId:
+          type: array
+          items:
+            type: string
+        periodStart:
+          type: string
+        periodEnd:
           type: string
         status:
           type: string
-        docStatus:
+          enum:
+            - Draft
+            - Submitted
+        submittedTime:
           type: string
-        author:
+        generatedTime:
           type: string
-        periodStartDate:
+        version:
           type: string
-        periodEndDate:
-          type: string
-        creationDate:
-          type: string
-          format: date-time
-        submittedDate:
-          type: string
-        note:
-          type: string
-    ReportBundle:
+        patientLists:
+          type: array
+          items:
+            type: string
+        aggregates:
+          type: array
+          items:
+            type: string
+    MeasureDefinition:
       type: object
       properties:
-        reportTypeId:
+        id:
           type: string
-        list:
-          type: array
-          items:
-            $ref: '#/components/schemas/Report'
-        totalSize:
-          type: integer
-          format: int32
-    PatientDataModel:
-      type: object
-      properties:
-        conditions:
-          type: array
-          items:
-            type: string
-        medicationRequests:
-          type: array
-          items:
-            type: string
-        procedures:
-          type: array
-          items:
-            type: string
-        encounters:
-          type: array
-          items:
-            type: string
-        observations:
-          type: array
-          items:
-            type: string
-        serviceRequests:
-          type: array
-          items:
-            type: string
-    PatientReportModel:
+        measureId:
+          type: string
+        bundle:
+          $ref: '#/components/schemas/FHIR.Bundle'
+        lastUpdated:
+          type: string
+    ConceptMap:
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        sex:
+        contexts:
+          type: array
+          items:
+            type: string
+        conceptMap:
+          $ref: '#/components/schemas/FHIR.ConceptMap'
+    ConceptMapItem:
+      type: object
+      properties:
+        id:
           type: string
-        dateOfBirth:
+        name:
           type: string
-        excluded:
+        contexts:
+          type: array
+          items:
+            type: string
+    TestResponse:
+      type: object
+      properties:
+        success:
           type: boolean
-    ReportSaveModel:
-      type: object
-      properties:
-        measureReport:
+        message:
           type: string
-    StoredMeasure:
+    TenantItem:
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-        system:
+        description:
           type: string
-        value:
-          type: string
-    UserModel:
+    Tenant:
       type: object
       properties:
         id:
           type: string
         name:
           type: string
-    ExcludedPatientModel:
+        description:
+          type: string
+        database:
+          type: string
+        bundling:
+          $ref: '#/components/schemas/Bundling'
+        scheduling:
+          $ref: '#/components/schemas/Schedule'
+        events:
+          $ref: '#/components/schemas/Events'
+        queryList:
+          $ref: '#/components/schemas/QueryList'
+        fhirQuery:
+          $ref: '#/components/schemas/FhirQuery'
+    Bundling:
       type: object
       properties:
-        patientId:
+        bundleType:
           type: string
-        reason:
-          $ref: '#/components/schemas/CodeableConcept'
-    CodeableConcept:
+          enum:
+            - COLLECTION
+            - BATCH
+          default: COLLECTION
+        includesCensuses:
+          type: boolean
+          default: true
+        mergeCensuses:
+          type: boolean
+          default: true
+        includeIndividualMeasureReports:
+          type: boolean
+          default: true
+        promoteLineLevelResources:
+          type: boolean
+          default: false
+        npi:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+    Address:
       type: object
       properties:
-        text:
+        addressLine:
           type: string
-        coding:
+        city:
+          type: string
+        state:
+          type: string
+        postalCode:
+          type: string
+        country:
+          type: string
+    Schedule:
+      type: object
+      properties:
+        queryPatientListCron:
+          type: string
+        dataRetentionCheckCron:
+          type: string
+        generateAndSubmitReports:
           type: array
           items:
-            $ref: '#/components/schemas/Coding'
-    Coding:
+            $ref: '#/components/schemas/GenerateReport'
+    GenerateReport:
+      type: object
       properties:
-        code:
+        cron:
           type: string
-        display:
+        measureIds:
+          type: array
+          items:
+            type: string
+        reportingPeriodMethod:
           type: string
-        system:
+          enum:
+            - LastMonth
+            - CurrentMonth
+            - LastWeek
+            - CurrentWeek
+        regenerateIfExists:
+          type: boolean
+          default: false
+    Events:
+      type: object
+      properties:
+        BeforeMeasureResolution:
+          type: array
+          items:
+            type: string
+        AfterMeasureResolution:
+          type: array
+          items:
+            type: string
+        OnRegeneration:
+          type: array
+          items:
+            type: string
+        BeforePatientOfInterestLookup:
+          type: array
+          items:
+            type: string
+        AfterPatientOfInterestLookup:
+          type: array
+          items:
+            type: string
+        BeforePatientDataQuery:
+          type: array
+          items:
+            type: string
+        AfterPatientResourceQuery:
+          type: array
+          items:
+            type: string
+        AfterPatientDataQuery:
+          type: array
+          items:
+            type: string
+        BeforePatientDataStore:
+          type: array
+          items:
+            type: string
+        AfterPatientDataStore:
+          type: array
+          items:
+            type: string
+        BeforeMeasureEval:
+          type: array
+          items:
+            type: string
+        AfterMeasureEval:
+          type: array
+          items:
+            type: string
+        BeforeReportStore:
+          type: array
+          items:
+            type: string
+        AfterReportStore:
+          type: array
+          items:
+            type: string
+        BeforeBundling:
+          type: array
+          items:
+            type: string
+        AfterBundling:
+          type: array
+          items:
+            type: string
+    QueryList:
+      type: object
+      properties:
+        fhirServerBase:
           type: string
+        lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/EhrPatientList'
+    EhrPatientList:
+      type: object
+      properties:
+        listId:
+          type: string
+        measureId:
+          type: array
+          items:
+            type: string
+    FhirQuery:
+      type: object
+      properties:
+        fhirServerBase:
+          type: string
+        authClass:
+          type: string
+        patientResourceTypes:
+          type: array
+          items:
+            type: string
+        otherResourceTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FhirQueryOtherResourceType'
+        parallelPatients:
+          type: number
+        queryParameters:
+          type: object
+          properties:
+            paramName:
+              description: The name of the query parameter
+              type: array
+              items:
+                $ref: '#/components/schemas/FhirQueryParametersResource'
+        lookbackPeriod:
+          type: string
+        encounterBased:
+          type: boolean
+          default: true
+    FhirQueryOtherResourceType:
+      type: object
+      properties:
+        resourceType:
+          type: string
+        supportsSearch:
+          type: boolean
+          default: false
+        countPerSearch:
+          type: number
+          default: 100
+    FhirQueryParametersResource:
+      type: object
+      properties:
+        resourceType:
+          type: string
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/FhirQueryParametersResourceParameter'
+    FhirQueryParametersResourceParameter:
+      type: object
+      properties:
+        name:
+          type: string
+        singleParam:
+          type: boolean
+        values:
+          type: array
+          items:
+            type: string
+    FHIR.ConceptMap:
+      type: object
+    FHIR.MeasureReport:
+      type: object
+    FHIR.Bundle:
+      type: object
