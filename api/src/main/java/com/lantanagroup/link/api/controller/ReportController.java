@@ -153,7 +153,7 @@ public class ReportController extends BaseController {
     if (input.getBundleIds().length < 1) {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
-    return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
+    return generateResponse(user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
   /**
@@ -188,13 +188,13 @@ public class ReportController extends BaseController {
     }
 
     singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
-    return generateResponse(user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
+    return generateResponse(user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
+  private Report generateResponse(LinkCredentials user, HttpServletRequest request, String packageId, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
     if (reportingPlanService.isPresent()) {
       logger.info("Checking MRP");
       Date date = Helper.parseFhirDate(periodStart);
@@ -208,7 +208,7 @@ public class ReportController extends BaseController {
       }
     }
 
-    ReportCriteria criteria = new ReportCriteria(List.of(bundleIds), periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(packageId, List.of(bundleIds), periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(request, user);
 
     this.eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);

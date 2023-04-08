@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class GenerateRequest {
   boolean regenerate;
+  private String packageId;
   private String[] bundleIds;
   private String periodStart;
   private String periodEnd;
