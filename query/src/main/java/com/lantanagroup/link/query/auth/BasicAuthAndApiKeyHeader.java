@@ -1,22 +1,33 @@
 package com.lantanagroup.link.query.auth;
 
+import com.lantanagroup.link.db.TenantService;
+import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BasicAuthAndApiKeyHeader implements ICustomAuth{
+public class BasicAuthAndApiKeyHeader implements ICustomAuth {
   private static final Logger logger = LoggerFactory.getLogger(BasicAuthAndApiKeyHeader.class);
 
-  @Autowired
-  private BasicAuthAndApiKeyHeaderConfig config;
+  @Setter
+  private TenantService tenantService;
 
   @Override
   public String getAuthHeader() {
-    String username = this.config.getUsername();
-    String password = this.config.getPassword();
+    if (this.tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant {} not configured to query FHIR", this.tenantService.getConfig().getId());
+      return null;
+    }
+
+    if (this.tenantService.getConfig().getFhirQuery().getBasicAuthAndApiKey() == null) {
+      logger.error("Tenant {} not configured for basic+apikey authentication", this.tenantService.getConfig().getId());
+      return null;
+    }
+
+    String username = this.tenantService.getConfig().getFhirQuery().getBasicAuthAndApiKey().getUsername();
+    String password = this.tenantService.getConfig().getFhirQuery().getBasicAuthAndApiKey().getPassword();
     logger.debug("Using basic credentials for FHIR authentication with username " + username);
     String credentials = username + ":" + password;
     String encoded = Base64.encodeBase64String(credentials.getBytes());
@@ -26,6 +37,6 @@ public class BasicAuthAndApiKeyHeader implements ICustomAuth{
   @Override
   public String getApiKeyHeader() {
     logger.debug("Adding API key to request");
-    return this.config.getApikey();
+    return this.tenantService.getConfig().getFhirQuery().getBasicAuthAndApiKey().getApikey();
   }
 }

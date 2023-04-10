@@ -2,12 +2,13 @@ package com.lantanagroup.link.query.auth;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import com.lantanagroup.link.db.TenantService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.Setter;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -25,18 +26,10 @@ import java.util.UUID;
 public class EpicAuth implements ICustomAuth {
   private static final Logger logger = LoggerFactory.getLogger(EpicAuth.class);
 
-  @Autowired
-  private EpicAuthConfig config;
+  @Setter
+  private TenantService tenantService;
 
-  public EpicAuth() {
-
-  }
-
-  public EpicAuth(EpicAuthConfig config) {
-    this.config = config;
-  }
-
-  public static String getJwt(EpicAuthConfig config) {
+  public static String getJwt(com.lantanagroup.link.db.model.tenant.auth.EpicAuth config) {
     Key key = null;
 
     try {
@@ -65,15 +58,25 @@ public class EpicAuth implements ICustomAuth {
 
   @Override
   public String getAuthHeader() throws URISyntaxException {
+    if (this.tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant {} not configured to query FHIR", this.tenantService.getConfig().getId());
+      return null;
+    }
+
+    if (this.tenantService.getConfig().getFhirQuery().getEpicAuth() == null) {
+      logger.error("Tenant {} not configured for Epic authentication", this.tenantService.getConfig().getId());
+      return null;
+    }
+
     logger.debug("Generating JWT to request auth token from Epic");
 
-    String jwt = getJwt(this.config);
+    String jwt = getJwt(this.tenantService.getConfig().getFhirQuery().getEpicAuth());
     String requestBody = String.format("grant_type=client_credentials&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=%s", jwt);
 
-    logger.debug("Requesting token from " + this.config.getTokenUrl() + " with JWT:\n" + jwt);
+    logger.debug("Requesting token from " + this.tenantService.getConfig().getFhirQuery().getEpicAuth().getTokenUrl() + " with JWT:\n" + jwt);
 
     HttpClient client = HttpClient.newHttpClient();
-    HttpRequest request = HttpRequest.newBuilder(new URI(this.config.getTokenUrl()))
+    HttpRequest request = HttpRequest.newBuilder(new URI(this.tenantService.getConfig().getFhirQuery().getEpicAuth().getTokenUrl()))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();

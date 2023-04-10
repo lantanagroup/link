@@ -2,9 +2,10 @@ package com.lantanagroup.link.query.auth;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import com.lantanagroup.link.db.TenantService;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -16,19 +17,29 @@ import java.net.http.HttpResponse;
 public class AzureAuth implements ICustomAuth {
   private static final Logger logger = LoggerFactory.getLogger(AzureAuth.class);
 
-  @Autowired
-  private AzureAuthConfig config;
+  @Setter
+  private TenantService tenantService;
 
   @Override
   public String getAuthHeader() throws Exception {
+    if (this.tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant {} not configured to query FHIR", this.tenantService.getConfig().getId());
+      return null;
+    }
+
+    if (this.tenantService.getConfig().getFhirQuery().getAzureAuth() == null) {
+      logger.error("Tenant {} not configured for azure authentication", this.tenantService.getConfig().getId());
+      return null;
+    }
+
     String requestBody = String.format(
             "grant_type=client_credentials&client_id=%s&client_secret=%s&resource=%s",
-            this.config.getClientId(),
-            this.config.getSecret(),
-            this.config.getResource());
+            this.tenantService.getConfig().getFhirQuery().getAzureAuth().getClientId(),
+            this.tenantService.getConfig().getFhirQuery().getAzureAuth().getSecret(),
+            this.tenantService.getConfig().getFhirQuery().getAzureAuth().getResource());
 
     HttpClient client = HttpClient.newHttpClient();
-    HttpRequest request = HttpRequest.newBuilder(new URI(this.config.getTokenUrl()))
+    HttpRequest request = HttpRequest.newBuilder(new URI(this.tenantService.getConfig().getFhirQuery().getAzureAuth().getTokenUrl()))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();

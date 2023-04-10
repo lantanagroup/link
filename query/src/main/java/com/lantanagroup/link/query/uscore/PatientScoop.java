@@ -86,7 +86,7 @@ public class PatientScoop {
       logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
 
       try {
-        client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService.getConfig().getFhirQuery(), this.applicationContext));
+        client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
       } catch (ClassNotFoundException e) {
         logger.error("Error registering authentication interceptor", e);
       }

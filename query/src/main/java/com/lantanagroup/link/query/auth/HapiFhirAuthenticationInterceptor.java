@@ -5,7 +5,7 @@ import ca.uhn.fhir.interceptor.api.Interceptor;
 import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
-import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.TenantService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
@@ -22,18 +22,21 @@ public class HapiFhirAuthenticationInterceptor {
   private String authHeader;
   private String apiKey;
 
-  public HapiFhirAuthenticationInterceptor(FhirQuery config, ApplicationContext context) throws ClassNotFoundException {
-    if (StringUtils.isEmpty(config.getAuthClass())) {
+  public HapiFhirAuthenticationInterceptor(TenantService tenantService, ApplicationContext context) throws ClassNotFoundException {
+    if (tenantService.getConfig().getFhirQuery() == null || StringUtils.isEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
       authorizer = null;
       return;
     }
 
     // Get the Class definition of the auth class specified in config
-    Class<?> authClass = Class.forName(config.getAuthClass());
+    Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
 
     // Get an instance of the class using Spring so that it injects/autowires
-    logger.debug(String.format("Getting an instance of the auth class \"%s\" from Spring", config.getAuthClass()));
+    logger.debug(String.format("Getting an instance of the auth class \"%s\" from Spring", tenantService.getConfig().getFhirQuery().getAuthClass()));
     authorizer = (ICustomAuth) context.getBean(authClass);
+
+    authorizer.setTenantService(tenantService);
+
     refresh();
   }
 

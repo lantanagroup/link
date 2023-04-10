@@ -1,5 +1,6 @@
 package com.lantanagroup.link.db.model.tenant;
 
+import com.lantanagroup.link.db.model.tenant.auth.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -48,4 +49,16 @@ public class FhirQuery {
    * Whether to exit immediately from the query phase if no encounters are found
    */
   private boolean encounterBased = true;
+
+  private BasicAuth basicAuth;
+
+  private BasicAuthAndApiKey basicAuthAndApiKey;
+
+  private TokenAuth tokenAuth;
+
+  private AzureAuth azureAuth;
+
+  private EpicAuth epicAuth;
+
+  private CernerAuth cernerAuth;
 }

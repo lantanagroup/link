@@ -86,7 +86,7 @@ public class PatientIdentifierController extends BaseController {
                     tenantService.getConfig().getQueryList().getFhirServerBase() :
                     tenantService.getConfig().getFhirQuery().getFhirServerBase());
 
-    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService.getConfig().getFhirQuery(), this.applicationContext));
+    client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
 
     return client
             .read()
