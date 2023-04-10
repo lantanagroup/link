@@ -2,7 +2,7 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.*;
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.FhirQueryOtherResourceType;
 import com.lantanagroup.link.db.model.tenant.Tenant;

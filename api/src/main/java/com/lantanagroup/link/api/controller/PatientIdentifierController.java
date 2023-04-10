@@ -4,7 +4,8 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
@@ -37,11 +38,11 @@ public class PatientIdentifierController extends BaseController {
   private ApplicationContext applicationContext;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   @GetMapping
   public List<PatientList> searchPatientLists(@PathVariable String tenantId) {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     return tenantService.getAllPatientLists()
             .stream().map(pl -> {
               pl.setPatients(null);
@@ -52,13 +53,13 @@ public class PatientIdentifierController extends BaseController {
 
   @GetMapping("/{id}")
   public PatientList getPatientList(@PathVariable String id, @PathVariable String tenantId) {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     return tenantService.getPatientList(id);
   }
 
   @PostMapping("/$query-list")
   public void queryPatientList(@PathVariable String tenantId) throws Exception {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null || tenantService.getConfig() == null) {
       return;
@@ -145,7 +146,7 @@ public class PatientIdentifierController extends BaseController {
           @RequestBody() String body, @PathVariable String tenantId) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in XML");
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
     checkMeasureIdentifier(list);
     this.receiveFHIR(tenantService, list);
@@ -156,7 +157,7 @@ public class PatientIdentifierController extends BaseController {
           @RequestBody() String body, @PathVariable String tenantId) throws Exception {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
     checkMeasureIdentifier(list);
     this.receiveFHIR(tenantService, list);
@@ -170,7 +171,7 @@ public class PatientIdentifierController extends BaseController {
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
 
-    MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(measureIdentifier.getValue());
+    MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(measureIdentifier.getValue());
 
     if (measureDefinition == null) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());

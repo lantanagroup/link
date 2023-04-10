@@ -1,9 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientData;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -45,7 +45,7 @@ public class DataController extends BaseController {
   private ApplicationContext applicationContext;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -94,7 +94,7 @@ public class DataController extends BaseController {
       return 0;
     }
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     List<PatientData> allPatientData = tenantService.getAllPatientData();
     List<String> patientDataToDelete = allPatientData.stream().filter(pd -> {
               try {
@@ -119,7 +119,7 @@ public class DataController extends BaseController {
   @GetMapping("/$test-fhir")
   public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
     TestResponse testResponse = new TestResponse();
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService.getConfig().getFhirQuery() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant not configured to query FHIR");
@@ -129,7 +129,7 @@ public class DataController extends BaseController {
       // Get the data
       logger.info("Testing querying/scooping data for the patient {}", patientId);
 
-      MeasureDefinition measureDef = this.mongoService.findMeasureDefinition(measureId);
+      MeasureDefinition measureDef = this.sharedService.findMeasureDefinition(measureId);
       List<String> resourceTypes = FhirHelper.getDataRequirementTypes(measureDef.getBundle())
               .stream()
               .collect(Collectors.toList());

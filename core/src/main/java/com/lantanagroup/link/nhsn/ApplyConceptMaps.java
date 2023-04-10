@@ -3,7 +3,7 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import org.hl7.fhir.r4.hapi.ctx.DefaultProfileValidationSupport;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;

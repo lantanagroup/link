@@ -1,6 +1,6 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
@@ -37,11 +37,10 @@ public class FhirBundlerTests {
     Tenant tenant = new Tenant();
     tenant.setBundling(bundlingConfig);
 
-    MongoService mongoService = mock(MongoService.class);
     TenantService tenantService = mock(TenantService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
-    FhirBundler bundler = new FhirBundler(mongoService, tenantService);
+    FhirBundler bundler = new FhirBundler(tenantService);
 
     Report report = new Report();
     report.getPatientLists().add("test-patient-list");

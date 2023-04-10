@@ -4,6 +4,7 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.SearchStyleEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.FhirQueryOtherResourceType;
 import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResource;

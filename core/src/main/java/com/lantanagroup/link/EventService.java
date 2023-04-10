@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Events;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;

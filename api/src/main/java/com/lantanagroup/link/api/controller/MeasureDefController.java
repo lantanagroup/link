@@ -5,7 +5,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public class MeasureDefController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(MeasureDefController.class);
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   @Autowired
   private ApiConfig apiConfig;
@@ -113,7 +113,7 @@ public class MeasureDefController extends BaseController {
 
     this.executeBundle(bundle);
 
-    MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(bundle.getIdElement().getIdPart());
+    MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(bundle.getIdElement().getIdPart());
 
     if (measureDefinition == null) {
       measureDefinition = new MeasureDefinition();
@@ -124,11 +124,11 @@ public class MeasureDefController extends BaseController {
     measureDefinition.setBundle(bundle);
 
     logger.info("Persisting measure definition {} in database", bundle.getIdElement().getIdPart());
-    this.mongoService.saveMeasureDefinition(measureDefinition);
+    this.sharedService.saveMeasureDefinition(measureDefinition);
   }
 
   @GetMapping
   public List<MeasureDefinition> searchMeasureDefinitions() {
-    return this.mongoService.getAllMeasureDefinitions();
+    return this.sharedService.getAllMeasureDefinitions();
   }
 }

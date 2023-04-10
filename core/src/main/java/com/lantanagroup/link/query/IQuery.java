@@ -1,6 +1,6 @@
 package com.lantanagroup.link.query;
 
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.springframework.context.ApplicationContext;

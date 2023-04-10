@@ -1,7 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IPatientIdProvider;
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;

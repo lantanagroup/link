@@ -2,7 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.IReportGenerationDataEvent;
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;

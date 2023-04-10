@@ -5,7 +5,8 @@ import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -61,7 +62,7 @@ public class ReportController extends BaseController {
   private Optional<ReportingPlanService> reportingPlanService;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -85,7 +86,7 @@ public class ReportController extends BaseController {
   private void resolveMeasures(ReportCriteria criteria, ReportContext context) throws Exception {
     context.getMeasureContexts().clear();
     for (String bundleId : criteria.getBundleIds()) {
-      MeasureDefinition measureDefinition = this.mongoService.findMeasureDefinition(bundleId);
+      MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(bundleId);
 
       if (measureDefinition == null) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find measure def with ID " + bundleId);
@@ -156,7 +157,7 @@ public class ReportController extends BaseController {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     return generateResponse(tenantService, user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
@@ -192,7 +193,7 @@ public class ReportController extends BaseController {
       throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
     }
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
     return generateResponse(tenantService, user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
@@ -312,7 +313,7 @@ public class ReportController extends BaseController {
       String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(this.mongoService, tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+      ReportGenerator generator = new ReportGenerator(tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
@@ -323,7 +324,7 @@ public class ReportController extends BaseController {
 
     tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+    this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
     logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
@@ -349,7 +350,7 @@ public class ReportController extends BaseController {
     if (StringUtils.isEmpty(this.config.getSender()))
       throw new IllegalStateException("Not configured for sending");
 
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
@@ -362,12 +363,12 @@ public class ReportController extends BaseController {
 
     tenantService.saveReport(report);
 
-    this.mongoService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+    this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
   }
 
   @GetMapping("/{reportId}/aggregate")
   public List<MeasureReport> getReportAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     Report report = tenantService.getReport(reportId);
 
     if (report == null) {
@@ -380,7 +381,7 @@ public class ReportController extends BaseController {
 
   @GetMapping("/{reportId}/patientList")
   public List<PatientList> getReportPatientLists(@PathVariable String reportId, @PathVariable String tenantId) {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     Report report = tenantService.getReport(reportId);
 
     if (report == null) {
@@ -392,7 +393,7 @@ public class ReportController extends BaseController {
 
   @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
   public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId, @PathVariable String tenantId) {
-    TenantService tenantService = TenantService.create(this.mongoService, tenantId);
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     PatientMeasureReport patientMeasureReport = tenantService.getPatientMeasureReport(patientMeasureReportId);
 
     if (patientMeasureReport == null) {

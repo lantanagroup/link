@@ -5,7 +5,7 @@ import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
 import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -30,7 +30,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   private ApiConfig config;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   @Autowired
   private LinkCredentials linkCredentials;
@@ -45,7 +45,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   protected void configure(HttpSecurity http) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config);
     authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAlgorithm(), config.getAuthJwksUrl(), config.getTokenVerificationClass(), null, config.getTokenValidationEndpoint()));
-    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.mongoService));
+    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.sharedService));
     http
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

@@ -1,6 +1,5 @@
-package com.lantanagroup.link;
+package com.lantanagroup.link.db;
 
-import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.mongodb.BasicDBObject;
@@ -45,19 +44,19 @@ public class TenantService {
     this.config = config;
   }
 
-  public static TenantService create(MongoService mongoService, String tenantId) {
+  public static TenantService create(SharedService sharedService, String tenantId) {
     if (StringUtils.isEmpty(tenantId)) {
       return null;
     }
 
-    Tenant tenant = mongoService.getTenantConfig(tenantId);
+    Tenant tenant = sharedService.getTenantConfig(tenantId);
 
     if (tenant == null) {
       logger.error("Tenant {} not found", tenantId);
       return null;
     }
 
-    return new TenantService(mongoService.getClient().getDatabase(tenant.getDatabase()), tenant);
+    return new TenantService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {

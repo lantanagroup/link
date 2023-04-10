@@ -1,6 +1,6 @@
 package com.lantanagroup.link.api.scheduling;
 
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Schedule;
 import com.lantanagroup.link.db.model.tenant.Tenant;
@@ -35,7 +35,7 @@ public class Scheduler {
   private ApplicationContext context;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   private Dictionary<String, List<ScheduledFuture>> schedules = new Hashtable<>();
 
@@ -48,7 +48,7 @@ public class Scheduler {
       this.schedules.remove(tenantId);
     }
 
-    Tenant tenant = this.mongoService.getTenantConfig(tenantId);
+    Tenant tenant = this.sharedService.getTenantConfig(tenantId);
 
     if (tenant == null) {
       logger.warn("Tenant {} no longer exists, not going to re-initialize schedules for tenant", tenantId);
@@ -102,7 +102,7 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
-    List<Tenant> tenants = this.mongoService.getTenantSchedules();
+    List<Tenant> tenants = this.sharedService.getTenantSchedules();
 
     // Loop through each of the tenants and register their scheduled tasks
     for (Tenant tenant : tenants) {

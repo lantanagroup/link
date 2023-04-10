@@ -6,7 +6,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
@@ -27,7 +27,7 @@ public class ApiInit {
   private ApiConfig config;
 
   @Autowired
-  private MongoService mongoService;
+  private SharedService sharedService;
 
   private boolean checkPrerequisites() {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
@@ -103,7 +103,7 @@ public class ApiInit {
       throw new IllegalStateException(msg);
     }
 
-    List<Tenant> tenants = this.mongoService.getTenantFhirQueries();
+    List<Tenant> tenants = this.sharedService.getTenantFhirQueries();
 
     for (Tenant tenant : tenants) {
       if (StringUtils.isEmpty(tenant.getFhirQuery().getFhirServerBase())) {

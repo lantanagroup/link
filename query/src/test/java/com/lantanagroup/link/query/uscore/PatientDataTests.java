@@ -1,6 +1,6 @@
 package com.lantanagroup.link.query.uscore;
 
-import com.lantanagroup.link.TenantService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResource;
 import com.lantanagroup.link.db.model.tenant.FhirQueryParametersResourceParameter;

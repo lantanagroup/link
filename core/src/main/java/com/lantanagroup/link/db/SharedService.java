@@ -1,6 +1,5 @@
 package com.lantanagroup.link.db;
 
-import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.Audit;
@@ -39,8 +38,8 @@ import static com.mongodb.client.model.Projections.include;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
 @Component
-public class MongoService {
-  private static final Logger logger = LoggerFactory.getLogger(MongoService.class);
+public class SharedService {
+  private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
   public static final String AUDIT_COLLECTION = "audit";
   public static final String MEASURE_DEF_COLLECTION = "measureDef";
   public static final String USER_COLLECTION = "user";

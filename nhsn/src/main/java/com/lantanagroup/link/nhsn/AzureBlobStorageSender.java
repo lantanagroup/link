@@ -8,6 +8,7 @@ import com.azure.storage.blob.models.ParallelTransferOptions;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.AzureBlobStorageConfig;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;

@@ -1,6 +1,6 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
@@ -21,19 +21,17 @@ public class FhirBundler {
   private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
-  private final MongoService mongoService;
   private final EventService eventService;
   private final TenantService tenantService;
   private Organization org;
 
-  public FhirBundler(MongoService mongoService, TenantService tenantService, EventService eventService) {
-    this.mongoService = mongoService;
+  public FhirBundler(TenantService tenantService, EventService eventService) {
     this.tenantService = tenantService;
     this.eventService = eventService;
   }
 
-  public FhirBundler(MongoService mongoService, TenantService tenantService) {
-    this(mongoService, tenantService, null);
+  public FhirBundler(TenantService tenantService) {
+    this(tenantService, null);
   }
 
   private Bundling getBundlingConfig() {

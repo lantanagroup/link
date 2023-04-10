@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 
 import javax.servlet.http.HttpServletRequest;

@@ -3,9 +3,8 @@ package com.lantanagroup.link.api;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.TenantService;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.db.MongoService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientData;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -28,11 +27,9 @@ public class MeasureEvaluator {
   private ApiConfig config;
   private String patientId;
   private StopwatchManager stopwatchManager;
-  private MongoService mongoService;
   private TenantService tenantService;
 
-  private MeasureEvaluator(MongoService mongoService, TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
-    this.mongoService = mongoService;
+  private MeasureEvaluator(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.tenantService = tenantService;
     this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
@@ -42,8 +39,8 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(MongoService mongoService, TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(mongoService, tenantService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
