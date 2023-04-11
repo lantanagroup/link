@@ -241,7 +241,7 @@ public class QueryTests {
 
     // Execute the query
     Query theQuery = new Query();
-    ReportCriteria criteria = new ReportCriteria(List.of(), null, null);
+    ReportCriteria criteria = new ReportCriteria("", null, null);
     ReportContext context = new ReportContext();
     context.setPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue("report1");

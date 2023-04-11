@@ -3,6 +3,7 @@ package com.lantanagroup.link.model;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -21,7 +22,7 @@ public class ReportCriteria {
     this.periodEnd = periodEnd;
   }
 
-  public ReportCriteria(Collection<String> bundleIds, String periodStart, String periodEnd) {
-    this(null, bundleIds, periodStart, periodEnd);
+  public ReportCriteria(String bundleId, String periodStart, String periodEnd) {
+    this(null, List.of(bundleId), periodStart, periodEnd);
   }
 }
