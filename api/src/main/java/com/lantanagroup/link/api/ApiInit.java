@@ -5,7 +5,6 @@ import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Automatically detected when the Spring Boot application starts up. Primary purpose is to validate configurations.
@@ -95,13 +93,6 @@ public class ApiInit {
 
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
-
-    Optional<ApiReportDefsUrlConfig> measureReportAggregator = config.getReportDefs().getUrls().stream().filter(urlConfig -> StringUtils.isEmpty(urlConfig.getReportAggregator())).findFirst();
-    if (StringUtils.isEmpty(config.getReportAggregator()) && !measureReportAggregator.isEmpty()) {
-      String msg = "Not all measures have aggregators configured and there is no default aggregator in the configuration file.";
-      logger.error(msg);
-      throw new IllegalStateException(msg);
-    }
 
     List<Tenant> tenants = this.sharedService.getTenantFhirQueries();
 

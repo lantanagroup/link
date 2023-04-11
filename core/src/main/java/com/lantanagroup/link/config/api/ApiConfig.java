@@ -129,18 +129,13 @@ public class ApiConfig {
   private CorsConfig cors;
 
   /**
-   * <strong>api.report-defs</strong><br>Configuration for measures supported by the system
-   */
-  @Getter
-  private ApiReportDefsConfig reportDefs;
-
-  /**
    * <strong>api.measure-packages</strong><br>Configuration for multi measures supported by the system
    */
   @Getter
   private List<ApiMeasurePackage> measurePackages;
 
   @Getter
+  @NotNull
   private String reportAggregator;
 
   @Getter

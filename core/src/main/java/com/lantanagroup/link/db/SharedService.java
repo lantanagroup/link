@@ -147,7 +147,7 @@ public class SharedService {
     List<Tenant> tenants = new ArrayList<>();
     this.getTenantConfigCollection()
             .find()
-            .projection(include("_id", "name", "description"))
+            .projection(include("_id", "name", "description", "database"))
             .into(tenants);
     return tenants;
   }

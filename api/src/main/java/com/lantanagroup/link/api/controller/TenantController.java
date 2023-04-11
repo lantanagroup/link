@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/tenant")
@@ -37,18 +38,57 @@ public class TenantController extends BaseController {
     return tenant;
   }
 
-  private void validateTenantConfig(Tenant tenant) {
+  private static boolean isIdValid(String id) {
+    final String regex = "[^a-zA-Z0-9_-]";
 
-    // TODO
+    Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+    return !pattern.matcher(id).find();
+  }
+
+  private void validateTenantConfig(Tenant newTenantConfig, Tenant existingTenantConfig) {
+    if (!isIdValid(newTenantConfig.getId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Id \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getId()));
+    }
+
+    if (!isIdValid(newTenantConfig.getDatabase())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Database name \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getDatabase()));
+    }
+
+    List<Tenant> existingTenants = this.sharedService.searchTenantConfigs();
+
+    boolean idAlreadyExists =
+            existingTenantConfig == null &&
+                    StringUtils.isNotEmpty(newTenantConfig.getId()) &&
+                    existingTenants.stream().anyMatch(t -> t.getId().equals(newTenantConfig.getId()));
+    boolean databaseAlreadyExists =
+            existingTenants.stream().anyMatch(t ->
+                    !t.getId().equals(newTenantConfig.getId()) &&
+                            t.getDatabase().equalsIgnoreCase(newTenantConfig.getDatabase()));
+
+    if (idAlreadyExists) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Tenant with id \"%s\" already exists", newTenantConfig.getId()));
+    }
+
+    if (StringUtils.isEmpty(newTenantConfig.getDatabase())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant must specify a database name");
+    } else if (existingTenantConfig != null && !existingTenantConfig.getDatabase().equals(newTenantConfig.getDatabase())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("The database name cannot be changed from \"%s\" to \"%s\"", existingTenantConfig.getDatabase(), newTenantConfig.getDatabase()));
+    }
+
+    if (databaseAlreadyExists) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Another tenant is using the database name %s", newTenantConfig.getDatabase()));
+    }
   }
 
   @PutMapping("/{tenantId}")
   public void updateTenant(@RequestBody Tenant tenant, @PathVariable String tenantId) {
-    if (this.sharedService.getTenantConfig(tenantId) == null) {
+    Tenant existingTenantConfig = this.sharedService.getTenantConfig(tenantId);
+
+    if (existingTenantConfig == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
-    this.validateTenantConfig(tenant);
+    this.validateTenantConfig(tenant, existingTenantConfig);
 
     tenant.setId(tenantId);
     this.sharedService.saveTenantConfig(tenant);
@@ -57,13 +97,11 @@ public class TenantController extends BaseController {
 
   @PostMapping
   public Tenant createTenant(@RequestBody Tenant tenant) {
-    this.validateTenantConfig(tenant);
-
-    if (StringUtils.isNotEmpty(tenant.getId()) && this.sharedService.getTenantConfig(tenant.getId()) != null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant already exists. Did you mean to PUT?");
-    } else if (StringUtils.isEmpty(tenant.getId())) {
+    if (StringUtils.isEmpty(tenant.getId())) {
       tenant.setId((new ObjectId()).toString());
     }
+
+    this.validateTenantConfig(tenant, null);
 
     this.sharedService.saveTenantConfig(tenant);
     this.scheduler.reset(tenant.getId());

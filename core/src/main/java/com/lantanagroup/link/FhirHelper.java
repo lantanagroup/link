@@ -3,8 +3,6 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
-import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Address;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -140,29 +137,6 @@ public class FhirHelper {
               }
             });
   }
-
-  /**
-   * Reads the configuration file and figures out what aggregator to instantiate for a given measure bundle
-   *
-   * @param reportDefBundle
-   * @param config
-   * @return Returns the aggregator class for that measure
-   */
-  public static String getReportAggregatorClassName(ApiConfig config, Bundle reportDefBundle) {
-    String reportAggregatorClassName = null;
-    Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
-      String bundleId = urlConfig.getBundleId();
-      return bundleId.equalsIgnoreCase(reportDefBundle.getIdElement().getIdPart());
-    }).findFirst();
-    if (measureReportAggregatorUrl.isPresent() && !StringUtils.isEmpty(measureReportAggregatorUrl.get().getReportAggregator())) {
-      reportAggregatorClassName = measureReportAggregatorUrl.get().getReportAggregator();
-    } else {
-      reportAggregatorClassName = config.getReportAggregator();
-    }
-    logger.info(String.format("Using aggregator %s for measure %s", reportAggregatorClassName, reportDefBundle.getId()));
-    return reportAggregatorClassName;
-  }
-
 
   public static Measure getMeasure(Bundle reportDefBundle) throws Exception {
     return reportDefBundle.getEntry().stream()

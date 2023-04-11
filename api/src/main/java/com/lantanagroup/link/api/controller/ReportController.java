@@ -307,12 +307,9 @@ public class ReportController extends BaseController {
     }
 
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-
       measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
 
-      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
-      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
-
+      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
       ReportGenerator generator = new ReportGenerator(tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
