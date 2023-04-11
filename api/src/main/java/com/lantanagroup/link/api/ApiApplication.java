@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
-import com.lantanagroup.link.nhsn.ReportingPlanService;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -39,9 +36,6 @@ import java.util.TimeZone;
 @EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class})
 @EnableAsync
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
-  @Autowired
-  private ReportingPlanConfig reportingPlanConfig;
-
   /**
    * Main entry point for SpringBoot application. Runs as a SpringBoot application.
    *
@@ -83,14 +77,5 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
     SimpleModule module = new SimpleModule();
     FhirHelper.initSerializers(module, fhirContext.newJsonParser());
     return module;
-  }
-
-  @Bean
-  public ReportingPlanService reportingPlanService() {
-    if (!reportingPlanConfig.isEnabled()) {
-      return null;
-    }
-    logger.info("Initializing MRP service");
-    return new ReportingPlanService(reportingPlanConfig.getUrl(), reportingPlanConfig.getNhsnOrgId());
   }
 }

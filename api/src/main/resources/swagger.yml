@@ -772,6 +772,8 @@ components:
           $ref: '#/components/schemas/QueryList'
         fhirQuery:
           $ref: '#/components/schemas/FhirQuery'
+        reportingPlan:
+          $ref: '#/components/schemas/ReportingPlan'
     Bundling:
       type: object
       properties:
@@ -1052,6 +1054,27 @@ components:
           type: array
           items:
             type: string
+    ReportingPlan:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: false
+        url:
+          type: string
+          required: true
+        nhsnOrgId:
+          type: string
+          required: true
+        planNames:
+          type: object
+          required: true
+          properties:
+            measureId:
+              type: string
+              description: Key is the  measure id registered in Link, value is the NHSN plan ID
+              required: true
+              example: nhsnPlanId
     FHIR.ConceptMap:
       type: object
     FHIR.MeasureReport:

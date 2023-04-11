@@ -25,4 +25,6 @@ public class Tenant {
   private QueryList queryList;
 
   private FhirQuery fhirQuery;
+
+  private ReportingPlan reportingPlan;
 }

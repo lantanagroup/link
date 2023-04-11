@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.controller;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -29,7 +28,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,12 +55,6 @@ public class ReportController extends BaseController {
 
   @Autowired
   private StopwatchManager stopwatchManager;
-
-  @Autowired
-  private ReportingPlanConfig reportingPlanConfig;
-
-  @Autowired
-  private Optional<ReportingPlanService> reportingPlanService;
 
   @Autowired
   private SharedService sharedService;
@@ -198,22 +194,44 @@ public class ReportController extends BaseController {
     return generateResponse(tenantService, user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
+  private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
+    if (tenantService.getConfig().getReportingPlan() == null) {
+      return;
+    }
+
+    if (!tenantService.getConfig().getReportingPlan().isEnabled()) {
+      return;
+    }
+
+    if (StringUtils.isEmpty(tenantService.getConfig().getReportingPlan().getUrl())) {
+      logger.error("Reporting plan for tenant {} is not configured with a URL", tenantService.getConfig().getId());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    if (StringUtils.isEmpty(tenantService.getConfig().getReportingPlan().getNhsnOrgId())) {
+      logger.error("Reporting plan for tenant {} is not configured with an NHSN/CDC ORG ID", tenantService.getConfig().getId());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan().getUrl(), tenantService.getConfig().getReportingPlan().getNhsnOrgId());
+
+    logger.info("Checking MRP");
+    Date date = Helper.parseFhirDate(periodStart);
+    int year = date.getYear() + 1900;
+    int month = date.getMonth() + 1;
+    for (String bundleId : measureIds) {
+      String planName = tenantService.getConfig().getReportingPlan().getPlanNames().get(bundleId);
+      if (!reportingPlanService.isReporting(planName, year, month)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
+      }
+    }
+  }
+
   /**
    * generates a response with one or multiple reports
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
-    if (reportingPlanService.isPresent()) {
-      logger.info("Checking MRP");
-      Date date = Helper.parseFhirDate(periodStart);
-      int year = date.getYear() + 1900;
-      int month = date.getMonth() + 1;
-      for (String bundleId : measureIds) {
-        String planName = reportingPlanConfig.getPlanNames().get(bundleId);
-        if (!reportingPlanService.get().isReporting(planName, year, month)) {
-          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
-        }
-      }
-    }
+    this.checkReportingPlan(tenantService, periodStart, measureIds);
 
     ReportCriteria criteria = new ReportCriteria(measureIds, periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(request, user);
