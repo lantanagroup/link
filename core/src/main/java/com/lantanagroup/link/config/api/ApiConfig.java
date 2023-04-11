@@ -10,7 +10,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
-import java.util.List;
 
 @Getter
 @Setter
@@ -127,12 +126,6 @@ public class ApiConfig {
    */
   @Getter
   private CorsConfig cors;
-
-  /**
-   * <strong>api.measure-packages</strong><br>Configuration for multi measures supported by the system
-   */
-  @Getter
-  private List<ApiMeasurePackage> measurePackages;
 
   @Getter
   @NotNull

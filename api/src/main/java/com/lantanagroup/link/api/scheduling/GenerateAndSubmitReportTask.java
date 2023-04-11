@@ -4,7 +4,6 @@ import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.api.controller.ReportController;
 import com.lantanagroup.link.db.SharedService;
-import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -53,11 +52,8 @@ public class GenerateAndSubmitReportTask implements Runnable {
     ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
     Report report;
 
-    TenantService tenantService = TenantService.create(this.sharedService, this.tenantId);
-
     try {
       GenerateRequest generateRequest = new GenerateRequest();
-      generateRequest.setBundleIds(this.measureIds.toArray(new String[0]));
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);

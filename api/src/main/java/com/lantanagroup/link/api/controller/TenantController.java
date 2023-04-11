@@ -110,13 +110,13 @@ public class TenantController extends BaseController {
   }
 
   @DeleteMapping("/{tenantId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteTenant(@PathVariable String tenantId) {
     if (this.sharedService.deleteTenantConfig(tenantId) == 0) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
-    // TODO: Remove concept maps for the tenant
-
+    // Update the scheduling system to remove the tenant's schedules
     this.scheduler.reset(tenantId);
   }
 }

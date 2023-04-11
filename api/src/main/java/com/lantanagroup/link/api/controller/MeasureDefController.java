@@ -7,6 +7,7 @@ import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
+import com.lantanagroup.link.db.model.MeasurePackage;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,5 +131,25 @@ public class MeasureDefController extends BaseController {
   @GetMapping
   public List<MeasureDefinition> searchMeasureDefinitions() {
     return this.sharedService.getAllMeasureDefinitions();
+  }
+
+  @DeleteMapping("/{measureId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteMeasureDefinition(@PathVariable String measureId) {
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(measureId);
+
+    if (measureDefinition == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Could not find measure definition %s", measureId));
+    }
+
+    this.sharedService.deleteMeasureDefinition(measureId);
+
+    // Make sure the any packages that reference the measure definition are updated to remove the reference to the definition
+    List<MeasurePackage> measurePackages = this.sharedService.getAllMeasurePackages();
+    measurePackages.forEach(measurePackage -> {
+      if (measurePackage.getMeasureIds().remove(measureId)) {
+        this.sharedService.saveMeasurePackage(measurePackage);
+      }
+    });
   }
 }

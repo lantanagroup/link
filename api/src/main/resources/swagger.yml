@@ -143,8 +143,8 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: successful response
+        '204':
+          description: successful response with no content returned
   /api/{tenantId}/poi:
     get:
       tags:
@@ -449,6 +449,65 @@ paths:
       responses:
         '200':
           description: successful response
+  /api/measureDef/{measureId}:
+    delete:
+      tags:
+        - Measure Definitions
+      summary: Loads the measure bundle from the request into Link. Either the request body must have a FHIR Bundle, or the url parameter must be specified.
+      operationId: deleteMeasureDef
+      parameters:
+        - name: measureId
+          in: path
+          description: The measureId of the measure definition to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: successful response with no content returned
+  /api/measurePackage:
+    get:
+      tags:
+        - Measure Packages
+      summary: Search measure packages
+      operationId: searchMeasurePackages
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MeasurePackage'
+    put:
+      tags:
+        - Measure Packages
+      summary: Saves a measure package
+      operationId: createOrUpdateMeasurePackage
+      requestBody:
+        required: false
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/MeasurePackage'
+      responses:
+        '200':
+          description: successful response
+  /api/measurePackage/{id}:
+    delete:
+      tags:
+        - Measure Packages
+      summary: Deletes a measure package
+      operationId: deleteMeasurePackage
+      parameters:
+        - name: id
+          in: path
+          description: The id of the measure package to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: successful response with no content returned
   /api/{tenantId}/conceptMap:
     put:
       tags:
@@ -643,6 +702,15 @@ components:
           $ref: '#/components/schemas/FHIR.Bundle'
         lastUpdated:
           type: string
+    MeasurePackage:
+      type: object
+      properties:
+        id:
+          type: string
+        measureIds:
+          type: array
+          items:
+            type: string
     ConceptMap:
       type: object
       properties:

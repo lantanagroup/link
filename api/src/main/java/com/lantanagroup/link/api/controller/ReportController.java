@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.controller;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiMeasurePackage;
 import com.lantanagroup.link.config.nhsn.ReportingPlanConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -153,7 +152,7 @@ public class ReportController extends BaseController {
           @RequestBody GenerateRequest input)
           throws Exception {
 
-    if (input.getBundleIds().length < 1) {
+    if (input.getBundleIds().size() < 1) {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
 
@@ -177,11 +176,11 @@ public class ReportController extends BaseController {
           @PathVariable String tenantId,
           @RequestParam boolean regenerate)
           throws Exception {
-    String[] singleMeasureBundleIds = new String[]{};
+    List<String> singleMeasureBundleIds;
 
     // should we look for multiple multimeasureid in the configuration file just in case there is a configuration mistake and error out?
-    Optional<ApiMeasurePackage> apiMeasurePackage = Optional.empty();
-    for (ApiMeasurePackage multiMeasurePackage : config.getMeasurePackages()) {
+    Optional<MeasurePackage> apiMeasurePackage = Optional.empty();
+    for (MeasurePackage multiMeasurePackage : this.sharedService.getAllMeasurePackages()) {
       if (multiMeasurePackage.getId().equals(multiMeasureBundleId)) {
         apiMeasurePackage = Optional.of(multiMeasurePackage);
         break;
@@ -195,20 +194,20 @@ public class ReportController extends BaseController {
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
-    singleMeasureBundleIds = apiMeasurePackage.get().getBundleIds();
+    singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
     return generateResponse(tenantService, user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String[] bundleIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
     if (reportingPlanService.isPresent()) {
       logger.info("Checking MRP");
       Date date = Helper.parseFhirDate(periodStart);
       int year = date.getYear() + 1900;
       int month = date.getMonth() + 1;
-      for (String bundleId : bundleIds) {
+      for (String bundleId : measureIds) {
         String planName = reportingPlanConfig.getPlanNames().get(bundleId);
         if (!reportingPlanService.get().isReporting(planName, year, month)) {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
@@ -216,7 +215,7 @@ public class ReportController extends BaseController {
       }
     }
 
-    ReportCriteria criteria = new ReportCriteria(List.of(bundleIds), periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(measureIds, periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(request, user);
 
     this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
@@ -298,7 +297,7 @@ public class ReportController extends BaseController {
     report.setId(masterIdentifierValue);
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(Arrays.asList(bundleIds));
+    report.setMeasureIds(measureIds);
     report.setPatientLists(reportContext.getPatientLists().stream().map(pl -> pl.getId()).collect(Collectors.toList()));
 
     // Preserve the version of the already-existing report

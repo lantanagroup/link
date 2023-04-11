@@ -2,10 +2,7 @@ package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
-import com.lantanagroup.link.db.model.Audit;
-import com.lantanagroup.link.db.model.AuditTypes;
-import com.lantanagroup.link.db.model.MeasureDefinition;
-import com.lantanagroup.link.db.model.User;
+import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -42,6 +39,7 @@ public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
   public static final String AUDIT_COLLECTION = "audit";
   public static final String MEASURE_DEF_COLLECTION = "measureDef";
+  public static final String MEASURE_PACKAGE_COLLECTION = "measurePackage";
   public static final String USER_COLLECTION = "user";
   public static final String TENANT_CONFIG_COLLECTION = "tenantConfig";
 
@@ -65,6 +63,10 @@ public class SharedService {
 
   public MongoCollection<MeasureDefinition> getMeasureDefinitionCollection() {
     return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
+  }
+
+  public MongoCollection<MeasurePackage> getMeasurePackageCollection() {
+    return this.getDatabase().getCollection(MEASURE_PACKAGE_COLLECTION, MeasurePackage.class);
   }
 
   public MongoCollection<User> getUserCollection() {
@@ -171,6 +173,16 @@ public class SharedService {
     return measureDefinitions;
   }
 
+  public MeasureDefinition getMeasureDefinition(String measureId) {
+    Bson criteria = eq("measureId", measureId);
+    return this.getMeasureDefinitionCollection().find(criteria).first();
+  }
+
+  public void deleteMeasureDefinition(String measureId) {
+    Bson criteria = eq("measureId", measureId);
+    this.getMeasureDefinitionCollection().deleteOne(criteria);
+  }
+
   public void saveMeasureDefinition(MeasureDefinition measureDefinition) {
     Bson criteria = eq("measureId", measureDefinition.getMeasureId());
     this.getMeasureDefinitionCollection().replaceOne(criteria, measureDefinition, new UpdateOptions().upsert(true));
@@ -218,5 +230,23 @@ public class SharedService {
   public User getUser(String id) {
     Bson criteria = eq("_id", id);
     return this.getUserCollection().find(criteria).first();
+  }
+
+  public List<MeasurePackage> getAllMeasurePackages() {
+    List<MeasurePackage> measurePackages = new ArrayList<>();
+    this.getMeasurePackageCollection()
+            .find()
+            .into(measurePackages);
+    return measurePackages;
+  }
+
+  public void saveMeasurePackage(MeasurePackage measurePackage) {
+    Bson criteria = eq("_id", measurePackage.getId());
+    this.getMeasurePackageCollection().replaceOne(criteria, measurePackage, new UpdateOptions().upsert(true));
+  }
+
+  public void deleteMeasurePackage(String id) {
+    Bson criteria = eq("_id", id);
+    this.getMeasurePackageCollection().deleteOne(criteria);
   }
 }
