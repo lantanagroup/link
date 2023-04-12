@@ -291,6 +291,8 @@ public class ReportController extends BaseController {
       generator.generate();
 
       this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+
+      generator.aggregate();
     }
 
     this.mongoService.saveReport(report);
