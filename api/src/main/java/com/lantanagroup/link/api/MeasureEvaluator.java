@@ -15,9 +15,6 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
   private ReportCriteria criteria;
@@ -53,19 +50,6 @@ public class MeasureEvaluator {
     return terminologyEndpoint;
   }
 
-  private Bundle getPatientBundle() {
-    List<PatientData> patientData = this.mongoService.findPatientData(this.patientId);
-    Bundle patientBundle = new Bundle();
-
-    patientBundle.setEntry(patientData.stream().map(pd -> {
-      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-      newEntry.setResource((Resource) pd.getResource());
-      return newEntry;
-    }).collect(Collectors.toList()));
-
-    return patientBundle;
-  }
-
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
@@ -74,7 +58,7 @@ public class MeasureEvaluator {
       String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
       logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
-      Bundle patientBundle = this.getPatientBundle();
+      Bundle patientBundle = PatientData.asBundle(this.mongoService.findPatientData(patientId));
 
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
