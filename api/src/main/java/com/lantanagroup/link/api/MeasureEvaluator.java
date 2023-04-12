@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MeasureEvaluator {
@@ -89,14 +88,6 @@ public class MeasureEvaluator {
       }
 
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
-
-      String distribution = patientBundle.getEntry().stream()
-              .collect(Collectors.groupingBy(entry -> entry.getResource().getResourceType(), Collectors.counting()))
-              .entrySet().stream()
-              .sorted(Map.Entry.comparingByKey())
-              .map(entry -> String.format("%-40s  %6d", entry.getKey(), entry.getValue()))
-              .collect(Collectors.joining("\n"));
-      logger.info("Resource type distribution:\n{}", distribution);
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       //noinspection unused

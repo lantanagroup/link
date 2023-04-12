@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.config.query.QueryPlan;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -106,9 +107,6 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     return false;
   }
 
-  // TODO: This is always unknown if executed during AfterPatientResourceQuery
-  //       In that case, the bundle argument is resource-type-specific, not an entire patient data bundle
-  //       So it doesn't include the patient resource
   private String getPatientResourceIdFromBundle(Bundle bundle) {
     Optional<Resource> foundPatient = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType() == ResourceType.Patient)
@@ -130,10 +128,8 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       return;
     }
 
-    if (this.usCoreConfig.getLookbackPeriod() == null) {
-      logger.trace("US Core Config does not specify a lookback period");
-      return;
-    }
+    QueryPlan queryPlan = usCoreConfig.getQueryPlans().get(criteria.getQueryPlanId());
+    java.time.Period lookback = queryPlan.getLookback();
 
     String patientResourceId = this.getPatientResourceIdFromBundle(bundle);
     int total = bundle.getEntry().size();
@@ -145,7 +141,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       Bundle.BundleEntryComponent entry = bundle.getEntry().get(i);
 
       if (entry.getResource() != null) {
-        if (shouldRemove(criteria, this.usCoreConfig.getLookbackPeriod(), entry.getResource())) {
+        if (shouldRemove(criteria, lookback, entry.getResource())) {
           bundle.getEntry().remove(i);
           filtered++;
         }

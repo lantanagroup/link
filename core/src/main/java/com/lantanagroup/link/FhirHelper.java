@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
@@ -166,5 +168,48 @@ public class FhirHelper {
       }
     }
   }
-}
 
+  public static String toString(Base value) {
+    return toString(value, true);
+  }
+
+  public static String toString(Base value, boolean includeType) {
+    if (value instanceof PrimitiveType<?>) {
+      PrimitiveType<?> primitive = (PrimitiveType<?>) value;
+      return StringUtils.truncate(primitive.asStringValue(), 100);
+    }
+    return String.format(
+            "%s{%s}",
+            includeType ? value.getClass().getSimpleName() : "",
+            value.children().stream()
+                    .filter(property -> !property.getValues().isEmpty())
+                    .map(FhirHelper::toString)
+                    .collect(Collectors.joining(";")));
+  }
+
+  public static String toString(Property property) {
+    return String.format(
+            "%s=[%s]",
+            property.getName(),
+            property.getValues().stream()
+                    .map(value -> toString(value, false))
+                    .collect(Collectors.joining(",")));
+  }
+
+  public static <T extends Base> void walk(Base ancestor, Class<T> resourceType, Consumer<T> consumer) {
+    if (resourceType.isInstance(ancestor)) {
+      consumer.accept(resourceType.cast(ancestor));
+    }
+    for (Property property : ancestor.children()) {
+      for (Base child : property.getValues()) {
+        walk(child, resourceType, consumer);
+      }
+    }
+  }
+
+  public static <T extends Base> List<T> collect(Base ancestor, Class<T> resourceType) {
+    List<T> resources = new ArrayList<>();
+    walk(ancestor, resourceType, resources::add);
+    return resources;
+  }
+}

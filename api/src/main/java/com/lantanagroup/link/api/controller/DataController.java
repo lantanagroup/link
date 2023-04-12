@@ -130,10 +130,6 @@ public class DataController extends BaseController {
       IQuery query = QueryFactory.getQueryInstance(this.applicationContext, queryConfig.getQueryClass());
 
       MeasureDefinition measureDef = this.mongoService.findMeasureDefinition(measureId);
-      List<String> resourceTypes = FhirHelper.getDataRequirementTypes(measureDef.getBundle())
-              .stream()
-              .collect(Collectors.toList());
-      resourceTypes.retainAll(this.usCoreConfig.getPatientResourceTypes());
 
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
       patientScoop.setFhirQueryServer(query.getFhirQueryClient());
@@ -145,7 +141,7 @@ public class DataController extends BaseController {
 
       ReportCriteria criteria = new ReportCriteria(measureId, periodStart, periodEnd);
 
-      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi), resourceTypes, List.of(measureId));
+      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi));
       String stats = patientScoop.getStopwatchManager().getStatistics();
       logger.info(stats);
     } catch (Exception ex) {

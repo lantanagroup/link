@@ -116,17 +116,14 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(List<String> resourceTypes, ReportCriteria criteria, ReportContext context) throws Exception {
+  private void queryAndStorePatientData(ReportCriteria criteria, ReportContext context) throws Exception {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
-    List<String> measureIds = context.getMeasureContexts().stream()
-            .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
-            .collect(Collectors.toList());
     try {
       // Get the data
       logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
       QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
       IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(criteria, context, resourceTypes, measureIds);
+      query.execute(criteria, context);
     } catch (Exception ex) {
       logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
       throw ex;
@@ -254,16 +251,6 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
-    // Get the resource types to query
-    Set<String> resourceTypesToQuery = new HashSet<>();
-    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      resourceTypesToQuery.addAll(FhirHelper.getDataRequirementTypes(measureContext.getReportDefBundle()));
-    }
-
-    // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
-    //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
-    resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
-
     // Scoop the data for the patients and store it
     if (config.isSkipQuery()) {
       logger.info("Skipping query and store");
@@ -273,7 +260,7 @@ public class ReportController extends BaseController {
         }
       }
     } else {
-      this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+      this.queryAndStorePatientData(criteria, reportContext);
     }
 
     this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);

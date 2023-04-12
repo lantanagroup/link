@@ -1,28 +1,34 @@
 package com.lantanagroup.link.query.uscore;
 
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.api.SearchStyleEnum;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.*;
-import com.lantanagroup.link.config.query.USCoreConfig;
-import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceConfig;
-import com.lantanagroup.link.config.query.USCoreQueryParametersResourceParameterConfig;
+import ca.uhn.fhir.rest.gclient.IQuery;
+import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import com.lantanagroup.link.EventService;
+import com.lantanagroup.link.EventTypes;
+import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.StreamUtils;
+import com.lantanagroup.link.config.query.*;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class PatientData {
@@ -30,29 +36,31 @@ public class PatientData {
 
   private final ReportCriteria criteria;
   private final ReportContext context;
+  private final QueryPlan plan;
   private final Patient patient;
   private final String patientId;
   private final IGenericClient fhirQueryServer;
   private final USCoreConfig usCoreConfig;
-  // private final QueryConfig queryConfig;
-  private List<String> resourceTypes;
   private Bundle bundle = new Bundle();
-  private List<String> encounterReferences = new ArrayList<>();
   private EventService eventService;
-  private HashMap<String, Resource> otherResources;
   private StopwatchManager stopwatchManager;
 
-  public PatientData(StopwatchManager stopwatchManager, HashMap<String, Resource> otherResources, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig, List<String> resourceTypes) {
+  public PatientData(StopwatchManager stopwatchManager, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig) {
     this.stopwatchManager = stopwatchManager;
-    this.otherResources = otherResources;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
     this.context = context;
+
+    String planId = criteria.getQueryPlanId();
+    this.plan = usCoreConfig.getQueryPlans().get(planId);
+    if (plan == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + planId);
+    }
+
     this.patient = patient;
     this.patientId = patient.getIdElement().getIdPart();
     this.usCoreConfig = usCoreConfig;
-    this.resourceTypes = resourceTypes;
 
     this.bundle.setType(BundleType.TRANSACTION);
     this.bundle.setIdentifier(new Identifier().setValue(this.patientId));
@@ -64,324 +72,238 @@ public class PatientData {
   }
 
   public Bundle getBundle() {
-    return this.bundle;
+    return bundle;
   }
 
-  /**
-   * Only return the ISO time precise to the day
-   *
-   * @param value
-   * @return
-   */
-  public static String getDateTimeString(String value) {
-    if (value != null && value.length() > 10) {
-      return value.substring(0, 10);
-    }
-    return value;
+  public void loadData() {
+    loadData(plan.getInitial());
+    loadData(plan.getSupplemental());
+    logResourceTypeCounts();
   }
 
-  public static String getQueryParamValue(String value, ReportCriteria criteria, java.time.Period lookBackPeriod) {
-    String lookBackStart = criteria.getPeriodStart();
-
-    if (lookBackPeriod != null) {
-      Instant lookBackStartInstant = new DateTimeType(criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
-      lookBackStart = DateTimeFormatter.ISO_INSTANT.format(lookBackStartInstant);
-    }
-
-    String ret = value
-            .replace("${lookBackStart}", getDateTimeString(lookBackStart))
-            .replace("${periodStart}", getDateTimeString(criteria.getPeriodStart()))
-            .replace("${periodEnd}", getDateTimeString(criteria.getPeriodEnd()));
-    return URLEncoder.encode(ret, StandardCharsets.UTF_8);
-  }
-
-  public List<String> getQuery(List<String> measureIds, String resourceType, String patientId) {
-    String finalResourceType = resourceType;
-    ArrayList<String> params = new ArrayList<>(List.of("patient=Patient/" + URLEncoder.encode(patientId, StandardCharsets.UTF_8)));
-    HashMap<String, List<USCoreQueryParametersResourceConfig>> queryParameters = this.usCoreConfig.getQueryParameters();
-
-    //check if queryParameters exist in config, if not just load patient without observations
-    for (String measureId : measureIds) {
-      if (queryParameters != null && !queryParameters.isEmpty()) {
-        if (this.usCoreConfig.getQueryParameters() != null && this.usCoreConfig.getQueryParameters().containsKey(measureId)) {
-
-          List<USCoreQueryParametersResourceConfig> resourceQueryParams =
-                  this.usCoreConfig.getQueryParameters()
-                          .get(measureId)
-                          .stream()
-                          .filter(queryParams -> queryParams.getResourceType().equals(finalResourceType))
-                          .collect(Collectors.toList());
-
-          for (USCoreQueryParametersResourceConfig resourceQueryParam : resourceQueryParams) {
-            for (USCoreQueryParametersResourceParameterConfig param : resourceQueryParam.getParameters()) {
-              if (param.getSingleParam() != null && param.getSingleParam() == true) {
-                List<String> values = param.getValues().stream().map(v -> getQueryParamValue(v, this.criteria, this.usCoreConfig.getLookbackPeriod())).collect(Collectors.toList());
-                String paramValue = String.join(",", values);
-                params.add(param.getName() + "=" + paramValue);
-              } else {
-                for (String paramValue : param.getValues()) {
-                  params.add(param.getName() + "=" + getQueryParamValue(paramValue, criteria, this.usCoreConfig.getLookbackPeriod()));
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    String query = resourceType + "?" + String.join("&", params);
-
-    // %24%7Bencounter%7D is encoded for "${encounter}" by getQueryParamValue()
-    if (query.indexOf("%24%7Bencounter%7D") >= 0) {
-      if (resourceType.equals("Encounter")) {
-        throw new IllegalArgumentException("Cannot create a query for Encounter that filters by encounter");
-      }
-
-      // Create a separate query for each encounter
-      List<String> encQueries = this.encounterReferences.stream().map(encRef -> {
-        return query.replace("%24%7Bencounter%7D", URLEncoder.encode(encRef, StandardCharsets.UTF_8));
-      }).collect(Collectors.toList());
-      return encQueries;
-    }
-
-    return List.of(query);
-  }
-
-  private Bundle rawSearch(String query) {
-    String resourceType = query.replaceAll("\\?.+$", "");
-
-    int interceptors = 0;
-
-    if (this.fhirQueryServer.getInterceptorService() != null) {
-      interceptors = this.fhirQueryServer.getInterceptorService().getAllRegisteredInterceptors().size();
-    }
-
-    //noinspection unused
-    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-resources-patient-%s", resourceType))) {
-      logger.info("Executing query: " + query);
-
-      if (this.fhirQueryServer == null) {
-        logger.error("Client is null");
-      }
-
-      Bundle retBundle = new Bundle();
-      Bundle nextBundle = this.fhirQueryServer.search()
-              .byUrl(query)
-              .returnBundle(Bundle.class)
-              .execute();
-      addSearchResults(nextBundle, retBundle);
-
-      while (nextBundle.getLink(IBaseBundle.LINK_NEXT) != null) {
-        nextBundle = this.fhirQueryServer.loadPage()
-                .next(nextBundle)
-                .execute();
-        addSearchResults(nextBundle, retBundle);
-      }
-
-      retBundle.setTotal(retBundle.getEntry().size());
-      logger.info(query + " Found " + retBundle.getTotal() + " resources for query " + query);
-
-      if (this.eventService != null) {
-        this.eventService.triggerDataEvent(EventTypes.AfterPatientResourceQuery, retBundle, this.criteria, this.context, null);
-      }
-
-      return retBundle;
-    } catch (Exception ex) {
-      logger.error("Could not retrieve \"" + query + "\" from FHIR server " + this.fhirQueryServer.getServerBase() + " with " + interceptors + ": " + ex.getMessage(), ex);
-    }
-
-    return null;
-  }
-
-  private void addSearchResults(Bundle searchset, Bundle patientData) {
-    IParser parser = FhirContextProvider.getFhirContext().newXmlParser();
-    for (Bundle.BundleEntryComponent entry : searchset.getEntry()) {
-      Resource resource = entry.getResource();
-      if (resource instanceof OperationOutcome) {
-        logger.warn(parser.encodeResourceToString(resource));
-        continue;
-      }
-      patientData.addEntry().setResource(resource);
-    }
-  }
-
-  /**
-   * Loads encounters for the patient first and populates encounterReferences
-   * So that encounterReferences may be used to filter queries using ${encounter}
-   *
-   * @param measureIds
-   */
-  private void loadEncounters(List<String> measureIds) {
-    if (this.resourceTypes.indexOf("Encounter") < 0) {
-      return;
-    }
-
-    List<String> encounterQuery = this.getQuery(measureIds, "Encounter", this.patientId);
-    Bundle encounterBundle = this.rawSearch(encounterQuery.get(0));
-    this.bundle.getEntry().addAll(encounterBundle.getEntry());
-
-    // Create references to all the encounters found
-    if (encounterBundle != null) {
-      encounterBundle.getEntry().forEach(encEntry -> {
-        if (encEntry.getResource() == null || encEntry.getResource().getResourceType() != ResourceType.Encounter) {
-          return;
-        }
-
-        this.encounterReferences.add("Encounter/" + encEntry.getResource().getIdElement().getIdPart());
-      });
-    }
-  }
-
-  public void loadData(List<String> measureIds) {
-    if (resourceTypes.size() == 0) {
-      logger.error("Not querying for any patient data.");
-      return;
-    }
-
-    //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient")) {
-      // Load all encounters first to populate this.encounterReferences
-      // so that the encounter ids may be used by getQuery()
-      this.loadEncounters(measureIds);
-      if (this.encounterReferences.isEmpty() && usCoreConfig.isEncounterBased()) {
-        logger.info("No encounters found; exiting query phase");
+  private void loadData(List<TypedQueryPlan> plans) {
+    for (TypedQueryPlan plan : plans) {
+      int beforeCount = bundle.getEntry().size();
+      search(plan);
+      int afterCount = bundle.getEntry().size();
+      if (afterCount == beforeCount && plan.isEarlyExit()) {
         return;
       }
+    }
+  }
 
-      //Loop through resource types specified. If observation, use config to add individual category queries
-      Set<String> queryString = new HashSet<>();
-      for (String resource : this.resourceTypes) {
-        if (resource.equals("Encounter")) continue;   // Skip encounters because they were loaded earlier
-        queryString.addAll(this.getQuery(measureIds, resource, this.patientId));
-      }
-
-      if (!queryString.isEmpty()) {
-        try {
-          queryString.forEach(query -> {
-            Bundle bundle = this.rawSearch(query);
-            if (bundle != null) {
-              this.bundle.getEntry().addAll(bundle.getEntry());
-            }
-          });
-        }
-        catch (Exception ex) {
-          logger.error("Error while parallel processing patient data queries: {}", Helper.encodeLogging(ex.getMessage()));
-        }
+  private void search(TypedQueryPlan plan) {
+    logger.info("Querying for patient {} and resource type {}", patientId, plan.getResourceType());
+    try (Stopwatch stopwatch = stopwatchManager.start("query-" + plan.getResourceType())) {
+      if (plan.getReferences() == null) {
+        searchByParameters(plan.getResourceType(), plan.getParameters());
       } else {
-        logger.warn("No queries generated based on resource types and configuration");
+        searchByReferences(plan.getResourceType(), plan.getReferences());
       }
+    } catch (Exception e) {
+      logger.error("Error in query", e);
     }
-
-    //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources-other")) {
-      this.getOtherResources();
+    try {
+      if (eventService != null) {
+        eventService.triggerDataEvent(EventTypes.AfterPatientResourceQuery, bundle, criteria, context, null);
+      }
+    } catch (Exception e) {
+      logger.error("Error in AfterPatientResourceQuery", e);
     }
   }
 
-  private List<List<String>> separateByCount(List<String> resourceIds, Integer max) {
-    List<String> queue = List.copyOf(resourceIds); // So we don't modify the original List by ref
-    List<List<String>> ret = new Stack<>();
-    List<String> next = new Stack<>();
-
-    for (int i = 0; i < queue.size(); i++) {
-      next.add(queue.get(i));
-
-      if (next.size() >= max || i == queue.size() - 1) {
-        ret.add(next);
-        next = new Stack<>();
+  private void searchByParameters(String resourceType, List<ParameterConfig> parameters) {
+    String pagedName = null;
+    List<List<String>> pagedIds = null;
+    Map<String, List<String>> unpagedMap = new HashMap<>();
+    for (ParameterConfig parameter : parameters) {
+      String resourceTypeForIds = parameter.getIds();
+      int pageSize = parameter.getPaged();
+      if (resourceTypeForIds != null && pageSize > 0) {
+        if (pagedName != null) {
+          throw new IllegalStateException("Multiple paged parameters: " + resourceType);
+        }
+        pagedName = parameter.getName();
+        pagedIds = getIds(resourceTypeForIds).stream().collect(StreamUtils.paging(pageSize));
+      } else {
+        List<String> values = unpagedMap.computeIfAbsent(parameter.getName(), key -> new ArrayList<>());
+        values.add(String.join(",", getParameterValue(parameter)));
       }
     }
-
-    return ret;
+    if (pagedName == null) {
+      IQuery<Bundle> query = fhirQueryServer.search()
+              .forResource(resourceType)
+              .whereMap(unpagedMap)
+              .returnBundle(Bundle.class);
+      addAllResources(query);
+    } else {
+      for (List<String> ids : pagedIds) {
+        String joinedIds = String.join(",", ids);
+        IQuery<Bundle> query = fhirQueryServer.search()
+                .forResource(resourceType)
+                .usingStyle(SearchStyleEnum.POST)
+                .whereMap(Map.of(pagedName, List.of(joinedIds)))
+                .whereMap(unpagedMap)
+                .returnBundle(Bundle.class);
+        addAllResources(query);
+      }
+    }
   }
 
-  private void getOtherResources() {
-    List<Reference> references = ResourceIdChanger.findReferences(this.bundle);
-
-    if (this.usCoreConfig.getOtherResourceTypes() != null) {
-      HashMap<String, List<String>> resourcesToGet = new HashMap<>();
-
-      for (Reference reference : references) {
-        if (!reference.hasReference()) {
-          continue;
+  private void searchByReferences(String resourceType, ReferencesConfig references) {
+    List<String> unpagedIds = getReferencedIds(resourceType);
+    OperationType operationType = references.getOperationType();
+    switch (operationType) {
+      case READ:
+        for (String id : unpagedIds) {
+          try {
+            IBaseResource resource = fhirQueryServer.read()
+                    .resource(resourceType)
+                    .withId(id)
+                    .execute();
+            bundle.addEntry().setResource((Resource) resource);
+          } catch (ResourceNotFoundException | ResourceGoneException e) {
+            logger.error("Resource not found or gone: {}/{}", resourceType, id, e);
+          }
         }
-
-        String[] refParts = reference.getReference().split("/");
-        List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes().stream()
-                .map(ort -> ort.getResourceType())
-                .collect(Collectors.toList());
-
-        if (otherResourceTypes.contains(refParts[0])) {
-          if (!resourcesToGet.containsKey(refParts[0])) {
-            resourcesToGet.put(refParts[0], new ArrayList<>());
+        break;
+      case SEARCH:
+        int pageSize = references.getPaged();
+        if (pageSize > 0) {
+          List<List<String>> pagedIds = unpagedIds.stream().collect(StreamUtils.paging(pageSize));
+          for (List<String> ids : pagedIds) {
+            IQuery<Bundle> query = fhirQueryServer.search()
+                    .forResource(resourceType)
+                    .usingStyle(SearchStyleEnum.POST)
+                    .where(Resource.RES_ID.exactly().codes(ids))
+                    .returnBundle(Bundle.class);
+            addAllResources(query);
           }
+        } else {
+          IQuery<Bundle> query = fhirQueryServer.search()
+                  .forResource(resourceType)
+                  .usingStyle(SearchStyleEnum.POST)
+                  .where(Resource.RES_ID.exactly().codes(unpagedIds))
+                  .returnBundle(Bundle.class);
+          addAllResources(query);
+        }
+        break;
+      default:
+        throw new IllegalStateException("Unrecognized operation type: " + operationType);
+    }
+  }
 
-          List<String> resourceIds = resourcesToGet.get(refParts[0]);
+  private List<String> getParameterValue(ParameterConfig parameter) {
+    String literal = parameter.getLiteral();
+    if (literal != null) {
+      return List.of(literal);
+    }
+    String variable = parameter.getVariable();
+    if (variable != null) {
+      String value = getVariableValue(variable);
+      String format = parameter.getFormat();
+      String formattedValue = format != null ? String.format(format, value) : value;
+      return List.of(formattedValue);
+    }
+    String resourceTypeForIds = parameter.getIds();
+    if (resourceTypeForIds != null) {
+      return getIds(resourceTypeForIds);
+    }
+    throw new IllegalStateException("Invalid parameter configuration: " + parameter.getName());
+  }
 
-          if (!resourceIds.contains(refParts[1])) {
-            resourceIds.add(refParts[1]);
-          }
+  private String getVariableValue(String variable) {
+    switch (variable.toLowerCase()) {
+      case "patientid":
+        return patientId;
+      case "lookbackstart":
+        return criteria.getPeriodStartDate().minus(plan.getLookback()).toString();
+      case "periodstart":
+        return criteria.getPeriodStartDate().toString();
+      case "periodend":
+        return criteria.getPeriodEndDate().toString();
+      default:
+        throw new IllegalStateException("Unrecognized parameter variable: " + variable);
+    }
+  }
+
+  private List<String> getIds(String resourceType) {
+    return bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(resource -> StringUtils.equals(resource.fhirType(), resourceType))
+            .map(resource -> resource.getIdElement().getIdPart())
+            .distinct()
+            .collect(Collectors.toList());
+  }
+
+  private List<String> getReferencedIds(String resourceType) {
+    return bundle.getEntry().stream()
+            .flatMap(entry -> FhirHelper.collect(entry.getResource(), Reference.class).stream())
+            .map(Reference::getReferenceElement)
+            .filter(resourceId -> StringUtils.equals(resourceId.getResourceType(), resourceType))
+            .map(IIdType::getIdPart)
+            .distinct()
+            .collect(Collectors.toList());
+  }
+
+  private void addAllResources(IQuery<Bundle> query) {
+    Bundle bundle = query.execute();
+    while (true) {
+      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+        Resource resource = entry.getResource();
+        if (resource instanceof OperationOutcome) {
+          logIssues((OperationOutcome) resource);
+        } else {
+          this.bundle.addEntry().setResource(resource);
         }
       }
+      if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
+        break;
+      }
+      bundle = fhirQueryServer.loadPage()
+              .next(bundle)
+              .execute();
+    }
+  }
 
-      resourcesToGet.keySet().stream().forEach(resourceType -> {
-        //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("query-resources-other-%s", resourceType))) {
-          List<String> allResourceIds = resourcesToGet.get(resourceType);
+  private void logResourceTypeCounts() {
+    Map<String, Long> countsByResourceType = bundle.getEntry().stream()
+            .collect(Collectors.groupingBy(entry -> entry.getResource().fhirType(), Collectors.counting()));
+    int resourceTypeWidth = countsByResourceType.keySet().stream()
+            .mapToInt(String::length)
+            .max()
+            .orElse(1);
+    int countWidth = 6;
+    String message = countsByResourceType.entrySet().stream()
+            .sorted(Map.Entry.comparingByKey())
+            .map(entry -> String.format(
+                    "%s  %s",
+                    StringUtils.rightPad(entry.getKey(), resourceTypeWidth),
+                    StringUtils.leftPad(entry.getValue().toString(), countWidth)))
+            .collect(Collectors.joining("\n"));
+    logger.info("Resource type counts:\n{}", message);
+  }
 
-          // Determine if other resource was already retrieved by as part of another patient query
-          for (int i = allResourceIds.size() - 1; i >= 0; i--) {
-            String reference = resourceType + "/" + allResourceIds.get(i);
-            if (this.otherResources.containsKey(reference)) {
-              this.bundle.getEntry().add(new Bundle.BundleEntryComponent().setResource(this.otherResources.get(reference)));
-              allResourceIds.remove(i);
-            }
-          }
+  private void logIssues(OperationOutcome operationOutcome) {
+    operationOutcome.getIssue().forEach(this::logIssue);
+  }
 
-          logger.info("Loading {} other {} resources for patient {}", allResourceIds.size(), resourceType, patientId);
-          USCoreOtherResourceTypeConfig otherResourceTypeConfig = this.usCoreConfig.getOtherResourceTypes().stream()
-                  .filter(ort -> ort.getResourceType().equals(resourceType))    // If we got to this point, we know a resourceType exists in the config that matches
-                  .findFirst().get();
-
-          if (otherResourceTypeConfig.getSupportsSearch()) {
-            Integer countPerSearch = otherResourceTypeConfig.getCountPerSearch() != null ? otherResourceTypeConfig.getCountPerSearch() : 100;
-            List<List<String>> dividedQueries = this.separateByCount(allResourceIds, countPerSearch);
-
-            for (List<String> resourceIds : dividedQueries) {
-              try {
-                Bundle otherResources = this.fhirQueryServer.search()
-                        .forResource(resourceType)
-                        .usingStyle(SearchStyleEnum.POST)
-                        .where(Resource.RES_ID.exactly().codes(resourceIds))
-                        .returnBundle(Bundle.class)
-                        .execute();
-
-                otherResources.getEntry().forEach(e -> {
-                  this.otherResources.put(e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart(), e.getResource());
-                  this.bundle.addEntry().setResource(e.getResource());
-                });
-              } catch (Exception e) {
-                logger.error("Can't find resources of type: " + resourceType + " and ids: " + String.join(",", resourceIds), e);
-              }
-            }
-          } else {
-            resourcesToGet.get(resourceType).forEach(resourceId -> {
-              try {
-                Resource resource = (Resource) this.fhirQueryServer.read()
-                        .resource(resourceType)
-                        .withId(resourceId)
-                        .execute();
-
-                this.otherResources.put(resource.getResourceType().toString() + "/" + resource.getIdElement().getIdPart(), resource);
-                this.bundle.addEntry().setResource(resource);
-              } catch (Exception e) {
-                logger.error("Can't find resource of type: " + resourceType + " and id: " + resourceId, e);
-              }
-            });
-          }
-
-        }
-      });
+  private void logIssue(OperationOutcome.OperationOutcomeIssueComponent issue) {
+    String message = FhirHelper.toString(issue);
+    switch (issue.getSeverity()) {
+      case FATAL:
+      case ERROR:
+        logger.error(message);
+        break;
+      case WARNING:
+        logger.warn(message);
+        break;
+      case INFORMATION:
+        logger.info(message);
+        break;
+      default:
+        logger.debug(message);
+        break;
     }
   }
 }

@@ -1,7 +1,9 @@
 package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.StreamUtils;
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.SortedSet;
@@ -24,5 +26,26 @@ public class ReportCriteria {
 
   public ReportCriteria(String bundleId, String periodStart, String periodEnd) {
     this(null, List.of(bundleId), periodStart, periodEnd);
+  }
+
+  public String getQueryPlanId() {
+    if (packageId != null) {
+      return packageId;
+    }
+    return bundleIds.stream()
+            .reduce(StreamUtils::toOnlyElement)
+            .orElseThrow();
+  }
+
+  public LocalDate getPeriodStartDate() {
+    return getDate(periodStart);
+  }
+
+  public LocalDate getPeriodEndDate() {
+    return getDate(periodEnd);
+  }
+
+  private LocalDate getDate(String text) {
+    return LocalDate.parse(text.substring(0, 10));
   }
 }
