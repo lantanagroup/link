@@ -1,31 +1,35 @@
 package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.AuditTypes;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientData;
+import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.model.TestResponse;
 import com.lantanagroup.link.query.uscore.PatientScoop;
 import com.lantanagroup.link.time.StopwatchManager;
-import lombok.Getter;
-import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -35,11 +39,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/{tenantId}/data")
 public class DataController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(DataController.class);
-
-  @Autowired
-  @Setter
-  @Getter
-  private DataGovernanceConfig dataGovernanceConfig;
 
   @Autowired
   private ApplicationContext applicationContext;
@@ -88,26 +87,49 @@ public class DataController extends BaseController {
    *                                        has been reached.
    */
   @DeleteMapping(value = "/$expunge")
-  public Integer expungeData(@PathVariable String tenantId) {
-    if (this.dataGovernanceConfig == null) {
-      logger.error("Data governance not configured");
+  public Integer expungeData(@PathVariable String tenantId, @AuthenticationPrincipal LinkCredentials user, HttpServletRequest request) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    assert tenantService != null : "Tenant not instantiated";
+
+    if (StringUtils.isEmpty(tenantService.getConfig().getRetentionPeriod())) {
+      logger.error("Tenant retention period is not configured");
       return 0;
     }
 
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     List<PatientData> allPatientData = tenantService.getAllPatientData();
     List<String> patientDataToDelete = allPatientData.stream().filter(pd -> {
               try {
-                return shouldDelete(this.dataGovernanceConfig.getPatientDataRetention(), pd.getRetrieved());
+                return shouldDelete(tenantService.getConfig().getRetentionPeriod(), pd.getRetrieved());
               } catch (DatatypeConfigurationException e) {
                 return false;
               }
             })
-            .map(pd -> pd.getId())
+            .map(PatientData::getId)
             .collect(Collectors.toList());
 
     if (patientDataToDelete.size() > 0) {
       tenantService.deletePatientData(patientDataToDelete);
+
+      logger.info("Deleting {} patient data", patientDataToDelete.size());
+      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientDataDelete, String.join(", ", patientDataToDelete));
+    }
+
+    List<PatientList> patientLists = tenantService.getAllPatientLists();
+    List<String> patientListsToDelete = patientLists.stream().filter(pl -> {
+              try {
+                return shouldDelete(tenantService.getConfig().getRetentionPeriod(), pl.getLastUpdated());
+              } catch (DatatypeConfigurationException e) {
+                return false;
+              }
+            })
+            .map(PatientList::getId)
+            .collect(Collectors.toList());
+
+    if (patientListsToDelete.size() > 0) {
+      tenantService.deletePatientLists(patientListsToDelete);
+
+      logger.info("Deleting {} patient lists", patientListsToDelete.size());
+      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientListDelete, String.join(", ", patientListsToDelete));
     }
 
     return patientDataToDelete.size();
@@ -118,21 +140,21 @@ public class DataController extends BaseController {
    */
   @GetMapping("/$test-fhir")
   public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
-    TestResponse testResponse = new TestResponse();
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    assert tenantService != null : "Tenant not instantiated";
 
     if (tenantService.getConfig().getFhirQuery() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant not configured to query FHIR");
     }
+
+    TestResponse testResponse = new TestResponse();
 
     try {
       // Get the data
       logger.info("Testing querying/scooping data for the patient {}", patientId);
 
       MeasureDefinition measureDef = this.sharedService.findMeasureDefinition(measureId);
-      List<String> resourceTypes = FhirHelper.getDataRequirementTypes(measureDef.getBundle())
-              .stream()
-              .collect(Collectors.toList());
+      List<String> resourceTypes = new ArrayList<>(FhirHelper.getDataRequirementTypes(measureDef.getBundle()));
       resourceTypes.retainAll(tenantService.getConfig().getFhirQuery().getPatientResourceTypes());
 
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);

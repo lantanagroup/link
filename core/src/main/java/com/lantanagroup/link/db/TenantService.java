@@ -102,6 +102,12 @@ public class TenantService {
     return patientLists;
   }
 
+  public void deletePatientLists(List<String> ids) {
+    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
+    Bson criteria = or(matchIds);
+    this.getPatientListCollection().deleteMany(criteria);
+  }
+
   public PatientList getPatientList(String id) {
     return this.getPatientListCollection()
             .find(eq("_id", id))

@@ -27,4 +27,9 @@ public class Tenant {
   private FhirQuery fhirQuery;
 
   private ReportingPlan reportingPlan;
+
+  /**
+   * ISO 8601 formatted duration in which to keep data for each tenant. Defaulted to 3 months.
+   */
+  private String retentionPeriod = "P3M";
 }

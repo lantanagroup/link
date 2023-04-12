@@ -774,6 +774,10 @@ components:
           $ref: '#/components/schemas/FhirQuery'
         reportingPlan:
           $ref: '#/components/schemas/ReportingPlan'
+        retentionPeriod:
+          type: string
+          description: ISO 8601 formatted duration in which to keep data for each tenant.
+          default: 'P3M'
     Bundling:
       type: object
       properties:

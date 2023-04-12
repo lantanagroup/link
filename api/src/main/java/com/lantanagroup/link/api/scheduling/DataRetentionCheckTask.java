@@ -20,7 +20,7 @@ public class DataRetentionCheckTask implements Runnable {
   @Override
   public void run() {
     try {
-      this.dataController.expungeData(this.tenantId);
+      this.dataController.expungeData(this.tenantId, null, null);
       logger.info("Done executing data retention check scheduled task");
     } catch (Exception ex) {
       logger.error("Error running data retention check scheduled task", ex);
