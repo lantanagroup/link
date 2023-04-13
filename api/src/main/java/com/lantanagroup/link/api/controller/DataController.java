@@ -140,8 +140,11 @@ public class DataController extends BaseController {
       poi.setReference(patientId);
 
       ReportCriteria criteria = new ReportCriteria(measureId, periodStart, periodEnd);
+      ReportContext context = new ReportContext();
+      List<PatientOfInterestModel> pois = List.of(poi);
 
-      patientScoop.loadPatientData(criteria, new ReportContext(), List.of(poi));
+      patientScoop.loadInitialPatientData(criteria, context, pois);
+      patientScoop.loadSupplementalPatientData(criteria, context, pois);
       String stats = patientScoop.getStopwatchManager().getStatistics();
       logger.info(stats);
     } catch (Exception ex) {

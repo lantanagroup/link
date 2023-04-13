@@ -37,48 +37,46 @@ public class PatientData {
   private final ReportCriteria criteria;
   private final ReportContext context;
   private final QueryPlan plan;
-  private final Patient patient;
-  private final String patientId;
   private final IGenericClient fhirQueryServer;
-  private final USCoreConfig usCoreConfig;
-  private Bundle bundle = new Bundle();
+  private String patientId;
+  private Bundle bundle;
   private EventService eventService;
   private StopwatchManager stopwatchManager;
 
-  public PatientData(StopwatchManager stopwatchManager, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, Patient patient, USCoreConfig usCoreConfig) {
+  public PatientData(StopwatchManager stopwatchManager, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, USCoreConfig usCoreConfig) {
     this.stopwatchManager = stopwatchManager;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
     this.context = context;
-
     String planId = criteria.getQueryPlanId();
     this.plan = usCoreConfig.getQueryPlans().get(planId);
     if (plan == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + planId);
     }
-
-    this.patient = patient;
-    this.patientId = patient.getIdElement().getIdPart();
-    this.usCoreConfig = usCoreConfig;
-
-    this.bundle.setType(BundleType.TRANSACTION);
-    this.bundle.setIdentifier(new Identifier().setValue(this.patientId));
-    this.bundle.addEntry()
-            .setResource(this.patient)
-            .getRequest()
-            .setMethod(Bundle.HTTPVerb.PUT)
-            .setUrl("Patient/" + patient.getIdElement().getIdPart());
   }
 
   public Bundle getBundle() {
     return bundle;
   }
 
-  public void loadData() {
+  public void loadInitialData(Patient patient) {
+    this.patientId = patient.getIdElement().getIdPart();
+    this.bundle = new Bundle();
+    this.bundle.setType(BundleType.TRANSACTION);
+    this.bundle.setIdentifier(new Identifier().setValue(this.patientId));
+    this.bundle.addEntry()
+            .setResource(patient)
+            .getRequest()
+            .setMethod(Bundle.HTTPVerb.PUT)
+            .setUrl("Patient/" + this.patientId);
     loadData(plan.getInitial());
+  }
+
+  public void loadSupplementalData(String patientId, Bundle bundle) {
+    this.patientId = patientId;
+    this.bundle = bundle;
     loadData(plan.getSupplemental());
-    logResourceTypeCounts();
   }
 
   private void loadData(List<TypedQueryPlan> plans) {
@@ -87,9 +85,11 @@ public class PatientData {
       search(plan);
       int afterCount = bundle.getEntry().size();
       if (afterCount == beforeCount && plan.isEarlyExit()) {
-        return;
+        logger.info("No resources found; exiting early");
+        break;
       }
     }
+    logResourceTypeCounts();
   }
 
   private void search(TypedQueryPlan plan) {

@@ -212,4 +212,11 @@ public class FhirHelper {
     walk(ancestor, resourceType, resources::add);
     return resources;
   }
+
+  public static boolean hasNonzeroPopulationCount(MeasureReport measureReport) {
+    return measureReport.getGroup().stream()
+            .flatMap(group -> group.getPopulation().stream())
+            .mapToInt(MeasureReport.MeasureReportGroupPopulationComponent::getCount)
+            .anyMatch(count -> count > 0);
+  }
 }

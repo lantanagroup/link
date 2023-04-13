@@ -16,6 +16,7 @@ import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
+import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -116,18 +117,10 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryAndStorePatientData(ReportCriteria criteria, ReportContext context) throws Exception {
-    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
-    try {
-      // Get the data
-      logger.info("Querying/scooping data for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-      QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
-      IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-      query.execute(criteria, context);
-    } catch (Exception ex) {
-      logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
-      throw ex;
-    }
+  private void queryAndStorePatientData(ReportCriteria criteria, ReportContext context, QueryPhase queryPhase) throws Exception {
+    QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
+    IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
+    query.execute(criteria, context, queryPhase);
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -260,7 +253,8 @@ public class ReportController extends BaseController {
         }
       }
     } else {
-      this.queryAndStorePatientData(criteria, reportContext);
+      logger.info("Beginning initial query and store");
+      this.queryAndStorePatientData(criteria, reportContext, QueryPhase.INITIAL);
     }
 
     this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
@@ -277,23 +271,14 @@ public class ReportController extends BaseController {
       report.setVersion(existingReport.getVersion());
     }
 
-    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+    logger.info("Beginning initial measure evaluation");
+    this.evaluateMeasures(criteria, reportContext, report, QueryPhase.INITIAL);
 
-      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+    logger.info("Beginning supplemental query and store");
+    this.queryAndStorePatientData(criteria, reportContext, QueryPhase.SUPPLEMENTAL);
 
-      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
-      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
-
-      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
-
-      this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
-
-      generator.generate();
-
-      this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
-
-      generator.aggregate();
-    }
+    logger.info("Beginning supplemental measure evaluation and aggregation");
+    this.evaluateMeasures(criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
 
     this.mongoService.saveReport(report);
 
@@ -304,6 +289,29 @@ public class ReportController extends BaseController {
     this.stopwatchManager.reset();
 
     return report;
+  }
+
+  private void evaluateMeasures(ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase) throws Exception {
+    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+      if (queryPhase == QueryPhase.INITIAL) {
+        measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+      }
+
+      String reportAggregatorClassName = FhirHelper.getReportAggregatorClassName(config, measureContext.getReportDefBundle());
+      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
+
+      ReportGenerator generator = new ReportGenerator(this.mongoService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+
+      this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+
+      generator.generate(queryPhase);
+
+      this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+
+      if (queryPhase == QueryPhase.SUPPLEMENTAL) {
+        generator.aggregate();
+      }
+    }
   }
 
   /**
