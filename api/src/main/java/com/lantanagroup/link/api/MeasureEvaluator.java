@@ -15,10 +15,6 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
   private ReportCriteria criteria;
@@ -54,19 +50,6 @@ public class MeasureEvaluator {
     return terminologyEndpoint;
   }
 
-  private Bundle getPatientBundle() {
-    List<PatientData> patientData = this.tenantService.findPatientData(this.patientId);
-    Bundle patientBundle = new Bundle();
-
-    patientBundle.setEntry(patientData.stream().map(pd -> {
-      Bundle.BundleEntryComponent newEntry = new Bundle.BundleEntryComponent();
-      newEntry.setResource((Resource) pd.getResource());
-      return newEntry;
-    }).collect(Collectors.toList()));
-
-    return patientBundle;
-  }
-
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
@@ -75,7 +58,7 @@ public class MeasureEvaluator {
       String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
       logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
-      Bundle patientBundle = this.getPatientBundle();
+      Bundle patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
 
       Parameters parameters = new Parameters();
       parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
@@ -89,14 +72,6 @@ public class MeasureEvaluator {
       }
 
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
-
-      String distribution = patientBundle.getEntry().stream()
-              .collect(Collectors.groupingBy(entry -> entry.getResource().getResourceType(), Collectors.counting()))
-              .entrySet().stream()
-              .sorted(Map.Entry.comparingByKey())
-              .map(entry -> String.format("%-40s  %6d", entry.getKey(), entry.getValue()))
-              .collect(Collectors.joining("\n"));
-      logger.info("Resource type distribution:\n{}", distribution);
 
       FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
       //noinspection unused

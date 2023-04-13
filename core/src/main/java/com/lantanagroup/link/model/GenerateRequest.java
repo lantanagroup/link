@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 public class GenerateRequest {
   boolean regenerate;
+  private String packageId;
   private List<String> bundleIds = new ArrayList<>();
   private String periodStart;
   private String periodEnd;

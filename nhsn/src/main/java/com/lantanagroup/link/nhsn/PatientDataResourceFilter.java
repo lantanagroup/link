@@ -2,6 +2,7 @@ package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -103,9 +104,6 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     return false;
   }
 
-  // TODO: This is always unknown if executed during AfterPatientResourceQuery
-  //       In that case, the bundle argument is resource-type-specific, not an entire patient data bundle
-  //       So it doesn't include the patient resource
   private String getPatientResourceIdFromBundle(Bundle bundle) {
     Optional<Resource> foundPatient = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType() == ResourceType.Patient)
@@ -135,12 +133,8 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       return;
     }
 
-    java.time.Period lookbackPeriod = java.time.Period.parse(tenantService.getConfig().getFhirQuery().getLookbackPeriod());
-
-    if (lookbackPeriod == null) {
-      logger.error("Lookback period for tenant {} could not be parsed", tenantService.getConfig().getId());
-      return;
-    }
+    QueryPlan queryPlan = tenantService.getConfig().getFhirQuery().getQueryPlans().get(criteria.getQueryPlanId());
+    java.time.Period lookback = queryPlan.getLookback();
 
     String patientResourceId = this.getPatientResourceIdFromBundle(bundle);
     int total = bundle.getEntry().size();
@@ -152,7 +146,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       Bundle.BundleEntryComponent entry = bundle.getEntry().get(i);
 
       if (entry.getResource() != null) {
-        if (shouldRemove(criteria, lookbackPeriod, entry.getResource())) {
+        if (shouldRemove(criteria, lookback, entry.getResource())) {
           bundle.getEntry().remove(i);
           filtered++;
         }

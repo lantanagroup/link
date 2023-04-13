@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 
 public abstract class GenericAggregator implements IReportAggregator {
@@ -19,7 +19,7 @@ public abstract class GenericAggregator implements IReportAggregator {
   @Autowired
   private ApiConfig config;
 
-  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports);
+  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, Collection<MeasureReport> measureReports);
 
   @Override
   public MeasureReport generate(ReportCriteria criteria, ReportContext.MeasureContext measureContext) throws ParseException {

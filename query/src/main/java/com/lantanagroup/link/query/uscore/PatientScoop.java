@@ -3,19 +3,16 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.nhsn.ApplyConceptMaps;
-import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
+import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Resource;
@@ -32,85 +29,53 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
+@Getter
+@Setter
 @Component
 public class PatientScoop {
   protected static final Logger logger = LoggerFactory.getLogger(PatientScoop.class);
+
+  protected IGenericClient fhirQueryServer;
+
+  @Autowired
+  private ApplicationContext context;
 
   @Setter
   @Autowired
   private EventService eventService;
 
   @Autowired
-  @Getter
-  @Setter
   private StopwatchManager stopwatchManager;
-
-  @Autowired
-  private ApplicationContext applicationContext;
 
   private HashMap<String, Resource> otherResources = new HashMap<>();
 
   @Setter
   private Boolean shouldPersist = true;
 
+  @Setter
   private TenantService tenantService;
 
-  @Setter
-  private IGenericClient fhirQueryServer;
-
-  public void setTenantService(TenantService tenantService) {
-    this.tenantService = tenantService;
-
-    if (tenantService.getConfig().getFhirQuery() == null) {
-      logger.error("Tenant is not configured for querying using USCore query method.");
-      return;
-    }
-
-    if (tenantService.getConfig().getFhirQuery().getFhirServerBase() == null) {
-      logger.error("Tenant is not configured with a FHIR server base");
-      return;
-    }
-
-    //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
-    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
-            tenantService.getConfig().getFhirQuery().getFhirServerBase());
-
-    /*
-    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
-    loggingInterceptor.setLogRequestSummary(true);
-    loggingInterceptor.setLogRequestBody(true);
-    fhirQueryClient.registerInterceptor(loggingInterceptor);
-     */
-
-    if (StringUtils.isNotEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
-      logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
-
-      try {
-        client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
-      } catch (ClassNotFoundException e) {
-        logger.error("Error registering authentication interceptor", e);
-      }
-    } else {
-      logger.warn("No authentication is configured for the FHIR server being queried");
-    }
-
-    this.fhirQueryServer = client;
-  }
-
-  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, List<String> resourceTypes, List<String> measureIds) throws Exception {
+  public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, QueryPhase queryPhase) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
 
-    this.loadPatientData(criteria, context, pois, resourceTypes, measureIds);
+    switch (queryPhase) {
+      case INITIAL:
+        this.loadInitialPatientData(criteria, context, pois);
+        break;
+      case SUPPLEMENTAL:
+        this.loadSupplementalPatientData(criteria, context, pois);
+        break;
+    }
   }
 
-  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadInitialPatientData(ReportCriteria criteria, ReportContext context, Patient patient) {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.tenantService, this.stopwatchManager, this.otherResources, this.eventService, this.fhirQueryServer, criteria, context, patient, this.tenantService.getConfig().getFhirQuery(), resourceTypes);
-      patientData.loadData(measureIds);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadInitialData(this.tenantService, patient);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -119,7 +84,21 @@ public class PatientScoop {
     return null;
   }
 
-  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, String patientId, Bundle patientBundle) {
+    if (patientBundle == null) return null;
+
+    try {
+      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadSupplementalData(this.tenantService, patientId, patientBundle);
+      return patientData;
+    } catch (Exception e) {
+      logger.error("Error loading data for Patient with logical ID " + patientId, e);
+    }
+
+    return null;
+  }
+
+  public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new HashMap<>();
     int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
@@ -131,7 +110,7 @@ public class PatientScoop {
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("query-patient")) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start("query-Patient")) {
           if (poi.getReference() != null) {
             String id = poi.getReference();
 
@@ -196,51 +175,14 @@ public class PatientScoop {
 
         PatientData patientData = null;
 
-        //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("query-resources")) {
-          patientData = this.loadPatientData(criteria, context, patient, resourceTypes, measureIds);
+        try {
+          patientData = this.loadInitialPatientData(criteria, context, patient);
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
         }
 
-        Bundle patientBundle = patientData.getBundle();
-
-        // store the data
-        try {
-          ApplyConceptMaps applyConceptMaps = new ApplyConceptMaps();
-          applyConceptMaps.execute(tenantService, patientBundle);
-
-          eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
-
-          List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientData.getBundle().getEntry().stream().map(entry -> {
-            com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
-            dbpd.setPatientId(patient.getIdElement().getIdPart());
-            dbpd.setResourceType(entry.getResource().getResourceType().toString());
-            dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
-            dbpd.setResource(entry.getResource());
-            return dbpd;
-          }).collect(Collectors.toList());
-
-          eventService.triggerDataEvent(this.tenantService, EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
-
-          if (this.shouldPersist) {
-            logger.info("Storing patient data for patient {}", patient.getIdElement().getIdPart());
-
-            // store data
-            //noinspection unused
-            try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
-              this.tenantService.savePatientData(dbPatientData);
-            }
-          } else {
-            logger.info("Not storing patient data bundle");
-          }
-
-          eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
-          logger.debug("After patient data");
-        } catch (Exception ex) {
-          logger.error("Exception is: " + ex.getMessage());
-        }
+        this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
 
         return patient.getIdElement().getIdPart();
       }).collect(Collectors.toList())).get();
@@ -250,6 +192,71 @@ public class PatientScoop {
       if (patientDataFork != null) {
         patientDataFork.shutdown();
       }
+    }
+  }
+
+  public void loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
+    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
+    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
+    try {
+      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
+
+      patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
+
+        Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(poi.getId()));
+        PatientData patientData = null;
+
+        try {
+          patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
+        } catch (Exception ex) {
+          logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
+          return null;
+        }
+
+        storePatientData(criteria, context, poi.getId(), patientData.getBundle());
+
+        return poi.getId();
+      }).collect(Collectors.toList())).get();
+    } catch (Exception e) {
+      logger.error("Error scooping data for patients {}", e.getMessage(), e);
+    } finally {
+      if (patientDataFork != null) {
+        patientDataFork.shutdown();
+      }
+    }
+  }
+
+  private void storePatientData(ReportCriteria criteria, ReportContext context, String patientId, Bundle patientBundle) {
+    try {
+      eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
+
+      List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientBundle.getEntry().stream().map(entry -> {
+        com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
+        dbpd.setPatientId(patientId);
+        dbpd.setResourceType(entry.getResource().getResourceType().toString());
+        dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
+        dbpd.setResource(entry.getResource());
+        return dbpd;
+      }).collect(Collectors.toList());
+
+      eventService.triggerDataEvent(this.tenantService, EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
+
+      if (this.shouldPersist) {
+        logger.info("Storing patient data for patient {}", patientId);
+
+        // store data
+        //noinspection unused
+        try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
+          this.tenantService.savePatientData(dbPatientData);
+        }
+      } else {
+        logger.info("Not storing patient data bundle");
+      }
+
+      eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
+    } catch (Exception ex) {
+      logger.error("Error storing patient data", ex);
     }
   }
 }

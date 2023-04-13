@@ -61,7 +61,7 @@ public class EncounterStatusTransformerTest {
     context.setMasterIdentifierValue(reportID);
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
 
-    encounterStatusTransformer.execute(tenantService, bundle, new ReportCriteria(new ArrayList<>(), start, end), new ReportContext(), new ReportContext.MeasureContext());
+    encounterStatusTransformer.execute(tenantService, bundle, new ReportCriteria(bundleId, start, end), new ReportContext(), new ReportContext.MeasureContext());
 
     Encounter encounterTest1 = (Encounter)bundle.getEntry().get(1).getResource();
     Encounter encounterTest2 = (Encounter)bundle.getEntry().get(2).getResource();

@@ -11,6 +11,7 @@ import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
+import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
@@ -32,7 +33,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -107,27 +110,15 @@ public class ReportController extends BaseController {
    * @throws Exception
    */
 
-  private void queryFhir(TenantService tenantService, List<String> resourceTypes, ReportCriteria criteria, ReportContext context) {
+  private void queryFhir(TenantService tenantService, ReportCriteria criteria, ReportContext context, QueryPhase queryPhase) {
     if (tenantService.getConfig().getFhirQuery() == null) {
       logger.debug("Tenant {} not configured to query FHIR", tenantService.getConfig().getId());
       return;
     }
 
-    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
-    List<String> measureIds = context.getMeasureContexts().stream()
-            .map(measureContext -> measureContext.getMeasure().getIdentifierFirstRep().getValue())
-            .collect(Collectors.toList());
-
-    try {
-      // Get the data
-      logger.info("Querying data from FHIR for the patients: " + StringUtils.join(patientsOfInterest, ", "));
-      Query query = new Query();
-      query.setApplicationContext(this.context);
-      query.execute(tenantService, criteria, context, resourceTypes, measureIds);
-    } catch (Exception ex) {
-      logger.error(String.format("Error scooping/storing data for the patients (%s)", StringUtils.join(patientsOfInterest, ", ")));
-      throw ex;
-    }
+    Query query = new Query();
+    query.setApplicationContext(this.context);
+    query.execute(tenantService, criteria, context, queryPhase);
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -153,7 +144,7 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
 
   /**
@@ -191,7 +182,7 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
@@ -230,10 +221,10 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
     this.checkReportingPlan(tenantService, periodStart, measureIds);
 
-    ReportCriteria criteria = new ReportCriteria(measureIds, periodStart, periodEnd);
+    ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
     ReportContext reportContext = new ReportContext(request, user);
 
     this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
@@ -279,24 +270,6 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
-    // Get the resource types to query
-    Set<String> resourceTypesToQuery = new HashSet<>();
-    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      resourceTypesToQuery.addAll(FhirHelper.getDataRequirementTypes(measureContext.getReportDefBundle()));
-    }
-
-    // Never attempt to search for Patient resource... We already do that at the start of the process to ensure
-    // we know the Patient.id. Location and Medication are NOT patient resources and shouldn't be queried as patient resources
-    resourceTypesToQuery.remove("Patient");
-    resourceTypesToQuery.remove("Location");
-    resourceTypesToQuery.remove("Medication");
-
-    // TODO: Fail if there are any data requirements that aren't listed as patient resource types?
-    //       How do we expect to accurately evaluate the measure if we can't provide all of its data requirements?
-    if (tenantService.getConfig().getFhirQuery().getPatientResourceTypes() != null) {
-      resourceTypesToQuery.retainAll(tenantService.getConfig().getFhirQuery().getPatientResourceTypes());
-    }
-
     // Scoop the data for the patients and store it
     if (config.isSkipQuery()) {
       logger.info("Skipping query and store");
@@ -306,7 +279,7 @@ public class ReportController extends BaseController {
         }
       }
     } else {
-      this.queryFhir(tenantService, new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
@@ -323,19 +296,14 @@ public class ReportController extends BaseController {
       report.setVersion(existingReport.getVersion());
     }
 
-    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
-      measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+    logger.info("Beginning initial measure evaluation");
+    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL);
 
-      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
-      ReportGenerator generator = new ReportGenerator(tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+    logger.info("Beginning supplemental query and store");
+    this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
 
-      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
-
-      generator.generate();
-
-      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
-    }
-
+    logger.info("Beginning supplemental measure evaluation and aggregation");
+    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
@@ -345,6 +313,28 @@ public class ReportController extends BaseController {
     this.stopwatchManager.reset();
 
     return report;
+  }
+
+  private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase) throws Exception {
+    for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
+      if (queryPhase == QueryPhase.INITIAL) {
+        measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
+      }
+
+      IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
+      ReportGenerator generator = new ReportGenerator(tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+
+      generator.generate(queryPhase);
+
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+      tenantService.saveReport(report);
+
+      if (queryPhase == QueryPhase.SUPPLEMENTAL) {
+        generator.aggregate();
+      }
+    }
   }
 
   /**

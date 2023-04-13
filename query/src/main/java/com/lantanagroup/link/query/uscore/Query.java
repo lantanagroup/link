@@ -1,45 +1,70 @@
 package com.lantanagroup.link.query.uscore;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import com.lantanagroup.link.query.IQuery;
+import com.lantanagroup.link.query.QueryPhase;
+import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
-public class Query implements IQuery {
+public class Query {
   private static final Logger logger = LoggerFactory.getLogger(Query.class);
+
+  @Setter
+  private IGenericClient fhirQueryClient;
 
   @Setter
   private ApplicationContext applicationContext;
 
-  @Override
-  public void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, List<String> resourceTypes, List<String> measureIds) {
-    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest();
-
-    if (patientsOfInterest == null) {
-      throw new IllegalArgumentException("patientsOfInterest");
+  public IGenericClient getFhirQueryClient(TenantService tenantService) {
+    if (this.fhirQueryClient != null) {
+      return this.fhirQueryClient;
     }
 
-    if (measureIds == null) {
-      throw new IllegalArgumentException("Measure IDs must be provided");
+    //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
+    IGenericClient fhirQueryClient = FhirContextProvider.getFhirContext()
+            .newRestfulGenericClient(tenantService.getConfig().getFhirQuery().getFhirServerBase());
+
+    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
+    loggingInterceptor.setLogRequestBody(true);
+    fhirQueryClient.registerInterceptor(loggingInterceptor);
+
+    if (StringUtils.isNotEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
+      logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
+
+      try {
+        fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
+      } catch (ClassNotFoundException e) {
+        logger.error("Error registering authentication interceptor", e);
+      }
+    } else {
+      logger.warn("No authentication is configured for the FHIR server being queried");
     }
 
+    this.fhirQueryClient = fhirQueryClient;
+    return fhirQueryClient;
+  }
+
+  public void execute(TenantService tenantService, ReportCriteria criteria, ReportContext context, QueryPhase queryPhase) {
+    List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest(queryPhase);
     if (patientsOfInterest.size() > 0) {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
+        scoop.setFhirQueryServer(this.getFhirQueryClient(tenantService));
         scoop.setTenantService(tenantService);
-        scoop.execute(criteria, context, patientsOfInterest, resourceTypes, measureIds);
+        scoop.execute(criteria, context, patientsOfInterest, queryPhase);
       } catch (Exception ex) {
-        logger.error("Error scooping data for patients: " + ex.getMessage());
-        ex.printStackTrace();
+        logger.error("Error scooping data for patients", ex);
       }
     }
   }

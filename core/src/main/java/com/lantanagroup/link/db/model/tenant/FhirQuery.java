@@ -5,8 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -61,4 +63,6 @@ public class FhirQuery {
   private EpicAuth epicAuth;
 
   private CernerAuth cernerAuth;
+
+  private Map<String, QueryPlan> queryPlans = Collections.emptyMap();
 }
