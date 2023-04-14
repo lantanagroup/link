@@ -944,26 +944,8 @@ components:
           type: string
         authClass:
           type: string
-        patientResourceTypes:
-          type: array
-          items:
-            type: string
-        otherResourceTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FhirQueryOtherResourceType'
         parallelPatients:
           type: number
-        queryParameters:
-          type: object
-          properties:
-            paramName:
-              description: The name of the query parameter
-              type: array
-              items:
-                $ref: '#/components/schemas/FhirQueryParametersResource'
-        lookbackPeriod:
-          type: string
         encounterBased:
           type: boolean
           default: true
@@ -977,6 +959,11 @@ components:
           $ref: '#/components/schemas/CernerAuth'
         epicAuth:
           $ref: '#/components/schemas/EpicAuth'
+        queryPlans:
+          type: object
+          properties:
+            measureId:
+              $ref: '#/components/schemas/QueryPlan'
     BasicAuth:
       type: object
       properties:
@@ -1027,18 +1014,43 @@ components:
           type: string
         audience:
           type: string
-    FhirQueryOtherResourceType:
+    ReportingPlan:
       type: object
+      required:
+        - url
+        - nhsnOrgId
+        - planNames
       properties:
-        resourceType:
-          type: string
-        supportsSearch:
+        enabled:
           type: boolean
           default: false
-        countPerSearch:
-          type: number
-          default: 100
-    FhirQueryParametersResource:
+        url:
+          type: string
+        nhsnOrgId:
+          type: string
+        planNames:
+          type: object
+          required:
+            - measureId
+          properties:
+            measureId:
+              type: string
+              description: Key is the  measure id registered in Link, value is the NHSN plan ID
+              example: nhsnPlanId
+    QueryPlan:
+      type: object
+      properties:
+        lookback:
+          type: string
+        initial:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedQueryPlan'
+        supplemental:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedQueryPlan'
+    TypedQueryPlan:
       type: object
       properties:
         resourceType:
@@ -1046,39 +1058,36 @@ components:
         parameters:
           type: array
           items:
-            $ref: '#/components/schemas/FhirQueryParametersResourceParameter'
-    FhirQueryParametersResourceParameter:
+            $ref: '#/components/schemas/ParameterConfig'
+        references:
+          $ref: '#/components/schemas/ReferencesConfig'
+        earlyExit:
+          type: boolean
+    ReferencesConfig:
+      type: object
+      properties:
+        operationType:
+          type: string
+          enum:
+            - READ
+            - SEARCH
+        paged:
+          type: number
+    ParameterConfig:
       type: object
       properties:
         name:
           type: string
-        singleParam:
-          type: boolean
-        values:
-          type: array
-          items:
-            type: string
-    ReportingPlan:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-          default: false
-        url:
+        literal:
           type: string
-          required: true
-        nhsnOrgId:
+        variable:
           type: string
-          required: true
-        planNames:
-          type: object
-          required: true
-          properties:
-            measureId:
-              type: string
-              description: Key is the  measure id registered in Link, value is the NHSN plan ID
-              required: true
-              example: nhsnPlanId
+        format:
+          type: string
+        ids:
+          type: string
+        paged:
+          type: number
     FHIR.ConceptMap:
       type: object
     FHIR.MeasureReport:
