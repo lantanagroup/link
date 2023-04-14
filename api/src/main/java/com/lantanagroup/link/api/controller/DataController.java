@@ -1,11 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.AuditTypes;
-import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientData;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -29,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -152,10 +149,6 @@ public class DataController extends BaseController {
     try {
       // Get the data
       logger.info("Testing querying/scooping data for the patient {}", patientId);
-
-      MeasureDefinition measureDef = this.sharedService.findMeasureDefinition(measureId);
-      List<String> resourceTypes = new ArrayList<>(FhirHelper.getDataRequirementTypes(measureDef.getBundle()));
-      resourceTypes.retainAll(tenantService.getConfig().getFhirQuery().getPatientResourceTypes());
 
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
       patientScoop.setShouldPersist(false);

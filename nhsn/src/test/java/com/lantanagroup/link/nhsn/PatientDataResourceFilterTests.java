@@ -22,7 +22,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertTrue(actual);
   }
 
@@ -41,7 +41,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertFalse(actual);
   }
 
@@ -60,7 +60,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertTrue(actual);
   }
 
@@ -79,7 +79,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertFalse(actual);
   }
 
@@ -98,7 +98,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertTrue(actual);
   }
 
@@ -119,7 +119,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertFalse(actual);
   }
 
@@ -140,7 +140,7 @@ public class PatientDataResourceFilterTests {
     condition.setOnset(period);
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), condition);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), condition);
     Assert.assertTrue(actual);
   }
 
@@ -156,7 +156,7 @@ public class PatientDataResourceFilterTests {
     serviceRequest.setAuthoredOnElement(new DateTimeType("2022-01-08T05:40:00.000+00:00"));
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), serviceRequest);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), serviceRequest);
     Assert.assertFalse(actual);
   }
 
@@ -172,7 +172,7 @@ public class PatientDataResourceFilterTests {
     serviceRequest.setAuthoredOnElement(new DateTimeType("2021-09-03T05:40:00.000+00:00"));
 
     ReportCriteria criteria = new ReportCriteria("", "2022-01-01T00:00:00.000+00:00", "2022-01-31T23:59:59.000+00:00");
-    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Period.ofDays(90), serviceRequest);
+    boolean actual = PatientDataResourceFilter.shouldRemove(criteria, java.time.Duration.ofDays(90), serviceRequest);
     Assert.assertTrue(actual);
   }
 }

@@ -49,7 +49,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     return false;
   }
 
-  public static boolean shouldRemove(ReportCriteria criteria, java.time.Period lookBackPeriod, Resource resource) {
+  public static boolean shouldRemove(ReportCriteria criteria, java.time.Duration lookBackPeriod, Resource resource) {
     Instant start = new DateTimeType(
             criteria.getPeriodStart()).getValue().toInstant().minus(lookBackPeriod);
     Instant end = new DateTimeType(criteria.getPeriodEnd()).getValue().toInstant();
@@ -128,13 +128,20 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     if (tenantService.getConfig().getFhirQuery() == null) {
       logger.error("Tenant not configured for FHIR queries");
       return;
-    } else if (tenantService.getConfig().getFhirQuery().getLookbackPeriod() == null) {
-      logger.debug("US Core Config does not specify a lookback period");
+    }
+
+    if (tenantService.getConfig().getFhirQuery().getQueryPlans() == null) {
+      logger.error("Tenant not configured for Query Plans");
+      return;
+    }
+
+    if (!tenantService.getConfig().getFhirQuery().getQueryPlans().containsKey(criteria.getQueryPlanId())) {
+      logger.error("Tenant not configured with Query Plan for {}", criteria.getQueryPlanId());
       return;
     }
 
     QueryPlan queryPlan = tenantService.getConfig().getFhirQuery().getQueryPlans().get(criteria.getQueryPlanId());
-    java.time.Period lookback = queryPlan.getLookback();
+    java.time.Duration lookback = java.time.Duration.parse(queryPlan.getLookback());
 
     String patientResourceId = this.getPatientResourceIdFromBundle(bundle);
     int total = bundle.getEntry().size();
