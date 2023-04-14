@@ -3,6 +3,8 @@ package com.lantanagroup.link;
 public class Constants {
   public static final String MainSystem = "https://nhsnlink.org";
   public static final String UuidPrefix = "urn:uuid:";
+  public static final String CdcOrgIdSystem = "https://www.cdc.gov/nhsn/OrgID";
+  public static final String OrganizationTypeSystem = "http://terminology.hl7.org/CodeSystem/organization-type";
   public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
   public static final String QiCoreOrganizationProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-organization";
   public static final String QiCorePatientProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient";

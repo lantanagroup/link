@@ -199,12 +199,12 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    if (StringUtils.isEmpty(tenantService.getConfig().getReportingPlan().getNhsnOrgId())) {
+    if (StringUtils.isEmpty(tenantService.getConfig().getCdcOrgId())) {
       logger.error("Reporting plan for tenant {} is not configured with an NHSN/CDC ORG ID", tenantService.getConfig().getId());
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan().getUrl(), tenantService.getConfig().getReportingPlan().getNhsnOrgId());
+    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan().getUrl(), tenantService.getConfig().getCdcOrgId());
 
     logger.info("Checking MRP");
     Date date = Helper.parseFhirDate(periodStart);
