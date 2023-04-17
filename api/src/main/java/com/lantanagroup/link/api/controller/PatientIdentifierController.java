@@ -190,6 +190,7 @@ public class PatientIdentifierController extends BaseController {
               patientList.getMeasureId(),
               patientList.getPeriodStart(),
               patientList.getPeriodEnd());
+      patientList.setId(found.getId());
       found.merge(patientList);
     }
 

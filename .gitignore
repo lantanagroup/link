@@ -18,3 +18,4 @@ query/src/main/resources/query-*.yml
 .idea/shelf/
 .idea/libraries/
 spring-shell.log
+.idea/.name

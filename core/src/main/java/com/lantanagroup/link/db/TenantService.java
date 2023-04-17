@@ -120,7 +120,6 @@ public class TenantService {
   }
 
   public void savePatientList(PatientList patientList) {
-    patientList.setId(null);
     Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
     this.getPatientListCollection().replaceOne(criteria, patientList, new ReplaceOptions().upsert(true));
   }
