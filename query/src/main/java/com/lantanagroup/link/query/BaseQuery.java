@@ -66,9 +66,10 @@ public class BaseQuery {
       logger.warn("No authentication is configured for the FHIR server being queried");
     }
 
+    // For multi-threading, ask for the conformance check right away, so we don't ask for it multiple times in separate threads.
+    fhirQueryClient.forceConformanceCheck();
+
     this.fhirQueryClient = fhirQueryClient;
     return fhirQueryClient;
   }
-
-
 }

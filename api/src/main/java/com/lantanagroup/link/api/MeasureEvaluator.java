@@ -53,58 +53,52 @@ public class MeasureEvaluator {
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
+    String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
+    logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
-    try {
-      String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
-      logger.info(String.format("Executing $evaluate-measure for %s", measureId));
+    Bundle patientBundle = PatientData.asBundle(this.mongoService.findPatientData(patientId));
 
-      Bundle patientBundle = PatientData.asBundle(this.mongoService.findPatientData(patientId));
+    Parameters parameters = new Parameters();
+    parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
+    parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
+    parameters.addParameter().setName("subject").setValue(new StringType(patientId));
+    parameters.addParameter().setName("additionalData").setResource(patientBundle);
+    if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
+      Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
+      parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
+      logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
+    }
 
-      Parameters parameters = new Parameters();
-      parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
-      parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
-      parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-      parameters.addParameter().setName("additionalData").setResource(patientBundle);
-      if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-        Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
-        parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
-        logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
-      }
+    logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
 
-      logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
+    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
+    //noinspection unused
+    try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
+      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
+    }
 
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-      //noinspection unused
-      try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
-        measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
-      }
+    // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
+    // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
+    // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
 
-      // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
-      // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());
-      // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
+    if (null != measureReport) {
+      // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
+      for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
+        if (!evaluatedResource.hasReference()) continue;
 
-      if (null != measureReport) {
-        // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
-        for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
-          if (!evaluatedResource.hasReference()) continue;
-
-          if (evaluatedResource.getReference().matches("^#[A-Z].+/.+$")) {
-            String newReference = evaluatedResource.getReference().substring(1);
-            evaluatedResource.setReference(newReference);
-          }
+        if (evaluatedResource.getReference().matches("^#[A-Z].+/.+$")) {
+          String newReference = evaluatedResource.getReference().substring(1);
+          evaluatedResource.setReference(newReference);
         }
-
-        logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
-        // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
-        measureReport.setId(this.measureContext.getReportId());
-        // TODO: Remove this; it's expected to be the summary report, not an individual report
-        //       Though maybe it would be helpful to collect the individual reports in the context as well
-        //       That way, we wouldn't have to retrieve them from the data store service during aggregation
-        this.measureContext.setMeasureReport(measureReport);
       }
-    } catch (Exception e) {
-      logger.error(String.format("Error evaluating Measure Report for patient bundle %s", patientDataBundleId));
-      throw e;
+
+      logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
+      // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
+      measureReport.setId(this.measureContext.getReportId());
+      // TODO: Remove this; it's expected to be the summary report, not an individual report
+      //       Though maybe it would be helpful to collect the individual reports in the context as well
+      //       That way, we wouldn't have to retrieve them from the data store service during aggregation
+      this.measureContext.setMeasureReport(measureReport);
     }
 
     return measureReport;
