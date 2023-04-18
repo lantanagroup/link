@@ -70,7 +70,7 @@ public class PatientScoop {
     }
   }
 
-  private synchronized PatientData loadInitialPatientData(ReportCriteria criteria, ReportContext context, Patient patient) {
+  private PatientData loadInitialPatientData(ReportCriteria criteria, ReportContext context, Patient patient) {
     if (patient == null) return null;
 
     try {
@@ -84,7 +84,7 @@ public class PatientScoop {
     return null;
   }
 
-  private synchronized PatientData loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, String patientId, Bundle patientBundle) {
+  private PatientData loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, String patientId, Bundle patientBundle) {
     if (patientBundle == null) return null;
 
     try {

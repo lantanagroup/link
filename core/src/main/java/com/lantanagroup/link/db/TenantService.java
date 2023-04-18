@@ -5,10 +5,7 @@ import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.model.*;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
@@ -56,7 +53,14 @@ public class TenantService {
       return null;
     }
 
-    return new TenantService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
+    TenantService tenantService = new TenantService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
+
+    // Ensure that the patientData collection has the necessary indexes
+    tenantService.getPatientDataCollection().createIndex(
+            Indexes.ascending("patientId", "resourceType", "resourceId"),
+            new IndexOptions().name("pid_rt_rid"));
+
+    return tenantService;
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {
