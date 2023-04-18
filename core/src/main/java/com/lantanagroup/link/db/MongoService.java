@@ -10,9 +10,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.UpdateOneModel;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.WriteModel;
+import com.mongodb.client.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -59,6 +57,10 @@ public class MongoService {
     if (this.database == null) {
       logger.info("Using database {}", this.config.getDatabase());
       this.database = getClient().getDatabase(this.config.getDatabase());
+
+      this.getPatientDataCollection().createIndex(
+              Indexes.ascending("patientId", "resourceType", "resourceId"),
+              new IndexOptions().name("pid_rt_rid"));
     }
     return this.database;
   }
