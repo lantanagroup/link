@@ -32,4 +32,6 @@ public class Tenant {
    * ISO 8601 formatted duration in which to keep data for each tenant. Defaulted to 3 months.
    */
   private String retentionPeriod = "P3M";
+
+  private String bulkGroupId;
 }
