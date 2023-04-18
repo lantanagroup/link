@@ -282,6 +282,7 @@ public class ReportController extends BaseController {
       this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
+    logger.info("Statistics after query:\n{}", this.stopwatchManager.getStatistics());
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     Report report = new Report();
@@ -309,7 +310,7 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
-    logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
+    logger.info("Statistics for entire report:\n{}", this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
     return report;

@@ -984,21 +984,45 @@ components:
           type: string
         authClass:
           type: string
+          description: 'The class that should be used (if any) to authenticate queries to the EHR''s FHIR server.'
+          enum:
+            - com.lantanagroup.link.query.auth.BasicAuth
+            - com.lantanagroup.link.query.auth.BasicAuthAndApiKeyHeader
+            - com.lantanagroup.link.query.auth.AzureAuth
+            - com.lantanagroup.link.query.auth.CernerAuth
+            - com.lantanagroup.link.query.auth.EpicAuth
+            - com.lantanagroup.link.query.auth.TokenAuth
         parallelPatients:
           type: number
+          description: 'The number of patients to query for in parallel using separate threads. Should not be greater than the number of cores available to the installation.'
         encounterBased:
           type: boolean
           default: true
+          description: 'Whether to exit immediately from the query phase if no encounters are found'
         basicAuth:
-          $ref: '#/components/schemas/BasicAuth'
+          allOf:
+            - $ref: '#/components/schemas/BasicAuth'
+            - description: 'Configuration used by BasicAuth implementation'
         basicAuthAndApiKey:
-          $ref: '#/components/schemas/BasicAuthAndApiKey'
+          allOf:
+            - $ref: '#/components/schemas/BasicAuthAndApiKey'
+            - description: 'Configuration used by basicAuthAndApiKeyHeader implementation'
+        tokenAuth:
+          allOf:
+            - $ref: '#/components/schemas/TokenAuth'
+            - description: 'Configuration used by TokenAuth implementation'
         azureAuth:
-          $ref: '#/components/schemas/AzureAuth'
+          allOf:
+            - $ref: '#/components/schemas/AzureAuth'
+            - description: 'Configuration used by AzureAuth implementation'
         cernerAuth:
-          $ref: '#/components/schemas/CernerAuth'
+          allOf:
+            - $ref: '#/components/schemas/CernerAuth'
+            - description: 'Configuration used by CernerAuth implementation'
         epicAuth:
-          $ref: '#/components/schemas/EpicAuth'
+          allOf:
+            - $ref: '#/components/schemas/EpicAuth'
+            - description: 'Configuration used by EpicAuth implementation'
         queryPlans:
           type: object
           properties:
@@ -1030,6 +1054,11 @@ components:
         secret:
           type: string
         resource:
+          type: string
+    TokenAuth:
+      type: object
+      properties:
+        token:
           type: string
     CernerAuth:
       type: object
