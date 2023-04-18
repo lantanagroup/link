@@ -8,24 +8,68 @@ import lombok.Setter;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Tenant {
+  /**
+   * A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.
+   */
   private String id;
 
+  /**
+   * The name of the tenant, such as the facility's name.
+   */
   private String name;
 
+  /**
+   * Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and
+   * when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.
+   */
+  private String cdcOrgId;
+
+  /**
+   * A description of the tenant that is more meaningful/useful than the id.
+   */
   private String description;
 
+  /**
+   * The name of the database to use for the tenant's PHI/PII data. The same connection string for the database server
+   * is used for each tenant, but a different database on the server is used for each tenant.
+   */
   private String database;
 
+  /**
+   * Configuration properties for how to bundle the final submission, including contact information that is used
+   * when creating an Organization resource that represents the sending facility (the tenant).
+   */
   private Bundling bundling;
 
+  /**
+   * Schedule configuration for the tenant that can be used to automatically begin processes such as querying for
+   * patient lists, data retention, and automatic generation and submission of reports.
+   * See https://productresources.collibra.com/docs/collibra/latest/Content/Cron/co_spring-cron.htm for more info.
+   * See https://crontab.guru/ for more info (note: seconds aren't accounted for in this tool).
+   */
   private Schedule scheduling;
 
+  /**
+   * Custom classes/functionality that can be turned on at various points during the report generation pipeline.
+   */
   private Events events;
 
+  /**
+   * Configuration that should be used for /api/{tenantId}/poi/$query-list to query the EHR's FHIR List
+   * for patients of interest
+   */
   private QueryList queryList;
 
+  /**
+   * Configuration to use when querying patients of interest for their clinical data, such as Encounter, Condition, etc.
+   * Includes authentication strategy that is needed to successfully query the EHR's FHIR API.
+   */
   private FhirQuery fhirQuery;
 
+  /**
+   * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
+   * is signed up to report during the calculated reporting period.
+   */
   private ReportingPlan reportingPlan;
 
   /**

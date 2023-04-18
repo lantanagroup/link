@@ -15,12 +15,13 @@ public class FhirQuery {
   private String fhirServerBase;
 
   /**
-   * The class that should be used (if any) to authenticate queries to the specified <strong>query.fhir-server-base</strong>.
+   * The class that should be used (if any) to authenticate queries to the EHR's FHIR server.
    */
   private String authClass;
 
   /**
-   * The number of patients to query for at a single time.
+   * The number of patients to query for in parallel using separate threads. Should not be greater than the number of
+   * cores available to the installation.
    */
   private int parallelPatients = 10;
 
@@ -29,16 +30,34 @@ public class FhirQuery {
    */
   private boolean encounterBased = true;
 
+  /**
+   * Configuration used by BasicAuth implementation
+   */
   private BasicAuth basicAuth;
 
+  /**
+   * Configuration used by BasicAuthAndApiKeyHeader implementation
+   */
   private BasicAuthAndApiKey basicAuthAndApiKey;
 
+  /**
+   * Configuration used by TokenAuth implementation
+   */
   private TokenAuth tokenAuth;
 
+  /**
+   * Configuration used by AzureAuth implementation
+   */
   private AzureAuth azureAuth;
 
+  /**
+   * Configuration used by EpicAuth implementation
+   */
   private EpicAuth epicAuth;
 
+  /**
+   * Configuration used by CernerAuth implementation
+   */
   private CernerAuth cernerAuth;
 
   private Map<String, QueryPlan> queryPlans = Collections.emptyMap();

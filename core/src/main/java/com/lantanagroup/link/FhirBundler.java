@@ -80,7 +80,7 @@ public class FhirBundler {
 
     org.addType()
             .addCoding()
-            .setSystem("http://terminology.hl7.org/CodeSystem/organization-type")
+            .setSystem(Constants.OrganizationTypeSystem)
             .setCode("prov")
             .setDisplay("Healthcare Provider");
 
@@ -92,6 +92,12 @@ public class FhirBundler {
       org.addIdentifier()
               .setSystem(Constants.NationalProviderIdentifierSystemUrl)
               .setValue(this.getBundlingConfig().getNpi());
+    }
+
+    if (StringUtils.isNotEmpty(this.tenantService.getConfig().getCdcOrgId())) {
+      org.addIdentifier()
+              .setSystem(Constants.CdcOrgIdSystem)
+              .setValue(this.tenantService.getConfig().getCdcOrgId());
     }
 
     if (!StringUtils.isEmpty(this.getBundlingConfig().getPhone())) {

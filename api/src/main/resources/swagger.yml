@@ -756,24 +756,43 @@ components:
       properties:
         id:
           type: string
+          description: 'A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.'
         name:
           type: string
+          description: 'The name of the tenant, such as the facility''s name.'
+        cdcOrgId:
+          type: string
+          description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
         description:
           type: string
+          description: 'A description of the tenant that is more meaningful/useful than the id.'
         database:
           type: string
+          description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
         bundling:
-          $ref: '#/components/schemas/Bundling'
+          allOf:
+            - $ref: '#/components/schemas/Bundling'
+            - description: 'Configuration properties for how to bundle the final submission, including contact information that is used when creating an Organization resource that represents the sending facility (the tenant).'
         scheduling:
-          $ref: '#/components/schemas/Schedule'
+          allOf:
+            - $ref: '#/components/schemas/Schedule'
+            - description: Schedule configuration for the tenant that can be used to automatically begin processes such as querying for patient lists, data retention, and automatic generation and submission of reports.
         events:
-          $ref: '#/components/schemas/Events'
+          allOf:
+            - $ref: '#/components/schemas/Events'
+            - description: 'Custom classes/functionality that can be turned on at various points during the report generation pipeline.'
         queryList:
-          $ref: '#/components/schemas/QueryList'
+          allOf:
+            - $ref: '#/components/schemas/QueryList'
+            - description: 'Configuration that should be used for /api/{tenantId}/poi/$query-list to query the EHR''s FHIR List for patients of interest'
         fhirQuery:
-          $ref: '#/components/schemas/FhirQuery'
+          allOf:
+            - $ref: '#/components/schemas/FhirQuery'
+            - description: 'Configuration to use when querying patients of interest for their clinical data, such as Encounter, Condition, etc. Includes authentication strategy that is needed to successfully query the EHR''s FHIR API.'
         reportingPlan:
-          $ref: '#/components/schemas/ReportingPlan'
+          allOf:
+            - $ref: '#/components/schemas/ReportingPlan'
+            - description: 'Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant is signed up to report during the calculated reporting period.'
         retentionPeriod:
           type: string
           description: ISO 8601 formatted duration in which to keep data for each tenant.
@@ -787,28 +806,39 @@ components:
             - COLLECTION
             - BATCH
           default: COLLECTION
+          description: 'The type of submission bundle to create.'
         includesCensuses:
           type: boolean
           default: true
+          description: 'Whether to include censuses in the submission bundle.'
         mergeCensuses:
           type: boolean
           default: true
+          description: 'Whether to merge multiple censuses into a single list.'
         includeIndividualMeasureReports:
           type: boolean
           default: true
+          description: 'Whether to include individual measure reports in the submission bundle.'
         promoteLineLevelResources:
           type: boolean
           default: false
+          description: 'Whether to move contained line-level resources to the top level of the submission bundle.'
         npi:
           type: string
+          description: 'The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.identifier field'
         name:
           type: string
+          description: 'The name of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
         phone:
           type: string
+          description: 'The phone of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
         email:
           type: string
+          description: 'The email of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
         address:
-          $ref: '#/components/schemas/Address'
+          allOf:
+            - $ref: '#/components/schemas/Address'
+            - description: 'The address of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
     Address:
       type: object
       properties:
@@ -824,24 +854,32 @@ components:
           type: string
     Schedule:
       type: object
+      description: |
+        See <a href="https://productresources.collibra.com/docs/collibra/latest/Content/Cron/co_spring-cron.htm" target="_new">Spring Cron syntax</a> for more info.<br/>
+        See <a href="https://crontab.guru/" target="_new">Crontab.guru</a> for more info (note: seconds aren't accounted for in this tool).
       properties:
         queryPatientListCron:
           type: string
+          description: 'The CRON-formatted schedule to use querying patient list information from the EHR.<br/>The equivalent of manually calling /api/{tenantId}/poi/$query-list'
         dataRetentionCheckCron:
           type: string
+          description: 'The CRON-formatted schedule to use for data retention checks (removing data that is outside the tenant''s configured retention period).'
         generateAndSubmitReports:
           type: array
           items:
             $ref: '#/components/schemas/GenerateReport'
+          description: 'Configuration for when to automatically generate and submit reports.'
     GenerateReport:
       type: object
       properties:
         cron:
           type: string
+          description: 'The CRON-formatted schedule to use for this report''s generation and submission'
         measureIds:
           type: array
           items:
             type: string
+          description: 'The IDs of the measures to generate the report for'
         reportingPeriodMethod:
           type: string
           enum:
@@ -849,9 +887,11 @@ components:
             - CurrentMonth
             - LastWeek
             - CurrentWeek
+          description: 'The method that should be used to calculate the reporting period for the report.'
         regenerateIfExists:
           type: boolean
           default: false
+          description: 'If a report already exists for the calculated reporting period and measures, indicates whether or not the report generation process should continue and overwrite the already existing report.'
     Events:
       type: object
       properties:
@@ -944,39 +984,50 @@ components:
           type: string
         authClass:
           type: string
-        patientResourceTypes:
-          type: array
-          items:
-            type: string
-        otherResourceTypes:
-          type: array
-          items:
-            $ref: '#/components/schemas/FhirQueryOtherResourceType'
+          description: 'The class that should be used (if any) to authenticate queries to the EHR''s FHIR server.'
+          enum:
+            - com.lantanagroup.link.query.auth.BasicAuth
+            - com.lantanagroup.link.query.auth.BasicAuthAndApiKeyHeader
+            - com.lantanagroup.link.query.auth.AzureAuth
+            - com.lantanagroup.link.query.auth.CernerAuth
+            - com.lantanagroup.link.query.auth.EpicAuth
+            - com.lantanagroup.link.query.auth.TokenAuth
         parallelPatients:
           type: number
-        queryParameters:
-          type: object
-          properties:
-            paramName:
-              description: The name of the query parameter
-              type: array
-              items:
-                $ref: '#/components/schemas/FhirQueryParametersResource'
-        lookbackPeriod:
-          type: string
+          description: 'The number of patients to query for in parallel using separate threads. Should not be greater than the number of cores available to the installation.'
         encounterBased:
           type: boolean
           default: true
+          description: 'Whether to exit immediately from the query phase if no encounters are found'
         basicAuth:
-          $ref: '#/components/schemas/BasicAuth'
+          allOf:
+            - $ref: '#/components/schemas/BasicAuth'
+            - description: 'Configuration used by BasicAuth implementation'
         basicAuthAndApiKey:
-          $ref: '#/components/schemas/BasicAuthAndApiKey'
+          allOf:
+            - $ref: '#/components/schemas/BasicAuthAndApiKey'
+            - description: 'Configuration used by basicAuthAndApiKeyHeader implementation'
+        tokenAuth:
+          allOf:
+            - $ref: '#/components/schemas/TokenAuth'
+            - description: 'Configuration used by TokenAuth implementation'
         azureAuth:
-          $ref: '#/components/schemas/AzureAuth'
+          allOf:
+            - $ref: '#/components/schemas/AzureAuth'
+            - description: 'Configuration used by AzureAuth implementation'
         cernerAuth:
-          $ref: '#/components/schemas/CernerAuth'
+          allOf:
+            - $ref: '#/components/schemas/CernerAuth'
+            - description: 'Configuration used by CernerAuth implementation'
         epicAuth:
-          $ref: '#/components/schemas/EpicAuth'
+          allOf:
+            - $ref: '#/components/schemas/EpicAuth'
+            - description: 'Configuration used by EpicAuth implementation'
+        queryPlans:
+          type: object
+          properties:
+            measureId:
+              $ref: '#/components/schemas/QueryPlan'
     BasicAuth:
       type: object
       properties:
@@ -1004,6 +1055,11 @@ components:
           type: string
         resource:
           type: string
+    TokenAuth:
+      type: object
+      properties:
+        token:
+          type: string
     CernerAuth:
       type: object
       properties:
@@ -1027,18 +1083,43 @@ components:
           type: string
         audience:
           type: string
-    FhirQueryOtherResourceType:
+    ReportingPlan:
       type: object
+      required:
+        - url
+        - nhsnOrgId
+        - planNames
       properties:
-        resourceType:
-          type: string
-        supportsSearch:
+        enabled:
           type: boolean
           default: false
-        countPerSearch:
-          type: number
-          default: 100
-    FhirQueryParametersResource:
+        url:
+          type: string
+        nhsnOrgId:
+          type: string
+        planNames:
+          type: object
+          required:
+            - measureId
+          properties:
+            measureId:
+              type: string
+              description: Key is the  measure id registered in Link, value is the NHSN plan ID
+              example: nhsnPlanId
+    QueryPlan:
+      type: object
+      properties:
+        lookback:
+          type: string
+        initial:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedQueryPlan'
+        supplemental:
+          type: array
+          items:
+            $ref: '#/components/schemas/TypedQueryPlan'
+    TypedQueryPlan:
       type: object
       properties:
         resourceType:
@@ -1046,39 +1127,36 @@ components:
         parameters:
           type: array
           items:
-            $ref: '#/components/schemas/FhirQueryParametersResourceParameter'
-    FhirQueryParametersResourceParameter:
+            $ref: '#/components/schemas/ParameterConfig'
+        references:
+          $ref: '#/components/schemas/ReferencesConfig'
+        earlyExit:
+          type: boolean
+    ReferencesConfig:
+      type: object
+      properties:
+        operationType:
+          type: string
+          enum:
+            - READ
+            - SEARCH
+        paged:
+          type: number
+    ParameterConfig:
       type: object
       properties:
         name:
           type: string
-        singleParam:
-          type: boolean
-        values:
-          type: array
-          items:
-            type: string
-    ReportingPlan:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-          default: false
-        url:
+        literal:
           type: string
-          required: true
-        nhsnOrgId:
+        variable:
           type: string
-          required: true
-        planNames:
-          type: object
-          required: true
-          properties:
-            measureId:
-              type: string
-              description: Key is the  measure id registered in Link, value is the NHSN plan ID
-              required: true
-              example: nhsnPlanId
+        format:
+          type: string
+        ids:
+          type: string
+        paged:
+          type: number
     FHIR.ConceptMap:
       type: object
     FHIR.MeasureReport:
