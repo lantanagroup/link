@@ -51,6 +51,8 @@ public class Query {
       logger.warn("No authentication is configured for the FHIR server being queried");
     }
 
+    fhirQueryClient.forceConformanceCheck();
+
     this.fhirQueryClient = fhirQueryClient;
     return fhirQueryClient;
   }

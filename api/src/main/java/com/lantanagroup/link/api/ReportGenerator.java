@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
+import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -65,7 +67,10 @@ public class ReportGenerator {
       Map<String, MeasureReport> patientMeasureReports = forkJoinPool.submit(() ->
                       measureContext.getPatientsOfInterest(queryPhase).parallelStream()
                               .filter(patient -> StringUtils.isNotEmpty(patient.getReference()) || StringUtils.isNotEmpty(patient.getIdentifier()))
-                              .collect(Collectors.toMap(PatientOfInterestModel::getId, this::generate)))
+                              .map(this::generate)
+                              .filter(Objects::nonNull)
+                              .map(mr -> new AbstractMap.SimpleEntry<>(mr.getSubject().getReference().substring("Patient/".length()), mr))
+                              .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue)))
               .get();
       // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
       // pass them to aggregators using measureContext
@@ -87,17 +92,23 @@ public class ReportGenerator {
     patientMeasureReport.setPatientId(patient.getId());
 
     logger.info("Generating measure report for patient " + patient);
-    MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.tenantService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
-    measureReport.setId(measureReportId);
-    patientMeasureReport.setMeasureReport(measureReport);
 
-    logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
-    //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
-      this.tenantService.savePatientMeasureReport(patientMeasureReport);
+    try {
+      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.tenantService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+      measureReport.setId(measureReportId);
+      patientMeasureReport.setMeasureReport(measureReport);
+
+      logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
+      //noinspection unused
+      try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
+        this.tenantService.savePatientMeasureReport(patientMeasureReport);
+      }
+
+      return measureReport;
+    } catch (Exception ex) {
+      logger.error("Error generating measure report for patient {}", patient.getId(), ex);
+      return null;
     }
-
-    return measureReport;
   }
 
   public void aggregate() throws ParseException {
