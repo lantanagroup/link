@@ -597,11 +597,45 @@ paths:
       tags:
         - Data
       summary: Tests the connectivity to the tenant's configured fhir server
+      description: Performs a basic integration test against the tenant's configured FHIR server. Either `patientId` or `patientIdentifier` is required.
       operationId: test
       parameters:
         - name: tenantId
           in: path
           description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: patientId
+          in: query
+          description: The logical FHIR ID of a Patient
+          example: Patient/123
+          schema:
+            type: string
+        - name: patientIdentifier
+          in: query
+          description: The business ID of a Patient
+          example: http://some-system|321
+          schema:
+            type: string
+        - name: measureId
+          in: query
+          description: The ID of the measure that should be used to determine the query method for the integration test
+          example: NHSNGlycemicControlHypoglycemicInitialPopulation
+          required: true
+          schema:
+            type: string
+        - name: periodStart
+          in: query
+          description: The ISO formatted (FHIR) date for the reporting period's start
+          example: 2022-01-01T00:00:00.000Z
+          required: true
+          schema:
+            type: string
+        - name: periodEnd
+          in: query
+          description: The ISO formatted (FHIR) date for the reporting period's end
+          example: 2022-01-31T23:59:59.000Z
           required: true
           schema:
             type: string

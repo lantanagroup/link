@@ -136,12 +136,28 @@ public class DataController extends BaseController {
    * @return
    */
   @GetMapping("/$test-fhir")
-  public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
+  public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String patientIdentifier, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     assert tenantService != null : "Tenant not instantiated";
 
     if (tenantService.getConfig().getFhirQuery() == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant not configured to query FHIR");
+    }
+
+    if (StringUtils.isEmpty(patientId) && StringUtils.isEmpty(patientIdentifier)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either patientId or patientIdentifier are required");
+    }
+
+    if (StringUtils.isEmpty(measureId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "measureId is required");
+    }
+
+    if (StringUtils.isEmpty(periodStart)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "periodStart is required");
+    }
+
+    if (StringUtils.isEmpty(periodEnd)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "periodEnd is required");
     }
 
     TestResponse testResponse = new TestResponse();
@@ -157,6 +173,7 @@ public class DataController extends BaseController {
 
       PatientOfInterestModel poi = new PatientOfInterestModel();
       poi.setReference(patientId);
+      poi.setIdentifier(patientIdentifier);
 
       ReportCriteria criteria = new ReportCriteria(measureId, periodStart, periodEnd);
       ReportContext context = new ReportContext();
