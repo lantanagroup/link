@@ -17,6 +17,7 @@ import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.QueryPhase;
+import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -120,7 +121,9 @@ public class ReportController extends BaseController {
   private void queryAndStorePatientData(ReportCriteria criteria, ReportContext context, QueryPhase queryPhase) throws Exception {
     QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
     IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-    query.execute(criteria, context, queryPhase);
+    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-%s", queryPhase))) {
+      query.execute(criteria, context, queryPhase);
+    }
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -309,7 +312,9 @@ public class ReportController extends BaseController {
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      generator.generate(queryPhase);
+      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-%s", queryPhase))) {
+        generator.generate(queryPhase);
+      }
 
       this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
