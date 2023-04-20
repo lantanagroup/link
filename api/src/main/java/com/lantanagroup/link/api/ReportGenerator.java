@@ -61,7 +61,8 @@ public class ReportGenerator {
             : ForkJoinPool.commonPool();
     try {
       forkJoinPool.submit(() -> measureContext.getPatientsOfInterest(queryPhase).parallelStream().forEach(patient -> {
-                if (StringUtils.isEmpty(patient.getReference()) && StringUtils.isEmpty(patient.getIdentifier())) {
+                if (StringUtils.isEmpty(patient.getId())) {
+                  logger.error("Patient {} has no ID; cannot generate measure report", patient);
                   return;
                 }
                 try {
