@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
@@ -108,7 +109,7 @@ public class PatientScoop {
 
   public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
-    Map<String, Patient> patientMap = new HashMap<>();
+    Map<String, Patient> patientMap = new ConcurrentHashMap<>();
     int threshold = usCoreConfig.getParallelPatients();
     ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
     ForkJoinPool patientFork = new ForkJoinPool(threshold);
