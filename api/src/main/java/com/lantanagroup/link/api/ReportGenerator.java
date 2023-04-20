@@ -64,12 +64,13 @@ public class ReportGenerator {
                 if (StringUtils.isEmpty(patient.getReference()) && StringUtils.isEmpty(patient.getIdentifier())) {
                   return;
                 }
-                MeasureReport measureReport = generate(patient);
-                if (measureReport == null) {
-                  return;
-                }
-                synchronized (this) {
-                  measureContext.getPatientReportsByPatientId().put(patient.getId(), measureReport);
+                try {
+                  MeasureReport measureReport = generate(patient);
+                  synchronized (this) {
+                    measureContext.getPatientReportsByPatientId().put(patient.getId(), measureReport);
+                  }
+                } catch (Exception e) {
+                  logger.error("Error generating measure report for patient {}", patient.getId(), e);
                 }
               }))
               .get();
@@ -91,22 +92,17 @@ public class ReportGenerator {
 
     logger.info("Generating measure report for patient " + patient);
 
-    try {
-      MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.mongoService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
-      measureReport.setId(measureReportId);
-      patientMeasureReport.setMeasureReport(measureReport);
+    MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.mongoService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+    measureReport.setId(measureReportId);
+    patientMeasureReport.setMeasureReport(measureReport);
 
-      logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
-      //noinspection unused
-      try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
-        this.mongoService.savePatientMeasureReport(patientMeasureReport);
-      }
-
-      return measureReport;
-    } catch (Exception ex) {
-      logger.error("Error generating measure report for patient {}", patient.getId(), ex);
-      return null;
+    logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
+    //noinspection unused
+    try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
+      this.mongoService.savePatientMeasureReport(patientMeasureReport);
     }
+
+    return measureReport;
   }
 
   public void aggregate() throws ParseException {
