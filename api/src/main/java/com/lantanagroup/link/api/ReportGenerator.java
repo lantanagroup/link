@@ -19,12 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 
 /**
  * This class creates a master measure report based on every individual report generated for each patient included in the "census" list..
@@ -64,17 +60,19 @@ public class ReportGenerator {
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
     try {
-      Map<String, MeasureReport> patientMeasureReports = forkJoinPool.submit(() ->
-                      measureContext.getPatientsOfInterest(queryPhase).parallelStream()
-                              .filter(patient -> StringUtils.isNotEmpty(patient.getReference()) || StringUtils.isNotEmpty(patient.getIdentifier()))
-                              .map(this::generate)
-                              .filter(Objects::nonNull)
-                              .map(mr -> new AbstractMap.SimpleEntry<>(mr.getSubject().getReference().substring("Patient/".length()), mr))
-                              .collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue)))
+      forkJoinPool.submit(() -> measureContext.getPatientsOfInterest(queryPhase).parallelStream().forEach(patient -> {
+                if (StringUtils.isEmpty(patient.getReference()) && StringUtils.isEmpty(patient.getIdentifier())) {
+                  return;
+                }
+                MeasureReport measureReport = generate(patient);
+                if (measureReport == null) {
+                  return;
+                }
+                synchronized (this) {
+                  measureContext.getPatientReportsByPatientId().put(patient.getId(), measureReport);
+                }
+              }))
               .get();
-      // to avoid thread collision remove saving the patientMeasureReport on the FhirServer from the above parallelStream
-      // pass them to aggregators using measureContext
-      this.measureContext.getPatientReportsByPatientId().putAll(patientMeasureReports);
     } finally {
       if (forkJoinPool != null) {
         forkJoinPool.shutdown();
