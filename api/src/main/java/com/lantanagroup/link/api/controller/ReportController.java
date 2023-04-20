@@ -242,53 +242,58 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+    try {
+      this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
-    // Scoop the data for the patients and store it
-    if (config.isSkipQuery()) {
-      logger.info("Skipping query and store");
-      for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
-        if (patient.getReference() != null) {
-          patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+      // Scoop the data for the patients and store it
+      if (config.isSkipQuery()) {
+        logger.info("Skipping query and store");
+        for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
+          if (patient.getReference() != null) {
+            patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+          }
         }
+      } else {
+        logger.info("Beginning initial query and store");
+        this.queryAndStorePatientData(criteria, reportContext, QueryPhase.INITIAL);
       }
-    } else {
-      logger.info("Beginning initial query and store");
-      this.queryAndStorePatientData(criteria, reportContext, QueryPhase.INITIAL);
+
+      this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
+
+      Report report = new Report();
+      report.setId(masterIdentifierValue);
+      report.setPeriodStart(criteria.getPeriodStart());
+      report.setPeriodEnd(criteria.getPeriodEnd());
+      report.setMeasureIds(Arrays.asList(bundleIds));
+      report.setPatientLists(reportContext.getPatientLists().stream().map(pl -> pl.getId()).collect(Collectors.toList()));
+
+      // Preserve the version of the already-existing report
+      if (existingReport != null) {
+        report.setVersion(existingReport.getVersion());
+      }
+
+      logger.info("Beginning initial measure evaluation");
+      this.evaluateMeasures(criteria, reportContext, report, QueryPhase.INITIAL);
+
+      logger.info("Beginning supplemental query and store");
+      this.queryAndStorePatientData(criteria, reportContext, QueryPhase.SUPPLEMENTAL);
+
+      logger.info("Beginning supplemental measure evaluation and aggregation");
+      this.evaluateMeasures(criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
+
+      this.mongoService.saveReport(report);
+
+      this.mongoService.audit(user, request, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+      logger.info("Done generating report {}", report.getId());
+
+      logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
+      this.stopwatchManager.reset();
+
+      return report;
+    } catch (Throwable t) {
+      logger.error("Fatal error in report generation", t);
+      throw t;
     }
-
-    this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
-
-    Report report = new Report();
-    report.setId(masterIdentifierValue);
-    report.setPeriodStart(criteria.getPeriodStart());
-    report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(Arrays.asList(bundleIds));
-    report.setPatientLists(reportContext.getPatientLists().stream().map(pl -> pl.getId()).collect(Collectors.toList()));
-
-    // Preserve the version of the already-existing report
-    if (existingReport != null) {
-      report.setVersion(existingReport.getVersion());
-    }
-
-    logger.info("Beginning initial measure evaluation");
-    this.evaluateMeasures(criteria, reportContext, report, QueryPhase.INITIAL);
-
-    logger.info("Beginning supplemental query and store");
-    this.queryAndStorePatientData(criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-
-    logger.info("Beginning supplemental measure evaluation and aggregation");
-    this.evaluateMeasures(criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
-
-    this.mongoService.saveReport(report);
-
-    this.mongoService.audit(user, request, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
-    logger.info("Done generating report {}", report.getId());
-
-    logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
-    this.stopwatchManager.reset();
-
-    return report;
   }
 
   private void evaluateMeasures(ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase) throws Exception {
