@@ -121,7 +121,7 @@ public class ReportController extends BaseController {
   private void queryAndStorePatientData(ReportCriteria criteria, ReportContext context, QueryPhase queryPhase) throws Exception {
     QueryConfig queryConfig = this.context.getBean(QueryConfig.class);
     IQuery query = QueryFactory.getQueryInstance(this.context, queryConfig.getQueryClass());
-    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-%s", queryPhase))) {
+    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-phase-%s", queryPhase))) {
       query.execute(criteria, context, queryPhase);
     }
   }
@@ -312,7 +312,7 @@ public class ReportController extends BaseController {
 
       this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-%s", queryPhase))) {
+      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-phase-%s", queryPhase))) {
         generator.generate(queryPhase);
       }
 
