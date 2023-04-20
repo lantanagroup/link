@@ -289,13 +289,13 @@ public class ReportController extends BaseController {
       this.mongoService.audit(user, request, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
       logger.info("Done generating report {}", report.getId());
 
-      logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
-      this.stopwatchManager.reset();
-
       return report;
     } catch (Throwable t) {
       logger.error("Fatal error in report generation", t);
       throw t;
+    } finally {
+      logger.info("Statistics:\n{}", this.stopwatchManager.getStatistics());
+      this.stopwatchManager.reset();
     }
   }
 
