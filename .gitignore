@@ -13,8 +13,5 @@ target/
 api/src/main/resources/api-*.yml
 query/src/main/resources/query-*.yml
 
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf/
-.idea/libraries/
+.idea/*
 spring-shell.log
