@@ -2,6 +2,7 @@ package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.IResource;
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
@@ -35,8 +36,11 @@ import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,8 +95,19 @@ public class RefreshPatientListCommand extends BaseShellCommand {
         ((BaseClient) client).setKeepResponses(true);
     }
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
-    IResource r = client.fetchResourceFromUrl(IResource.class, patientListId);
+    Resource r = client.fetchResourceFromUrl(ListResource.class, patientListId);
     if (r instanceof ListResource) {
+    	IParser jp = fhirContext.newJsonParser();
+    	jp.setPrettyPrint(true);
+    	try {
+			jp.encodeResourceToWriter(r, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
+		} catch (DataFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         return (ListResource)r;
     } else {
         IParser p = fhirContext.newJsonParser();
@@ -106,21 +121,25 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     logger.info("Transforming");
     ListResource target = new ListResource();
     Period period = new Period();
-
-    if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Month)) {
+    CensusReportingPeriods reportingPeriod = this.config.getCensusReportingPeriod();
+    if (reportingPeriod == null) {
+    	reportingPeriod = CensusReportingPeriods.Day;
+    }
+    
+    if (reportingPeriod.equals(CensusReportingPeriods.Month)) {
       period
-              .setStart(Helper.getStartOfMonth(source.getDate()))
-              .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
-    } else if (this.config.getCensusReportingPeriod().equals(CensusReportingPeriods.Day)) {
+          .setStart(Helper.getStartOfMonth(source.getDate()))
+          .setEnd(Helper.getEndOfMonth(source.getDate(), 0));
+    } else if (reportingPeriod.equals(CensusReportingPeriods.Day)) {
       period
-              .setStart(Helper.getStartOfDay(source.getDate()))
-              .setEnd(Helper.getEndOfDay(source.getDate(), 0));
+          .setStart(Helper.getStartOfDay(source.getDate()))
+          .setEnd(Helper.getEndOfDay(source.getDate(), 0));
     }
 
     target.addExtension(Constants.ApplicablePeriodExtensionUrl, period);
     target.addIdentifier()
-            .setSystem(Constants.MainSystem)
-            .setValue(censusIdentifier);
+        .setSystem(Constants.MainSystem)
+        .setValue(censusIdentifier);
     target.setStatus(ListResource.ListStatus.CURRENT);
     target.setMode(ListResource.ListMode.WORKING);
     target.setTitle(String.format("Census List for %s", censusIdentifier));
