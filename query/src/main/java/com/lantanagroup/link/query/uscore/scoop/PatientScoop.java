@@ -41,10 +41,11 @@ public class PatientScoop extends Scoop {
   @Autowired
   protected FhirDataProvider fhirDataProvider;
 
+  /*
   @Setter
   @Autowired
+  */
   private EventService eventService;
-
 
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {

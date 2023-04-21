@@ -5,7 +5,8 @@ cli:
     data-store:
       base-url: https://thsa1.sanerproject.org:944?/fhir
       username: temp-user
-      password: temp-password!     
+      password: temp-password!
+    fhir-server-base: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/api/FHIR/STU3
 
   refresh-patient-list:
     api-url: https://thsa1.sanerproject.org:9440/api

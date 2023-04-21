@@ -14,6 +14,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 
 
 @Component
+@Service
 public class EventService {
 
   private static final Logger logger = LoggerFactory.getLogger(EventService.class);

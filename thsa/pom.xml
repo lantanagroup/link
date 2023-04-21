@@ -64,19 +64,16 @@
         </dependency>
 
         <!-- Adding support for YAML conversion -->
-        <!-- dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.11.2</version>
-        </dependency -->
+            <version>2.14.2</version>
+        </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-<<<<<<< HEAD
-            <version>2.12.6.1</version>
-=======
             <version>2.14.2</version>
->>>>>>> 0feb5b2a (Updating jackson versions)
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
