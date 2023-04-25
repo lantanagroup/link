@@ -41,11 +41,16 @@ public class PatientScoop extends Scoop {
   @Autowired
   protected FhirDataProvider fhirDataProvider;
 
-  /*
+  /* TODO : ALM - commenting this out and setting in added constructor until autowired snafu figured out
   @Setter
   @Autowired
-  */
+   */
   private EventService eventService;
+
+  public PatientScoop() {
+    // TODO - trying to get past the dependency / autowired snafu for now.
+    eventService = new EventService();
+  }
 
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
     if (this.fhirQueryServer == null) {

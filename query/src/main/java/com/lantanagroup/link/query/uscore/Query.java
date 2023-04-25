@@ -28,7 +28,9 @@ public class Query extends BaseQuery implements IQuery {
 
     if (patientsOfInterest.size() > 0) {
       try {
-        PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
+        //EventService es = new EventService();
+        PatientScoop scoop = new PatientScoop();
+        //PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
         scoop.setFhirQueryServer(this.getFhirQueryClient());
         scoop.execute(criteria, context, patientsOfInterest, reportId, resourceTypes, measureIds);
       } catch (Exception ex) {
