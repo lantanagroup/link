@@ -75,9 +75,11 @@ public class ApiController {
             "          tokenUrl: " + this.swaggerConfig.getTokenUrl() + "\n" +
             "          scopes:\n";
 
+    StringBuilder contentBuilder = new StringBuilder(content);
     for (String scope : this.swaggerConfig.getScope()) {
-      content += String.format("            %s: %s\n", scope, scope);
+      contentBuilder.append(String.format("            %s: %s\n", scope, scope));
     }
+    content = contentBuilder.toString();
 
     String publicAddress = this.getPublicAddress();
 
