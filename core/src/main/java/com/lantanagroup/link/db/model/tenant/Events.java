@@ -24,6 +24,8 @@ public class Events {
 
   List<String> AfterPatientDataQuery;
 
+  List<String> AfterApplyConceptMaps;
+
   List<String> BeforePatientDataStore;
 
   List<String> AfterPatientDataStore;

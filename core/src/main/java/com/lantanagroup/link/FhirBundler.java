@@ -24,6 +24,19 @@ public class FhirBundler {
   private final EventService eventService;
   private final TenantService tenantService;
   private Organization org;
+  private final List<String> REMOVE_EXTENSIONS = List.of(
+          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
+          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
+          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/accidentrelated",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/billing-organization",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/ip-admit-datetime",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/observation-datetime",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/specialty",
+          "http://open.epic.com/FHIR/StructureDefinition/extension/team-name",
+          "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
+  );
 
   public FhirBundler(TenantService tenantService, EventService eventService) {
     this.tenantService = tenantService;
@@ -71,9 +84,10 @@ public class FhirBundler {
   private Organization createOrganization() {
     Organization org = new Organization();
     org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
+    org.setActive(true);
 
     if (!StringUtils.isEmpty(this.getBundlingConfig().getNpi())) {
-      org.setId("" + this.getBundlingConfig().getNpi().hashCode());
+      org.setId(String.format("%s", this.getBundlingConfig().getNpi().hashCode()));
     } else {
       org.setId(UUID.randomUUID().toString());
     }
@@ -114,6 +128,10 @@ public class FhirBundler {
 
     if (this.getBundlingConfig().getAddress() != null) {
       org.addAddress(FhirHelper.getFHIRAddress(this.getBundlingConfig().getAddress()));
+    } else {
+      org.addAddress().addExtension()
+              .setUrl(Constants.DataAbsentReasonExtensionUrl)
+              .setValue(new CodeType().setValue("unknown"));
     }
 
     return org;
@@ -143,7 +161,17 @@ public class FhirBundler {
     }
   }
 
-  private void setProfile(Resource resource) {
+  /**
+   * Add profiles to the resource if they are clinical resources
+   * Remove other meta details
+   * Remove Epic extensions
+   * Remove CQF-Ruler extensions
+   *
+   * @param resource
+   */
+  private void cleanupResource(Resource resource) {
+    resource.setMeta(null);
+
     String profile = null;
 
     switch (resource.getResourceType()) {
@@ -173,16 +201,30 @@ public class FhirBundler {
         resource.getMeta().addProfile(profile);
       }
     }
+
+    if (resource instanceof DomainResource) {
+      DomainResource domainResource = (DomainResource) resource;
+
+      // Remove extensions from Epic
+      List<Extension> removeExtensions = domainResource.getExtension().stream()
+              .filter(e ->
+                      e.getUrl() != null && e.getUrl().startsWith("http://open.epic.com/FHIR/"))
+              .collect(Collectors.toList());
+      removeExtensions.forEach(re -> domainResource.getExtension().remove(re));
+
+      // Remove extensions from CQF-Ruler
+    }
   }
 
   private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
+    this.cleanupResource(resource);
+
     String resourceId = getNonLocalId(resource);
     Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
             .filter(_entry -> getNonLocalId(_entry.getResource()).equals(resourceId))
             .findFirst()
             .orElse(null);
     if (entry == null) {
-      this.setProfile(resource);
       bundle.addEntry().setResource(resource);
     } else if (overwrite) {
       entry.setResource(resource);
@@ -249,6 +291,13 @@ public class FhirBundler {
     }).collect(Collectors.toList());
   }
 
+  private void setCensusProperties(ListResource census) {
+    census.setMeta(new Meta());
+    census.getMeta().addProfile(Constants.CensusProfileUrl);
+    census.setMode(ListResource.ListMode.SNAPSHOT);
+    census.setStatus(ListResource.ListStatus.CURRENT);
+  }
+
   private void addCensuses(Bundle bundle, Report report) {
     logger.debug("Adding censuses");
     Collection<ListResource> patientLists = this.getPatientLists(report);
@@ -262,17 +311,15 @@ public class FhirBundler {
       ListResource mergedCensus = patientLists.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
       mergedCensus.getEntry().clear();
+      this.setCensusProperties(mergedCensus);
       for (ListResource census : patientLists) {
-        census.setMeta(new Meta());
-        census.getMeta().addProfile(Constants.CensusProfileUrl);
         FhirHelper.mergePatientLists(mergedCensus, census);
       }
       bundle.addEntry().setResource(mergedCensus);
     } else {
       for (ListResource census : patientLists) {
         logger.debug("Adding census: {}", census.getId());
-        census.setMeta(new Meta());
-        census.getMeta().addProfile(Constants.CensusProfileUrl);
+        this.setCensusProperties(census);
         bundle.addEntry().setResource(census);
       }
     }
@@ -303,7 +350,7 @@ public class FhirBundler {
 
     for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
-      individualMeasureReport.getContained().forEach(c -> this.setProfile(c));  // Ensure all contained resources have the right profiles
+      individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
     }
   }
@@ -319,6 +366,8 @@ public class FhirBundler {
 
   private void addIndividualMeasureReport(Bundle bundle, MeasureReport individualMeasureReport) {
     logger.debug("Adding individual measure report: {}", individualMeasureReport.getId());
+
+    this.cleanupResource(individualMeasureReport);
 
     // Set the reporter to the facility/org
     individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));

@@ -78,6 +78,18 @@ public class TenantController extends BaseController {
     if (databaseAlreadyExists) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Another tenant is using the database name %s", newTenantConfig.getDatabase()));
     }
+
+    if (StringUtils.isEmpty(newTenantConfig.getCdcOrgId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'cdcOrgId' is required");
+    }
+
+    if (newTenantConfig.getBundling() == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'bundling' is required");
+    }
+
+    if (StringUtils.isEmpty(newTenantConfig.getBundling().getName())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'bundling.name' is required");
+    }
   }
 
   @PutMapping("/{tenantId}")

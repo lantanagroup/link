@@ -8,6 +8,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.nhsn.ApplyConceptMaps;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
@@ -55,10 +56,16 @@ public class PatientScoop {
   @Setter
   private TenantService tenantService;
 
+  private ApplyConceptMaps applyConceptMaps;
+
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, QueryPhase queryPhase) throws Exception {
     if (this.fhirQueryServer == null) {
       throw new Exception("No FHIR server to query");
     }
+
+    // Because this is a @Component, it instantiates only once. Make sure ApplyConceptMaps is re-created
+    // each execution so that we always get the latest concept maps
+    this.applyConceptMaps = new ApplyConceptMaps();
 
     switch (queryPhase) {
       case INITIAL:
@@ -214,7 +221,7 @@ public class PatientScoop {
           return null;
         }
 
-        storePatientData(criteria, context, poi.getId(), patientData.getBundle());
+        this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
 
         return poi.getId();
       }).collect(Collectors.toList())).get();
@@ -230,6 +237,10 @@ public class PatientScoop {
   private void storePatientData(ReportCriteria criteria, ReportContext context, String patientId, Bundle patientBundle) {
     try {
       eventService.triggerDataEvent(this.tenantService, EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
+
+      this.applyConceptMaps.execute(this.tenantService, patientBundle);
+
+      eventService.triggerDataEvent(this.tenantService, EventTypes.AfterApplyConceptMaps, patientBundle, criteria, context, null);
 
       List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientBundle.getEntry().stream().map(entry -> {
         com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();

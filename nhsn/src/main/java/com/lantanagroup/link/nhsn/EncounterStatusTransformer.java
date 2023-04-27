@@ -16,19 +16,17 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    logger.info("Called: " + EncounterStatusTransformer.class.getName());
     for (Bundle.BundleEntryComponent patientResource : bundle.getEntry()) {
       if (patientResource.getResource().getResourceType().equals(ResourceType.Encounter)) {
-        // logger.debug("Reviewing encounter " + patientResource.getResource().getId() + " status");
         Encounter patientEncounter = (Encounter) patientResource.getResource();
-        if (patientEncounter.getPeriod().hasEnd()) {
-          Extension previous = new Extension();
-          previous.setUrl(Constants.OriginalEncounterStatus);
-          Coding coding = new Coding();
-          coding.setCode(patientEncounter.getStatus().toString());
-          previous.setValue(coding);
+
+        if (patientEncounter.getPeriod().hasEnd() && patientEncounter.getStatus() != Encounter.EncounterStatus.FINISHED) {
+          logger.debug("Updating Encounter {} status from {} to FINISHED", patientEncounter.getIdElement().getIdPart(), patientEncounter.getStatus());
+
+          patientEncounter.addExtension()
+                  .setUrl(Constants.OriginalEncounterStatus)
+                  .setValue(new CodeType().setValue(patientEncounter.getStatus().toString()));
           patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
-          patientEncounter.addExtension(previous);
         }
       }
     }

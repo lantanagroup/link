@@ -17,7 +17,9 @@ import java.util.stream.Collectors;
 
 public class ApplyConceptMaps {
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
-  DefaultProfileValidationSupport validationSupport;
+  private DefaultProfileValidationSupport validationSupport;
+
+  private List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps;
 
   public ApplyConceptMaps() {
     validationSupport = new DefaultProfileValidationSupport();
@@ -97,9 +99,13 @@ public class ApplyConceptMaps {
 
   public void execute(TenantService tenantService, List<DomainResource> resourceList) {
     if (resourceList.size() > 0) {
-      List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps = tenantService.getAllConceptMaps();
+      if (this.conceptMaps == null) {
+        logger.info("Getting all concept maps for the tenant {}", tenantService.getConfig().getId());
+        this.conceptMaps = tenantService.getAllConceptMaps();
+        logger.info("Found {} concept maps for tenant {}", this.conceptMaps.size(), tenantService.getConfig().getId());
+      }
 
-      for (com.lantanagroup.link.db.model.ConceptMap dbConceptMap : conceptMaps) {
+      for (com.lantanagroup.link.db.model.ConceptMap dbConceptMap : this.conceptMaps) {
         ConceptMap conceptMap = dbConceptMap.getConceptMap();
 
         logger.debug("Applying concept map {} to {} resources", dbConceptMap.getId(), resourceList.size());

@@ -356,10 +356,19 @@ public class ReportController extends BaseController {
       throw new IllegalStateException("Not configured for sending");
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
     Class<?> senderClazz = Class.forName(this.config.getSender());
     IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
 
     Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
 
     sender.send(tenantService, report, request, user);
 
@@ -374,6 +383,11 @@ public class ReportController extends BaseController {
   @GetMapping("/{reportId}/aggregate")
   public List<MeasureReport> getReportAggregates(@PathVariable String reportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
     Report report = tenantService.getReport(reportId);
 
     if (report == null) {
@@ -387,6 +401,11 @@ public class ReportController extends BaseController {
   @GetMapping("/{reportId}/patientList")
   public List<PatientList> getReportPatientLists(@PathVariable String reportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
     Report report = tenantService.getReport(reportId);
 
     if (report == null) {
@@ -399,6 +418,11 @@ public class ReportController extends BaseController {
   @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
   public MeasureReport getPatientMeasureReport(@PathVariable String patientMeasureReportId, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
     PatientMeasureReport patientMeasureReport = tenantService.getPatientMeasureReport(patientMeasureReportId);
 
     if (patientMeasureReport == null) {

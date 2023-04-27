@@ -10,6 +10,7 @@ public enum EventTypes {
   BeforePatientDataQuery,
   AfterPatientResourceQuery,
   AfterPatientDataQuery,
+  AfterApplyConceptMaps,
   BeforePatientDataStore,
   AfterPatientDataStore,
   BeforeMeasureEval,

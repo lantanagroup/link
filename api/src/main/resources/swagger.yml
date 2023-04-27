@@ -796,6 +796,7 @@ components:
           description: 'The name of the tenant, such as the facility''s name.'
         cdcOrgId:
           type: string
+          required: true
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
         description:
           type: string
@@ -804,6 +805,7 @@ components:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
         bundling:
+          required: true
           allOf:
             - $ref: '#/components/schemas/Bundling'
             - description: 'Configuration properties for how to bundle the final submission, including contact information that is used when creating an Organization resource that represents the sending facility (the tenant).'
@@ -862,6 +864,7 @@ components:
           description: 'The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.identifier field'
         name:
           type: string
+          required: true
           description: 'The name of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
         phone:
           type: string
@@ -958,6 +961,10 @@ components:
           items:
             type: string
         AfterPatientDataQuery:
+          type: array
+          items:
+            type: string
+        AfterApplyConceptMaps:
           type: array
           items:
             type: string

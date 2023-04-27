@@ -119,7 +119,7 @@ public class PatientIdentifierController extends BaseController {
   }
 
   private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry) throws URISyntaxException {
-    URI baseUrl = new URI(tenantService.getConfig().getQueryList().getFhirServerBase());
+    URI baseUrl = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase());
     if (listEntry.getItem().hasReference()) {
       URI referenceUrl = new URI(listEntry.getItem().getReference());
       String reference;

@@ -42,7 +42,7 @@ public class EventService {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean);
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
-          ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+          ((IReportGenerationEvent) bean).execute(tenantService, criteria, reportContext, measureContext);
         }
       } else {
         logger.warn(bean.toString() + " does not implement the IReportGenerationEvent interface");
