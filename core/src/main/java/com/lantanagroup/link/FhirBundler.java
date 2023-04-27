@@ -77,6 +77,12 @@ public class FhirBundler {
       org.setName(this.config.getOrgName());
     }
 
+    if (!StringUtils.isEmpty(this.config.getNhsnOrgId())) {
+      org.addIdentifier()
+              .setSystem(Constants.NhsnOrgIdSystemUrl)
+              .setValue(this.config.getNhsnOrgId());
+    }
+
     if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
       org.addIdentifier()
               .setSystem(Constants.NationalProviderIdentifierSystemUrl)

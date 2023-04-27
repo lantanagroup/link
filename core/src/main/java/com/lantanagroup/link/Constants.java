@@ -14,6 +14,7 @@ public class Constants {
   public static final String ReportBundleProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/individual-measure-report";
   public static final String CensusProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/poi-list";
+  public static final String NhsnOrgIdSystemUrl = "https://www.cdc.gov/nhsn/OrgID";
   public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org.fhir/sid/us-npi";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";

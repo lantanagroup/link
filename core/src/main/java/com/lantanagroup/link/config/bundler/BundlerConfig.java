@@ -42,6 +42,12 @@ public class BundlerConfig {
   private boolean promoteLineLevelResources = false;
 
   /**
+   * The NHSN OrgID/Facility ID of the organization/facility the system is bundling/submitting for, to be used in the
+   * submission Bundle's Organization.identifier field
+   */
+  private String nhsnOrgId;
+
+  /**
    * The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be
    * used in the submission Bundle's Organization.identifier field
    */
