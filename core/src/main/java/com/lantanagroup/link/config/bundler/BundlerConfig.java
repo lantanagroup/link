@@ -79,7 +79,7 @@ public class BundlerConfig {
 
   @Getter
   @Setter
-  public class Address {
+  public static class Address {
     private String orgAddressLine;
     private String orgCity;
     private String orgState;
