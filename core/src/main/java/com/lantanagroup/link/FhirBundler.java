@@ -5,6 +5,7 @@ import com.lantanagroup.link.db.MongoService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
@@ -62,7 +63,7 @@ public class FhirBundler {
     org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
 
     if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
-      org.setId("" + this.config.getOrgNpi().hashCode());
+      org.setId(DigestUtils.sha1Hex(this.config.getOrgNpi()));
     } else {
       org.setId(UUID.randomUUID().toString());
     }
