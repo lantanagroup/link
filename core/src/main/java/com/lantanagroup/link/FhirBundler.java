@@ -126,12 +126,19 @@ public class FhirBundler {
               .setValue(this.getBundlingConfig().getEmail());
     }
 
+    if (StringUtils.isEmpty(this.getBundlingConfig().getPhone()) && StringUtils.isEmpty(this.getBundlingConfig().getEmail())) {
+      org.addTelecom()
+              .addExtension()
+              .setUrl(Constants.DataAbsentReasonExtensionUrl)
+              .setValue(new CodeType(Constants.DataAbsentReasonUnknownCode));
+    }
+
     if (this.getBundlingConfig().getAddress() != null) {
       org.addAddress(FhirHelper.getFHIRAddress(this.getBundlingConfig().getAddress()));
     } else {
       org.addAddress().addExtension()
               .setUrl(Constants.DataAbsentReasonExtensionUrl)
-              .setValue(new CodeType().setValue("unknown"));
+              .setValue(new CodeType().setValue(Constants.DataAbsentReasonUnknownCode));
     }
 
     return org;
@@ -280,6 +287,14 @@ public class FhirBundler {
     return patientLists.stream().map(pl -> {
       ListResource listResource = new ListResource();
       listResource.setId(pl.getId());
+      listResource.addExtension()
+              .setUrl(Constants.ApplicablePeriodExtensionUrl)
+              .setValue(new Period()
+                      .setStartElement(new DateTimeType(pl.getPeriodStart()))
+                      .setEndElement(new DateTimeType(pl.getPeriodEnd())));
+      listResource.addIdentifier()
+              .setSystem(Constants.MainSystem)
+              .setValue(pl.getMeasureId());
 
       listResource.setEntry(pl.getPatients().stream().map(pid -> {
         ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();

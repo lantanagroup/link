@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 public class Constants {
   public static final String DataAbsentReasonExtensionUrl = "http://hl7.org/fhir/StructureDefinition/data-absent-reason";
+  public static final String DataAbsentReasonUnknownCode = "unknown";
   public static final String MainSystem = "https://nhsnlink.org";
   public static final String UuidPrefix = "urn:uuid:";
   public static final String CdcOrgIdSystem = "https://www.cdc.gov/nhsn/OrgID";
