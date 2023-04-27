@@ -205,14 +205,31 @@ public class FhirBundler {
     if (resource instanceof DomainResource) {
       DomainResource domainResource = (DomainResource) resource;
 
-      // Remove extensions from Epic
-      List<Extension> removeExtensions = domainResource.getExtension().stream()
-              .filter(e ->
-                      e.getUrl() != null && e.getUrl().startsWith("http://open.epic.com/FHIR/"))
-              .collect(Collectors.toList());
-      removeExtensions.forEach(re -> domainResource.getExtension().remove(re));
+      // Remove extensions from resources
+      domainResource.getExtension().stream()
+              .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
+              .collect(Collectors.toList())
+              .forEach(re -> domainResource.getExtension().remove(re));
 
-      // Remove extensions from CQF-Ruler
+      // Remove extensions from group/populations of MeasureReports
+      if (resource instanceof MeasureReport) {
+        MeasureReport measureReport = (MeasureReport) resource;
+        measureReport.getGroup().forEach(g -> {
+          g.getPopulation().forEach(p -> {
+            p.getExtension().stream()
+                    .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
+                    .collect(Collectors.toList())
+                    .forEach(re -> p.getExtension().remove(re));
+          });
+        });
+
+        measureReport.getEvaluatedResource().forEach(er -> {
+          er.getExtension().stream()
+                  .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
+                  .collect(Collectors.toList())
+                  .forEach(re -> er.getExtension().remove(re));
+        });
+      }
     }
   }
 
