@@ -83,7 +83,7 @@ public class FhirBundler {
 
   private Organization createOrganization() {
     Organization org = new Organization();
-    org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
+    org.getMeta().addProfile(Constants.SubmittingOrganizationProfile);
     org.setActive(true);
 
     if (!StringUtils.isEmpty(this.getBundlingConfig().getNpi())) {
@@ -389,6 +389,8 @@ public class FhirBundler {
 
   private void addAggregateMeasureReport(Bundle bundle, MeasureReport aggregateMeasureReport) {
     logger.debug("Adding aggregate measure report: {}", aggregateMeasureReport.getId());
+
+    aggregateMeasureReport.getMeta().addProfile(Constants.SubjectListMeasureReportProfile);
 
     // Set the reporter to the facility/org
     aggregateMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));

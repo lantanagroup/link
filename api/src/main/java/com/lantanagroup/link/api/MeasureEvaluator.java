@@ -92,6 +92,34 @@ public class MeasureEvaluator {
         }
       }
 
+      // This extension is required for profile validation against DEQM
+      if (!measureReport.hasExtension(Constants.MeasureScoringExtension)) {
+        measureReport.addExtension(Constants.MeasureScoringExtension, this.measureContext.getMeasure().getScoring());
+      }
+
+      // improvementNotation is required for DEQM profile validation
+      if (measureReport.getImprovementNotation() == null || !measureReport.getImprovementNotation().hasCoding()) {
+        String improvementNotationCode;
+        if (measureReport.getGroup().size() > 0 && measureReport.getGroup().get(0).getPopulation().size() > 0 && measureReport.getGroup().get(0).getPopulation().get(0).getCount() > 0) {
+          improvementNotationCode = "increase";
+        } else {
+          improvementNotationCode = "decrease";
+        }
+
+        CodeableConcept improvementNotation = new CodeableConcept();
+        improvementNotation.addCoding()
+                .setSystem(Constants.MeasureImprovementNotationCodeSystem)
+                .setCode(improvementNotationCode);
+        measureReport.setImprovementNotation(improvementNotation);
+      }
+
+      // group.measureScore is required for DEQM profile validation
+      measureReport.getGroup().stream()
+              .filter(g -> g.getMeasureScore() == null || g.getMeasureScore().getValue() == null)
+              .forEach(g -> {
+                g.getMeasureScore().addExtension(Constants.DataAbsentReasonExtensionUrl, new CodeType(Constants.DataAbsentReasonUnknownCode));
+              });
+
       logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
       // TODO: Remove this; ReportGenerator.generate already does it (correctly, unlike here)
       measureReport.setId(this.measureContext.getReportId());

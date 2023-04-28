@@ -7,8 +7,11 @@ public class Constants {
   public static final String UuidPrefix = "urn:uuid:";
   public static final String CdcOrgIdSystem = "https://www.cdc.gov/nhsn/OrgID";
   public static final String OrganizationTypeSystem = "http://terminology.hl7.org/CodeSystem/organization-type";
-  public static final String ApplicablePeriodExtensionUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period";
-  public static final String QiCoreOrganizationProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-organization";
+  public static final String ApplicablePeriodExtensionUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-patient-list-applicable-period-extension";
+  public static final String SubjectListMeasureReportProfile = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/subjectlist-measurereport";
+  public static final String SubmittingOrganizationProfile = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-submitting-organization";
+  public static final String MeasureScoringExtension = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring";
+  public static final String MeasureImprovementNotationCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-improvement-notation";
   public static final String QiCorePatientProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient";
   public static final String UsCoreEncounterProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter";
   public static final String UsCoreMedicationRequestProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest";
@@ -16,7 +19,7 @@ public class Constants {
   public static final String UsCoreConditionProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition";
   public static final String UsCoreObservationProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab";
   public static final String ReportBundleProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-measurereport-bundle";
-  public static final String IndividualMeasureReportProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/individual-measure-report";
+  public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/poi-list";
   public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org.fhir/sid/us-npi";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
