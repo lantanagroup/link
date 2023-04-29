@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.scheduling;
 
+import com.lantanagroup.link.api.bulk.InitiateBulkDataRequestTask;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Schedule;
@@ -97,6 +98,14 @@ public class Scheduler {
         this.addFuture(tenantId, generateAndSubmitReportFuture);
         logger.info("Scheduled report generation for tenant {} for measures {} with CRON \"{}\"", tenantId, String.join(",", generateReportConfig.getMeasureIds()), generateReportConfig.getCron());
       }
+    }
+
+    if(StringUtils.isNotEmpty(config.getBulkDataCron())){
+      InitiateBulkDataRequestTask bulkDataTask = this.context.getBean(InitiateBulkDataRequestTask.class);
+      bulkDataTask.setTenantId(tenantId);
+      ScheduledFuture bulkDataFuture = this.taskScheduler.schedule(bulkDataTask, new CronTrigger(config.getBulkDataCron()));
+      this.addFuture(tenantId, bulkDataFuture);
+      logger.info("Scheduled bulk data for tenant {} with CRON \"{}\"", tenantId, config.getQueryPatientListCron());
     }
   }
 

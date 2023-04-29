@@ -77,5 +77,28 @@ public class Tenant {
    */
   private String retentionPeriod = "P3M";
 
+  /**
+   *
+   */
   private String bulkGroupId;
+
+  /**
+   * ex /R4/Group/{groupId}/$export?_type=patient,medicationrequest,medication
+   */
+  private String relativeBulkUrl;
+
+  /**
+   * Header name to retrieve polling url
+   */
+  private String BulkInitiateResponseUrlHeader;
+
+  /*
+   * Header name for progress status. e.g. X-Progress
+   */
+  private String progressHeaderName;
+
+  /*
+   * value that indicates bulk export is ready to retrieve
+   */
+  private String progressHeaderCompleteValue;
 }
