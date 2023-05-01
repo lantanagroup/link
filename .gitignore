@@ -15,3 +15,6 @@ query/src/main/resources/query-*.yml
 
 .idea/*
 spring-shell.log
+
+cli/cli.yml
+cli/austin-query.yml

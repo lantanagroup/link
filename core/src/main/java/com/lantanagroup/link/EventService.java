@@ -31,9 +31,13 @@ public class EventService {
   @Setter
   protected ApplicationContext context;
 
-  @Autowired
-  @Setter
+  //@Autowired
+  //@Setter
   private ApiConfigEvents apiConfigEvents;
+
+  public EventService() {
+    apiConfigEvents = new ApiConfigEvents();
+  }
 
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);

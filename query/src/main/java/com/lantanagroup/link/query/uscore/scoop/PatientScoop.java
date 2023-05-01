@@ -2,6 +2,7 @@ package com.lantanagroup.link.query.uscore.scoop;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.config.api.ApiConfigEvents;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -32,13 +33,15 @@ public class PatientScoop extends Scoop {
   @Autowired
   private ApplicationContext context;
 
-  @Autowired
+  //@Autowired
   private QueryConfig queryConfig;
 
-  @Autowired
+  //@Autowired
+  //none of the autowired stuff seems to be working w/ this class, trying to setup
+  // because we need this config
   private USCoreConfig usCoreConfig;
 
-  @Autowired
+  //@Autowired
   protected FhirDataProvider fhirDataProvider;
 
   /* TODO : ALM - commenting this out and setting in added constructor until autowired snafu figured out
@@ -50,6 +53,7 @@ public class PatientScoop extends Scoop {
   public PatientScoop() {
     // TODO - trying to get past the dependency / autowired snafu for now.
     eventService = new EventService();
+
   }
 
   public void execute(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> pois, String reportId, List<String> resourceTypes, List<String> measureIds) throws Exception {
