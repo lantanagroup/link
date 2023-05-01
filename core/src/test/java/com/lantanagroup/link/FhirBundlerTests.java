@@ -40,7 +40,7 @@ public class FhirBundlerTests {
     TenantService tenantService = mock(TenantService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
-    FhirBundler bundler = new FhirBundler(tenantService);
+    FhirBundler bundler = new FhirBundler(null, tenantService, null);
 
     Report report = new Report();
     report.getPatientLists().add("test-patient-list");

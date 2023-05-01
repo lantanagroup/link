@@ -16,6 +16,7 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -51,6 +52,9 @@ public class ReportController extends BaseController {
   @Setter
   @Autowired
   private EventService eventService;
+
+  @Autowired
+  private Validator validator;
 
   @Autowired
   @Setter
@@ -338,6 +342,16 @@ public class ReportController extends BaseController {
     }
   }
 
+  public Bundle generateBundle(TenantService tenantService, Report report) {
+    FhirBundler bundler = new FhirBundler(this.eventService, tenantService, this.validator);
+    logger.info("Building Bundle for MeasureReport to send...");
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<MeasureReport> aggregateReports = aggregates.stream().map(Aggregate::getReport).collect(Collectors.toList());
+    Bundle bundle = bundler.generateBundle(aggregateReports, report);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
+  }
+
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
    *
@@ -370,7 +384,8 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    sender.send(tenantService, report, request, user);
+    Bundle submissionBundle = this.generateBundle(tenantService, report);
+    sender.send(tenantService, submissionBundle, report, request, user);
 
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);

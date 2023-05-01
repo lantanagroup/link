@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.validation.ValidationResult;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
@@ -12,6 +13,10 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,9 +26,15 @@ public class FhirBundler {
   private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
+
   private final EventService eventService;
+
   private final TenantService tenantService;
+
+  private final Validator validator;
+
   private Organization org;
+
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
@@ -38,13 +49,10 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(TenantService tenantService, EventService eventService) {
-    this.tenantService = tenantService;
+  public FhirBundler(EventService eventService, TenantService tenantService, Validator validator) {
     this.eventService = eventService;
-  }
-
-  public FhirBundler(TenantService tenantService) {
-    this(tenantService, null);
+    this.tenantService = tenantService;
+    this.validator = validator;
   }
 
   private Bundling getBundlingConfig() {
@@ -59,6 +67,23 @@ public class FhirBundler {
     }
 
     return this.org;
+  }
+
+  private void validate(Bundle bundle) {
+    if (this.validator == null) {
+      return;
+    }
+
+    try {
+      OperationOutcome outcome = this.validator.validate(bundle);
+      Path tempFile = Files.createTempFile(null, ".json");
+      try (FileWriter fw = new FileWriter(tempFile.toFile())) {
+        FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
+      }
+      logger.info("Validation results saved to {}", tempFile);
+    } catch (IOException ex) {
+      logger.error("Error validating bundle", ex);
+    }
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
@@ -77,7 +102,10 @@ public class FhirBundler {
 
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
 
-    cleanEntries(bundle);
+    this.cleanEntries(bundle);
+
+    this.validate(bundle);
+
     return bundle;
   }
 
@@ -161,6 +189,7 @@ public class FhirBundler {
     if (eventService == null) {
       return;
     }
+
     try {
       eventService.triggerDataEvent(tenantService, eventType, bundle, null, null, null);
     } catch (Exception e) {

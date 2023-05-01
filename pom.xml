@@ -18,9 +18,9 @@
         <jetty.version>9.4.43.v20210629</jetty.version>
         <lombok.version>1.18.22</lombok.version>
         <mockito.version>3.12.4</mockito.version>
-        <hapi.lib.version>4.2.0</hapi.lib.version>
+        <hapi.lib.version>6.2.0</hapi.lib.version>
         <saxon.version>9.9.1-5</saxon.version>
-        <junit.version>4.13.1</junit.version>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <groupId>com.lantanagroup.link</groupId>
@@ -59,6 +59,16 @@
             <version>${hapi.lib.version}</version>
         </dependency>
         <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation-resources-r4</artifactId>
+            <version>${hapi.lib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation</artifactId>
+            <version>${hapi.lib.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.4.1</version>
@@ -67,6 +77,12 @@
             <groupId>com.mchange</groupId>
             <artifactId>c3p0</artifactId>
             <version>0.9.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -31,19 +31,6 @@ public abstract class GenericSender {
   @Setter
   private FHIRSenderConfig fhirSenderConfig;
 
-  @Autowired
-  private EventService eventService;
-
-  public Bundle generateBundle(TenantService tenantService, Report report) {
-    logger.info("Building Bundle for MeasureReport to send...");
-    FhirBundler bundler = new FhirBundler(tenantService, this.eventService);
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
-    List<MeasureReport> aggregateReports = aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
-    Bundle bundle = bundler.generateBundle(aggregateReports, report);
-    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
-    return bundle;
-  }
-
   public CloseableHttpClient getHttpClient() {
     return HttpClientBuilder.create().build();
   }
