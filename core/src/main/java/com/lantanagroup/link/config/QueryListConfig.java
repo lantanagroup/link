@@ -27,8 +27,9 @@ public class QueryListConfig {
   @Getter
   @Setter
   public static class PatientList {
-    @NotBlank
-    private String listId;
+    @NotNull
+    @Size(min = 1)
+    private List<@NotBlank String> listId;
 
     @NotNull
     @Size(min = 1)
