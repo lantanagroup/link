@@ -1,4 +1,4 @@
-package com.lantanagroup.link.nhsn;
+package com.lantanagroup.link.events;
 
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.util.BundleUtil;

@@ -24,19 +24,16 @@ public class Validator {
   public Validator() {
     try {
       FhirContext ctx = FhirContextProvider.getFhirContext();
-      PrePopulatedValidationSupport prePopulatedValidationSupport = new NpmPackageValidationSupport(ctx);
       NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
       npmPackageSupport.loadPackageFromClasspath("classpath:nhsn-measures.tgz");
       npmPackageSupport.loadPackageFromClasspath("classpath:uscore.tgz");
       npmPackageSupport.loadPackageFromClasspath("classpath:qicore.tgz");
       npmPackageSupport.loadPackageFromClasspath("classpath:deqm.tgz");
       ValidationSupportChain validationSupportChain = new ValidationSupportChain(
-              prePopulatedValidationSupport,
               npmPackageSupport,
               new DefaultProfileValidationSupport(ctx),
               new CommonCodeSystemsTerminologyService(ctx),
-              new InMemoryTerminologyServerValidationSupport(ctx),
-              new SnapshotGeneratingValidationSupport(ctx)
+              new InMemoryTerminologyServerValidationSupport(ctx)
       );
       CachingValidationSupport validationSupport = new CachingValidationSupport(validationSupportChain);
       this.validator = ctx.newValidator();
@@ -49,11 +46,26 @@ public class Validator {
     }
   }
 
-  public OperationOutcome validate(Resource resource) {
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
     ValidationResult result = this.validator.validateWithResult(resource);
     OperationOutcome outcome = (OperationOutcome) result.toOperationOutcome();
-    outcome.setIssue(outcome.getIssue().stream().filter(i -> i.getSeverity() == OperationOutcome.IssueSeverity.ERROR).collect(Collectors.toList()));
+    outcome.setIssue(outcome.getIssue().stream()
+            .filter(i -> {
+              boolean isError = i.getSeverity() == OperationOutcome.IssueSeverity.ERROR;
+              boolean isWarning = i.getSeverity() == OperationOutcome.IssueSeverity.WARNING;
+              boolean isInfo = i.getSeverity() == OperationOutcome.IssueSeverity.INFORMATION;
+
+              if (severity == OperationOutcome.IssueSeverity.ERROR && !isError) {
+                return false;
+              } else if (severity == OperationOutcome.IssueSeverity.WARNING && !isError && !isWarning) {
+                return false;
+              } else if (severity == OperationOutcome.IssueSeverity.INFORMATION && !isError && !isWarning && !isInfo) {
+                return false;
+              }
+              return true;
+            })
+            .collect(Collectors.toList()));
     logger.debug("Done validating and found {} errors", outcome.getIssue().size());
 
     return outcome;

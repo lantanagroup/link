@@ -1,5 +1,6 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.events.PatientDataResourceFilter;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.DateTimeType;

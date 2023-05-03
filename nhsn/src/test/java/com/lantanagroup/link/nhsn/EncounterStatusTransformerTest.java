@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.events.EncounterStatusTransformer;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;

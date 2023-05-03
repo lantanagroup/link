@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.validation.ValidationResult;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
@@ -8,18 +7,12 @@ import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
@@ -30,8 +23,6 @@ public class FhirBundler {
   private final EventService eventService;
 
   private final TenantService tenantService;
-
-  private final Validator validator;
 
   private Organization org;
 
@@ -49,10 +40,9 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(EventService eventService, TenantService tenantService, Validator validator) {
+  public FhirBundler(EventService eventService, TenantService tenantService) {
     this.eventService = eventService;
     this.tenantService = tenantService;
-    this.validator = validator;
   }
 
   private Bundling getBundlingConfig() {
@@ -67,23 +57,6 @@ public class FhirBundler {
     }
 
     return this.org;
-  }
-
-  private void validate(Bundle bundle) {
-    if (this.validator == null) {
-      return;
-    }
-
-    try {
-      OperationOutcome outcome = this.validator.validate(bundle);
-      Path tempFile = Files.createTempFile(null, ".json");
-      try (FileWriter fw = new FileWriter(tempFile.toFile())) {
-        FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
-      }
-      logger.info("Validation results saved to {}", tempFile);
-    } catch (IOException ex) {
-      logger.error("Error validating bundle", ex);
-    }
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
@@ -103,8 +76,6 @@ public class FhirBundler {
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
 
     this.cleanEntries(bundle);
-
-    this.validate(bundle);
 
     return bundle;
   }
@@ -269,21 +240,6 @@ public class FhirBundler {
     }
   }
 
-  private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
-    this.cleanupResource(resource);
-
-    String resourceId = getNonLocalId(resource);
-    Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
-            .filter(_entry -> getNonLocalId(_entry.getResource()).equals(resourceId))
-            .findFirst()
-            .orElse(null);
-    if (entry == null) {
-      bundle.addEntry().setResource(resource);
-    } else if (overwrite) {
-      entry.setResource(resource);
-    }
-  }
-
   private void cleanEntries(Bundle bundle) {
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
       Resource resource = entry.getResource();
@@ -436,44 +392,20 @@ public class FhirBundler {
     individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));
     individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
 
+    // Clean up the contained resources within the measure report
+    individualMeasureReport.getContained().stream()
+            .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("#LCR-"))
+            .forEach(c -> {
+              // Remove the LCR- prefix added by CQL
+              c.setId(c.getIdElement().getIdPart().substring(5));
+
+              // Update references to the evaluated resource to point to the contained reference (for validation purposes)
+              individualMeasureReport.getEvaluatedResource().stream()
+                      .filter(er -> er.hasReference() && er.getReference().equals(c.getResourceType().toString() + "/" + c.getIdElement().getIdPart()))
+                      .forEach(er -> er.setReference("#" + c.getIdElement().getIdPart()));
+            });
+
     bundle.addEntry().setResource(individualMeasureReport);
-
-    // Identify line-level resources
-    Map<IIdType, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
-
-    // As specified in configuration, move/copy line-level resources
-    for (Map.Entry<IIdType, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
-      IIdType resourceId = lineLevelResource.getKey();
-
-      // Promote contained line-level resources
-      if (resourceId.isLocal() && this.getBundlingConfig().isPromoteLineLevelResources()) {
-        Resource resource = individualMeasureReport.getContained().stream()
-                .filter(_resource -> _resource.getIdElement().equals(resourceId))
-                .findFirst()
-                .orElse(null);
-        if (resource == null) {
-          continue;
-        }
-        individualMeasureReport.getContained().remove(resource);
-        addEntry(bundle, resource, true);
-        for (Reference reference : lineLevelResource.getValue()) {
-          reference.setReference(getNonLocalId(resource));
-        }
-      }
-    }
-  }
-
-  private Map<IIdType, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
-    Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
-    Stream<Reference> supplementalDataReferences =
-            individualMeasureReport.getExtension().stream()
-                    .filter(extension -> SUPPLEMENTAL_DATA_EXTENSION_URLS.contains(extension.getUrl()))
-                    .map(Extension::getValue)
-                    .filter(value -> value instanceof Reference)
-                    .map(value -> (Reference) value);
-    return Stream.concat(supplementalDataReferences, evaluatedResources)
-            .filter(reference -> reference.hasExtension(Constants.ExtensionCriteriaReference))
-            .collect(Collectors.groupingBy(Reference::getReferenceElement, LinkedHashMap::new, Collectors.toList()));
   }
 
   private String getNonLocalId(IBaseResource resource) {

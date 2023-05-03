@@ -26,7 +26,7 @@ public class ResourceIdChangerTests {
     comp.getRelatesTo().add(new Composition.CompositionRelatesToComponent().setTarget(new Reference("Composition/xyz")));
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(comp));
 
-    List<Reference> references = ResourceIdChanger.findReferences(bundle);
+    List<Reference> references = FhirScanner.findReferences(bundle);
     Assert.assertEquals(2, references.size());
     Assert.assertEquals("Patient/123", references.get(0).getReference());
     Assert.assertEquals("Composition/xyz", references.get(1).getReference());
@@ -77,32 +77,32 @@ public class ResourceIdChangerTests {
 
 
     // Make sure an extension was added to the resource to track the original ID
-    Assert.assertNotNull(cond1.getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(cond1.getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     // Make sure an extension was added to the resource to track the original ID
-    Assert.assertNotNull(cond2.getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(cond2.getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     // Make sure an extension was added to the resource to track the original ID
-    Assert.assertNotNull(cond3.getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(cond3.getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     // Make sure an extension was added to the resource to track the original ID
-    Assert.assertNull(cond4.getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNull(cond4.getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
 
     // Make sure the reference to the Condition has an extension to track the original reference
     Assert.assertEquals("Condition/hash-6d21d51b109afcf4a65ca7bae1019699c62aa2a3", enc1.getDiagnosisFirstRep().getCondition().getReference());
-    Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(enc1.getDiagnosisFirstRep().getCondition().getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
     Assert.assertEquals("Condition/hash-a00fb8db0da7b8287ff9ee01cdfcf39adb1e866f", enc1.getDiagnosis().get(1).getCondition().getReference());
-    Assert.assertNotNull(enc1.getDiagnosis().get(1).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(enc1.getDiagnosis().get(1).getCondition().getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     // Make sure the reference to a condition that isn't in the bundle is updated
     Assert.assertEquals("Condition/123412341", enc1.getDiagnosis().get(2).getCondition().getReference());
-    Assert.assertNotNull(enc1.getDiagnosis().get(2).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNotNull(enc1.getDiagnosis().get(2).getCondition().getExtensionByUrl(Constants.OriginalResourceIdExtension));
 
     Assert.assertEquals("Condition/correctOne", enc1.getDiagnosis().get(3).getCondition().getReference());
-    Assert.assertNull(enc1.getDiagnosis().get(3).getCondition().getExtensionByUrl(ResourceIdChanger.ORIG_ID_EXT_URL));
+    Assert.assertNull(enc1.getDiagnosis().get(3).getCondition().getExtensionByUrl(Constants.OriginalResourceIdExtension));
   }
 
   @Test
@@ -135,7 +135,7 @@ public class ResourceIdChangerTests {
     location.setType(codeableConceptList);
     location.setName("Some Location");
     bundle.addEntry(new Bundle.BundleEntryComponent().setResource(location));
-    List<Coding> codings = ResourceIdChanger.findCodings(bundle);
+    List<Coding> codings = FhirScanner.findCodings(bundle);
     Assert.assertEquals(2, codings.size());
     Coding codingTarget = codings.get(0);
     Assert.assertEquals("some-type1", codingTarget.getCode());

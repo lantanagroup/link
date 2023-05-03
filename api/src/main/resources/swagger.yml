@@ -234,28 +234,6 @@ paths:
       responses:
         '200':
           description: successful response
-  /api/{tenantId}/report/{reportId}/$send:
-    post:
-      tags:
-        - Reports
-      summary: Send/submit the specified report to the consumer/recipient
-      operationId: send
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant
-          required: true
-          schema:
-            type: string
-        - name: reportId
-          in: path
-          description: The logical id of the report to submit
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful response
   /api/{tenantId}/report/$generate:
     post:
       tags:
@@ -327,6 +305,54 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Report'
+  /api/{tenantId}/report/{reportId}/$send:
+    post:
+      tags:
+        - Reports
+      summary: Send/submit the specified report to the consumer/recipient
+      operationId: send
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+  /api/{tenantId}/report/{reportId}/$validate:
+    get:
+      tags:
+        - Reports
+      summary: Validate the report against FHIR standards and implementation guides
+      operationId: validate
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
   /api/{tenantId}/report/{reportId}/aggregate:
     get:
       tags:
@@ -787,6 +813,9 @@ components:
           type: string
     Tenant:
       type: object
+      required:
+        - cdcOrgId
+        - bundling
       properties:
         id:
           type: string
@@ -796,7 +825,6 @@ components:
           description: 'The name of the tenant, such as the facility''s name.'
         cdcOrgId:
           type: string
-          required: true
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
         description:
           type: string
@@ -805,7 +833,6 @@ components:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
         bundling:
-          required: true
           allOf:
             - $ref: '#/components/schemas/Bundling'
             - description: 'Configuration properties for how to bundle the final submission, including contact information that is used when creating an Organization resource that represents the sending facility (the tenant).'
@@ -835,6 +862,8 @@ components:
           default: 'P3M'
     Bundling:
       type: object
+      required:
+        - name
       properties:
         bundleType:
           type: string
@@ -864,7 +893,6 @@ components:
           description: 'The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.identifier field'
         name:
           type: string
-          required: true
           description: 'The name of the organization/facility the system is bundling/submitting for, to be used in the submission Bundle''s Organization.name field'
         phone:
           type: string
@@ -935,71 +963,81 @@ components:
         BeforeMeasureResolution:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterMeasureResolution:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         OnRegeneration:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforePatientOfInterestLookup:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterPatientOfInterestLookup:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforePatientDataQuery:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterPatientResourceQuery:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterPatientDataQuery:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterApplyConceptMaps:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforePatientDataStore:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterPatientDataStore:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforeMeasureEval:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterMeasureEval:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforeReportStore:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterReportStore:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         BeforeBundling:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
         AfterBundling:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EventOptions'
+    EventOptions:
+      type: string
+      enum:
+        - com.lantanagroup.link.events.ApplyConceptMaps
+        - com.lantanagroup.link.events.CodeSystemCleanup
+        - com.lantanagroup.link.events.ContainedResourceCleanup
+        - com.lantanagroup.link.events.CopyLocationIdentifierToType
+        - com.lantanagroup.link.events.EncounterStatusTransformer
+        - com.lantanagroup.link.events.FixResourceId
+        - com.lantanagroup.link.events.PatientDataResourceFilter
     QueryList:
       type: object
       properties:
@@ -1204,3 +1242,34 @@ components:
       type: object
     FHIR.Bundle:
       type: object
+    FHIR.OperationOutcome:
+      type: object
+      properties:
+        extension:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.Extension'
+        issue:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.OperationOutcomeIssue'
+    FHIR.OperationOutcomeIssue:
+      type: object
+      properties:
+        severity:
+          type: string
+        code:
+          type: string
+        diagnostics:
+          type: string
+        location:
+          type: array
+          items:
+            type: string
+    FHIR.Extension:
+      type: object
+      properties:
+        url:
+          type: string
+        valueInteger:
+          type: number
