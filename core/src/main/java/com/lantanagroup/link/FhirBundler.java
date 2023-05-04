@@ -5,6 +5,7 @@ import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
@@ -86,7 +87,7 @@ public class FhirBundler {
     org.setActive(true);
 
     if (!StringUtils.isEmpty(this.getBundlingConfig().getNpi())) {
-      org.setId(String.format("%s", this.getBundlingConfig().getNpi().hashCode()));
+      org.setId(DigestUtils.sha1Hex(this.getBundlingConfig().getNpi()));
     } else {
       org.setId(UUID.randomUUID().toString());
     }

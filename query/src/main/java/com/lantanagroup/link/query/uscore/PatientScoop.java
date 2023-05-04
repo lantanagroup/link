@@ -16,7 +16,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Patient;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +23,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
@@ -47,8 +46,6 @@ public class PatientScoop {
 
   @Autowired
   private StopwatchManager stopwatchManager;
-
-  private HashMap<String, Resource> otherResources = new HashMap<>();
 
   @Setter
   private Boolean shouldPersist = true;
@@ -107,7 +104,7 @@ public class PatientScoop {
 
   public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
-    Map<String, Patient> patientMap = new HashMap<>();
+    Map<String, Patient> patientMap = new ConcurrentHashMap<>();
     int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
     ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
     ForkJoinPool patientFork = new ForkJoinPool(threshold);

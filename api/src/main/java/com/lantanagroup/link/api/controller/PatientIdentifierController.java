@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,10 +71,13 @@ public class PatientIdentifierController extends BaseController {
     List<EhrPatientList> filteredList = tenantService.getConfig().getQueryList().getLists();
 
     for (EhrPatientList patientListConfig : filteredList) {
-      ListResource source = this.readList(tenantService, patientListConfig.getListId());
+      List<ListResource> sources = new ArrayList<>();
+      for (String listId : patientListConfig.getListId()) {
+        sources.add(this.readList(tenantService, listId));
+      }
 
       for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
-        PatientList patientList = this.convert(tenantService, source, patientListConfig.getMeasureId().get(j));
+        PatientList patientList = this.convert(tenantService, sources, patientListConfig.getMeasureId().get(j));
         this.storePatientList(tenantService, patientList);
       }
     }
@@ -95,8 +99,8 @@ public class PatientIdentifierController extends BaseController {
             .execute();
   }
 
-  private PatientList convert(TenantService tenantService, ListResource source, String identifier) throws URISyntaxException {
-    logger.info("Converting List resource from source into DB PatientList");
+  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier) throws URISyntaxException {
+    logger.info("Converting List resources to DB PatientLists");
     PatientList patientList = new PatientList();
 
     // TODO: Make ReportingPeriodMethods configurable
@@ -107,11 +111,14 @@ public class PatientIdentifierController extends BaseController {
     patientList.setPeriodEnd(calculator.getEnd());
     patientList.setMeasureId(identifier);
 
-    for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-      PatientId patientId = this.convertListItem(tenantService, sourceEntry);
+    for (ListResource source : sources) {
+      logger.info("Converting List: {}", source.getIdElement().getIdPart());
+      for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
+        PatientId patientId = this.convertListItem(tenantService, sourceEntry);
 
-      if (patientId != null) {
-        patientList.getPatients().add(patientId);
+        if (patientId != null && !patientList.getPatients().contains(patientId)) {
+          patientList.getPatients().add(patientId);
+        }
       }
     }
 

@@ -5,6 +5,7 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.EventTypes;
 import com.lantanagroup.link.FhirHelper;
@@ -234,9 +235,18 @@ public class PatientData {
     return bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(resource -> StringUtils.equals(resource.fhirType(), resourceType))
-            .map(resource -> resource.getIdElement().getIdPart())
+            .map(this::getOriginalId)
             .distinct()
             .collect(Collectors.toList());
+  }
+
+  private String getOriginalId(Resource resource) {
+    String id = resource.getIdElement().getIdPart();
+    if (!(resource instanceof DomainResource)) {
+      return id;
+    }
+    Extension extension = ((DomainResource) resource).getExtensionByUrl(Constants.OriginalResourceIdExtension);
+    return extension == null ? id : extension.getValueAsPrimitive().getValueAsString();
   }
 
   private List<String> getReferencedIds(String resourceType) {

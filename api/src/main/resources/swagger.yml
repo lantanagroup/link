@@ -1074,10 +1074,6 @@ components:
         parallelPatients:
           type: number
           description: 'The number of patients to query for in parallel using separate threads. Should not be greater than the number of cores available to the installation.'
-        encounterBased:
-          type: boolean
-          default: true
-          description: 'Whether to exit immediately from the query phase if no encounters are found'
         basicAuth:
           allOf:
             - $ref: '#/components/schemas/BasicAuth'

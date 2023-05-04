@@ -13,6 +13,7 @@ import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
+import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -123,7 +124,9 @@ public class ReportController extends BaseController {
 
     Query query = new Query();
     query.setApplicationContext(this.context);
-    query.execute(tenantService, criteria, context, queryPhase);
+    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-phase-%s", queryPhase))) {
+      query.execute(tenantService, criteria, context, queryPhase);
+    }
   }
 
   private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
@@ -209,9 +212,8 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan().getUrl(), tenantService.getConfig().getCdcOrgId());
+    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan(), tenantService.getConfig().getCdcOrgId());
 
-    logger.info("Checking MRP");
     Date date = Helper.parseFhirDate(periodStart);
     int year = date.getYear() + 1900;
     int month = date.getMonth() + 1;
@@ -284,6 +286,7 @@ public class ReportController extends BaseController {
         }
       }
     } else {
+      logger.info("Beginning initial query and store");
       this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
@@ -332,10 +335,11 @@ public class ReportController extends BaseController {
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      generator.generate(queryPhase);
+      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-phase-%s", queryPhase))) {
+        generator.generate(queryPhase);
+      }
 
       this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
-      tenantService.saveReport(report);
 
       if (queryPhase == QueryPhase.SUPPLEMENTAL) {
         generator.aggregate();

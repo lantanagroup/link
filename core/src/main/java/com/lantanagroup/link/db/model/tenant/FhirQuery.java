@@ -26,11 +26,6 @@ public class FhirQuery {
   private int parallelPatients = 10;
 
   /**
-   * Whether to exit immediately from the query phase if no encounters are found
-   */
-  private boolean encounterBased = true;
-
-  /**
    * Configuration used by BasicAuth implementation
    */
   private BasicAuth basicAuth;

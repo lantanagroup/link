@@ -11,8 +11,9 @@ import java.util.List;
 @Getter
 @Setter
 public class EhrPatientList {
-  @NotBlank
-  private String listId;
+  @NotNull
+  @Size(min = 1)
+  private List<@NotBlank String> listId;
 
   @NotNull
   @Size(min = 1)

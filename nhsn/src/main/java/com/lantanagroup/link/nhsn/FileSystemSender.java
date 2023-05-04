@@ -16,8 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -94,12 +95,9 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     }
 
     logger.info(String.format("Encoding submission bundle to %s", format));
-    content = parser.encodeResourceToString(submissionBundle);
+    try (Writer writer = new FileWriter(this.getFilePath().toString(), StandardCharsets.UTF_8)) {
+      parser.encodeResourceToWriter(submissionBundle, writer);
+    }
     logger.info(String.format("Done encoding submission bundle to %s", format));
-
-    Path filePath = this.getFilePath();
-    Files.write(filePath, content.getBytes(StandardCharsets.UTF_8));
-
-    logger.info(String.format("Done saving submission bundle/report to %s", filePath.toString()));
   }
 }
