@@ -1,5 +1,7 @@
-package com.lantanagroup.link;
+package com.lantanagroup.link.events;
 
+import com.lantanagroup.link.IReportGenerationDataEvent;
+import com.lantanagroup.link.ResourceIdChanger;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;

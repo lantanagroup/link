@@ -7,23 +7,25 @@ import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
   private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
+
   private final EventService eventService;
+
   private final TenantService tenantService;
+
   private Organization org;
+
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
@@ -38,13 +40,9 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(TenantService tenantService, EventService eventService) {
-    this.tenantService = tenantService;
+  public FhirBundler(EventService eventService, TenantService tenantService) {
     this.eventService = eventService;
-  }
-
-  public FhirBundler(TenantService tenantService) {
-    this(tenantService, null);
+    this.tenantService = tenantService;
   }
 
   private Bundling getBundlingConfig() {
@@ -77,7 +75,8 @@ public class FhirBundler {
 
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
 
-    cleanEntries(bundle);
+    this.cleanEntries(bundle);
+
     return bundle;
   }
 
@@ -161,6 +160,7 @@ public class FhirBundler {
     if (eventService == null) {
       return;
     }
+
     try {
       eventService.triggerDataEvent(tenantService, eventType, bundle, null, null, null);
     } catch (Exception e) {
@@ -237,21 +237,6 @@ public class FhirBundler {
                   .forEach(re -> er.getExtension().remove(re));
         });
       }
-    }
-  }
-
-  private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
-    this.cleanupResource(resource);
-
-    String resourceId = getNonLocalId(resource);
-    Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
-            .filter(_entry -> getNonLocalId(_entry.getResource()).equals(resourceId))
-            .findFirst()
-            .orElse(null);
-    if (entry == null) {
-      bundle.addEntry().setResource(resource);
-    } else if (overwrite) {
-      entry.setResource(resource);
     }
   }
 
@@ -407,44 +392,20 @@ public class FhirBundler {
     individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));
     individualMeasureReport.getMeta().addProfile(Constants.IndividualMeasureReportProfileUrl);
 
+    // Clean up the contained resources within the measure report
+    individualMeasureReport.getContained().stream()
+            .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("#LCR-"))
+            .forEach(c -> {
+              // Remove the LCR- prefix added by CQL
+              c.setId(c.getIdElement().getIdPart().substring(5));
+
+              // Update references to the evaluated resource to point to the contained reference (for validation purposes)
+              individualMeasureReport.getEvaluatedResource().stream()
+                      .filter(er -> er.hasReference() && er.getReference().equals(c.getResourceType().toString() + "/" + c.getIdElement().getIdPart()))
+                      .forEach(er -> er.setReference("#" + c.getIdElement().getIdPart()));
+            });
+
     bundle.addEntry().setResource(individualMeasureReport);
-
-    // Identify line-level resources
-    Map<IIdType, List<Reference>> lineLevelResources = getLineLevelResources(individualMeasureReport);
-
-    // As specified in configuration, move/copy line-level resources
-    for (Map.Entry<IIdType, List<Reference>> lineLevelResource : lineLevelResources.entrySet()) {
-      IIdType resourceId = lineLevelResource.getKey();
-
-      // Promote contained line-level resources
-      if (resourceId.isLocal() && this.getBundlingConfig().isPromoteLineLevelResources()) {
-        Resource resource = individualMeasureReport.getContained().stream()
-                .filter(_resource -> _resource.getIdElement().equals(resourceId))
-                .findFirst()
-                .orElse(null);
-        if (resource == null) {
-          continue;
-        }
-        individualMeasureReport.getContained().remove(resource);
-        addEntry(bundle, resource, true);
-        for (Reference reference : lineLevelResource.getValue()) {
-          reference.setReference(getNonLocalId(resource));
-        }
-      }
-    }
-  }
-
-  private Map<IIdType, List<Reference>> getLineLevelResources(MeasureReport individualMeasureReport) {
-    Stream<Reference> evaluatedResources = individualMeasureReport.getEvaluatedResource().stream();
-    Stream<Reference> supplementalDataReferences =
-            individualMeasureReport.getExtension().stream()
-                    .filter(extension -> SUPPLEMENTAL_DATA_EXTENSION_URLS.contains(extension.getUrl()))
-                    .map(Extension::getValue)
-                    .filter(value -> value instanceof Reference)
-                    .map(value -> (Reference) value);
-    return Stream.concat(supplementalDataReferences, evaluatedResources)
-            .filter(reference -> reference.hasExtension(Constants.ExtensionCriteriaReference))
-            .collect(Collectors.groupingBy(Reference::getReferenceElement, LinkedHashMap::new, Collectors.toList()));
   }
 
   private String getNonLocalId(IBaseResource resource) {

@@ -16,8 +16,7 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +28,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -51,6 +53,9 @@ public class ReportController extends BaseController {
   @Setter
   @Autowired
   private EventService eventService;
+
+  @Autowired
+  private Validator validator;
 
   @Autowired
   @Setter
@@ -338,6 +343,16 @@ public class ReportController extends BaseController {
     }
   }
 
+  public Bundle generateBundle(TenantService tenantService, Report report) {
+    FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+    logger.info("Building Bundle for MeasureReport to send...");
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<MeasureReport> aggregateReports = aggregates.stream().map(Aggregate::getReport).collect(Collectors.toList());
+    Bundle bundle = bundler.generateBundle(aggregateReports, report);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
+  }
+
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
    *
@@ -370,7 +385,8 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    sender.send(tenantService, report, request, user);
+    Bundle submissionBundle = this.generateBundle(tenantService, report);
+    sender.send(tenantService, submissionBundle, report, request, user);
 
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
@@ -378,6 +394,57 @@ public class ReportController extends BaseController {
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+  }
+
+  @GetMapping("/{reportId}/$validate")
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) throws IOException {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    Bundle submissionBundle = this.generateBundle(tenantService, report);
+
+    if (this.validator == null) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for validation");
+    }
+
+    try {
+      OperationOutcome outcome = this.validator.validate(submissionBundle, severity);
+      Path tempFile = Files.createTempFile(null, ".json");
+      try (FileWriter fw = new FileWriter(tempFile.toFile())) {
+        FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
+      }
+      logger.info("Validation results saved to {}", tempFile);
+
+      // Add an extension (which doesn't formally exist) that shows the total issues
+      outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
+
+      // Don't return more than 2k issues to the response... We can just look at the temp file instead
+      if (outcome.getIssue().size() > 2000) {
+        outcome.setIssue(null);
+      } else {
+        outcome.getIssue().forEach(i -> {
+          i.setExtension(null);
+          i.setDetails(null);
+          if (i.getLocation().size() == 2) {
+            i.getLocation().remove(1);    // Remove the line number - it's useless.
+          }
+        });
+      }
+
+      return outcome;
+    } catch (IOException ex) {
+      logger.error("Error validating bundle", ex);
+      throw ex;
+    }
   }
 
   @GetMapping("/{reportId}/aggregate")

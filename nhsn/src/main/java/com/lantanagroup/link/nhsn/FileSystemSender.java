@@ -73,9 +73,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
   @SuppressWarnings("unused")
   @Override
-  public void send(TenantService tenantService, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
-    Bundle bundle = this.generateBundle(tenantService, report);
-
+  public void send(TenantService tenantService, Bundle submissionBundle, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
     FileSystemSenderConfig.Formats format = this.getFormat();
     String content;
     IParser parser;
@@ -91,12 +89,12 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         throw new Exception(String.format("Unexpected format %s", format));
     }
 
-    if (this.config != null && this.config.getPretty() == true) {
+    if (this.config != null && this.config.getPretty()) {
       parser.setPrettyPrint(true);
     }
 
     logger.info(String.format("Encoding submission bundle to %s", format));
-    content = parser.encodeResourceToString(bundle);
+    content = parser.encodeResourceToString(submissionBundle);
     logger.info(String.format("Done encoding submission bundle to %s", format));
 
     Path filePath = this.getFilePath();

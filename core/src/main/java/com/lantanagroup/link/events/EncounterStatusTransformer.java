@@ -1,4 +1,4 @@
-package com.lantanagroup.link.nhsn;
+package com.lantanagroup.link.events;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.IReportGenerationDataEvent;
@@ -24,7 +24,7 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
           logger.debug("Updating Encounter {} status from {} to FINISHED", patientEncounter.getIdElement().getIdPart(), patientEncounter.getStatus());
 
           patientEncounter.addExtension()
-                  .setUrl(Constants.OriginalEncounterStatus)
+                  .setUrl(Constants.OriginalElementValueExtension)
                   .setValue(new CodeType().setValue(patientEncounter.getStatus().toString()));
           patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
         }

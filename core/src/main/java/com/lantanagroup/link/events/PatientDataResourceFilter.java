@@ -1,4 +1,4 @@
-package com.lantanagroup.link.nhsn;
+package com.lantanagroup.link.events;
 
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
