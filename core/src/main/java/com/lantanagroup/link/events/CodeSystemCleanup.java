@@ -21,13 +21,12 @@ public class CodeSystemCleanup implements IReportGenerationDataEvent {
 
   private final HashMap<String, String> codeSystemMap = new HashMap<>();
 
-  private int fixCount = 0;
-
   public CodeSystemCleanup() {
     this.codeSystemMap.put("http://hl7.org/fhir/sid/icd-9-cm/diagnosis", "http://terminology.hl7.org/CodeSystem/icd9cm");
   }
 
-  private void checkCoding(Coding coding) {
+  private int checkCoding(Coding coding) {
+    int fixCount = 0;
     if (coding.getSystem() != null && this.codeSystemMap.containsKey(coding.getSystem())) {
       String originalValue = coding.getSystem();
       coding.setSystem(this.codeSystemMap.get(originalValue));
@@ -37,37 +36,49 @@ public class CodeSystemCleanup implements IReportGenerationDataEvent {
 
       fixCount++;
     }
+    return fixCount;
   }
 
   @Override
   public void execute(TenantService tenantService, Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+    int fixCount = 0;
     List<CodeableConcept> codeableConcepts = FhirScanner.findCodeableConcepts(data);
-    codeableConcepts.forEach(cc -> {
-      cc.getCoding().forEach(this::checkCoding);
-    });
+    for (CodeableConcept codeableConcept : codeableConcepts) {
+      for (Coding coding : codeableConcept.getCoding()) {
+        fixCount += checkCoding(coding);
+      }
+    }
 
     List<Coding> codings = FhirScanner.findCodings(data);
-    codings.forEach(this::checkCoding);
+    for (Coding coding : codings) {
+      fixCount += checkCoding(coding);
+    }
 
-    if (this.fixCount > 0) {
-      logger.info("Fixed {} code systems", this.fixCount);
+    if (fixCount > 0) {
+      logger.info("Fixed {} code systems", fixCount);
     }
   }
 
   @Override
   public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    data.forEach(next -> {
+    int fixCount = 0;
+
+    for (DomainResource next : data) {
       List<CodeableConcept> codeableConcepts = FhirScanner.findCodeableConcepts(next);
-      codeableConcepts.forEach(cc -> {
-        cc.getCoding().forEach(this::checkCoding);
-      });
+      for (CodeableConcept codeableConcept : codeableConcepts) {
+        for (Coding coding : codeableConcept.getCoding()) {
+          fixCount += checkCoding(coding);
+        }
+      }
 
       List<Coding> codings = FhirScanner.findCodings(next);
-      codings.forEach(this::checkCoding);
-    });
+      for (Coding coding : codings) {
+        fixCount += checkCoding(coding);
+      }
+    }
 
-    if (this.fixCount > 0) {
-      logger.info("Fixed {} code systems", this.fixCount);
+    if (fixCount > 0) {
+      logger.info("Fixed {} code systems", fixCount);
     }
   }
 }

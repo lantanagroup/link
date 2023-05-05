@@ -7,6 +7,7 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.DomainResource;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,16 +19,16 @@ import java.util.UUID;
  */
 public class ContainedResourceCleanup implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(ContainedResourceCleanup.class);
-  private int fixCount = 0;
 
   @Override
   public void execute(TenantService tenantService, Bundle data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+    int fixCount = 0;
     int totalEntries = data.getEntry().size();
     for (int i = 0; i < totalEntries; i++) {
       DomainResource resource = (DomainResource) data.getEntry().get(i).getResource();
 
       if (resource.getContained().size() > 0) {
-        resource.getContained().forEach(contained -> {
+        for (Resource contained : resource.getContained()) {
           DomainResource clone = (DomainResource) contained.copy();
           String newId = UUID.randomUUID().toString();
           clone.setId(newId);
@@ -41,15 +42,15 @@ public class ContainedResourceCleanup implements IReportGenerationDataEvent {
             }
           });
 
-          this.fixCount++;
-        });
+          fixCount++;
+        }
 
         resource.getContained().clear();
       }
+    }
 
-      if (this.fixCount > 0) {
-        logger.info("Moved {} contained resources to top level of patient bundle", this.fixCount);
-      }
+    if (fixCount > 0) {
+      logger.info("Moved {} contained resources to top level of patient bundle", fixCount);
     }
   }
 
