@@ -68,12 +68,13 @@ public class PatientIdentifierController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant is not configured to query the EHR for patient lists");
     }
 
+    IGenericClient client = createClient(tenantService);
     List<EhrPatientList> filteredList = tenantService.getConfig().getQueryList().getLists();
 
     for (EhrPatientList patientListConfig : filteredList) {
       List<ListResource> sources = new ArrayList<>();
       for (String listId : patientListConfig.getListId()) {
-        sources.add(this.readList(tenantService, listId));
+        sources.add(this.readList(client, listId));
       }
 
       for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
@@ -83,7 +84,7 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
-  private ListResource readList(TenantService tenantService, String patientListId) throws ClassNotFoundException {
+  private IGenericClient createClient(TenantService tenantService) throws ClassNotFoundException {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
             StringUtils.isNotEmpty(tenantService.getConfig().getQueryList().getFhirServerBase()) ?
@@ -91,7 +92,10 @@ public class PatientIdentifierController extends BaseController {
                     tenantService.getConfig().getFhirQuery().getFhirServerBase());
 
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
+    return client;
+  }
 
+  private ListResource readList(IGenericClient client, String patientListId) {
     return client
             .read()
             .resource(ListResource.class)
