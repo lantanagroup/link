@@ -36,12 +36,12 @@ public class ApiController {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       URL buildFile = this.getClass().getClassLoader().getResource("build.yml");
 
-      if (buildFile == null) return new ApiInfoModel("dev");
+      if (buildFile == null) return new ApiInfoModel("dev", "0.9.0");
 
       ApiInfoModel apiInfo = mapper.readValue(buildFile, ApiInfoModel.class);
       return apiInfo;
     } catch (IOException ex) {
-      return new ApiInfoModel("dev");
+      return new ApiInfoModel("dev", "0.9.0");
     }
   }
 
