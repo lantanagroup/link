@@ -1051,7 +1051,9 @@ components:
       type: object
       properties:
         listId:
-          type: string
+          type: array
+          items:
+            type: string
         measureId:
           type: array
           items:

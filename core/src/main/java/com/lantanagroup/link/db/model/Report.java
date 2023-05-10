@@ -1,6 +1,7 @@
 package com.lantanagroup.link.db.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.lantanagroup.link.model.ReportBase;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,11 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Report {
-  private String id;
-  private List<String> measureIds = new ArrayList<>();
-  private String periodStart;
-  private String periodEnd;
+public class Report extends ReportBase {
   private ReportStatuses status = ReportStatuses.Draft;
   private Date submittedTime;
   private Date generatedTime = new Date();

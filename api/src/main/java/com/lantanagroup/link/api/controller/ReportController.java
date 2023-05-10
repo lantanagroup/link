@@ -6,10 +6,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
-import com.lantanagroup.link.model.GenerateRequest;
-import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.ReportContext;
-import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
@@ -502,5 +499,16 @@ public class ReportController extends BaseController {
     }
 
     return patientMeasureReport.getMeasureReport();
+  }
+
+  @GetMapping
+  public List<ReportBase> searchReports(@PathVariable String tenantId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    return tenantService.searchReports();
   }
 }

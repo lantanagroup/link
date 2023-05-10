@@ -2,6 +2,7 @@ package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.ReportBase;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -170,6 +171,22 @@ public class TenantService {
 
   public Report getReport(String id) {
     return this.getReportCollection().find(eq("_id", id)).first();
+  }
+
+  public List<ReportBase> searchReports() {
+    List<ReportBase> reports = new ArrayList<>();
+    this.getReportCollection().find()
+            .projection(include("_id", "measureIds", "periodStart", "periodEnd"))
+            .map(r -> {
+              ReportBase reportBase = new ReportBase();
+              reportBase.setId(r.getId());
+              reportBase.setMeasureIds(r.getMeasureIds());
+              reportBase.setPeriodEnd(r.getPeriodEnd());
+              reportBase.setPeriodStart(r.getPeriodStart());
+              return reportBase;
+            })
+            .into(reports);
+    return reports;
   }
 
   public void saveReport(Report report) {
