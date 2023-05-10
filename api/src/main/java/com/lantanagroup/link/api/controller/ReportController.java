@@ -15,6 +15,7 @@ import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
