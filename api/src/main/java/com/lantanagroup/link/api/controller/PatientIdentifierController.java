@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import com.lantanagroup.link.Constants;
@@ -158,8 +159,17 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in XML");
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    ListResource list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
-    checkMeasureIdentifier(list);
+    ListResource list;
+
+    try {
+      list = this.ctx.newXmlParser().parseResource(ListResource.class, body);
+    } catch (DataFormatException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FHIR XML cannot be parsed: " + ex.getMessage());
+    } catch (Exception ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FHIR XML cannot be parsed");
+    }
+
+    this.checkMeasureIdentifier(list);
     this.receiveFHIR(tenantService, list);
   }
 
@@ -169,7 +179,16 @@ public class PatientIdentifierController extends BaseController {
     logger.debug("Receiving patient identifier FHIR List in JSON");
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    ListResource list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
+    ListResource list;
+
+    try {
+      list = this.ctx.newJsonParser().parseResource(ListResource.class, body);
+    } catch (DataFormatException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FHIR JSON cannot be parsed: " + ex.getMessage());
+    } catch (Exception ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "FHIR JSON cannot be parsed");
+    }
+
     checkMeasureIdentifier(list);
     this.receiveFHIR(tenantService, list);
   }
