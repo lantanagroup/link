@@ -30,7 +30,7 @@ public class Bundling {
   /**
    * Whether to move contained line-level resources to the top level of the submission bundle.
    */
-  private boolean promoteLineLevelResources = false;
+  private boolean promoteLineLevelResources = true;
 
   /**
    * The National Provider Identifier (NPI) of the organization/facility the system is bundling/submitting for, to be

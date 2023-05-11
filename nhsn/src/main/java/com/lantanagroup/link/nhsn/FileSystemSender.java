@@ -76,6 +76,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   @Override
   public void send(TenantService tenantService, Bundle submissionBundle, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
     FileSystemSenderConfig.Formats format = this.getFormat();
+    String path = this.getFilePath().toString();
     String content;
     IParser parser;
 
@@ -94,10 +95,11 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       parser.setPrettyPrint(true);
     }
 
-    logger.info(String.format("Encoding submission bundle to %s", format));
-    try (Writer writer = new FileWriter(this.getFilePath().toString(), StandardCharsets.UTF_8)) {
+    logger.info("Encoding submission bundle to {}", format);
+    try (Writer writer = new FileWriter(path, StandardCharsets.UTF_8)) {
       parser.encodeResourceToWriter(submissionBundle, writer);
+      logger.info("Saved submission bundle to file system: {}", path);
     }
-    logger.info(String.format("Done encoding submission bundle to %s", format));
+    logger.info("Done encoding submission bundle to {}", format);
   }
 }

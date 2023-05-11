@@ -32,7 +32,6 @@ public class FhirBundler {
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
           "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
           "http://open.epic.com/FHIR/StructureDefinition/extension/accidentrelated",
-          "http://open.epic.com/FHIR/StructureDefinition/extension/billing-organization",
           "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",
           "http://open.epic.com/FHIR/StructureDefinition/extension/ip-admit-datetime",
           "http://open.epic.com/FHIR/StructureDefinition/extension/observation-datetime",
@@ -407,6 +406,38 @@ public class FhirBundler {
             });
 
     bundle.addEntry().setResource(individualMeasureReport);
+
+    if (this.getBundlingConfig().isPromoteLineLevelResources()) {
+      List<Reference> references = FhirScanner.findReferences(individualMeasureReport);
+
+      for (int i = 0; i < individualMeasureReport.getContained().size(); i++) {
+        Resource contained = individualMeasureReport.getContained().get(i);
+        String containedId = contained.getIdElement().getIdPart().replace("#", "");
+        Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream()
+                .filter(e ->
+                        e.getResource().getResourceType() == contained.getResourceType() &&
+                                e.getResource().getIdElement().getIdPart().equals(contained.getIdElement().getIdPart()))
+                .findFirst();
+
+        if (found.isEmpty()) {
+          bundle.addEntry().setResource(contained);
+        } else {
+          if (!found.get().getResource().equalsDeep(contained)) {
+            logger.error("Need to change the id of {}/{} because another resource has already been promoted with the same ID that is not the same", contained.getResourceType(), contained.getIdElement().getIdPart());
+          } else {
+            logger.debug("Resource {}/{} already has a copy that has been promoted. Not promoting/replacing.", contained.getResourceType(), contained.getIdElement().getIdPart());
+          }
+        }
+
+        String oldReference = "#" + containedId;
+        String newReference = contained.getResourceType() + "/" + containedId;
+        references.stream()
+                .filter(r -> r.getReference() != null && r.getReference().equals(oldReference))
+                .forEach(r -> r.setReference(newReference));
+      }
+
+      individualMeasureReport.getContained().clear();
+    }
   }
 
   private String getNonLocalId(IBaseResource resource) {
