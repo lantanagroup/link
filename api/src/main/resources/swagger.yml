@@ -612,7 +612,88 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/TestResponse'
-
+  /api/{tenantId}/bulk/$initiate-bulk-data:
+    post:
+      tags:
+        - Bulk
+      summary: Initiates the Bulk Data Export process.
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+  /api/{tenantId}/bulk/status/{id}:
+    get:
+      tags:
+        - Bulk
+      summary: Gets a bulk status by id
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: the id of the bulk status record
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BulkStatus'
+  /api/{tenantId}/bulk/status/:
+    get:
+      tags:
+        - Bulk
+      summary: Gets a bulk status by id
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: the id of the bulk status record
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BulkStatus'
+  /api/{tenantId}/bulk/$execute-query-and-retrieval:
+    post:
+      tags:
+        - Bulk
+      summary: Pulls all pending bulk statuses and fetches results.
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
 components:
   schemas:
     ApiInfoModel:
@@ -735,6 +816,25 @@ components:
           type: array
           items:
             type: string
+    BulkStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        statusUrl:
+          type: string
+        status:
+          $ref: '#/components/schemas/BulkStatuses'
+        lastChecked:
+          type: string
+    BulkStatuses:
+      type: string
+      enum:
+        - Pending
+        - InProgress
+        - Complete
     TestResponse:
       type: object
       properties:

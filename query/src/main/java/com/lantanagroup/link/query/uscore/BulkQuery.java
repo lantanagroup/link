@@ -2,27 +2,27 @@ package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import com.google.gson.Gson;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.BulkStatus;
 import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.db.model.BulkStatuses;
-import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.BulkResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.link.query.auth.ICustomAuth;
 import lombok.Setter;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 public class BulkQuery {
   private static final Logger logger = LoggerFactory.getLogger(BulkQuery.class);
@@ -65,23 +65,32 @@ public class BulkQuery {
 
   public void executeInitiateRequest(TenantService tenantService, BulkStatusService service, BulkStatus bulkStatus, ApplicationContext context) throws Exception {
 
-    OkHttpClient client = new OkHttpClient();
-
-    URL url = new URL(tenantService.getConfig().getFhirQuery().getFhirServerBase() + tenantService.getConfig().getRelativeBulkUrl().replace("{groupId}", tenantService.getConfig().getBulkGroupId()));
-    var requestBuilder = new Request.Builder()
-            .url(url);
-
+    URI uri = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase() + tenantService.getConfig().getRelativeBulkUrl().replace("{groupId}", tenantService.getConfig().getBulkGroupId()));
+    HttpClient httpClient = HttpClient.newHttpClient();
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
     setAuthHeaders(requestBuilder, tenantService, context);
+    HttpRequest request = requestBuilder.build();
+    HttpResponse<String> response = null;
 
-    Request request = requestBuilder.build();
-    Response response = client.newCall(request).execute();
-
-    if(!response.isSuccessful()) {
-      //figure out what to do here.
+    try {
+      response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    } catch (IOException | InterruptedException e) {
+      logger.warn("Error initiating bulk export", e);
+      bulkStatus.setStatus(BulkStatuses.Pending);
+      service.saveBulkStatus(bulkStatus);
     }
 
-    String pollingUrlresponse = response.header(tenantService.getConfig().getBulkInitiateResponseUrlHeader());
+    assert response != null;
+    if(response.statusCode() > 400) {
+      logger.warn("Error initiating bulk export");
+      bulkStatus.setStatus(BulkStatuses.Pending);
+      service.saveBulkStatus(bulkStatus);
+      return;
+    }
+
+    String pollingUrlresponse = response.headers().map().get(tenantService.getConfig().getBulkInitiateResponseUrlHeader()).get(0);
     bulkStatus.setStatusUrl(pollingUrlresponse);
+    bulkStatus.setStatus(BulkStatuses.Pending);
     service.saveBulkStatus(bulkStatus);
   }
   public void executeStatusCheck(TenantService tenantService, BulkStatus bulkStatus) {
@@ -92,43 +101,48 @@ public class BulkQuery {
                         TenantService tenantService,
                         BulkStatusService bulkStatusService,
                         ApplicationContext context) throws Exception {
-    OkHttpClient client = new OkHttpClient();
-    URL url = new URL(bulkStatus.getStatusUrl());
-    var requestBuilder = new Request.Builder()
-            .url(url);
+
+    URI uri = new URI(bulkStatus.getStatusUrl());
+    HttpClient httpClient = HttpClient.newHttpClient();
+    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
     setAuthHeaders(requestBuilder, tenantService, context);
-    Request request = requestBuilder.build();
+    HttpRequest request = requestBuilder.build();
 
     boolean progressComplete = false;
     String responseBody = null;
 
     while(!progressComplete){
-      Response response = client.newCall(request).execute();
+      //Response response = client.newCall(request).execute();
+      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-      if(!response.isSuccessful()) {
+      if(response.statusCode() > 400) {
         //figure out what to do here.
+        throw new Exception("Fetch failed: " + uri.toString());
       }
 
       var config = tenantService.getConfig();
-
-      String progressHeader = response.header(config.getProgressHeaderName());
+      String progressHeader = response.headers().map().get(config.getProgressHeaderName()).get(0);
 
       if(progressHeader == null && progressHeader.trim().isEmpty()) {
         progressComplete = true;
-        responseBody = response.body().string();
+        responseBody = response.body();
       }
+      Thread.sleep(config.getBulkWaitTimeInMilliseconds());
     }
 
     BulkStatusResult statusResult = new BulkStatusResult();
     statusResult.setStatusId(bulkStatus.getId());
-    statusResult.setResult(responseBody);
+    Gson gson = new Gson();
+    BulkResponse bulkResponse = gson.fromJson(responseBody, BulkResponse.class);
+    statusResult.setResult(bulkResponse);
 
     bulkStatus.setStatus(BulkStatuses.Complete);
     bulkStatusService.saveBulkStatus(bulkStatus);
+
+    bulkStatusService.saveResult(statusResult);
   }
 
-  private void setAuthHeaders(Request.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {
-
+  private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {
     Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
     var authorizer = (ICustomAuth) context.getBean(authClass);
     authorizer.setTenantService(tenantService);
@@ -137,10 +151,10 @@ public class BulkQuery {
     String authHeader = authorizer.getAuthHeader();
 
     if (authHeader != null && !authHeader.isEmpty()) {
-      requestBuilder.addHeader("Authorization", authHeader);
+      requestBuilder.setHeader("Authorization", authHeader);
     }
     if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.addHeader("apikey", apiKey);
+      requestBuilder.setHeader("apikey", apiKey);
     }
   }
 }

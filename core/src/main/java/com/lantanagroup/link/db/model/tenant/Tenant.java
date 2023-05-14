@@ -92,13 +92,18 @@ public class Tenant {
    */
   private String BulkInitiateResponseUrlHeader;
 
-  /*
+  /**
    * Header name for progress status. e.g. X-Progress
    */
   private String progressHeaderName;
 
-  /*
+  /**
    * value that indicates bulk export is ready to retrieve
    */
   private String progressHeaderCompleteValue;
+
+  /**
+   * value that indicates the sleep time when looping retries for progress completion
+   */
+  private int bulkWaitTimeInMilliseconds;
 }

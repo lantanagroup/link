@@ -1,6 +1,8 @@
 package com.lantanagroup.link.db.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.lantanagroup.link.model.BulkOutput;
+import com.lantanagroup.link.model.BulkResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.bson.types.ObjectId;
@@ -11,5 +13,5 @@ import org.bson.types.ObjectId;
 public class BulkStatusResult {
   private String id = (new ObjectId()).toString();
   private String statusId;
-  private String result;
+  private BulkResponse result;
 }
