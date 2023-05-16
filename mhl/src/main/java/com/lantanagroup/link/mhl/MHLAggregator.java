@@ -25,14 +25,14 @@ import java.util.UUID;
 @Component
 public class MHLAggregator extends ReportAggregator {
   public static final String SUPPLEMENTAL_DATA_EXTENSION_URL =
-          "https://mhl.nhsnlink.org/fhir/StructureDefinition/supplemental-data";
+          "https://mhl.lantanagroup.com/fhir/StructureDefinition/supplemental-data";
   private static final String INITIAL_POPULATION_SYSTEM =
           "http://terminology.hl7.org/CodeSystem/measure-population";
   private static final String INITIAL_POPULATION_CODE = "initial-population";
   private static final String INITIAL_POPULATION_CHILDREN_SYSTEM =
-          String.format("%s/measure-population", Constants.MainSystem);
+          String.format("%s/measure-population", Constants.MHLSystem);
   private static final String INITIAL_POPULATION_CHILDREN_CODE = "initial-population-children";
-  private static final String TOTAL_NUMBER_OF_RECORDS_QUERIED_SYSTEM =   String.format("%s/CodeSystem/measure-population", Constants.MainSystem);;
+  private static final String TOTAL_NUMBER_OF_RECORDS_QUERIED_SYSTEM =   String.format("%s/CodeSystem/measure-population", Constants.MHLSystem);;
   private static final String TOTAL_NUMBER_OF_RECORDS_QUERIED_CODE = "total-queried-records";
   private static final Logger logger = LoggerFactory.getLogger(MHLAggregator.class);
 
@@ -43,17 +43,16 @@ public class MHLAggregator extends ReportAggregator {
   private FhirDataProvider fhirDataProvider;
 
   /**
-   * Suppresses adding subject results to the "initial population children" population.
+   * Suppresses adding subject results to populations other than "initial population."
    * Otherwise, delegates to the superclass implementation.
    */
   @Override
   protected void addSubjectResult(
           MeasureReport individualMeasureReport,
           MeasureReport.MeasureReportGroupPopulationComponent aggregatePopulation) {
-    if (aggregatePopulation.getCode().hasCoding(INITIAL_POPULATION_CHILDREN_SYSTEM, INITIAL_POPULATION_CHILDREN_CODE)) {
-      return;
+    if (aggregatePopulation.getCode().hasCoding(INITIAL_POPULATION_SYSTEM, INITIAL_POPULATION_CODE)) {
+      super.addSubjectResult(individualMeasureReport, aggregatePopulation);
     }
-    super.addSubjectResult(individualMeasureReport, aggregatePopulation);
   }
 
   /**

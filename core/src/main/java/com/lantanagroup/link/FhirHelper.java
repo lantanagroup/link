@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
@@ -287,8 +286,8 @@ public class FhirHelper {
 
   public static Bundle.BundleEntryComponent findEntry(Bundle bundle, ResourceType resourceType, String id) {
     Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream().filter(e ->
-            e.getResource().getResourceType() == resourceType &&
-                    e.getResource().getIdElement().getIdPart().equals(id))
+                    e.getResource().getResourceType() == resourceType &&
+                            e.getResource().getIdElement().getIdPart().equals(id))
             .findFirst();
     return found.isPresent() ? found.get() : null;
   }
@@ -490,10 +489,6 @@ public class FhirHelper {
     return reportDefBundleDataReqSet.stream().filter(properties::contains).collect(Collectors.toList());
   }
 
-  public static List<String> getQueryConfigurationResourceTypes(USCoreConfig usCoreConfig) {
-    return Helper.concatenate(usCoreConfig.getPatientResourceTypes(), usCoreConfig.getOtherResourceTypes());
-  }
-
   public static List<ListResource> getCensusLists(DocumentReference documentReference, FhirDataProvider fhirDataProvider) {
     if (documentReference != null && documentReference.getContext() != null && documentReference.getContext().hasRelated()) {
       Bundle requestBundle = new Bundle();
@@ -515,6 +510,8 @@ public class FhirHelper {
       return responseBundle.getEntry().stream()
               .map(entry -> (ListResource) entry.getResource())
               .collect(Collectors.toList());
+    } else {
+      logger.warn("The DocumentReference does not have a context/related census associated with it");
     }
 
     return new ArrayList<>();

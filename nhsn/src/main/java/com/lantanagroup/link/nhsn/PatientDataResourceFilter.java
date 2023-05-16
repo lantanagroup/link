@@ -85,11 +85,22 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
           }
         }
         break;
+      case Specimen:
+        Specimen specimen = (Specimen) resource;
+
+        if (specimen.getReceivedTime() != null) {
+          if (!isWithin(specimen.getReceivedTime().toInstant(), start, end)) {
+            return true;
+          }
+        }
     }
 
     return false;
   }
 
+  // TODO: This is always unknown if executed during AfterPatientResourceQuery
+  //       In that case, the bundle argument is resource-type-specific, not an entire patient data bundle
+  //       So it doesn't include the patient resource
   private String getPatientResourceIdFromBundle(Bundle bundle) {
     Optional<Resource> foundPatient = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType() == ResourceType.Patient)
@@ -118,7 +129,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
     String patientResourceId = this.getPatientResourceIdFromBundle(bundle);
     int total = bundle.getEntry().size();
     int filtered = 0;
-    logger.info(String.format("Filtering patient data bundle for patient %s of %s resources", patientResourceId, total));
+    logger.info(String.format("Filtering bundle for patient %s of %s resources", patientResourceId, total));
 
     // Loop through the entries in reverse so that we can easily remove entries without worrying about the index
     for (int i = bundle.getEntry().size() - 1; i >= 0; i--) {
@@ -132,7 +143,7 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       }
     }
 
-    logger.info(String.format("Filtered out %s resources of patient bundle %s for a total of %s", filtered, patientResourceId, bundle.getEntry().size()));
+    logger.info(String.format("Filtered out %s resources of patient %s for a total of %s", filtered, patientResourceId, bundle.getEntry().size()));
   }
 
   @Override

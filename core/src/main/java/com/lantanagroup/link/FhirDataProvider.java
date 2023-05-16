@@ -9,7 +9,9 @@ import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
+import ca.uhn.fhir.rest.gclient.IClientExecutable;
 import ca.uhn.fhir.rest.gclient.ICriterion;
+import ca.uhn.fhir.rest.gclient.IOperation;
 import ca.uhn.fhir.rest.param.TokenParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ctc.wstx.util.StringUtil;
@@ -305,6 +307,10 @@ public class FhirDataProvider {
   }
 
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
+
+    // TODO - this is failing I assume to pull a measure report from the DataStore.
+    // What would have PUT the measure report there????
+
     MeasureReport measureReport = client.operation()
             .onInstance(new IdType("Measure", measureId))
             .named("$evaluate-measure")
@@ -312,6 +318,7 @@ public class FhirDataProvider {
             .returnResourceType(MeasureReport.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
+
     return measureReport;
   }
 

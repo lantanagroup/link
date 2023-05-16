@@ -12,7 +12,8 @@ public class ApiInfoModel {
 
   }
 
-  public ApiInfoModel(String build) {
+  public ApiInfoModel(String build, String version) {
     this.setBuild(build);
+    this.setVersion(version);
   }
 }
