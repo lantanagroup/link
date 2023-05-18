@@ -101,10 +101,16 @@ public class PatientScoop {
             }
 
             logger.debug("Retrieving patient at index " + poiIndex);
-            Patient patient = this.fhirQueryServer.read()
-                    .resource(Patient.class)
-                    .withId(id)
-                    .execute();
+            Patient patient = new Patient();
+            try {
+              patient = this.fhirQueryServer.read()
+                      .resource(Patient.class)
+                      .withId(id)
+                      .execute();
+            } catch (Exception ex) {
+              patient = new Patient();
+              patient.setId(String.format("Patient/%s",id));
+            }
             patientMap.put(poi.getReference(), patient);
             poi.setId(patient.getIdElement().getIdPart());
             stopwatch.stop();
