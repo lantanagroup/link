@@ -18,5 +18,5 @@ query/src/main/resources/query-*.yml
 spring-shell.log
 
 cli/cli.yml
-cli/austin-query.yml
+austin-cli-config.yml
 austin-api-config.yml
