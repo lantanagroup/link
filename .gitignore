@@ -20,3 +20,5 @@ spring-shell.log
 cli/cli.yml
 austin-cli-config.yml
 austin-api-config.yml
+austin-consumer-config.yml
+knox-measure-report-transfer.known_hosts
