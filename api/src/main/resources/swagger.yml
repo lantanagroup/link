@@ -1031,7 +1031,6 @@ components:
     EventOptions:
       type: string
       enum:
-        - com.lantanagroup.link.events.ApplyConceptMaps
         - com.lantanagroup.link.events.CodeSystemCleanup
         - com.lantanagroup.link.events.ContainedResourceCleanup
         - com.lantanagroup.link.events.CopyLocationIdentifierToType

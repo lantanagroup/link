@@ -222,9 +222,11 @@ public class PatientIdentifierController extends BaseController {
               patientList.getPeriodEnd());
       patientList.setId(found.getId());
       found.merge(patientList);
+    } else {
+      found = patientList;
     }
 
-    tenantService.savePatientList(patientList);
+    tenantService.savePatientList(found);
   }
 
   private void receiveFHIR(TenantService tenantService, ListResource listResource) throws Exception {
