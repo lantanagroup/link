@@ -346,6 +346,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: withNhsnMeasures
+          in: query
+          description: Whether to include validation of the nhsn-measures IG
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: successful response
@@ -1031,7 +1037,6 @@ components:
     EventOptions:
       type: string
       enum:
-        - com.lantanagroup.link.events.ApplyConceptMaps
         - com.lantanagroup.link.events.CodeSystemCleanup
         - com.lantanagroup.link.events.ContainedResourceCleanup
         - com.lantanagroup.link.events.CopyLocationIdentifierToType

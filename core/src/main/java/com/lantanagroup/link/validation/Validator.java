@@ -23,41 +23,58 @@ import java.util.stream.Collectors;
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
 
-  private FhirValidator validator;
+  private FhirValidator validatorWithNhsnMeasures;
+  private FhirValidator validatorWithout;
 
   public Validator() {
     try {
-      FhirContext ctx = FhirContextProvider.getFhirContext();
-      NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
-      npmPackageSupport.loadPackageFromClasspath("classpath:nhsn-measures.tgz");
-      npmPackageSupport.loadPackageFromClasspath("classpath:uscore.tgz");
-      npmPackageSupport.loadPackageFromClasspath("classpath:qicore.tgz");
-      npmPackageSupport.loadPackageFromClasspath("classpath:deqm.tgz");
-      ValidationSupportChain validationSupportChain = new ValidationSupportChain(
-              npmPackageSupport,
-              new DefaultProfileValidationSupport(ctx),
-              new CommonCodeSystemsTerminologyService(ctx),
-              new InMemoryTerminologyServerValidationSupport(ctx)
-      );
-      CachingValidationSupport validationSupport = new CachingValidationSupport(validationSupportChain);
-      this.validator = ctx.newValidator();
-
-      FhirInstanceValidator instanceValidator = new FhirInstanceValidator(validationSupport);
-      instanceValidator.setValidatorPolicyAdvisor(new PolicyAdvisor());
-      instanceValidator.setAssumeValidRestReferences(true);
-      instanceValidator.setErrorForUnknownProfiles(false);
-      instanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
-      this.validator.registerValidatorModule(instanceValidator);
-      this.validator.setConcurrentBundleValidation(true);
+      this.validatorWithNhsnMeasures = this.buildValidator(true);
+      this.validatorWithout = this.buildValidator(false);
     } catch (IOException ex) {
       logger.error("Error initializing validator", ex);
     }
   }
 
-  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
+  private FhirValidator buildValidator(boolean withNhsnMeasures) throws IOException {
+    FhirContext ctx = FhirContextProvider.getFhirContext();
+    NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
+    if (withNhsnMeasures) {
+      npmPackageSupport.loadPackageFromClasspath("classpath:nhsn-measures.tgz");
+    }
+    npmPackageSupport.loadPackageFromClasspath("classpath:uscore.tgz");
+    npmPackageSupport.loadPackageFromClasspath("classpath:qicore.tgz");
+    npmPackageSupport.loadPackageFromClasspath("classpath:deqm.tgz");
+    ValidationSupportChain validationSupportChain = new ValidationSupportChain(
+            npmPackageSupport,
+            new DefaultProfileValidationSupport(ctx),
+            new CommonCodeSystemsTerminologyService(ctx),
+            new InMemoryTerminologyServerValidationSupport(ctx)
+    );
+    CachingValidationSupport validationSupport = new CachingValidationSupport(validationSupportChain);
+    FhirValidator validator = ctx.newValidator();
+
+    FhirInstanceValidator instanceValidator = new FhirInstanceValidator(validationSupport);
+    instanceValidator.setValidatorPolicyAdvisor(new PolicyAdvisor());
+    instanceValidator.setAssumeValidRestReferences(true);
+    instanceValidator.setErrorForUnknownProfiles(false);
+    instanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
+    validator.registerValidatorModule(instanceValidator);
+    validator.setConcurrentBundleValidation(true);
+
+    return validator;
+  }
+
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, boolean withNhsnMeasures) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
     Date start = new Date();
-    ValidationResult result = this.validator.validateWithResult(resource);
+    ValidationResult result;
+
+    if (withNhsnMeasures) {
+      result = this.validatorWithNhsnMeasures.validateWithResult(resource);
+    } else {
+      result = this.validatorWithout.validateWithResult(resource);
+    }
+
     Date end = new Date();
     logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));
     OperationOutcome outcome = (OperationOutcome) result.toOperationOutcome();

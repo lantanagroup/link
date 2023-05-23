@@ -399,7 +399,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping("/{reportId}/$validate")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) throws IOException {
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity, @RequestParam(defaultValue = "false") boolean withNhsnMeasures) throws IOException {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -419,7 +419,7 @@ public class ReportController extends BaseController {
     }
 
     try {
-      OperationOutcome outcome = this.validator.validate(submissionBundle, severity);
+      OperationOutcome outcome = this.validator.validate(submissionBundle, severity, withNhsnMeasures);
       Path tempFile = Files.createTempFile(null, ".json");
       try (FileWriter fw = new FileWriter(tempFile.toFile())) {
         FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);

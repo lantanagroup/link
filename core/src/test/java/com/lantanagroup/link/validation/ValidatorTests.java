@@ -21,7 +21,7 @@ public class ValidatorTests {
       this.validator = new Validator();
 
       // Perform a single validation to pre-load all the packages and profiles
-      this.validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
+      this.validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR, true);
       logger.info("Done initializing validator");
     }
 
@@ -38,7 +38,7 @@ public class ValidatorTests {
   @Ignore
   public void testPerformance() throws IOException {
     Bundle bundle = this.getBundle();
-    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
+    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, true);
 
     logger.info("Issues:");
     oo.getIssue().forEach(i -> {
