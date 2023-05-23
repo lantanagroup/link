@@ -1,6 +1,7 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.lantanagroup.link.db.model.tenant.Validation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.junit.Ignore;
@@ -18,7 +19,7 @@ public class ValidatorTests {
 
   private Validator getValidator() {
     if (this.validator == null) {
-      this.validator = new Validator();
+      this.validator = new Validator(new Validation());
 
       // Perform a single validation to pre-load all the packages and profiles
       this.validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);

@@ -54,9 +54,6 @@ public class ReportController extends BaseController {
   private EventService eventService;
 
   @Autowired
-  private Validator validator;
-
-  @Autowired
   @Setter
   private ApplicationContext context;
 
@@ -414,12 +411,9 @@ public class ReportController extends BaseController {
 
     Bundle submissionBundle = this.generateBundle(tenantService, report);
 
-    if (this.validator == null) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Not configured for validation");
-    }
-
     try {
-      OperationOutcome outcome = this.validator.validate(submissionBundle, severity);
+      Validator validator = new Validator(tenantService.getConfig().getValidation());
+      OperationOutcome outcome = validator.validate(submissionBundle, severity);
       Path tempFile = Files.createTempFile(null, ".json");
       try (FileWriter fw = new FileWriter(tempFile.toFile())) {
         FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);

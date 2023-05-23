@@ -39,7 +39,7 @@ public class Tenant {
    * Configuration properties for how to bundle the final submission, including contact information that is used
    * when creating an Organization resource that represents the sending facility (the tenant).
    */
-  private Bundling bundling;
+  private Bundling bundling = new Bundling();
 
   /**
    * Schedule configuration for the tenant that can be used to automatically begin processes such as querying for
@@ -76,4 +76,9 @@ public class Tenant {
    * ISO 8601 formatted duration in which to keep data for each tenant. Defaulted to 3 months.
    */
   private String retentionPeriod = "P3M";
+
+  /**
+   * Configuration for how to validate submission bundles.
+   */
+  private Validation validation = new Validation();
 }
