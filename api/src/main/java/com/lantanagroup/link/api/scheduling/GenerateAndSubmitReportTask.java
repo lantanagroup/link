@@ -54,6 +54,7 @@ public class GenerateAndSubmitReportTask implements Runnable {
 
     try {
       GenerateRequest generateRequest = new GenerateRequest();
+      generateRequest.setBundleIds(this.measureIds);
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
