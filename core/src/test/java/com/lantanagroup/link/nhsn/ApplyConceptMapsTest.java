@@ -1,6 +1,7 @@
 package com.lantanagroup.link.nhsn;
 
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.events.ApplyConceptMaps;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -75,6 +76,10 @@ public class ApplyConceptMapsTest {
 
     ReportContext context = new ReportContext();
     context.setMasterIdentifierValue("test");
+
+    Tenant tenant = new Tenant();
+    tenant.setId("test");
+    when(tenantService.getConfig()).thenReturn(tenant);
 
     ApplyConceptMaps applyConceptMaps = Mockito.spy(ApplyConceptMaps.class);
 
