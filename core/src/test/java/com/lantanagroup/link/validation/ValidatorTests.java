@@ -19,7 +19,9 @@ public class ValidatorTests {
 
   private Validator getValidator() {
     if (this.validator == null) {
-      this.validator = new Validator(new Validation());
+      Validation validation = new Validation();
+      validation.getNpmPackages().add("nhsn-measures.tgz");
+      this.validator = new Validator(validation);
 
       // Perform a single validation to pre-load all the packages and profiles
       this.validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
