@@ -79,7 +79,7 @@ public class PatientIdentifierController extends BaseController {
       }
 
       for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
-        PatientList patientList = this.convert(tenantService, sources, patientListConfig.getMeasureId().get(j));
+        PatientList patientList = this.convert(tenantService, sources, patientListConfig.getMeasureId().get(j), new URI(client.getServerBase()));
         this.storePatientList(tenantService, patientList);
       }
     }
@@ -104,7 +104,7 @@ public class PatientIdentifierController extends BaseController {
             .execute();
   }
 
-  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier) throws URISyntaxException {
+  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier, URI baseUrl) throws URISyntaxException {
     logger.info("Converting List resources to DB PatientLists");
     PatientList patientList = new PatientList();
 
@@ -119,7 +119,7 @@ public class PatientIdentifierController extends BaseController {
     for (ListResource source : sources) {
       logger.info("Converting List: {}", source.getIdElement().getIdPart());
       for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-        PatientId patientId = this.convertListItem(tenantService, sourceEntry);
+        PatientId patientId = this.convertListItem(tenantService, sourceEntry, baseUrl);
 
         if (patientId != null && !patientList.getPatients().contains(patientId)) {
           patientList.getPatients().add(patientId);
@@ -130,13 +130,12 @@ public class PatientIdentifierController extends BaseController {
     return patientList;
   }
 
-  private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry) throws URISyntaxException {
-    URI baseUrl = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase());
+  private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
     if (listEntry.getItem().hasReference()) {
       URI referenceUrl = new URI(listEntry.getItem().getReference());
       String reference;
 
-      if (referenceUrl.isAbsolute()) {
+      if (referenceUrl.isAbsolute() && baseUrl != null) {
         reference = baseUrl.relativize(referenceUrl).toString();
       } else {
         reference = listEntry.getItem().getReference();
@@ -283,7 +282,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(value);
 
     for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
-      PatientId patientId = this.convertListItem(tenantService, sourceEntry);
+      PatientId patientId = this.convertListItem(tenantService, sourceEntry, null);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);
