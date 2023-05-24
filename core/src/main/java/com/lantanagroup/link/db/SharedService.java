@@ -31,8 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.exists;
+import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.include;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
@@ -264,6 +263,24 @@ public class SharedService {
   public User getUser(String id) {
     Bson criteria = eq("_id", id);
     return this.getUserCollection().find(criteria).first();
+  }
+
+  public List<User> searchUsers(boolean includeDisabled) {
+    List<User> users = new ArrayList<>();
+    Bson criteria = exists("_id");
+
+    if (!includeDisabled) {
+      criteria = or(eq("enabled", true), not(exists("enabled")));
+    }
+
+    this.getUserCollection()
+            .find(criteria)
+            .map(u -> {
+              u.setPassword(null);
+              return u;
+            })
+            .into(users);
+    return users;
   }
 
   public User findUser(String email) {

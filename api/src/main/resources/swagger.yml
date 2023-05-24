@@ -55,7 +55,100 @@ paths:
               schema:
                 type: string
       security:
-        - {}
+        - { }
+  /api/user:
+    get:
+      tags:
+        - Users
+      summary: Search all users
+      operationId: searchUsers
+      parameters:
+        - name: includeDisabled
+          in: query
+          description: Whether or not to include disabled users
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: createUser
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+  /api/user/{userId}:
+    put:
+      tags:
+        - Users
+      summary: Update a user
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the user to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 'The "enabled" property of the User is ignored. It can only be set via DELETE'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      tags:
+        - Users
+      summary: Delete (disable) a user
+      operationId: deleteUser
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the user to delete/disable
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: successful response
+  /api/user/{userId}/$change-password:
+    put:
+      tags:
+        - Users
+      summary: Change a user's password
+      operationId: changeUserPassword
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the user to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: successful response
   /api/tenant:
     get:
       tags:
@@ -1233,6 +1326,15 @@ components:
           type: string
         paged:
           type: number
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
     FHIR.ConceptMap:
       type: object
     FHIR.MeasureReport:
