@@ -6,10 +6,7 @@ import ca.uhn.fhir.rest.gclient.IQuery;
 import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.EventService;
-import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.StreamUtils;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.*;
 import com.lantanagroup.link.model.ReportContext;
@@ -164,7 +161,7 @@ public class PatientData {
                     .resource(resourceType)
                     .withId(id)
                     .execute();
-            bundle.addEntry().setResource((Resource) resource);
+            addResource((Resource) resource);
           } catch (ResourceNotFoundException | ResourceGoneException e) {
             logger.error("Resource not found or gone: {}/{}", resourceType, id, e);
           }
@@ -267,7 +264,7 @@ public class PatientData {
         if (resource instanceof OperationOutcome) {
           logIssues((OperationOutcome) resource);
         } else {
-          this.bundle.addEntry().setResource(resource);
+          addResource(resource);
         }
       }
       if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
@@ -277,6 +274,11 @@ public class PatientData {
               .next(bundle)
               .execute();
     }
+  }
+
+  private void addResource(Resource resource) {
+    resource.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
+    bundle.addEntry().setResource(resource);
   }
 
   private void logResourceTypeCounts() {

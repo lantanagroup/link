@@ -177,7 +177,7 @@ public class FhirBundler {
    * @param resource
    */
   private void cleanupResource(Resource resource) {
-    resource.setMeta(null);
+    resource.getMeta().getProfile().clear();
 
     String profile = null;
 
@@ -245,13 +245,6 @@ public class FhirBundler {
       Resource resource = entry.getResource();
       String resourceId = getNonLocalId(resource);
       resource.setId(resourceId);
-
-      // Only allow meta.profile
-      if (resource.getMeta() != null) {
-        Meta cleanedMeta = new Meta();
-        cleanedMeta.setProfile(resource.getMeta().getProfile());
-        resource.setMeta(cleanedMeta);
-      }
 
       if (resource instanceof DomainResource) {
         ((DomainResource) resource).setText(null);

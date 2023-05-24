@@ -8,6 +8,7 @@ public class Constants {
   public static final String CdcOrgIdSystem = "https://www.cdc.gov/nhsn/OrgID";
   public static final String OrganizationTypeSystem = "http://terminology.hl7.org/CodeSystem/organization-type";
   public static final String ApplicablePeriodExtensionUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-patient-list-applicable-period-extension";
+  public static final String ReceivedDateExtensionUrl = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension";
   public static final String SubjectListMeasureReportProfile = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/subjectlist-measurereport";
   public static final String SubmittingOrganizationProfile = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-submitting-organization";
   public static final String MeasureScoringExtension = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring";

@@ -1,6 +1,7 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.EventTypes;
 import com.lantanagroup.link.Helper;
@@ -15,6 +16,7 @@ import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,6 +129,7 @@ public class PatientScoop {
                     .resource(Patient.class)
                     .withId(id)
                     .execute();
+            patient.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
             patientMap.put(poi.getReference(), patient);
             poi.setId(patient.getIdElement().getIdPart());
             return patient;
@@ -149,6 +152,7 @@ public class PatientScoop {
 
             if (response.getEntry().size() > 0) {
               Patient patient = (Patient) response.getEntryFirstRep().getResource();
+              patient.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
               patientMap.put(poi.getIdentifier(), patient);
               poi.setId(patient.getIdElement().getIdPart());
               return patient;
