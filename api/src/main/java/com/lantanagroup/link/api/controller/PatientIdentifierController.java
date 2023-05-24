@@ -45,6 +45,11 @@ public class PatientIdentifierController extends BaseController {
   @GetMapping
   public List<PatientList> searchPatientLists(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tenant with id %s not found", tenantId));
+    }
+
     return tenantService.getAllPatientLists()
             .stream().map(pl -> {
               pl.setPatients(null);
