@@ -14,9 +14,10 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class FileSystemSenderConfig {
   private String path;
-  ;
+
   private Formats format = Formats.JSON;
   private Boolean pretty = false;
+  private String encryptSecret;
 
   public enum Formats {
     JSON,
