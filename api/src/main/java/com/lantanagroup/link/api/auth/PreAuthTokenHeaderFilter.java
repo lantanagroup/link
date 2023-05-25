@@ -101,7 +101,7 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     String[] split = new String(authBytes).split(":");
 
     if (split.length != 2) {
-      logger.warn("Expected basic auth header to have two parst");
+      logger.warn("Expected basic auth header to have two parts");
       return null;
     }
 
