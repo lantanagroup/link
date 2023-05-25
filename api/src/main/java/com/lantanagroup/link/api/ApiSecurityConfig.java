@@ -1,20 +1,20 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.api.auth.LinkAuthenticationSuccessHandler;
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
-import com.lantanagroup.link.auth.LinkAuthManager;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -38,14 +38,22 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 //  @Autowired
 //  private CsrfTokenRepository customCsrfTokenRepository; //custom csrfToken repository
 
-  @Autowired
-  private Environment env;
-
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config);
-    authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAlgorithm(), config.getAuthJwksUrl(), config.getTokenVerificationClass(), null, config.getTokenValidationEndpoint()));
-    authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.sharedService));
+    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config, this.sharedService);
+    authFilter.setAuthenticationManager(new AuthenticationManager() {
+      @Override
+      public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        LinkCredentials credentials = (LinkCredentials) authentication.getPrincipal();
+
+        if (credentials.getUser() != null) {
+          authentication.setAuthenticated(true);
+        }
+
+        return authentication;
+      }
+    });
+
     http
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

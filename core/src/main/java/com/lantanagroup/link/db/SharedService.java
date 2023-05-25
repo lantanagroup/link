@@ -1,5 +1,6 @@
 package com.lantanagroup.link.db;
 
+import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.*;
@@ -30,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Projections.include;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
@@ -43,6 +44,8 @@ public class SharedService {
   public static final String USER_COLLECTION = "user";
   public static final String TENANT_CONFIG_COLLECTION = "tenantConfig";
   public static final String BULK_DATA_COLLECTION = "bulkDataStatus";
+  public static final String DEFAULT_PASS = "linkt3mppass";
+  public static final String DEFAULT_EMAIL = "default@nhsnlink.org";
 
   private MongoClient client;
   private MongoDatabase database;
@@ -54,7 +57,37 @@ public class SharedService {
     if (this.database == null) {
       logger.info("Using database {}", this.config.getDatabase());
       this.database = getClient().getDatabase(this.config.getDatabase());
+
+      // If no users in the db have a password
+      if (this.database.getCollection(USER_COLLECTION).find(exists("password", true)).first() == null) {
+        logger.warn("Did not find any users with passwords, ensuring at least one user has a password");
+
+        // Find the default user by email
+        User foundDefault = this.database.getCollection(USER_COLLECTION, User.class).find(eq("email", DEFAULT_EMAIL)).first();
+
+        if (foundDefault == null) {
+          logger.warn("Did not found a default user, creating a new default user with {}", DEFAULT_EMAIL);
+
+          foundDefault = new User();
+          foundDefault.setEmail(DEFAULT_EMAIL);
+        }
+
+        try {
+          // Just set the password of the already-existing default user to the hash of the default password
+          foundDefault.setPassword(String.format("%s", Hasher.hash(DEFAULT_PASS)));
+        } catch (Exception ex) {
+          logger.error("Error hashing new/default user's password", ex);
+          return this.database;
+        }
+
+        this.database.getCollection(USER_COLLECTION, User.class)
+                .replaceOne(
+                        eq("_id", foundDefault.getId()),
+                        foundDefault,
+                        new ReplaceOptions().upsert(true));
+      }
     }
+
     return this.database;
   }
 
@@ -233,6 +266,29 @@ public class SharedService {
 
   public User getUser(String id) {
     Bson criteria = eq("_id", id);
+    return this.getUserCollection().find(criteria).first();
+  }
+
+  public List<User> searchUsers(boolean includeDisabled) {
+    List<User> users = new ArrayList<>();
+    Bson criteria = exists("_id");
+
+    if (!includeDisabled) {
+      criteria = or(eq("enabled", true), not(exists("enabled")));
+    }
+
+    this.getUserCollection()
+            .find(criteria)
+            .map(u -> {
+              u.setPassword(null);
+              return u;
+            })
+            .into(users);
+    return users;
+  }
+
+  public User findUser(String email) {
+    Bson criteria = eq("email", email);
     return this.getUserCollection().find(criteria).first();
   }
 
