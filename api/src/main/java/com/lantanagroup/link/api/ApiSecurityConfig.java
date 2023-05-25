@@ -32,15 +32,12 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired
   private SharedService sharedService;
 
-  @Autowired
-  private LinkCredentials linkCredentials;
-
 //  @Autowired
 //  private CsrfTokenRepository customCsrfTokenRepository; //custom csrfToken repository
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
-    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config, this.sharedService);
+    PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", config, this.sharedService);
     authFilter.setAuthenticationManager(new AuthenticationManager() {
       @Override
       public Authentication authenticate(Authentication authentication) throws AuthenticationException {

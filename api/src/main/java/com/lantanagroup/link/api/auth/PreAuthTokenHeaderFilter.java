@@ -32,13 +32,11 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
   private static final Logger logger = LoggerFactory.getLogger(PreAuthTokenHeaderFilter.class);
 
   private final String authHeaderName;
-  private final LinkCredentials linkCredentials;
   private final ApiConfig apiConfig;
   private final SharedService sharedService;
 
-  public PreAuthTokenHeaderFilter(String authHeaderName, LinkCredentials linkCredentials, ApiConfig apiConfig, SharedService sharedService) {
+  public PreAuthTokenHeaderFilter(String authHeaderName, ApiConfig apiConfig, SharedService sharedService) {
     this.authHeaderName = authHeaderName;
-    this.linkCredentials = linkCredentials;
     this.apiConfig = apiConfig;
     this.sharedService = sharedService;
   }
@@ -85,9 +83,10 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
           return null;
         }
 
-        this.linkCredentials.setUser(found);
-        this.linkCredentials.setJwt(jwt);
-        return this.linkCredentials;
+        LinkCredentials linkCredentials = new LinkCredentials();
+        linkCredentials.setUser(found);
+        linkCredentials.setJwt(jwt);
+        return linkCredentials;
       }
     } catch (ClassNotFoundException | InvocationTargetException | NoSuchMethodException | InstantiationException |
              IllegalAccessException e) {
@@ -117,8 +116,9 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     }
 
     if (found != null && found.hasPassword() && found.getPassword().equals(hashed)) {
-      this.linkCredentials.setUser(found);
-      return this.linkCredentials;
+      LinkCredentials linkCredentials = new LinkCredentials();
+      linkCredentials.setUser(found);
+      return linkCredentials;
     } else if (found == null) {
       logger.error("User with email {} not found", split[0]);
     } else {
