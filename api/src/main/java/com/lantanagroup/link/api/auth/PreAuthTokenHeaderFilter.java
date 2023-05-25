@@ -74,10 +74,15 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
 
       if (valid) {
         DecodedJWT jwt = JWT.decode(authHeader.substring(7));
-        User found = this.sharedService.findUser(jwt.getClaim(EMAIL_CLAIM).asString());
-
+        String email = jwt.getClaim(EMAIL_CLAIM).asString();
+        if (StringUtils.isEmpty(email)) {
+          logger.error("No email claim in JWT");
+          return null;
+        }
+        User found = this.sharedService.findUser(email);
         if (found == null) {
-          logger.error("Email from JWT not found: {}", this.linkCredentials.getJwt().getClaim(EMAIL_CLAIM));
+          logger.error("Email not found: {}", email);
+          return null;
         }
 
         this.linkCredentials.setUser(found);
