@@ -81,4 +81,34 @@ public class Tenant {
    * Configuration for how to validate submission bundles.
    */
   private Validation validation = new Validation();
+
+  /**
+   *
+   */
+  private String bulkGroupId;
+
+  /**
+   * ex /R4/Group/{groupId}/$export?_type=patient,medicationrequest,medication
+   */
+  private String relativeBulkUrl;
+
+  /**
+   * Header name to retrieve polling url
+   */
+  private String BulkInitiateResponseUrlHeader;
+
+  /**
+   * Header name for progress status. e.g. X-Progress
+   */
+  private String progressHeaderName;
+
+  /**
+   * value that indicates bulk export is ready to retrieve
+   */
+  private String progressHeaderCompleteValue;
+
+  /**
+   * value that indicates the sleep time when looping retries for progress completion
+   */
+  private int bulkWaitTimeInMilliseconds;
 }

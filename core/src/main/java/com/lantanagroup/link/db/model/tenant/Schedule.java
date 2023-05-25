@@ -24,4 +24,6 @@ public class Schedule {
    * Configuration for when to automatically generate and submit reports.
    */
   private List<GenerateReport> generateAndSubmitReports;
+
+  private String bulkDataCron;
 }

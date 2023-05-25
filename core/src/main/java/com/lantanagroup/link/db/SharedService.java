@@ -42,6 +42,7 @@ public class SharedService {
   public static final String MEASURE_PACKAGE_COLLECTION = "measurePackage";
   public static final String USER_COLLECTION = "user";
   public static final String TENANT_CONFIG_COLLECTION = "tenantConfig";
+  public static final String BULK_DATA_COLLECTION = "bulkDataStatus";
 
   private MongoClient client;
   private MongoDatabase database;
@@ -57,6 +58,9 @@ public class SharedService {
     return this.database;
   }
 
+  public MongoCollection<BulkStatus> getBulkDataStatusCollection() {
+    return this.getDatabase().getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
+  }
   public MongoCollection<Tenant> getTenantConfigCollection() {
     return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
   }
