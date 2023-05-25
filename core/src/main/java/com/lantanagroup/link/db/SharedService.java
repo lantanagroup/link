@@ -59,7 +59,7 @@ public class SharedService {
       this.database = getClient().getDatabase(this.config.getDatabase());
 
       // If no users in the db have a password
-      if (this.database.getCollection(USER_COLLECTION).find(exists("password", true)).first() == null) {
+      if (this.database.getCollection(USER_COLLECTION).find(exists("passwordHash", true)).first() == null) {
         logger.warn("Did not find any users with passwords, ensuring at least one user has a password");
 
         // Find the default user by email
