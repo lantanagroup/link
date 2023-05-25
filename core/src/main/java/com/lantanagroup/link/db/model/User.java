@@ -13,7 +13,8 @@ public class User {
   private String id = (new ObjectId()).toString();
   private String name;
   private String email;
-  private String password;
+  private String passwordSalt;
+  private String passwordHash;
   private Boolean enabled = true;
 
   public boolean hasEmail() {
@@ -21,6 +22,6 @@ public class User {
   }
 
   public boolean hasPassword() {
-    return StringUtils.isNotEmpty(this.password);
+    return StringUtils.isNotEmpty(this.passwordHash);
   }
 }

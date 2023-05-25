@@ -105,27 +105,28 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
       return null;
     }
 
-    User found = this.sharedService.findUser(split[0]);
-    String hashed;
+    String email = split[0];
+    String password = split[1];
+    User found = this.sharedService.findUser(email);
 
-    try {
-      hashed = Hasher.hash(split[1]);
-    } catch (Exception ex) {
-      logger.warn("Failed to hash incoming basic password", ex);
+    if (found == null) {
+      logger.error("User with email {} not found", email);
       return null;
     }
 
-    if (found != null && found.hasPassword() && found.getPassword().equals(hashed)) {
-      LinkCredentials linkCredentials = new LinkCredentials();
-      linkCredentials.setUser(found);
-      return linkCredentials;
-    } else if (found == null) {
-      logger.error("User with email {} not found", split[0]);
-    } else {
-      logger.error("Password for user with email {} not correct", split[0]);
+    if (!found.hasPassword()) {
+      logger.error("User with email {} has no password", email);
+      return null;
     }
 
-    return null;
+    if (!Hasher.check(password, found.getPasswordSalt(), found.getPasswordHash())) {
+      logger.error("Password for user with email {} not correct", email);
+      return null;
+    }
+
+    LinkCredentials linkCredentials = new LinkCredentials();
+    linkCredentials.setUser(found);
+    return linkCredentials;
   }
 
   @Override

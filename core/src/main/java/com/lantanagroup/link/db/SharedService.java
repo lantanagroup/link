@@ -74,7 +74,9 @@ public class SharedService {
 
         try {
           // Just set the password of the already-existing default user to the hash of the default password
-          foundDefault.setPassword(String.format("%s", Hasher.hash(DEFAULT_PASS)));
+          String salt = Hasher.getRandomSalt();
+          foundDefault.setPasswordSalt(salt);
+          foundDefault.setPasswordHash(Hasher.hash(DEFAULT_PASS, salt));
         } catch (Exception ex) {
           logger.error("Error hashing new/default user's password", ex);
           return this.database;
@@ -280,7 +282,8 @@ public class SharedService {
     this.getUserCollection()
             .find(criteria)
             .map(u -> {
-              u.setPassword(null);
+              u.setPasswordSalt(null);
+              u.setPasswordHash(null);
               return u;
             })
             .into(users);

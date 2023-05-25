@@ -37,11 +37,13 @@ public class UserController extends BaseController {
       User found = this.sharedService.getUser(user.getId());
 
       if (found != null) {
-        user.setPassword(found.getPassword());
+        user.setPasswordSalt(found.getPasswordSalt());
+        user.setPasswordHash(found.getPasswordHash());
         user.setEnabled(found.getEnabled());
       }
     } else {
-      user.setPassword(null);
+      user.setPasswordSalt(null);
+      user.setPasswordHash(null);
     }
 
     this.sharedService.saveUser(user);
@@ -75,7 +77,9 @@ public class UserController extends BaseController {
     }
 
     try {
-      user.setPassword(Hasher.hash(newPassword));
+      String salt = Hasher.getRandomSalt();
+      user.setPasswordSalt(salt);
+      user.setPasswordHash(Hasher.hash(newPassword, salt));
     } catch (Exception ex) {
       logger.error("Could not hash user {}'s new password", userId, ex);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
