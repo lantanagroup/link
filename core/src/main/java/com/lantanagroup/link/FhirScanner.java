@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
+import org.hl7.fhir.r4.model.Period;
 import org.hl7.fhir.r4.model.Reference;
 
 import java.lang.reflect.Array;
@@ -21,6 +22,12 @@ public class FhirScanner {
     List<Reference> references = new ArrayList<>();
     scanInstance(obj, Reference.class, Collections.newSetFromMap(new IdentityHashMap<>()), references);
     return references;
+  }
+
+  public static List<Period> findPeriods(Object obj) {
+    List<Period> periods = new ArrayList<>();
+    scanInstance(obj, Period.class, Collections.newSetFromMap(new IdentityHashMap<>()), periods);
+    return periods;
   }
 
   /**

@@ -1037,6 +1037,7 @@ components:
         - com.lantanagroup.link.events.CopyLocationIdentifierToType
         - com.lantanagroup.link.events.EncounterStatusTransformer
         - com.lantanagroup.link.events.FixResourceId
+        - com.lantanagroup.link.events.FixPeriodDates
         - com.lantanagroup.link.events.PatientDataResourceFilter
     QueryList:
       type: object
