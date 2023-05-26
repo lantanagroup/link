@@ -6,12 +6,6 @@ import org.hl7.fhir.r4.model.DateTimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.TimeZone;
-
 public class PeriodDateFixer
 {
   private Bundle _bundle;
@@ -27,31 +21,20 @@ public class PeriodDateFixer
 
     periodsInBundle.forEach(p -> {
 
-      //Fix the Start Date
-      var start = p.getStart();
-      start = FixDate(start);
+        DateTimeType start = p.getStartElement();
+        DateTimeType end = p.getEndElement();
 
-      //Fix the End Date
-      var end = p.getEnd();
-      end = FixDate(end);
+        if (start.getPrecision() == TemporalPrecisionEnum.DAY && end.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
+          start.setPrecision(end.getPrecision());
+          start.setTimeZone(end.getTimeZone());
+          start.setHour(0);
+          start.setMinute(0);
+          start.setSecond(0);
+          start.setMillis(0);
 
-      var tz = TimeZone.getTimeZone(ZoneId.ofOffset("", ZoneOffset.UTC));
-
-      //Set the fixed datetimes back into the Period, which should always include a time component if one was missing.
-      p.setStartElement(new DateTimeType(start, TemporalPrecisionEnum.SECOND, tz));
-      p.setEndElement(new DateTimeType(end, TemporalPrecisionEnum.SECOND, tz));
+          p.setStartElement(start);
+      }
 
     });
-  }
-
-  private Date FixDate(Date date)
-  {
-    //Convert the deprecated Date object to the modern LocalDateTime, setting the timezone to UTC
-    ZonedDateTime zdt = ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC);
-
-    //convert it back into a java.util.Date object
-    var newDT = new java.util.Date(zdt.getYear()-1900, zdt.getMonthValue()-1, zdt.getDayOfMonth(), zdt.getHour(), zdt.getMinute(), zdt.getSecond());
-
-    return newDT;
   }
 }
