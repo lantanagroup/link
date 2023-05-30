@@ -75,16 +75,16 @@ public class PatientIdentifierController extends BaseController {
     }
 
     IGenericClient client = createClient(tenantService);
-    List<EhrPatientList> filteredList = tenantService.getConfig().getQueryList().getLists();
+    List<EhrPatientList> lists = tenantService.getConfig().getQueryList().getLists();
 
-    for (EhrPatientList patientListConfig : filteredList) {
+    for (EhrPatientList list : lists) {
       List<ListResource> sources = new ArrayList<>();
-      for (String listId : patientListConfig.getListId()) {
+      for (String listId : list.getListId()) {
         sources.add(this.readList(client, listId));
       }
 
-      for (int j = 0; j < patientListConfig.getMeasureId().size(); j++) {
-        PatientList patientList = this.convert(tenantService, sources, patientListConfig.getMeasureId().get(j), new URI(client.getServerBase()));
+      for (int j = 0; j < list.getMeasureId().size(); j++) {
+        PatientList patientList = this.convert(tenantService, sources, list.getMeasureId().get(j), new URI(client.getServerBase()));
         this.storePatientList(tenantService, patientList);
       }
     }
@@ -102,11 +102,13 @@ public class PatientIdentifierController extends BaseController {
   }
 
   private ListResource readList(IGenericClient client, String patientListId) {
-    return client
+    ListResource list = client
             .read()
             .resource(ListResource.class)
             .withId(patientListId)
             .execute();
+    logger.info("List {} contains {} entries", patientListId, list.getEntry().size());
+    return list;
   }
 
   private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier, URI baseUrl) throws URISyntaxException {
@@ -220,13 +222,16 @@ public class PatientIdentifierController extends BaseController {
 
     // Merge the list of patients found with the new list
     if (found != null) {
-      logger.info("Merging with pre-existing patient list that has {} (measure) {} (start) and {} (end)",
+      logger.info("Merging with pre-existing patient list with {} entries that has {} (measure) {} (start) and {} (end)",
+              patientList.getPatients().size(),
               patientList.getMeasureId(),
               patientList.getPeriodStart(),
               patientList.getPeriodEnd());
       patientList.setId(found.getId());
       found.merge(patientList);
+      logger.info("Merged list contains {} entries", found.getPatients().size());
     } else {
+      logger.info("No pre-existing patient list found");
       found = patientList;
     }
 
