@@ -55,6 +55,16 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
         }
       }
     }
+    for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
+      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+        if (population.getCount() > 0) {
+          logger.debug(
+                  "Added subject results to {}: {}",
+                  population.getCode().getCodingFirstRep().getCode(),
+                  population.getCount());
+        }
+      }
+    }
   }
 
   protected void createGroupsFromMeasure(MeasureReport masterMeasureReport, ReportContext.MeasureContext measureContext) {
