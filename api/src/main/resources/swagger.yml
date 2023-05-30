@@ -502,6 +502,32 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientList'
+  /api/{tenantId}/report/{reportId}/individual:
+    get:
+      tags:
+        - Reports
+      summary: Get all individuals' patient measure reports generated for the specified report id
+      operationId: getPatientMeasureReports
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: All individuals' FHIR MeasureReport
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.MeasureReport'
   /api/{tenantId}/report/{reportId}/individual/{patientMeasureReportId}:
     get:
       tags:

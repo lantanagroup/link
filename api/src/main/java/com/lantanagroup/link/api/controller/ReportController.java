@@ -34,6 +34,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -476,6 +477,48 @@ public class ReportController extends BaseController {
     }
 
     return tenantService.getPatientLists(report.getPatientLists());
+  }
+
+  @GetMapping("/{reportId}/individual")
+  public List<MeasureReport> getPatientMeasureReports(@PathVariable String tenantId, @PathVariable String reportId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
+    }
+
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<String> ids = new ArrayList<>();
+    for (Aggregate aggregate : aggregates) {
+      for (MeasureReport.MeasureReportGroupComponent group : aggregate.getReport().getGroup()) {
+        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+          if (!population.hasSubjectResults()) {
+            continue;
+          }
+          String subjectResultsId = population.getSubjectResults().getReference();
+          ListResource subjectResults = (ListResource) aggregate.getReport().getContained().stream()
+                  .filter(c -> c.getId().equals(subjectResultsId))
+                  .findFirst()
+                  .filter(resource -> resource instanceof ListResource)
+                  .orElse(null);
+          if (subjectResults == null) {
+            continue;
+          }
+          for (ListResource.ListEntryComponent entry : subjectResults.getEntry()) {
+            ids.add(entry.getItem().getReferenceElement().getIdPart());
+          }
+        }
+      }
+    }
+    return tenantService.getPatientMeasureReports(ids).stream()
+            .map(PatientMeasureReport::getMeasureReport)
+            .collect(Collectors.toList());
   }
 
   @GetMapping("/{reportId}/individual/{patientMeasureReportId}")
