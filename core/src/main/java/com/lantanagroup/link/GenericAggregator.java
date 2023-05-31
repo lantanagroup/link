@@ -11,10 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static com.lantanagroup.link.Constants.LINK_VERSION_URL;
-import static com.lantanagroup.link.Constants.MEASURE_VERSION_URL;
 
 public abstract class GenericAggregator implements IReportAggregator {
   private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
@@ -36,24 +32,6 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
     masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
 
-    //Get version info for measure and LINK and store as extensions in master measure report
-    try {
-
-      FhirDataProvider fhirStoreProvider = new FhirDataProvider(config.getEvaluationService());
-      Bundle measureBundle = fhirStoreProvider.getBundleById(measureContext.getBundleId());
-      Library measureLibrary = measureBundle.getEntry().stream()
-              .map(Bundle.BundleEntryComponent::getResource)
-              .filter(resource -> resource instanceof Library)
-              .map(resource -> (Library) resource)
-              .filter(library -> library.getIdPart().equals(measureContext.getBundleId()))
-              .findFirst()
-              .orElseThrow();
-      masterMeasureReport.addExtension(MEASURE_VERSION_URL, new StringType(measureLibrary.getVersion()));
-      masterMeasureReport.addExtension(LINK_VERSION_URL, new StringType(Helper.getVersionInfo().getVersion()));
-    }catch(Exception e){
-      //do nothing, just don't put version info if can't be found
-      logger.debug("Couldn't find measure bundle in evaluation server to add version info to master measure report");
-    }
     // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
     this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
 

@@ -327,7 +327,7 @@ public class ReportController extends BaseController {
       }
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
-      ReportGenerator generator = new ReportGenerator(tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
+      ReportGenerator generator = new ReportGenerator(sharedService, tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
