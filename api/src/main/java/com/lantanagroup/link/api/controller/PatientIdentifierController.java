@@ -223,10 +223,10 @@ public class PatientIdentifierController extends BaseController {
     // Merge the list of patients found with the new list
     if (found != null) {
       logger.info("Merging with pre-existing patient list with {} entries that has {} (measure) {} (start) and {} (end)",
-              patientList.getPatients().size(),
-              patientList.getMeasureId(),
-              patientList.getPeriodStart(),
-              patientList.getPeriodEnd());
+              found.getPatients().size(),
+              found.getMeasureId(),
+              found.getPeriodStart(),
+              found.getPeriodEnd());
       patientList.setId(found.getId());
       found.merge(patientList);
       logger.info("Merged list contains {} entries", found.getPatients().size());
