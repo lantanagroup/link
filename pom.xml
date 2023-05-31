@@ -130,10 +130,8 @@
                     <reportOutputDirectory>./</reportOutputDirectory>
                     <destDir>docs</destDir>
                     <sourcepath>
-                        cli/target/generated-sources/delombok;
                         api/target/generated-sources/delombok;
                         query/target/generated-sources/delombok;
-                        query-api/target/generated-sources/delombok;
                         core/target/generated-sources/delombok;
                     </sourcepath>
                     <additionalOptions>-Xdoclint:none</additionalOptions>
@@ -169,6 +167,7 @@
                             <encoding>UTF-8</encoding>
                             <addOutputDirectory>false</addOutputDirectory>
                             <sourceDirectory>src/main/java</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/delombok</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
