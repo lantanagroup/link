@@ -30,4 +30,6 @@ public class Constants {
   public static final String OriginalElementValueExtension = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-original-element-value-extension";
   public static final String OriginalResourceIdExtension = "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-original-resource-id-extension";
   public static final String BundlingFullUrlFormat = "http://lantanagroup.com/fhir/nhsn-measures/%s";
+  public static final String MEASURE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version";
+  public static final String LINK_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version";
 }

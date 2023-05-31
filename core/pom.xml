@@ -169,6 +169,10 @@
             <artifactId>azure-core</artifactId>
             <version>1.31.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.password4j</groupId>

@@ -1,8 +1,16 @@
 package com.lantanagroup.link;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -16,6 +24,19 @@ public class Helper {
   public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
   public static final String RFC_1123_DATE_TIME_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
+
+  public static ApiInfoModel getVersionInfo(){
+    try {
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      URL buildFile = Helper.class.getClassLoader().getResource("build.yml");
+
+      if (buildFile == null) return new ApiInfoModel("dev", "0.9.0");
+
+      return mapper.readValue(buildFile, ApiInfoModel.class);
+    } catch (IOException ex) {
+      return new ApiInfoModel("dev", "0.9.0");
+    }
+  }
 
   public static String getFhirDate(LocalDateTime localDateTime) {
     Instant instant = localDateTime.atZone(ZoneId.systemDefault()).toInstant();
