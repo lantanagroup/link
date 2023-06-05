@@ -59,7 +59,13 @@ public class ReportGenerator {
               measureContext.getPatientsOfInterest().parallelStream().filter(patient -> !StringUtils.isEmpty(patient.getId())).map(patient -> {
 
                 logger.info("Generating measure report for patient " + patient);
-                MeasureReport patientMeasureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+                MeasureReport patientMeasureReport = new MeasureReport();
+                try {
+                  patientMeasureReport = MeasureEvaluator.generateMeasureReport(this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+                } catch (Exception ex) {
+                  logger.error(String.format("Issue generating patient measure report for %s, error %s", patient, ex.getMessage()));
+                }
+
                 String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
                 patientMeasureReport.setId(measureReportId);
 

@@ -19,6 +19,13 @@ spring-shell.log
 
 cli/cli.yml
 austin-cli-config.yml
+austin-cli-config-LIVE.yml
 austin-api-config.yml
+austin-api-config-dockercompose.yml
 austin-consumer-config.yml
+austin-datastore-config.yml
+austin-datastore-config-POSTGRES.yml
+docker-compose.yml
 knox-measure-report-transfer.known_hosts
+qodana.yaml
+docker-volumes/
