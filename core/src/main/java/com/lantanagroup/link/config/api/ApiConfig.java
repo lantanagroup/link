@@ -202,4 +202,9 @@ public class ApiConfig {
    * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
    */
   private Integer measureEvaluationThreads;
+
+  /**
+   * <strong>api.skip-query</strong><br>Whether to skip the query phase of report generation; useful if patient data bundles have already been stored.
+   */
+  private boolean skipQuery = false;
 }

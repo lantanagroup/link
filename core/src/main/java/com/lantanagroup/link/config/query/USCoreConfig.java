@@ -11,7 +11,6 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import java.time.Period;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class USCoreConfig {
   /**
    * <strong>uscore.other-resource-types</strong><br>The list of resource types supported by the configured EHR's FHIR API that are NOT specific to a patient. These are queried via references from patient resources.
    */
-  private List<String> otherResourceTypes;
+  private List<USCoreOtherResourceTypeConfig> otherResourceTypes;
 
   /**
    * <strong>uscore.parallel-patients</strong><br>The number of patients to query for at a single time.
@@ -56,8 +55,8 @@ public class USCoreConfig {
   private Period lookbackPeriod;
 
   /**
-   * <strong>uscore.lookback-resource-types</strong><br>Resource types to apply date-constrained searches to based on the lookback period
+   * <strong>uscore.encounter-based</strong><br>Whether to exit immediately from the query phase if no encounters are found
    */
-  private List<String> lookbackResourceTypes = new ArrayList<>();
+  private boolean encounterBased = true;
 }
 

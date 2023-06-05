@@ -12,12 +12,15 @@
     </li>
 </ul>
 <div class="document">
-    <div class="input-group">
+    <span class="input-group">
         <div class="input-group-prepend">
             <div class="input-group-text">Reporting Period</div>
         </div>
-        <input [disabled]="true" class="form-control" id="report-period" type="text" value="TODO"/>
-    </div>
+        <div class="form-control">
+            <span class="labelForPeriod">{{periodStart | date : 'MM/dd/yyyy'}}</span>-<span class="labelForPeriod">{{periodEnd | date: 'MM/dd/yyyy'}}</span>
+        </div>
+    </span>
+
 
     <div class="input-group">
         <div class="input-group-prepend">
@@ -91,7 +94,7 @@
             </div>
             <div class="report-buttons btn-group">
                 <div class="btn-group">
-                    <button (click)="viewLineLevel(report)" class="btn btn-primary">View Line-Level Data</button>
+                    <!-- <button (click)="viewLineLevel(report)" class="btn btn-primary">View Line-Level Data</button> -->
                     <button (click)="save(report)" *ngIf="!isSubmitted()" [disabled]="!dirty" class="btn btn-primary">
                         Save
                     </button>

@@ -1,4 +1,5 @@
 docs/
+web/nginx-assets-local.json
 web/.angular/cache/
 web/node_modules/
 web/src/main/angular/assets/local.json
@@ -13,8 +14,18 @@ target/
 api/src/main/resources/api-*.yml
 query/src/main/resources/query-*.yml
 
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf/
-.idea/libraries/
+.idea/*
 spring-shell.log
+
+cli/cli.yml
+austin-cli-config.yml
+austin-cli-config-LIVE.yml
+austin-api-config.yml
+austin-api-config-dockercompose.yml
+austin-consumer-config.yml
+austin-datastore-config.yml
+austin-datastore-config-POSTGRES.yml
+docker-compose.yml
+knox-measure-report-transfer.known_hosts
+qodana.yaml
+docker-volumes/

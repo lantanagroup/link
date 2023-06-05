@@ -1,6 +1,8 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
@@ -65,6 +67,9 @@ public class ReportController extends BaseController {
 
   @Autowired
   private ApiInit apiInit;
+
+  @Autowired
+  private StopwatchManager stopwatchManager;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -160,9 +165,9 @@ public class ReportController extends BaseController {
     if (input.getBundleIds().length < 1) {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
+
     return generateResponse(user, request, input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
   }
-
 
   /**
    * to be invoked when only a multiMeasureBundleId is provided
@@ -170,7 +175,6 @@ public class ReportController extends BaseController {
    * @return Returns a GenerateResponse
    * @throws Exception
    */
-
   @PostMapping("/$generateMultiMeasure")
   public GenerateResponse generateReport(
           @AuthenticationPrincipal LinkCredentials user,
@@ -209,12 +213,12 @@ public class ReportController extends BaseController {
     reportContext.setRequest(request);
     reportContext.setUser(user);
 
-    eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
     // Get the latest measure def and update it on the FHIR storage server
     this.resolveMeasures(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterMeasureResolution, criteria, reportContext);
 
     String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
 
@@ -246,17 +250,17 @@ public class ReportController extends BaseController {
       reportContext.setMasterIdentifierValue(masterIdentifierValue);
     } else {
       reportContext.setMasterIdentifierValue(existingDocumentReference.getMasterIdentifier().getValue());
-      eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
+      this.eventService.triggerEvent(EventTypes.OnRegeneration, criteria, reportContext);
     }
 
-    eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
     // Get the patient identifiers for the given date
     this.getPatientIdentifiers(criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Get the resource types to query
     Set<String> resourceTypesToQuery = new HashSet<>();
@@ -268,7 +272,16 @@ public class ReportController extends BaseController {
     resourceTypesToQuery.retainAll(usCoreConfig.getPatientResourceTypes());
 
     // Scoop the data for the patients and store it
-    this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+    if (config.isSkipQuery()) {
+      logger.info("Skipping query and store");
+      for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
+        if (patient.getReference() != null) {
+          patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+        }
+      }
+    } else {
+      this.queryAndStorePatientData(new ArrayList<>(resourceTypesToQuery), criteria, reportContext);
+    }
 
     // TODO: Move this to just after the AfterPatientOfInterestLookup trigger
     if (reportContext.getPatientCensusLists().size() < 1 || reportContext.getPatientCensusLists() == null) {
@@ -277,7 +290,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
-    eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
+    this.eventService.triggerEvent(EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     response.setMasterId(reportContext.getMasterIdentifierValue());
 
@@ -293,19 +306,19 @@ public class ReportController extends BaseController {
 
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(reportAggregatorClassName));
 
-      ReportGenerator generator = new ReportGenerator(reportContext, measureContext, criteria, config, user, reportAggregator);
+      ReportGenerator generator = new ReportGenerator(this.stopwatchManager, reportContext, measureContext, criteria, config, user, reportAggregator);
 
-      eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
       generator.generate();
 
-      eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
-      eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.BeforeReportStore, criteria, reportContext, measureContext);
 
       generator.store();
 
-      eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
+      this.eventService.triggerEvent(EventTypes.AfterReportStore, criteria, reportContext, measureContext);
 
     }
 
@@ -334,6 +347,10 @@ public class ReportController extends BaseController {
     this.getFhirDataProvider().updateResource(documentReference);
 
     this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Generate, "Successfully Generated Report");
+    logger.info(String.format("Done generating report %s", documentReference.getIdElement().getIdPart()));
+
+    this.stopwatchManager.print();
+    this.stopwatchManager.reset();
 
     return response;
   }
@@ -503,7 +520,17 @@ public class ReportController extends BaseController {
 
     List<PatientReportModel> patientsReportModelList = new ArrayList<>();
 
-    List<Bundle> patientBundles = getPatientBundles(reportId);
+    List<Bundle> patientBundles =  new ArrayList<>();
+
+    String allPatientsBundleId = reportId;
+    String[] idParts = reportId.split("-");
+    if (idParts.length > 1) {
+      allPatientsBundleId = idParts[0];
+    }
+
+    Bundle retrievePatientBundle = this.getFhirDataProvider().getBundleById(allPatientsBundleId);
+
+    patientBundles.add(retrievePatientBundle);
 
     for (Bundle patientBundle : patientBundles) {
       if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
@@ -527,7 +554,16 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @RequestBody ReportSaveModel data) throws Exception {
 
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
+    // TODO
+    // ALM 15May2023 - again faced with getting from UI MasterReportId+MeasureId but
+    // generate DOES NOT store DocumentReference with this id.
+    String masterReportId = id;
+    String[] idParts = id.split("-");
+    if (idParts.length > 1) {
+      masterReportId = idParts[0];
+    }
+
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
 
     documentReference = FhirHelper.incrementMinorVersion(documentReference);
 
@@ -565,7 +601,20 @@ public class ReportController extends BaseController {
     data.setEncounters(new ArrayList<>());
     data.setServiceRequests(new ArrayList<>());
 
-    List<Bundle> patientBundles = getPatientBundles(reportId, patientId);
+    // TODO - revisit this.
+    // ALM 15May2023
+    // UI is calling this /api/report/430749b-9d35173c/patient/<REMOVED>
+    // This ultimately will call Bundle/430749b-9d35173c-patidhash but nowhere in
+    // generate code are we storing Patient bundles under that id... only storing
+    // under 430749b-patidhash.
+    // So here stripping off the measure hash from the passed in id.
+    String masterReportId = reportId;
+    String[] idParts = reportId.split("-");
+    if (idParts.length > 1) {
+      masterReportId = idParts[0];
+    }
+
+    List<Bundle> patientBundles = getPatientBundles(masterReportId, patientId);
     if (patientBundles == null || patientBundles.size() < 1) {
       return data;
     }
@@ -621,7 +670,20 @@ public class ReportController extends BaseController {
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
 
-    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(id);
+    // TODO - revisit this.
+    // ALM 15May2023
+    // UI is calling this /api/report/430749b-9d35173c/patient/<REMOVED>
+    // This ultimately will call Bundle/430749b-9d35173c-patidhash but nowhere in
+    // generate code are we storing Patient bundles under that id... only storing
+    // under 430749b-patidhash.
+    // So here stripping off the measure hash from the passed in id.
+    String masterReportId = id;
+    String[] idParts = id.split("-");
+    if (idParts.length > 1) {
+      masterReportId = idParts[0];
+    }
+
+    DocumentReference documentReference = this.getFhirDataProvider().findDocRefForReport(masterReportId);
 
     Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
     Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
@@ -766,44 +828,32 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
-
-    /*MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
-    if (measureReport == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s does not have a MeasureReport", reportId));
-    }*/
-
     if (excludedPatients == null || excludedPatients.size() == 0) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No exclusions specified");
     }
 
 
+    /* ALM 11May2023 from what I have seen in report generation MeasureReports will NEVER exist with just the Report Id
+    playing around pulling by masterId and measure hash (THSAMeasure)
+     */
 
-    MeasureReport measureReport = this.getFhirDataProvider().getMeasureReportById(reportId);
-    if (measureReport == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s does not have a MeasureReport", reportId));
-    }
     Measure measure = null;
+    MeasureReport measureReport = null;
     Bundle measureBundle = null;
     for (int i = 0; i < reportDocRef.getIdentifier().size(); i++) {
-      String report = "";
+      String encodedReport = "";
       try {
-        report = ReportIdHelper.getMasterMeasureReportId(ReportIdHelper.getMasterIdentifierValue(reportId), reportDocRef.getIdentifier().get(i).getValue());
-        if(report.equals(measureReport.getIdElement().getIdPart())){
-          measureBundle =  this.getFhirDataProvider().getBundleById(reportDocRef.getIdentifier().get(i).getValue());
-          measure = FhirHelper.getMeasure(measureBundle);
-          break;
-        }
+        encodedReport = Helper.encodeForUrl(ReportIdHelper.getMasterMeasureReportId(reportId, reportDocRef.getIdentifier().get(i).getValue()));
+        measureBundle =  this.getFhirDataProvider().getBundleById(reportDocRef.getIdentifier().get(i).getValue());
+        measureReport = this.getFhirDataProvider().getMeasureReportById(encodedReport);
+        measure = FhirHelper.getMeasure(measureBundle);
+        break;
       } catch (Exception ex) {
         logger.error(ex.getMessage());
       }
     }
 
     List<String> bundleIds = reportDocRef.getIdentifier().stream().map(identifier -> identifier.getValue()).collect(Collectors.toList());
-
-
-
-    //Measure measure = new Measure();
-    //measure.setUrl(measureReport.getMeasure());
 
     if (measure == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("The measure for report %s was not found or no longer exists on the system", reportId));
@@ -902,8 +952,9 @@ public class ReportController extends BaseController {
     reportContext.setUser(user);
     reportContext.setMasterIdentifierValue(reportId);
     ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
-    //  measureContext.setBundleId(reportDefIdentifier);
+    //measureContext.setBundleId(reportDefIdentifier); // this was commented out.
     // TODO: Set report def bundle on measure context
+    measureContext.setReportDefBundle(measureBundle);
     measureContext.setMeasure(measure);
     measureContext.setReportId(measureReport.getIdElement().getIdPart());
     reportContext.getMeasureContexts().add(measureContext);
@@ -982,26 +1033,16 @@ public class ReportController extends BaseController {
     List<Bundle> patientBundles = new ArrayList<>();
 
     logger.info("Report not sent: Searching for patient data from master measure report");
-    MeasureReport masterReport = this.getFhirDataProvider().getMeasureReportById(masterReportId);
-    ListResource refs = (ListResource) masterReport.getContained().get(0);
-    for (ListResource.ListEntryComponent ref : refs.getEntry()) {
-      String[] refParts = ref.getItem().getReference().split("/");
-      if (refParts.length > 1) {
-        if (patientId != null && !patientId.equals("")) {
-          logger.info("Searching for specified report " + patientId.hashCode() + " checking if part of " + refParts[refParts.length - 1]);
-          if (refParts[refParts.length - 1].contains(String.valueOf(patientId.hashCode()))) {
-            logger.info("Searching for specified patient " + (Helper.validateLoggerValue(patientId) ? patientId : ""));
-            IBaseResource patientBundle = this.getFhirDataProvider().getBundleById(ReportIdHelper.getPatientDataBundleId(refParts[refParts.length - 1]));
-            patientBundles.add((Bundle) patientBundle);
-            break;
-          }
-        } else {
-          logger.info("Searching for patient report " + refParts[refParts.length - 1] + " out of all patients in master measure report");
-          IBaseResource patientBundle = this.getFhirDataProvider().getBundleById(ReportIdHelper.getPatientDataBundleId(refParts[refParts.length - 1]));
-          patientBundles.add((Bundle) patientBundle);
-        }
-      }
+
+    String patientBundleId = masterReportId;
+    if (patientId != null && !patientId.isEmpty()) {
+      patientBundleId = String.format("%s-%s", masterReportId, ReportIdHelper.hash(patientId));
     }
+
+    Bundle patientBundle = this.getFhirDataProvider().getBundleById(patientBundleId);
+
+    patientBundles.add(patientBundle);
+
     return patientBundles;
   }
 

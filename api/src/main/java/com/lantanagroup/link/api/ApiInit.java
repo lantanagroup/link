@@ -3,7 +3,6 @@ package com.lantanagroup.link.api;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
-import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -208,15 +207,20 @@ public class ApiInit {
     if (!FhirHelper.validLibraries(remoteBundle)) {
       throw new Exception("Report def contains libraries without data requirements");
     }
+
+    List<String> otherResourceTypes = this.usCoreConfig.getOtherResourceTypes().stream()
+            .map(ort -> ort.getResourceType())
+            .collect(Collectors.toList());
+    List<String> allResourceTypes = Helper.concatenate(this.usCoreConfig.getPatientResourceTypes(), otherResourceTypes);
     List<String> missingResourceTypes = FhirHelper.getQueryConfigurationDataReqMissingResourceTypes(
-            FhirHelper.getQueryConfigurationResourceTypes(usCoreConfig),
+            allResourceTypes,
             remoteBundle);
+
     if (!missingResourceTypes.isEmpty()) {
       logger.warn(String.format(
               "Report def contains data requirements that are not configured for querying: %s",
               String.join(", ", missingResourceTypes)));
     }
-
 
     // Store to terminology service
     logger.debug("Storing to terminology service");

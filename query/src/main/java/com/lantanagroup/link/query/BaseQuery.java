@@ -46,7 +46,9 @@ public class BaseQuery {
       return this.fhirQueryClient;
     }
 
-    //this.getFhirContext().getRestfulClientFactory().setSocketTimeout(30 * 1000);   // 30 seconds
+    // TODO - have this in a configuration?
+    // ALM 10May2023 - Epic has had some calls that take > 2 minutes to return because there is a lot of data.
+    // this.getFhirContext().getRestfulClientFactory().setSocketTimeout(300000);   // 300000 = 5 minutes
     IGenericClient fhirQueryClient = this.getFhirContext().newRestfulGenericClient(this.usCoreConfig.getFhirServerBase());
 
     /*

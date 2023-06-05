@@ -1,6 +1,6 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
-import {GenerateComponent} from "./generate/generate.component";
+import {GenerateComponent} from './generate/generate.component';
 import {ReviewComponent} from "./review/review.component";
 import {ReportComponent} from "./report/report.component";
 import {ErrorPageComponent} from './error-page/error-page.component';

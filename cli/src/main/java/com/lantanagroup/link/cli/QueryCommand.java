@@ -13,7 +13,7 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
-import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
+import com.lantanagroup.link.query.uscore.PatientScoop;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
