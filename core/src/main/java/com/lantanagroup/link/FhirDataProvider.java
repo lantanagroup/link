@@ -12,9 +12,7 @@ import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
 import ca.uhn.fhir.rest.param.TokenParam;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ctc.wstx.util.StringUtil;
 import com.lantanagroup.link.config.api.ApiDataStoreConfig;
-import com.lantanagroup.link.config.datastore.DataStoreConfig;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -30,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 
 public class FhirDataProvider {
   private static final Logger logger = LoggerFactory.getLogger(FhirDataProvider.class);
@@ -48,6 +45,7 @@ public class FhirDataProvider {
 
   public FhirDataProvider(ApiDataStoreConfig config) {
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(config.getBaseUrl());
+
     if (StringUtils.isNotEmpty(config.getUsername()) && StringUtils.isNotEmpty(config.getPassword())) {
       BasicAuthInterceptor authInterceptor = new BasicAuthInterceptor(config.getUsername(), config.getPassword());
       client.registerInterceptor(authInterceptor);
@@ -305,6 +303,10 @@ public class FhirDataProvider {
   }
 
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
+
+    // TODO - this is failing I assume to pull a measure report from the DataStore.
+    // What would have PUT the measure report there????
+
     MeasureReport measureReport = client.operation()
             .onInstance(new IdType("Measure", measureId))
             .named("$evaluate-measure")
@@ -312,6 +314,7 @@ public class FhirDataProvider {
             .returnResourceType(MeasureReport.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
+
     return measureReport;
   }
 

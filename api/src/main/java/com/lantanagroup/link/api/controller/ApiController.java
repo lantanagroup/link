@@ -1,8 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.base.Strings;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ApiInfoModel;
@@ -17,7 +16,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
@@ -32,17 +30,7 @@ public class ApiController {
 
   @GetMapping
   public ApiInfoModel getVersionInfo() {
-    try {
-      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-      URL buildFile = this.getClass().getClassLoader().getResource("build.yml");
-
-      if (buildFile == null) return new ApiInfoModel("dev");
-
-      ApiInfoModel apiInfo = mapper.readValue(buildFile, ApiInfoModel.class);
-      return apiInfo;
-    } catch (IOException ex) {
-      return new ApiInfoModel("dev");
-    }
+    return Helper.getVersionInfo();
   }
 
   @GetMapping(value = "/docs", produces = "text/yaml")
