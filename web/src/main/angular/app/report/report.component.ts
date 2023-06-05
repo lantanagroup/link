@@ -17,6 +17,8 @@ import {formatDateToISO} from "../helper";
 })
 export class ReportComponent implements OnInit, OnDestroy {
   masterId: string;
+  periodStart: string;
+  periodEnd: string;
   reportModel: ReportModel;
   reportMeasureList: any[];
   paramsSubscription: Subscription;
@@ -45,6 +47,7 @@ export class ReportComponent implements OnInit, OnDestroy {
     if (!this.reportModel) return 0;
     return Number(this.reportModel.version);
   }
+
 
   isSubmitted() {
     if (!this.reportModel) return false;
@@ -210,11 +213,15 @@ export class ReportComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.masterId = this.route.snapshot.params['id'];
+    this.periodStart = this.route.snapshot.params['periodStart'];
+    this.periodEnd = this.route.snapshot.params['periodEnd'];
     await this.initReport();
 
     this.paramsSubscription = this.route.params.subscribe(
         (params: Params) => {
           this.masterId = params.id;
+          this.periodStart = params.periodStart;
+          this.periodEnd = params.periodEnd;
         }
     );
   }

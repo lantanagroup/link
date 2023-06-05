@@ -1,0 +1,1318 @@
+{
+  "resourceType": "Bundle",
+  "type": "batch",
+  "entry": [ {
+    "fullUrl": "http://localhost:8080/fhir/Measure/THSAMeasure",
+    "resource": {
+      "resourceType": "Measure",
+      "id": "THSAMeasure",
+      "meta": {
+        "versionId": "1",
+        "lastUpdated": "2023-02-03T17:47:52.144+00:00",
+        "source": "#s8FnlXzPs86bPZVj",
+        "profile": [ "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/computable-measure-cqfm" ]
+      },
+      "contained": [ {
+        "resourceType": "Library",
+        "id": "effective-data-requirements",
+        "extension": [ {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "IMP",
+            "display": "inpatient encounter"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "ACUTE",
+            "display": "inpatient acute"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+            "code": "NONAC",
+            "display": "inpatient non-acute"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://snomed.info/sct",
+            "code": "416800000",
+            "display": "Inpatient"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://snomed.info/sct",
+            "code": "309904001",
+            "display": "Intensive care unit (environment)"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-directReferenceCode",
+          "valueCoding": {
+            "system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
+            "code": "bd",
+            "display": "Bed"
+          }
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "COVID19 Diagnoses"
+          }, {
+            "url": "statement",
+            "valueString": "define \"COVID19 Diagnoses\":     [Condition: \"COVID_19 (Disorders) (SNOMED)\"]     union [Condition: \"COVID_19 (Disorders) (ICD10CM)\"]     union [Condition: \"COVID_19 (COVID_19 Exposure) (SNOMED)\"]"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 0
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "COVID19 Flags"
+          }, {
+            "url": "statement",
+            "valueString": "define \"COVID19 Flags\":     [Flag: \"COVID_19 (Disorders) (SNOMED)\"]     union [Flag: \"COVID_19 (Disorders) (ICD10CM)\"]     union [Flag: \"COVID_19 (COVID_19 Exposure) (SNOMED)\"]"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 1
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "In Progress or Completed Confirmed or Suspected COVID19 Encounters"
+          }, {
+            "url": "statement",
+            "valueString": "define \"In Progress or Completed Confirmed or Suspected COVID19 Encounters\":   [Encounter: class in {\"inpatient encounter\", \"inpatient acute\", \"inpatient non-acute\"}] Encounters     where (         exists(             \"COVID19 Diagnoses\" COVID19Diagnoses             where Global.\"Prevalence Period\"(COVID19Diagnoses) overlaps Encounters.period         ) or exists(             \"COVID19 Flags\" COVID19Flags             where COVID19Flags.period overlaps Encounters.period         )     )     and Encounters.period ends during \"Measurement Period\"     and Encounters.status in { 'finished', 'in-progress' }"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 2
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Initial Population"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Initial Population\":     \"In Progress or Completed Confirmed or Suspected COVID19 Encounters\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 3
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 30-39"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 30-39\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 30         and AgeInYearsAt(start of \"Measurement Period\") < 40"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 4
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "SupplementalDataElementsFHIR4"
+          }, {
+            "url": "name",
+            "valueString": "SDE Race"
+          }, {
+            "url": "statement",
+            "valueString": "define \"SDE Race\":   (flatten (       Patient.extension Extension         where Extension.url = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race'           return Extension.extension     )) E       where E.url = 'ombCategory'         or E.url = 'detailed'       return E.value as Coding"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 5
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Race Stratifier"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Race Stratifier\":     SDE.\"SDE Race\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 6
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 50-59"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 50-59\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 50         and AgeInYearsAt(start of \"Measurement Period\") < 60"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 7
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Bed in Hospital Location"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Bed in Hospital Location\":     \"Initial Population\" IP     where exists(         IP.location IPLocation         where true in \"Check for Inpatient Hospital Location\"(Global.GetLocation(IPLocation.location))     )     and exists(         IP.location IPLocation         where IPLocation.physicalType ~ \"Bed\"     )"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 8
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Numerator 1"
+          }, {
+            "url": "statement",
+            "valueString": "/*define function \"Check Hospital Location ID\"(location Location):     location.identifier Identifiers     return Identifiers.value in {'536508', '536506', '536504', '536510', '535401', '535402', '536509',          '537901', '532904', '538001', '535701', '560511', '542101', '505701', '540335', '537701', '542006', '530225', '540306', '536206', '536505',          '537801', '535601', '535502', '542003', '542004', '535301', '542005', '534800', '536501', '538401', '540301', '533802', '537601', '536901',          '536601', '536602'}  define function \"Check ICU Location ID\"(location Location):     location.identifier Identifiers     return Identifiers.value in {'536508', '536506', '536504', '536510', '535401', '535402', '536509', '537901', '532904'}*/ define \"Numerator 1\":     \"Bed in Hospital Location\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 9
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Numerator 2"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Numerator 2\":     \"Initial Population\" InitialPopulation     where exists(         InitialPopulation.location IPLocations         where true in \"Check for ICU Hospital Location\"(Global.GetLocation(IPLocations.location))     )     and exists(         InitialPopulation.location IPLocations         where IPLocations.physicalType ~ \"Bed\"     )"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 10
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 70-79"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 70-79\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 70         and AgeInYearsAt(start of \"Measurement Period\") < 80"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 11
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 90-99"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 90-99\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 90         and AgeInYearsAt(start of \"Measurement Period\") < 100"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 12
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "SupplementalDataElementsFHIR4"
+          }, {
+            "url": "name",
+            "valueString": "SDE Ethnicity"
+          }, {
+            "url": "statement",
+            "valueString": "define \"SDE Ethnicity\":   (flatten (       Patient.extension Extension         where Extension.url = 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity'           return Extension.extension     )) E       where E.url = 'ombCategory'         or E.url = 'detailed'       return E.value as Coding"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 13
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Ethnicity Stratifier"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Ethnicity Stratifier\":     SDE.\"SDE Ethnicity\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 14
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 20-29"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 20-29\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 20         and AgeInYearsAt(start of \"Measurement Period\") < 30"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 15
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Denominator"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Denominator\":     \"Initial Population\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 16
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 40-49"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 40-49\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 40         and AgeInYearsAt(start of \"Measurement Period\") < 50"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 17
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 60-69"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 60-69\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 60         and AgeInYearsAt(start of \"Measurement Period\") < 70"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 18
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "SupplementalDataElementsFHIR4"
+          }, {
+            "url": "name",
+            "valueString": "SDE Sex"
+          }, {
+            "url": "statement",
+            "valueString": "define \"SDE Sex\":   case       when Patient.gender = 'male' then Code { code: 'M', system: 'http://hl7.org/fhir/v3/AdministrativeGender', display: 'Male' }       when Patient.gender = 'female' then Code { code: 'F', system: 'http://hl7.org/fhir/v3/AdministrativeGender', display: 'Female' }       else null     end"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 19
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Sex Stratifier"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Sex Stratifier\":     SDE.\"SDE Sex\""
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 20
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 10-19"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 10-19\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 10         and AgeInYearsAt(start of \"Measurement Period\") < 20"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 21
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Age Stratifier 80-89"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Age Stratifier 80-89\":     \"Initial Population\" InitialPopulation     where AgeInYearsAt(start of \"Measurement Period\") >= 80         and AgeInYearsAt(start of \"Measurement Period\") < 90"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 22
+          } ]
+        }, {
+          "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-logicDefinition",
+          "extension": [ {
+            "url": "libraryName",
+            "valueString": "THSAMeasure"
+          }, {
+            "url": "name",
+            "valueString": "Stratifier 2"
+          }, {
+            "url": "statement",
+            "valueString": "define \"Stratifier 2\":     \"Initial Population\" InitialPopulation     where exists(             \"COVID19 Diagnoses\" COVID19Dx             where Global.\"Normalize Interval\"(COVID19Dx.onset) starts 14 days or more after start of InitialPopulation.period             and Global.\"Normalize Interval\"(COVID19Dx.onset) starts before end of InitialPopulation.period)         or exists(             \"COVID19 Flags\" COVID19Flags             where COVID19Flags.period starts 14 days or more after start of InitialPopulation.period             and COVID19Flags.period starts before end of InitialPopulation.period         )"
+          }, {
+            "url": "displaySequence",
+            "valueInteger": 23
+          } ]
+        } ],
+        "status": "active",
+        "type": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/library-type",
+            "code": "module-definition"
+          } ]
+        },
+        "date": "2022-07-29T11:30:30-04:00",
+        "relatedArtifact": [ {
+          "type": "depends-on",
+          "display": "Library Global",
+          "resource": "Library/MATGlobalCommonFunctionsFHIR4|6.1.000"
+        }, {
+          "type": "depends-on",
+          "display": "Library FHIRHelpers",
+          "resource": "http://fhir.org/guides/cqf/common/Library/FHIRHelpers|4.0.1"
+        }, {
+          "type": "depends-on",
+          "display": "Library SDE",
+          "resource": "Library/SupplementalDataElementsFHIR4|2.0.000"
+        }, {
+          "type": "depends-on",
+          "display": "Code system ActCode",
+          "resource": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+        }, {
+          "type": "depends-on",
+          "display": "Code system SNOMEDCT",
+          "resource": "http://snomed.info/sct"
+        }, {
+          "type": "depends-on",
+          "display": "Code system LocationPhysicalType",
+          "resource": "http://terminology.hl7.org/CodeSystem/location-physical-type"
+        }, {
+          "type": "depends-on",
+          "display": "Value set COVID_19 (Disorders) (SNOMED)",
+          "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1124"
+        }, {
+          "type": "depends-on",
+          "display": "Value set COVID_19 (Disorders) (ICD10CM)",
+          "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1123"
+        }, {
+          "type": "depends-on",
+          "display": "Value set COVID_19 (COVID_19 Exposure) (SNOMED)",
+          "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1203"
+        } ],
+        "parameter": [ {
+          "name": "Measurement Period",
+          "use": "in",
+          "min": 0,
+          "max": "1",
+          "type": "Period"
+        }, {
+          "name": "Age Stratifier 30-39",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Race Stratifier",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Coding"
+        }, {
+          "name": "Age Stratifier 50-59",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Numerator 1",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Numerator 2",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Age Stratifier 70-79",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Age Stratifier 90-99",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Ethnicity Stratifier",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Coding"
+        }, {
+          "name": "Age Stratifier 20-29",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Denominator",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Age Stratifier 40-49",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Initial Population",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Age Stratifier 60-69",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Sex Stratifier",
+          "use": "out",
+          "min": 0,
+          "max": "1",
+          "type": "Coding"
+        }, {
+          "name": "Age Stratifier 10-19",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Age Stratifier 80-89",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        }, {
+          "name": "Stratifier 2",
+          "use": "out",
+          "min": 0,
+          "max": "*",
+          "type": "Encounter"
+        } ],
+        "dataRequirement": [ {
+          "type": "Condition",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Condition" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1124"
+          } ]
+        }, {
+          "type": "Condition",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Condition" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1123"
+          } ]
+        }, {
+          "type": "Condition",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Condition" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1203"
+          } ]
+        }, {
+          "type": "Flag",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Flag" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1124"
+          } ]
+        }, {
+          "type": "Flag",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Flag" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1123"
+          } ]
+        }, {
+          "type": "Flag",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Flag" ],
+          "mustSupport": [ "code" ],
+          "codeFilter": [ {
+            "path": "code",
+            "valueSet": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1203"
+          } ]
+        }, {
+          "type": "Patient",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Patient" ],
+          "mustSupport": [ "extension", "value", "url" ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Encounter",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Encounter" ],
+          "mustSupport": [ "period", "location", "class", "status" ],
+          "codeFilter": [ {
+            "path": "class",
+            "code": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "IMP",
+              "display": "inpatient encounter"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "ACUTE",
+              "display": "inpatient acute"
+            }, {
+              "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+              "code": "NONAC",
+              "display": "inpatient non-acute"
+            } ]
+          } ]
+        }, {
+          "type": "Location",
+          "profile": [ "http://hl7.org/fhir/StructureDefinition/Location" ],
+          "mustSupport": [ "id" ]
+        } ]
+      } ],
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem",
+        "valueReference": {
+          "reference": "Device/cqf-tooling"
+        }
+      }, {
+        "id": "effective-data-requirements",
+        "url": "http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-effectiveDataRequirements",
+        "valueReference": {
+          "reference": "#effective-data-requirements"
+        }
+      } ],
+      "url": "http://nhsnlink.org/fhir/Measure/THSAMeasure",
+      "identifier": [ {
+        "system": "https://nhsnlink.org",
+        "value": "thsameasure"
+      } ],
+      "version": "1.0.0",
+      "name": "SANER Measure",
+      "title": "SANER Measure",
+      "status": "draft",
+      "date": "2022-07-29T11:30:30-04:00",
+      "relatedArtifact": [ {
+        "type": "depends-on",
+        "display": "Library Global",
+        "resource": "Library/MATGlobalCommonFunctionsFHIR4|6.1.000"
+      }, {
+        "type": "depends-on",
+        "display": "Library FHIRHelpers",
+        "resource": "http://fhir.org/guides/cqf/common/Library/FHIRHelpers|4.0.1"
+      }, {
+        "type": "depends-on",
+        "display": "Library SDE",
+        "resource": "Library/SupplementalDataElementsFHIR4|2.0.000"
+      }, {
+        "type": "depends-on",
+        "display": "Code system ActCode",
+        "resource": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+      }, {
+        "type": "depends-on",
+        "display": "Code system SNOMEDCT",
+        "resource": "http://snomed.info/sct"
+      }, {
+        "type": "depends-on",
+        "display": "Code system LocationPhysicalType",
+        "resource": "http://terminology.hl7.org/CodeSystem/location-physical-type"
+      }, {
+        "type": "depends-on",
+        "display": "Value set COVID_19 (Disorders) (SNOMED)",
+        "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1124"
+      }, {
+        "type": "depends-on",
+        "display": "Value set COVID_19 (Disorders) (ICD10CM)",
+        "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1123"
+      }, {
+        "type": "depends-on",
+        "display": "Value set COVID_19 (COVID_19 Exposure) (SNOMED)",
+        "resource": "http://cts.nlm.nih.gov/fhir/ValueSet/2.16.840.1.113762.1.4.1146.1203"
+      } ],
+      "library": [ "http://nhsnlink.org/fhir/Library/THSAMeasure" ],
+      "scoring": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+          "code": "proportion",
+          "display": "Proportion"
+        } ]
+      },
+      "group": [ {
+        "code": {
+          "coding": [ {
+            "code": "beds"
+          } ]
+        },
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Initial Population"
+          }
+        }, {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "denominator",
+              "display": "Denominator"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Denominator"
+          }
+        }, {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "numerator",
+              "display": "Numerator"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Numerator 1"
+          }
+        } ],
+        "stratifier": [ {
+          "code": {
+            "text": "Sex Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Sex Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Ethnicity Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Ethnicity Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Race Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Race Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 10-19"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 10-19"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 20-29"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 20-29"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 30-39"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 30-39"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 40-49"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 40-49"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 50-59"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 50-59"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 60-69"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 60-69"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 70-79"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 70-79"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 80-89"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 80-89"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 90-99"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 90-99"
+          }
+        } ]
+      }, {
+        "code": {
+          "coding": [ {
+            "code": "icu-beds"
+          } ]
+        },
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Initial Population"
+          }
+        }, {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "denominator",
+              "display": "Denominator"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Denominator"
+          }
+        }, {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "numerator",
+              "display": "Numerator"
+            } ]
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Numerator 2"
+          }
+        } ],
+        "stratifier": [ {
+          "code": {
+            "text": "Stratifier 2"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Stratifier 2"
+          }
+        }, {
+          "code": {
+            "text": "Sex Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Sex Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Ethnicity Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Ethnicity Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Race Stratifier"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Race Stratifier"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 10-19"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 10-19"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 20-29"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 20-29"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 30-39"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 30-39"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 40-49"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 40-49"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 50-59"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 50-59"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 60-69"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 60-69"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 70-79"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 70-79"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 80-89"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 80-89"
+          }
+        }, {
+          "code": {
+            "text": "Age Stratifier 90-99"
+          },
+          "criteria": {
+            "language": "text/cql.identifier",
+            "expression": "Age Stratifier 90-99"
+          }
+        } ]
+      } ]
+    },
+    "search": {
+      "mode": "match"
+    },
+      "request": {
+        "method": "PUT",
+        "url": "Measure/THSAMeasure"
+      }
+  } ]
+}

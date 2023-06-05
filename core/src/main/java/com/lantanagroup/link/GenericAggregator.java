@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -11,12 +12,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.lantanagroup.link.Constants.LINK_VERSION_URL;
+import static com.lantanagroup.link.Constants.MEASURE_VERSION_URL;
 
 public abstract class GenericAggregator implements IReportAggregator {
   private static final Logger logger = LoggerFactory.getLogger(GenericAggregator.class);
 
+
+
   @Autowired
   private ApiConfig config;
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, List<MeasureReport> measureReports);
 
@@ -53,6 +62,8 @@ public abstract class GenericAggregator implements IReportAggregator {
     }
   }
 
+
+
   @Override
   public MeasureReport generate(ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws ParseException {
     // Create the master measure report
@@ -65,6 +76,23 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
     masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
 
+    //Get version info for measure and LINK and store as extensions in master measure report
+    try {
+
+      FhirDataProvider fhirStoreProvider = new FhirDataProvider(this.usCoreConfig.getFhirServerBase());
+      String measureId = measureContext.getMeasure().getId();
+      Bundle measureBundle = (Bundle) fhirStoreProvider
+              .getResourceByTypeAndId("Bundle", measureId.substring(measureId.indexOf("/") + 1));
+      Library measureLibrary = (Library) measureBundle.getEntry().stream().filter(e ->
+                      e.getResource().getResourceType().toString().equals("Library")
+                              && e.getResource().getIdElement().getIdPart().equals(measureId.substring(measureId.indexOf("/") + 1)))
+              .collect(Collectors.toList()).get(0).getResource();
+      masterMeasureReport.addExtension(MEASURE_VERSION_URL, new StringType(measureLibrary.getVersion()));
+      masterMeasureReport.addExtension(LINK_VERSION_URL, new StringType(Helper.getVersionInfo().getVersion()));
+    }catch(Exception e){
+      //do nothing, just don't put version info if can't be found
+      logger.debug("Couldn't find measure bundle in USCore server to add version info to master measure report");
+    }
     // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
     this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
 

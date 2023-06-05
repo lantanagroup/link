@@ -48,6 +48,12 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation-resources-r4</artifactId>
+            <version>${hapi.lib.version}</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/junit/junit -->
         <dependency>
             <groupId>junit</groupId>
@@ -55,16 +61,16 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.azure</groupId>-->
-<!--            <artifactId>azure-storage-blob</artifactId>-->
-<!--            <version>12.19.0</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.azure.spring</groupId>-->
-<!--            <artifactId>spring-cloud-azure-starter-storage-blob</artifactId>-->
-<!--            <version>4.3.0</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.azure</groupId>-->
+        <!--            <artifactId>azure-storage-blob</artifactId>-->
+        <!--            <version>12.19.0</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.azure.spring</groupId>-->
+        <!--            <artifactId>spring-cloud-azure-starter-storage-blob</artifactId>-->
+        <!--            <version>4.3.0</version>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <build>
