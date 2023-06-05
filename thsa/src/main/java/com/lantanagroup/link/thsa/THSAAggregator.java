@@ -79,6 +79,8 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     }
     // look up the inventory on the Fhir Server but save the original ID before to restore it
     String id = measureReport.getId();
+    // TODO - at the point where it's trying to call the Data Store and find a MeasureReport named inventorydata
+    // But it isn there... what puts it there?!?
     MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
     masterMeasureReport.setId(id);
 

@@ -33,12 +33,20 @@ public class EventService {
   @Setter
   private ApiConfigEvents apiConfigEvents;
 
+  @Autowired
+  private StopwatchManager stopwatchManager;
+
   public void triggerEvent(EventTypes eventType, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext) throws Exception {
     List<Object> beans = getBeans(eventType);
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationEvent) {
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationEvent) bean).execute(criteria, reportContext, measureContext);
+        stopwatch.stop();
+      } else {
+        logger.error(bean.toString() + " does not implement the IReportGenerationEvent interface");
       }
     }
   }
@@ -52,7 +60,12 @@ public class EventService {
     if (beans == null || beans.size() == 0) return;
     for (Object bean : beans) {
       if (bean instanceof IReportGenerationDataEvent) {
+        logger.info("Executing event " + eventType.toString() + " for bean " + bean.toString());
+        Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()));
         ((IReportGenerationDataEvent) bean).execute(bundle, criteria, reportContext, measureContext);
+        stopwatch.stop();
+      } else {
+        logger.error(bean.toString() + " does not implement the IReportGenerationDataEvent interface");
       }
     }
   }
@@ -61,16 +74,14 @@ public class EventService {
     List<Class<?>> classes = new ArrayList<>();
     Method eventMethodInvoked = ApiConfigEvents.class.getMethod("get" + eventType.toString());
     List<String> classNames = (List<String>) eventMethodInvoked.invoke(apiConfigEvents);
-    if (classNames == null) {
-      logger.debug(String.format("No class set-up for event %s", eventType.toString()));
-      return null;
-    }
-    for (String className : classNames) {
-      try {
-        Class<?> aClass = Class.forName(className);
-        classes.add(aClass);
-      } catch (ClassNotFoundException ex) {
-        logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType.toString(), className));
+    if (classNames != null) {
+      for (String className : classNames) {
+        try {
+          Class<?> aClass = Class.forName(className);
+          classes.add(aClass);
+        } catch (ClassNotFoundException ex) {
+          logger.error(String.format("TriggerEvent %s - class %s cannot be found:", eventType.toString(), className));
+        }
       }
     }
     List<Object> beans = getBeans(classes);

@@ -67,17 +67,19 @@ public class ReportDefinitionController extends BaseController {
       return storedMeasure;
     }).collect(Collectors.toList());
     //  add the multi-measure reports
-    config.getMeasurePackages().forEach(apiMeasurePackage -> {
-      String[] bundleIds = apiMeasurePackage.getBundleIds();
-      List<StoredMeasure> multiStoredMeasures = storedMeasures.stream().filter(storedMeasure -> List.of(bundleIds).contains(storedMeasure.getId())).collect(Collectors.toList());
-      StoredMeasure multiMeasure = new StoredMeasure();
-      multiMeasure.setName(multiStoredMeasures.stream().map(storedMeasure -> storedMeasure.getName()).collect(Collectors.joining("-")));
-      multiMeasure.setId(apiMeasurePackage.getId());
-      for (StoredMeasure multiStoreMeasure : multiStoredMeasures) {
-        multiMeasure.getBundleIds().add(multiStoreMeasure.getId());
-      }
-      storedMeasures.add(multiMeasure);
-    });
+    if(config.getMeasurePackages() != null && !config.getMeasurePackages().isEmpty()) {
+      config.getMeasurePackages().forEach(apiMeasurePackage -> {
+        String[] bundleIds = apiMeasurePackage.getBundleIds();
+        List<StoredMeasure> multiStoredMeasures = storedMeasures.stream().filter(storedMeasure -> List.of(bundleIds).contains(storedMeasure.getId())).collect(Collectors.toList());
+        StoredMeasure multiMeasure = new StoredMeasure();
+        multiMeasure.setName(multiStoredMeasures.stream().map(storedMeasure -> storedMeasure.getName()).collect(Collectors.joining("-")));
+        multiMeasure.setId(apiMeasurePackage.getId());
+        for (StoredMeasure multiStoreMeasure : multiStoredMeasures) {
+          multiMeasure.getBundleIds().add(multiStoreMeasure.getId());
+        }
+        storedMeasures.add(multiMeasure);
+      });
+    }
     return storedMeasures;
   }
 }
