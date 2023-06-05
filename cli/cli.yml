@@ -1,71 +1,39 @@
 cli:
   generate-and-submit:
-    bundleIds: testBundle
+    bundleIds:
   query:
     data-store:
-      base-url: https://thsa1.sanerproject.org:944?/fhir
-      username: temp-user
-      password: temp-password!     
+      base-url:
+      username:
+      password:
+    fhir-server-base:
+    uscore:
+      fhir-server-base:
 
   refresh-patient-list:
-    api-url: https://thsa1.sanerproject.org:9440/api
+    api-url:
     auth:
-      token-url: https://thsa1.sanerproject.org:8443/realms/THSA/protocol/openid-connect/token
-      client-id: nhsnlink-app
-      client-secret: ''
-      user: keith
-      pass: Iam4Wizard!
-      scope: openid
-      credential-mode: password # token generation method: "password", "sams-password", or "client"
+      token-url:
+      client-id:
+      client-secret:
+      user:
+      pass:
+      scope:
+      credential-mode:
     patient-list:
-      - patient-list-path: /List/e72zPOGn1BeZwRyQKvjc8oeVWP49i19AUjEVxspBxBJIU8cMgF7ozFWHOZ6WKKHbo3 
-      #/Patient?identifier=MRN%7C5505433
-      #/STU3/List/e72zPOGn1BeZwRyQKvjc8oeVWP49i19AUjEVxspBxBJIU8cMgF7ozFWHOZ6WKKHbo3
+      - patient-list-path:
         census-identifier:
-          - thsameasure
-
+          -
 uscore:
-  fhir-server-base: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/api/FHIR/STU3
-  #fhir-server-base: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/api/FHIR/R4
+  fhir-server-base:
 
 query:
-  query-class: com.lantanagroup.link.query.uscore.Query
-  auth-class: com.lantanagroup.link.query.auth.EpicAuth
-  fhir-server-base: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/api/FHIR/STU3
+  auth-class:
+  query-class:
+  fhir-server-base:
   auth:
     epic:
-      token-url: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/oauth2/token
-      audience: https://pmh-vmhaitst-01.pmh.org/FHIRVALPHI/oauth2/token
-      client-id: 6f8c6bde-3587-417c-9ef0-a435d5b13dd7
-      
-      key: 'MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCNmTQi87rHLm9z
-            DdPqHHb2Dm4JOLyk19KGPpjLtaqvwr6gMqjN76GVQwUeAwfLnKqpHviXVnbDnlAS
-            neNGmQzJbkmBsJmlzoEtPNPI08VK6adVzRURjqEryMQKqMH33fQXcPWP78gG7+Mj
-            K7XOikZQiyJe20CJ/RwqbUZsYCDeZw6CUNOULgmCDsUnOZa4tAFJ0MnzbbKO8VoV
-            tQiZhfqP06byn/XxgLu4WvepRWDlyUvT2caohWrEHEn+pzNQL4ymJW5ezXRlNPoK
-            1oaRauBAl3M6o2+3DMo/tzvuFFXBoeiy9dY0FM+dV1unIP1cWGRTePsHBKwkSpxP
-            ljbKzExbAgMBAAECggEAAWSKiufpXR67o1euMsGTB4bgeWrbZCaTEgdK0DohRH6F
-            tV1WpAvooCBF6KrwaE0DIdMMxa72+msJKOvwh9f1NGgAIaVDM9iwhgX/FblSoNny
-            fcsq/rdhe3Mn6gjtApmCyCuTpsCBTFUO7dIhoX5iWas8rEC7fkcTOR/UllRqKssp
-            9X6acElPRkGmxm2ZUvLQahk0NK/E6qKOfeuYGWkyvYDSNEKYLCOolQNYXHMpTeZF
-            PGSEacn0bMSuVeHksRq0yux06Udyb5UxyIxMxL8XCN0bWHXDOj+Ov+R4WYyQR4MJ
-            JZYbblj1eA3btAFq+HPKTHQQa3LXeoUv666E5jaS7QKBgQC+buBBSsOpu+fZU6YB
-            1Gf84iH37txmEtN7U9XE9FkKiDRkOd13MgkGUZTRgqeCIotAqK6ygepmSV+DirvS
-            ef2EuFnjity1z5T8Ie7+n+Dg4AJhQM2efu6Wp7F1u8c2L+ln+hmbneiwVctp+tKi
-            cpkMdOz46AZ/8sZJCRxuGH3LZwKBgQC+WfOFd7zuyKyzRM+gPEvqzV6cI4KbmPxw
-            JCyFomjpZaGglzcgUAbr6vY7D1pjVrSfvnjtxYNva3Mb4O5wCgpbpsjk4n4EtjRr
-            n0/8MtBxujw/qhmLDcDrPwU29EWOvPMsFUVJhPZtSj2mUKEaE5uzHU4gio7INqLL
-            yvIExVBS7QKBgQCjufxA5qDXG+E4bry5sf894sZFvi3r7J+61tdiIJs1fOleiomo
-            Y3Jy5k1G3EhckIqdKuoYO65mBwuBsxPM4GlhZIaUJd2gyzpSlHJApQDZFn+1Udv3
-            OzayfLcMfEfIhOTuKo89xkQ652ieU7IpTNHdbeIYFpUQCJEGVjkFRzVQXQKBgQCV
-            NlPTguoCUCI4oK8Uz08/bt9EC/381K7FhUW1N3t/waAyD3cyCCl004lTAJT9G+GY
-            +yk2UcbXF2ZzKx4di3FVKOd/rB/Wt7Fdz9NWQcrt62wBB+jf/NcGUS9YRaEk4+7G
-            1qGqoOS/BRxQfBHdLBO4EzfEAHkubs2sbJjMrpNpfQKBgDFfeHTzQvXAMcgP8wJx
-            m3mVKqeOqSCKhYJhEjQXQi6UFVQpeX3ty1Ljhkw+6Go/hizhU4spke4H5XjPusXM
-            86jyPt7GKmVLq0UKCSojanIwWaHq0fe+jdqjoH5dKEEkUFVyZneD/0V0IbkaPnur
-            GAW2rkUQ5U3J0qT4SSpJaTiW'
-#                       Old                                   New      
-#   prod-client-id:     6806abcf-0c8b-40ca-9e85-67b394d9fb8b  d229d07a-ecd1-42ac-a7ea-626792da6806
-#   non-prod-client-id: b3b40241-fb7a-4df8-b221-94d2837b93e9  6f8c6bde-3587-417c-9ef0-a435d5b13dd7
-#   key: 'MIIEvQ...'
-      
+      token-url:
+      audience:
+      client-id:
+      key:

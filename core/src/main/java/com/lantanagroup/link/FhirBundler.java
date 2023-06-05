@@ -2,6 +2,7 @@ package com.lantanagroup.link;
 
 import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.config.bundler.BundlerConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
@@ -20,11 +21,13 @@ public class FhirBundler {
   private final BundlerConfig config;
   private final FhirDataProvider fhirDataProvider;
   private final EventService eventService;
+  private Organization org;
 
   public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider, EventService eventService) {
     this.config = config;
     this.fhirDataProvider = fhirDataProvider;
     this.eventService = eventService;
+    this.org = this.createOrganization();
   }
 
   public FhirBundler(BundlerConfig config, FhirDataProvider fhirDataProvider) {
@@ -32,27 +35,78 @@ public class FhirBundler {
   }
 
   public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, DocumentReference documentReference) {
-    Bundle bundle = createBundle();
+    Bundle bundle = this.createBundle();
+    bundle.addEntry().setResource(this.org);
+
     triggerEvent(EventTypes.BeforeBundling, bundle);
-    if (config.isIncludeCensuses()) {
-      addCensuses(bundle, documentReference);
+
+    if (this.config.isIncludeCensuses()) {
+      this.addCensuses(bundle, documentReference);
     }
+
     for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
-      addMeasureReports(bundle, aggregateMeasureReport);
+      this.addMeasureReports(bundle, aggregateMeasureReport);
     }
+
     triggerEvent(EventTypes.AfterBundling, bundle);
+
     cleanEntries(bundle);
     return bundle;
+  }
+
+  private Organization createOrganization() {
+    Organization org = new Organization();
+    org.getMeta().addProfile(Constants.QiCoreOrganizationProfileUrl);
+
+    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
+      org.setId("" + this.config.getOrgNpi().hashCode());
+    } else {
+      org.setId(UUID.randomUUID().toString());
+    }
+
+    org.addType()
+            .addCoding()
+            .setSystem("http://terminology.hl7.org/CodeSystem/organization-type")
+            .setCode("prov")
+            .setDisplay("Healthcare Provider");
+
+    if (!StringUtils.isEmpty(this.config.getOrgName())) {
+      org.setName(this.config.getOrgName());
+    }
+
+    if (!StringUtils.isEmpty(this.config.getOrgNpi())) {
+      org.addIdentifier()
+              .setSystem(Constants.NationalProviderIdentifierSystemUrl)
+              .setValue(this.config.getOrgNpi());
+    }
+
+    if (!StringUtils.isEmpty(this.config.getOrgPhone())) {
+      org.addTelecom()
+              .setSystem(ContactPoint.ContactPointSystem.PHONE)
+              .setValue(this.config.getOrgPhone());
+    }
+
+    if (!StringUtils.isEmpty(this.config.getOrgEmail())) {
+      org.addTelecom()
+              .setSystem(ContactPoint.ContactPointSystem.EMAIL)
+              .setValue(this.config.getOrgEmail());
+    }
+
+    if (this.config.getOrgAddress() != null) {
+      org.addAddress(this.config.getOrgAddress().getFHIRAddress());
+    }
+
+    return org;
   }
 
   private Bundle createBundle() {
     Bundle bundle = new Bundle();
     bundle.getMeta()
-            .addProfile(Constants.MeasureReportBundleProfileUrl)
-            .addTag(Constants.MainSystem, "report", "Report");
+            .addProfile(config.isMHL() ? Constants.MHLReportBundleProfileUrl : Constants.ReportBundleProfileUrl)
+            .addTag((config.isMHL() ? Constants.MHLSystem : Constants.MainSystem), "report", "Report");
     bundle.getIdentifier()
             .setSystem(Constants.IdentifierSystem)
-            .setValue(UUID.randomUUID().toString());
+            .setValue("urn:uuid:" + UUID.randomUUID().toString());
     bundle.setType(config.getBundleType());
     bundle.setTimestamp(new Date());
     return bundle;
@@ -69,6 +123,38 @@ public class FhirBundler {
     }
   }
 
+  private void setProfile(Resource resource) {
+    String profile = null;
+
+    switch (resource.getResourceType()) {
+      case Patient:
+        profile = Constants.QiCorePatientProfileUrl;
+        break;
+      case Encounter:
+        profile = Constants.UsCoreEncounterProfileUrl;
+        break;
+      case MedicationRequest:
+        profile = Constants.UsCoreMedicationRequestProfileUrl;
+        break;
+      case Medication:
+        profile = Constants.UsCoreMedicationProfileUrl;
+        break;
+      case Condition:
+        profile = Constants.UsCoreConditionProfileUrl;
+        break;
+      case Observation:
+        profile = Constants.UsCoreObservationProfileUrl;
+        break;
+    }
+
+    if (!StringUtils.isEmpty(profile)) {
+      String finalProfile = profile;
+      if (!resource.getMeta().getProfile().stream().anyMatch(p -> p.getValue().equals(finalProfile))) {   // Don't duplicate profile if it already exists
+        resource.getMeta().addProfile(profile);
+      }
+    }
+  }
+
   private void addEntry(Bundle bundle, Resource resource, boolean overwrite) {
     String resourceId = getNonLocalId(resource);
     Bundle.BundleEntryComponent entry = bundle.getEntry().stream()
@@ -76,6 +162,7 @@ public class FhirBundler {
             .findFirst()
             .orElse(null);
     if (entry == null) {
+      this.setProfile(resource);
       bundle.addEntry().setResource(resource);
     } else if (overwrite) {
       entry.setResource(resource);
@@ -87,11 +174,19 @@ public class FhirBundler {
       Resource resource = entry.getResource();
       String resourceId = getNonLocalId(resource);
       resource.setId(resourceId);
-      resource.setMeta(null);
+
+      // Only allow meta.profile
+      if (resource.getMeta() != null) {
+        Meta cleanedMeta = new Meta();
+        cleanedMeta.setProfile(resource.getMeta().getProfile());
+        resource.setMeta(cleanedMeta);
+      }
+
       if (resource instanceof DomainResource) {
         ((DomainResource) resource).setText(null);
       }
-      entry.setFullUrl(String.format("http://nhsnlink.org/fhir/%s", resourceId));
+      entry.setFullUrl(String.format("http://lantanagroup.com/fhir/" +
+              (config.isMHL() ? "nih-measures" : "nhsn-measures") + "/%s", resourceId));
       if (config.getBundleType() == Bundle.BundleType.TRANSACTION
               || config.getBundleType() == Bundle.BundleType.BATCH) {
         entry.getRequest()
@@ -104,21 +199,27 @@ public class FhirBundler {
   private void addCensuses(Bundle bundle, DocumentReference documentReference) {
     logger.debug("Adding censuses");
     Collection<ListResource> censuses = FhirHelper.getCensusLists(documentReference, fhirDataProvider);
+
     if (censuses.isEmpty()) {
       return;
     }
+
     if (censuses.size() > 1 && config.isMergeCensuses()) {
       logger.debug("Merging censuses");
       ListResource mergedCensus = censuses.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
       mergedCensus.getEntry().clear();
       for (ListResource census : censuses) {
+        census.setMeta(new Meta());
+        census.getMeta().addProfile(config.isMHL() ? Constants.MHLCensusProfileUrl : Constants.CensusProfileUrl);
         FhirHelper.mergeCensusLists(mergedCensus, census);
       }
       bundle.addEntry().setResource(mergedCensus);
     } else {
       for (ListResource census : censuses) {
         logger.debug("Adding census: {}", census.getId());
+        census.setMeta(new Meta());
+        census.getMeta().addProfile(config.isMHL() ? Constants.MHLCensusProfileUrl : Constants.CensusProfileUrl);
         bundle.addEntry().setResource(census);
       }
     }
@@ -126,28 +227,44 @@ public class FhirBundler {
 
   private void addMeasureReports(Bundle bundle, MeasureReport aggregateMeasureReport) {
     logger.debug("Adding measure reports: {}", aggregateMeasureReport.getMeasure());
-    addAggregateMeasureReport(bundle, aggregateMeasureReport);
+
+    this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
+
     if (!config.isIncludeIndividualMeasureReports()) {
       return;
     }
+
     Collection<MeasureReport> individualMeasureReports = FhirHelper.getPatientReports(
             FhirHelper.getPatientMeasureReportReferences(aggregateMeasureReport),
             fhirDataProvider);
+
     for (MeasureReport individualMeasureReport : individualMeasureReports) {
       if (individualMeasureReport == null) {
         continue;
       }
-      addIndividualMeasureReport(bundle, individualMeasureReport);
+
+      individualMeasureReport.getContained().forEach(c -> this.setProfile(c));  // Ensure all contained resources have the right profiles
+      this.addIndividualMeasureReport(bundle, individualMeasureReport);
     }
   }
 
   private void addAggregateMeasureReport(Bundle bundle, MeasureReport aggregateMeasureReport) {
     logger.debug("Adding aggregate measure report: {}", aggregateMeasureReport.getId());
+
+    // Set the reporter to the facility/org
+    aggregateMeasureReport.setReporter(new Reference().setReference("Organization/" + this.org.getIdElement().getIdPart()));
+
     bundle.addEntry().setResource(aggregateMeasureReport);
   }
 
   private void addIndividualMeasureReport(Bundle bundle, MeasureReport individualMeasureReport) {
     logger.debug("Adding individual measure report: {}", individualMeasureReport.getId());
+
+    // Set the reporter to the facility/org
+    individualMeasureReport.setReporter(new Reference().setReference("Organization/" + this.org.getIdElement().getIdPart()));
+    individualMeasureReport.getMeta().addProfile(config.isMHL() ?
+            Constants.MHLIndividualMeasureReportProfileUrl : Constants.IndividualMeasureReportProfileUrl);
+
     bundle.addEntry().setResource(individualMeasureReport);
 
     // Identify line-level resources

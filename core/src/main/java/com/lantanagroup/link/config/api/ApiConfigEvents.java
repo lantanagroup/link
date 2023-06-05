@@ -28,6 +28,8 @@ public class ApiConfigEvents {
 
   List<String> BeforePatientDataQuery;
 
+  List<String> AfterPatientResourceQuery;
+
   List<String> AfterPatientDataQuery;
 
   List<String> BeforePatientDataStore;

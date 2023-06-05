@@ -94,13 +94,13 @@ export class GenerateComponent implements OnInit {
 
       try {
         const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate));
-        await this.router.navigate(['review', generateResponse.masterId + '-' + generateResponse.measureHashId]);
+        await this.router.navigate(['review', generateResponse.masterId + '-' + generateResponse.measureHashId, this.criteria.periodStart, this.criteria.periodEnd]);
       } catch (ex) {
         if (ex.status === 409) {
           if (confirm('A report already exists for the selected criteria. Would you like to re-generate the report?')) {
             try {
               const generateResponse = await this.reportService.generate(this.criteria.reportDef.bundleIds, formatDateToISO(periodStart), formatDateToISO(periodEndDate), true);
-              await this.router.navigate(['review', generateResponse.masterId + '-' + generateResponse.measureHashId]);
+              await this.router.navigate(['review', generateResponse.masterId + '-' + generateResponse.measureHashId, this.criteria.periodStart, this.criteria.periodEnd]);
             } catch (ex) {
               this.toastService.showException('Error generating report', ex);
             }

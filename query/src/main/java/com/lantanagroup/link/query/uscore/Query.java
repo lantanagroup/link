@@ -5,7 +5,6 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.query.BaseQuery;
 import com.lantanagroup.link.query.IQuery;
-import com.lantanagroup.link.query.uscore.scoop.PatientScoop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
