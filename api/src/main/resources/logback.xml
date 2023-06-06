@@ -1,13 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
-    <property name="LOG_FILE" value="target/link-api.log"/>
-    <include resource="org/springframework/boot/logging/logback/file-appender.xml"/>
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </root>
+    <property name="LOG_FILE" value="logs/link-api.log"/>
+    <property name="LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE" value="100MB"/>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
-    <logger name="ca.uhn.fhir.context.ModelScanner" level="INFO"/>
 </configuration>
