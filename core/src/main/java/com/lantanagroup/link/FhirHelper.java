@@ -114,17 +114,19 @@ public class FhirHelper {
             .collect(Collectors.toSet());
   }
 
-  public static boolean validLibraries(Bundle reportRefBundle) throws Exception {
-    Measure measure = FhirHelper.getMeasure(reportRefBundle);
+  public static List<Library> getMainLibraries(Bundle reportDefBundle) throws Exception {
+    Measure measure = FhirHelper.getMeasure(reportDefBundle);
     List<String> measureIncludedLibraries = measure.getLibrary().stream().map(canonUrl -> canonUrl.getValue()).collect(Collectors.toList());
 
     // get only the "primary" libraries from the bundle - the ones that have the url included in the Measure resource under "Library" section
-    List<Library> libraryList = reportRefBundle.getEntry().stream()
+    return reportDefBundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Library && measureIncludedLibraries.contains(((Library) e.getResource()).getUrl()))
             .map(e -> (Library) e.getResource()).collect(Collectors.toList());
+  }
 
-    List<Library> libraryEmptyList = libraryList.stream().filter(library -> library.getDataRequirement().isEmpty()).collect(Collectors.toList());
-    return libraryEmptyList.isEmpty();
+  public static boolean validLibraries(Bundle reportDefBundle) throws Exception {
+    return getMainLibraries(reportDefBundle).stream()
+            .noneMatch(library -> library.getDataRequirement().isEmpty());
   }
 
   public static void initSerializers(SimpleModule module, IParser jsonParser) {

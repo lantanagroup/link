@@ -1,10 +1,11 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.IReportAggregator;
-import com.lantanagroup.link.ReportIdHelper;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -15,6 +16,7 @@ import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,10 +36,12 @@ public class ReportGenerator {
   private ApiConfig config;
   private IReportAggregator reportAggregator;
   private StopwatchManager stopwatchManager;
+  private SharedService sharedService;
   private TenantService tenantService;
   private Report report;
 
-  public ReportGenerator(TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
+  public ReportGenerator(SharedService sharedService, TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
+    this.sharedService = sharedService;
     this.tenantService = tenantService;
     this.stopwatchManager = stopwatchManager;
     this.reportContext = reportContext;
@@ -108,10 +112,23 @@ public class ReportGenerator {
 
   public void aggregate() throws ParseException {
     MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
+    setVersions(masterMeasureReport);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
     Aggregate aggregateReport = new Aggregate(masterMeasureReport);
     this.tenantService.saveAggregate(aggregateReport);
     this.report.getAggregates().add(aggregateReport.getId());
+  }
+
+  private void setVersions(MeasureReport measureReport) {
+    try {
+      String linkVersion = Helper.getVersionInfo().getVersion();
+      MeasureDefinition measureDefinition = sharedService.findMeasureDefinition(measureContext.getBundleId());
+      String measureVersion = FhirHelper.getMainLibraries(measureDefinition.getBundle()).get(0).getVersion();
+      measureReport.addExtension(Constants.LINK_VERSION_URL, new StringType(linkVersion));
+      measureReport.addExtension(Constants.MEASURE_VERSION_URL, new StringType(measureVersion));
+    } catch (Exception e) {
+      logger.error("Error setting versions on measure report", e);
+    }
   }
 }
