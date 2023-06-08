@@ -90,6 +90,40 @@ public class TenantController extends BaseController {
     if (StringUtils.isEmpty(newTenantConfig.getBundling().getName())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'bundling.name' is required");
     }
+
+    if (newTenantConfig.getEvents() != null) {
+      this.validateEvents("BeforeMeasureResolution", newTenantConfig.getEvents().getBeforeMeasureResolution());
+      this.validateEvents("AfterMeasureResolution", newTenantConfig.getEvents().getAfterMeasureResolution());
+      this.validateEvents("OnRegeneration", newTenantConfig.getEvents().getOnRegeneration());
+      this.validateEvents("BeforePatientOfInterestLookup", newTenantConfig.getEvents().getBeforePatientOfInterestLookup());
+      this.validateEvents("AfterPatientOfInterestLookup", newTenantConfig.getEvents().getAfterPatientOfInterestLookup());
+      this.validateEvents("BeforePatientDataQuery", newTenantConfig.getEvents().getBeforePatientDataQuery());
+      this.validateEvents("AfterPatientResourceQuery", newTenantConfig.getEvents().getAfterPatientResourceQuery());
+      this.validateEvents("AfterPatientDataQuery", newTenantConfig.getEvents().getAfterPatientDataQuery());
+      this.validateEvents("AfterApplyConceptMaps", newTenantConfig.getEvents().getAfterApplyConceptMaps());
+      this.validateEvents("BeforePatientDataStore", newTenantConfig.getEvents().getBeforePatientDataStore());
+      this.validateEvents("AfterPatientDataStore", newTenantConfig.getEvents().getAfterPatientDataStore());
+      this.validateEvents("BeforeMeasureEval", newTenantConfig.getEvents().getBeforeMeasureEval());
+      this.validateEvents("AfterMeasureEval", newTenantConfig.getEvents().getAfterMeasureEval());
+      this.validateEvents("BeforeReportStore", newTenantConfig.getEvents().getBeforeReportStore());
+      this.validateEvents("AfterReportStore", newTenantConfig.getEvents().getAfterReportStore());
+      this.validateEvents("BeforeBundling", newTenantConfig.getEvents().getBeforeBundling());
+      this.validateEvents("AfterBundling", newTenantConfig.getEvents().getAfterBundling());
+    }
+  }
+
+  private void validateEvents(String eventName, List<String> events) {
+    if (events == null) {
+      return;
+    }
+
+    for (String className : events) {
+      try {
+        Class.forName(className);
+      } catch (ClassNotFoundException e) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Class '%s' for event %s could not be found", className, eventName));
+      }
+    }
   }
 
   @PutMapping("/{tenantId}")

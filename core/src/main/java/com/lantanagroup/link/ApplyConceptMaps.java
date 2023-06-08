@@ -1,9 +1,7 @@
-package com.lantanagroup.link.events;
+package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.util.BundleUtil;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.TenantService;
 import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;

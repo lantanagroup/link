@@ -1,8 +1,8 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.ApplyConceptMaps;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.events.ApplyConceptMaps;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;

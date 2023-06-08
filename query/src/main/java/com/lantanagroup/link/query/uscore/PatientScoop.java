@@ -1,12 +1,8 @@
 package com.lantanagroup.link.query.uscore;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.EventService;
-import com.lantanagroup.link.EventTypes;
-import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.events.ApplyConceptMaps;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
