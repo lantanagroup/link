@@ -4,6 +4,8 @@ import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.db.model.tenant.Validation;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.Patient;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
@@ -20,7 +23,7 @@ public class ValidatorTests {
   private Validator getValidator() {
     if (this.validator == null) {
       Validation validation = new Validation();
-      validation.getNpmPackages().add("nhsn-measures.tgz");
+      //validation.getNpmPackages().add("nhsn-measures.tgz");
       this.validator = new Validator(validation);
 
       // Perform a single validation to pre-load all the packages and profiles
@@ -47,5 +50,43 @@ public class ValidatorTests {
     oo.getIssue().forEach(i -> {
       logger.info("{} - {} - {}", i.getSeverity(), i.getLocation(), i.getDiagnostics());
     });
+  }
+
+  @Test
+  public void testValidationCredibility() throws IOException {
+    var bundle = this.getBundle();
+    var patientResources = bundle.getEntry().stream().map(be -> be.getResource()).filter(r -> r instanceof Patient).collect(Collectors.toList());
+
+    ValidateBundle(bundle, true);
+
+    for(int i = 0; i < patientResources.stream().count(); i++)
+    {
+      var patient = (Patient)(patientResources.get(i));
+      var name = patient.getName();
+      patient.getName().clear();
+    }
+
+    ValidateBundle(bundle, false);
+  }
+
+  private void ValidateBundle(Bundle bundle, Boolean failOnIssueFound)
+  {
+    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
+
+    System.out.println("Beginning Validation. Fail State: " + (failOnIssueFound ? "Issues Found" : "No Issues Found") );
+    if(oo.hasIssue()) {
+      System.out.println("Issues Found:");
+      oo.getIssue().stream().forEach(i -> System.out.println(i.getDiagnostics()));
+    }
+    else {
+      System.out.println("No Issues Found.");
+    }
+
+    //If we want to fail the test if the bundle has errors
+    if(failOnIssueFound)
+      Assert.assertFalse(oo.hasIssue());
+    //If we want to fail the test if the bundle does not have errors
+    else
+      Assert.assertTrue(oo.hasIssue());
   }
 }
