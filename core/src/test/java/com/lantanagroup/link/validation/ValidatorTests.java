@@ -55,14 +55,16 @@ public class ValidatorTests {
   @Test
   public void testValidationCredibility() throws IOException {
     var bundle = this.getBundle();
-    var patientResources = bundle.getEntry().stream().map(be -> be.getResource()).filter(r -> r instanceof Patient).collect(Collectors.toList());
+    var patientResources = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Patient)
+            .map(r -> (Patient) r)
+            .collect(Collectors.toList());
 
     ValidateBundle(bundle, true);
 
-    for(int i = 0; i < patientResources.stream().count(); i++)
+    for (Patient patient : patientResources)
     {
-      var patient = (Patient)(patientResources.get(i));
-      var name = patient.getName();
       patient.getName().clear();
     }
 
@@ -73,13 +75,13 @@ public class ValidatorTests {
   {
     OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
 
-    System.out.println("Beginning Validation. Fail State: " + (failOnIssueFound ? "Issues Found" : "No Issues Found") );
+    logger.info("Beginning Validation. Fail State: {}", failOnIssueFound ? "Issues Found" : "No Issues Found");
     if(oo.hasIssue()) {
-      System.out.println("Issues Found:");
-      oo.getIssue().stream().forEach(i -> System.out.println(i.getDiagnostics()));
+      logger.info("Issues Found:");
+      oo.getIssue().forEach(i -> logger.info(i.getDiagnostics()));
     }
     else {
-      System.out.println("No Issues Found.");
+      logger.info("No Issues Found.");
     }
 
     //If we want to fail the test if the bundle has errors
