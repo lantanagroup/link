@@ -23,7 +23,7 @@ public class ValidatorTests {
   private Validator getValidator() {
     if (this.validator == null) {
       Validation validation = new Validation();
-      //validation.getNpmPackages().add("nhsn-measures.tgz");
+      validation.getNpmPackages().add("nhsn-measures.tgz");
       this.validator = new Validator(validation);
 
       // Perform a single validation to pre-load all the packages and profiles
