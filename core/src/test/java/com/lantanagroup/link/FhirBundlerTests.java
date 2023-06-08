@@ -58,7 +58,7 @@ public class FhirBundlerTests {
     pmr1.getMeasureReport().setType(MeasureReport.MeasureReportType.INDIVIDUAL);
     when(tenantService.getPatientMeasureReports(any())).thenReturn(List.of(pmr1));
 
-    // Generate the bundleviva
+    // Generate the bundle
     Bundle bundle = bundler.generateBundle(List.of(masterMeasureReport), report);
 
     Assert.assertNotNull(bundle);
