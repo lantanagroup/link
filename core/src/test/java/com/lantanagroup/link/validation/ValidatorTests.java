@@ -2,9 +2,7 @@ package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.db.model.tenant.Validation;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -53,20 +51,59 @@ public class ValidatorTests {
   }
 
   @Test
-  public void testValidationCredibility() throws IOException {
+  public void validateUsCore() throws IOException {
     var bundle = this.getBundle();
-    var patientResources = bundle.getEntry().stream()
+    var patientResource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Patient)
             .map(r -> (Patient) r)
-            .collect(Collectors.toList());
+            .findFirst();
 
     ValidateBundle(bundle, true);
 
-    for (Patient patient : patientResources)
-    {
-      patient.getName().clear();
-    }
+    patientResource.get().getName().clear();
+
+    ValidateBundle(bundle, false);
+  }
+
+  @Test
+  public void validateNhsnMeasureIg() throws IOException {
+    var bundle = this.getBundle();
+
+    var organizationResource = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Organization)
+            .map(r -> (Organization) r)
+            .collect(Collectors.toList());
+
+    var encounter = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Encounter)
+            .map(r -> (Encounter) r)
+            .findFirst();
+
+    ValidateBundle(bundle, true);
+
+    organizationResource.forEach(o ->bundle.getEntry().remove(o));
+
+    encounter.get().getClass_().setCode("UNKNOWNCODE");
+
+    ValidateBundle(bundle, false);
+  }
+
+  @Test
+  public void validateDqmIg() throws IOException {
+    var bundle = this.getBundle();
+
+    var measureReport = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof MeasureReport)
+            .map(r -> (MeasureReport) r)
+            .findFirst();
+
+    ValidateBundle(bundle, true);
+
+    measureReport.get().setMeasure("");
 
     ValidateBundle(bundle, false);
   }
