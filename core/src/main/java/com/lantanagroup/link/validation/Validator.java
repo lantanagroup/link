@@ -42,7 +42,6 @@ public class Validator {
       this.validator = ctx.newValidator();
 
       FhirInstanceValidator instanceValidator = new FhirInstanceValidator(validationSupport);
-      instanceValidator.setValidatorPolicyAdvisor(new PolicyAdvisor());
       instanceValidator.setAssumeValidRestReferences(true);
       instanceValidator.setErrorForUnknownProfiles(false);
       instanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
