@@ -417,6 +417,12 @@ paths:
           required: true
           schema:
             type: string
+        - name: download
+          in: query
+          description: Whether to echo the report to the client
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: successful response

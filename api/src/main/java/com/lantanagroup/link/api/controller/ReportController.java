@@ -361,10 +361,11 @@ public class ReportController extends BaseController {
    * @throws Exception Thrown when the configured sender class is not found or fails to initialize or the reportId it not found
    */
   @PostMapping("/{reportId}/$send")
-  public void send(
+  public Bundle send(
           @AuthenticationPrincipal LinkCredentials user,
           @PathVariable String reportId,
           @PathVariable String tenantId,
+          @RequestParam(required = false, defaultValue = "false") boolean download,
           HttpServletRequest request) throws Exception {
 
     if (StringUtils.isEmpty(this.config.getSender()))
@@ -394,6 +395,8 @@ public class ReportController extends BaseController {
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+
+    return download ? submissionBundle : null;
   }
 
   @GetMapping("/{reportId}/$validate")

@@ -65,7 +65,7 @@ public class GenerateAndSubmitReportTask implements Runnable {
     }
 
     try {
-      this.reportController.send(null, report.getId(), this.tenantId, null);
+      this.reportController.send(null, report.getId(), this.tenantId, false, null);
     } catch (Exception ex) {
       logger.error("Error submitting report", ex);
     }
