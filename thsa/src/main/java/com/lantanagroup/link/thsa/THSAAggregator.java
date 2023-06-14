@@ -8,6 +8,7 @@ import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.MeasureReport.MeasureReportGroupComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -83,6 +84,34 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     // But it isn there... what puts it there?!?
     MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
     masterMeasureReport.setId(id);
+
+    // ALM 06June2023
+    // Parkland Inventory Report Import will set the inventory data to just have vents
+    // group.  Here we check for and then add beds & icu-beds to the template before we
+    // populate below
+    List<MeasureReportGroupComponent> groups = masterMeasureReport.getGroup();
+    List<String> groupCodes = new ArrayList<>();
+    for (MeasureReportGroupComponent group : groups) {
+      String groupCode = group.getCode().getCodingFirstRep().getCode();
+      groupCodes.add(groupCode);
+    }
+
+    // Add empty beds section if needed
+    if (!groupCodes.contains("beds")) {
+      MeasureReportGroupComponent group = getGroupComponent("beds");
+      group.addPopulation(getPopulationComponent("NumTotBeds"));
+      group.addPopulation(getPopulationComponent("NumTotBedsOcc"));
+      group.addPopulation(getPopulationComponent("NumTotBedsAvail"));
+      masterMeasureReport.addGroup(group);
+    }
+
+    if (!groupCodes.contains("icu-beds")) {
+      MeasureReportGroupComponent group = getGroupComponent("icu-beds");
+      group.addPopulation(getPopulationComponent("NumICUBeds"));
+      group.addPopulation(getPopulationComponent("NumICUBedsOcc"));
+      group.addPopulation(getPopulationComponent("NumICUBedsAvail"));
+      masterMeasureReport.addGroup(group);
+    }
 
     //store the total inventory
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
@@ -212,5 +241,27 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
         }
       }
     }
+  }
+
+  private MeasureReportGroupComponent getGroupComponent(String type) {
+    MeasureReportGroupComponent group = new MeasureReport.MeasureReportGroupComponent();
+    Coding coding = new Coding();
+    coding.setSystem(Constants.MeasuredValues);
+    coding.setCode(type);
+    group.setCode(new CodeableConcept(coding));
+
+    return group;
+  }
+
+  private MeasureReport.MeasureReportGroupPopulationComponent getPopulationComponent(String type) {
+    MeasureReport.MeasureReportGroupPopulationComponent pop = new MeasureReport.MeasureReportGroupPopulationComponent();
+    Coding coding = new Coding();
+    coding.setSystem(Constants.MeasuredValues);
+    coding.setCode(type);
+    coding.setDisplay(type);
+    pop.setCode(new CodeableConcept(coding));
+    pop.setCount(0);
+
+    return pop;
   }
 }
