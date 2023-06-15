@@ -27,24 +27,47 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
         List<CodeableConcept> types = locationResource.getType();
         if (identifiers.size() > 0) {
           for (Identifier identifier : identifiers) {
-            // logger.debug("Moving identifier code to type in Location: " + locationResource.getId());
-            List<Coding> codings = new ArrayList<>();
-            CodeableConcept type = new CodeableConcept();
+            String idValue = identifier.getValue();
+            String idSystem = identifier.getSystem();
 
-            Coding coding = new Coding();
-            coding.setCode(identifier.getValue());
-            coding.setSystem(identifier.getSystem());
+            //Check for a full identifier (both system and value)
+            if(idValue != null && idSystem != null){
+              //Check for if the identifier of the Location has already been copied over into Location.type
+              Boolean found = false;
+              if(types.size() > 0){
+                for(CodeableConcept type : types){
+                  for(Coding coding : type.getCoding()){
+                    if(coding.getCode().equals(idValue) && coding.getSystem().equals(idSystem)){
+                      found = true;
+                      break;
+                    }
+                  }
+                  if(found) break;
+                }
+              }
+              //If no duplicate, then copy/paste into Location.type
+              if(!found){
+                // logger.debug("Moving identifier code to type in Location: " + locationResource.getId());
+                List<Coding> codings = new ArrayList<>();
+                CodeableConcept type = new CodeableConcept();
 
-            //0..* cardinality of coding in Location.type.coding
-            codings.add(coding);
+                Coding coding = new Coding();
 
-            //0..* cardinality of type in Location.type
-            type.setCoding(codings);
+                coding.setCode(idValue);
+                coding.setSystem(idSystem);
 
-            //Add type to list of existing types
-            types.add(type);
+                //0..* cardinality of coding in Location.type.coding
+                codings.add(coding);
+
+                //0..* cardinality of type in Location.type
+                type.setCoding(codings);
+
+                //Add type to list of existing types
+                types.add(type);
+              }
+            }
           }
-          locationResource.setType(types);
+          if(types.size() > 0) locationResource.setType(types);
         }
       }
     }
