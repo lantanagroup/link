@@ -179,34 +179,35 @@ public class FhirBundler {
   private void cleanupResource(Resource resource) {
     resource.getMeta().getProfile().clear();
 
-    String profile = null;
+    List<String> profiles = null;
 
     switch (resource.getResourceType()) {
       case Patient:
-        profile = Constants.QiCorePatientProfileUrl;
+        profiles = List.of(Constants.QiCorePatientProfileUrl, Constants.UsCorePatientProfileUrl);
         break;
       case Encounter:
-        profile = Constants.UsCoreEncounterProfileUrl;
+        profiles = List.of(Constants.UsCoreEncounterProfileUrl);
         break;
       case MedicationRequest:
-        profile = Constants.UsCoreMedicationRequestProfileUrl;
+        profiles = List.of(Constants.UsCoreMedicationRequestProfileUrl);
         break;
       case Medication:
-        profile = Constants.UsCoreMedicationProfileUrl;
+        profiles = List.of(Constants.UsCoreMedicationProfileUrl);
         break;
       case Condition:
-        profile = Constants.UsCoreConditionProfileUrl;
+        profiles = List.of(Constants.UsCoreConditionProfileUrl);
         break;
       case Observation:
-        profile = Constants.UsCoreObservationProfileUrl;
+        profiles = List.of(Constants.UsCoreObservationProfileUrl);
         break;
     }
 
-    if (!StringUtils.isEmpty(profile)) {
-      String finalProfile = profile;
-      if (!resource.getMeta().getProfile().stream().anyMatch(p -> p.getValue().equals(finalProfile))) {   // Don't duplicate profile if it already exists
-        resource.getMeta().addProfile(profile);
-      }
+    if (profiles != null) {
+      profiles.forEach(profile -> {
+        if (resource.getMeta().getProfile().stream().noneMatch(p -> p.getValue().equals(profile))) {   // Don't duplicate profile if it already exists
+          resource.getMeta().addProfile(profile);
+        }
+      });
     }
 
     if (resource instanceof DomainResource) {

@@ -23,6 +23,7 @@ public class CodeSystemCleanup implements IReportGenerationDataEvent {
 
   public CodeSystemCleanup() {
     this.codeSystemMap.put("http://hl7.org/fhir/sid/icd-9-cm/diagnosis", "http://terminology.hl7.org/CodeSystem/icd9cm");
+    this.codeSystemMap.put("http://hl7.org/fhir/v3/ParticipationType", "http://terminology.hl7.org/CodeSystem/v3-ParticipationType");
   }
 
   private int checkCoding(Coding coding) {

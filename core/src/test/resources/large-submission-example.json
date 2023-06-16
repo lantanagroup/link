@@ -45290,7 +45290,7 @@
               {
                 "coding": [
                   {
-                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
                     "code": "ADM",
                     "display": "admitter"
                   }
@@ -45309,7 +45309,7 @@
               {
                 "coding": [
                   {
-                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
                     "code": "DIS",
                     "display": "discharger"
                   }
@@ -45328,7 +45328,7 @@
               {
                 "coding": [
                   {
-                    "system": "http://hl7.org/fhir/v3/ParticipationType",
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
                     "code": "ATND",
                     "display": "attender"
                   }

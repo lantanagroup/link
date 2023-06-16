@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,11 @@ public class ValidatorTests {
     if (this.validator == null) {
       Validation validation = new Validation();
       validation.getNpmPackages().add("nhsn-measures.tgz");
+      validation.getNpmPackages().add("cqfmeasures.tgz");
+      validation.getNpmPackages().add("qicore.tgz");
+      validation.getNpmPackages().add("uscore.tgz");
+      validation.getNpmPackages().add("deqm.tgz");
+      validation.getNpmPackages().add("terminology.tgz");
       this.validator = new Validator(validation);
 
       // Perform a single validation to pre-load all the packages and profiles
@@ -32,16 +38,16 @@ public class ValidatorTests {
     return this.validator;
   }
 
-  private Bundle getBundle() throws IOException {
+  private Bundle getBundle(String resourcePath) {
     return this.ctx.newJsonParser().parseResource(
             Bundle.class,
-            Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream("large-submission-example.json")));
+            Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(resourcePath)));
   }
 
   @Test
   @Ignore
   public void testPerformance() throws IOException {
-    Bundle bundle = this.getBundle();
+    Bundle bundle = this.getBundle("large-submission-example.json");
     OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
 
     logger.info("Issues:");
@@ -52,23 +58,23 @@ public class ValidatorTests {
 
   @Test
   public void validateUsCore() throws IOException {
-    var bundle = this.getBundle();
+    var bundle = this.getBundle("large-submission-example.json");
     var patientResource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Patient)
             .map(r -> (Patient) r)
             .findFirst();
 
-    ValidateBundle(bundle, true);
+    validateBundle(bundle, true);
 
     patientResource.get().getName().clear();
 
-    ValidateBundle(bundle, false);
+    validateBundle(bundle, false);
   }
 
   @Test
   public void validateNhsnMeasureIg() throws IOException {
-    var bundle = this.getBundle();
+    var bundle = this.getBundle("large-submission-example.json");
 
     var organizationResource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -82,18 +88,18 @@ public class ValidatorTests {
             .map(r -> (Encounter) r)
             .findFirst();
 
-    ValidateBundle(bundle, true);
+    validateBundle(bundle, true);
 
     organizationResource.forEach(o ->bundle.getEntry().remove(o));
 
     encounter.get().getClass_().setCode("UNKNOWNCODE");
 
-    ValidateBundle(bundle, false);
+    validateBundle(bundle, false);
   }
 
   @Test
   public void validateDqmIg() throws IOException {
-    var bundle = this.getBundle();
+    var bundle = this.getBundle("large-submission-example.json");
 
     var measureReport = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -101,31 +107,31 @@ public class ValidatorTests {
             .map(r -> (MeasureReport) r)
             .findFirst();
 
-    ValidateBundle(bundle, true);
+    validateBundle(bundle, true);
 
     measureReport.get().setMeasure("");
 
-    ValidateBundle(bundle, false);
+    validateBundle(bundle, false);
   }
 
-  private void ValidateBundle(Bundle bundle, Boolean failOnIssueFound)
-  {
+  private void validateBundle(Bundle bundle, Boolean failOnIssueFound) {
     OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
 
+    List<String> allMessages = oo.getIssue().stream().map(i -> {
+      return i.getDiagnostics()
+              .replaceAll("\\sPatient\\/.+?\\s", " Patient/X ")
+              .replaceAll("\\sMeasureReport\\/.+?\\s", " MeasureReport/X ");
+    }).collect(Collectors.toList());
+    List<String> distinctMessages = allMessages.stream().distinct().collect(Collectors.toList());
+
     logger.info("Beginning Validation. Fail State: {}", failOnIssueFound ? "Issues Found" : "No Issues Found");
-    if(oo.hasIssue()) {
-      logger.info("Issues Found:");
-      oo.getIssue().forEach(i -> logger.info(i.getDiagnostics()));
-    }
-    else {
-      logger.info("No Issues Found.");
-    }
 
     //If we want to fail the test if the bundle has errors
-    if(failOnIssueFound)
+    if (failOnIssueFound) {
       Assert.assertFalse(oo.hasIssue());
-    //If we want to fail the test if the bundle does not have errors
-    else
+      //If we want to fail the test if the bundle does not have errors
+    } else {
       Assert.assertTrue(oo.hasIssue());
+    }
   }
 }
