@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -290,9 +291,39 @@ public class SharedService {
     return users;
   }
 
+  private Connection getSQLConnection() {Connection conn = null;
+    try {
+      String dbURL = "jdbc:sqlserver://;servername=Laptop-HRK3RV3";
+      conn = DriverManager.getConnection(dbURL, "link-user", "Temp123");
+      if (conn != null) {
+        DatabaseMetaData dm = (DatabaseMetaData) conn.getMetaData();
+        System.out.println("Driver name: " + dm.getDriverName());
+        System.out.println("Driver version: " + dm.getDriverVersion());
+        System.out.println("Product name: " + dm.getDatabaseProductName());
+        System.out.println("Product version: " + dm.getDatabaseProductVersion());
+      }
+      return conn;
+    } catch (SQLException ex) {
+      ex.printStackTrace();
+    }
+
+    return null;
+  }
+
   public User findUser(String email) {
-    Bson criteria = eq("email", email);
-    return this.getUserCollection().find(criteria).first();
+    try (Connection conn = this.getSQLConnection()) {
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE email = ?");
+      ps.setString(1, email);
+      ResultSet rs = ps.executeQuery();
+
+      if (!rs.next()) {
+        return null;
+      }
+
+      return User.create(rs);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public List<MeasurePackage> getAllMeasurePackages() {

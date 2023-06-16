@@ -1,10 +1,14 @@
 package com.lantanagroup.link.db.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.lantanagroup.link.db.SQLHelper;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @Getter
 @Setter
@@ -23,5 +27,16 @@ public class User {
 
   public boolean hasPassword() {
     return StringUtils.isNotEmpty(this.passwordHash);
+  }
+
+  public static User create(ResultSet rs) throws SQLException {
+    User user = new User();
+    user.setId(SQLHelper.getString(rs, "id"));
+    user.setEmail(SQLHelper.getNString(rs, "email"));
+    user.setName(SQLHelper.getNString(rs, "name"));
+    user.setEnabled(SQLHelper.getBoolean(rs, "enabled"));
+    user.setPasswordHash(SQLHelper.getNString(rs, "passwordHash"));
+    user.setPasswordSalt(SQLHelper.getNString(rs, "passwordSalt"));
+    return user;
   }
 }
