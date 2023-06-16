@@ -1,5 +1,8 @@
 package com.lantanagroup.link.db.model;
 
-public enum BulkStatuses {
-  Pending, InProgress, Complete
+public class BulkStatuses {
+  public static final String pending = "Pending";
+  public static final String inProgress = "InProgress";
+  public static final String complete = "Complete";
+//  Pending, InProgress, Complete
 }

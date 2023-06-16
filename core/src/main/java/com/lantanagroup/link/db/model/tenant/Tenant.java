@@ -95,7 +95,7 @@ public class Tenant {
   /**
    * Header name to retrieve polling url
    */
-  private String BulkInitiateResponseUrlHeader;
+  private String bulkInitiateResponseUrlHeader;
 
   /**
    * Header name for progress status. e.g. X-Progress
