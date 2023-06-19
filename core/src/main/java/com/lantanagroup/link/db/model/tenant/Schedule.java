@@ -26,4 +26,6 @@ public class Schedule {
   private List<GenerateReport> generateAndSubmitReports;
 
   private String bulkDataCron;
+
+  private String bulkDataFollowUpCron;
 }

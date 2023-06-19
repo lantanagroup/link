@@ -145,7 +145,8 @@ public class SharedService {
                       new BaseCodec<>(IBaseResource.class),
                       new BaseCodec<>(Bundle.class),
                       new BaseCodec<>(MeasureReport.class),
-                      new BaseCodec<>(org.hl7.fhir.r4.model.ConceptMap.class)),
+                      new BaseCodec<>(org.hl7.fhir.r4.model.ConceptMap.class)
+              ),
               MongoClientSettings.getDefaultCodecRegistry(),
               pojoCodecRegistry);
 

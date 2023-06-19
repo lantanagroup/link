@@ -14,7 +14,7 @@ public class BulkStatus {
   private String id = (new ObjectId()).toString();
   private String tenantId;
   private String statusUrl;
-  private BulkStatuses status;
+  private String status;
   private Date lastChecked;
 }
 

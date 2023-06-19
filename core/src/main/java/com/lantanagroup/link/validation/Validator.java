@@ -28,7 +28,7 @@ public class Validator {
     try {
       FhirContext ctx = FhirContextProvider.getFhirContext();
       NpmPackageValidationSupport npmPackageSupport = new NpmPackageValidationSupport(ctx);
-      for (String npmPackage : config.getNpmPackages()) {
+      for (String npmPackage : config.getNpmPackages().stream().distinct().collect(Collectors.toList())) {
         logger.info("Validating against NPM package: {}", npmPackage);
         npmPackageSupport.loadPackageFromClasspath(npmPackage);
       }
@@ -44,7 +44,7 @@ public class Validator {
       FhirInstanceValidator instanceValidator = new FhirInstanceValidator(validationSupport);
       instanceValidator.setAssumeValidRestReferences(true);
       instanceValidator.setErrorForUnknownProfiles(false);
-      instanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Error);
+      instanceValidator.setBestPracticeWarningLevel(BestPracticeWarningLevel.Warning);
       this.validator.registerValidatorModule(instanceValidator);
       this.validator.setConcurrentBundleValidation(true);
     } catch (IOException ex) {

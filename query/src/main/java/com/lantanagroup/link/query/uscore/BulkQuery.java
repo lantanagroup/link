@@ -17,13 +17,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
+@Component
 public class BulkQuery {
   private static final Logger logger = LoggerFactory.getLogger(BulkQuery.class);
   @Setter
@@ -65,9 +68,13 @@ public class BulkQuery {
 
   public void executeInitiateRequest(TenantService tenantService, BulkStatusService service, BulkStatus bulkStatus, ApplicationContext context) throws Exception {
 
+    var config = tenantService.getConfig();
+
     URI uri = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase() + tenantService.getConfig().getRelativeBulkUrl().replace("{groupId}", tenantService.getConfig().getBulkGroupId()));
     HttpClient httpClient = HttpClient.newHttpClient();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
+    requestBuilder.setHeader("Accept", "application/fhir+json");
+    requestBuilder.setHeader("Prefer", "respond-async");
     setAuthHeaders(requestBuilder, tenantService, context);
     HttpRequest request = requestBuilder.build();
     HttpResponse<String> response = null;
@@ -76,21 +83,24 @@ public class BulkQuery {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     } catch (IOException | InterruptedException e) {
       logger.warn("Error initiating bulk export", e);
-      bulkStatus.setStatus(BulkStatuses.Pending);
+      bulkStatus.setStatus(BulkStatuses.pending);
       service.saveBulkStatus(bulkStatus);
     }
 
     assert response != null;
     if(response.statusCode() > 400) {
       logger.warn("Error initiating bulk export");
-      bulkStatus.setStatus(BulkStatuses.Pending);
+      bulkStatus.setStatus(BulkStatuses.pending);
       service.saveBulkStatus(bulkStatus);
       return;
     }
 
-    String pollingUrlresponse = response.headers().map().get(tenantService.getConfig().getBulkInitiateResponseUrlHeader()).get(0);
+    var headers = response.headers();
+    String facilityHeaderNameValue = tenantService.getConfig().getBulkInitiateResponseUrlHeader();
+    var statusHeader = headers.firstValue(facilityHeaderNameValue);
+    String pollingUrlresponse = statusHeader.get();
     bulkStatus.setStatusUrl(pollingUrlresponse);
-    bulkStatus.setStatus(BulkStatuses.Pending);
+    bulkStatus.setStatus(BulkStatuses.pending);
     service.saveBulkStatus(bulkStatus);
   }
   public void executeStatusCheck(TenantService tenantService, BulkStatus bulkStatus) {
@@ -102,17 +112,17 @@ public class BulkQuery {
                         BulkStatusService bulkStatusService,
                         ApplicationContext context) throws Exception {
 
-    URI uri = new URI(bulkStatus.getStatusUrl());
-    HttpClient httpClient = HttpClient.newHttpClient();
-    HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
-    setAuthHeaders(requestBuilder, tenantService, context);
-    HttpRequest request = requestBuilder.build();
-
     boolean progressComplete = false;
     String responseBody = null;
 
     while(!progressComplete){
-      //Response response = client.newCall(request).execute();
+
+      URI uri = new URI(bulkStatus.getStatusUrl());
+      HttpClient httpClient = HttpClient.newHttpClient();
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
+      setAuthHeaders(requestBuilder, tenantService, context);
+      HttpRequest request = requestBuilder.build();
+
       HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
       if(response.statusCode() > 400) {
@@ -121,9 +131,9 @@ public class BulkQuery {
       }
 
       var config = tenantService.getConfig();
-      String progressHeader = response.headers().map().get(config.getProgressHeaderName()).get(0);
+      List progressHeader = response.headers().map().get(config.getProgressHeaderName());
 
-      if(progressHeader == null && progressHeader.trim().isEmpty()) {
+      if(progressHeader == null || progressHeader.size() == 0) {
         progressComplete = true;
         responseBody = response.body();
       }
@@ -136,7 +146,7 @@ public class BulkQuery {
     BulkResponse bulkResponse = gson.fromJson(responseBody, BulkResponse.class);
     statusResult.setResult(bulkResponse);
 
-    bulkStatus.setStatus(BulkStatuses.Complete);
+    bulkStatus.setStatus(BulkStatuses.complete);
     bulkStatusService.saveBulkStatus(bulkStatus);
 
     bulkStatusService.saveResult(statusResult);
