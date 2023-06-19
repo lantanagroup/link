@@ -26,7 +26,7 @@ public class BulkManagerService {
   @Setter
   ApplicationContext applicationContext;
 
-  public BulkManagerService(Tenant tenantConfig, ExecutorService executorService, SharedService sharedService) {
+  public BulkManagerService(Tenant tenantConfig, ExecutorService executorService, SharedService sharedService, ApplicationContext applicationContext) {
     this.tenantConfig = tenantConfig;
     this.executorService = executorService;
     this.sharedService = sharedService;
@@ -34,72 +34,39 @@ public class BulkManagerService {
   }
 
   public void InitiateBulkDataRequest(BulkStatus status) throws Exception {
-    /*
-     * 1. update bulk status to in-progress
-     * 2. use BulkQuery to initiate request
-     * 3. refetch bulkstatus
-     * 4. kick off thread CheckBulkDataRequest
-     */
 
-    //step 1 - update bulk status to in-progress
-    status.setStatus(BulkStatuses.Pending);
+    //status.setStatus(BulkStatuses.pending);
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    bulkStatusService.saveBulkStatus(status);
+    //bulkStatusService.saveBulkStatus(status);
 
-    //step 2 - use BulkQuery to initiate request
     TenantService tenantService = TenantService.create(sharedService, tenantConfig.getId());
     BulkQuery bulkQuery = new BulkQuery();
     bulkQuery.executeInitiateRequest(tenantService, bulkStatusService, status, this.applicationContext);
-
-    //step 3 - refetch bulkstatus
-//    status = bulkStatusService.getBulkStatusById(status.getId());
-
-    //step 4 - kick off thread CheckBulkDataRequest
-//    final String tenantId = status.getTenantId();
-//    executorService.execute(() -> {
-//      boolean resultsFetched = false;
-//      while(!resultsFetched){
-//        BulkStatus bulkStatus = bulkStatusService.getBulkStatusById(tenantId);
-//        try {
-//          bulkQuery.getStatus(bulkStatus, tenantService, bulkStatusService, applicationContext);
-//        } catch (Exception e) {
-//          throw new RuntimeException(e);
-//        }
-//        bulkStatus = bulkStatusService.getBulkStatusById(tenantId);
-//        if(bulkStatus.getStatus() == BulkStatuses.Complete)
-//          resultsFetched = true;
-//        try {
-//          Thread.sleep(tenantConfig.getBulkWaitTimeInMilliseconds());
-//        } catch (InterruptedException e) {
-//          throw new RuntimeException(e);
-//        }
-//      }
-//    });
   }
 
   public void getPendingRequestsAndGetStatusResults(String tenantId) {
     //get pending statuses
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    var statuses = bulkStatusService.getBulkStatusByStatus(BulkStatuses.Pending);
+    var statuses = bulkStatusService.getBulkPendingStatusesWithPopulatedUrl();
 
     //loop through statuses and fire off thread to get results
     for(var status : statuses) {
       try{
         executorService.execute(() -> {
           BulkQuery bulkQuery = new BulkQuery();
-          status.setStatus(BulkStatuses.InProgress);
+          status.setStatus(BulkStatuses.inProgress);
           bulkStatusService.saveBulkStatus(status);
           try {
             bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
           } catch (Exception e) {
-            status.setStatus(BulkStatuses.Pending);
+            status.setStatus(BulkStatuses.pending);
             bulkStatusService.saveBulkStatus(status);
             throw new RuntimeException(e);
           }
         });
       } catch (Exception e) {
         logger.error(e.getMessage());
-        status.setStatus(BulkStatuses.Pending);
+        status.setStatus(BulkStatuses.pending);
         bulkStatusService.saveBulkStatus(status);
         throw new RuntimeException(e);
       }

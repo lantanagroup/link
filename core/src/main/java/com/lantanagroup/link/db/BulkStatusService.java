@@ -50,7 +50,8 @@ public class BulkStatusService {
   }
 
   public MongoCollection<BulkStatus> getBulkStatusCollection() {
-    return this.database.getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
+    var collection =  this.database.getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
+    return collection;
   }
 
   public MongoCollection<BulkStatusResult> getBulkStatusResultCollection() {
@@ -58,11 +59,11 @@ public class BulkStatusService {
   }
 
   public BulkStatus saveBulkStatus(BulkStatus bulkStatus) {
-    Bson criteria = or(eq("id", bulkStatus.getId()));
+    Bson criteria = eq("_id", bulkStatus.getId());
     var result = this.getBulkStatusCollection().replaceOne(criteria, bulkStatus, new ReplaceOptions().upsert(true));
-    if(result.wasAcknowledged()) {
-      bulkStatus.setId(result.getUpsertedId().toString());
-    }
+//    if(result.wasAcknowledged()) {
+//      bulkStatus.setId(result.getUpsertedId().toString());
+//    }
     return bulkStatus;
   }
 
@@ -80,9 +81,21 @@ public class BulkStatusService {
             .first();
   }
 
-  public List<BulkStatus> getBulkStatusByStatus(BulkStatuses status) {
+  public List<BulkStatus> getBulkStatusByStatus(String status) {
     List<BulkStatus> bulkStatuses = new ArrayList<>();
     Bson criteria = eq("status", status);
+    this.getBulkStatusCollection()
+            .find(criteria)
+            .into(bulkStatuses);
+    return bulkStatuses;
+  }
+
+  public List<BulkStatus> getBulkPendingStatusesWithPopulatedUrl() {
+    List<BulkStatus> bulkStatuses = new ArrayList<>();
+    Bson criteria = and(
+            eq("status", BulkStatuses.pending),
+            ne("statusUrl", null)
+    );
     this.getBulkStatusCollection()
             .find(criteria)
             .into(bulkStatuses);

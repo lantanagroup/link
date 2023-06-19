@@ -57,15 +57,15 @@ public class BulkController  extends BaseController {
 
     //log request in datastore
     var bulkStatus = new BulkStatus();
-    bulkStatus.setStatus(BulkStatuses.Pending);
+    bulkStatus.setStatus(BulkStatuses.pending);
     bulkStatus.setLastChecked(new Date());
     bulkStatus.setTenantId(tenantId);
 
-    logger.info(String.format("Saving initial bulk status record for tenant %s as PENDING"), tenantId);
+    logger.info(String.format("Saving initial bulk status record for tenant %s as PENDING", tenantId));
 
     bulkStatus = bulkStatusService.saveBulkStatus(bulkStatus);
 
-    new BulkManagerService(tenantConfig, executorService, sharedService).InitiateBulkDataRequest(bulkStatus);
+    new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).InitiateBulkDataRequest(bulkStatus);
 
 
   }
@@ -74,7 +74,7 @@ public class BulkController  extends BaseController {
   public BulkStatus getBulkStatusRecord(@PathVariable String id, @PathVariable String tenantId) {
     //retrieve bulk status record for an id
     Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
-    BulkStatus status = new BulkManagerService(tenantConfig, executorService, sharedService).getBulkStatusById(id);
+    BulkStatus status = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatusById(id);
     return status;
   }
 
@@ -82,7 +82,7 @@ public class BulkController  extends BaseController {
   public List<BulkStatus> getAllBulkStatuses(@PathVariable String tenantId) {
     //retrieve all pending bulk status requests for a tenantId
     Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
-    List<BulkStatus> statuses = new BulkManagerService(tenantConfig, executorService, sharedService).getBulkStatusByTenantId(tenantId);
+    List<BulkStatus> statuses = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatusByTenantId(tenantId);
     return statuses;
   }
 
@@ -92,6 +92,6 @@ public class BulkController  extends BaseController {
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantId);
     Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
 
-    new BulkManagerService(tenantConfig, executorService, sharedService).getPendingRequestsAndGetStatusResults(tenantId);
+    new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getPendingRequestsAndGetStatusResults(tenantId);
   }
 }
