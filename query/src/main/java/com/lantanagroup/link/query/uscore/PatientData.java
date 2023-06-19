@@ -218,11 +218,11 @@ public class PatientData {
         return patientId;
       case "lookbackstart":
         Duration lookback = Duration.parse(plan.getLookback());
-        return criteria.getPeriodStartDate().minus(lookback).toString();
+        return criteria.getPeriodStartDate().minus(lookback) + "T00:00:00Z";
       case "periodstart":
-        return criteria.getPeriodStartDate().toString();
+        return criteria.getPeriodStartDate().toString() + "T00:00:00Z";
       case "periodend":
-        return criteria.getPeriodEndDate().toString();
+        return criteria.getPeriodEndDate().toString() + "T23:59:59Z";
       default:
         throw new IllegalStateException("Unrecognized parameter variable: " + variable);
     }
