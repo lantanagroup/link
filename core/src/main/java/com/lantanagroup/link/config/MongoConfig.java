@@ -19,5 +19,7 @@ public class MongoConfig {
   @NotNull
   private String connectionString;
   @NotNull
+  private String sqlConnectionString;
+  @NotNull
   private String database;
 }

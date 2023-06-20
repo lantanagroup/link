@@ -59,8 +59,7 @@ public class SharedService {
 
   private Connection getSQLConnection() {
     try {
-      String dbURL = "jdbc:sqlserver://;servername=Laptop-HRK3RV3";
-      Connection conn = DriverManager.getConnection(dbURL, "link-user", "Temp123");
+      Connection conn = DriverManager.getConnection(this.config.getSqlConnectionString());
       if (conn != null) {
         DatabaseMetaData dm = conn.getMetaData();
         return conn;
