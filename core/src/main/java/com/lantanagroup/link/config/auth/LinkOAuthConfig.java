@@ -47,6 +47,12 @@ public class LinkOAuthConfig {
      */
     private String scope;
 
+    /**
+     * <strong>oauth.useBasicAuth</strong><br>
+     */
+
+    private boolean useBasicAuth = false;
+
     public boolean hasCredentialProperties() {
         if (this.credentialMode != null) {
             switch (this.credentialMode.toLowerCase(Locale.ROOT)) {

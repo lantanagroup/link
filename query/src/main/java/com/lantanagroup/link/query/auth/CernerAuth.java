@@ -32,7 +32,8 @@ public class CernerAuth implements ICustomAuth {
             this.tenantService.getConfig().getFhirQuery().getCernerAuth().getTokenUrl(),
             this.tenantService.getConfig().getFhirQuery().getCernerAuth().getClientId(),
             this.tenantService.getConfig().getFhirQuery().getCernerAuth().getSecret(),
-            this.tenantService.getConfig().getFhirQuery().getCernerAuth().getScopes());
+            this.tenantService.getConfig().getFhirQuery().getCernerAuth().getScopes(),
+            true);
 
     if (!StringUtils.isEmpty(token)) {
       logger.debug("Retrieved system token for FHIR authentication: " + token);
