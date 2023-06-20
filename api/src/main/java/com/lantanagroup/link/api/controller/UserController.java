@@ -4,7 +4,6 @@ import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.User;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +50,7 @@ public class UserController extends BaseController {
 
   @PostMapping
   public User createUser(@RequestBody User user) {
-    user.setId((new ObjectId()).toString());
+    user.setId(null);
     user.setEnabled(true);
     this.saveUser(user);
     return user;
@@ -59,12 +58,20 @@ public class UserController extends BaseController {
 
   @PutMapping("/{userId}")
   public User updateUser(@RequestBody User user, @PathVariable String userId) {
-    if (StringUtils.isNotEmpty(userId) && this.sharedService.getUser(userId) == null) {
+    User current = this.sharedService.getUser(userId);
+
+    if (current == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s is not found", userId));
     }
 
     user.setId(userId);
+    user.setPasswordHash(current.getPasswordHash());    // Don't change the password
+    user.setPasswordSalt(current.getPasswordSalt());
+
     this.saveUser(user);
+
+    user.setPasswordHash(null);                         // Don't return the password hash/salt in the response
+    user.setPasswordSalt(null);
     return user;
   }
 

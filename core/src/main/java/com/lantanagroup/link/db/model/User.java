@@ -1,11 +1,9 @@
 package com.lantanagroup.link.db.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.lantanagroup.link.db.SQLHelper;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -14,7 +12,7 @@ import java.sql.SQLException;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
-  private String id = (new ObjectId()).toString();
+  private String id;
   private String name;
   private String email;
   private String passwordSalt;
@@ -31,12 +29,12 @@ public class User {
 
   public static User create(ResultSet rs) throws SQLException {
     User user = new User();
-    user.setId(SQLHelper.getString(rs, "id"));
-    user.setEmail(SQLHelper.getNString(rs, "email"));
-    user.setName(SQLHelper.getNString(rs, "name"));
-    user.setEnabled(SQLHelper.getBoolean(rs, "enabled"));
-    user.setPasswordHash(SQLHelper.getNString(rs, "passwordHash"));
-    user.setPasswordSalt(SQLHelper.getNString(rs, "passwordSalt"));
+    user.setId(rs.getString("id"));
+    user.setEmail(rs.getString("email"));
+    user.setName(rs.getString("name"));
+    user.setEnabled(rs.getBoolean("enabled"));
+    user.setPasswordHash(rs.getString("passwordHash"));
+    user.setPasswordSalt(rs.getString("passwordSalt"));
     return user;
   }
 }

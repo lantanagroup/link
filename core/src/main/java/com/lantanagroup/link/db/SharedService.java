@@ -5,6 +5,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -31,8 +32,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.exists;
 import static com.mongodb.client.model.Projections.include;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
@@ -53,6 +56,21 @@ public class SharedService {
 
   @Autowired
   private MongoConfig config;
+
+  private Connection getSQLConnection() {
+    try {
+      String dbURL = "jdbc:sqlserver://;servername=Laptop-HRK3RV3";
+      Connection conn = DriverManager.getConnection(dbURL, "link-user", "Temp123");
+      if (conn != null) {
+        DatabaseMetaData dm = conn.getMetaData();
+        return conn;
+      }
+    } catch (SQLException ex) {
+      ex.printStackTrace();
+    }
+
+    return null;
+  }
 
   public MongoDatabase getDatabase() {
     if (this.database == null) {
@@ -97,6 +115,7 @@ public class SharedService {
   public MongoCollection<BulkStatus> getBulkDataStatusCollection() {
     return this.getDatabase().getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
   }
+
   public MongoCollection<Tenant> getTenantConfigCollection() {
     return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
   }
@@ -107,10 +126,6 @@ public class SharedService {
 
   public MongoCollection<MeasurePackage> getMeasurePackageCollection() {
     return this.getDatabase().getCollection(MEASURE_PACKAGE_COLLECTION, MeasurePackage.class);
-  }
-
-  public MongoCollection<User> getUserCollection() {
-    return this.getDatabase().getCollection(USER_COLLECTION, User.class);
   }
 
   public MeasureDefinition findMeasureDefinition(String measureId) {
@@ -264,56 +279,80 @@ public class SharedService {
   }
 
   public void saveUser(User user) {
-    Bson criteria = eq("_id", user.getId());
-    this.getUserCollection().replaceOne(criteria, user, new ReplaceOptions().upsert(true));
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveUser (?, ?, ?, ?, ?, ?) }");
+      cs.setString("id", user.getId());
+      cs.setNString("email", user.getEmail());
+      cs.setNString("name", user.getName());
+      cs.setBoolean("enabled", user.getEnabled());
+      cs.setNString("passwordHash", user.getPasswordHash());
+      cs.setBytes("passwordSalt", user.getPasswordSalt());
+
+      try (ResultSet rs = cs.executeQuery()) {
+        if (rs.next()) {
+          user.setId(rs.getString(1));
+        }
+      }
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public User getUser(String id) {
-    Bson criteria = eq("_id", id);
-    return this.getUserCollection().find(criteria).first();
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE id = CONVERT(UNIQUEIDENTIFIER, ?)");
+      ps.setObject(1, id);
+      ResultSet rs = ps.executeQuery();
+
+      if (!rs.next()) {
+        return null;
+      }
+
+      return User.create(rs);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public List<User> searchUsers(boolean includeDisabled) {
-    List<User> users = new ArrayList<>();
-    Bson criteria = exists("_id");
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
 
-    if (!includeDisabled) {
-      criteria = or(eq("enabled", true), not(exists("enabled")));
-    }
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user]");
 
-    this.getUserCollection()
-            .find(criteria)
-            .map(u -> {
-              u.setPasswordSalt(null);
-              u.setPasswordHash(null);
-              return u;
-            })
-            .into(users);
-    return users;
-  }
+      ResultSet rs = ps.executeQuery();
+      List<User> users = new ArrayList<>();
 
-  private Connection getSQLConnection() {Connection conn = null;
-    try {
-      String dbURL = "jdbc:sqlserver://;servername=Laptop-HRK3RV3";
-      conn = DriverManager.getConnection(dbURL, "link-user", "Temp123");
-      if (conn != null) {
-        DatabaseMetaData dm = (DatabaseMetaData) conn.getMetaData();
-        System.out.println("Driver name: " + dm.getDriverName());
-        System.out.println("Driver version: " + dm.getDriverVersion());
-        System.out.println("Product name: " + dm.getDatabaseProductName());
-        System.out.println("Product version: " + dm.getDatabaseProductVersion());
+      while (rs.next()) {
+        User next = User.create(rs);
+        next.setPasswordSalt(null);
+        next.setPasswordHash(null);
+        users.add(next);
       }
-      return conn;
-    } catch (SQLException ex) {
-      ex.printStackTrace();
-    }
 
-    return null;
+      return users.stream()
+              .filter(u -> {
+                if (includeDisabled) {
+                  return true;
+                }
+                return u.getEnabled();
+              }).collect(Collectors.toList());
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public User findUser(String email) {
     try (Connection conn = this.getSQLConnection()) {
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE email = ?");
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE enabled = 1 AND email = ?");
       ps.setString(1, email);
       ResultSet rs = ps.executeQuery();
 
@@ -322,7 +361,7 @@ public class SharedService {
       }
 
       return User.create(rs);
-    } catch (SQLException e) {
+    } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
   }
