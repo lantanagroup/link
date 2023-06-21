@@ -118,7 +118,7 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
-    List<Tenant> tenants = this.sharedService.getTenantSchedules();
+    List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     // Loop through each of the tenants and register their scheduled tasks
     for (Tenant tenant : tenants) {
