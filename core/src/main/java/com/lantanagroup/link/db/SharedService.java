@@ -256,7 +256,7 @@ public class SharedService {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenant (?, ?) }");
-      cs.setString("tenantId", tenant.getId());
+      cs.setNString("tenantId", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
       cs.executeQuery();
