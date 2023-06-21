@@ -1,9 +1,5 @@
+
 {
-  "resourceType": "Bundle",
-  "type": "batch",
-  "entry": [
-    {
-      "resource": {
         "resourceType": "Device",
         "id": "cqf-tooling",
         "meta": {
@@ -31,11 +27,4 @@
             "value": "2.4.0"
           }
         ]
-      },
-            "request": {
-        "method": "PUT",
-        "url": "Device/cqf-tooling"
       }
-    }
-  ]
-}

@@ -41,7 +41,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
             .setResource(measureReport)
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
+                    .setUrl("MeasureReport/" + this.thsaConfig.getVentInventoryReportId()));
     Bundle response = fhirDataProvider.transaction(updateBundle);
   }
 

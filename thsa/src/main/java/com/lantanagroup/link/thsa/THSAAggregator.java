@@ -70,25 +70,46 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
 
     HashMap<String, Integer> usedInventoryMap = new HashMap<>();
     HashMap<String, Integer> totalInventoryMap = new HashMap<>();
-    // store the used counts
+
+    // store the occupied counts from aggregated individual MeasureReport's
+    // ONLY beds & icu beds at this point are available, via CQL so restricting to that here.
     MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
     for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
-        usedInventoryMap.put(populationCode, population.getCount());
+        if ( populationCode.equals(NumTotBedsOcc) || populationCode.equals(NumICUBedsOcc)) {
+          usedInventoryMap.put(populationCode, population.getCount());
+        }
       }
     }
+
     // look up the inventory on the Fhir Server but save the original ID before to restore it
     String id = measureReport.getId();
-    // TODO - at the point where it's trying to call the Data Store and find a MeasureReport named inventorydata
-    // But it isn there... what puts it there?!?
     MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
     masterMeasureReport.setId(id);
+
+    // Look up the Vent inventory on the Data Store FHIR server
+    MeasureReport ventMeasureReport = provider.getMeasureReportById(thsaConfig.getVentInventoryReportId());
+    // Store the Total # of Vents and # of Vents occupied/used from vent inventory report
+    for (MeasureReport.MeasureReportGroupComponent group : ventMeasureReport.getGroup()) {
+      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+        String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
+        if (populationCode.equals(NumVent)) {
+          totalInventoryMap.put(NumVent, population.getCount());
+        } else if (populationCode.equals(NumVentUse)) {
+          usedInventoryMap.put(populationCode, population.getCount());
+        }
+      }
+    }
 
     // ALM 06June2023
     // Parkland Inventory Report Import will set the inventory data to just have vents
     // group.  Here we check for and then add beds & icu-beds to the template before we
     // populate below
+    // TODO - we need total # beds & icu beds to start from somehow.  I think we are still waiting
+    // on some CSV report for this?  alm 21June2023
+    // Could be we store this as a different "inventory report".  Have an inventory report for vents,
+    // one for beds, one for icu-beds.  Pull those here to get the number of each as a start.
     List<MeasureReportGroupComponent> groups = masterMeasureReport.getGroup();
     List<String> groupCodes = new ArrayList<>();
     for (MeasureReportGroupComponent group : groups) {
@@ -113,7 +134,8 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
       masterMeasureReport.addGroup(group);
     }
 
-    //store the total inventory
+    //store the total inventory this is coming from inventorydata
+    // Total vent inventory set above
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
@@ -121,13 +143,14 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           totalInventoryMap.put(NumTotBeds, population.getCount());
         } else if (populationCode.equals(NumICUBeds)) {
           totalInventoryMap.put(NumICUBeds, population.getCount());
-        } else if (populationCode.equals(NumVent)) {
+        } /* THIS now populated via ventMeasureReport
+        else if (populationCode.equals(NumVent)) {
           totalInventoryMap.put(NumVent, population.getCount());
-        }
+        } */
       }
     }
 
-    // store the available counts
+    // compute/store the available counts
     for (MeasureReport.MeasureReportGroupComponent group1 : masterMeasureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";

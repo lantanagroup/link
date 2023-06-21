@@ -19,4 +19,11 @@ public class THSAConfig {
   @Setter
   @Getter
   private String dataMeasureReportId;
+
+  /*
+  The id of the Vent inventory MeasureReport
+   */
+  @Setter
+  @Getter
+  private String ventInventoryReportId;
 }
