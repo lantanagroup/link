@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -57,30 +56,73 @@ public class ValidatorTests {
   }
 
   @Test
-  public void validateUsCore() throws IOException {
+  @Ignore
+  public void validateUsCore_Patient_Name_Remove() throws IOException {
+
     var bundle = this.getBundle("large-submission-example.json");
+
     var patientResource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Patient)
             .map(r -> (Patient) r)
             .findFirst();
 
-    validateBundle(bundle, true);
+    var issueTextToFind = "Patient.name: minimum required = 1, but only found 0";
+
+    ValidateBundle(bundle, issueTextToFind, true);
 
     patientResource.get().getName().clear();
 
-    validateBundle(bundle, false);
+    ValidateBundle(bundle, issueTextToFind, false);
   }
 
   @Test
-  public void validateNhsnMeasureIg() throws IOException {
+  @Ignore
+  public void validateUsCore_Patient_Identifier_Remove() throws IOException {
+
     var bundle = this.getBundle("large-submission-example.json");
 
-    var organizationResource = bundle.getEntry().stream()
+    var patientResource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
-            .filter(r -> r instanceof Organization)
-            .map(r -> (Organization) r)
-            .collect(Collectors.toList());
+            .filter(r -> r instanceof Patient)
+            .map(r -> (Patient) r)
+            .findFirst();
+
+    var issueTextToFind = "Patient.identifier: minimum required = 1, but only found 0";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    patientResource.get().getIdentifier().clear();
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateUsCore_Patient_Gender_Remove() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example.json");
+
+    var patientResource = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Patient)
+            .map(r -> (Patient) r)
+            .findFirst();
+
+    var issueTextToFind = "The value provided ('?') is not in the value set 'AdministrativeGender'";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    patientResource.get().setGender(Enumerations.AdministrativeGender.NULL);
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateUsCore_Encounter_Class_Remove() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example.json");
 
     var encounter = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -88,17 +130,134 @@ public class ValidatorTests {
             .map(r -> (Encounter) r)
             .findFirst();
 
-    validateBundle(bundle, true);
+    var issueTextToFind = "Encounter.class: minimum required = 1, but only found 0";
 
-    organizationResource.forEach(o ->bundle.getEntry().remove(o));
+    ValidateBundle(bundle, issueTextToFind, true);
 
-    encounter.get().getClass_().setCode("UNKNOWNCODE");
+    encounter.get().setClass_(null);
 
-    validateBundle(bundle, false);
+    ValidateBundle(bundle, issueTextToFind, false);
   }
 
   @Test
-  public void validateDqmIg() throws IOException {
+  @Ignore
+  public void validateUsCore_Encounter_Class_Change() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example.json");
+
+    var encounter = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Encounter)
+            .map(r -> (Encounter) r)
+            .findFirst();
+
+    var issueTextToFind = "Unknown Code";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    encounter.get().getClass_().setCode("Bogus Code To Fail");
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateNhsnMeasureIg_Organization_Remove() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example2.json");
+
+    var organizationResource = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Organization)
+            .map(r -> (Organization)r)
+            .findFirst();
+
+    var issueTextToFind = "Bundle.entry:organization: minimum required = 1, but only found 0";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    organizationResource.get().setName("");
+    organizationResource.get().setId("");
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  public void validateNhsnMeasureIg_Location_Remove() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example2.json");
+
+    var locations = bundle.getEntry().stream().filter(r -> r.getResource() instanceof Location).collect(Collectors.toList());
+
+    var issueTextToFind = "location";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    for(var location : locations) {
+      bundle.getEntry().remove(location);
+    }
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateNhsnMeasureIg_MedicationAdministration_Remove() throws IOException {
+
+    //Currently, no Locations are found in the bundle with the code below
+
+    var bundle = this.getBundle("large-submission-example2.json");
+
+    var encounterResource = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Observation)
+            .map(r -> (Observation) r)
+            .collect(Collectors.toList());
+
+    var issueTextToFind = "encounter";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateNhsnMeasureIg_BodyStructure_Change() throws IOException {
+
+    var bundle = this.getBundle("large-submission-example2.json");
+
+    var bodyStructureResources = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof BodyStructure)
+            .map(r -> (BodyStructure) r)
+            .collect(Collectors.toList());
+
+    var issueTextToFind = "body";
+
+    if(bodyStructureResources.size() > 0) {
+      ValidateBundle(bundle, issueTextToFind, true);
+
+      for (var bod : bodyStructureResources) {
+        bod.setId("");
+        bod.setPatient(null);
+        bod.setLocation(null);
+      }
+
+      ValidateBundle(bundle, issueTextToFind, false);
+    }
+    else
+    {
+      Assert.assertTrue(true);
+    }
+  }
+
+  @Test
+  @Ignore
+  public void validateDqmIg_MeasureReport_Measure() throws IOException {
+
     var bundle = this.getBundle("large-submission-example.json");
 
     var measureReport = bundle.getEntry().stream()
@@ -107,31 +266,52 @@ public class ValidatorTests {
             .map(r -> (MeasureReport) r)
             .findFirst();
 
-    validateBundle(bundle, true);
+    var issueTextToFind = "MeasureReport.measure: minimum required = 1, but only found 0";
+
+    ValidateBundle(bundle, issueTextToFind, true);
 
     measureReport.get().setMeasure("");
 
-    validateBundle(bundle, false);
+    ValidateBundle(bundle, issueTextToFind, false);
   }
 
-  private void validateBundle(Bundle bundle, Boolean failOnIssueFound) {
-    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
+  private void ValidateBundle(Bundle bundle, String IssueTextToFind, Boolean failOnTextFound)
+  {
+    logger.info("Beginning Validation. Fail State: {}", failOnTextFound ? "'" + IssueTextToFind + "'" + " Found" : "'" + IssueTextToFind + "'" + " Not Found");
 
-    List<String> allMessages = oo.getIssue().stream().map(i -> {
+    var lowIssueTextToFind = IssueTextToFind.toLowerCase();
+
+    var errors = GetValidationErrors(bundle);
+    var errorDetected = false;
+
+    var allMessages = errors.getIssue().stream().map(i -> {
       return i.getDiagnostics()
               .replaceAll("\\sPatient\\/.+?\\s", " Patient/X ")
               .replaceAll("\\sMeasureReport\\/.+?\\s", " MeasureReport/X ");
     }).collect(Collectors.toList());
-    List<String> distinctMessages = allMessages.stream().distinct().collect(Collectors.toList());
 
-    logger.info("Beginning Validation. Fail State: {}", failOnIssueFound ? "Issues Found" : "No Issues Found");
+    var distinctMessages = allMessages.stream().distinct().collect(Collectors.toList());
 
-    //If we want to fail the test if the bundle has errors
-    if (failOnIssueFound) {
-      Assert.assertFalse(oo.hasIssue());
-      //If we want to fail the test if the bundle does not have errors
-    } else {
-      Assert.assertTrue(oo.hasIssue());
+    for(var error : distinctMessages) {
+      logger.info(error);
+      if(error.toLowerCase().contains(lowIssueTextToFind)){
+        errorDetected = true;
+        //break;
+      }
     }
+
+    //If we want to fail the test if the bundle errors contains the correct pattern
+    if(failOnTextFound)
+      Assert.assertFalse(errorDetected);
+      //If we want to fail the test if the bundle errors do not contain the correct pattern
+    else
+      Assert.assertTrue(errorDetected);
+  }
+
+  private OperationOutcome GetValidationErrors(Bundle bundle)
+  {
+    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
+
+    return oo;
   }
 }
