@@ -36,12 +36,7 @@ CREATE TABLE dbo.tenantConfig
     -- That way, we don't have to alter this table every time its structure changes
     -- But worthwhile to call out the database name in an explicit column as follows?
     -- [database] NVARCHAR(128) NOT NULL UNIQUE
-    [
-    json]
-    NVARCHAR
-(
-    max
-) NOT NULL
+    json NVARCHAR(MAX) NOT NULL
     );
 END
 GO
@@ -95,7 +90,7 @@ CREATE TABLE dbo.audit
 ),
     -- Normalize to refer to a table mirroring the AuditTypes enum?
     -- Probably not worth the effort
-    [type] NVARCHAR(64), userId UNIQUEIDENTIFIER NOT NULL REFERENCES dbo.[ user] (id)
+    [type] NVARCHAR(64), userId UNIQUEIDENTIFIER NOT NULL REFERENCES dbo.[user] (id)
     );
 END
 GO
@@ -149,5 +144,28 @@ INTO [user] (email, [enabled], [name], passwordHash, passwordSalt)
 VALUES (@email, @enabled, @name, @passwordHash, @passwordSalt)
 SELECT SCOPE_IDENTITY()
 END
+END
+GO
+
+DROP PROCEDURE IF EXISTS saveTenant
+GO
+
+CREATE PROCEDURE [dbo].[saveTenant]
+    @tenantId nvarchar(128),
+	@json NVARCHAR(MAX)
+AS
+BEGIN
+
+	IF NOT EXISTS(SELECT * FROM dbo.tenantConfig t WHERE t.id = @tenantId)
+    BEGIN
+        INSERT INTO dbo.tenantConfig (id, json)
+        VALUES(@tenantId, @json)
+    END
+    ELSE
+    BEGIN
+        update tenantConfig
+        set json = @json
+        where id = @tenantId
+    END
 END
 GO

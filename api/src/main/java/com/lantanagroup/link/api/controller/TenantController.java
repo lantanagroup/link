@@ -24,7 +24,7 @@ public class TenantController extends BaseController {
 
   @GetMapping
   public List<Tenant> searchTenants() {
-    return this.sharedService.searchTenantConfigs();
+    return this.sharedService.getTenantConfigs();
   }
 
   @GetMapping("{tenantId}")
@@ -54,7 +54,7 @@ public class TenantController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Database name \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getDatabase()));
     }
 
-    List<Tenant> existingTenants = this.sharedService.searchTenantConfigs();
+    List<Tenant> existingTenants = this.sharedService.getTenantConfigs();
 
     boolean idAlreadyExists =
             existingTenantConfig == null &&

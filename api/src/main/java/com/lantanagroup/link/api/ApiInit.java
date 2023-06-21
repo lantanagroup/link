@@ -94,7 +94,7 @@ public class ApiInit {
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
-    List<Tenant> tenants = this.sharedService.getTenantFhirQueries();
+    List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
       if (StringUtils.isEmpty(tenant.getFhirQuery().getFhirServerBase())) {

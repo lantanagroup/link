@@ -1,5 +1,8 @@
 package com.lantanagroup.link.db;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
@@ -42,6 +45,7 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 @Component
 public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
+  private static final ObjectMapper mapper = new ObjectMapper();
   public static final String AUDIT_COLLECTION = "audit";
   public static final String MEASURE_DEF_COLLECTION = "measureDef";
   public static final String MEASURE_PACKAGE_COLLECTION = "measurePackage";
@@ -115,8 +119,61 @@ public class SharedService {
     return this.getDatabase().getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
   }
 
-  public MongoCollection<Tenant> getTenantConfigCollection() {
-    return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
+  public Tenant getTenantConfig(String tenantId)
+  {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT json FROM [dbo].[tenantConfig] WHERE id = ?");
+      ps.setNString(1, tenantId);
+      ResultSet rs = ps.executeQuery();
+
+      Tenant tenant = null;
+
+      if(rs.next()) {
+        var json = rs.getString(0);
+        tenant = mapper.readValue(json, Tenant.class);
+      }
+
+      assert tenant != null;
+
+      return tenant;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public ArrayList<Tenant> getTenantConfigs() {
+
+    //return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT json FROM [dbo].[tenantConfig]");
+
+      ResultSet rs = ps.executeQuery();
+      var tenants = new ArrayList<Tenant>();
+
+      while(rs.next()) {
+        var json = rs.getString(0);
+        var tenant = mapper.readValue(json, Tenant.class);
+        tenants.add(tenant);
+      }
+
+      return tenants;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public MongoCollection<MeasureDefinition> getMeasureDefinitionCollection() {
@@ -176,47 +233,41 @@ public class SharedService {
     return this.client;
   }
 
-  public Tenant getTenantConfig(String id) {
-    return this.getTenantConfigCollection()
-            .find(eq("_id", id))
-            .first();
+  public int deleteTenantConfig(String tenantId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM [dbo].[tenantConfig] WHERE id = ?");
+      ps.setNString(1, tenantId);
+
+      var rowsAffected = ps.executeUpdate();
+
+      assert rowsAffected <= 1;
+
+      return rowsAffected;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public List<Tenant> getTenantSchedules() {
-    List<Tenant> tenants = new ArrayList<>();
-    this.getTenantConfigCollection()
-            .find()
-            .projection(include("_id", "scheduling"))
-            .into(tenants);
-    return tenants;
-  }
+  public void saveTenantConfig(Tenant tenant){
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
 
-  public List<Tenant> getTenantFhirQueries() {
-    List<Tenant> tenants = new ArrayList<>();
-    this.getTenantConfigCollection()
-            .find()
-            .projection(include("_id", "fhirQuery"))
-            .into(tenants);
-    return tenants;
-  }
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenant (?, ?) }");
+      cs.setNString("tenantId", tenant.getId());
+      cs.setNString("json", mapper.writeValueAsString(tenant));
 
-  public List<Tenant> searchTenantConfigs() {
-    List<Tenant> tenants = new ArrayList<>();
-    this.getTenantConfigCollection()
-            .find()
-            .projection(include("_id", "name", "description", "database"))
-            .into(tenants);
-    return tenants;
-  }
+      cs.executeQuery();
 
-  public long deleteTenantConfig(String tenantId) {
-    DeleteResult result = this.getTenantConfigCollection().deleteOne(eq("_id", tenantId));
-    return result.getDeletedCount();
-  }
-
-  public void saveTenantConfig(Tenant tenant) {
-    Bson criteria = eq("_id", tenant.getId());
-    this.getTenantConfigCollection().replaceOne(criteria, tenant, new ReplaceOptions().upsert(true));
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public List<MeasureDefinition> getAllMeasureDefinitions() {
