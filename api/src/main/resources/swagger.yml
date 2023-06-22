@@ -837,33 +837,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/BulkStatus'
-  /api/{tenantId}/bulk/status/:
-    get:
-      tags:
-        - Bulk
-      summary: Gets a bulk status by id
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant
-          required: true
-          schema:
-            type: string
-        - name: id
-          in: path
-          description: the id of the bulk status record
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BulkStatus'
   /api/{tenantId}/bulk/$execute-query-and-retrieval:
     post:
       tags:
@@ -1433,9 +1406,7 @@ components:
         lookback:
           type: string
           description: The query look back period in Java Period format (PnYnMnDTnHnMnS).
-          examples:
-            - P20Y3M20D (20 years, 3 months and 20 days)
-            - P1W (1 week)
+          example: P20Y3M20D (20 years, 3 months and 20 days) P1W (1 week)
         initial:
           type: array
           description: The query plan for resources that are required to determine if the patient is a part of the initial population of a measure
@@ -1488,17 +1459,11 @@ components:
         variable:
           type: string
           description: The internal Link variable value used for the search parameter
-          examples:
-            - patientid
-            - lookbackstart
-            - periodstart
-            - periodend
+          example: patientid, lookbackstart, periodstart, periodend
         format:
           type: string
           description: The format to apply to the 'variable' parameterConfig type
-          examples:
-            - ge%s (Using 'greater than' for lookBackStart)
-            - le%s (Using 'less' than for period end)
+          example: ge%s (Using 'greater than' for lookBackStart) le%s (Using 'less' than for period end)
         ids:
           type: string
           description: The value of a resource type that's already been queried.  The resource type defined here should be defined earlier in the query plan.  Link collects the IDs of those previously queried resources and uses them as a search parameter for the resource type in question.
