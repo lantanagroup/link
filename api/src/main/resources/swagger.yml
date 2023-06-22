@@ -1,12 +1,13 @@
 openapi: 3.0.1
 info:
-  version: '{{version}}'
+  version: ''
   title: Link API
 servers:
-  - url: {{server-base-url}}
+  - url: ''
     description: This server
 security:
   - oauth: []
+  - basic: [ ]
 tags:
   - name: API Root
     description: The root endpoint of the API
@@ -1517,3 +1518,14 @@ components:
           type: string
         valueInteger:
           type: number
+  securitySchemes:
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: ''
+          tokenUrl: ''
+          scopes: { }
+    basic:
+      type: http
+      scheme: basic
