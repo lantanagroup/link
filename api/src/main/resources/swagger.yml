@@ -1267,7 +1267,8 @@ components:
       properties:
         listId:
           type: array
-          description: TODO
+          description: The Fhir Id of the List resource for the EHR endpoint
+          example: euj5ULD0SRDdVTh-PiN0IUYAXZGLNFfFXKetvxENyFeT6Np3ZuIULYMArJUgUYL-H3 (Used in the following request - {fhirServerBase}/List/{listId})
           items:
             type: string
         measureId:
