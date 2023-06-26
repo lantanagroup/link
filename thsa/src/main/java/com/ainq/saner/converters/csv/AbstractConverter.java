@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CanonicalType;
@@ -131,7 +130,6 @@ public abstract class AbstractConverter {
 
     /**
      * Search a list for a value and return the position of it in the list, or -1 if not found
-     * @param <T>
      * @param find  The value to find
      * @param list  The list to find it in
      * @return the position of find in the list, or -1 if not found
@@ -223,9 +221,7 @@ public abstract class AbstractConverter {
 
     /**
      * Get the canonical list of headers for the given measureReport.
-     * @param measureReport The measureReport to compute the headers for.
      * @return  The canonical list of headers.
-     * @throws CSVConversionException
      */
     protected List<String> getCanonicalHeaders() {
         List<String> headers = getStrataHeaders();
@@ -306,7 +302,7 @@ public abstract class AbstractConverter {
      * either from the cached value, or computed from the MeasureReport.
      *
      * @param measureReport The MeasureReport
-     * @return
+     * @return resource the Measure
      */
     protected static Measure getMeasure(MeasureReport measureReport) {
         CanonicalType measure = measureReport.getMeasureElement();
