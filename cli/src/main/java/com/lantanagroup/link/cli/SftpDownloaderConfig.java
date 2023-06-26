@@ -28,4 +28,6 @@ public class SftpDownloaderConfig {
 
   @NotEmpty
   private String password;
+
+  private String fileName;
 }

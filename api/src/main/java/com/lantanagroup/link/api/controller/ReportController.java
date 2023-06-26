@@ -496,12 +496,15 @@ public class ReportController extends BaseController {
         logger.error(ex.getMessage());
       }
 
-      Bundle bundle = this.getFhirDataProvider().getBundleById(documentReference.getIdentifier().get(i).getValue());
-      Measure measure = FhirHelper.getMeasure(bundle);
+      // Get the Measure to put in Report from Evaluation Service, where it is actually being used
+      // and not the old version pulled from report defs in the config
+      FhirDataProvider evaluationService = new FhirDataProvider(this.config.getEvaluationService());
+      Measure measure = evaluationService.getMeasureById(documentReference.getIdentifier().get(i).getValue());
+
       ReportModel.ReportMeasure reportMeasure = new ReportModel.ReportMeasure();
       // get Master Measure Report
       reportMeasure.setMeasureReport(this.getFhirDataProvider().getMeasureReportById(encodedReport));
-      reportMeasure.setBundleId(bundle.getIdElement().getIdPart());
+      reportMeasure.setBundleId(measure.getIdElement().getIdPart());
       reportMeasure.setMeasure(measure);
       reportModel.setVersion(documentReference
               .getExtensionByUrl(Constants.DocumentReferenceVersionUrl) != null ?

@@ -29,3 +29,7 @@ docker-compose.yml
 knox-measure-report-transfer.known_hosts
 qodana.yaml
 docker-volumes/
+
+Writerside/*
+Writerside/images/*
+Writerside/topics/*

@@ -14,11 +14,12 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class THSAConfig {
   /**
-   * The id of the MeasureReport for inventory data
+   * The id of the MeasureReport for bed and icu-bed inventory data
    */
   @Setter
   @Getter
-  private String dataMeasureReportId;
+  //private String dataMeasureReportId;
+  private String bedInventoryReportId;
 
   /*
   The id of the Vent inventory MeasureReport

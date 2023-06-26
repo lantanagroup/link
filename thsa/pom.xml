@@ -13,7 +13,6 @@
     <name>THSA Customizations</name>
 
     <packaging>jar</packaging>
-
     <dependencies>
         <dependency>
             <groupId>com.lantanagroup.link</groupId>
@@ -105,16 +104,18 @@
     </dependencies>
 
     <build>
+
         <finalName>thsa</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>14</source>
+                    <target>14</target>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>

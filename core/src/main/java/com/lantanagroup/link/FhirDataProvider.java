@@ -174,6 +174,10 @@ public class FhirDataProvider {
     return bundle;
   }
 
+  public Measure getMeasureById(String measureId) {
+    return this.client.read().resource(Measure.class).withId(measureId).execute();
+  }
+
   public MeasureReport getMeasureReportById(String reportId) {
     MeasureReport report = this.client
             .read()

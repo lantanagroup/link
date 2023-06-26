@@ -45,7 +45,7 @@ public class GenericCSVProcessor implements IDataProcessor {
         e.printStackTrace();
       }
 
-      measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+      measureReport.setId(this.thsaConfig.getBedInventoryReportId());
 
       // Store report
       Bundle updateBundle = new Bundle();
@@ -54,7 +54,7 @@ public class GenericCSVProcessor implements IDataProcessor {
               .setResource(measureReport)
               .setRequest(new Bundle.BundleEntryRequestComponent()
                       .setMethod(Bundle.HTTPVerb.PUT)
-                      .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
+                      .setUrl("MeasureReport/" + this.thsaConfig.getBedInventoryReportId()));
       Bundle response = fhirDataProvider.transaction(updateBundle);
 
     }

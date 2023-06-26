@@ -31,7 +31,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
 
     XSSFSheet sheet = workbook.getSheetAt(0);
     MeasureReport measureReport = convert(sheet);
-    measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+    measureReport.setId(this.thsaConfig.getBedInventoryReportId());
     measureReport.setType(MeasureReport.MeasureReportType.SUMMARY);
     measureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
 

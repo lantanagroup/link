@@ -7,17 +7,24 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 
 @Getter
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "cli.parkland-inventory-import")
 public class ParklandInventoryImportConfig {
-  @NotNull
-  private SftpDownloaderConfig downloader;
+
+  @Getter
+  private HashMap<String, SftpDownloaderConfig> downloader;
 
   @NotEmpty
   private String submissionUrl;
 
+  @Getter
   private AuthConfig submissionAuth;
+
+  @Getter
+  private HashMap<String, ParklandSubmissionInfo> submissionInfo;
+
 }

@@ -8,15 +8,11 @@ import com.lantanagroup.link.config.thsa.THSAConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
-import org.hl7.fhir.r4.model.MeasureReport.MeasureReportGroupComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @Component
@@ -43,15 +39,13 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     String populationCode = "";
     String populationDisplay = "";
 
-    if (groupCode.equals("beds")) {
-      populationCode = NumTotBedsOcc;
+    switch (groupCode) {
       // populationDisplay = "Hospital Beds Occupied";
-    } else if (groupCode.equals("icu-beds")) {
-      populationCode = NumICUBedsOcc;
+      case "beds" -> populationCode = NumTotBedsOcc;
       // populationDisplay = "ICU Bed Occupancy";
-    } else if (groupCode.equals("vents")) {
-      populationCode = NumVentUse;
+      case "icu-beds" -> populationCode = NumICUBedsOcc;
       // populationDisplay = "Mechanical Ventilators in Use";
+      case "vents" -> populationCode = NumVentUse;
     }
 
     CodeableConcept codeableConcept = new CodeableConcept();
@@ -74,112 +68,66 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     // store the occupied counts from aggregated individual MeasureReport's
     // ONLY beds & icu beds at this point are available, via CQL so restricting to that here.
     MeasureReport measureReport = super.generate(criteria, reportContext, measureContext);
-    for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
-      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-        String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
-        if ( populationCode.equals(NumTotBedsOcc) || populationCode.equals(NumICUBedsOcc)) {
-          usedInventoryMap.put(populationCode, population.getCount());
-        }
-      }
-    }
+    PopulateInventoryMap(measureReport, usedInventoryMap, Arrays.asList(NumTotBedsOcc,NumICUBedsOcc));
 
-    // look up the inventory on the Fhir Server but save the original ID before to restore it
+    // look up the bed inventory on the Fhir Server but save the original ID before to restore it
     String id = measureReport.getId();
-    MeasureReport masterMeasureReport = provider.getMeasureReportById(thsaConfig.getDataMeasureReportId());
-    masterMeasureReport.setId(id);
+    MeasureReport bedMeasureReport = provider.getMeasureReportById(thsaConfig.getBedInventoryReportId());
+    bedMeasureReport.setId(id);
+
+    //store the total inventory this is coming from bed-inventorydata
+    PopulateInventoryMap(bedMeasureReport, totalInventoryMap, Arrays.asList(NumTotBeds,NumICUBeds));
 
     // Look up the Vent inventory on the Data Store FHIR server
     MeasureReport ventMeasureReport = provider.getMeasureReportById(thsaConfig.getVentInventoryReportId());
     // Store the Total # of Vents and # of Vents occupied/used from vent inventory report
-    for (MeasureReport.MeasureReportGroupComponent group : ventMeasureReport.getGroup()) {
-      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-        String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
-        if (populationCode.equals(NumVent)) {
-          totalInventoryMap.put(NumVent, population.getCount());
-        } else if (populationCode.equals(NumVentUse)) {
-          usedInventoryMap.put(populationCode, population.getCount());
-        }
-      }
-    }
-
-    // ALM 06June2023
-    // Parkland Inventory Report Import will set the inventory data to just have vents
-    // group.  Here we check for and then add beds & icu-beds to the template before we
-    // populate below
-    // TODO - we need total # beds & icu beds to start from somehow.  I think we are still waiting
-    // on some CSV report for this?  alm 21June2023
-    // Could be we store this as a different "inventory report".  Have an inventory report for vents,
-    // one for beds, one for icu-beds.  Pull those here to get the number of each as a start.
-    List<MeasureReportGroupComponent> groups = masterMeasureReport.getGroup();
-    List<String> groupCodes = new ArrayList<>();
-    for (MeasureReportGroupComponent group : groups) {
-      String groupCode = group.getCode().getCodingFirstRep().getCode();
-      groupCodes.add(groupCode);
-    }
-
-    // Add empty beds section if needed
-    if (!groupCodes.contains("beds")) {
-      MeasureReportGroupComponent group = getGroupComponent("beds");
-      group.addPopulation(getPopulationComponent("NumTotBeds"));
-      group.addPopulation(getPopulationComponent("NumTotBedsOcc"));
-      group.addPopulation(getPopulationComponent("NumTotBedsAvail"));
-      masterMeasureReport.addGroup(group);
-    }
-
-    if (!groupCodes.contains("icu-beds")) {
-      MeasureReportGroupComponent group = getGroupComponent("icu-beds");
-      group.addPopulation(getPopulationComponent("NumICUBeds"));
-      group.addPopulation(getPopulationComponent("NumICUBedsOcc"));
-      group.addPopulation(getPopulationComponent("NumICUBedsAvail"));
-      masterMeasureReport.addGroup(group);
-    }
-
-    //store the total inventory this is coming from inventorydata
-    // Total vent inventory set above
-    for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
-      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-        String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
-        if (populationCode.equals(NumTotBeds)) {
-          totalInventoryMap.put(NumTotBeds, population.getCount());
-        } else if (populationCode.equals(NumICUBeds)) {
-          totalInventoryMap.put(NumICUBeds, population.getCount());
-        } /* THIS now populated via ventMeasureReport
-        else if (populationCode.equals(NumVent)) {
-          totalInventoryMap.put(NumVent, population.getCount());
-        } */
-      }
-    }
+    PopulateInventoryMap(ventMeasureReport, totalInventoryMap, List.of(NumVent));
+    PopulateInventoryMap(ventMeasureReport, usedInventoryMap, List.of(NumVentUse));
 
     // compute/store the available counts
-    for (MeasureReport.MeasureReportGroupComponent group1 : masterMeasureReport.getGroup()) {
+    for (MeasureReport.MeasureReportGroupComponent group1 : bedMeasureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group1.getPopulation()) {
         String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
-        if (populationCode.equals(NumTotBedsOcc)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
-        } else if (populationCode.equals(NumICUBedsOcc)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
-        } else if (populationCode.equals(NumVentUse)) {
-          population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
-        } else if (populationCode.equals(NumTotBedsAvail)) {
-          int available = (totalInventoryMap.get(NumTotBeds) != null ? totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? usedInventoryMap.get(NumTotBedsOcc) : 0);
-          population.setCount(available);
-        } else if (populationCode.equals(NumICUBedsAvail)) {
-          int available = (totalInventoryMap.get(NumICUBeds) != null ? totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? usedInventoryMap.get(NumICUBedsOcc) : 0);
-          population.setCount(available);
-        } else if (populationCode.equals(NumVentAvail)) {
-          int available = (totalInventoryMap.get(NumVent) != null ? totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? usedInventoryMap.get(NumVentUse) : 0);
-          population.setCount(available);
+        switch (populationCode) {
+          case NumTotBedsOcc, NumICUBedsOcc, NumVentUse ->
+                  population.setCount(usedInventoryMap.get(populationCode) != null ? usedInventoryMap.get(populationCode) : 0);
+          case NumTotBedsAvail -> {
+            int available = (totalInventoryMap.get(NumTotBeds) != null ? totalInventoryMap.get(NumTotBeds) : 0) - (usedInventoryMap.get(NumTotBedsOcc) != null ? usedInventoryMap.get(NumTotBedsOcc) : 0);
+            population.setCount(available);
+          }
+          case NumICUBedsAvail -> {
+            int available = (totalInventoryMap.get(NumICUBeds) != null ? totalInventoryMap.get(NumICUBeds) : 0) - (usedInventoryMap.get(NumICUBedsOcc) != null ? usedInventoryMap.get(NumICUBedsOcc) : 0);
+            population.setCount(available);
+          }
+          case NumVentAvail -> {
+            int available = (totalInventoryMap.get(NumVent) != null ? totalInventoryMap.get(NumVent) : 0) - (usedInventoryMap.get(NumVentUse) != null ? usedInventoryMap.get(NumVentUse) : 0);
+            population.setCount(available);
+          }
+          case NumVent -> population.setCount(totalInventoryMap.get(NumVent));
+          case NumTotBeds -> population.setCount(totalInventoryMap.get(NumTotBeds));
+          case NumICUBeds -> population.setCount(totalInventoryMap.get(NumICUBeds));
         }
       }
     }
-    return masterMeasureReport;
+    return bedMeasureReport;
+  }
+
+  private void PopulateInventoryMap(MeasureReport report, HashMap<String, Integer> inventoryMap, List<String> populationCodes) {
+    for (MeasureReport.MeasureReportGroupComponent group : report.getGroup()) {
+      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+        String populationCode = population.getCode().getCoding().size() > 0 ? population.getCode().getCoding().get(0).getCode() : "";
+        if (populationCodes.contains(populationCode)) {
+          inventoryMap.put(populationCode, population.getCount());
+        }
+      }
+    }
   }
 
   protected MeasureReport.MeasureReportGroupPopulationComponent getOrCreateGroupAndPopulation(MeasureReport
                                                                                                       masterReport, MeasureReport.MeasureReportGroupPopulationComponent
                                                                                                       reportPopulation, MeasureReport.MeasureReportGroupComponent reportGroup) {
     MeasureReport.MeasureReportGroupComponent masterReportGroupValue = null;
-    MeasureReport.MeasureReportGroupPopulationComponent masteReportGroupPopulationValue;
+    MeasureReport.MeasureReportGroupPopulationComponent masterReportGroupPopulationValue;
     Optional<MeasureReport.MeasureReportGroupComponent> masterReportGroup;
 
     String populationCode = reportPopulation.getCode().getCoding().size() > 0 ? reportPopulation.getCode().getCoding().get(0).getCode() : "";
@@ -210,13 +158,13 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     Optional<MeasureReport.MeasureReportGroupPopulationComponent> masterReportGroupPopulation = masterReportGroupValue.getPopulation().stream().filter(population -> population.getCode().getCoding().size() > 0 && population.getCode().getCoding().get(0).getCode().equals(translatedPopulationCode)).findFirst();
     // if empty create it
     if (masterReportGroupPopulation.isPresent()) {
-      masteReportGroupPopulationValue = masterReportGroupPopulation.get();
+      masterReportGroupPopulationValue = masterReportGroupPopulation.get();
     } else {
-      masteReportGroupPopulationValue = new MeasureReport.MeasureReportGroupPopulationComponent();
-      masteReportGroupPopulationValue.setCode(translatedPopulationCoding);
-      masterReportGroupValue.addPopulation(masteReportGroupPopulationValue);
+      masterReportGroupPopulationValue = new MeasureReport.MeasureReportGroupPopulationComponent();
+      masterReportGroupPopulationValue.setCode(translatedPopulationCoding);
+      masterReportGroupValue.addPopulation(masterReportGroupPopulationValue);
     }
-    return masteReportGroupPopulationValue;
+    return masterReportGroupPopulationValue;
   }
 
   @Override
@@ -235,7 +183,7 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
           groupComponent.setCode(group.getCode());
           group.getPopulation().forEach(population -> {
             MeasureReport.MeasureReportGroupPopulationComponent populationComponent = new MeasureReport.MeasureReportGroupPopulationComponent();
-            if (!population.getCode().equals("numerator")) {
+            if (!population.getCode().toString().equals("numerator")) {
               if (group.getCode().getCoding() != null && group.getCode().getCoding().size() > 0) {
                 populationComponent.setCode(getTranslatedPopulationCoding(group.getCode().getCoding().get(0).getCode()));
                 populationComponent.setCount(0);
@@ -266,25 +214,4 @@ public class THSAAggregator extends GenericAggregator implements IReportAggregat
     }
   }
 
-  private MeasureReportGroupComponent getGroupComponent(String type) {
-    MeasureReportGroupComponent group = new MeasureReport.MeasureReportGroupComponent();
-    Coding coding = new Coding();
-    coding.setSystem(Constants.MeasuredValues);
-    coding.setCode(type);
-    group.setCode(new CodeableConcept(coding));
-
-    return group;
-  }
-
-  private MeasureReport.MeasureReportGroupPopulationComponent getPopulationComponent(String type) {
-    MeasureReport.MeasureReportGroupPopulationComponent pop = new MeasureReport.MeasureReportGroupPopulationComponent();
-    Coding coding = new Coding();
-    coding.setSystem(Constants.MeasuredValues);
-    coding.setCode(type);
-    coding.setDisplay(type);
-    pop.setCode(new CodeableConcept(coding));
-    pop.setCount(0);
-
-    return pop;
-  }
 }
