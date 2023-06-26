@@ -15,6 +15,7 @@ public class BulkStatus {
   private String tenantId;
   private String statusUrl;
   private String status;
+  private String errorMessage;
   private Date lastChecked;
 }
 
