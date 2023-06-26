@@ -4,6 +4,7 @@ import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.BulkStatus;
+import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.db.model.BulkStatuses;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.query.uscore.BulkQuery;
@@ -83,5 +84,11 @@ public class BulkManagerService {
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
     BulkStatus status = bulkStatusService.getBulkStatusById(id);
     return status;
+  }
+
+  public BulkStatusResult getBulkStatusResultByStatusId(String id){
+    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
+    BulkStatusResult result = bulkStatusService.getResultByStatusId(id);
+    return result;
   }
 }

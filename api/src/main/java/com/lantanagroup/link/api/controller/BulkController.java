@@ -4,6 +4,7 @@ import com.lantanagroup.link.api.bulk.BulkManagerService;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.BulkStatus;
+import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.db.model.BulkStatuses;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import lombok.Setter;
@@ -84,6 +85,13 @@ public class BulkController  extends BaseController {
     Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
     List<BulkStatus> statuses = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatusByTenantId(tenantId);
     return statuses;
+  }
+
+  @GetMapping("/status/{statusId}/result")
+  public BulkStatusResult getBulkStatusResultByStatusId(@PathVariable String tenantId, @PathVariable String statusId){
+    Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
+    BulkStatusResult result = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatusResultByStatusId(statusId);
+    return result;
   }
 
   @PostMapping("$execute-query-and-retrieval")
