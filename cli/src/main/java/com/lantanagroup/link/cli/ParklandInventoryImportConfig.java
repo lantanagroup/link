@@ -17,13 +17,6 @@ public class ParklandInventoryImportConfig {
 
   @Getter
   private HashMap<String, SftpDownloaderConfig> downloader;
-
-  @NotEmpty
-  private String submissionUrl;
-
-  @Getter
-  private AuthConfig submissionAuth;
-
   @Getter
   private HashMap<String, ParklandSubmissionInfo> submissionInfo;
 
