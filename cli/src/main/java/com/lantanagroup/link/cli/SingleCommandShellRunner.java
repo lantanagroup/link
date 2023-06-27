@@ -30,9 +30,9 @@ public class SingleCommandShellRunner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) throws Exception {
-    Optional<String> command = args.getNonOptionArgs().stream().filter(a -> commands.indexOf(a) >= 0).findFirst();
+    Optional<String> command = args.getNonOptionArgs().stream().filter(commands::contains).findFirst();
 
-    if (!command.isPresent()) {
+    if (command.isEmpty()) {
       return;
     }
 

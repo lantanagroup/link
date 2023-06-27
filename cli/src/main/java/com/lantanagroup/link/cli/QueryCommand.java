@@ -15,7 +15,6 @@ import com.lantanagroup.link.query.auth.*;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.query.uscore.PatientScoop;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,7 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @ShellComponent
@@ -55,6 +55,8 @@ public class QueryCommand extends BaseShellCommand {
     try {
       this.registerBeans();
 
+      // TODO - why is this here?  It basically does this.applicationContext.getBean(FhirDataProvider.class)
+      // but the assigned object in BaseShellCommand isn't used, and then that calls happens later in this function.
       this.registerFhirDataProvider();
       QueryConfig config = this.applicationContext.getBean(QueryConfig.class);
       QueryCliConfig cliConfig = this.applicationContext.getBean(QueryCliConfig.class);
@@ -76,10 +78,7 @@ public class QueryCommand extends BaseShellCommand {
         patientsOfInterest.add(poi);
       }
 
-      List<String> resourceTypesList = new ArrayList<>();
-      for (String resourceType : resourceTypes.split(",")) {
-        resourceTypesList.add(resourceType);
-      }
+      List<String> resourceTypesList = new ArrayList<>(Arrays.asList(resourceTypes.split(",")));
 
       logger.info("Executing query");
       ReportCriteria criteria = new ReportCriteria(List.of(), start, end);
@@ -92,8 +91,8 @@ public class QueryCommand extends BaseShellCommand {
         logger.info("Patient is: " + patientsOfInterest.get(i).getId());
         try {
           String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(masterReportid, patientsOfInterest.get(i).getId());
-          IBaseResource patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
-          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString((Bundle) patientBundle);
+          Bundle patientBundle = fhirDataProvider.getBundleById(patientDataBundleId);
+          String patientDataXml = FhirContextProvider.getFhirContext().newXmlParser().encodeResourceToString(patientBundle);
           if (StringUtils.isNotEmpty(output)) {
             String file = (!output.endsWith("/") ? output + FileSystems.getDefault().getSeparator() : output) + "patient-" + (i + 1) + ".xml";
             try (FileOutputStream fos = new FileOutputStream(file)) {
