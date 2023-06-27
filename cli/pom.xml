@@ -14,12 +14,6 @@
 
     <packaging>jar</packaging>
 
-    <!--
-    <properties>
-        <start-class>com.lantanagroup.link.PillBox</start-class>
-    </properties>
-    -->
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.shell</groupId>
@@ -97,8 +91,14 @@
             <optional>true</optional>
         </dependency>
 
-    </dependencies>
+        <!-- Adding support for CSV file manipulation -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>4.5</version>
+        </dependency>
 
+    </dependencies>
 
     <build>
         <finalName>link-cli</finalName>
@@ -106,8 +106,8 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>14</source>
+                    <target>14</target>
                 </configuration>
             </plugin>
             <plugin>

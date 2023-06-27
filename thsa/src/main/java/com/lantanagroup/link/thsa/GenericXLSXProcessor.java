@@ -31,7 +31,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
 
     XSSFSheet sheet = workbook.getSheetAt(0);
     MeasureReport measureReport = convert(sheet);
-    measureReport.setId(this.thsaConfig.getDataMeasureReportId());
+    measureReport.setId(this.thsaConfig.getBedInventoryReportId());
     measureReport.setType(MeasureReport.MeasureReportType.SUMMARY);
     measureReport.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
 
@@ -41,7 +41,7 @@ public class GenericXLSXProcessor implements IDataProcessor {
             .setResource(measureReport)
             .setRequest(new Bundle.BundleEntryRequestComponent()
                     .setMethod(Bundle.HTTPVerb.PUT)
-                    .setUrl("MeasureReport/" + this.thsaConfig.getDataMeasureReportId()));
+                    .setUrl("MeasureReport/" + this.thsaConfig.getVentInventoryReportId()));
     Bundle response = fhirDataProvider.transaction(updateBundle);
   }
 

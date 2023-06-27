@@ -1,11 +1,7 @@
 package com.lantanagroup.link.cli;
 
-import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.GenerateResponse;
@@ -14,10 +10,8 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -30,11 +24,9 @@ import java.util.*;
 
 
 @ShellComponent
-public class GenerateAndSubmitCommand {
+public class GenerateAndSubmitCommand extends BaseShellCommand {
   private static final Logger logger = LoggerFactory.getLogger(GenerateAndSubmitCommand.class);
-  private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
-  @Autowired
   @Setter
   @Getter
   private GenerateAndSubmitConfig configInfo;
@@ -69,6 +61,9 @@ public class GenerateAndSubmitCommand {
 
   @ShellMethod("generate-and-submit")
   public void generateAndSubmit() throws IOException {
+    registerBeans();
+    configInfo = applicationContext.getBean(GenerateAndSubmitConfig.class);
+
     CloseableHttpClient client = HttpClientBuilder.create().build();
     try {
       RestTemplate restTemplate = new RestTemplate();
@@ -93,11 +88,11 @@ public class GenerateAndSubmitCommand {
         logger.error("The token-url is required.");
         return;
       }
-      if (StringUtils.isBlank(configInfo.getAuth().getUser())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getUsername())) {
         logger.error("The user is required.");
         return;
       }
-      if (StringUtils.isBlank(configInfo.getAuth().getPass())) {
+      if (StringUtils.isBlank(configInfo.getAuth().getPassword())) {
         logger.error("The password is required.");
         return;
       }
@@ -106,51 +101,19 @@ public class GenerateAndSubmitCommand {
         return;
       }
       //String token = OAuth2Helper.getPasswordCredentialsToken(client, configInfo.getAuth().getTokenUrl(), configInfo.getAuth().getUser(), configInfo.getAuth().getPass(), "nhsnlink-app", configInfo.getAuth().getScope());
-      if (configInfo.getAuth() == null && configInfo.getAuth().getCredentialMode() == null) {
+      if (configInfo.getAuth() == null || configInfo.getAuth().getCredentialMode() == null) {
         logger.error("Invalid authorization configuration.");
         System.exit(1);
       }
 
-      String token = null;
-
-      ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
-      if(StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "password")) {
-        token = OAuth2Helper.getPasswordCredentialsToken(
-                httpClient,
-                configInfo.getAuth().getTokenUrl(),
-                configInfo.getAuth().getUser(),
-                configInfo.getAuth().getPass(),
-                configInfo.getAuth().getClientId(),
-                configInfo.getAuth().getScope());
-      }
-      else if(StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "sams-password")) {
-        token = OAuth2Helper.getSamsPasswordCredentialsToken(
-                httpClient,
-                configInfo.getAuth().getTokenUrl(),
-                configInfo.getAuth().getUser(),
-                configInfo.getAuth().getPass(),
-                configInfo.getAuth().getClientId(),
-                configInfo.getAuth().getClientSecret(),
-                configInfo.getAuth().getScope());
-      }
-      else if (StringUtils.equalsIgnoreCase(configInfo.getAuth().getCredentialMode(), "client")) {
-        token = OAuth2Helper.getClientCredentialsToken(
-                httpClient,
-                configInfo.getAuth().getTokenUrl(),
-                configInfo.getAuth().getClientId(),
-                configInfo.getAuth().getPass(),
-                configInfo.getAuth().getScope());
-      }
+      String token = OAuth2Helper.getToken(configInfo.getAuth());
 
       if (token == null) {
         client.close();
         logger.error("Authentication failed. Please contact the system administrator.");
         System.exit(1);
       }
-      DecodedJWT jwt = JWT.decode(token);
-      LinkCredentials principal = new LinkCredentials();
-      principal.setJwt(jwt);
-      principal.setPractitioner(FhirHelper.toPractitioner(jwt));
+
       String url = configInfo.getApiUrl() + "/report/$generate";
 
       // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day

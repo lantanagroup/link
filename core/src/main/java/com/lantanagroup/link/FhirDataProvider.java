@@ -1,12 +1,14 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import org.hl7.fhir.r4.model.MeasureReport;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.model.api.IQueryParameterType;
 import ca.uhn.fhir.rest.api.CacheControlDirective;
 import ca.uhn.fhir.rest.api.MethodOutcome;
 import ca.uhn.fhir.rest.api.SummaryEnum;
 import ca.uhn.fhir.rest.client.apache.GZipContentInterceptor;
-import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.rest.gclient.DateClientParam;
 import ca.uhn.fhir.rest.gclient.ICriterion;
@@ -28,6 +30,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+
 
 public class FhirDataProvider {
   private static final Logger logger = LoggerFactory.getLogger(FhirDataProvider.class);
@@ -170,6 +174,10 @@ public class FhirDataProvider {
     return bundle;
   }
 
+  public Measure getMeasureById(String measureId) {
+    return this.client.read().resource(Measure.class).withId(measureId).execute();
+  }
+
   public MeasureReport getMeasureReportById(String reportId) {
     MeasureReport report = this.client
             .read()
@@ -304,8 +312,10 @@ public class FhirDataProvider {
 
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
 
-    // TODO - this is failing I assume to pull a measure report from the DataStore.
-    // What would have PUT the measure report there????
+    //Uncomment to get payload sent to get MeasureReport
+    FhirContext ctx = FhirContext.forR4();
+    IParser parser = ctx.newJsonParser();
+    String myRequestBody = parser.encodeResourceToString(parameters);
 
     MeasureReport measureReport = client.operation()
             .onInstance(new IdType("Measure", measureId))
@@ -408,3 +418,4 @@ public class FhirDataProvider {
     }
   }
 }
+

@@ -1,7 +1,6 @@
 package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.model.api.IResource;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
@@ -18,18 +17,13 @@ import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.Period;
-import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
@@ -47,8 +41,6 @@ import java.util.stream.Collectors;
 @ShellComponent
 public class RefreshPatientListCommand extends BaseShellCommand {
   private static final Logger logger = LoggerFactory.getLogger(RefreshPatientListCommand.class);
-
-  private final CloseableHttpClient httpClient = HttpClients.createDefault();
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   private RefreshPatientListConfig config;
   private QueryConfig queryConfig;
@@ -95,25 +87,19 @@ public class RefreshPatientListCommand extends BaseShellCommand {
         ((BaseClient) client).setKeepResponses(true);
     }
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
-    Resource r = client.fetchResourceFromUrl(ListResource.class, patientListId);
-    if (r instanceof ListResource) {
+    ListResource r = client.fetchResourceFromUrl(ListResource.class, patientListId);
+    if (r != null) {
     	IParser jp = fhirContext.newJsonParser();
     	jp.setPrettyPrint(true);
     	try {
 			jp.encodeResourceToWriter(r, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
-		} catch (DataFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (DataFormatException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        return (ListResource)r;
+      return r;
     } else {
-        IParser p = fhirContext.newJsonParser();
-        p.setPrettyPrint(true);
-        System.out.printf("%s%n", p.encodeResourceToString(r));
-        throw new IllegalArgumentException("Expected ListResource, but got " +  r.fhirType());
+        throw new IllegalArgumentException(String.format("Issue getting ListResource for Patient List ID %s", patientListId));
     }
   }
 
@@ -169,36 +155,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     logger.info("Submitting to {}", url);
     HttpPost request = new HttpPost(url);
     if (config.getAuth() != null && config.getAuth().getCredentialMode() != null) {
-      String token = null;
-
-      ///TODO: Potentially change this to a implementation of an interface instead of using the helper class
-      if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "password")) {
-        token = OAuth2Helper.getPasswordCredentialsToken(
-                httpClient,
-                config.getAuth().getTokenUrl(),
-                config.getAuth().getUser(),
-                config.getAuth().getPass(),
-                config.getAuth().getClientId(),
-                config.getAuth().getScope());
-      }
-      else if(StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "sams-password")) {
-        token = OAuth2Helper.getSamsPasswordCredentialsToken(
-                httpClient,
-                config.getAuth().getTokenUrl(),
-                config.getAuth().getUser(),
-                config.getAuth().getPass(),
-                config.getAuth().getClientId(),
-                config.getAuth().getClientSecret(),
-                config.getAuth().getScope());
-      }
-      else if (StringUtils.equalsIgnoreCase(config.getAuth().getCredentialMode(), "client")) {
-        token = OAuth2Helper.getClientCredentialsToken(
-                httpClient,
-                config.getAuth().getTokenUrl(),
-                config.getAuth().getClientId(),
-                config.getAuth().getPass(),
-                config.getAuth().getScope());
-      }
+      String token = OAuth2Helper.getToken(config.getAuth());
 
       if (token == null) {
         throw new Exception("Authorization failed");
@@ -213,16 +170,10 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     }
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
-    httpClient.execute(request, response -> {
-      logger.info("Response: {}", response.getStatusLine());
-      HttpEntity entity = response.getEntity();
-      if (entity != null) {
-        String body = EntityUtils.toString(entity);
-        if (StringUtils.isNotEmpty(body)) {
-          logger.debug(body);
-        }
-      }
-      return null;
-    });
+
+    HttpResponse response = Utility.HttpPoster(request, logger);
+
+    logger.info("HTTP Reponse Code {}", response.getStatusLine().getStatusCode());
   }
+
 }

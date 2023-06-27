@@ -1,6 +1,7 @@
 package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,7 +23,7 @@ public class GenerateAndSubmitConfig {
   private String apiUrl;
   private GenerateAndSubmitPeriodStart periodStart;
   private GenerateAndSubmitPeriodEnd periodEnd;
-  private AuthConfig auth;
+  private LinkOAuthConfig auth;
   @NotNull
   @Size(min = 1)
   private String[] bundleIds;

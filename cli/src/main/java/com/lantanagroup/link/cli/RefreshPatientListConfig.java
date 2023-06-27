@@ -1,6 +1,7 @@
 package com.lantanagroup.link.cli;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -22,7 +23,8 @@ import java.util.List;
 public class RefreshPatientListConfig {
   @NotBlank
   private String apiUrl;
-  private AuthConfig auth;
+  //private AuthConfig auth;
+  private LinkOAuthConfig auth;
   @NotNull
   @Size(min = 1)
   private List<PatientList> patientList;

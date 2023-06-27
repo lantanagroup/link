@@ -43,7 +43,7 @@ public class BaseShellCommand {
   protected void registerFhirDataProvider() {
     DefaultListableBeanFactory beanFactory = (DefaultListableBeanFactory) ((AnnotationConfigServletWebServerApplicationContext) this.applicationContext).getBeanFactory();
     QueryCliConfig config = this.applicationContext.getBean(QueryCliConfig.class);
-    FhirDataProvider fhirDataprovider = null;
+    FhirDataProvider fhirDataprovider;
     try {
       fhirDataprovider = this.applicationContext.getBean(FhirDataProvider.class);
     } catch (NoSuchBeanDefinitionException ex) {
