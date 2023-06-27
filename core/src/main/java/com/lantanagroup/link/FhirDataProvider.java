@@ -48,7 +48,12 @@ public class FhirDataProvider {
   }
 
   public FhirDataProvider(ApiDataStoreConfig config) {
-    IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(config.getBaseUrl());
+
+    if (StringUtils.isNotEmpty(config.getSocketTimeout())) {
+      this.ctx.getRestfulClientFactory().setSocketTimeout(Integer.parseInt(config.getSocketTimeout()));
+    }
+
+    IGenericClient client = this.ctx.newRestfulGenericClient(config.getBaseUrl());
 
     if (StringUtils.isNotEmpty(config.getUsername()) && StringUtils.isNotEmpty(config.getPassword())) {
       BasicAuthInterceptor authInterceptor = new BasicAuthInterceptor(config.getUsername(), config.getPassword());
@@ -63,10 +68,12 @@ public class FhirDataProvider {
   }
 
   public Resource createResource(IBaseResource resource) {
+
     MethodOutcome outcome = this.client
             .create()
             .resource(resource)
             .execute();
+
 
     if (!outcome.getCreated() || outcome.getResource() == null) {
       logger.error("Failed to store/create FHIR resource");

@@ -14,9 +14,4 @@ import org.springframework.context.annotation.Configuration;
 public class LinkCredentials {
     DecodedJWT jwt;
     Practitioner practitioner;
-
-    public LinkCredentials(DecodedJWT jwt) {
-        this.jwt = jwt;
-        this.practitioner = FhirHelper.toPractitioner(jwt);
-    }
 }

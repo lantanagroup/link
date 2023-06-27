@@ -8,4 +8,5 @@ public class ApiDataStoreConfig {
   private String baseUrl;
   private String username;
   private String password;
+  private String socketTimeout;
 }
