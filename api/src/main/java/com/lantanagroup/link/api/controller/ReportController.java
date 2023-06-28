@@ -86,7 +86,7 @@ public class ReportController extends BaseController {
   private void resolveMeasures(ReportCriteria criteria, ReportContext context) throws Exception {
     context.getMeasureContexts().clear();
     for (String bundleId : criteria.getBundleIds()) {
-      MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(bundleId);
+      MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(bundleId);
 
       if (measureDefinition == null) {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find measure def with ID " + bundleId);
@@ -171,7 +171,7 @@ public class ReportController extends BaseController {
 
     // should we look for multiple multimeasureid in the configuration file just in case there is a configuration mistake and error out?
     Optional<MeasurePackage> apiMeasurePackage = Optional.empty();
-    for (MeasurePackage multiMeasurePackage : this.sharedService.getAllMeasurePackages()) {
+    for (MeasurePackage multiMeasurePackage : this.sharedService.getMeasurePackages()) {
       if (multiMeasurePackage.getId().equals(multiMeasureBundleId)) {
         apiMeasurePackage = Optional.of(multiMeasurePackage);
         break;

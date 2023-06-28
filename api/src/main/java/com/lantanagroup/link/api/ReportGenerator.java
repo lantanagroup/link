@@ -123,7 +123,7 @@ public class ReportGenerator {
   private void setVersions(MeasureReport measureReport) {
     try {
       String linkVersion = Helper.getVersionInfo().getVersion();
-      MeasureDefinition measureDefinition = sharedService.findMeasureDefinition(measureContext.getBundleId());
+      MeasureDefinition measureDefinition = sharedService.getMeasureDefinition(measureContext.getBundleId());
       String measureVersion = FhirHelper.getMainLibraries(measureDefinition.getBundle()).get(0).getVersion();
       measureReport.addExtension(Constants.LINK_VERSION_URL, new StringType(linkVersion));
       measureReport.addExtension(Constants.MEASURE_VERSION_URL, new StringType(measureVersion));

@@ -114,7 +114,7 @@ public class MeasureDefController extends BaseController {
 
     this.executeBundle(bundle);
 
-    MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(bundle.getIdElement().getIdPart());
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(bundle.getIdElement().getIdPart());
 
     if (measureDefinition == null) {
       measureDefinition = new MeasureDefinition();
@@ -130,7 +130,7 @@ public class MeasureDefController extends BaseController {
 
   @GetMapping
   public List<MeasureDefinition> searchMeasureDefinitions() {
-    return this.sharedService.getAllMeasureDefinitions();
+    return this.sharedService.getMeasureDefinitions();
   }
 
   @DeleteMapping("/{measureId}")
@@ -145,7 +145,7 @@ public class MeasureDefController extends BaseController {
     this.sharedService.deleteMeasureDefinition(measureId);
 
     // Make sure the any packages that reference the measure definition are updated to remove the reference to the definition
-    List<MeasurePackage> measurePackages = this.sharedService.getAllMeasurePackages();
+    List<MeasurePackage> measurePackages = this.sharedService.getMeasurePackages();
     measurePackages.forEach(measurePackage -> {
       if (measurePackage.getMeasureIds().remove(measureId)) {
         this.sharedService.saveMeasurePackage(measurePackage);

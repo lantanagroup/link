@@ -23,6 +23,15 @@ public class SQLCSHelper {
     }
   }
 
+  public void setDateTime(String parameterName, String value) throws SQLException {
+    if (StringUtils.isEmpty(value)) {
+      this.callableStatement.setNull(parameterName, Types.VARCHAR);
+    } else {
+      var parsed = java.sql.Date.valueOf(value);
+      this.callableStatement.setDate(parameterName, parsed);
+    }
+  }
+
   public void setNString(String parameterName, String value) throws SQLException {
     if (StringUtils.isEmpty(value)) {
       this.callableStatement.setNull(parameterName, Types.NVARCHAR);

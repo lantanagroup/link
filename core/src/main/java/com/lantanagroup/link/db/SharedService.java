@@ -16,8 +16,6 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.DeleteResult;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -47,10 +45,7 @@ public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
   private static final ObjectMapper mapper = new ObjectMapper();
   public static final String AUDIT_COLLECTION = "audit";
-  public static final String MEASURE_DEF_COLLECTION = "measureDef";
-  public static final String MEASURE_PACKAGE_COLLECTION = "measurePackage";
   public static final String USER_COLLECTION = "user";
-  public static final String TENANT_CONFIG_COLLECTION = "tenantConfig";
   public static final String BULK_DATA_COLLECTION = "bulkDataStatus";
   public static final String DEFAULT_PASS = "linkt3mppass";
   public static final String DEFAULT_EMAIL = "default@nhsnlink.org";
@@ -115,10 +110,6 @@ public class SharedService {
     return this.database;
   }
 
-  public MongoCollection<BulkStatus> getBulkDataStatusCollection() {
-    return this.getDatabase().getCollection(BULK_DATA_COLLECTION, BulkStatus.class);
-  }
-
   public Tenant getTenantConfig(String tenantId)
   {
     try (Connection conn = this.getSQLConnection()) {
@@ -149,9 +140,6 @@ public class SharedService {
   }
 
   public ArrayList<Tenant> getTenantConfigs() {
-
-    //return this.getDatabase().getCollection(TENANT_CONFIG_COLLECTION, Tenant.class);
-
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -176,20 +164,284 @@ public class SharedService {
     }
   }
 
-  public MongoCollection<MeasureDefinition> getMeasureDefinitionCollection() {
-    return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
+  public int deleteTenantConfig(String tenantId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM [dbo].[tenantConfig] WHERE id = ?");
+      ps.setNString(1, tenantId);
+
+      var rowsAffected = ps.executeUpdate();
+
+      assert rowsAffected <= 1;
+
+      return rowsAffected;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public MongoCollection<MeasurePackage> getMeasurePackageCollection() {
-    return this.getDatabase().getCollection(MEASURE_PACKAGE_COLLECTION, MeasurePackage.class);
+  public void saveTenantConfig(Tenant tenant){
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenant (?, ?) }");
+      cs.setNString("tenantId", tenant.getId());
+      cs.setNString("json", mapper.writeValueAsString(tenant));
+
+      cs.executeQuery();
+
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public MeasureDefinition findMeasureDefinition(String measureId) {
-    return this.getMeasureDefinitionCollection().find(eq("measureId", measureId)).first();
+  public MeasureDefinition getMeasureDefinition(String measureId) {
+    //return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT bundle FROM [dbo].[measureDef] WHERE measureId = ?");
+      ps.setNString(1, measureId);
+
+      ResultSet rs = ps.executeQuery();
+
+      MeasureDefinition measureDef = null;
+
+      if(rs.next()) {
+        var json = rs.getString(0);
+        measureDef = mapper.readValue(json, MeasureDefinition.class);
+      }
+
+      assert measureDef != null;
+
+      return measureDef;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  public MongoCollection<Audit> getAuditCollection() {
-    return this.getDatabase().getCollection(AUDIT_COLLECTION, Audit.class);
+  public ArrayList<MeasureDefinition> getMeasureDefinitions() {
+    //return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT bundle FROM [dbo].[measureDef]");
+
+      ResultSet rs = ps.executeQuery();
+      var measureDefs = new ArrayList<MeasureDefinition>();
+
+      while(rs.next()) {
+        var json = rs.getString(0);
+        var tenant = mapper.readValue(json, MeasureDefinition.class);
+        measureDefs.add(tenant);
+      }
+
+      return measureDefs;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public long deleteMeasureDefinition(String measureId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM [dbo].[measureDef] WHERE measureId = ?");
+      ps.setNString(1, measureId);
+
+      var rowsAffected = ps.executeUpdate();
+
+      assert rowsAffected <= 1;
+
+      return rowsAffected;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void saveMeasureDefinition(MeasureDefinition measureDefinition) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasureDef (?, ?, ?) }");
+      cs.setNString("measureId", measureDefinition.getMeasureId());
+      cs.setNString("bundle", mapper.writeValueAsString(measureDefinition.getBundle()));
+      cs.setString("lastUpdated", measureDefinition.getLastUpdated().toString());
+
+      cs.executeQuery();
+
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public MeasurePackage getMeasurePackage(String packageId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT measures FROM [dbo].[measurePackage] WHERE packageId = ?");
+      ps.setNString(1, packageId);
+      ResultSet rs = ps.executeQuery();
+
+      MeasurePackage measurePackage = null;
+
+      if(rs.next()) {
+        var json = rs.getString(0);
+        measurePackage = mapper.readValue(json, MeasurePackage.class);
+      }
+
+      assert measurePackage != null;
+
+      return measurePackage;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public ArrayList<MeasurePackage> getMeasurePackages() {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT measures FROM [dbo].[measurePackage]");
+
+      ResultSet rs = ps.executeQuery();
+      var packages = new ArrayList<MeasurePackage>();
+
+      while(rs.next()) {
+        var json = rs.getString(0);
+        var measurePackage = mapper.readValue(json, MeasurePackage.class);
+        packages.add(measurePackage);
+      }
+
+      return packages;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonMappingException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void saveMeasurePackage(MeasurePackage measurePackage) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasurePackage (?, ?) }");
+      cs.setNString("packageId", measurePackage.getId());
+      cs.setNString("measures", mapper.writeValueAsString(measurePackage));
+
+      cs.executeQuery();
+
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public long deleteMeasurePackage(String packageId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("DELETE FROM [dbo].[measurePackage] WHERE packageId = ?");
+      ps.setNString(1, packageId);
+
+      var rowsAffected = ps.executeUpdate();
+
+      assert rowsAffected <= 1;
+
+      return rowsAffected;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public ArrayList<Audit> getAudits() {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [dbo].[audit]");
+
+      ResultSet rs = ps.executeQuery();
+      var audits = new ArrayList<Audit>();
+
+      while(rs.next()) {
+        var iD = rs.getString(0);
+        var network = rs.getString(1);
+        var notes = rs.getString(2);
+        var tenantId = rs.getString(3);
+        var timeStamp = rs.getDate(4);
+        var type = rs.getString(5);
+        var userId = rs.getString(6);
+
+        var audit = new Audit();
+        audit.setId(iD);
+        audit.setNetwork(network);
+        audit.setNotes(notes);
+        audit.setTenantId(tenantId);
+        audit.setTimestamp(timeStamp);
+        audit.setType(AuditTypes.valueOf(type));
+        audit.setUserId(userId);
+
+        audits.add(audit);
+      }
+
+      return audits;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void saveAudit(Audit audit) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveAudit (?, ?, ?, ?, ?, ?, ?) }");
+      cs.setNString("id", audit.getId());
+      cs.setNString("network", audit.getNetwork());
+      cs.setNString("notes", audit.getNotes());
+      cs.setNString("tenantId", audit.getTenantId());
+      cs.setDateTime("timeStamp", audit.getTimestamp().toString());
+      cs.setNString("type", audit.getType().toString());
+      cs.setString("userID", audit.getUserId());
+
+      cs.executeQuery();
+
+    } catch (SQLServerException e) {
+      SQLServerHelper.handleException(e);
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static String getRemoteAddress(HttpServletRequest request) {
@@ -233,67 +485,6 @@ public class SharedService {
     return this.client;
   }
 
-  public int deleteTenantConfig(String tenantId) {
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      PreparedStatement ps = conn.prepareStatement("DELETE FROM [dbo].[tenantConfig] WHERE id = ?");
-      ps.setNString(1, tenantId);
-
-      var rowsAffected = ps.executeUpdate();
-
-      assert rowsAffected <= 1;
-
-      return rowsAffected;
-
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public void saveTenantConfig(Tenant tenant){
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenant (?, ?) }");
-      cs.setNString("tenantId", tenant.getId());
-      cs.setNString("json", mapper.writeValueAsString(tenant));
-
-      cs.executeQuery();
-
-    } catch (SQLServerException e) {
-      SQLServerHelper.handleException(e);
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public List<MeasureDefinition> getAllMeasureDefinitions() {
-    List<MeasureDefinition> measureDefinitions = new ArrayList<>();
-    this.getMeasureDefinitionCollection()
-            .find()
-            .projection(include("measureId", "lastUpdated"))
-            .into(measureDefinitions);
-    return measureDefinitions;
-  }
-
-  public MeasureDefinition getMeasureDefinition(String measureId) {
-    Bson criteria = eq("measureId", measureId);
-    return this.getMeasureDefinitionCollection().find(criteria).first();
-  }
-
-  public void deleteMeasureDefinition(String measureId) {
-    Bson criteria = eq("measureId", measureId);
-    this.getMeasureDefinitionCollection().deleteOne(criteria);
-  }
-
-  public void saveMeasureDefinition(MeasureDefinition measureDefinition) {
-    Bson criteria = eq("measureId", measureDefinition.getMeasureId());
-    this.getMeasureDefinitionCollection().replaceOne(criteria, measureDefinition, new UpdateOptions().upsert(true));
-  }
-
   public void audit(LinkCredentials credentials, HttpServletRequest request, TenantService tenantService, AuditTypes type, String notes) {
     Audit audit = new Audit();
 
@@ -324,8 +515,7 @@ public class SharedService {
     audit.setTimestamp(new Date());
     audit.setNotes(notes);
 
-    Bson criteria = eq("_id", audit.getId());
-    this.getAuditCollection().replaceOne(criteria, audit, new ReplaceOptions().upsert(true));
+    this.saveAudit(audit);
   }
 
   public void saveUser(User user) {
@@ -414,23 +604,5 @@ public class SharedService {
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public List<MeasurePackage> getAllMeasurePackages() {
-    List<MeasurePackage> measurePackages = new ArrayList<>();
-    this.getMeasurePackageCollection()
-            .find()
-            .into(measurePackages);
-    return measurePackages;
-  }
-
-  public void saveMeasurePackage(MeasurePackage measurePackage) {
-    Bson criteria = eq("_id", measurePackage.getId());
-    this.getMeasurePackageCollection().replaceOne(criteria, measurePackage, new UpdateOptions().upsert(true));
-  }
-
-  public void deleteMeasurePackage(String id) {
-    Bson criteria = eq("_id", id);
-    this.getMeasurePackageCollection().deleteOne(criteria);
   }
 }

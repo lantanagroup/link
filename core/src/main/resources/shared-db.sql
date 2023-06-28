@@ -79,13 +79,8 @@ CREATE TABLE dbo.audit
     -- Is NVARCHAR(max) overkill?
     -- In practice, what's the longest value we expect here?
     notes    NVARCHAR( max),
-    tenantId NVARCHAR(128) REFERENCES dbo.tenantConfig (id), [
-    timestamp]
-    DATETIME2
-    NOT
-    NULL
-    DEFAULT
-    GETDATE
+    tenantId NVARCHAR(128) REFERENCES dbo.tenantConfig (id),
+    [timestamp] DATETIME2 NOT NULL DEFAULT GETDATE
 (
 ),
     -- Normalize to refer to a table mirroring the AuditTypes enum?
@@ -166,6 +161,96 @@ BEGIN
         update tenantConfig
         set json = @json
         where id = @tenantId
+    END
+END
+GO
+
+DROP PROCEDURE IF EXISTS saveMeasureDef
+GO
+
+CREATE PROCEDURE [dbo].[saveMeasureDef]
+    @measureId NVARCHAR(64),
+	@bundle NVARCHAR(MAX),
+	@lastUpdated VARCHAR(MAX)
+AS
+BEGIN
+
+	DECLARE @dateTime DateTime;
+	IF(@lastUpdated IS NOT NULL)
+    BEGIN
+		SET @dateTime = CONVERT(DATETIME2, @LASTuPDATED);
+    END
+    ELSE
+    BEGIN
+		SET @dateTime = GETUTCDATE();
+    END
+
+
+	IF NOT EXISTS(SELECT * FROM dbo.measureDef t WHERE t.measureId = @measureId)
+    BEGIN
+        INSERT INTO dbo.measureDef(measureId, bundle, lastUpdated)
+        VALUES(@measureId, @bundle, @dateTime)
+    END
+    ELSE
+    BEGIN
+        update measureDef
+        set bundle = @bundle, lastUpdated = @dateTime
+        where measureId = @measureId
+    END
+END
+GO
+
+DROP PROCEDURE IF EXISTS saveMeasurePackage
+GO
+
+CREATE PROCEDURE [dbo].[saveMeasurePackage]
+    @packageId NVARCHAR(64),
+	@measures NVARCHAR(MAX)
+AS
+BEGIN
+
+	IF NOT EXISTS(SELECT * FROM dbo.measurePackage t WHERE t.packageId = @packageId)
+    BEGIN
+        INSERT INTO dbo.measurePackage(packageId, measures)
+        VALUES(@packageId, @measures)
+    END
+    ELSE
+    BEGIN
+        UPDATE measurePackage
+        SET measures = @measures
+        WHERE packageId = @packageId
+    END
+END
+
+DROP PROCEDURE IF EXISTS saveAudit
+GO
+
+CREATE PROCEDURE [dbo].[saveAudit]
+    @id NVARCHAR(64),
+	@network NVARCHAR(128),
+	@notes NVARCHAR(MAX),
+	@tenantId NVARCHAR(128),
+	@timestamp DATETIME2,
+	@type NVARCHAR(64),
+	@userId VARCHAR(MAX)
+AS
+BEGIN
+
+	IF NOT EXISTS(SELECT * FROM dbo.audit t WHERE t.id = @id)
+    BEGIN
+        INSERT INTO dbo.[audit](id, network, notes, tenantId, [timestamp], [type], userId)
+        VALUES(@id, @network, @notes, @tenantId, @timestamp, @type, @userId)
+    END
+    ELSE
+    BEGIN
+        UPDATE audit
+        SET network = @network,
+            notes = @notes,
+            tenantId = @tenantId,
+            [timestamp] = @timestamp,
+            [type] = @type,
+            userId = @userId
+        WHERE id = @id
     END
 END
 GO

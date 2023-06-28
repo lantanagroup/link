@@ -207,7 +207,7 @@ public class PatientIdentifierController extends BaseController {
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
 
-    MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(measureIdentifier.getValue());
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(measureIdentifier.getValue());
 
     if (measureDefinition == null) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
