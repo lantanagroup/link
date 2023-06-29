@@ -84,7 +84,7 @@ public class UserController extends BaseController {
     }
 
     try {
-      String salt = Hasher.getRandomSalt();
+      byte[] salt = Hasher.getRandomSalt();
       user.setPasswordSalt(salt);
       user.setPasswordHash(Hasher.hash(newPassword, salt));
     } catch (Exception ex) {

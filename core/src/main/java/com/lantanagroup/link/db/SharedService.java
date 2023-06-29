@@ -91,7 +91,7 @@ public class SharedService {
 
         try {
           // Just set the password of the already-existing default user to the hash of the default password
-          String salt = Hasher.getRandomSalt();
+          byte[] salt = Hasher.getRandomSalt();
           foundDefault.setPasswordSalt(salt);
           foundDefault.setPasswordHash(Hasher.hash(DEFAULT_PASS, salt));
         } catch (Exception ex) {

@@ -40,11 +40,11 @@ public class SQLCSHelper {
     }
   }
 
-  public void setBytes(String parameterName, String value) throws SQLException {
-    if (StringUtils.isEmpty(value)) {
+  public void setBytes(String parameterName, byte[] value) throws SQLException {
+    if (value == null) {
       this.callableStatement.setNull(parameterName, Types.VARBINARY);
     } else {
-      this.callableStatement.setBytes(parameterName, value.getBytes());
+      this.callableStatement.setBytes(parameterName, value);
     }
   }
 

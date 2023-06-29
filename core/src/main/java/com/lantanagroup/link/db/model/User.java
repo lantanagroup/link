@@ -15,7 +15,7 @@ public class User {
   private String id;
   private String name;
   private String email;
-  private String passwordSalt;
+  private byte[] passwordSalt;
   private String passwordHash;
   private Boolean enabled = true;
 
@@ -34,7 +34,7 @@ public class User {
     user.setName(rs.getString("name"));
     user.setEnabled(rs.getBoolean("enabled"));
     user.setPasswordHash(rs.getString("passwordHash"));
-    user.setPasswordSalt(rs.getString("passwordSalt"));
+    user.setPasswordSalt(rs.getBytes("passwordSalt"));
     return user;
   }
 }
