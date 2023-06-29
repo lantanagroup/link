@@ -23,21 +23,13 @@ public class ApiReportDefsConfig {
   public int retryWait = 5000;
 
   /**
-   * <strong>api.report-defs.urls</strong><br>A list of report definitions for each measure that should be supported by the system.
+   * <strong>api.report-defs.bundles</strong><br>A list of report definition bundles identifiers and report aggregators which can be used and shoudl be loaded on Evaluation/CQF service.
    */
-  public List<ApiReportDefsUrlConfig> urls;
+  public List<ApiReportDefsBundleConfig> bundles;
 
   /**
    * <strong>api.report-defs.auth</strong><br>A list of authentication properties.
    */
   public LinkOAuthConfig auth;
 
-  public ApiReportDefsUrlConfig getUrlByBundleId(String bundleId) {
-    for (ApiReportDefsUrlConfig url : urls) {
-      if (url.getBundleId().equals(bundleId)) {
-        return url;
-      }
-    }
-    return null;
-  }
 }

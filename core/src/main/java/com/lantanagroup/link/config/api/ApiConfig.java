@@ -83,14 +83,6 @@ public class ApiConfig {
   private String evaluationService;
 
   /**
-   * <strong>api.terminology-service</strong><br>The FHIR terminology service to use for storing ValueSet and CodeSystem resources, passed to the evaluation-service for use during measure evaluation.
-   */
-  @Getter
-  @Setter
-  @NotNull
-  private String terminologyService;
-
-  /**
    * <strong>api.auth-jwks-url</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
    */
   @Getter

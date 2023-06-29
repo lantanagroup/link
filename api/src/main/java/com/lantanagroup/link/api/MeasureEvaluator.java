@@ -38,17 +38,6 @@ public class MeasureEvaluator {
     return evaluator.generateMeasureReport();
   }
 
-  private static Endpoint getTerminologyEndpoint(ApiConfig config) {
-    Endpoint terminologyEndpoint = new Endpoint();
-    terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
-    terminologyEndpoint.setConnectionType(new Coding());
-    terminologyEndpoint.getConnectionType().setSystem(Constants.TerminologyEndpointSystem);
-    terminologyEndpoint.getConnectionType().setCode(Constants.TerminologyEndpointCode);
-    terminologyEndpoint.setAddress(config.getTerminologyService());
-    return terminologyEndpoint;
-  }
-
-
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
@@ -79,11 +68,6 @@ public class MeasureEvaluator {
       parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
       parameters.addParameter().setName("subject").setValue(new StringType(patientId));
       parameters.addParameter().setName("additionalData").setResource((Bundle) patientBundle);
-      if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-        Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
-        parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
-        logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
-      }
 
       logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
       Date measureEvalStartTime = new Date();

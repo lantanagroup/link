@@ -1,15 +1,12 @@
 package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ApiInit;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiMeasurePackage;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
 import com.lantanagroup.link.config.query.QueryConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.model.*;
@@ -17,7 +14,6 @@ import com.lantanagroup.link.query.IQuery;
 import com.lantanagroup.link.query.QueryFactory;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +31,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.*;
@@ -79,18 +74,10 @@ public class ReportController extends BaseController {
   private void resolveMeasures(ReportCriteria criteria, ReportContext context) throws Exception {
     context.getMeasureContexts().clear();
     for (String bundleId : criteria.getBundleIds()) {
-      // Find the report def for the given bundleId
-      Bundle reportDefBundle = this.getFhirDataProvider().getBundleById(bundleId);
-      if (reportDefBundle == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Did not find report def with ID " + bundleId);
-      }
 
-      ApiReportDefsUrlConfig urlConfig = config.getReportDefs().getUrlByBundleId(bundleId);
-      if (urlConfig == null) {
-        throw new IllegalStateException("api.report-defs.urls.url not found with bundle ID " + bundleId);
-      }
-      logger.info("Loading report def");
-      reportDefBundle = apiInit.loadMeasureDefinition(HttpClient.newHttpClient(), urlConfig, reportDefBundle);
+      // Pull the report definition bundle from CQF (eval service)
+      FhirDataProvider evaluationProvider = new FhirDataProvider(config.getEvaluationService());
+      Bundle reportDefBundle = evaluationProvider.getBundleById(bundleId);
 
       // Update the context
       ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
