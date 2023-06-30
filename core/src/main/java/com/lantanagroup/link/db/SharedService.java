@@ -3,6 +3,7 @@ package com.lantanagroup.link.db;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
@@ -13,13 +14,11 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.ReplaceOptions;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.conversions.Bson;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.MeasureReport;
@@ -37,7 +36,6 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.exists;
-import static com.mongodb.client.model.Projections.include;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
 @Component
@@ -70,46 +68,6 @@ public class SharedService {
     return null;
   }
 
-  public MongoDatabase getDatabase() {
-    if (this.database == null) {
-      logger.info("Using database {}", this.config.getDatabase());
-      this.database = getClient().getDatabase(this.config.getDatabase());
-
-      // If no users in the db have a password
-      if (this.database.getCollection(USER_COLLECTION).find(exists("passwordHash", true)).first() == null) {
-        logger.warn("Did not find any users with passwords, ensuring at least one user has a password");
-
-        // Find the default user by email
-        User foundDefault = this.database.getCollection(USER_COLLECTION, User.class).find(eq("email", DEFAULT_EMAIL)).first();
-
-        if (foundDefault == null) {
-          logger.warn("Did not found a default user, creating a new default user with {}", DEFAULT_EMAIL);
-
-          foundDefault = new User();
-          foundDefault.setEmail(DEFAULT_EMAIL);
-        }
-
-        try {
-          // Just set the password of the already-existing default user to the hash of the default password
-          String salt = Hasher.getRandomSalt();
-          foundDefault.setPasswordSalt(salt);
-          foundDefault.setPasswordHash(Hasher.hash(DEFAULT_PASS, salt));
-        } catch (Exception ex) {
-          logger.error("Error hashing new/default user's password", ex);
-          return this.database;
-        }
-
-        this.database.getCollection(USER_COLLECTION, User.class)
-                .replaceOne(
-                        eq("_id", foundDefault.getId()),
-                        foundDefault,
-                        new ReplaceOptions().upsert(true));
-      }
-    }
-
-    return this.database;
-  }
-
   public Tenant getTenantConfig(String tenantId)
   {
     try (Connection conn = this.getSQLConnection()) {
@@ -139,7 +97,7 @@ public class SharedService {
     }
   }
 
-  public ArrayList<Tenant> getTenantConfigs() {
+  public List<Tenant> getTenantConfigs() {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -207,53 +165,55 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT bundle FROM [dbo].[measureDef] WHERE measureId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT bundle, lastUpdated FROM [dbo].[measureDef] WHERE measureId = ?");
       ps.setNString(1, measureId);
 
       ResultSet rs = ps.executeQuery();
 
-      MeasureDefinition measureDef = null;
+      MeasureDefinition measureDef = new MeasureDefinition();
 
       if(rs.next()) {
         var json = rs.getString(0);
-        measureDef = mapper.readValue(json, MeasureDefinition.class);
+        java.util.Date lastUpdated  = rs.getTimestamp(1);
+        measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
+        measureDef.setMeasureId(measureId);
+        measureDef.setLastUpdated(lastUpdated);
       }
 
-      assert measureDef != null;
+      assert measureDef.getBundle() != null;
+      assert measureDef.getMeasureId() != null;
 
       return measureDef;
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
     }
   }
 
-  public ArrayList<MeasureDefinition> getMeasureDefinitions() {
+  public List<MeasureDefinition> getMeasureDefinitions() {
     //return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
 
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT bundle FROM [dbo].[measureDef]");
+      PreparedStatement ps = conn.prepareStatement("SELECT bundle, lastUpdated, measureId FROM [dbo].[measureDef]");
 
       ResultSet rs = ps.executeQuery();
       var measureDefs = new ArrayList<MeasureDefinition>();
 
       while(rs.next()) {
+        var measureDef = new MeasureDefinition();
         var json = rs.getString(0);
-        var tenant = mapper.readValue(json, MeasureDefinition.class);
-        measureDefs.add(tenant);
+        java.util.Date lastUpdated  = rs.getTimestamp(1);
+        var measureId = rs.getString(2);
+
+        measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
+        measureDef.setMeasureId(measureId);
+        measureDef.setLastUpdated(lastUpdated);
+        measureDefs.add(measureDef);
       }
 
       return measureDefs;
     } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -282,7 +242,7 @@ public class SharedService {
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasureDef (?, ?, ?) }");
       cs.setNString("measureId", measureDefinition.getMeasureId());
-      cs.setNString("bundle", mapper.writeValueAsString(measureDefinition.getBundle()));
+      cs.setNString("bundle", FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
       cs.setString("lastUpdated", measureDefinition.getLastUpdated().toString());
 
       cs.executeQuery();
@@ -291,8 +251,6 @@ public class SharedService {
       SQLServerHelper.handleException(e);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -300,7 +258,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT measures FROM [dbo].[measurePackage] WHERE packageId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT measuresFROM [dbo].[measurePackage] WHERE packageId = ?");
       ps.setNString(1, packageId);
       ResultSet rs = ps.executeQuery();
 
@@ -309,6 +267,7 @@ public class SharedService {
       if(rs.next()) {
         var json = rs.getString(0);
         measurePackage = mapper.readValue(json, MeasurePackage.class);
+        measurePackage.setId(packageId);
       }
 
       assert measurePackage != null;
@@ -324,7 +283,7 @@ public class SharedService {
     }
   }
 
-  public ArrayList<MeasurePackage> getMeasurePackages() {
+  public List<MeasurePackage> getMeasurePackages() {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -386,7 +345,7 @@ public class SharedService {
     }
   }
 
-  public ArrayList<Audit> getAudits() {
+  public List<Audit> getAudits() {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
