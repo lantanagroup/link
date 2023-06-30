@@ -1,8 +1,10 @@
 package com.lantanagroup.link.db;
 
+import ca.uhn.fhir.context.FhirContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
@@ -44,6 +46,7 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
   private static final ObjectMapper mapper = new ObjectMapper();
+  private static final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   public static final String AUDIT_COLLECTION = "audit";
   public static final String USER_COLLECTION = "user";
   public static final String BULK_DATA_COLLECTION = "bulkDataStatus";
@@ -216,17 +219,14 @@ public class SharedService {
 
       if(rs.next()) {
         var json = rs.getString(1);
-        measureDef = mapper.readValue(json, MeasureDefinition.class);
+        measureDef = new MeasureDefinition();
+        measureDef.setBundle(fhirContext.newJsonParser().parseResource(Bundle.class, json));
       }
 
       assert measureDef != null;
 
       return measureDef;
     } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -282,7 +282,7 @@ public class SharedService {
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasureDef (?, ?, ?) }");
       cs.setNString("measureId", measureDefinition.getMeasureId());
-      cs.setNString("bundle", mapper.writeValueAsString(measureDefinition.getBundle()));
+      cs.setNString("bundle", fhirContext.newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
       cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
       cs.executeUpdate();
@@ -290,8 +290,6 @@ public class SharedService {
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
     } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
