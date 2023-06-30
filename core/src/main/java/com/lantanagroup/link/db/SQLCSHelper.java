@@ -27,12 +27,11 @@ public class SQLCSHelper {
     }
   }
 
-  public void setDateTime(String parameterName, String value) throws SQLException {
-    if (StringUtils.isEmpty(value)) {
-      this.callableStatement.setNull(parameterName, Types.VARCHAR);
+  public void setDateTime(String parameterName, Long value) throws SQLException {
+    if (value == null) {
+      this.callableStatement.setNull(parameterName, Types.TIME);
     } else {
-      var parsed = java.sql.Date.valueOf(value);
-      this.callableStatement.setDate(parameterName, parsed);
+      this.callableStatement.setTime(parameterName, new java.sql.Time(value));
     }
   }
 

@@ -283,7 +283,7 @@ public class SharedService {
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasureDef (?, ?, ?) }");
       cs.setNString("measureId", measureDefinition.getMeasureId());
       cs.setNString("bundle", mapper.writeValueAsString(measureDefinition.getBundle()));
-      cs.setString("lastUpdated", measureDefinition.getLastUpdated().toString());
+      cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
       cs.executeUpdate();
 
@@ -431,7 +431,7 @@ public class SharedService {
       cs.setNString("network", audit.getNetwork());
       cs.setNString("notes", audit.getNotes());
       cs.setNString("tenantId", audit.getTenantId());
-      cs.setDateTime("timeStamp", audit.getTimestamp().toString());
+      cs.setDateTime("timeStamp", audit.getTimestamp().getTime());
       cs.setNString("type", audit.getType().toString());
       cs.setString("userID", audit.getUserId());
 
