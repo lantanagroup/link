@@ -190,7 +190,7 @@ public class SharedService {
       cs.setNString("tenantId", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -285,7 +285,7 @@ public class SharedService {
       cs.setNString("bundle", mapper.writeValueAsString(measureDefinition.getBundle()));
       cs.setString("lastUpdated", measureDefinition.getLastUpdated().toString());
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -357,7 +357,7 @@ public class SharedService {
       cs.setNString("packageId", measurePackage.getId());
       cs.setNString("measures", mapper.writeValueAsString(measurePackage));
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -435,7 +435,7 @@ public class SharedService {
       cs.setNString("type", audit.getType().toString());
       cs.setString("userID", audit.getUserId());
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);

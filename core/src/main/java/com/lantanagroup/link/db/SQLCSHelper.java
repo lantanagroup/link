@@ -15,6 +15,10 @@ public class SQLCSHelper {
     return this.callableStatement.executeQuery();
   }
 
+  public int executeUpdate() throws SQLException {
+    return this.callableStatement.executeUpdate();
+  }
+
   public void setString(String parameterName, String value) throws SQLException {
     if (StringUtils.isEmpty(value)) {
       this.callableStatement.setNull(parameterName, Types.VARCHAR);
