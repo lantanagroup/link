@@ -9,7 +9,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.gson.*;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.config.api.ApiReportDefsUrlConfig;
+import com.lantanagroup.link.config.api.ApiReportDefsBundleConfig;
 import com.lantanagroup.link.model.PatientReportModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
@@ -420,39 +420,6 @@ public class FhirHelper {
             .collect(Collectors.toList());
   }
 
-  /**
-   * Creates a bundle of the same type as the measure definition bundle and another bundle of type batch,
-   * Then traverses the measure definition bundle, adding all the ValueSet and CodeSystem resources to the
-   * batch bundle and stores them on the configured TX server while all the other resources are added to the
-   * new measure definition bundle to be returned.
-   *
-   * @param bundle measure definition bundle
-   * @param config contains Api configurations
-   * @return A bundle of the same type as the measureDefBundle bundle without any of the ValueSet or CodeSystem resources.
-   */
-  public static Bundle storeTerminologyAndReturnOther(Bundle bundle, ApiConfig config) {
-    if (bundle.hasEntry()) {
-      FhirDataProvider fhirDataProvider = new FhirDataProvider(config.getTerminologyService());
-      Bundle txBundle = new Bundle();
-      Bundle returnBundle = new Bundle();
-      txBundle.setType(Bundle.BundleType.BATCH);
-      returnBundle.setType(bundle.getType());
-      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-        entry.getRequest().setMethod(Bundle.HTTPVerb.PUT);
-        if (entry.getResource() instanceof ValueSet || entry.getResource() instanceof CodeSystem) {
-          txBundle.addEntry(entry);
-        } else {
-          returnBundle.addEntry(entry);
-        }
-      }
-      if (txBundle.hasEntry()) {
-        fhirDataProvider.transaction(txBundle);
-      }
-      return returnBundle;
-    }
-    return bundle;
-  }
-
   public static Set<String> getDataRequirementTypes(Bundle reportDefBundle) {
     return reportDefBundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -558,10 +525,12 @@ public class FhirHelper {
    */
   public static String getReportAggregatorClassName(ApiConfig config, Bundle reportDefBundle) {
     String reportAggregatorClassName = null;
-    Optional<ApiReportDefsUrlConfig> measureReportAggregatorUrl = config.getReportDefs().getUrls().stream().filter(urlConfig -> {
-      String bundleId = urlConfig.getBundleId();
+
+    Optional<ApiReportDefsBundleConfig> measureReportAggregatorUrl = config.getReportDefs().getBundles().stream().filter(bundleConfig -> {
+      String bundleId = bundleConfig.getBundleId();
       return bundleId.equalsIgnoreCase(reportDefBundle.getIdElement().getIdPart());
     }).findFirst();
+
     if (measureReportAggregatorUrl.isPresent() && !StringUtils.isEmpty(measureReportAggregatorUrl.get().getReportAggregator())) {
       reportAggregatorClassName = measureReportAggregatorUrl.get().getReportAggregator();
     } else {
