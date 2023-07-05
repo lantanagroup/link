@@ -3,6 +3,7 @@ package com.lantanagroup.link.db;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.ConceptMapRepository;
+import com.lantanagroup.link.db.repositories.PatientListRepository;
 import com.lantanagroup.link.model.ReportBase;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.mongodb.BasicDBObject;
@@ -21,6 +22,7 @@ import org.springframework.scheduling.annotation.Async;
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
@@ -35,8 +37,8 @@ public class TenantService {
   private MongoDatabase database;
 
   private final ConceptMapRepository conceptMaps;
+  private final PatientListRepository patientLists;
 
-  public static final String PATIENT_LIST_COLLECTION = "patientList";
   public static final String PATIENT_DATA_COLLECTION = "patientData";
   public static final String REPORT_COLLECTION = "report";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
@@ -49,6 +51,7 @@ public class TenantService {
             .url(config.getConnectionString())
             .build();
     this.conceptMaps = new ConceptMapRepository(dataSource);
+    this.patientLists = new PatientListRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -64,10 +67,6 @@ public class TenantService {
     }
 
     return new TenantService(tenant);
-  }
-
-  public MongoCollection<PatientList> getPatientListCollection() {
-    return this.database.getCollection(PATIENT_LIST_COLLECTION, PatientList.class);
   }
 
   public MongoCollection<PatientData> getPatientDataCollection() {
@@ -86,45 +85,28 @@ public class TenantService {
     return this.database.getCollection(AGGREGATE_COLLECTION, Aggregate.class);
   }
 
-  public List<PatientList> getPatientLists(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    List<PatientList> patientLists = new ArrayList<>();
-    this.getPatientListCollection()
-            .find(criteria)
-            .into(patientLists);
-    return patientLists;
+  public List<PatientList> getPatientLists(String reportId) {
+    return this.patientLists.findByReportId(reportId);
   }
 
   public List<PatientList> getAllPatientLists() {
-    List<PatientList> patientLists = new ArrayList<>();
-    this.getPatientListCollection()
-            .find()
-            .projection(include("measureId", "_id", "periodStart", "periodEnd"))
-            .into(patientLists);
-    return patientLists;
+    return this.patientLists.findAll();
   }
 
-  public void deletePatientLists(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    this.getPatientListCollection().deleteMany(criteria);
+  public void deletePatientLists(List<UUID> ids) {
+    this.patientLists.deleteByIds(ids);
   }
 
-  public PatientList getPatientList(String id) {
-    return this.getPatientListCollection()
-            .find(eq("_id", id))
-            .first();
+  public PatientList getPatientList(UUID id) {
+    return this.patientLists.findById(id);
   }
 
-  public PatientList findPatientList(String periodStart, String periodEnd, String measureId) {
-    Bson criteria = and(eq("periodStart", periodStart), eq("periodEnd", periodEnd), eq("measureId", measureId));
-    return this.getPatientListCollection().find(criteria).first();
+  public PatientList findPatientList(String measureId, String periodStart, String periodEnd) {
+    return this.patientLists.findByMeasureIdAndReportingPeriod(measureId, periodStart, periodEnd);
   }
 
   public void savePatientList(PatientList patientList) {
-    Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
-    this.getPatientListCollection().replaceOne(criteria, patientList, new ReplaceOptions().upsert(true));
+    this.patientLists.save(patientList);
   }
 
   public List<PatientData> findPatientData(String patientId) {

@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -43,7 +44,7 @@ public class FhirBundlerTests {
     FhirBundler bundler = new FhirBundler(null, tenantService);
 
     Report report = new Report();
-    report.getPatientLists().add("test-patient-list");
+    report.getPatientLists().add(UUID.randomUUID());
 
     List<PatientList> patientLists = new ArrayList<>();
     patientLists.add(new PatientList());

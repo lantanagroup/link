@@ -479,7 +479,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
-    return tenantService.getPatientLists(report.getPatientLists());
+    return tenantService.getPatientLists(report.getId());
   }
 
   @GetMapping("/{reportId}/individual")

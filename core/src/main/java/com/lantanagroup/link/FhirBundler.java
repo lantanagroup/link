@@ -261,11 +261,11 @@ public class FhirBundler {
   }
 
   public List<ListResource> getPatientLists(Report report) {
-    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getPatientLists());
+    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getId());
 
     return patientLists.stream().map(pl -> {
       ListResource listResource = new ListResource();
-      listResource.setId(pl.getId());
+      listResource.setId(pl.getId().toString());
       listResource.addExtension()
               .setUrl(Constants.ApplicablePeriodExtensionUrl)
               .setValue(new Period()

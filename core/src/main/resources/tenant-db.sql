@@ -8,12 +8,12 @@ CREATE TABLE dbo.conceptMap
 CREATE TABLE dbo.patientList
 (
     id          uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    lastUpdated datetime2        NOT NULL,
     measureId   nvarchar(64)     NOT NULL,
+    periodStart nvarchar(32)     NOT NULL,
+    periodEnd   nvarchar(32)     NOT NULL,
     patients    nvarchar(max)    NOT NULL,
-    periodEnd   datetime2        NOT NULL,
-    periodStart datetime2        NOT NULL,
-    UNIQUE (measureId, periodEnd, periodStart)
+    lastUpdated datetime2        NOT NULL,
+    UNIQUE (measureId, periodStart, periodEnd)
 );
 
 CREATE TABLE dbo.report

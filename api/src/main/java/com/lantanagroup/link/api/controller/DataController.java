@@ -30,6 +30,7 @@ import javax.xml.datatype.Duration;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -112,7 +113,7 @@ public class DataController extends BaseController {
     }
 
     List<PatientList> patientLists = tenantService.getAllPatientLists();
-    List<String> patientListsToDelete = patientLists.stream().filter(pl -> {
+    List<UUID> patientListsToDelete = patientLists.stream().filter(pl -> {
               try {
                 return shouldDelete(tenantService.getConfig().getRetentionPeriod(), pl.getLastUpdated());
               } catch (DatatypeConfigurationException e) {
@@ -126,7 +127,7 @@ public class DataController extends BaseController {
       tenantService.deletePatientLists(patientListsToDelete);
 
       logger.info("Deleting {} patient lists", patientListsToDelete.size());
-      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientListDelete, String.join(", ", patientListsToDelete));
+      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientListDelete, patientListsToDelete.stream().map(UUID::toString).collect(Collectors.joining(", ")));
     }
 
     return patientDataToDelete.size();

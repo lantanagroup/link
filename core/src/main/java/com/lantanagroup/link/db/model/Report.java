@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,6 +18,6 @@ public class Report extends ReportBase {
   private Date submittedTime;
   private Date generatedTime = new Date();
   private String version = "0.1";
-  private List<String> patientLists = new ArrayList<>();
+  private List<UUID> patientLists = new ArrayList<>();
   private List<String> aggregates = new ArrayList<>();
 }
