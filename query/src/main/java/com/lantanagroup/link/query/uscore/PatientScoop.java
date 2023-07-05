@@ -21,8 +21,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -62,7 +61,7 @@ public class PatientScoop {
     this.loadPatientData(criteria, context, pois, reportId, resourceTypes, measureIds);
   }
 
-  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, String reportId, List<String> resourceTypes, List<String> measureIds) {
+  private synchronized PatientData loadPatientData(ReportCriteria criteria, ReportContext context, Patient patient, List<String> resourceTypes, List<String> measureIds) {
     if (patient == null) return null;
 
     Stopwatch stopwatch = this.stopwatchManager.start("query-resources-patient");
@@ -80,87 +79,182 @@ public class PatientScoop {
     return null;
   }
 
-  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
-    // first get the patients and store them in the patientMap
-    Map<String, Patient> patientMap = new HashMap<>();
+  public List<Patient> queryAndGetPatients(List<PatientOfInterestModel> patientsOfInterest) {
+    List<Patient> patients = new ArrayList<>();
     int threshold = usCoreConfig.getParallelPatients();
-    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
     ForkJoinPool patientFork = new ForkJoinPool(threshold);
 
+    for(PatientOfInterestModel poi : patientsOfInterest) {
+      patientFork.submit(
+              () -> {
+                Stopwatch stopwatch = this.stopwatchManager.start("query-patient");
+                int poiIndex = patientsOfInterest.indexOf(poi);
+
+                try {
+                  if (poi.getReference() != null) {
+                    String id = poi.getReference();
+
+                    if (id.indexOf("/") > 0) {
+                      id = id.substring(id.indexOf("/") + 1);
+                    }
+
+                    logger.debug("Retrieving patient at index " + poiIndex);
+                    Patient patient;
+                    try {
+                      patient = this.fhirQueryServer.read()
+                              .resource(Patient.class)
+                              .withId(id)
+                              .execute();
+                    } catch (Exception ex) {
+                      patient = new Patient();
+                      patient.setId(String.format("Patient/%s",id));
+                    }
+                    patients.add(patient);
+                    poi.setId(patient.getIdElement().getIdPart());
+                    stopwatch.stop();
+                  } else if (poi.getIdentifier() != null) {
+                    String searchUrl = "Patient?identifier=" + poi.getIdentifier();
+
+                    logger.debug("Searching for patient at index " + poiIndex);
+                    // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
+                    Bundle response = this.fhirQueryServer.search()
+                            .byUrl(searchUrl)
+                            .returnBundle(Bundle.class)
+                            .execute();
+                    if (response.getEntry().size() != 1) {
+                      logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
+                      stopwatch.stop();
+                    } else {
+                      Patient patient = (Patient) response.getEntryFirstRep().getResource();
+                      patients.add(patient);
+                      poi.setId(patient.getIdElement().getIdPart());
+                      stopwatch.stop();
+                    }
+                  }
+                } catch (Exception e) {
+                  logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
+                }
+              }
+      );
+    }
+
+    patientFork.shutdown();
+
     try {
-      patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
-        Stopwatch stopwatch = this.stopwatchManager.start("query-patient");
-        int poiIndex = patientsOfInterest.indexOf(poi);
-
-        try {
-          if (poi.getReference() != null) {
-            String id = poi.getReference();
-
-            if (id.indexOf("/") > 0) {
-              id = id.substring(id.indexOf("/") + 1);
-            }
-
-            logger.debug("Retrieving patient at index " + poiIndex);
-            Patient patient = new Patient();
-            try {
-              patient = this.fhirQueryServer.read()
-                      .resource(Patient.class)
-                      .withId(id)
-                      .execute();
-            } catch (Exception ex) {
-              patient = new Patient();
-              patient.setId(String.format("Patient/%s",id));
-            }
-            patientMap.put(poi.getReference(), patient);
-            poi.setId(patient.getIdElement().getIdPart());
-            stopwatch.stop();
-            return patient;
-          } else if (poi.getIdentifier() != null) {
-            String searchUrl = "Patient?identifier=" + poi.getIdentifier();
-
-            logger.debug("Searching for patient at index " + poiIndex);
-            // TODO: Search by identifier rather than URL (see, e.g., FhirDataProvider.findBundleByIdentifier)
-            Bundle response = this.fhirQueryServer.search()
-                    .byUrl(searchUrl)
-                    .returnBundle(Bundle.class)
-                    .execute();
-            if (response.getEntry().size() != 1) {
-              logger.info("Did not find one Patient with identifier " + Helper.encodeLogging(poi.getIdentifier()));
-              stopwatch.stop();
-              return null;
-            } else {
-              Patient patient = (Patient) response.getEntryFirstRep().getResource();
-              patientMap.put(poi.getIdentifier(), patient);
-              poi.setId(patient.getIdElement().getIdPart());
-              stopwatch.stop();
-              return patient;
-            }
-          }
-        } catch (Exception e) {
-          logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
-        }
-
-        stopwatch.stop();
-        return null;
-      }).collect(Collectors.toList())).get();
-    } catch (Exception e) {
-      logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
-      return;
-    } finally {
-      if (patientFork != null) {
-        patientFork.shutdown();
+      while (!patientFork.awaitTermination(30, TimeUnit.SECONDS)) {
+        logger.info("Waiting for patient queries to complete...");
       }
+      logger.info("All patient queries completed.");
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    return patients;
+  }
+
+  public Bundle getPatientBundle(Patient patient, ReportCriteria criteria, ReportContext context, String reportId, List<String> resourceTypes, List<String> measureIds) {
+
+    PatientData patientData;
+    Stopwatch stopwatch = this.stopwatchManager.start("query-resources");
+
+    try {
+      patientData = this.loadPatientData(criteria, context, patient, resourceTypes, measureIds);
+    } catch (Exception ex) {
+      logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
+      return null;
+    } finally {
+      stopwatch.stop();
+    }
+
+    Bundle patientBundle = patientData.getBundle();
+
+    patientBundle.setType(Bundle.BundleType.BATCH);
+
+    patientBundle.getEntry().forEach(entry ->
+            entry.getRequest()
+                    .setMethod(Bundle.HTTPVerb.PUT)
+                    .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
+    );
+
+    // Make sure the patient bundle returned by query component has an ID in the correct format
+    patientBundle.setId(ReportIdHelper.getPatientDataBundleId(reportId, patient.getIdElement().getIdPart()));
+
+    // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
+    patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
+
+    return patientBundle;
+  }
+
+  public void queryAndGetPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds, List<Patient> patients) {
+    int threshold = usCoreConfig.getParallelPatients();
+    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
+
+    for(Patient patient : patients) {
+      patientDataFork.submit(
+              () -> {
+                // Get & Store patient data as Bundle
+                Bundle patientBundle = null;
+                try {
+                  logger.debug("START : Getting Patient Bundle For Patient ID '{}'", patient.getIdElement().getIdPart());
+                  patientBundle = getPatientBundle(patient, criteria, context, reportId, resourceTypes, measureIds);
+                  logger.debug("END : Getting Patient Bundle For Patient ID '{}'", patient.getIdElement().getIdPart());
+                } catch (Exception ex) {
+                  logger.error("Issue Getting Patient Bundle For Patient ID '{}' - Message {}",
+                          patient.getIdElement().getIdPart(),
+                          ex.getMessage());
+                }
+
+                try {
+                  if (patientBundle != null) {
+                    eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
+                    eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
+
+                    logger.info("START: Storing Patient data bundle Bundle/" + patientBundle.getId());
+
+                    Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data");
+                    this.fhirDataProvider.updateResource(patientBundle);
+                    stopwatch.stop();
+
+                    eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
+
+                    logger.debug("END: Storing Patient data bundle Bundle/" + patientBundle.getId());
+                  }
+                } catch (Exception ex) {
+                  logger.info("Error getting/storing Patient data bundle - Exception is: " + ex.getMessage());
+                }
+              }
+      );
+    };
+
+    patientDataFork.shutdown();
+
+    try {
+      while (!patientDataFork.awaitTermination(30, TimeUnit.SECONDS)) {
+        logger.info("Waiting for patient data queries to complete...");
+      }
+      logger.info("All patient data queries completed.");
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  public void loadPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds) {
+    int threshold = usCoreConfig.getParallelPatients();
+
+    List<Patient> patients = null;
+    try {
+    // First get all patients and store them in List
+    patients = queryAndGetPatients(patientsOfInterest);
+    } catch (Exception e) {
+      logger.error("Error scooping data for patients {}", e.getMessage(), e);
     }
 
     try {
-
-      // TODO - ALM 12May2023 - looking to store a Bundle which is a bunch of Patient Bundles so that getReportPatients works
+      // Store a Bundle which is a bunch of Patient Bundles so that getReportPatients works
       Bundle allPatientBundle = new Bundle();
-      // needd to set id on the bundle
-      for (Map.Entry<String, Patient> entry : patientMap.entrySet()) {
-        Patient patient = entry.getValue();
 
-        // assume bundle and patient are already instantiated
+      for (Patient patient : patients) {
         Bundle.BundleEntryComponent bundleEntry = new Bundle.BundleEntryComponent();
         bundleEntry.setResource(patient);
         allPatientBundle.addEntry(bundleEntry);
@@ -171,70 +265,18 @@ public class PatientScoop {
       allPatientBundle.setType(Bundle.BundleType.COLLECTION);
       // need to see if this already exists??? If not call createResource???
       this.fhirDataProvider.updateResource(allPatientBundle);
+    } catch (Exception ex) {
+      logger.error("Issue storing patient bundles: {}", ex.getMessage());
+    }
 
+    try {
       // loop through the patient ids to retrieve the patientData using each patient.
-      List<Patient> patients = new ArrayList<>(patientMap.values());
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
 
-      patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
-        logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+      queryAndGetPatientData(criteria,context,patientsOfInterest,reportId,resourceTypes,measureIds,patients);
 
-        PatientData patientData = null;
-        Stopwatch stopwatch = this.stopwatchManager.start("query-resources");
-
-        try {
-          patientData = this.loadPatientData(criteria, context, patient, reportId, resourceTypes, measureIds);
-        } catch (Exception ex) {
-          logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
-          return null;
-        } finally {
-          stopwatch.stop();
-        }
-
-        Bundle patientBundle = patientData.getBundle();
-
-        // store the data
-        try {
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataQuery, patientBundle, criteria, context, null);
-
-          patientBundle.setType(Bundle.BundleType.BATCH);
-
-          patientBundle.getEntry().forEach(entry ->
-                  entry.getRequest()
-                          .setMethod(Bundle.HTTPVerb.PUT)
-                          .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart())
-          );
-
-          // Make sure the patient bundle returned by query component has an ID in the correct format
-          patientBundle.setId(ReportIdHelper.getPatientDataBundleId(reportId, patient.getIdElement().getIdPart()));
-
-          // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
-          patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
-
-
-          eventService.triggerDataEvent(EventTypes.BeforePatientDataStore, patientBundle, criteria, context, null);
-
-          logger.info("Storing patient data bundle Bundle/" + patientBundle.getId());
-
-          // store data
-          stopwatch = this.stopwatchManager.start("store-patient-data");
-          this.fhirDataProvider.updateResource(patientBundle);
-          stopwatch.stop();
-
-          eventService.triggerDataEvent(EventTypes.AfterPatientDataStore, patientBundle, criteria, context, null);
-          logger.debug("After patient data");
-        } catch (Exception ex) {
-          logger.info("Exception is: " + ex.getMessage());
-        }
-
-        return patient.getId();
-      }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
-    } finally {
-      if (patientDataFork != null) {
-        patientDataFork.shutdown();
-      }
     }
   }
 }
