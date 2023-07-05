@@ -30,10 +30,9 @@ public class Tenant {
   private String description;
 
   /**
-   * The name of the database to use for the tenant's PHI/PII data. The same connection string for the database server
-   * is used for each tenant, but a different database on the server is used for each tenant.
+   * The connection string to use for tenant-specific data.
    */
-  private String database;
+  private String connectionString;
 
   /**
    * Configuration properties for how to bundle the final submission, including contact information that is used

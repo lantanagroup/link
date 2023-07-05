@@ -2,7 +2,9 @@ package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.db.repositories.ConceptMapRepository;
 import com.lantanagroup.link.model.ReportBase;
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -13,8 +15,10 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.scheduling.annotation.Async;
 
+import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,16 +34,21 @@ public class TenantService {
 
   private MongoDatabase database;
 
+  private final ConceptMapRepository conceptMaps;
+
   public static final String PATIENT_LIST_COLLECTION = "patientList";
   public static final String PATIENT_DATA_COLLECTION = "patientData";
   public static final String REPORT_COLLECTION = "report";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   public static final String AGGREGATE_COLLECTION = "aggregate";
-  public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
 
-  protected TenantService(MongoDatabase database, Tenant config) {
-    this.database = database;
+  protected TenantService(Tenant config) {
     this.config = config;
+    DataSource dataSource = DataSourceBuilder.create()
+            .type(SQLServerDataSource.class)
+            .url(config.getConnectionString())
+            .build();
+    this.conceptMaps = new ConceptMapRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -54,14 +63,7 @@ public class TenantService {
       return null;
     }
 
-    TenantService tenantService = new TenantService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
-
-    // Ensure that the patientData collection has the necessary indexes
-    tenantService.getPatientDataCollection().createIndex(
-            Indexes.ascending("patientId", "resourceType", "resourceId"),
-            new IndexOptions().name("pid_rt_rid"));
-
-    return tenantService;
+    return new TenantService(tenant);
   }
 
   public MongoCollection<PatientList> getPatientListCollection() {
@@ -82,10 +84,6 @@ public class TenantService {
 
   public MongoCollection<Aggregate> getAggregateCollection() {
     return this.database.getCollection(AGGREGATE_COLLECTION, Aggregate.class);
-  }
-
-  public MongoCollection<ConceptMap> getConceptMapCollection() {
-    return this.database.getCollection(CONCEPT_MAP_COLLECTION, ConceptMap.class);
   }
 
   public List<PatientList> getPatientLists(List<String> ids) {
@@ -228,33 +226,22 @@ public class TenantService {
   }
 
   public ConceptMap getConceptMap(String id) {
-    Bson criteria = eq("_id", id);
-    return this.getConceptMapCollection().find(criteria).first();
+    return this.conceptMaps.findById(id);
   }
 
   public List<ConceptMap> searchConceptMaps() {
-    List<ConceptMap> conceptMaps = new ArrayList<>();
-
-    // resourceType is needed in the projection for HAPI to deserialize it
-    this.getConceptMapCollection()
-            .find()
-            .projection(include("_id", "name", "contexts"))
-            .into(conceptMaps);
+    List<ConceptMap> conceptMaps = this.conceptMaps.findAll();
+    for (ConceptMap conceptMap : conceptMaps) {
+      conceptMap.setConceptMap(null);
+    }
     return conceptMaps;
   }
 
   public List<ConceptMap> getAllConceptMaps() {
-    List<ConceptMap> conceptMaps = new ArrayList<>();
-
-    // resourceType is needed in the projection for HAPI to deserialize it
-    this.getConceptMapCollection()
-            .find()
-            .into(conceptMaps);
-    return conceptMaps;
+    return this.conceptMaps.findAll();
   }
 
   public void saveConceptMap(ConceptMap conceptMap) {
-    Bson criteria = eq("_id", conceptMap.getId());
-    this.getConceptMapCollection().replaceOne(criteria, conceptMap, new ReplaceOptions().upsert(true));
+    this.conceptMaps.save(conceptMap);
   }
 }

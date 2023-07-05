@@ -1,8 +1,8 @@
 CREATE TABLE dbo.conceptMap
 (
     id         nvarchar(128)  NOT NULL PRIMARY KEY,
-    conceptMap nvarchar(max)  NOT NULL,
-    contexts   nvarchar(1024) NOT NULL
+    contexts   nvarchar(1024) NOT NULL,
+    conceptMap nvarchar(max)  NOT NULL
 );
 
 CREATE TABLE dbo.patientList
