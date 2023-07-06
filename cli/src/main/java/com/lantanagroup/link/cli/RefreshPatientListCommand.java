@@ -11,7 +11,6 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
@@ -37,15 +36,12 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   private RefreshPatientListConfig config;
   private QueryConfig queryConfig;
-  private USCoreConfig usCoreConfig;
-
 
   @Override
   protected List<Class<?>> getBeanClasses() {
 
     return List.of(
             QueryConfig.class,
-            USCoreConfig.class,
             EpicAuth.class,
             EpicAuthConfig.class);
   }
@@ -57,7 +53,6 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
-    usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
     List<RefreshPatientListConfig.PatientList> filteredList = config.getPatientList();
 
@@ -74,7 +69,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
   private ListResource readList(String patientListId) throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-    IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
+    IGenericClient client = fhirContext.newRestfulGenericClient(config.getFhirServerBase());
     if (client instanceof BaseClient) {
         ((BaseClient) client).setKeepResponses(true);
     }
@@ -115,7 +110,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     target.setTitle(String.format("Census List for %s", censusIdentifier));
     target.setCode(source.getCode());
     target.setDate(source.getDate());
-    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
+    URI baseUrl = new URI(config.getFhirServerBase());
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
       target.addEntry(transformListEntry(sourceEntry, baseUrl));
     }
