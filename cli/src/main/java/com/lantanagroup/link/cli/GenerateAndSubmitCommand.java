@@ -159,6 +159,8 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
         logger.error("Error generating report. Please contact the system administrator.");
         client.close();
         System.exit(1);
+      } else {
+        logger.info("Report Generated Master Id - {}", reportId);
       }
 
       url = configInfo.getApiUrl() + "/report/{reportId}/$send";
@@ -169,6 +171,7 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
       URI urlWithParameters1 = builder1.buildAndExpand(map).toUri();
 
       // send the report
+      logger.info("Sending report");
       restTemplate.exchange(urlWithParameters1, HttpMethod.POST, entity, String.class);
       logger.info("Report successfully generated and submitted.");
       client.close();
