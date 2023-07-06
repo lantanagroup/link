@@ -68,8 +68,7 @@ public class SharedService {
     return null;
   }
 
-  public Tenant getTenantConfig(String tenantId)
-  {
+  public Tenant getTenantConfig(String tenantId) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -160,8 +159,6 @@ public class SharedService {
   }
 
   public MeasureDefinition getMeasureDefinition(String measureId) {
-    //return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
-
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -190,8 +187,6 @@ public class SharedService {
   }
 
   public List<MeasureDefinition> getMeasureDefinitions() {
-    //return this.getDatabase().getCollection(MEASURE_DEF_COLLECTION, MeasureDefinition.class);
-
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 

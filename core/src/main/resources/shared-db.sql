@@ -254,3 +254,26 @@ BEGIN
     END
 END
 GO
+
+DROP PROCEDURE IF EXISTS saveTenant
+GO
+
+CREATE PROCEDURE [dbo].[saveTenant]
+    @tenantId nvarchar(128),
+	@json NVARCHAR(MAX)
+AS
+BEGIN
+
+	IF NOT EXISTS(SELECT * FROM dbo.tenantConfig t WHERE t.id = @tenantId)
+    BEGIN
+        INSERT INTO dbo.tenantConfig (id, json)
+        VALUES(@tenantId, @json)
+    END
+    ELSE
+    BEGIN
+        update tenantConfig
+        set json = @json
+        where id = @tenantId
+    END
+END
+GO
