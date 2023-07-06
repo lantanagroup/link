@@ -80,7 +80,7 @@ public class SharedService {
       Tenant tenant = null;
 
       if(rs.next()) {
-        var json = rs.getString(0);
+        var json = rs.getString(1);
         tenant = mapper.readValue(json, Tenant.class);
       }
 
@@ -107,7 +107,7 @@ public class SharedService {
       var tenants = new ArrayList<Tenant>();
 
       while(rs.next()) {
-        var json = rs.getString(0);
+        var json = rs.getString(1);
         var tenant = mapper.readValue(json, Tenant.class);
         tenants.add(tenant);
       }
@@ -173,8 +173,8 @@ public class SharedService {
       MeasureDefinition measureDef = new MeasureDefinition();
 
       if(rs.next()) {
-        var json = rs.getString(0);
-        java.util.Date lastUpdated  = rs.getTimestamp(1);
+        var json = rs.getString(1);
+        java.util.Date lastUpdated  = rs.getTimestamp(2);
         measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
         measureDef.setMeasureId(measureId);
         measureDef.setLastUpdated(lastUpdated);
@@ -202,9 +202,9 @@ public class SharedService {
 
       while(rs.next()) {
         var measureDef = new MeasureDefinition();
-        var json = rs.getString(0);
-        java.util.Date lastUpdated  = rs.getTimestamp(1);
-        var measureId = rs.getString(2);
+        var json = rs.getString(1);
+        java.util.Date lastUpdated  = rs.getTimestamp(2);
+        var measureId = rs.getString(3);
 
         measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
         measureDef.setMeasureId(measureId);
@@ -265,7 +265,7 @@ public class SharedService {
       MeasurePackage measurePackage = null;
 
       if(rs.next()) {
-        var json = rs.getString(0);
+        var json = rs.getString(1);
         measurePackage = mapper.readValue(json, MeasurePackage.class);
         measurePackage.setId(packageId);
       }
@@ -293,7 +293,7 @@ public class SharedService {
       var packages = new ArrayList<MeasurePackage>();
 
       while(rs.next()) {
-        var json = rs.getString(0);
+        var json = rs.getString(1);
         var measurePackage = mapper.readValue(json, MeasurePackage.class);
         packages.add(measurePackage);
       }
@@ -355,13 +355,13 @@ public class SharedService {
       var audits = new ArrayList<Audit>();
 
       while(rs.next()) {
-        var iD = rs.getString(0);
-        var network = rs.getString(1);
-        var notes = rs.getString(2);
-        var tenantId = rs.getString(3);
-        var timeStamp = rs.getDate(4);
-        var type = rs.getString(5);
-        var userId = rs.getString(6);
+        var iD = rs.getString(1);
+        var network = rs.getString(2);
+        var notes = rs.getString(3);
+        var tenantId = rs.getString(4);
+        var timeStamp = rs.getDate(5);
+        var type = rs.getString(6);
+        var userId = rs.getString(7);
 
         var audit = new Audit();
         audit.setId(iD);
@@ -390,7 +390,7 @@ public class SharedService {
       cs.setNString("network", audit.getNetwork());
       cs.setNString("notes", audit.getNotes());
       cs.setNString("tenantId", audit.getTenantId());
-      cs.setDateTime("timeStamp", audit.getTimestamp().toString());
+      cs.setDateTime("timeStamp", audit.getTimestamp().getTime());
       cs.setNString("type", audit.getType().toString());
       cs.setString("userID", audit.getUserId());
 
