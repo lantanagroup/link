@@ -10,7 +10,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ import java.util.Map;
 public class KnoxMeasureReportTransferCommand extends BaseShellCommand {
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("M/d/y");
   private static final String PROFILE_URL =
-          "http://hl7.org/fhir/uv/saner/StructureDefinition/PublicHealthMeasureReport";
+          "https://hl7.org/fhir/uv/saner/StructureDefinition/PublicHealthMeasureReport";
 
   private static final Logger logger = LoggerFactory.getLogger(KnoxMeasureReportTransferCommand.class);
 
