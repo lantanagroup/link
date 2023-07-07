@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.*;
@@ -15,7 +14,6 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.ReplaceOptions;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -34,22 +32,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.exists;
 import static org.bson.codecs.configuration.CodecRegistries.*;
 
 @Component
 public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
   private static final ObjectMapper mapper = new ObjectMapper();
-  public static final String AUDIT_COLLECTION = "audit";
-  public static final String USER_COLLECTION = "user";
-  public static final String BULK_DATA_COLLECTION = "bulkDataStatus";
-  public static final String DEFAULT_PASS = "linkt3mppass";
-  public static final String DEFAULT_EMAIL = "default@nhsnlink.org";
 
   private MongoClient client;
-  private MongoDatabase database;
 
   @Autowired
   private MongoConfig config;
@@ -238,7 +228,7 @@ public class SharedService {
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMeasureDef (?, ?, ?) }");
       cs.setNString("measureId", measureDefinition.getMeasureId());
       cs.setNString("bundle", FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
-      cs.setString("lastUpdated", measureDefinition.getLastUpdated().toString());
+      cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
       cs.executeQuery();
 

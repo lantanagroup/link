@@ -171,33 +171,21 @@ GO
 CREATE PROCEDURE [dbo].[saveMeasureDef]
     @measureId NVARCHAR(64),
 	@bundle NVARCHAR(MAX),
-	@lastUpdated VARCHAR(MAX)
+	@lastUpdated DATETIME2
 AS
 BEGIN
-
-	DECLARE @dateTime DateTime;
-	IF(@lastUpdated IS NOT NULL)
-    BEGIN
-		SET @dateTime = CONVERT(DATETIME2, @LASTuPDATED);
-    END
-    ELSE
-    BEGIN
-		SET @dateTime = GETUTCDATE();
-    END
-
-
 	IF NOT EXISTS(SELECT * FROM dbo.measureDef t WHERE t.measureId = @measureId)
     BEGIN
         INSERT INTO dbo.measureDef(measureId, bundle, lastUpdated)
-        VALUES(@measureId, @bundle, @dateTime)
+        VALUES(@measureId, @bundle, @lastUpdated)
     END
     ELSE
     BEGIN
-        update measureDef
-        set bundle = @bundle, lastUpdated = @dateTime
-        where measureId = @measureId
+        UPDATE measureDef
+        SET bundle = @bundle, lastUpdated = @lastUpdated
+        WHERE measureId = @measureId
     END
-END
+    END
 GO
 
 DROP PROCEDURE IF EXISTS saveMeasurePackage
