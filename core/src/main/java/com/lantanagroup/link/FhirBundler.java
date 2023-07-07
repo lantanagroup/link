@@ -279,7 +279,7 @@ public class FhirBundler {
         ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();
 
         if (StringUtils.isNotEmpty(pid.getIdentifier())) {
-          String[] identifierSplit = pid.getIdentifier().split("|");
+          String[] identifierSplit = pid.getIdentifier().split("\\|");
           Identifier identifier = new Identifier();
           entry.getItem().setIdentifier(identifier);
 

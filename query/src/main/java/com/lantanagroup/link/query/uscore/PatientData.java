@@ -131,11 +131,11 @@ public class PatientData {
       }
     }
     if (pagedName == null) {
-      IQuery<Bundle> query = fhirQueryServer.search()
+      IQuery<Bundle> response = fhirQueryServer.search()
               .forResource(resourceType)
               .whereMap(unpagedMap)
               .returnBundle(Bundle.class);
-      addAllResources(query);
+      addAllResources(response);
     } else {
       for (List<String> ids : pagedIds) {
         String joinedIds = String.join(",", ids);

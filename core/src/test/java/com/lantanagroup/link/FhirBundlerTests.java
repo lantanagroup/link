@@ -47,7 +47,8 @@ public class FhirBundlerTests {
 
     List<PatientList> patientLists = new ArrayList<>();
     patientLists.add(new PatientList());
-    patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
+    patientLists.get(0).getPatients().add(PatientId.createFromReference("Patient/test-patient"));
+    patientLists.get(0).getPatients().add(PatientId.createFromIdentifier("urn:oid:2.16.2|some-pt-id"));
 
     when(tenantService.getConfig()).thenReturn(tenant);
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);

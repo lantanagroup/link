@@ -8,6 +8,7 @@ import com.lantanagroup.link.db.model.tenant.ReportingPlan;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -69,7 +70,7 @@ public class ReportingPlanService {
   private String getAccessToken() throws IOException {
     logger.info("Retrieving access token from SAMS");
     ReportingPlan.SamsAuth samsAuth = config.getSamsAuth();
-    HttpPost request = new HttpPost(samsAuth.getTokenUrl());
+    HttpPost request = new HttpPost(StringEscapeUtils.escapeHtml4(samsAuth.getTokenUrl()));
     List<NameValuePair> parameters = new ArrayList<>();
     parameters.add(new BasicNameValuePair("grant_type", "password"));
     parameters.add(new BasicNameValuePair("username", samsAuth.getUsername()));

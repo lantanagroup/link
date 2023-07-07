@@ -7,10 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -67,21 +64,21 @@ public class Helper {
     return list;
   }
 
-  public static String encodeLogging(String message) {
-    if (StringUtils.isEmpty(message)) {
-      return message;
+  public static String sanitizeString(String value) {
+    if (StringUtils.isEmpty(value)) {
+      return value;
     }
 
     //redundant checks to satisfy fortify scans
-    message = message.replace('\n', '_').replace('\r', '_')
+    value = value.replace('\n', '_').replace('\r', '_')
             .replace('\t', '_');
 
     String whiteList = "[^A-Za-z0-9\\-\\._~\\+\\/]";
-    message = message.replaceAll(whiteList, "");
+    value = value.replaceAll(whiteList, "");
 
-    message = quoteApostrophe(message);
-    message = StringEscapeUtils.escapeHtml4(message);
-    return message;
+    value = quoteApostrophe(value);
+    value = StringEscapeUtils.escapeHtml4(value);
+    return value;
   }
 
   public static String quoteApostrophe(String input) {
