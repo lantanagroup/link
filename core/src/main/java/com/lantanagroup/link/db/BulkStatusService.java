@@ -76,9 +76,12 @@ public class BulkStatusService {
   }
 
   public BulkStatus getBulkStatusById(String id) {
-    return this.getBulkStatusCollection()
-            .find(eq("id", id))
-            .first();
+    List<BulkStatus> bulkStatuses = new ArrayList<>();
+    this.getBulkStatusCollection()
+            .find(eq("_id", id))
+            .into(bulkStatuses);
+    if(bulkStatuses.isEmpty()) return null;
+    return bulkStatuses.get(0);
   }
 
   public List<BulkStatus> getBulkStatusByStatus(String status) {

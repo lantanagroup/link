@@ -82,23 +82,49 @@ public class BulkQuery {
     try {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
     } catch (IOException | InterruptedException e) {
-      logger.warn("Error initiating bulk export", e);
-      bulkStatus.setStatus(BulkStatuses.pending);
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
+      sbuilder.append("Stack Trace:\n");
+      sbuilder.append(e.getStackTrace());
+      bulkStatus.setStatus(BulkStatuses.cancelled);
+      bulkStatus.setErrorMessage(sbuilder.toString());
       service.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
+      return;
     }
 
     assert response != null;
     if(response.statusCode() > 400) {
-      logger.warn("Error initiating bulk export");
-      bulkStatus.setStatus(BulkStatuses.pending);
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
+      if(response.body().length() > 0){
+        sbuilder.append("Response Body: " + response.body());
+      }
+      bulkStatus.setStatus(BulkStatuses.cancelled);
       service.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
       return;
     }
 
     var headers = response.headers();
     String facilityHeaderNameValue = tenantService.getConfig().getBulkInitiateResponseUrlHeader();
     var statusHeader = headers.firstValue(facilityHeaderNameValue);
-    String pollingUrlresponse = statusHeader.get();
+    String pollingUrlresponse;
+    try {
+      pollingUrlresponse = statusHeader.get();
+    } catch(Exception e){
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
+      sbuilder.append("Stack Trace:\n");
+      sbuilder.append(e.getStackTrace());
+      bulkStatus.setStatus(BulkStatuses.cancelled);
+      bulkStatus.setErrorMessage(sbuilder.toString());
+      service.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
+      return;
+//      throw new Exception(sbuilder.toString());
+    }
+
     bulkStatus.setStatusUrl(pollingUrlresponse);
     bulkStatus.setStatus(BulkStatuses.pending);
     service.saveBulkStatus(bulkStatus);
@@ -127,7 +153,15 @@ public class BulkQuery {
 
       if(response.statusCode() > 400) {
         //figure out what to do here.
-        throw new Exception("Fetch failed: " + uri.toString());
+        responseBody = response.body();
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append("Fetch failed for URI: " + uri.toString());
+        if(responseBody.length() > 0){
+          sbuilder.append("Response Body: " + responseBody);
+        }
+        logger.warn(sbuilder.toString());
+        return;
+        //throw new Exception(sbuilder.toString());
       }
 
       var config = tenantService.getConfig();
