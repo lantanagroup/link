@@ -4,6 +4,7 @@ import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.ConceptMapRepository;
 import com.lantanagroup.link.db.repositories.PatientListRepository;
+import com.lantanagroup.link.db.repositories.ReportRepository;
 import com.lantanagroup.link.model.ReportBase;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.mongodb.BasicDBObject;
@@ -38,9 +39,9 @@ public class TenantService {
 
   private final ConceptMapRepository conceptMaps;
   private final PatientListRepository patientLists;
+  private final ReportRepository reports;
 
   public static final String PATIENT_DATA_COLLECTION = "patientData";
-  public static final String REPORT_COLLECTION = "report";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   public static final String AGGREGATE_COLLECTION = "aggregate";
 
@@ -52,6 +53,7 @@ public class TenantService {
             .build();
     this.conceptMaps = new ConceptMapRepository(dataSource);
     this.patientLists = new PatientListRepository(dataSource);
+    this.reports = new ReportRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -71,10 +73,6 @@ public class TenantService {
 
   public MongoCollection<PatientData> getPatientDataCollection() {
     return this.database.getCollection(PATIENT_DATA_COLLECTION, PatientData.class);
-  }
-
-  public MongoCollection<Report> getReportCollection() {
-    return this.database.getCollection(REPORT_COLLECTION, Report.class);
   }
 
   public MongoCollection<PatientMeasureReport> getPatientMeasureReportCollection() {
@@ -150,28 +148,19 @@ public class TenantService {
   }
 
   public Report getReport(String id) {
-    return this.getReportCollection().find(eq("_id", id)).first();
+    return this.reports.findById(id);
   }
 
-  public List<ReportBase> searchReports() {
-    List<ReportBase> reports = new ArrayList<>();
-    this.getReportCollection().find()
-            .projection(include("_id", "measureIds", "periodStart", "periodEnd"))
-            .map(r -> {
-              ReportBase reportBase = new ReportBase();
-              reportBase.setId(r.getId());
-              reportBase.setMeasureIds(r.getMeasureIds());
-              reportBase.setPeriodEnd(r.getPeriodEnd());
-              reportBase.setPeriodStart(r.getPeriodStart());
-              return reportBase;
-            })
-            .into(reports);
-    return reports;
+  public List<Report> searchReports() {
+    return this.reports.findAll();
   }
 
   public void saveReport(Report report) {
-    Bson criteria = and(eq("periodStart", report.getPeriodStart()), eq("periodEnd", report.getPeriodEnd()), eq("measureIds", report.getMeasureIds()));
-    this.getReportCollection().replaceOne(criteria, report, new ReplaceOptions().upsert(true));
+    this.reports.save(report);
+  }
+
+  public void saveReport(Report report, List<PatientList> patientLists) {
+    this.reports.save(report, patientLists);
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
@@ -192,8 +181,8 @@ public class TenantService {
     this.getPatientMeasureReportCollection().replaceOne(criteria, patientMeasureReport, new ReplaceOptions().upsert(true));
   }
 
-  public List<Aggregate> getAggregates(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
+  public List<Aggregate> getAggregates(String reportId) {
+    List<Bson> matchIds = List.of();
     Bson criteria = or(matchIds);
     List<Aggregate> aggregates = new ArrayList<>();
     this.getAggregateCollection()

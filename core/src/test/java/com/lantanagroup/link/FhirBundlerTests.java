@@ -44,7 +44,6 @@ public class FhirBundlerTests {
     FhirBundler bundler = new FhirBundler(null, tenantService);
 
     Report report = new Report();
-    report.getPatientLists().add(UUID.randomUUID());
 
     List<PatientList> patientLists = new ArrayList<>();
     patientLists.add(new PatientList());

@@ -294,7 +294,7 @@ public class ReportController extends BaseController {
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
-    report.setPatientLists(reportContext.getPatientLists().stream().map(pl -> pl.getId()).collect(Collectors.toList()));
+    tenantService.saveReport(report, reportContext.getPatientLists());
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
@@ -309,6 +309,8 @@ public class ReportController extends BaseController {
 
     logger.info("Beginning supplemental measure evaluation and aggregation");
     this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
+
+    report.setGeneratedTime(new Date());
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
@@ -346,7 +348,7 @@ public class ReportController extends BaseController {
   public Bundle generateBundle(TenantService tenantService, Report report) {
     FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
     logger.info("Building Bundle for MeasureReport to send...");
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
     List<MeasureReport> aggregateReports = aggregates.stream().map(Aggregate::getReport).collect(Collectors.toList());
     Bundle bundle = bundler.generateBundle(aggregateReports, report);
     logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
@@ -391,6 +393,7 @@ public class ReportController extends BaseController {
 
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
+    report.setSubmittedTime(new Date());
 
     tenantService.saveReport(report);
 
@@ -461,7 +464,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
     return aggregates.stream().map(a -> a.getReport()).collect(Collectors.toList());
   }
 
@@ -496,7 +499,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
     List<String> ids = new ArrayList<>();
     for (Aggregate aggregate : aggregates) {
       for (MeasureReport.MeasureReportGroupComponent group : aggregate.getReport().getGroup()) {
@@ -542,7 +545,7 @@ public class ReportController extends BaseController {
   }
 
   @GetMapping
-  public List<ReportBase> searchReports(@PathVariable String tenantId) {
+  public List<Report> searchReports(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {

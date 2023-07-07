@@ -9,6 +9,7 @@ import org.hl7.fhir.r4.model.MeasureReport;
 @Setter
 public class PatientMeasureReport {
   private String id = (new ObjectId()).toString();
+  private String reportId;
   private String patientId;
   private String measureId;
   private String periodStart;

@@ -19,12 +19,13 @@ CREATE TABLE dbo.patientList
 CREATE TABLE dbo.report
 (
     id            nvarchar(128)  NOT NULL PRIMARY KEY,
-    generatedTime datetime2      NOT NULL,
     measureIds    nvarchar(1024) NOT NULL,
-    periodEnd     datetime2      NOT NULL,
-    periodStart   datetime2      NOT NULL,
+    periodStart   nvarchar(32)   NOT NULL,
+    periodEnd     nvarchar(32)   NOT NULL,
     status        nvarchar(64)   NOT NULL,
-    version       nvarchar(64)   NOT NULL
+    version       nvarchar(64)   NOT NULL,
+    generatedTime datetime2,
+    submittedTime datetime2
 );
 
 CREATE TABLE dbo.reportPatientList
@@ -48,18 +49,18 @@ CREATE TABLE dbo.patientData
 CREATE TABLE dbo.patientMeasureReport
 (
     id            nvarchar(128) NOT NULL PRIMARY KEY,
+    reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
     measureId     nvarchar(64)  NOT NULL,
     measureReport nvarchar(max) NOT NULL,
     patientId     nvarchar(64)  NOT NULL,
     periodEnd     datetime2     NOT NULL,
     periodStart   datetime2     NOT NULL,
-    reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
     UNIQUE (measureId, patientId, periodEnd, periodStart)
 );
 
 CREATE TABLE dbo.[aggregate]
 (
     id       uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    report   nvarchar(max)    NOT NULL,
-    reportId nvarchar(128)    NOT NULL REFERENCES dbo.report (id)
+    reportId nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+    report   nvarchar(max)    NOT NULL
 );
