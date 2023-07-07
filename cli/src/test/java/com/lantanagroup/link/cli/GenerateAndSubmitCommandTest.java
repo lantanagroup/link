@@ -23,7 +23,7 @@ public class GenerateAndSubmitCommandTest {
     test.set(Calendar.MINUTE, 0);
     test.set(Calendar.HOUR_OF_DAY, 0);
 
-    Date date = GenerateAndSubmitCommand.getStartDate(day * 24, month, true);
+    Date date = GenerateAndSubmitCommand.getStartDate(day, month, true);
     Assert.assertEquals(test.getTime(), date);
   }
 
@@ -40,7 +40,7 @@ public class GenerateAndSubmitCommandTest {
     test.set(Calendar.SECOND, 59);
     test.set(Calendar.MILLISECOND, 0);
 
-    Date date = GenerateAndSubmitCommand.getEndDate(day * 24, month, true);
+    Date date = GenerateAndSubmitCommand.getEndDate(day, month, true);
     Assert.assertEquals(test.getTime(), date);
   }
 }
