@@ -427,16 +427,42 @@ paths:
       responses:
         '200':
           description: successful response
+  /api/{tenantId}/report/$validate:
+    post:
+      tags:
+        - Reports
+      summary: Validate a report provided in the request body
+      operationId: validateRequest
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant, used to determine validation options
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
   /api/{tenantId}/report/{reportId}/$validate:
     get:
       tags:
         - Reports
       summary: Validate the report against FHIR standards and implementation guides
-      operationId: validate
+      operationId: validateReport
       parameters:
         - name: tenantId
           in: path
-          description: The id of the tenant
+          description: The id of the tenant in which the report resides, and used to determine validation options
           required: true
           schema:
             type: string
