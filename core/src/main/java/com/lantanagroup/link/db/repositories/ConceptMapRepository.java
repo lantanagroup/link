@@ -47,35 +47,38 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
     }
   }
 
+  private int insert(ConceptMap conceptMap, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.conceptMap " +
+            "(id, contexts, conceptMap) " +
+            "VALUES " +
+            "(?, ?, ?);")) {
+      statement.setNString(1, conceptMap.getId());
+      statement.setNString(2, serializeList(conceptMap.getContexts()));
+      statement.setNString(3, serializeResource(conceptMap.getConceptMap()));
+      return statement.executeUpdate();
+    }
+  }
+
+  private int update(ConceptMap conceptMap, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.conceptMap " +
+            "SET contexts = ?, conceptMap = ? " +
+            "WHERE id = ?;")) {
+      statement.setNString(1, serializeList(conceptMap.getContexts()));
+      statement.setNString(2, serializeResource(conceptMap.getConceptMap()));
+      statement.setNString(3, conceptMap.getId());
+      return statement.executeUpdate();
+    }
+  }
+
   @SneakyThrows(SQLException.class)
   public void save(ConceptMap conceptMap) {
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
       try {
-        String pId = conceptMap.getId();
-        String pContexts = serializeList(conceptMap.getContexts());
-        String pConceptMap = serializeResource(conceptMap.getConceptMap());
-        try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.conceptMap " +
-                "SET contexts = ?, conceptMap = ? " +
-                "WHERE id = ?;")) {
-          statement.setNString(1, pContexts);
-          statement.setNString(2, pConceptMap);
-          statement.setNString(3, pId);
-          if (statement.executeUpdate() > 0) {
-            connection.commit();
-            return;
-          }
+        if (update(conceptMap, connection) == 0) {
+          insert(conceptMap, connection);
         }
-        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.conceptMap " +
-                "(id, contexts, conceptMap) " +
-                "VALUES " +
-                "(?, ?, ?);")) {
-          statement.setNString(1, pId);
-          statement.setNString(2, pContexts);
-          statement.setNString(3, pConceptMap);
-          statement.executeUpdate();
-          connection.commit();
-        }
+        connection.commit();
       } catch (Exception e) {
         connection.rollback();
         throw e;

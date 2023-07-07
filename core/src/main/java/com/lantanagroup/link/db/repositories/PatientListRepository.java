@@ -77,43 +77,43 @@ public class PatientListRepository extends BaseRepository<PatientList> {
     }
   }
 
+  private int insert(PatientList patientList, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.patientList " +
+            "(id, measureId, periodStart, periodEnd, patients, lastUpdated) " +
+            "VALUES " +
+            "(?, ?, ?, ?, ?, ?);")) {
+      statement.setObject(1, patientList.getId());
+      statement.setNString(2, patientList.getMeasureId());
+      statement.setNString(3, patientList.getPeriodStart());
+      statement.setNString(4, patientList.getPeriodEnd());
+      statement.setNString(5, serializeList(patientList.getPatients()));
+      statement.setTimestamp(6, new Timestamp(patientList.getLastUpdated().getTime()));
+      return statement.executeUpdate();
+    }
+  }
+
+  private int update(PatientList patientList, Connection connection) throws SQLException {
+    try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.patientList " +
+            "SET patients = ?, lastUpdated = ? " +
+            "WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;")) {
+      statement.setNString(1, serializeList(patientList.getPatients()));
+      statement.setTimestamp(2, new Timestamp(patientList.getLastUpdated().getTime()));
+      statement.setNString(3, patientList.getMeasureId());
+      statement.setNString(4, patientList.getPeriodStart());
+      statement.setNString(5, patientList.getPeriodEnd());
+      return statement.executeUpdate();
+    }
+  }
+
   @SneakyThrows(SQLException.class)
   public void save(PatientList patientList) {
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
       try {
-        UUID pId = patientList.getId();
-        String pMeasureId = patientList.getMeasureId();
-        String pPeriodStart = patientList.getPeriodStart();
-        String pPeriodEnd = patientList.getPeriodEnd();
-        String pPatients = serializeList(patientList.getPatients());
-        Timestamp pLastUpdated = new Timestamp(patientList.getLastUpdated().getTime());
-        try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.patientList " +
-                "SET patients = ?, lastUpdated = ? " +
-                "WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;")) {
-          statement.setNString(1, pPatients);
-          statement.setTimestamp(2, pLastUpdated);
-          statement.setNString(3, pMeasureId);
-          statement.setNString(4, pPeriodStart);
-          statement.setNString(5, pPeriodEnd);
-          if (statement.executeUpdate() > 0) {
-            connection.commit();
-            return;
-          }
+        if (update(patientList, connection) == 0) {
+          insert(patientList, connection);
         }
-        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.patientList " +
-                "(id, measureId, periodStart, periodEnd, patients, lastUpdated) " +
-                "VALUES " +
-                "(?, ?, ?, ?, ?, ?);")) {
-          statement.setObject(1, pId);
-          statement.setNString(2, pMeasureId);
-          statement.setNString(3, pPeriodStart);
-          statement.setNString(4, pPeriodEnd);
-          statement.setNString(5, pPatients);
-          statement.setTimestamp(6, pLastUpdated);
-          statement.executeUpdate();
-          connection.commit();
-        }
+        connection.commit();
       } catch (Exception e) {
         connection.rollback();
         throw e;
