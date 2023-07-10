@@ -3,6 +3,7 @@ package com.lantanagroup.link.db;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.*;
+import java.util.UUID;
 
 public class SQLCSHelper {
   private final CallableStatement callableStatement;
@@ -56,6 +57,14 @@ public class SQLCSHelper {
       this.callableStatement.setNull(parameterName, Types.NVARCHAR);
     } else {
       this.callableStatement.setBoolean(parameterName, value);
+    }
+  }
+
+  public void setUUID(String parameterName, UUID value) throws SQLException {
+    if (value == null) {
+      this.callableStatement.setNull(parameterName, Types.CHAR);
+    } else {
+      this.callableStatement.setObject(parameterName, value);
     }
   }
 }

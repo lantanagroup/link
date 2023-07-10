@@ -35,6 +35,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -394,7 +395,7 @@ public class SharedService {
       var audits = new ArrayList<Audit>();
 
       while(rs.next()) {
-        var iD = rs.getString(1);
+        var iD = rs.getObject(1, UUID.class);
         var network = rs.getString(2);
         var notes = rs.getString(3);
         var tenantId = rs.getString(4);
@@ -425,7 +426,7 @@ public class SharedService {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveAudit (?, ?, ?, ?, ?, ?, ?) }");
-      cs.setNString("id", audit.getId());
+      cs.setUUID("id", audit.getId());
       cs.setNString("network", audit.getNetwork());
       cs.setNString("notes", audit.getNotes());
       cs.setNString("tenantId", audit.getTenantId());
