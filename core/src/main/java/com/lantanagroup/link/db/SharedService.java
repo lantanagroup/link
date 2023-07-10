@@ -211,7 +211,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT bundle FROM [dbo].[measureDef] WHERE measureId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [dbo].[measureDef] WHERE measureId = ?");
       ps.setNString(1, measureId);
 
       ResultSet rs = ps.executeQuery();
@@ -219,9 +219,11 @@ public class SharedService {
       MeasureDefinition measureDef = null;
 
       if(rs.next()) {
-        var json = rs.getString(1);
         measureDef = new MeasureDefinition();
-        measureDef.setBundle(fhirContext.newJsonParser().parseResource(Bundle.class, json));
+        measureDef.setId(rs.getObject("id", UUID.class).toString());
+        measureDef.setBundle(fhirContext.newJsonParser().parseResource(Bundle.class, rs.getNString("bundle")));
+        measureDef.setLastUpdated(rs.getTimestamp("lastUpdated"));
+        measureDef.setMeasureId(rs.getNString("measureId"));
       }
 
       assert measureDef != null;
