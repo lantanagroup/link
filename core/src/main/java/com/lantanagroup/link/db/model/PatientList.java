@@ -13,7 +13,7 @@ import java.util.UUID;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PatientList {
-  private UUID id = UUID.randomUUID();
+  private UUID id;
   private String measureId;
   private String periodStart;
   private String periodEnd;

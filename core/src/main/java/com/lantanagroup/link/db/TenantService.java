@@ -3,9 +3,9 @@ package com.lantanagroup.link.db;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.ConceptMapRepository;
+import com.lantanagroup.link.db.repositories.PatientDataRepository;
 import com.lantanagroup.link.db.repositories.PatientListRepository;
 import com.lantanagroup.link.db.repositories.ReportRepository;
-import com.lantanagroup.link.model.ReportBase;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,8 +41,8 @@ public class TenantService {
   private final ConceptMapRepository conceptMaps;
   private final PatientListRepository patientLists;
   private final ReportRepository reports;
+  private final PatientDataRepository patientDatas;
 
-  public static final String PATIENT_DATA_COLLECTION = "patientData";
   public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   public static final String AGGREGATE_COLLECTION = "aggregate";
 
@@ -54,6 +55,7 @@ public class TenantService {
     this.conceptMaps = new ConceptMapRepository(dataSource);
     this.patientLists = new PatientListRepository(dataSource);
     this.reports = new ReportRepository(dataSource);
+    this.patientDatas = new PatientDataRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -69,10 +71,6 @@ public class TenantService {
     }
 
     return new TenantService(tenant);
-  }
-
-  public MongoCollection<PatientData> getPatientDataCollection() {
-    return this.database.getCollection(PATIENT_DATA_COLLECTION, PatientData.class);
   }
 
   public MongoCollection<PatientMeasureReport> getPatientMeasureReportCollection() {
@@ -91,8 +89,8 @@ public class TenantService {
     return this.patientLists.findAll();
   }
 
-  public void deletePatientLists(List<UUID> ids) {
-    this.patientLists.deleteByIds(ids);
+  public int deletePatientListsLastUpdatedBefore(Date date) {
+    return this.patientLists.deleteByLastUpdatedBefore(date);
   }
 
   public PatientList getPatientList(UUID id) {
@@ -108,43 +106,15 @@ public class TenantService {
   }
 
   public List<PatientData> findPatientData(String patientId) {
-    List<PatientData> patientData = new ArrayList<>();
-    this.getPatientDataCollection()
-            .find(eq("patientId", patientId))
-            .into(patientData);
-    return patientData;
+    return this.patientDatas.findByPatientId(patientId);
   }
 
-  public List<PatientData> getAllPatientData() {
-    List<PatientData> allPatientData = new ArrayList<>();
-    this.getPatientDataCollection().find()
-            .projection(include("_id", "retrieved"))
-            .into(allPatientData);
-    return allPatientData;
+  public int deletePatientDataRetrievedBefore(Date date) {
+    return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
-  public void deletePatientData(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    this.getPatientDataCollection().deleteMany(criteria);
-  }
-
-  @Async
   public void savePatientData(List<PatientData> patientData) {
-    List<WriteModel<PatientData>> writeOperations = patientData.stream().map(pd -> {
-      Bson criteria = and(
-              eq("patientId", pd.getPatientId()),
-              eq("resourceType", pd.getResourceType()),
-              eq("resourceId", pd.getResourceId()));
-      BasicDBObject setOnInsert = new BasicDBObject();
-      setOnInsert.put("_id", (new ObjectId()).toString());
-      BasicDBObject update = new BasicDBObject();
-      update.put("$set", pd);
-      update.put("$setOnInsert", setOnInsert);
-      return new UpdateOneModel<PatientData>(criteria, update, new UpdateOptions().upsert(true));
-    }).collect(Collectors.toList());
-
-    this.getPatientDataCollection().bulkWrite(writeOperations);
+    this.patientDatas.saveAll(patientData);
   }
 
   public Report getReport(String id) {

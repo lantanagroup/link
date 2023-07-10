@@ -41,6 +41,10 @@ public abstract class BaseRepository<T> {
     return fhirContext.newJsonParser().parseResource(resourceType, string);
   }
 
+  protected IBaseResource deserializeResource(String string) {
+    return fhirContext.newJsonParser().parseResource(string);
+  }
+
   protected abstract T mapOne(ResultSet resultSet) throws SQLException;
 
   protected List<T> mapAll(ResultSet resultSet) throws SQLException {

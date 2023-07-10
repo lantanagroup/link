@@ -4,8 +4,6 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.AuditTypes;
-import com.lantanagroup.link.db.model.PatientData;
-import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -24,14 +22,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.Duration;
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/data")
@@ -53,36 +48,9 @@ public class DataController extends BaseController {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
   }
 
-  private static boolean shouldDelete(String retentionPeriod, Date lastDatePosted) throws DatatypeConfigurationException {
-    Date comp = adjustTime(retentionPeriod, lastDatePosted);
-    Date today = new Date();
-    return today.compareTo(comp) >= 0;
-  }
-
   /**
-   * @param retentionPeriod how long to keep the data
-   * @param lastDatePosted  when the data was last updated
-   * @return the adjusted day from when the data had been last updated to the end of its specified retention period
-   * @throws DatatypeConfigurationException
-   */
-  private static Date adjustTime(String retentionPeriod, Date lastDatePosted) throws DatatypeConfigurationException {
-    Duration dur = DatatypeFactory.newInstance().newDuration(retentionPeriod);
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(lastDatePosted);
-
-    calendar.add(Calendar.YEAR, dur.getYears());
-    calendar.add(Calendar.MONTH, dur.getMonths());
-    calendar.add(Calendar.DAY_OF_MONTH, dur.getDays());
-    calendar.add(Calendar.HOUR_OF_DAY, dur.getHours());
-    calendar.add(Calendar.MINUTE, dur.getMinutes());
-    calendar.add(Calendar.SECOND, dur.getSeconds());
-
-    return calendar.getTime();
-  }
-
-  /**
-   * @throws DatatypeConfigurationException Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
-   *                                        has been reached.
+   * Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
+   * has been reached.
    */
   @DeleteMapping(value = "/$expunge")
   public Integer expungeData(@PathVariable String tenantId, @AuthenticationPrincipal LinkCredentials user, HttpServletRequest request) {
@@ -94,43 +62,25 @@ public class DataController extends BaseController {
       return 0;
     }
 
-    List<PatientData> allPatientData = tenantService.getAllPatientData();
-    List<String> patientDataToDelete = allPatientData.stream().filter(pd -> {
-              try {
-                return shouldDelete(tenantService.getConfig().getRetentionPeriod(), pd.getRetrieved());
-              } catch (DatatypeConfigurationException e) {
-                return false;
-              }
-            })
-            .map(PatientData::getId)
-            .collect(Collectors.toList());
-
-    if (patientDataToDelete.size() > 0) {
-      tenantService.deletePatientData(patientDataToDelete);
-
-      logger.info("Deleting {} patient data", patientDataToDelete.size());
-      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientDataDelete, String.join(", ", patientDataToDelete));
+    Period retentionPeriod = Period.parse(tenantService.getConfig().getRetentionPeriod());
+    Date date = Date.from(LocalDate.now().minus(retentionPeriod)
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant());
+    int patientDataCount = tenantService.deletePatientDataRetrievedBefore(date);
+    if (patientDataCount > 0) {
+      logger.info("Deleted {} patient data", patientDataCount);
+      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientDataDelete, null);
     }
 
-    List<PatientList> patientLists = tenantService.getAllPatientLists();
-    List<UUID> patientListsToDelete = patientLists.stream().filter(pl -> {
-              try {
-                return shouldDelete(tenantService.getConfig().getRetentionPeriod(), pl.getLastUpdated());
-              } catch (DatatypeConfigurationException e) {
-                return false;
-              }
-            })
-            .map(PatientList::getId)
-            .collect(Collectors.toList());
+    // TODO: Delete from dbo.aggregate, dbo.patientMeasureReport, dbo.reportPatientList, and dbo.report
 
-    if (patientListsToDelete.size() > 0) {
-      tenantService.deletePatientLists(patientListsToDelete);
-
-      logger.info("Deleting {} patient lists", patientListsToDelete.size());
-      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientListDelete, patientListsToDelete.stream().map(UUID::toString).collect(Collectors.joining(", ")));
+    int patientListCount = tenantService.deletePatientListsLastUpdatedBefore(date);
+    if (patientListCount > 0) {
+      logger.info("Deleted {} patient lists", patientListCount);
+      this.sharedService.audit(user, request, tenantService, AuditTypes.PatientListDelete, null);
     }
 
-    return patientDataToDelete.size();
+    return patientDataCount;
   }
 
   /**

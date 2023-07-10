@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -245,6 +246,7 @@ public class PatientScoop {
         dbpd.setResourceType(entry.getResource().getResourceType().toString());
         dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
         dbpd.setResource(entry.getResource());
+        dbpd.setRetrieved(new Date());
         return dbpd;
       }).collect(Collectors.toList());
 

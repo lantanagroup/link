@@ -39,11 +39,11 @@ CREATE TABLE dbo.patientData
 (
     id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
     patientId    nvarchar(64)     NOT NULL,
-    resourceId   nvarchar(64)     NOT NULL,
     resourceType nvarchar(64)     NOT NULL,
+    resourceId   nvarchar(64)     NOT NULL,
     resource     nvarchar(max)    NOT NULL,
     retrieved    datetime2        NOT NULL,
-    UNIQUE (patientId, resourceId, resourceType)
+    UNIQUE (patientId, resourceType, resourceId)
 );
 
 CREATE TABLE dbo.patientMeasureReport

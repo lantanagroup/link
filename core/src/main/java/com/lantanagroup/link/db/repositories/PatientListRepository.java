@@ -6,6 +6,7 @@ import lombok.SneakyThrows;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,6 +82,9 @@ public class PatientListRepository extends BaseRepository<PatientList> {
   }
 
   private int insert(PatientList patientList, Connection connection) throws SQLException {
+    if (patientList.getId() == null) {
+      patientList.setId(UUID.randomUUID());
+    }
     String sql = "INSERT INTO dbo.patientList " +
             "(id, measureId, periodStart, periodEnd, patients, lastUpdated) " +
             "VALUES " +
@@ -129,20 +133,12 @@ public class PatientListRepository extends BaseRepository<PatientList> {
   }
 
   @SneakyThrows(SQLException.class)
-  public void deleteByIds(List<UUID> ids) {
-    String sql = "DELETE FROM dbo.patientList WHERE id = ?;";
-    try (Connection connection = dataSource.getConnection()) {
-      connection.setAutoCommit(false);
-      try (PreparedStatement statement = connection.prepareStatement(sql)) {
-        for (UUID id : ids) {
-          statement.setObject(1, id);
-          statement.executeUpdate();
-        }
-        connection.commit();
-      } catch (Exception e) {
-        connection.rollback();
-        throw e;
-      }
+  public int deleteByLastUpdatedBefore(Date date) {
+    String sql = "DELETE FROM dbo.patientList WHERE lastUpdated < ?;";
+    try (Connection connection = dataSource.getConnection();
+         PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setTimestamp(1, new Timestamp(date.getTime()));
+      return statement.executeUpdate();
     }
   }
 
