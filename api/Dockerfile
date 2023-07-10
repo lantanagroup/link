@@ -1,5 +1,4 @@
 FROM tomcat:9.0.65-jre17-temurin-jammy
-ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 RUN useradd -U -d ${CATALINA_HOME} -s /bin/bash tomcat && chown -R tomcat:tomcat ${CATALINA_HOME}
 USER tomcat:tomcat
 COPY api/target/link-api.war /usr/local/tomcat/webapps/ROOT.war

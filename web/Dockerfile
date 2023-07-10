@@ -1,8 +1,8 @@
 ### STAGE 1: Build ###
 FROM node:lts-alpine3.16 AS build
 WORKDIR /usr/src/app
-COPY ./web/package.json ./
-COPY ./web/package-lock.json ./
+COPY web/package.json ./
+COPY web/package-lock.json ./
 RUN apk add python3 alpine-sdk
 RUN npm ci
 RUN npm install -g @angular/cli
@@ -13,11 +13,4 @@ RUN ng build --configuration production
 FROM nginx:1.23.1
 COPY web/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html
-#RUN chown -R nginx:nginx /usr/share/nginx/html && \
-#        chown -R nginx:nginx /var/cache/nginx && \
-#        chown -R nginx:nginx /var/log/nginx && \
-#        chown -R nginx:nginx /etc/nginx/conf.d
-#RUN touch /var/run/nginx.pid && \
-#        chown -R nginx:nginx /var/run/nginx.pid
-#USER nginx
 CMD ["nginx","-g","daemon off;"]
