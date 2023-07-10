@@ -51,16 +51,16 @@ CREATE TABLE dbo.patientMeasureReport
     id            nvarchar(128) NOT NULL PRIMARY KEY,
     reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
     measureId     nvarchar(64)  NOT NULL,
-    measureReport nvarchar(max) NOT NULL,
     patientId     nvarchar(64)  NOT NULL,
-    periodEnd     datetime2     NOT NULL,
-    periodStart   datetime2     NOT NULL,
-    UNIQUE (measureId, patientId, periodEnd, periodStart)
+    measureReport nvarchar(max) NOT NULL,
+    UNIQUE (reportId, measureId, patientId)
 );
 
 CREATE TABLE dbo.[aggregate]
 (
-    id       uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    reportId nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
-    report   nvarchar(max)    NOT NULL
+    id        nvarchar(128) NOT NULL PRIMARY KEY,
+    reportId  nvarchar(128) NOT NULL REFERENCES dbo.report (id),
+    measureId nvarchar(64)  NOT NULL,
+    report    nvarchar(max) NOT NULL,
+    UNIQUE (reportId, measureId)
 );

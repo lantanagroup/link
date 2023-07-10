@@ -4,23 +4,16 @@ import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.*;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import static com.mongodb.client.model.Filters.*;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
@@ -28,15 +21,12 @@ public class TenantService {
   @Getter
   private Tenant config;
 
-  private MongoDatabase database;
-
   private final ConceptMapRepository conceptMaps;
   private final PatientListRepository patientLists;
   private final ReportRepository reports;
   private final PatientDataRepository patientDatas;
   private final PatientMeasureReportRepository patientMeasureReports;
-
-  public static final String AGGREGATE_COLLECTION = "aggregate";
+  private final AggregateRepository aggregates;
 
   protected TenantService(Tenant config) {
     this.config = config;
@@ -49,6 +39,7 @@ public class TenantService {
     this.reports = new ReportRepository(dataSource);
     this.patientDatas = new PatientDataRepository(dataSource);
     this.patientMeasureReports = new PatientMeasureReportRepository(dataSource);
+    this.aggregates = new AggregateRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -64,10 +55,6 @@ public class TenantService {
     }
 
     return new TenantService(tenant);
-  }
-
-  public MongoCollection<Aggregate> getAggregateCollection() {
-    return this.database.getCollection(AGGREGATE_COLLECTION, Aggregate.class);
   }
 
   public List<PatientList> getPatientLists(String reportId) {
@@ -139,18 +126,11 @@ public class TenantService {
   }
 
   public List<Aggregate> getAggregates(String reportId) {
-    List<Bson> matchIds = List.of();
-    Bson criteria = or(matchIds);
-    List<Aggregate> aggregates = new ArrayList<>();
-    this.getAggregateCollection()
-            .find(criteria)
-            .into(aggregates);
-    return aggregates;
+    return this.aggregates.findByReportId(reportId);
   }
 
   public void saveAggregate(Aggregate aggregate) {
-    Bson criteria = eq("_id", aggregate.getId());
-    this.getAggregateCollection().replaceOne(criteria, aggregate, new ReplaceOptions().upsert(true));
+    this.aggregates.save(aggregate);
   }
 
   public ConceptMap getConceptMap(String id) {

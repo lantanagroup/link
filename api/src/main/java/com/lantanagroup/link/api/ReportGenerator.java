@@ -114,9 +114,11 @@ public class ReportGenerator {
     setVersions(masterMeasureReport);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
-    Aggregate aggregateReport = new Aggregate(masterMeasureReport);
+    Aggregate aggregateReport = new Aggregate();
+    aggregateReport.setId(this.measureContext.getReportId());
     aggregateReport.setReportId(this.reportContext.getMasterIdentifierValue());
     aggregateReport.setMeasureId(this.measureContext.getBundleId());
+    aggregateReport.setReport(masterMeasureReport);
     this.tenantService.saveAggregate(aggregateReport);
   }
 
