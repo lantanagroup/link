@@ -18,8 +18,7 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
   }
 
   @Override
-  @SneakyThrows(SQLException.class)
-  protected ConceptMap mapOne(ResultSet resultSet) {
+  protected ConceptMap mapOne(ResultSet resultSet) throws SQLException {
     ConceptMap model = new ConceptMap();
     model.setId(resultSet.getString("id"));
     model.setContexts(deserializeList(String.class, resultSet.getNString("contexts")));

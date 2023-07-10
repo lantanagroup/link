@@ -17,7 +17,6 @@ public class ReportRepository extends BaseRepository<Report> {
   }
 
   @Override
-  @SneakyThrows(SQLException.class)
   protected Report mapOne(ResultSet resultSet) throws SQLException {
     Report model = new Report();
     model.setId(resultSet.getNString("id"));

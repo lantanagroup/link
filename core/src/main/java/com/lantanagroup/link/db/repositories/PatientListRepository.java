@@ -18,8 +18,7 @@ public class PatientListRepository extends BaseRepository<PatientList> {
   }
 
   @Override
-  @SneakyThrows(SQLException.class)
-  protected PatientList mapOne(ResultSet resultSet) {
+  protected PatientList mapOne(ResultSet resultSet) throws SQLException {
     PatientList model = new PatientList();
     model.setId(resultSet.getObject("id", UUID.class));
     model.setMeasureId(resultSet.getNString("measureId"));
