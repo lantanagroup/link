@@ -31,8 +31,9 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public List<PatientList> findAll() {
+    String sql = "SELECT * FROM dbo.patientList;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.patientList;");
+         PreparedStatement statement = connection.prepareStatement(sql);
          ResultSet resultSet = statement.executeQuery()) {
       return mapAll(resultSet);
     }
@@ -40,8 +41,9 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public PatientList findById(UUID id) {
+    String sql = "SELECT * FROM dbo.patientList WHERE id = ?;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.patientList WHERE id = ?;")) {
+         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setObject(1, id);
       try (ResultSet resultSet = statement.executeQuery()) {
         return resultSet.next() ? mapOne(resultSet) : null;
@@ -51,11 +53,12 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public List<PatientList> findByReportId(String reportId) {
+    String sql = "SELECT PL.* " +
+            "FROM dbo.patientList AS PL " +
+            "INNER JOIN dbo.reportPatientList AS RPL ON PL.id = RPL.patientListId " +
+            "WHERE RPL.reportId = ?;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT pl.* " +
-                 "FROM dbo.patientList AS pl " +
-                 "INNER JOIN dbo.reportPatientList AS rpl ON pl.id = rpl.patientListId " +
-                 "WHERE rpl.reportId = ?;")) {
+         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, reportId);
       try (ResultSet resultSet = statement.executeQuery()) {
         return mapAll(resultSet);
@@ -65,9 +68,9 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public PatientList findByMeasureIdAndReportingPeriod(String measureId, String periodStart, String periodEnd) {
+    String sql = "SELECT * FROM dbo.patientList WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.patientList " +
-                 "WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;")) {
+         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, measureId);
       statement.setNString(2, periodStart);
       statement.setNString(3, periodEnd);
@@ -78,29 +81,33 @@ public class PatientListRepository extends BaseRepository<PatientList> {
   }
 
   private int insert(PatientList patientList, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.patientList " +
+    String sql = "INSERT INTO dbo.patientList " +
             "(id, measureId, periodStart, periodEnd, patients, lastUpdated) " +
             "VALUES " +
-            "(?, ?, ?, ?, ?, ?);")) {
-      statement.setObject(1, patientList.getId());
-      statement.setNString(2, patientList.getMeasureId());
-      statement.setNString(3, patientList.getPeriodStart());
-      statement.setNString(4, patientList.getPeriodEnd());
-      statement.setNString(5, serializeList(patientList.getPatients()));
-      statement.setTimestamp(6, new Timestamp(patientList.getLastUpdated().getTime()));
+            "(?, ?, ?, ?, ?, ?);";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(patientList, statement);
+      parameters.addId();
+      parameters.addMeasureId();
+      parameters.addPeriodStart();
+      parameters.addPeriodEnd();
+      parameters.addPatients();
+      parameters.addLastUpdated();
       return statement.executeUpdate();
     }
   }
 
   private int update(PatientList patientList, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.patientList " +
+    String sql = "UPDATE dbo.patientList " +
             "SET patients = ?, lastUpdated = ? " +
-            "WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;")) {
-      statement.setNString(1, serializeList(patientList.getPatients()));
-      statement.setTimestamp(2, new Timestamp(patientList.getLastUpdated().getTime()));
-      statement.setNString(3, patientList.getMeasureId());
-      statement.setNString(4, patientList.getPeriodStart());
-      statement.setNString(5, patientList.getPeriodEnd());
+            "WHERE measureId = ? AND periodStart = ? AND periodEnd = ?;";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(patientList, statement);
+      parameters.addPatients();
+      parameters.addLastUpdated();
+      parameters.addMeasureId();
+      parameters.addPeriodStart();
+      parameters.addPeriodEnd();
       return statement.executeUpdate();
     }
   }
@@ -123,9 +130,10 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public void deleteByIds(List<UUID> ids) {
+    String sql = "DELETE FROM dbo.patientList WHERE id = ?;";
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
-      try (PreparedStatement statement = connection.prepareStatement("DELETE FROM dbo.patientList WHERE id = ?;")) {
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
         for (UUID id : ids) {
           statement.setObject(1, id);
           statement.executeUpdate();
@@ -135,6 +143,41 @@ public class PatientListRepository extends BaseRepository<PatientList> {
         connection.rollback();
         throw e;
       }
+    }
+  }
+
+  private class Parameters {
+    private final PatientList model;
+    private final PreparedStatement statement;
+    private int nextParameterIndex = 1;
+
+    public Parameters(PatientList model, PreparedStatement statement) {
+      this.model = model;
+      this.statement = statement;
+    }
+
+    public void addId() throws SQLException {
+      statement.setObject(nextParameterIndex++, model.getId());
+    }
+
+    public void addMeasureId() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getMeasureId());
+    }
+
+    public void addPeriodStart() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getPeriodStart());
+    }
+
+    public void addPeriodEnd() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getPeriodEnd());
+    }
+
+    public void addPatients() throws SQLException {
+      statement.setNString(nextParameterIndex++, serializeList(model.getPatients()));
+    }
+
+    public void addLastUpdated() throws SQLException {
+      statement.setTimestamp(nextParameterIndex++, new Timestamp(model.getLastUpdated().getTime()));
     }
   }
 }

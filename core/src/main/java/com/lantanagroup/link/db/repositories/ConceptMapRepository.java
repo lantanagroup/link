@@ -29,8 +29,9 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
 
   @SneakyThrows(SQLException.class)
   public List<ConceptMap> findAll() {
+    String sql = "SELECT * FROM dbo.conceptMap;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.conceptMap;");
+         PreparedStatement statement = connection.prepareStatement(sql);
          ResultSet resultSet = statement.executeQuery()) {
       return mapAll(resultSet);
     }
@@ -38,8 +39,9 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
 
   @SneakyThrows(SQLException.class)
   public ConceptMap findById(String id) {
+    String sql = "SELECT * FROM dbo.conceptMap WHERE id = ?;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.conceptMap WHERE id = ?;")) {
+         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, id);
       try (ResultSet resultSet = statement.executeQuery()) {
         return resultSet.next() ? mapOne(resultSet) : null;
@@ -48,24 +50,23 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
   }
 
   private int insert(ConceptMap conceptMap, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.conceptMap " +
-            "(id, contexts, conceptMap) " +
-            "VALUES " +
-            "(?, ?, ?);")) {
-      statement.setNString(1, conceptMap.getId());
-      statement.setNString(2, serializeList(conceptMap.getContexts()));
-      statement.setNString(3, serializeResource(conceptMap.getConceptMap()));
+    String sql = "INSERT INTO dbo.conceptMap (id, contexts, conceptMap) VALUES (?, ?, ?);";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(conceptMap, statement);
+      parameters.addId();
+      parameters.addContexts();
+      parameters.addConceptMap();
       return statement.executeUpdate();
     }
   }
 
   private int update(ConceptMap conceptMap, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.conceptMap " +
-            "SET contexts = ?, conceptMap = ? " +
-            "WHERE id = ?;")) {
-      statement.setNString(1, serializeList(conceptMap.getContexts()));
-      statement.setNString(2, serializeResource(conceptMap.getConceptMap()));
-      statement.setNString(3, conceptMap.getId());
+    String sql = "UPDATE dbo.conceptMap SET contexts = ?, conceptMap = ? WHERE id = ?;";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(conceptMap, statement);
+      parameters.addContexts();
+      parameters.addConceptMap();
+      parameters.addId();
       return statement.executeUpdate();
     }
   }
@@ -83,6 +84,29 @@ public class ConceptMapRepository extends BaseRepository<ConceptMap> {
         connection.rollback();
         throw e;
       }
+    }
+  }
+
+  private class Parameters {
+    private final ConceptMap model;
+    private final PreparedStatement statement;
+    private int nextParameterIndex = 1;
+
+    public Parameters(ConceptMap model, PreparedStatement statement) {
+      this.model = model;
+      this.statement = statement;
+    }
+
+    public void addId() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getId());
+    }
+
+    public void addContexts() throws SQLException {
+      statement.setNString(nextParameterIndex++, serializeList(model.getContexts()));
+    }
+
+    public void addConceptMap() throws SQLException {
+      statement.setNString(nextParameterIndex++, serializeResource(model.getConceptMap()));
     }
   }
 }

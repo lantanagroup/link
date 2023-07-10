@@ -35,7 +35,6 @@ public abstract class BaseRepository<T> {
 
   protected String serializeResource(IBaseResource resource) {
     return fhirContext.newJsonParser().encodeResourceToString(resource);
-
   }
 
   protected <U extends IBaseResource> U deserializeResource(Class<U> resourceType, String string) {

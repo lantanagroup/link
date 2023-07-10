@@ -33,8 +33,9 @@ public class ReportRepository extends BaseRepository<Report> {
 
   @SneakyThrows(SQLException.class)
   public List<Report> findAll() {
+    String sql = "SELECT * FROM dbo.report;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.report;");
+         PreparedStatement statement = connection.prepareStatement(sql);
          ResultSet resultSet = statement.executeQuery()) {
       return mapAll(resultSet);
     }
@@ -42,8 +43,9 @@ public class ReportRepository extends BaseRepository<Report> {
 
   @SneakyThrows(SQLException.class)
   public Report findById(String id) {
+    String sql = "SELECT * FROM dbo.report WHERE id = ?;";
     try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement("SELECT * FROM dbo.report WHERE id = ?;")) {
+         PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, id);
       try (ResultSet resultSet = statement.executeQuery()) {
         return resultSet.next() ? mapOne(resultSet) : null;
@@ -52,46 +54,53 @@ public class ReportRepository extends BaseRepository<Report> {
   }
 
   private int insert(Report report, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.report " +
+    String sql = "INSERT INTO dbo.report " +
             "(id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime) " +
             "VALUES " +
-            "(?, ?, ?, ?, ?, ?, ?, ?);")) {
-      statement.setNString(1, report.getId());
-      statement.setNString(2, serializeList(report.getMeasureIds()));
-      statement.setNString(3, report.getPeriodStart());
-      statement.setNString(4, report.getPeriodEnd());
-      statement.setNString(5, report.getStatus().toString());
-      statement.setNString(6, report.getVersion());
-      statement.setObject(7, report.getGeneratedTime() == null ? null : new Timestamp(report.getGeneratedTime().getTime()), Types.TIMESTAMP);
-      statement.setObject(8, report.getSubmittedTime() == null ? null : new Timestamp(report.getSubmittedTime().getTime()), Types.TIMESTAMP);
+            "(?, ?, ?, ?, ?, ?, ?, ?);";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(report, statement);
+      parameters.addId();
+      parameters.addMeasureIds();
+      parameters.addPeriodStart();
+      parameters.addPeriodEnd();
+      parameters.addStatus();
+      parameters.addVersion();
+      parameters.addGeneratedTime();
+      parameters.addSubmittedTime();
       return statement.executeUpdate();
     }
   }
 
   private int update(Report report, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("UPDATE dbo.report " +
+    String sql = "UPDATE dbo.report " +
             "SET measureIds = ?, periodStart = ?, periodEnd = ?, status = ?, version = ?, generatedTime = ?, submittedTime = ? " +
-            "WHERE id = ?;")) {
-      statement.setNString(1, serializeList(report.getMeasureIds()));
-      statement.setNString(2, report.getPeriodStart());
-      statement.setNString(3, report.getPeriodEnd());
-      statement.setNString(4, report.getStatus().toString());
-      statement.setNString(5, report.getVersion());
-      statement.setObject(6, report.getGeneratedTime() == null ? null : new Timestamp(report.getGeneratedTime().getTime()), Types.TIMESTAMP);
-      statement.setObject(7, report.getSubmittedTime() == null ? null : new Timestamp(report.getSubmittedTime().getTime()), Types.TIMESTAMP);
+            "WHERE id = ?;";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
+      Parameters parameters = new Parameters(report, statement);
+      parameters.addMeasureIds();
+      parameters.addPeriodStart();
+      parameters.addPeriodEnd();
+      parameters.addStatus();
+      parameters.addVersion();
+      parameters.addGeneratedTime();
+      parameters.addSubmittedTime();
+      parameters.addId();
       return statement.executeUpdate();
     }
   }
 
-  private void updatePatientLists(Report report, List<PatientList> patientLists, Connection connection) throws SQLException {
-    try (PreparedStatement statement = connection.prepareStatement("DELETE FROM dbo.reportPatientList WHERE reportId = ?;")) {
+  private void deletePatientLists(Report report, Connection connection) throws SQLException {
+    String sql = "DELETE FROM dbo.reportPatientList WHERE reportId = ?;";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, report.getId());
       statement.executeUpdate();
     }
-    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO dbo.reportPatientList " +
-            "(reportId, patientListId) " +
-            "VALUES " +
-            "(?, ?);")) {
+  }
+
+  private void insertPatientLists(Report report, List<PatientList> patientLists, Connection connection) throws SQLException {
+    String sql = "INSERT INTO dbo.reportPatientList (reportId, patientListId) VALUES (?, ?);";
+    try (PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.setNString(1, report.getId());
       for (PatientList patientList : patientLists) {
         statement.setObject(2, patientList.getId());
@@ -109,7 +118,8 @@ public class ReportRepository extends BaseRepository<Report> {
           insert(report, connection);
         }
         if (patientLists != null) {
-          updatePatientLists(report, patientLists, connection);
+          deletePatientLists(report, connection);
+          insertPatientLists(report, patientLists, connection);
         }
         connection.commit();
       } catch (Exception e) {
@@ -121,5 +131,56 @@ public class ReportRepository extends BaseRepository<Report> {
 
   public void save(Report report) {
     save(report, null);
+  }
+
+  private class Parameters {
+    private final Report model;
+    private final PreparedStatement statement;
+    private int nextParameterIndex = 1;
+
+    public Parameters(Report model, PreparedStatement statement) {
+      this.model = model;
+      this.statement = statement;
+    }
+
+    public void addId() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getId());
+    }
+
+    public void addMeasureIds() throws SQLException {
+      statement.setNString(nextParameterIndex++, serializeList(model.getMeasureIds()));
+    }
+
+    public void addPeriodStart() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getPeriodStart());
+    }
+
+    public void addPeriodEnd() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getPeriodEnd());
+    }
+
+    public void addStatus() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getStatus().toString());
+    }
+
+    public void addVersion() throws SQLException {
+      statement.setNString(nextParameterIndex++, model.getVersion());
+    }
+
+    public void addGeneratedTime() throws SQLException {
+      if (model.getGeneratedTime() == null) {
+        statement.setNull(nextParameterIndex++, Types.TIMESTAMP);
+      } else {
+        statement.setTimestamp(nextParameterIndex++, new Timestamp(model.getGeneratedTime().getTime()));
+      }
+    }
+
+    public void addSubmittedTime() throws SQLException {
+      if (model.getSubmittedTime() == null) {
+        statement.setNull(nextParameterIndex++, Types.TIMESTAMP);
+      } else {
+        statement.setTimestamp(nextParameterIndex++, new Timestamp(model.getSubmittedTime().getTime()));
+      }
+    }
   }
 }
