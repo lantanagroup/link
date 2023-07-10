@@ -2,33 +2,25 @@ package com.lantanagroup.link.db;
 
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.db.repositories.ConceptMapRepository;
-import com.lantanagroup.link.db.repositories.PatientDataRepository;
-import com.lantanagroup.link.db.repositories.PatientListRepository;
-import com.lantanagroup.link.db.repositories.ReportRepository;
+import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
-import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.scheduling.annotation.Async;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.include;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
@@ -42,8 +34,8 @@ public class TenantService {
   private final PatientListRepository patientLists;
   private final ReportRepository reports;
   private final PatientDataRepository patientDatas;
+  private final PatientMeasureReportRepository patientMeasureReports;
 
-  public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
   public static final String AGGREGATE_COLLECTION = "aggregate";
 
   protected TenantService(Tenant config) {
@@ -56,6 +48,7 @@ public class TenantService {
     this.patientLists = new PatientListRepository(dataSource);
     this.reports = new ReportRepository(dataSource);
     this.patientDatas = new PatientDataRepository(dataSource);
+    this.patientMeasureReports = new PatientMeasureReportRepository(dataSource);
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -71,10 +64,6 @@ public class TenantService {
     }
 
     return new TenantService(tenant);
-  }
-
-  public MongoCollection<PatientMeasureReport> getPatientMeasureReportCollection() {
-    return this.database.getCollection(PATIENT_MEASURE_REPORT_COLLECTION, PatientMeasureReport.class);
   }
 
   public MongoCollection<Aggregate> getAggregateCollection() {
@@ -134,21 +123,19 @@ public class TenantService {
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
-    return this.getPatientMeasureReportCollection().find(eq("_id", id)).first();
+    return this.patientMeasureReports.findById(id);
   }
 
-  public List<PatientMeasureReport> getPatientMeasureReports(List<String> ids) {
-    List<PatientMeasureReport> patientMeasureReports = new ArrayList<>();
-    Bson criteria = in("_id", ids);
-    this.getPatientMeasureReportCollection()
-            .find(criteria)
-            .into(patientMeasureReports);
-    return patientMeasureReports;
+  public List<PatientMeasureReport> getPatientMeasureReports(String reportId) {
+    return this.patientMeasureReports.findByReportId(reportId);
+  }
+
+  public List<PatientMeasureReport> getPatientMeasureReports(String reportId, String measureId) {
+    return this.patientMeasureReports.findByReportIdAndMeasureId(reportId, measureId);
   }
 
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {
-    Bson criteria = eq("_id", patientMeasureReport.getId());
-    this.getPatientMeasureReportCollection().replaceOne(criteria, patientMeasureReport, new ReplaceOptions().upsert(true));
+    this.patientMeasureReports.save(patientMeasureReport);
   }
 
   public List<Aggregate> getAggregates(String reportId) {

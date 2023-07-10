@@ -12,6 +12,7 @@ import org.hl7.fhir.r4.model.MeasureReport;
 public class Aggregate {
   private String id = (new ObjectId()).toString();
   private String reportId;
+  private String measureId;
   private MeasureReport report;
   public Aggregate(MeasureReport measureReport) {
     this.setReport(measureReport);

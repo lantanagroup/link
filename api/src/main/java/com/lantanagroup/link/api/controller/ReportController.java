@@ -349,8 +349,7 @@ public class ReportController extends BaseController {
     FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
     logger.info("Building Bundle for MeasureReport to send...");
     List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
-    List<MeasureReport> aggregateReports = aggregates.stream().map(Aggregate::getReport).collect(Collectors.toList());
-    Bundle bundle = bundler.generateBundle(aggregateReports, report);
+    Bundle bundle = bundler.generateBundle(aggregates, report);
     logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
     return bundle;
   }
@@ -499,30 +498,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Report %s not found", reportId));
     }
 
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
-    List<String> ids = new ArrayList<>();
-    for (Aggregate aggregate : aggregates) {
-      for (MeasureReport.MeasureReportGroupComponent group : aggregate.getReport().getGroup()) {
-        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-          if (!population.hasSubjectResults()) {
-            continue;
-          }
-          String subjectResultsId = population.getSubjectResults().getReference();
-          ListResource subjectResults = (ListResource) aggregate.getReport().getContained().stream()
-                  .filter(c -> c.getId().equals(subjectResultsId))
-                  .findFirst()
-                  .filter(resource -> resource instanceof ListResource)
-                  .orElse(null);
-          if (subjectResults == null) {
-            continue;
-          }
-          for (ListResource.ListEntryComponent entry : subjectResults.getEntry()) {
-            ids.add(entry.getItem().getReferenceElement().getIdPart());
-          }
-        }
-      }
-    }
-    return tenantService.getPatientMeasureReports(ids).stream()
+    return tenantService.getPatientMeasureReports(reportId).stream()
             .map(PatientMeasureReport::getMeasureReport)
             .collect(Collectors.toList());
   }

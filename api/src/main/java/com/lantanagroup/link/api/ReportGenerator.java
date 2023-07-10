@@ -91,8 +91,6 @@ public class ReportGenerator {
     PatientMeasureReport patientMeasureReport = new PatientMeasureReport();
     patientMeasureReport.setId(measureReportId);
     patientMeasureReport.setReportId(reportContext.getMasterIdentifierValue());
-    patientMeasureReport.setPeriodStart(criteria.getPeriodStart());
-    patientMeasureReport.setPeriodEnd(criteria.getPeriodEnd());
     patientMeasureReport.setMeasureId(measureContext.getBundleId());
     patientMeasureReport.setPatientId(patient.getId());
 
@@ -118,6 +116,7 @@ public class ReportGenerator {
 
     Aggregate aggregateReport = new Aggregate(masterMeasureReport);
     aggregateReport.setReportId(this.reportContext.getMasterIdentifierValue());
+    aggregateReport.setMeasureId(this.measureContext.getBundleId());
     this.tenantService.saveAggregate(aggregateReport);
   }
 
