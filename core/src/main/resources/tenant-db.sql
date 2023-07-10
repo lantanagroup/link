@@ -1,3 +1,4 @@
+IF OBJECT_ID(N'dbo.conceptMap', N'U') IS NULL
 CREATE TABLE dbo.conceptMap
 (
     id         nvarchar(128)  NOT NULL PRIMARY KEY,
@@ -5,6 +6,7 @@ CREATE TABLE dbo.conceptMap
     conceptMap nvarchar(max)  NOT NULL
 );
 
+IF OBJECT_ID(N'dbo.patientList', N'U') IS NULL
 CREATE TABLE dbo.patientList
 (
     id          uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
@@ -16,6 +18,7 @@ CREATE TABLE dbo.patientList
     UNIQUE (measureId, periodStart, periodEnd)
 );
 
+IF OBJECT_ID(N'dbo.report', N'U') IS NULL
 CREATE TABLE dbo.report
 (
     id            nvarchar(128)  NOT NULL PRIMARY KEY,
@@ -28,6 +31,7 @@ CREATE TABLE dbo.report
     submittedTime datetime2
 );
 
+IF OBJECT_ID(N'dbo.reportPatientList', N'U') IS NULL
 CREATE TABLE dbo.reportPatientList
 (
     reportId      nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
@@ -35,6 +39,7 @@ CREATE TABLE dbo.reportPatientList
     PRIMARY KEY (reportId, patientListId)
 );
 
+IF OBJECT_ID(N'dbo.patientData', N'U') IS NULL
 CREATE TABLE dbo.patientData
 (
     id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
@@ -46,6 +51,7 @@ CREATE TABLE dbo.patientData
     UNIQUE (patientId, resourceType, resourceId)
 );
 
+IF OBJECT_ID(N'dbo.patientMeasureReport', N'U') IS NULL
 CREATE TABLE dbo.patientMeasureReport
 (
     id            nvarchar(128) NOT NULL PRIMARY KEY,
@@ -56,6 +62,7 @@ CREATE TABLE dbo.patientMeasureReport
     UNIQUE (reportId, measureId, patientId)
 );
 
+IF OBJECT_ID(N'dbo.[aggregate]', N'U') IS NULL
 CREATE TABLE dbo.[aggregate]
 (
     id        nvarchar(128) NOT NULL PRIMARY KEY,
