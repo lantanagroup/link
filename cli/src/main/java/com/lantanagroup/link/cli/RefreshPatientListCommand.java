@@ -1,8 +1,6 @@
 package com.lantanagroup.link.cli;
 
 import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.DataFormatException;
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.client.impl.BaseClient;
@@ -13,7 +11,6 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import com.lantanagroup.link.config.query.QueryConfig;
-import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.query.auth.EpicAuth;
 import com.lantanagroup.link.query.auth.EpicAuthConfig;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
@@ -28,15 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
-import org.springframework.shell.standard.ShellOption;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ShellComponent
 public class RefreshPatientListCommand extends BaseShellCommand {
@@ -44,15 +36,12 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   private final FhirContext fhirContext = FhirContextProvider.getFhirContext();
   private RefreshPatientListConfig config;
   private QueryConfig queryConfig;
-  private USCoreConfig usCoreConfig;
-
 
   @Override
   protected List<Class<?>> getBeanClasses() {
 
     return List.of(
             QueryConfig.class,
-            USCoreConfig.class,
             EpicAuth.class,
             EpicAuthConfig.class);
   }
@@ -60,19 +49,17 @@ public class RefreshPatientListCommand extends BaseShellCommand {
   @ShellMethod(
           key = "refresh-patient-list",
           value = "Read patient lists and update the corresponding census in Link.")
-  public void execute(@ShellOption(defaultValue = "") String[] patientListPath) throws Exception {
+  public void execute() throws Exception {
     registerBeans();
     config = applicationContext.getBean(RefreshPatientListConfig.class);
     queryConfig = applicationContext.getBean(QueryConfig.class);
-    usCoreConfig = applicationContext.getBean(USCoreConfig.class);
 
     List<RefreshPatientListConfig.PatientList> filteredList = config.getPatientList();
-    // if patientListPath argument is not passed to the command then load all the lists defined in the configuration file
-    if (patientListPath.length > 0) {
-      filteredList = config.getPatientList().stream().filter(item -> List.of(patientListPath).contains(item.getPatientListPath())).collect(Collectors.toList());
-    }
+
     for (RefreshPatientListConfig.PatientList listResource : filteredList) {
+      logger.info("Reading List - {}", listResource.getPatientListPath());
       ListResource source = readList(listResource.getPatientListPath());
+      logger.info("List has {} items", source.getEntry().size());
       for (int j = 0; j < listResource.getCensusIdentifier().size(); j++) {
         ListResource target = transformList(source, listResource.getCensusIdentifier().get(j));
         updateList(target);
@@ -82,29 +69,21 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
   private ListResource readList(String patientListId) throws ClassNotFoundException {
     fhirContext.getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-    IGenericClient client = fhirContext.newRestfulGenericClient(usCoreConfig.getFhirServerBase());
+    IGenericClient client = fhirContext.newRestfulGenericClient(config.getFhirServerBase());
     if (client instanceof BaseClient) {
         ((BaseClient) client).setKeepResponses(true);
     }
     client.registerInterceptor(new HapiFhirAuthenticationInterceptor(queryConfig, applicationContext));
     ListResource r = client.fetchResourceFromUrl(ListResource.class, patientListId);
     if (r != null) {
-    	IParser jp = fhirContext.newJsonParser();
-    	jp.setPrettyPrint(true);
-    	try {
-			jp.encodeResourceToWriter(r, new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
-		} catch (DataFormatException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
       return r;
     } else {
-        throw new IllegalArgumentException(String.format("Issue getting ListResource for Patient List ID %s", patientListId));
+      throw new IllegalArgumentException(String.format("Issue getting ListResource for Patient List ID %s", patientListId));
     }
   }
 
   private ListResource transformList(ListResource source, String censusIdentifier) throws URISyntaxException {
-    logger.info("Transforming");
+    logger.info("Transforming List");
     ListResource target = new ListResource();
     Period period = new Period();
     CensusReportingPeriods reportingPeriod = this.config.getCensusReportingPeriod();
@@ -131,7 +110,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     target.setTitle(String.format("Census List for %s", censusIdentifier));
     target.setCode(source.getCode());
     target.setDate(source.getDate());
-    URI baseUrl = new URI(usCoreConfig.getFhirServerBase());
+    URI baseUrl = new URI(config.getFhirServerBase());
     for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
       target.addEntry(transformListEntry(sourceEntry, baseUrl));
     }
@@ -173,7 +152,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
 
     HttpResponse response = Utility.HttpPoster(request, logger);
 
-    logger.info("HTTP Reponse Code {}", response.getStatusLine().getStatusCode());
+    logger.info("HTTP Response Code {}", response.getStatusLine().getStatusCode());
   }
 
 }

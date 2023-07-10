@@ -23,7 +23,8 @@ import java.util.List;
 public class RefreshPatientListConfig {
   @NotBlank
   private String apiUrl;
-  //private AuthConfig auth;
+  @NotBlank
+  private String fhirServerBase;
   private LinkOAuthConfig auth;
   @NotNull
   @Size(min = 1)

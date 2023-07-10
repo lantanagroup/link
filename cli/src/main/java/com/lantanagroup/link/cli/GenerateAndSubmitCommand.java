@@ -31,11 +31,16 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
   @Getter
   private GenerateAndSubmitConfig configInfo;
 
-  public static Date getStartDate(int adjustHours, int adjustMonths, boolean startOfDay) {
+  public static Calendar getAdjustedCalendar(int adjustDays, int adjustMonths) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     Calendar cal = new GregorianCalendar();
-    cal.add(Calendar.HOUR, adjustHours);
+    cal.add(Calendar.HOUR, (adjustDays * 24));
     cal.add(Calendar.MONTH, adjustMonths);
+    return cal;
+  }
+  public static Date getStartDate(int adjustDays, int adjustMonths, boolean startOfDay) {
+    Calendar cal = getAdjustedCalendar(adjustDays, adjustMonths);
+
     if (startOfDay) {
       cal.set(Calendar.MILLISECOND, 0);
       cal.set(Calendar.SECOND, 0);
@@ -45,11 +50,9 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
     return cal.getTime();
   }
 
-  public static Date getEndOfDay(int adjustHours, int adjustMonths, boolean endOfDay) {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    Calendar cal = new GregorianCalendar();
-    cal.add(Calendar.HOUR, adjustHours);
-    cal.add(Calendar.MONTH, adjustMonths);
+  public static Date getEndDate(int adjustDays, int adjustMonths, boolean endOfDay) {
+    Calendar cal = getAdjustedCalendar(adjustDays, adjustMonths);
+
     if (endOfDay) {
       cal.set(Calendar.HOUR_OF_DAY, 23);
       cal.set(Calendar.MINUTE, 59);
@@ -117,9 +120,19 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
       String url = configInfo.getApiUrl() + "/report/$generate";
 
       // We generate reports for 1 day now so end date will be midnight of the start date (23h.59min.59s)- the period end date will be used when we will generate reports for more than 1 day
-      Date startDate = getStartDate(this.configInfo.getPeriodStart().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodStart().isStartOfDay());
+      Date startDate = getStartDate(
+              configInfo.getPeriodStart().getAdjustDay(),
+              configInfo.getPeriodStart().getAdjustMonth(),
+              configInfo.getPeriodStart().isStartOfDay()
+      );
       String startDateFormatted = Helper.getFhirDate(startDate);
-      String endDateFormatted = Helper.getFhirDate(getEndOfDay(this.configInfo.getPeriodEnd().getAdjustDay() * 24, this.configInfo.getPeriodStart().getAdjustMonth(), this.configInfo.getPeriodEnd().isEndOfDay()));
+
+      Date endDate = getEndDate(
+              configInfo.getPeriodEnd().getAdjustDay(),
+              configInfo.getPeriodEnd().getAdjustMonth(),
+              configInfo.getPeriodEnd().isEndOfDay()
+      );
+      String endDateFormatted = Helper.getFhirDate(endDate);
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
 
@@ -159,6 +172,8 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
         logger.error("Error generating report. Please contact the system administrator.");
         client.close();
         System.exit(1);
+      } else {
+        logger.info("Report Generated Master Id - {}", reportId);
       }
 
       url = configInfo.getApiUrl() + "/report/{reportId}/$send";
@@ -169,6 +184,7 @@ public class GenerateAndSubmitCommand extends BaseShellCommand {
       URI urlWithParameters1 = builder1.buildAndExpand(map).toUri();
 
       // send the report
+      logger.info("Sending report");
       restTemplate.exchange(urlWithParameters1, HttpMethod.POST, entity, String.class);
       logger.info("Report successfully generated and submitted.");
       client.close();
