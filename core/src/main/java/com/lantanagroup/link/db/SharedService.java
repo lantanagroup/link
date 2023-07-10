@@ -161,7 +161,7 @@ public class SharedService {
 
       if(rs.next()) {
         var json = rs.getString(1);
-        java.util.Date lastUpdated  = rs.getTimestamp(2);
+        java.util.Date lastUpdated  = new java.util.Date(rs.getTimestamp(2).getTime());
         measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
         measureDef.setMeasureId(measureId);
         measureDef.setLastUpdated(lastUpdated);
