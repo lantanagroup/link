@@ -136,8 +136,8 @@ WHERE email = @email)
 
 INSERT
 INTO [user] (email, [enabled], [name], passwordHash, passwordSalt)
+OUTPUT inserted.id
 VALUES (@email, @enabled, @name, @passwordHash, @passwordSalt)
-SELECT SCOPE_IDENTITY()
 END
 END
 GO

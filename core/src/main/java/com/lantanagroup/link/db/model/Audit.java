@@ -12,7 +12,7 @@ public class Audit {
   private UUID id = UUID.randomUUID();
   private Date timestamp = new Date();
   private String tenantId;
-  private String userId;
+  private UUID userId;
   private String name;
   private String network;
   private AuditTypes type;

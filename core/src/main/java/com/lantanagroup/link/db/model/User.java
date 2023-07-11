@@ -7,12 +7,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class User {
-  private String id;
+  private UUID id;
   private String name;
   private String email;
   private byte[] passwordSalt;
@@ -29,7 +30,7 @@ public class User {
 
   public static User create(ResultSet rs) throws SQLException {
     User user = new User();
-    user.setId(rs.getString("id"));
+    user.setId(rs.getObject("id", UUID.class));
     user.setEmail(rs.getString("email"));
     user.setName(rs.getString("name"));
     user.setEnabled(rs.getBoolean("enabled"));

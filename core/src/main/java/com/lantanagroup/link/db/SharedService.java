@@ -348,7 +348,7 @@ public class SharedService {
         var tenantId = rs.getString(4);
         var timeStamp = rs.getDate(5);
         var type = rs.getString(6);
-        var userId = rs.getString(7);
+        var userId = rs.getObject(7, UUID.class);
 
         var audit = new Audit();
         audit.setId(iD);
@@ -379,7 +379,7 @@ public class SharedService {
       cs.setNString("tenantId", audit.getTenantId());
       cs.setDateTime("timeStamp", audit.getTimestamp().getTime());
       cs.setNString("type", audit.getType().toString());
-      cs.setString("userID", audit.getUserId());
+      cs.setUUID("userID", audit.getUserId());
 
       cs.executeUpdate();
 
@@ -469,7 +469,7 @@ public class SharedService {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveUser (?, ?, ?, ?, ?, ?) }");
-      cs.setString("id", user.getId());
+      cs.setUUID("id", user.getId());
       cs.setNString("email", user.getEmail());
       cs.setNString("name", user.getName());
       cs.setBoolean("enabled", user.getEnabled());
@@ -478,7 +478,7 @@ public class SharedService {
 
       try (ResultSet rs = cs.executeQuery()) {
         if (rs.next()) {
-          user.setId(rs.getString(1));
+          user.setId(rs.getObject(1, UUID.class));
         }
       }
     } catch (SQLServerException e) {
@@ -488,11 +488,11 @@ public class SharedService {
     }
   }
 
-  public User getUser(String id) {
+  public User getUser(UUID id) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE id = CONVERT(UNIQUEIDENTIFIER, ?)");
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [user] WHERE id = ?");
       ps.setObject(1, id);
       ResultSet rs = ps.executeQuery();
 

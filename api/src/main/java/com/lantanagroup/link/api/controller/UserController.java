@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")
@@ -32,7 +33,7 @@ public class UserController extends BaseController {
     }
 
     // Don't let the user's password or enabled status change via this operation
-    if (StringUtils.isNotEmpty(user.getId())) {
+    if (user.getId() != null) {
       User found = this.sharedService.getUser(user.getId());
 
       if (found != null) {
@@ -57,7 +58,7 @@ public class UserController extends BaseController {
   }
 
   @PutMapping("/{userId}")
-  public User updateUser(@RequestBody User user, @PathVariable String userId) {
+  public User updateUser(@RequestBody User user, @PathVariable UUID userId) {
     User current = this.sharedService.getUser(userId);
 
     if (current == null) {
@@ -76,7 +77,7 @@ public class UserController extends BaseController {
   }
 
   @PutMapping("/{userId}/$change-password")
-  public void updateUserPassword(@PathVariable String userId, @RequestBody String newPassword) {
+  public void updateUserPassword(@PathVariable UUID userId, @RequestBody String newPassword) {
     User user = this.sharedService.getUser(userId);
 
     if (user == null) {
@@ -97,7 +98,7 @@ public class UserController extends BaseController {
 
   @DeleteMapping("/{userId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteUser(@PathVariable String userId) {
+  public void deleteUser(@PathVariable UUID userId) {
     User user = this.sharedService.getUser(userId);
 
     if (user == null) {
