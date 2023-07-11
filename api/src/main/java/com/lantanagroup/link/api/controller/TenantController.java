@@ -50,8 +50,8 @@ public class TenantController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Id \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getId()));
     }
 
-    if (!isIdValid(newTenantConfig.getDatabase())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Database name \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getDatabase()));
+    if (StringUtils.isEmpty(newTenantConfig.getConnectionString())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'connectionString' is required");
     }
 
     List<Tenant> existingTenants = this.sharedService.getTenantConfigs();
@@ -60,24 +60,11 @@ public class TenantController extends BaseController {
             existingTenantConfig == null &&
                     StringUtils.isNotEmpty(newTenantConfig.getId()) &&
                     existingTenants.stream().anyMatch(t -> t.getId().equals(newTenantConfig.getId()));
-    boolean databaseAlreadyExists =
-            existingTenants.stream().anyMatch(t ->
-                    !t.getId().equals(newTenantConfig.getId()) &&
-                            t.getDatabase().equalsIgnoreCase(newTenantConfig.getDatabase()));
-
     if (idAlreadyExists) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Tenant with id \"%s\" already exists", newTenantConfig.getId()));
     }
 
-    if (StringUtils.isEmpty(newTenantConfig.getDatabase())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant must specify a database name");
-    } else if (existingTenantConfig != null && !existingTenantConfig.getDatabase().equals(newTenantConfig.getDatabase())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("The database name cannot be changed from \"%s\" to \"%s\"", existingTenantConfig.getDatabase(), newTenantConfig.getDatabase()));
-    }
-
-    if (databaseAlreadyExists) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Another tenant is using the database name %s", newTenantConfig.getDatabase()));
-    }
+    // TODO: Check if database is already being used by another tenant?
 
     if (StringUtils.isEmpty(newTenantConfig.getCdcOrgId())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'cdcOrgId' is required");

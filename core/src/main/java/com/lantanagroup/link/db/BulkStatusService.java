@@ -35,18 +35,20 @@ public class BulkStatusService {
   }
 
   public static BulkStatusService create(SharedService sharedService, String tenantId) {
-    if(StringUtils.isEmpty(tenantId)) {
-      return null;
-    }
+    throw new UnsupportedOperationException("Service does not support SQL Server");
 
-    Tenant tenant = sharedService.getTenantConfig(tenantId);
-
-    if (tenant == null) {
-      logger.error("Tenant {} not found", tenantId);
-      return null;
-    }
-
-    return new BulkStatusService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
+//    if(StringUtils.isEmpty(tenantId)) {
+//      return null;
+//    }
+//
+//    Tenant tenant = sharedService.getTenantConfig(tenantId);
+//
+//    if (tenant == null) {
+//      logger.error("Tenant {} not found", tenantId);
+//      return null;
+//    }
+//
+//    return new BulkStatusService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
   }
 
   public MongoCollection<BulkStatus> getBulkStatusCollection() {

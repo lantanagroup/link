@@ -56,7 +56,10 @@ public class MeasureEvaluator {
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
     logger.info(String.format("Executing $evaluate-measure for %s", measureId));
 
-    Bundle patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+    Bundle patientBundle;
+    try (Stopwatch stopwatch = this.stopwatchManager.start("retrieve-patient-data")) {
+      patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+    }
 
     Parameters parameters = new Parameters();
     parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));

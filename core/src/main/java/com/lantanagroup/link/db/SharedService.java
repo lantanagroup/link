@@ -13,7 +13,6 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
@@ -30,6 +29,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.bson.codecs.configuration.CodecRegistries.*;
@@ -137,7 +137,7 @@ public class SharedService {
       cs.setNString("tenantId", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -152,7 +152,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT bundle, lastUpdated FROM [dbo].[measureDef] WHERE measureId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT id, bundle, lastUpdated FROM [dbo].[measureDef] WHERE measureId = ?");
       ps.setNString(1, measureId);
 
       ResultSet rs = ps.executeQuery();
@@ -160,8 +160,10 @@ public class SharedService {
       MeasureDefinition measureDef = new MeasureDefinition();
 
       if(rs.next()) {
-        var json = rs.getString(1);
-        java.util.Date lastUpdated  = new java.util.Date(rs.getTimestamp(2).getTime());
+        String id = rs.getObject(1, UUID.class).toString();
+        var json = rs.getString(2);
+        java.util.Date lastUpdated  = new java.util.Date(rs.getTimestamp(3).getTime());
+        measureDef.setId(id);
         measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
         measureDef.setMeasureId(measureId);
         measureDef.setLastUpdated(lastUpdated);
@@ -230,7 +232,7 @@ public class SharedService {
       cs.setNString("bundle", FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
       cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -301,7 +303,7 @@ public class SharedService {
       cs.setNString("packageId", measurePackage.getId());
       cs.setNString("measures", mapper.writeValueAsString(measurePackage));
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -340,7 +342,7 @@ public class SharedService {
       var audits = new ArrayList<Audit>();
 
       while(rs.next()) {
-        var iD = rs.getString(1);
+        var iD = rs.getObject(1, UUID.class);
         var network = rs.getString(2);
         var notes = rs.getString(3);
         var tenantId = rs.getString(4);
@@ -371,7 +373,7 @@ public class SharedService {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveAudit (?, ?, ?, ?, ?, ?, ?) }");
-      cs.setNString("id", audit.getId());
+      cs.setUUID("id", audit.getId());
       cs.setNString("network", audit.getNetwork());
       cs.setNString("notes", audit.getNotes());
       cs.setNString("tenantId", audit.getTenantId());
@@ -379,7 +381,7 @@ public class SharedService {
       cs.setNString("type", audit.getType().toString());
       cs.setString("userID", audit.getUserId());
 
-      cs.executeQuery();
+      cs.executeUpdate();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);

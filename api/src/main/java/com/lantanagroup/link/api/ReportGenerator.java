@@ -90,8 +90,7 @@ public class ReportGenerator {
     String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
     PatientMeasureReport patientMeasureReport = new PatientMeasureReport();
     patientMeasureReport.setId(measureReportId);
-    patientMeasureReport.setPeriodStart(criteria.getPeriodStart());
-    patientMeasureReport.setPeriodEnd(criteria.getPeriodEnd());
+    patientMeasureReport.setReportId(reportContext.getMasterIdentifierValue());
     patientMeasureReport.setMeasureId(measureContext.getBundleId());
     patientMeasureReport.setPatientId(patient.getId());
 
@@ -115,9 +114,12 @@ public class ReportGenerator {
     setVersions(masterMeasureReport);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
-    Aggregate aggregateReport = new Aggregate(masterMeasureReport);
+    Aggregate aggregateReport = new Aggregate();
+    aggregateReport.setId(this.measureContext.getReportId());
+    aggregateReport.setReportId(this.reportContext.getMasterIdentifierValue());
+    aggregateReport.setMeasureId(this.measureContext.getBundleId());
+    aggregateReport.setReport(masterMeasureReport);
     this.tenantService.saveAggregate(aggregateReport);
-    this.report.getAggregates().add(aggregateReport.getId());
   }
 
   private void setVersions(MeasureReport measureReport) {

@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
@@ -59,7 +60,7 @@ public class FhirBundler {
     return this.org;
   }
 
-  public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
+  public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
 
@@ -69,8 +70,8 @@ public class FhirBundler {
       this.addCensuses(bundle, report);
     }
 
-    for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
-      this.addMeasureReports(bundle, aggregateMeasureReport);
+    for (Aggregate aggregate : aggregates) {
+      this.addMeasureReports(bundle, aggregate);
     }
 
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
@@ -261,11 +262,11 @@ public class FhirBundler {
   }
 
   public List<ListResource> getPatientLists(Report report) {
-    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getPatientLists());
+    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getId());
 
     return patientLists.stream().map(pl -> {
       ListResource listResource = new ListResource();
-      listResource.setId(pl.getId());
+      listResource.setId(pl.getId().toString());
       listResource.addExtension()
               .setUrl(Constants.ApplicablePeriodExtensionUrl)
               .setValue(new Period()
@@ -336,7 +337,8 @@ public class FhirBundler {
     }
   }
 
-  private void addMeasureReports(Bundle bundle, MeasureReport aggregateMeasureReport) {
+  private void addMeasureReports(Bundle bundle, Aggregate aggregate) {
+    MeasureReport aggregateMeasureReport = aggregate.getReport();
     logger.debug("Adding measure reports: {}", aggregateMeasureReport.getMeasure());
 
     this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
@@ -345,19 +347,8 @@ public class FhirBundler {
       return;
     }
 
-    List<String> individualMeasureReportIds = new ArrayList<>();
-    aggregateMeasureReport.getContained()
-            .stream().filter(c -> c.getResourceType() == ResourceType.List)
-            .forEach(c -> {
-              ListResource listResource = (ListResource) c;
-              listResource.getEntry().forEach(e -> {
-                String[] referenceSplit = e.getItem().getReference().split("/");
-                individualMeasureReportIds.add(referenceSplit[1]);
-              });
-            });
-
     List<PatientMeasureReport> individualMeasureReports =
-            this.tenantService.getPatientMeasureReports(individualMeasureReportIds);
+            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
 
     for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();

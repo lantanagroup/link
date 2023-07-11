@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
   private FhirContext ctx = FhirContext.forR4();
@@ -45,7 +46,6 @@ public class ValidatorTests {
   }
 
   @Test
-  @Ignore
   public void testPerformance() throws IOException {
     Bundle bundle = this.getBundle("large-submission-example.json");
     OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);

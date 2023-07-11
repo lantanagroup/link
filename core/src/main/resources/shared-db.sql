@@ -214,7 +214,7 @@ DROP PROCEDURE IF EXISTS saveAudit
 GO
 
 CREATE PROCEDURE [dbo].[saveAudit]
-    @id NVARCHAR(64),
+    @id UNIQUEIDENTIFIER,
 	@network NVARCHAR(128),
 	@notes NVARCHAR(MAX),
 	@tenantId NVARCHAR(128),
