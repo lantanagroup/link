@@ -157,9 +157,10 @@ public class SharedService {
 
       ResultSet rs = ps.executeQuery();
 
-      MeasureDefinition measureDef = new MeasureDefinition();
+      MeasureDefinition measureDef = null;
 
       if(rs.next()) {
+        measureDef = new MeasureDefinition();
         String id = rs.getObject(1, UUID.class).toString();
         var json = rs.getString(2);
         java.util.Date lastUpdated  = new java.util.Date(rs.getTimestamp(3).getTime());
@@ -167,10 +168,10 @@ public class SharedService {
         measureDef.setBundle(FhirContextProvider.getFhirContext().newJsonParser().parseResource(Bundle.class, json));
         measureDef.setMeasureId(measureId);
         measureDef.setLastUpdated(lastUpdated);
-      }
 
-      assert measureDef.getBundle() != null;
-      assert measureDef.getMeasureId() != null;
+        assert measureDef.getBundle() != null;
+        assert measureDef.getMeasureId() != null;
+      }
 
       return measureDef;
     } catch (SQLException | NullPointerException e) {
