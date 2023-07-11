@@ -57,13 +57,23 @@ public class BulkManagerService {
           BulkQuery bulkQuery = new BulkQuery();
           status.setStatus(BulkStatuses.inProgress);
           bulkStatusService.saveBulkStatus(status);
+          BulkStatusResult statusResult = null;
           try {
-            bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
+            statusResult = bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
           } catch (Exception e) {
             status.setStatus(BulkStatuses.pending);
             bulkStatusService.saveBulkStatus(status);
             throw new RuntimeException(e);
           }
+
+          if(statusResult != null){
+            try {
+              bulkQuery.getResultSetFromBulkResultAndLoadPatientData(statusResult,TenantService.create(sharedService, tenantId),this.applicationContext);
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }
+
         });
       } catch (Exception e) {
         logger.error(e.getMessage());
