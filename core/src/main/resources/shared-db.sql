@@ -24,6 +24,17 @@ CREATE TABLE dbo.[user]
     256
 )
     );
+
+INSERT INTO dbo.[user] (
+    email,
+    passwordSalt,
+    passwordHash
+) VALUES (
+    'default@nhsnlink.org',
+    0xc665798206a55f432c43f63701ea1a7ed24ba26d26932cc5d939ff69588ff3dd280ccbbdd63a0190ba00fd1e119880cf0d063df52b9f8c2a9e8c3ed79f976702,
+    '$argon2id$v=19$m=15360,t=2,p=1$xmV5ggalX0MsQ/Y3AeoaftJLom0mkyzF2Tn/aViP890oDMu91joBkLoA/R4RmIDPDQY99SufjCqejD7Xn5dnAg$8w3buojb38d2X3Q8UbPX8FbiwMXzzMmvW5QKwmeUSYY'
+);
+
 END
 GO
 
