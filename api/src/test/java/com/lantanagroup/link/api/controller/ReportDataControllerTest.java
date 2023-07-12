@@ -7,7 +7,6 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -67,6 +66,6 @@ public class ReportDataControllerTest {
     when(reportDataController.getFhirDataProvider().getAllResourcesByType(Bundle.class)).thenReturn(patientBundle);
     when(reportDataController.getFhirDataProvider().getAllResourcesByType(MeasureReport.class)).thenReturn(reportBundle);
 
-    reportDataController.expungeData();
+    reportDataController.expungeSpecificData();
   }
 }

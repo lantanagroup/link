@@ -1,9 +1,6 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.IReportAggregator;
-import com.lantanagroup.link.ReportIdHelper;
-import com.lantanagroup.link.Stopwatch;
-import com.lantanagroup.link.StopwatchManager;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
@@ -68,6 +65,8 @@ public class ReportGenerator {
 
                 String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
                 patientMeasureReport.setId(measureReportId);
+                // Tag individual MeasureReport as patient-data as it references a patient and will be found for expunge
+                patientMeasureReport.getMeta().addTag(Constants.MainSystem, Constants.patientDataTag,"");
 
                 logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
                 Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report");
