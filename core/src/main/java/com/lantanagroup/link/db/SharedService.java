@@ -246,7 +246,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT measuresFROM [dbo].[measurePackage] WHERE packageId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT measures FROM [dbo].[measurePackage] WHERE packageId = ?");
       ps.setNString(1, packageId);
       ResultSet rs = ps.executeQuery();
 
