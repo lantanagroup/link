@@ -66,6 +66,8 @@ public class FhirHelper {
       case SearchReports:
         auditEvent.setType(new Coding(null, "search-reports", null));
         break;
+      case Delete:
+        auditEvent.setType(new Coding("http://terminology.hl7.org/CodeSystem/audit-event-subtype", "delete", "Delete"));
     }
 
     auditEvent.setAction(AuditEvent.AuditEventAction.E);
@@ -581,7 +583,8 @@ public class FhirHelper {
     SearchLocations,
     InitiateQuery,
     SearchReports,
-    Transformation
+    Transformation,
+    Delete
   }
 }
 

@@ -3,9 +3,11 @@ package com.lantanagroup.link.api.controller;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.IDataProcessor;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
+import com.lantanagroup.link.model.ExpungeResourcesToDelete;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -14,9 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
@@ -60,6 +64,37 @@ public class ReportDataController extends BaseController {
     IDataProcessor dataProcessor = (IDataProcessor) this.context.getBean(dataProcessorClass);
 
     dataProcessor.process(content, getFhirDataProvider());
+  }
+
+  @DeleteMapping(value = "/data/manual-expunge")
+  public void manualExpunge(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @RequestBody ExpungeResourcesToDelete resourcesToDelete) throws Exception {
+
+    FhirDataProvider fhirDataProvider = getFhirDataProvider();
+
+    if (resourcesToDelete == null) {
+      logger.error("Payload not provided");
+      throw new Exception();
+    } else if (resourcesToDelete.getResourceType() == null || resourcesToDelete.getResourceType().trim().isEmpty()) {
+      logger.error("Resource type to delete not specified");
+      throw new Exception();
+    } else if (resourcesToDelete.getResourceIdentifiers() == null || resourcesToDelete.getResourceIdentifiers().length == 0) {
+      logger.error("Resource Identifiers to delete not specified");
+      throw new Exception();
+    }
+
+    for (String resourceIdentifier : resourcesToDelete.getResourceIdentifiers()) {
+      try {
+        fhirDataProvider.deleteResource(resourcesToDelete.getResourceType(), resourceIdentifier, true);
+        logger.info("Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
+      } catch (Exception ex) {
+        logger.info("Issue Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
+        throw new Exception();
+      }
+    }
+
   }
 
   /**
