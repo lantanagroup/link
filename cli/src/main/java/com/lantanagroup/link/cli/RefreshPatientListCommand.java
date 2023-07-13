@@ -150,7 +150,7 @@ public class RefreshPatientListCommand extends BaseShellCommand {
     request.addHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     request.setEntity(new StringEntity(fhirContext.newJsonParser().encodeResourceToString(target)));
 
-    HttpResponse response = Utility.HttpPoster(request, logger);
+    HttpResponse response = Utility.HttpExecuter(request, logger);
 
     logger.info("HTTP Response Code {}", response.getStatusLine().getStatusCode());
   }

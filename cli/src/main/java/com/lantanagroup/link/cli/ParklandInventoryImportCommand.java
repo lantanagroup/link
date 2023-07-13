@@ -80,7 +80,7 @@ public class ParklandInventoryImportCommand extends BaseShellCommand {
         }
       }
       request.setEntity(new ByteArrayEntity(data));
-      Utility.HttpPoster(request, logger);
+      Utility.HttpExecuter(request, logger);
     }
   }
 
