@@ -1,5 +1,8 @@
 package com.lantanagroup.link.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -10,6 +13,13 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
@@ -54,7 +64,7 @@ public class OAuth2Helper {
         return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
       }
       case "sams-password": {
-        return getSamsPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getClientSecret(), config.getScope());
+        return getSamsToken(config);
       }
 
       default:
@@ -119,61 +129,96 @@ public class OAuth2Helper {
     }
   }
 
-  public static String getSamsPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
-    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getSamsPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, clientSecret, scope);
-    }
-    catch(IOException ex) {
-      logger.error(ex.getMessage());
-      return "";
-    }
-  }
+//  public static String getSamsToken(LinkOAuthConfig config) {
+//    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+//      return getSamsToken(httpClient, config);
+//    }
+//    catch(IOException ex) {
+//      logger.error(ex.getMessage());
+//      return "";
+//    }
+//  }
 
-  public static String getSamsPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
-    HttpPost request = new HttpPost(tokenUrl);
+  public static String getSamsToken(LinkOAuthConfig config) throws JsonProcessingException {
 
-    request.addHeader("Accept", "application/json");
-    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    // Make an HTTP request to the introspection endpoint to validate the access token.
+    RestTemplate restTemplate = new RestTemplate();
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Accept", "application/json");
+    headers.add("Content-Type", "application/x-www-form-urlencoded");
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=password");
-    sb.append("&scope=" + scope);
-    sb.append("&username=" + username);
-    sb.append("&password=" + password);
-    sb.append("&client_id=" + clientId);
-    sb.append("&client_secret" + clientSecret);
+    MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+    requestBody.add("grant_type", "password");
+    requestBody.add("scope", config.getScope());
+    requestBody.add("username", config.getUsername());
+    requestBody.add("password", config.getPassword());
+    requestBody.add("client_id", config.getClientSecret());
+    requestBody.add("client_secret", config.getClientSecret());
 
-    try {
-      request.setEntity(new StringEntity(sb.toString()));
+
+    HttpEntity<MultiValueMap<String, String>> samsRequest = new HttpEntity<>(requestBody, headers);
+
+    try
+    {
+      ResponseEntity<String> samsResponse = restTemplate.postForEntity(config.getTokenUrl(), samsRequest, String.class);
+
+      if (samsResponse.getStatusCode() == HttpStatus.OK) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode response = objectMapper.readTree(samsResponse.getBody());
+        return response.get("access_token").toString();
+      }
+      else {
+        return null;
+      }
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      logger.error("Failed to retrieve token from authorization service", ex);
       return null;
     }
 
-    try {
-      if (httpClient == null) {
-        httpClient = HttpClientBuilder.create().build();
-      }
-
-      HttpResponse result = httpClient.execute(request);
-
-      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
-
-      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
-      }
-
-      JSONObject jsonObject = new JSONObject(content);
-
-      if (jsonObject.has("access_token")) {
-        return jsonObject.getString("access_token");
-      }
-
-      return null;
-    } catch (IOException ex) {
-      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
-      return null;
-    }
+    //    HttpPost request = new HttpPost(tokenUrl);
+    //
+    //    request.addHeader("Accept", "application/json");
+    //    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    //
+    //    StringBuilder sb = new StringBuilder();
+    //    sb.append("grant_type=password");
+    //    sb.append("&scope=").append(scope);
+    //    sb.append("&username=").append(username);
+    //    sb.append("&password=").append(password);
+    //    sb.append("&client_id=").append(clientId);
+    //    sb.append("&client_secret").append(clientSecret);
+    //
+    //    try {
+    //      request.setEntity(new StringEntity(sb.toString()));
+    //    } catch (Exception ex) {
+    //      logger.error(ex.getMessage());
+    //      return null;
+    //    }
+    //
+    //    try {
+    //      if (httpClient == null) {
+    //        httpClient = HttpClientBuilder.create().build();
+    //      }
+    //
+    //      HttpResponse result = httpClient.execute(request);
+    //
+    //      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+    //
+    //      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+    //        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
+    //      }
+    //
+    //      JSONObject jsonObject = new JSONObject(content);
+    //
+    //      if (jsonObject.has("access_token")) {
+    //        return jsonObject.getString("access_token");
+    //      }
+    //
+    //      return null;
+    //    } catch (IOException ex) {
+    //      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
+    //      return null;
+    //    }
   }
 
   public static String getClientCredentialsToken(String tokenUrl, String clientId, String clientSecret, String scope, boolean useBasicAuth) {
@@ -201,10 +246,10 @@ public class OAuth2Helper {
     StringBuilder sb = new StringBuilder();
     sb.append("grant_type=client_credentials");
     if (!useBasicAuth) {
-      sb.append("&client_id=" + clientId);
-      sb.append("&client_secret=" + clientSecret);
+      sb.append("&client_id=").append(clientId);
+      sb.append("&client_secret=").append(clientSecret);
     }
-    sb.append("&scope=" + scope);
+    sb.append("&scope=").append(scope);
 
     try {
       request.setEntity(new StringEntity(sb.toString()));
@@ -410,14 +455,7 @@ public class OAuth2Helper {
                   authConfig.getScope());
           break;
         case "sams-password":
-          token = OAuth2Helper.getSamsPasswordCredentialsToken(
-                  client,
-                  authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
-                  authConfig.getPassword(),
-                  authConfig.getClientId(),
-                  authConfig.getClientSecret(),
-                  authConfig.getScope());
+          token = OAuth2Helper.getSamsToken(authConfig);
           break;
       }
     } else {

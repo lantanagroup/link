@@ -1,12 +1,13 @@
 openapi: 3.0.1
 info:
-  version: '{{version}}'
+  version: ''
   title: Link API
 servers:
-  - url: {{server-base-url}}
+  - url: ''
     description: This server
 security:
   - oauth: []
+  - basic: [ ]
 tags:
   - name: API Root
     description: The root endpoint of the API
@@ -167,7 +168,7 @@ paths:
     post:
       tags:
         - Tenants
-      summary: Create a new tenant. If id is specified, will make sure that the tenant does not arleady exist and then create the tenant with the specified id
+      summary: Create a new tenant. If id is specified, will make sure that the tenant does not already exist and then create the tenant with the specified id
       operationId: createTenant
       requestBody:
         content:
@@ -837,33 +838,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/BulkStatus'
-  /api/{tenantId}/bulk/status/:
-    get:
-      tags:
-        - Bulk
-      summary: Gets a bulk status by id
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant
-          required: true
-          schema:
-            type: string
-        - name: id
-          in: path
-          description: the id of the bulk status record
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BulkStatus'
   /api/{tenantId}/bulk/$execute-query-and-retrieval:
     post:
       tags:
@@ -1096,7 +1070,7 @@ components:
             - COLLECTION
             - BATCH
           default: COLLECTION
-          description: 'The type of submission bundle to create.'
+          description: 'The type of submission bundle to create. Bundle types are defined in https://hl7.org/fhir/codesystem-bundle-type.html'
         includesCensuses:
           type: boolean
           default: true
@@ -1150,7 +1124,7 @@ components:
       properties:
         queryPatientListCron:
           type: string
-          description: 'The CRON-formatted schedule to use querying patient list information from the EHR.<br/>The equivalent of manually calling /api/{tenantId}/poi/$query-list'
+          description: 'The CRON-formatted schedule to use querying patient list information from the EHR. The equivalent of manually calling /api/{tenantId}/poi/$query-list. Cron expression formatting can be found in https://docs.oracle.com/cd/E12058_01/doc/doc.1014/e12030/cron_expressions.htm'
         dataRetentionCheckCron:
           type: string
           description: 'The CRON-formatted schedule to use for data retention checks (removing data that is outside the tenant''s configured retention period).'
@@ -1263,11 +1237,27 @@ components:
         - com.lantanagroup.link.events.FixResourceId
         - com.lantanagroup.link.events.FixPeriodDates
         - com.lantanagroup.link.events.PatientDataResourceFilter
+      description: >
+        Event Options
+          * `com.lantanagroup.link.events.CodeSystemCleanup` - Finds references to invalid code systems and replaces them with valid code systems
+
+          * `com.lantanagroup.link.events.ContainedResourceCleanup` - Moves any contained resources from resources retrieved from the EHR to the top-level of patient data
+        
+          * `com.lantanagroup.link.events.CopyLocationIdentifierToType` - This is a specific transform to move data from an extension to the type of a Location resource for UMich. This must happen BEFORE ApplyConceptMaps as an event
+
+          * `com.lantanagroup.link.events.EncounterStatusTransformer` - For each Encounter resource acquired from the EHR, it checks if an end date has been specified on the encounter. If so, changes the Encounter.status to “finished”.
+
+          * `com.lantanagroup.link.events.FixResourceId` - Looks for resources acquired from the EHR that have id elements with a length greater than 64 characters. For those, stores the original id in an extension and replaces the id with a hash representation of the id to keep it unique, which is shorter than 64 characters.
+
+          * `com.lantanagroup.link.events.FixPeriodDates` - Looks for started dates that have no time component. If found, the stored start date is fixed to include precision up to the seconds
+
+          * `com.lantanagroup.link.events.PatientDataResourceFilter` - Filters patient data resources to determine which resources are applicable for the measure period.
     QueryList:
       type: object
       properties:
         fhirServerBase:
           type: string
+          description: The URL to the facility FHIR endpoint
         lists:
           type: array
           items:
@@ -1277,10 +1267,12 @@ components:
       properties:
         listId:
           type: array
+          description: TODO
           items:
             type: string
         measureId:
           type: array
+          example: NHSNGlycemicControlHypoglycemicInitialPopulation
           items:
             type: string
     FhirQuery:
@@ -1288,6 +1280,7 @@ components:
       properties:
         fhirServerBase:
           type: string
+          description: The URL to the facility FHIR endpoint
         authClass:
           type: string
           description: 'The class that should be used (if any) to authenticate queries to the EHR''s FHIR server.'
@@ -1413,12 +1406,16 @@ components:
       properties:
         lookback:
           type: string
+          description: The query look back period in Java Period format (PnYnMnDTnHnMnS).
+          example: P20Y3M20D (20 years, 3 months and 20 days) P1W (1 week)
         initial:
           type: array
+          description: The query plan for resources that are required to determine if the patient is a part of the initial population of a measure
           items:
             $ref: '#/components/schemas/TypedQueryPlan'
         supplemental:
           type: array
+          description: The query plan for additional resources that need to be applied to patients that are part of the initial population of a measure.
           items:
             $ref: '#/components/schemas/TypedQueryPlan'
     TypedQueryPlan:
@@ -1426,10 +1423,14 @@ components:
       properties:
         resourceType:
           type: string
+          description: The FHIR resource to query
+          example: Encounter
         parameters:
           type: array
+          description: Supported parameters applied to the resource query request
           items:
             $ref: '#/components/schemas/ParameterConfig'
+          example: GET [base]?parameter(s)
         references:
           $ref: '#/components/schemas/ReferencesConfig'
         earlyExit:
@@ -1446,19 +1447,31 @@ components:
           type: number
     ParameterConfig:
       type: object
+      description: The supported resource parameter applied to query
+      example: Encounter resource parameter - https://build.fhir.org/encounter-search.html
       properties:
         name:
           type: string
+          description: The resource search parameter name
+          example: date
         literal:
+          description: The actual value used for the search parameter
           type: string
         variable:
           type: string
+          description: The internal Link variable value used for the search parameter
+          example: patientid, lookbackstart, periodstart, periodend
         format:
           type: string
+          description: The format to apply to the 'variable' parameterConfig type
+          example: ge%s (Using 'greater than' for lookBackStart) le%s (Using 'less' than for period end)
         ids:
           type: string
+          description: The value of a resource type that's already been queried.  The resource type defined here should be defined earlier in the query plan.  Link collects the IDs of those previously queried resources and uses them as a search parameter for the resource type in question.
+          example: Encounter
         paged:
           type: number
+          description: The total number of resources returned by the query
     User:
       type: object
       properties:
@@ -1505,3 +1518,14 @@ components:
           type: string
         valueInteger:
           type: number
+  securitySchemes:
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: ''
+          tokenUrl: ''
+          scopes: { }
+    basic:
+      type: http
+      scheme: basic

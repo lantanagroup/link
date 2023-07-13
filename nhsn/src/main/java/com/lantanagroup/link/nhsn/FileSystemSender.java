@@ -42,6 +42,8 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   @Setter
   private FileSystemSenderConfig config;
 
+  private SecureRandom random = new SecureRandom();
+
   public static String expandEnvVars(String text) {
     Map<String, String> envMap = System.getenv();
     for (Map.Entry<String, String> entry : envMap.entrySet()) {
@@ -123,7 +125,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
       try (OutputStream os = new FileOutputStream(path)) {
         byte[] salt = new byte[8];
-        new SecureRandom().nextBytes(salt);// Create key
+        this.random.nextBytes(salt);// Create key
         Cipher cipher = getCipher(this.config.getEncryptSecret(), salt);
         CipherOutputStream cipherOut = new CipherOutputStream(os, cipher);
         Writer writer = new OutputStreamWriter(cipherOut, StandardCharsets.UTF_8);

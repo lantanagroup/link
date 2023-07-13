@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.api.controller.ReportController;
-import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -29,9 +28,6 @@ public class GenerateAndSubmitReportTask implements Runnable {
 
   @Setter
   private String tenantId;
-
-  @Autowired
-  private SharedService sharedService;
 
   @Autowired
   private ReportController reportController;

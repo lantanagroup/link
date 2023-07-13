@@ -66,6 +66,8 @@ public class ApiInit {
       try {
         Thread.sleep(config.getRetryWait());
       } catch (InterruptedException ignored) {
+        logger.warn("Thread was interrupted, while sleeping, while waiting for other services to come online");
+        Thread.currentThread().interrupt();
       }
     }
 

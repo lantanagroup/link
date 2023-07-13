@@ -93,7 +93,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       this.upload(fileName, stream);
       logger.info("Send to upload here");
     } catch (Exception ex) {
-      logger.error("Failed to send measure report to blob storage: {}", Helper.encodeLogging(ex.getMessage()));
+      logger.error("Failed to send measure report to blob storage: {}", Helper.sanitizeString(ex.getMessage()));
       throw new Exception(ex.getMessage());
     }
 
@@ -118,7 +118,7 @@ public class AzureBlobStorageSender extends GenericSender implements IReportSend
       return svcClient.getBlobContainerAsyncClient(this.absConfig.getAzureStorageContainerName());
     }
     catch (Exception ex) {
-      logger.error("Failed to send measure report to blob storage: {}", Helper.encodeLogging(ex.getMessage()));
+      logger.error("Failed to send measure report to blob storage: {}", Helper.sanitizeString(ex.getMessage()));
     }
 
     return null;

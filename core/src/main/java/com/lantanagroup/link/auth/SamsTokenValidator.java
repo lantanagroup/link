@@ -1,13 +1,13 @@
 package com.lantanagroup.link.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -61,7 +61,7 @@ public class SamsTokenValidator implements  ITokenValidator {
 
       ObjectMapper mapper = new ObjectMapper();
       SamsTokenResult tokenResult = mapper.readValue(content, SamsTokenResult.class);
-      return tokenResult.status == "ok";
+      return StringUtils.isNotEmpty(tokenResult.status) && tokenResult.status.equals("ok");
 
     } catch (IOException e) {
       logger.error("Error requesting token validation: " + e.getMessage());

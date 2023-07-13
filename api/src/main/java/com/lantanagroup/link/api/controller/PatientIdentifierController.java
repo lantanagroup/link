@@ -151,7 +151,7 @@ public class PatientIdentifierController extends BaseController {
         reference = listEntry.getItem().getReference();
       }
 
-      return new PatientId(reference);
+      return PatientId.createFromReference(reference);
     } else if (listEntry.getItem().hasIdentifier()) {
       PatientId patientId = new PatientId();
       patientId.setIdentifier(listEntry.getItem().getIdentifier().getSystem() + "|" + listEntry.getItem().getIdentifier().getValue());

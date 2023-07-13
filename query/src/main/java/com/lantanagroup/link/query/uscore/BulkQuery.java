@@ -81,10 +81,15 @@ public class BulkQuery {
 
     try {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       logger.warn("Error initiating bulk export", e);
       bulkStatus.setStatus(BulkStatuses.pending);
       service.saveBulkStatus(bulkStatus);
+    } catch (InterruptedException e) {
+      logger.warn("Interrupted while initiating bulk export", e);
+      bulkStatus.setStatus(BulkStatuses.pending);
+      service.saveBulkStatus(bulkStatus);
+      Thread.currentThread().interrupt();
     }
 
     assert response != null;

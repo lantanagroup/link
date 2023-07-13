@@ -48,7 +48,6 @@ public class FhirBundlerTests {
     PatientList patientList = new PatientList();
     patientList.setId(UUID.randomUUID());
     patientLists.add(patientList);
-    patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
 
     when(tenantService.getConfig()).thenReturn(tenant);
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);
