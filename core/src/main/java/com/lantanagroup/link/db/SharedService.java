@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.MongoConfig;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
@@ -30,11 +30,11 @@ public class SharedService {
   private static final ObjectMapper mapper = new ObjectMapper();
 
   @Autowired
-  private MongoConfig config;
+  private ApiConfig config;
 
   private Connection getSQLConnection() {
     try {
-      Connection conn = DriverManager.getConnection(this.config.getSqlConnectionString());
+      Connection conn = DriverManager.getConnection(this.config.getConnectionString());
       if (conn != null) {
         DatabaseMetaData dm = conn.getMetaData();
         return conn;
