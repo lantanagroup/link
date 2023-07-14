@@ -56,7 +56,7 @@ public class MeasureDefController extends BaseController {
   }
 
   private Bundle getBundleFromUrl(String url) throws URISyntaxException {
-    URI uri = new URI(Helper.sanitizeString(url));
+    URI uri = new URI(Helper.sanitizeUrl(url));
 
     if (this.config.isRequireHttps() && !"https".equalsIgnoreCase(uri.getScheme())) {
       throw new IllegalStateException("URL is not HTTPS");

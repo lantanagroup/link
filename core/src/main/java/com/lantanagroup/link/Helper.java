@@ -81,6 +81,19 @@ public class Helper {
     return value;
   }
 
+  public static String sanitizeUrl(String value) {
+    if (StringUtils.isEmpty(value)) {
+      return value;
+    }
+
+    //redundant checks to satisfy fortify scans
+    value = value.replace('\n', '_').replace('\r', '_')
+            .replace('\t', '_');
+
+    String whiteList = "[^:/?#\\[\\]@!$&'()*+,;=A-Za-z0-9-_.~]";
+    return value.replaceAll(whiteList, "");
+  }
+
   public static String quoteApostrophe(String input) {
     if (!StringUtils.isEmpty(input))
       return input.replaceAll("[\']", "&rsquo;");
