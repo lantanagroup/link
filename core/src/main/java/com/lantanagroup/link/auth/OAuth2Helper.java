@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -75,7 +76,7 @@ public class OAuth2Helper {
 
   public static String getCredentialsToken(LinkOAuthConfig config) {
 
-    // Make an HTTP request to the token endpoint to validate the access token.
+    // Make an HTTP request to the token endpoint to acquire an access token.
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
@@ -86,19 +87,20 @@ public class OAuth2Helper {
     requestBody.add("scope", config.getScope());
     requestBody.add("username", config.getUsername());
     requestBody.add("password", config.getPassword());
-    requestBody.add("client_id", config.getClientSecret());
-
+    requestBody.add("client_id", config.getClientId());
 
     HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(requestBody, headers);
 
     try
     {
-      ResponseEntity<String> idpResponse = restTemplate.postForEntity(config.getTokenUrl(), tokenRequest, String.class);
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
-        return response.get("access_token").toString();
+        return response.get("access_token").asText();
       }
       else {
         return null;
@@ -155,7 +157,7 @@ public class OAuth2Helper {
 
   public static String getSamsToken(LinkOAuthConfig config) {
 
-    // Make an HTTP request to the token endpoint to validate the access token.
+    // Make an HTTP request to the token endpoint to acquire an access token.
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
@@ -166,20 +168,21 @@ public class OAuth2Helper {
     requestBody.add("scope", config.getScope());
     requestBody.add("username", config.getUsername());
     requestBody.add("password", config.getPassword());
-    requestBody.add("client_id", config.getClientSecret());
+    requestBody.add("client_id", config.getClientId());
     requestBody.add("client_secret", config.getClientSecret());
-
 
     HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(requestBody, headers);
 
     try
     {
-      ResponseEntity<String> idpResponse = restTemplate.postForEntity(config.getTokenUrl(), tokenRequest, String.class);
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
-        return response.get("access_token").toString();
+        return response.get("access_token").asText();
       }
       else {
         return null;
@@ -193,7 +196,7 @@ public class OAuth2Helper {
 
   public static String getClientCredentialsToken(String tokenUrl, String clientId, String clientSecret, String scope, boolean useBasicAuth) {
 
-    // Make an HTTP request to the token endpoint to validate the access token.
+    // Make an HTTP request to the token endpoint to acquire an access token.
     RestTemplate restTemplate = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.add("Accept", "application/json");
@@ -217,18 +220,20 @@ public class OAuth2Helper {
 
     try
     {
-      ResponseEntity<String> idpResponse = restTemplate.postForEntity(tokenUrl, tokenRequest, String.class);
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(tokenUrl), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
-        return response.get("access_token").toString();
+        return response.get("access_token").asText();
       }
       else {
         return null;
       }
     } catch (Exception ex) {
-      logger.error("Failed to retrieve token from authorization service", ex);
+      logger.error("Failed to retrieve token from identity provider", ex);
       return null;
     }
 

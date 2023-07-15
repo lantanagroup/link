@@ -42,6 +42,7 @@ public class SamsTokenValidator implements  ITokenValidator {
 
     try
     {
+      logger.info("Requesting token verification from Identity Provider");
       ResponseEntity<String> idpResponse = restTemplate.postForEntity(validationEndpoint, idpRequest, String.class);
 
     /*
@@ -66,6 +67,7 @@ public class SamsTokenValidator implements  ITokenValidator {
         return StringUtils.equalsIgnoreCase(status, "ok");
       }
       else {
+        logger.error("Error requesting token validation, failed server response.");
         return false;
       }
     }
