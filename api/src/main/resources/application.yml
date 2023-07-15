@@ -5,10 +5,6 @@ swagger:
     - openid
     - profile
 api:
-  data-store:
-    base-url: ''
-    username: ''
-    password: ''
   auth-jwks-url:
   # signing algorithm: RSA256,
   algorithm: RSA256

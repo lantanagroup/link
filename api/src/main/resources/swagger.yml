@@ -586,9 +586,9 @@ paths:
       summary: Loads the measure bundle from the request into Link. Either the request body must have a FHIR Bundle, or the url parameter must be specified.
       operationId: createOrUpdateMeasureDef
       parameters:
-        - name: url
+        - name: measureId
           in: query
-          description: A url reference to the measure definition bundle that should be loaded
+          description: The ID of a measure that should be loaded. The ID specified represents a URL in the system config.
           required: false
           schema:
             type: string
