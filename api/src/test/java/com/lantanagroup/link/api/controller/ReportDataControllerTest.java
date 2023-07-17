@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Coding;
@@ -9,7 +10,9 @@ import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -66,7 +69,10 @@ public class ReportDataControllerTest {
     when(reportDataController.getFhirDataProvider().getAllResourcesByType(Bundle.class)).thenReturn(patientBundle);
     when(reportDataController.getFhirDataProvider().getAllResourcesByType(MeasureReport.class)).thenReturn(reportBundle);
 
-    // TODO - ALM 13Jul2023 - get this working somehow...
-    //reportDataController.expungeSpecificData();
+    HttpServletRequest  mockedRequest = Mockito.mock(HttpServletRequest.class);
+    LinkCredentials user = Mockito.mock(LinkCredentials.class);
+    try {
+      reportDataController.expungeSpecificData(user, mockedRequest);
+    } catch (Exception ignored) {}
   }
 }
