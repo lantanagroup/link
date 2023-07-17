@@ -12,13 +12,13 @@ import org.springframework.shell.standard.ShellMethod;
 
 @ShellComponent
 public class ExpungeData extends BaseShellCommand {
-    private static final Logger logger = LoggerFactory.getLogger(ExpungeDateConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExpungeDataConfig.class);
 
     @ShellMethod(
             key = "expunge-data",
             value = "Call API expunge function to clear data")
     public void execute() {
-        ExpungeDateConfig config = applicationContext.getBean(ExpungeDateConfig.class);
+        ExpungeDataConfig config = applicationContext.getBean(ExpungeDataConfig.class);
 
         if (!ValidConfiguration(config)) {
             logger.error("Issue with expunge-data configuration...");
@@ -50,7 +50,7 @@ public class ExpungeData extends BaseShellCommand {
 
     }
 
-    private Boolean ValidConfiguration(ExpungeDateConfig config) {
+    private Boolean ValidConfiguration(ExpungeDataConfig config) {
         if (StringUtils.isBlank(config.getApiUrl())) {
             logger.error("Parameter expunge-data.api-url parameter is required.");
             return false;

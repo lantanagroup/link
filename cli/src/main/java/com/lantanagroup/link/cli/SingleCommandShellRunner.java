@@ -22,7 +22,8 @@ public class SingleCommandShellRunner implements ApplicationRunner {
           "refresh-patient-list",
           "parkland-inventory-import",
           "manual-bed-inventory",
-          "expunge-data");
+          "expunge-data",
+          "manual-expunge");
 
   public SingleCommandShellRunner(Shell shell, ConfigurableEnvironment environment) {
     this.shell = shell;

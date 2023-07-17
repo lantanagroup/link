@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "cli.expunge-data")
-public class ExpungeDateConfig {
+public class ExpungeDataConfig {
     private String apiUrl;
     private LinkOAuthConfig auth;
 }

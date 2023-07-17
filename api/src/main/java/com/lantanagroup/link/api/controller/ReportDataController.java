@@ -2,12 +2,14 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IDataProcessor;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
 import com.lantanagroup.link.config.query.USCoreConfig;
 import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
 import com.lantanagroup.link.model.ExpungeResourcesToDelete;
+import com.lantanagroup.link.model.ExpungeResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +28,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 
 @RestController
@@ -66,13 +72,22 @@ public class ReportDataController extends BaseController {
     dataProcessor.process(content, getFhirDataProvider());
   }
 
-  @DeleteMapping(value = "/data/manual-expunge")
-  public void manualExpunge(
+  @PostMapping(value = "/data/manual-expunge")
+  public ResponseEntity<ExpungeResponse> manualExpunge(
           @AuthenticationPrincipal LinkCredentials user,
           HttpServletRequest request,
           @RequestBody ExpungeResourcesToDelete resourcesToDelete) throws Exception {
 
+    ExpungeResponse response = new ExpungeResponse();
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
+
+    Boolean hasExpungeRole = HasExpungeRole(user);
+
+    if (!hasExpungeRole) {
+      logger.error("User doesn't have proper role to expunge data");
+      response.setMessage("User doesn't have proper role to expunge data");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 
     if (resourcesToDelete == null) {
       logger.error("Payload not provided");
@@ -88,12 +103,16 @@ public class ReportDataController extends BaseController {
     for (String resourceIdentifier : resourcesToDelete.getResourceIdentifiers()) {
       try {
         fhirDataProvider.deleteResource(resourcesToDelete.getResourceType(), resourceIdentifier, true);
+        this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Delete, String.format("Successfully Deleted {} Resource", resourcesToDelete.getResourceType()));
         logger.info("Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
       } catch (Exception ex) {
         logger.info("Issue Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
         throw new Exception();
       }
     }
+
+    response.setMessage("All specified items submitted to Data Store for removal.");
+    return ResponseEntity.ok(response);
 
   }
 
@@ -103,8 +122,20 @@ public class ReportDataController extends BaseController {
    * has been reached.
    */
   @DeleteMapping(value = "/data/expunge")
-  public void expungeSpecificData() throws DatatypeConfigurationException {
+  public ResponseEntity<ExpungeResponse> expungeSpecificData(@AuthenticationPrincipal LinkCredentials user,
+                                                             HttpServletRequest request) throws Exception {
+    ExpungeResponse response = new ExpungeResponse();
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
+
+    Boolean hasExpungeRole = HasExpungeRole(user);
+
+    if (!hasExpungeRole) {
+      logger.error("User doesn't have proper role to expunge data");
+      response.setMessage("User doesn't have proper role to expunge data");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    // TODO - add auditing... somehow
 
     if(dataGovernanceConfig != null) {
       expungeDataByType(fhirDataProvider, "List", false, dataGovernanceConfig.getCensusListRetention());
@@ -123,6 +154,9 @@ public class ReportDataController extends BaseController {
       // Individual MeasureReport for patient will be tagged.  Others have no PHI.
       expungeDataByType(fhirDataProvider, "MeasureReport", true, dataGovernanceConfig.getReportRetention());
     }
+
+    response.setMessage("All specified items submitted to Data Store for removal.");
+    return ResponseEntity.ok(response);
   }
 
   /**
@@ -195,5 +229,20 @@ public class ReportDataController extends BaseController {
     calendar.add(Calendar.SECOND, dur.getSeconds());
 
     return calendar.getTime();
+  }
+
+  private Boolean HasExpungeRole(LinkCredentials user) {
+    ArrayList<String> roles = (ArrayList<String>)user.getJwt().getClaim("realm_access").asMap().get("roles");
+
+    boolean hasExpungeRole = false;
+    for (String role : roles) {
+      if (role.equals(dataGovernanceConfig.getExpungeRole())) {
+        hasExpungeRole = true;
+        break;
+      }
+    }
+
+    return hasExpungeRole;
+
   }
 }

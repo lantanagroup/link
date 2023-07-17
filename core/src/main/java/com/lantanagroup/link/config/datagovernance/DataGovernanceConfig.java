@@ -16,17 +16,22 @@ import org.springframework.validation.annotation.Validated;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class DataGovernanceConfig {
   /**
-   * <strong>data-governance.retention-period.census-list-retention</strong><br>Contains the retention periods for the census list.
+   * <strong>data-governance.census-list-retention</strong><br>Contains the retention periods for the census list.
    */
   private String censusListRetention;
 
   /**
-   * <strong>data-governance.retention-period.patient-data-retention</strong><br>Contains the retention periods for the patient data.
+   * <strong>data-governance.patient-data-retention</strong><br>Contains the retention periods for the patient data.
    */
   private String patientDataRetention;
 
   /**
-   * <strong>data-governance.retention-period.report-retention</strong><br>Contains the retention periods for the report.
+   * <strong>data-governance.report-retention</strong><br>Contains the retention periods for the report.
    */
   private String reportRetention;
+
+  /**
+   * <strong>data-governance.expunge-role</strong><br/>The JWT role required for a user to be able to call expunge endpoints.
+   */
+  private String expungeRole;
 }
