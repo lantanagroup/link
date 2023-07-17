@@ -103,7 +103,10 @@ public class ReportDataController extends BaseController {
     for (String resourceIdentifier : resourcesToDelete.getResourceIdentifiers()) {
       try {
         fhirDataProvider.deleteResource(resourcesToDelete.getResourceType(), resourceIdentifier, true);
-        this.getFhirDataProvider().audit(request, user.getJwt(), FhirHelper.AuditEventTypes.Delete, String.format("Successfully Deleted {} Resource", resourcesToDelete.getResourceType()));
+        getFhirDataProvider().audit(request,
+                user.getJwt(),
+                FhirHelper.AuditEventTypes.Delete,
+                String.format("Resource of Type '%s' with Id of '%s' has been expunged.", resourcesToDelete.getResourceType(), resourceIdentifier));
         logger.info("Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
       } catch (Exception ex) {
         logger.info("Issue Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
@@ -135,24 +138,52 @@ public class ReportDataController extends BaseController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // TODO - add auditing... somehow
-
     if(dataGovernanceConfig != null) {
-      expungeDataByType(fhirDataProvider, "List", false, dataGovernanceConfig.getCensusListRetention());
-      expungeDataByType(fhirDataProvider, "Bundle", true, dataGovernanceConfig.getPatientDataRetention());
-      expungeDataByType(fhirDataProvider, "Patient", false, dataGovernanceConfig.getPatientDataRetention());
+      expungeDataByType(fhirDataProvider,
+              "List",
+              false,
+              dataGovernanceConfig.getCensusListRetention(),
+              request,
+              user);
+      expungeDataByType(fhirDataProvider,
+              "Bundle",
+              true,
+              dataGovernanceConfig.getPatientDataRetention(),
+              request,
+              user);
+      expungeDataByType(fhirDataProvider,
+              "Patient",
+              false,
+              dataGovernanceConfig.getPatientDataRetention(),
+              request,
+              user);
 
       // Loop uscore.patient-resource-types & other-resource-types and delete
       for(String resourceType : usCoreConfig.getPatientResourceTypes()) {
-        expungeDataByType(fhirDataProvider, resourceType, false, dataGovernanceConfig.getPatientDataRetention());
+        expungeDataByType(fhirDataProvider,
+                resourceType,
+                false,
+                dataGovernanceConfig.getPatientDataRetention(),
+                request,
+                user);
       }
 
       for(USCoreOtherResourceTypeConfig otherResourceTypes : usCoreConfig.getOtherResourceTypes()) {
-        expungeDataByType(fhirDataProvider, otherResourceTypes.getResourceType(), false, dataGovernanceConfig.getPatientDataRetention());
+        expungeDataByType(fhirDataProvider,
+                otherResourceTypes.getResourceType(),
+                false,
+                dataGovernanceConfig.getPatientDataRetention(),
+                request,
+                user);
       }
 
       // Individual MeasureReport for patient will be tagged.  Others have no PHI.
-      expungeDataByType(fhirDataProvider, "MeasureReport", true, dataGovernanceConfig.getReportRetention());
+      expungeDataByType(fhirDataProvider,
+              "MeasureReport",
+              true,
+              dataGovernanceConfig.getReportRetention(),
+              request,
+              user);
     }
 
     response.setMessage("All specified items submitted to Data Store for removal.");
@@ -168,7 +199,7 @@ public class ReportDataController extends BaseController {
    * if a retention period exists for the data, expunge the data.
    * if the data being expunged are patientDataBundles, only expunge bundles with the patient data tag.
    */
-  private void expungeDataByType(FhirDataProvider fhirDataProvider, String resourceType, boolean filterPatientData, String retention) throws DatatypeConfigurationException {
+  private void expungeDataByType(FhirDataProvider fhirDataProvider, String resourceType, boolean filterPatientData, String retention, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
     Bundle bundle = fhirDataProvider.getAllResourcesByType(resourceType);
     if(bundle != null)
     {
@@ -181,7 +212,9 @@ public class ReportDataController extends BaseController {
                   retention,
                   lastUpdate,
                   entry.getResource().getIdElement().getIdPart(),
-                  entry.getResource().getResourceType().toString());
+                  entry.getResource().getResourceType().toString(),
+                  request,
+                  user);
         }
       }
     }
@@ -196,13 +229,17 @@ public class ReportDataController extends BaseController {
    * @throws DatatypeConfigurationException
    * Determines if the retention period has passed, if so then it expunges the data.
    */
-  private void expungeSpecificData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) throws DatatypeConfigurationException {
+  private void expungeSpecificData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
     Date comp = adjustTime(retentionPeriod, lastDatePosted);
     Date today = new Date();
 
     if(today.compareTo(comp) >= 0) {
       try {
         fhirDataProvider.deleteResource(type, id, true);
+        getFhirDataProvider().audit(request,
+                user.getJwt(),
+                FhirHelper.AuditEventTypes.Delete,
+                String.format("Resource of Type '%s' with Id of '%s' has been expunged.", type, id));
         logger.info("Resource of Type '{}' with Id of '{}' has been expunged.", type, id);
       } catch (Exception ex) {
         logger.error("Issue Deleting Resource of Type '{}' with Id of '{}'", type, id);

@@ -26,7 +26,7 @@ public class ManualExpunge extends BaseShellCommand {
             value = "Manual expunge lists of Resources from the Data Store")
     public void execute(String resourceType, String[] resourceIdentifiers) {
 
-        ExpungeDataConfig config = applicationContext.getBean(ExpungeDataConfig.class);
+        ManualExpungeConfig config = applicationContext.getBean(ManualExpungeConfig.class);
 
         Scanner scanner = new Scanner(System.in);
         System.out.printf("Are You SURE You Want To Delete These %s Items? (type YES to continue) ", resourceType);
