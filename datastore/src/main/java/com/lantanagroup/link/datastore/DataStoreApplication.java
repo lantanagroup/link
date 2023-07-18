@@ -4,6 +4,7 @@ import ca.uhn.fhir.jpa.api.config.DaoConfig;
 import ca.uhn.fhir.jpa.model.config.PartitionSettings;
 import ca.uhn.fhir.jpa.model.entity.ModelConfig;
 import com.lantanagroup.link.config.datastore.DataStoreConfig;
+import com.lantanagroup.link.config.datastore.DataStoreDaoConfig;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.h2.Driver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,14 +63,21 @@ public class DataStoreApplication extends SpringBootServletInitializer {
   @Bean
   public DaoConfig daoConfig() {
     DaoConfig theDaoConfig = new DaoConfig();
-    theDaoConfig.setAutoCreatePlaceholderReferenceTargets(true);
-    theDaoConfig.setEnforceReferentialIntegrityOnDelete(false);
-    theDaoConfig.setEnforceReferentialIntegrityOnWrite(true);
-    theDaoConfig.setAllowContainsSearches(true);
-    theDaoConfig.setAllowMultipleDelete(false);
-    theDaoConfig.setExpungeEnabled(true);
-    theDaoConfig.setFetchSizeDefaultMaximum(100);
-    theDaoConfig.setExpireSearchResultsAfterMillis(3600000);    // 60 minutes
+
+    if (dataStoreConfig.getDao() != null) {
+      DataStoreDaoConfig dao = dataStoreConfig.getDao();
+
+      if (dao.getAutoCreatePlaceholderReferenceTargets() != null) { theDaoConfig.setAutoCreatePlaceholderReferenceTargets(dao.getAutoCreatePlaceholderReferenceTargets()); }
+      if (dao.getEnforceReferentialIntegrityOnDelete() != null) { theDaoConfig.setEnforceReferentialIntegrityOnDelete(dao.getEnforceReferentialIntegrityOnDelete()); }
+      if (dao.getEnforceReferentialIntegrityOnWrite() != null) { theDaoConfig.setEnforceReferentialIntegrityOnWrite(dao.getEnforceReferentialIntegrityOnWrite()); }
+      if (dao.getAllowContainsSearches() != null) { theDaoConfig.setAllowContainsSearches(dao.getAllowContainsSearches()); }
+      if (dao.getAllowMultipleDelete() != null) { theDaoConfig.setAllowMultipleDelete(dao.getAllowMultipleDelete()); }
+      if (dao.getExpungeEnabled() != null) { theDaoConfig.setExpungeEnabled(dao.getExpungeEnabled()); }
+      if (dao.getAllowMultipleDelete() != null) { theDaoConfig.setDeleteExpungeEnabled(dao.getAllowMultipleDelete()); }
+      if (dao.getFetchSizeDefaultMaximum() != null) { theDaoConfig.setFetchSizeDefaultMaximum(dao.getFetchSizeDefaultMaximum()); }
+      if (dao.getExpireSearchResultsAfterMillis() != null) { theDaoConfig.setExpireSearchResultsAfterMillis(dao.getExpireSearchResultsAfterMillis()); }
+    }
+
     return theDaoConfig;
   }
 

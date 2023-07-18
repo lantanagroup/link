@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import org.hl7.fhir.r4.model.MeasureReport;
 import ca.uhn.fhir.context.FhirContext;
@@ -23,9 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +37,7 @@ public class FhirDataProvider {
   protected FhirContext ctx = FhirContextProvider.getFhirContext();
 
   @Getter
-  private IGenericClient client;
+  private final IGenericClient client;
 
   public FhirDataProvider(IGenericClient client) {
     this.client = client;
@@ -169,7 +165,7 @@ public class FhirDataProvider {
   }
 
   public Bundle findListByIdentifierAndDate(String system, String value, String start, String end) {
-    Bundle bundle = this.client
+    return this.client
             .search()
             .forResource(ListResource.class)
             .where(ListResource.IDENTIFIER.exactly().systemAndValues(system, value))
@@ -178,7 +174,6 @@ public class FhirDataProvider {
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
-    return bundle;
   }
 
   public Measure getMeasureById(String measureId) {
@@ -186,23 +181,21 @@ public class FhirDataProvider {
   }
 
   public MeasureReport getMeasureReportById(String reportId) {
-    MeasureReport report = this.client
+
+    return this.client
             .read()
             .resource(MeasureReport.class)
             .withId(reportId)
             .execute();
-
-    return report;
   }
 
   public Bundle getBundleById(String bundleId) {
-    Bundle report = this.client
+
+    return this.client
             .read()
             .resource(Bundle.class)
             .withId(bundleId)
             .execute();
-
-    return report;
   }
 
   public Bundle getMeasureReportsByIds(List<String> reportIds) {
@@ -210,15 +203,14 @@ public class FhirDataProvider {
     //       E.g., a maximum query string length that HAPI will accept?
     //       If so, modify this logic to use multiple requests
     //       Limit the number of report IDs (based on total query string length?) sent in any single request
-    Bundle response = this.client
+
+    return this.client
             .search()
             .forResource(MeasureReport.class)
             .where(Resource.RES_ID.exactly().codes(reportIds))
             .returnBundle(Bundle.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
-
-    return response;
   }
 
   public Measure getMeasureForReport(DocumentReference docRef) {
@@ -248,12 +240,10 @@ public class FhirDataProvider {
   public Bundle transaction(Bundle txBundle) {
     logger.trace("Executing transaction on " + this.client.getServerBase());
 
-    Bundle responseBundle = this.client
+    return this.client
             .transaction()
             .withBundle(txBundle)
             .execute();
-
-    return responseBundle;
   }
 
   public Measure findMeasureByIdentifier(Identifier identifier) {
@@ -288,9 +278,9 @@ public class FhirDataProvider {
 
   /**
    * Gets a resource by type and ID only including the id property to check if the resource exists
-   * @param resourceType
-   * @param resourceId
-   * @return
+   * @param resourceType The type of resource we are trying to get (List, Patient, etc...)
+   * @param resourceId The identifier of the resource we are trying to get
+   * @return The gotten Resource
    */
   public IBaseResource tryGetResource(String resourceType, String resourceId) {
     return this.client
@@ -304,9 +294,9 @@ public class FhirDataProvider {
 
   /**
    * Gets a complete resource by retrieving it based on type and id
-   * @param resourceType
-   * @param resourceId
-   * @return
+   * @param resourceType The type of resource we are trying to get (List, Patient, etc...)
+   * @param resourceId The identifier of the resource we are trying to get
+   * @return The gotten Resource
    */
   public IBaseResource getResourceByTypeAndId(String resourceType, String resourceId) {
     return this.client
@@ -320,19 +310,19 @@ public class FhirDataProvider {
   public MeasureReport getMeasureReport(String measureId, Parameters parameters) {
 
     //Uncomment to get payload sent to get MeasureReport
+    /*
     FhirContext ctx = FhirContext.forR4();
     IParser parser = ctx.newJsonParser();
     String myRequestBody = parser.encodeResourceToString(parameters);
+     */
 
-    MeasureReport measureReport = client.operation()
+    return client.operation()
             .onInstance(new IdType("Measure", measureId))
             .named("$evaluate-measure")
             .withParameters(parameters)
             .returnResourceType(MeasureReport.class)
             .cacheControl(new CacheControlDirective().setNoCache(true))
             .execute();
-
-    return measureReport;
   }
 
   public Bundle searchPractitioner(String tagSystem, String tagValue) {
@@ -405,6 +395,14 @@ public class FhirDataProvider {
             .execute();
   }
 
+  public Bundle getAllResourcesByType(String resourceType) {
+    return client
+            .search()
+            .forResource(resourceType)
+            .returnBundle(Bundle.class)
+            .execute();
+  }
+
   public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
     return client
             .search()
@@ -414,15 +412,11 @@ public class FhirDataProvider {
   }
 
   public void deleteResource(String resourceType, String id, boolean permanent) {
-    try {
-      URL url = new URL(this.client.getServerBase() + "/" + resourceType + "/" + id + (permanent?"?_expunge=true":""));
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("DELETE");
-      con.getResponseMessage();
-      con.disconnect();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+
+    String url = String.format("%s?_id=%s%s", resourceType, id, (permanent?"&_expunge=true":""));
+
+    client.delete().resourceConditionalByUrl(url).execute();
+
   }
 }
 

@@ -21,7 +21,9 @@ public class SingleCommandShellRunner implements ApplicationRunner {
           "knox-measure-report-transfer",
           "refresh-patient-list",
           "parkland-inventory-import",
-          "manual-bed-inventory");
+          "manual-bed-inventory",
+          "expunge-data",
+          "manual-expunge");
 
   public SingleCommandShellRunner(Shell shell, ConfigurableEnvironment environment) {
     this.shell = shell;

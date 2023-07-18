@@ -2,27 +2,35 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IDataProcessor;
+import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.datagovernance.DataGovernanceConfig;
+import com.lantanagroup.link.config.query.USCoreConfig;
+import com.lantanagroup.link.config.query.USCoreOtherResourceTypeConfig;
+import com.lantanagroup.link.model.ExpungeResourcesToDelete;
+import com.lantanagroup.link.model.ExpungeResponse;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.ListResource;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotNull;
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 
 @RestController
@@ -38,6 +46,9 @@ public class ReportDataController extends BaseController {
   @Setter
   @Getter
   private DataGovernanceConfig dataGovernanceConfig;
+
+  @Autowired
+  private USCoreConfig usCoreConfig;
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -61,42 +72,149 @@ public class ReportDataController extends BaseController {
     dataProcessor.process(content, getFhirDataProvider());
   }
 
+  @PostMapping(value = "/data/manual-expunge")
+  public ResponseEntity<ExpungeResponse> manualExpunge(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @RequestBody ExpungeResourcesToDelete resourcesToDelete) throws Exception {
+
+    ExpungeResponse response = new ExpungeResponse();
+    FhirDataProvider fhirDataProvider = getFhirDataProvider();
+
+    Boolean hasExpungeRole = HasExpungeRole(user);
+
+    if (!hasExpungeRole) {
+      logger.error("User doesn't have proper role to expunge data");
+      response.setMessage("User doesn't have proper role to expunge data");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    if (resourcesToDelete == null) {
+      logger.error("Payload not provided");
+      throw new Exception();
+    } else if (resourcesToDelete.getResourceType() == null || resourcesToDelete.getResourceType().trim().isEmpty()) {
+      logger.error("Resource type to delete not specified");
+      throw new Exception();
+    } else if (resourcesToDelete.getResourceIdentifiers() == null || resourcesToDelete.getResourceIdentifiers().length == 0) {
+      logger.error("Resource Identifiers to delete not specified");
+      throw new Exception();
+    }
+
+    for (String resourceIdentifier : resourcesToDelete.getResourceIdentifiers()) {
+      try {
+        fhirDataProvider.deleteResource(resourcesToDelete.getResourceType(), resourceIdentifier, true);
+        getFhirDataProvider().audit(request,
+                user.getJwt(),
+                FhirHelper.AuditEventTypes.Delete,
+                String.format("Resource of Type '%s' with Id of '%s' has been expunged.", resourcesToDelete.getResourceType(), resourceIdentifier));
+        logger.info("Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
+      } catch (Exception ex) {
+        logger.info("Issue Removing Resource of type {} with Identifier {}", resourcesToDelete.getResourceType(), resourceIdentifier);
+        throw new Exception();
+      }
+    }
+
+    response.setMessage("All specified items submitted to Data Store for removal.");
+    return ResponseEntity.ok(response);
+
+  }
+
   /**
    * @throws DatatypeConfigurationException
    * Deletes all census lists, patient data bundles, and measure reports stored on the server if their retention period
    * has been reached.
    */
   @DeleteMapping(value = "/data/expunge")
-  public void expungeData() throws DatatypeConfigurationException {
+  public ResponseEntity<ExpungeResponse> expungeSpecificData(@AuthenticationPrincipal LinkCredentials user,
+                                                             HttpServletRequest request) throws Exception {
+    ExpungeResponse response = new ExpungeResponse();
     FhirDataProvider fhirDataProvider = getFhirDataProvider();
 
-    if(dataGovernanceConfig != null) {
-      expungeData(fhirDataProvider, ListResource.class, false, dataGovernanceConfig.getCensusListRetention());
-      expungeData(fhirDataProvider, Bundle.class, true, dataGovernanceConfig.getPatientDataRetention());
-      expungeData(fhirDataProvider, MeasureReport.class, false, dataGovernanceConfig.getReportRetention());
-    }
-  }
+    Boolean hasExpungeRole = HasExpungeRole(user);
 
+    if (!hasExpungeRole) {
+      logger.error("User doesn't have proper role to expunge data");
+      response.setMessage("User doesn't have proper role to expunge data");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    if(dataGovernanceConfig != null) {
+      expungeDataByType(fhirDataProvider,
+              "List",
+              false,
+              dataGovernanceConfig.getCensusListRetention(),
+              request,
+              user);
+      expungeDataByType(fhirDataProvider,
+              "Bundle",
+              true,
+              dataGovernanceConfig.getPatientDataRetention(),
+              request,
+              user);
+      expungeDataByType(fhirDataProvider,
+              "Patient",
+              false,
+              dataGovernanceConfig.getPatientDataRetention(),
+              request,
+              user);
+
+      // Loop uscore.patient-resource-types & other-resource-types and delete
+      for(String resourceType : usCoreConfig.getPatientResourceTypes()) {
+        expungeDataByType(fhirDataProvider,
+                resourceType,
+                false,
+                dataGovernanceConfig.getPatientDataRetention(),
+                request,
+                user);
+      }
+
+      for(USCoreOtherResourceTypeConfig otherResourceTypes : usCoreConfig.getOtherResourceTypes()) {
+        expungeDataByType(fhirDataProvider,
+                otherResourceTypes.getResourceType(),
+                false,
+                dataGovernanceConfig.getPatientDataRetention(),
+                request,
+                user);
+      }
+
+      // Individual MeasureReport for patient will be tagged.  Others have no PHI.
+      expungeDataByType(fhirDataProvider,
+              "MeasureReport",
+              true,
+              dataGovernanceConfig.getReportRetention(),
+              request,
+              user);
+    }
+
+    response.setMessage("All specified items submitted to Data Store for removal.");
+    return ResponseEntity.ok(response);
+  }
 
   /**
    * @param fhirDataProvider used to work with data on the server.
-   * @param classType the type of class for the data.
+   * @param resourceType the type of FHIR Resource for the data.
    * @param filterPatientData if looking for patientDataBundles and not other bundles.
    * @param retention how long to keep the data.
    * @throws DatatypeConfigurationException
    * if a retention period exists for the data, expunge the data.
    * if the data being expunged are patientDataBundles, only expunge bundles with the patient data tag.
    */
-  private void expungeData(FhirDataProvider fhirDataProvider, Class<? extends IBaseResource> classType, boolean filterPatientData, String retention) throws DatatypeConfigurationException {
-    Bundle bundle = fhirDataProvider.getAllResourcesByType(classType);
+  private void expungeDataByType(FhirDataProvider fhirDataProvider, String resourceType, boolean filterPatientData, String retention, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
+    Bundle bundle = fhirDataProvider.getAllResourcesByType(resourceType);
     if(bundle != null)
     {
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         String tag = entry.getResource().getMeta().getTag().isEmpty()? "" :entry.getResource().getMeta().getTag().get(0).getCode();
         Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
-        if((StringUtils.isNotBlank(retention)) && ((filterPatientData && tag.equals(Constants.patientDataTag)) || !filterPatientData)) {
-          expungeData(fhirDataProvider, dataGovernanceConfig.getPatientDataRetention(),
-                  lastUpdate, entry.getResource().getId(), entry.getResource().getResourceType().toString());
+
+        if((StringUtils.isNotBlank(retention)) && (!filterPatientData || tag.equals(Constants.patientDataTag))) {
+          expungeSpecificData(fhirDataProvider,
+                  retention,
+                  lastUpdate,
+                  entry.getResource().getIdElement().getIdPart(),
+                  entry.getResource().getResourceType().toString(),
+                  request,
+                  user);
         }
       }
     }
@@ -111,13 +229,21 @@ public class ReportDataController extends BaseController {
    * @throws DatatypeConfigurationException
    * Determines if the retention period has passed, if so then it expunges the data.
    */
-  private void expungeData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type) throws DatatypeConfigurationException {
+  private void expungeSpecificData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
     Date comp = adjustTime(retentionPeriod, lastDatePosted);
     Date today = new Date();
 
     if(today.compareTo(comp) >= 0) {
-      fhirDataProvider.deleteResource(type, id, true);
-      logger.info(String.format("{}: {} has been expunged.", type, id));
+      try {
+        fhirDataProvider.deleteResource(type, id, true);
+        getFhirDataProvider().audit(request,
+                user.getJwt(),
+                FhirHelper.AuditEventTypes.Delete,
+                String.format("Resource of Type '%s' with Id of '%s' has been expunged.", type, id));
+        logger.info("Resource of Type '{}' with Id of '{}' has been expunged.", type, id);
+      } catch (Exception ex) {
+        logger.error("Issue Deleting Resource of Type '{}' with Id of '{}'", type, id);
+      }
     }
   }
 
@@ -140,5 +266,20 @@ public class ReportDataController extends BaseController {
     calendar.add(Calendar.SECOND, dur.getSeconds());
 
     return calendar.getTime();
+  }
+
+  private Boolean HasExpungeRole(LinkCredentials user) {
+    ArrayList<String> roles = (ArrayList<String>)user.getJwt().getClaim("realm_access").asMap().get("roles");
+
+    boolean hasExpungeRole = false;
+    for (String role : roles) {
+      if (role.equals(dataGovernanceConfig.getExpungeRole())) {
+        hasExpungeRole = true;
+        break;
+      }
+    }
+
+    return hasExpungeRole;
+
   }
 }

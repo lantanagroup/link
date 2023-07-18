@@ -48,4 +48,7 @@ public class DataStoreConfig {
    */
   @Getter
   private CorsConfig cors;
+
+  @Getter
+  private DataStoreDaoConfig dao;
 }

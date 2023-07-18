@@ -180,7 +180,7 @@ public class PatientScoop {
     patientBundle.setId(ReportIdHelper.getPatientDataBundleId(reportId, patient.getIdElement().getIdPart()));
 
     // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
-    patientBundle.getMeta().addTag(Constants.MainSystem, "patient-data", null);
+    patientBundle.getMeta().addTag(Constants.MainSystem, Constants.patientDataTag, "Patient Data");
 
     return patientBundle;
   }
@@ -251,7 +251,9 @@ public class PatientScoop {
     }
 
     try {
+
       // Store a Bundle which is a bunch of Patient Bundles so that getReportPatients works
+      // TODO - note we may remove this because of expunge policy
       Bundle allPatientBundle = new Bundle();
 
       for (Patient patient : patients) {
@@ -263,6 +265,9 @@ public class PatientScoop {
       //String allPatientBundleId = String.format("%s-%s", reportId, ReportIdHelper.);
       allPatientBundle.setId(reportId);
       allPatientBundle.setType(Bundle.BundleType.COLLECTION);
+      // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
+      allPatientBundle.getMeta().addTag(Constants.MainSystem, Constants.patientDataTag, null);
+
       // need to see if this already exists??? If not call createResource???
       this.fhirDataProvider.updateResource(allPatientBundle);
     } catch (Exception ex) {
