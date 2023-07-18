@@ -1,5 +1,6 @@
 package com.lantanagroup.link.cli;
 
+import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,5 +12,5 @@ public class ParklandSubmissionInfo {
     @NotEmpty
     private String submissionUrl;
     @NotEmpty
-    private AuthConfig submissionAuth;
+    private LinkOAuthConfig submissionAuth;
 }

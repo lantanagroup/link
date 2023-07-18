@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 
 @Getter
@@ -13,8 +15,10 @@ import java.util.HashMap;
 public class ParklandInventoryImportConfig {
 
   @Getter
+  @NotNull
   private HashMap<String, SftpDownloaderConfig> downloader;
   @Getter
+  @NotNull
   private HashMap<String, ParklandSubmissionInfo> submissionInfo;
 
 }

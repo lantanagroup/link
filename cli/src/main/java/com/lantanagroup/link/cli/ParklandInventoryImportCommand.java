@@ -31,6 +31,20 @@ public class ParklandInventoryImportCommand extends BaseShellCommand {
       registerBeans();
       config = applicationContext.getBean(ParklandInventoryImportConfig.class);
       validate(config);
+
+      // Check to make sure the downloader & submissionInfo sections
+      // exist for the fileType
+      if (config.getDownloader().get(fileType) == null) {
+        String errorMessage = String.format("parkland-inventory-import.downloader configuration for File Type '%s' is not available.", fileType);
+        logger.error(errorMessage);
+        throw new Exception(errorMessage);
+      }
+      if (config.getSubmissionInfo().get(fileType) == null) {
+        String errorMessage = String.format("parkland-inventory-import.submission-info configuration for File Type '%s' is not available.", fileType);
+        logger.error(errorMessage);
+        throw new Exception(errorMessage);
+      }
+
       SetConfigFileName(fileName);
       byte[] data = download();
       submit(data);
@@ -61,23 +75,11 @@ public class ParklandInventoryImportCommand extends BaseShellCommand {
     logger.info("Submitting to {}", submissionUrl);
     try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
       HttpPost request = new HttpPost(submissionUrl);
-      AuthConfig auth = config.getSubmissionInfo().get(fileType).getSubmissionAuth();
-      if (auth != null) {
-        String token = OAuth2Helper.getPasswordCredentialsToken(
-                httpClient,
-                auth.getTokenUrl(),
-                auth.getUser(),
-                auth.getPass(),
-                auth.getClientId(),
-                auth.getScope());
-        if (token == null) {
-          throw new Exception("Authorization failed");
-        }
-        if (OAuth2Helper.validateHeaderJwtToken(token)) {
-          request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
-        } else {
-          throw new JWTVerificationException("Invalid token format");
-        }
+      String token = OAuth2Helper.getToken(config.getSubmissionInfo().get(fileType).getSubmissionAuth());
+      if (OAuth2Helper.validateHeaderJwtToken(token)) {
+        request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+      } else {
+        throw new JWTVerificationException("Invalid token format");
       }
       request.setEntity(new ByteArrayEntity(data));
       Utility.HttpExecuter(request, logger);
