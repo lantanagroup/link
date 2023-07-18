@@ -3,10 +3,9 @@ package com.lantanagroup.link.cli;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.lantanagroup.link.auth.OAuth2Helper;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.shell.standard.ShellComponent;
@@ -73,17 +72,19 @@ public class ParklandInventoryImportCommand extends BaseShellCommand {
   private void submit(byte[] data) throws Exception {
     String submissionUrl = config.getSubmissionInfo().get(fileType).getSubmissionUrl();
     logger.info("Submitting to {}", submissionUrl);
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      HttpPost request = new HttpPost(submissionUrl);
-      String token = OAuth2Helper.getToken(config.getSubmissionInfo().get(fileType).getSubmissionAuth());
-      if (OAuth2Helper.validateHeaderJwtToken(token)) {
-        request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
-      } else {
-        throw new JWTVerificationException("Invalid token format");
-      }
-      request.setEntity(new ByteArrayEntity(data));
-      Utility.HttpExecuter(request, logger);
+
+    HttpPost request = new HttpPost(submissionUrl);
+
+    String token = OAuth2Helper.getToken(config.getSubmissionInfo().get(fileType).getSubmissionAuth());
+    if (OAuth2Helper.validateHeaderJwtToken(token)) {
+      request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", token));
+    } else {
+      throw new JWTVerificationException("Invalid token format");
     }
+
+    request.setEntity(new ByteArrayEntity(data));
+    HttpResponse response = Utility.HttpExecuter(request, logger);
+    logger.info("HTTP Response Code {}", response.getStatusLine().getStatusCode());
   }
 
   private void SetConfigFileName(String fileName) {
