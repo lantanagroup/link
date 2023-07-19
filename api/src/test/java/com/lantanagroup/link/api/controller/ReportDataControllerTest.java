@@ -1,5 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -8,12 +10,12 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.ListResource;
 import org.hl7.fhir.r4.model.MeasureReport;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.datatype.DatatypeConfigurationException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -32,13 +34,41 @@ public class ReportDataControllerTest {
   }
 
   @Test
-  public void expungeDataTest() throws DatatypeConfigurationException {
+  public void testHasExpungeRole() {
+    String jwtStringWithRole = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGF0YS1leHB1bmdlIiwiZGVmYXVsdC1yb2xlcy10aHNhIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfX0.w3tc2pirPE3GavZ2qKxkpQlWC8B9Z353YrLSrOJ1RCM";
+    String jwtStringNoRole = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsiZGVmYXVsdC1yb2xlcy10aHNhIiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfX0.k324NdSGy1fUUDgWaqvXEZS5eOsw5WpfmWykQwEYzNA";
+
+    DecodedJWT jwtWithRole = JWT.decode(jwtStringWithRole);
+    DecodedJWT jwtNoRole = JWT.decode(jwtStringNoRole);
+
+    LinkCredentials userWithRole = new LinkCredentials();
+    userWithRole.setJwt(jwtWithRole);
+
+    LinkCredentials userNoRole = new LinkCredentials();
+    userNoRole.setJwt(jwtNoRole);
+
+    ReportDataController reportDataController = new ReportDataController();
+    DataGovernanceConfig config = new DataGovernanceConfig();
+    config.setExpungeRole("data-expunge");
+    reportDataController.setDataGovernanceConfig(config);
+
+    Assert.assertTrue(reportDataController.HasExpungeRole(userWithRole));
+    Assert.assertFalse(reportDataController.HasExpungeRole(userNoRole));
+
+  }
+
+  @Test
+  public void expungeDataTest() {
     ReportDataController reportDataController = new ReportDataController();
     reportDataController.setFhirStoreProvider(mock(FhirDataProvider.class));
     reportDataController.setDataGovernanceConfig(new DataGovernanceConfig());
     reportDataController.getDataGovernanceConfig().setCensusListRetention("PT4H");
     reportDataController.getDataGovernanceConfig().setPatientDataRetention("PT4H");
-    reportDataController.getDataGovernanceConfig().setReportRetention("PT4H");
+    reportDataController.getDataGovernanceConfig().setMeasureReportRetention("PT4H");
+    reportDataController.getDataGovernanceConfig().setResourceTypeRetention("PT4H");
+    reportDataController.getDataGovernanceConfig().setOtherTypeRetention("PT4H");
+    reportDataController.getDataGovernanceConfig().setExpungeRole("expunge-role");
+    reportDataController.getDataGovernanceConfig().setExpungeChunkSize(100);
     Date testDate = new Date(-1);
 
     Bundle censusBundle = new Bundle();

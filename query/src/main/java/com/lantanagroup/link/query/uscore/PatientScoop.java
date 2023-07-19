@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -185,7 +184,7 @@ public class PatientScoop {
     return patientBundle;
   }
 
-  public void queryAndGetPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest, String reportId, List<String> resourceTypes, List<String> measureIds, List<Patient> patients) {
+  public void queryAndGetPatientData(ReportCriteria criteria, ReportContext context, String reportId, List<String> resourceTypes, List<String> measureIds, List<Patient> patients) {
     int threshold = usCoreConfig.getParallelPatients();
     ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
 
@@ -224,7 +223,7 @@ public class PatientScoop {
                 }
               }
       );
-    };
+    }
 
     patientDataFork.shutdown();
 
@@ -251,34 +250,10 @@ public class PatientScoop {
     }
 
     try {
-
-      // Store a Bundle which is a bunch of Patient Bundles so that getReportPatients works
-      // TODO - note we may remove this because of expunge policy
-      Bundle allPatientBundle = new Bundle();
-
-      for (Patient patient : patients) {
-        Bundle.BundleEntryComponent bundleEntry = new Bundle.BundleEntryComponent();
-        bundleEntry.setResource(patient);
-        allPatientBundle.addEntry(bundleEntry);
-      }
-
-      //String allPatientBundleId = String.format("%s-%s", reportId, ReportIdHelper.);
-      allPatientBundle.setId(reportId);
-      allPatientBundle.setType(Bundle.BundleType.COLLECTION);
-      // Tag the bundle as patient-data to be able to quickly look up any data that is related to a patient
-      allPatientBundle.getMeta().addTag(Constants.MainSystem, Constants.patientDataTag, null);
-
-      // need to see if this already exists??? If not call createResource???
-      this.fhirDataProvider.updateResource(allPatientBundle);
-    } catch (Exception ex) {
-      logger.error("Issue storing patient bundles: {}", ex.getMessage());
-    }
-
-    try {
       // loop through the patient ids to retrieve the patientData using each patient.
       logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
 
-      queryAndGetPatientData(criteria,context,patientsOfInterest,reportId,resourceTypes,measureIds,patients);
+      queryAndGetPatientData(criteria,context,reportId,resourceTypes,measureIds,patients);
 
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);

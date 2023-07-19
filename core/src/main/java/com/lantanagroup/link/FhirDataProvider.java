@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -395,12 +396,31 @@ public class FhirDataProvider {
             .execute();
   }
 
-  public Bundle getAllResourcesByType(String resourceType) {
+  public Bundle getResourcesSummaryByCountTagLastUpdated(String resourceType, Integer count, String tagSystem, String tagCode, Date lastUpdatedBefore) {
+
     return client
             .search()
             .forResource(resourceType)
+            .count(count)
+            .withTag(tagSystem,tagCode)
+            .summaryMode(SummaryEnum.TRUE)
+            .where(new DateClientParam("_lastUpdated").beforeOrEquals().second(lastUpdatedBefore))
             .returnBundle(Bundle.class)
             .execute();
+
+  }
+
+  public Bundle getResourcesSummaryByCountLastUpdated(String resourceType, Integer count, Date lastUpdatedBefore) {
+
+    return client
+            .search()
+            .forResource(resourceType)
+            .count(count)
+            .summaryMode(SummaryEnum.TRUE)
+            .where(new DateClientParam("_lastUpdated").beforeOrEquals().second(lastUpdatedBefore))
+            .returnBundle(Bundle.class)
+            .execute();
+
   }
 
   public Bundle getAllResourcesByType(Class<? extends IBaseResource> classType) {
