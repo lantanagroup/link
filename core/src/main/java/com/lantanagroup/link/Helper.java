@@ -1,10 +1,13 @@
 package com.lantanagroup.link;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,20 +21,28 @@ import java.util.Date;
 import java.util.List;
 
 public class Helper {
+  private static final Logger logger = LoggerFactory.getLogger(Helper.class);
+
   public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
   public static final String RFC_1123_DATE_TIME_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
 
-  public static ApiInfoModel getVersionInfo(){
+  public static ApiInfoModel getVersionInfo() {
     try {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
       URL buildFile = Helper.class.getClassLoader().getResource("build.yml");
 
-      if (buildFile == null) return new ApiInfoModel("dev", "0.9.0");
+      if (buildFile == null) {
+        logger.warn("No build.yml file found, returning default \"dev\" build and \"0.9.0\" version");
+        return new ApiInfoModel();
+      }
 
       return mapper.readValue(buildFile, ApiInfoModel.class);
     } catch (IOException ex) {
-      return new ApiInfoModel("dev", "0.9.0");
+      logger.error("Error deserializing build.yml file", ex);
+      return new ApiInfoModel();
     }
   }
 
