@@ -149,7 +149,7 @@ public class BulkQuery {
     bulkStatus.setStatus(BulkStatuses.complete);
     bulkStatusService.saveBulkStatus(bulkStatus);
 
-    bulkStatusService.saveResult(statusResult);
+    bulkStatusService.saveBulkStatusResult(statusResult);
   }
 
   private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {

@@ -9,16 +9,9 @@ import com.lantanagroup.link.config.MongoConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.bson.codecs.configuration.CodecRegistries.*;
-
 @Component
 public class SharedService {
   private static final Logger logger = LoggerFactory.getLogger(SharedService.class);
@@ -44,7 +35,7 @@ public class SharedService {
   @Autowired
   private MongoConfig config;
 
-  private Connection getSQLConnection() {
+  public Connection getSQLConnection() {
     try {
       Connection conn = DriverManager.getConnection(this.config.getSqlConnectionString());
       if (conn != null) {
@@ -246,7 +237,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT measuresFROM [dbo].[measurePackage] WHERE packageId = ?");
+      PreparedStatement ps = conn.prepareStatement("SELECT measures FROM [dbo].[measurePackage] WHERE packageId = ?");
       ps.setNString(1, packageId);
       ResultSet rs = ps.executeQuery();
 
@@ -405,31 +396,6 @@ public class SharedService {
       remoteAddress = request.getRemoteAddr() != null ? (request.getRemoteHost() != null ? request.getRemoteAddr() + "(" + request.getRemoteHost() + ")" : request.getRemoteAddr()) : "";
     }
     return remoteAddress;
-  }
-
-  public MongoClient getClient() {
-    if (this.client == null) {
-      CodecRegistry pojoCodecRegistry = fromProviders(PojoCodecProvider.builder().automatic(true).build());
-      CodecRegistry codecRegistry = fromRegistries(
-              fromCodecs(
-                      new BaseCodec<>(IBaseResource.class),
-                      new BaseCodec<>(Bundle.class),
-                      new BaseCodec<>(MeasureReport.class),
-                      new BaseCodec<>(org.hl7.fhir.r4.model.ConceptMap.class)
-              ),
-              MongoClientSettings.getDefaultCodecRegistry(),
-              pojoCodecRegistry);
-
-      logger.info("Connecting to mongo database with connection string {}", this.config.getConnectionString());
-
-      MongoClientSettings clientSettings = MongoClientSettings.builder()
-              .applyConnectionString(new ConnectionString(this.config.getConnectionString()))
-              .codecRegistry(codecRegistry)
-              .build();
-      this.client = MongoClients.create(clientSettings);
-    }
-
-    return this.client;
   }
 
   public void audit(LinkCredentials credentials, HttpServletRequest request, TenantService tenantService, AuditTypes type, String notes) {

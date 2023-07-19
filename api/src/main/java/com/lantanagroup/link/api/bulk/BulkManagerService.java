@@ -34,10 +34,7 @@ public class BulkManagerService {
   }
 
   public void InitiateBulkDataRequest(BulkStatus status) throws Exception {
-
-    //status.setStatus(BulkStatuses.pending);
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    //bulkStatusService.saveBulkStatus(status);
 
     TenantService tenantService = TenantService.create(sharedService, tenantConfig.getId());
     BulkQuery bulkQuery = new BulkQuery();
@@ -73,9 +70,9 @@ public class BulkManagerService {
     }
   }
 
-  public List<BulkStatus> getBulkStatusByTenantId(String tenantId) {
+  public List<BulkStatus> getBulkStatuses() {
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    List<BulkStatus> status = bulkStatusService.getBulkStatusesByTenantId(tenantId);
+    List<BulkStatus> status = bulkStatusService.getBulkStatuses();
     return status;
   }
 
