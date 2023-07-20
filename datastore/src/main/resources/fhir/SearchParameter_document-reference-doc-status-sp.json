@@ -1,0 +1,16 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "document-reference-doc-status-sp",
+  "name": "DocumentReferenceDocStatusSP",
+  "status": "active",
+  "date": "2021-06-22",
+  "publisher": "Lantana Consulting Group",
+  "code": "docStatus",
+  "base": [
+    "DocumentReference"
+  ],
+  "type": "token",
+  "expression": "DocumentReference.docStatus",
+  "xpath": "f:DocumentReference/f:docStatus",
+  "xpathUsage": "normal"
+}

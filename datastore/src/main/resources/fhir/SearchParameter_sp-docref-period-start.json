@@ -1,0 +1,15 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "sp-docref-period-start",
+  "name": "Search for document references by period start",
+  "status": "active",
+  "date": "2021-09-29",
+  "code": "periodStart",
+  "base": [
+    "DocumentReference"
+  ],
+  "type": "date",
+  "expression": "DocumentReference.context.period.start",
+  "xpath": "f:DocumentReference/f:context/f:period/f:start",
+  "xpathUsage": "normal"
+}
