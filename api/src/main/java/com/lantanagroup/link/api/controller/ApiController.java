@@ -42,7 +42,7 @@ public class ApiController {
 
   @GetMapping
   public ApiInfoModel getVersionInfo() {
-    return Helper.getVersionInfo();
+    return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
   }
 
   private static Map<Object, Object> getYamlObj(Map<Object, Object> obj, String property) {

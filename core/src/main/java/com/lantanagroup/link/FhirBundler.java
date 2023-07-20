@@ -111,7 +111,7 @@ public class FhirBundler {
   }
 
   private Device createDevice() {
-    ApiInfoModel apiInfoModel = Helper.getVersionInfo();
+    ApiInfoModel apiInfoModel = Helper.getVersionInfo(this.apiConfig.getEvaluationService());
     Device device = new Device();
     device.setId(UUID.randomUUID().toString());
     device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
