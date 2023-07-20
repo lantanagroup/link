@@ -12,7 +12,6 @@ import com.lantanagroup.link.model.ExpungeResourcesToDelete;
 import com.lantanagroup.link.model.ExpungeResponse;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 
 @RestController
@@ -128,7 +126,6 @@ public class ReportDataController extends BaseController {
   public ResponseEntity<ExpungeResponse> expungeSpecificData(@AuthenticationPrincipal LinkCredentials user,
                                                              HttpServletRequest request) throws Exception {
     ExpungeResponse response = new ExpungeResponse();
-    FhirDataProvider fhirDataProvider = getFhirDataProvider();
 
     Boolean hasExpungeRole = HasExpungeRole(user);
 
@@ -139,136 +136,136 @@ public class ReportDataController extends BaseController {
     }
 
     if(dataGovernanceConfig != null) {
-      expungeDataByType(fhirDataProvider,
+      expungeCountByTypeAndRetentionAndPatientFilter(request,
+              user,
+              dataGovernanceConfig.getExpungeChunkSize(),
               "List",
-              false,
               dataGovernanceConfig.getCensusListRetention(),
-              request,
-              user);
-      expungeDataByType(fhirDataProvider,
+              false);
+
+      expungeCountByTypeAndRetentionAndPatientFilter(request,
+              user,
+              dataGovernanceConfig.getExpungeChunkSize(),
               "Bundle",
-              true,
               dataGovernanceConfig.getPatientDataRetention(),
-              request,
-              user);
-      expungeDataByType(fhirDataProvider,
+              true);
+
+      // This to remove the "placeholder" Patient resources
+      expungeCountByTypeAndRetentionAndPatientFilter(request,
+              user,
+              dataGovernanceConfig.getExpungeChunkSize(),
               "Patient",
-              false,
               dataGovernanceConfig.getPatientDataRetention(),
-              request,
-              user);
+              false);
+
+      // Remove individual MeasureReport tied to Patient
+      // Individual MeasureReport for patient will be tagged.  Others have no PHI.
+      expungeCountByTypeAndRetentionAndPatientFilter(request,
+              user,
+              dataGovernanceConfig.getExpungeChunkSize(),
+              "MeasureReport",
+              dataGovernanceConfig.getMeasureReportRetention(),
+              true);
 
       // Loop uscore.patient-resource-types & other-resource-types and delete
       for(String resourceType : usCoreConfig.getPatientResourceTypes()) {
-        expungeDataByType(fhirDataProvider,
+        expungeCountByTypeAndRetentionAndPatientFilter(request,
+                user,
+                dataGovernanceConfig.getExpungeChunkSize(),
                 resourceType,
-                false,
-                dataGovernanceConfig.getPatientDataRetention(),
-                request,
-                user);
+                dataGovernanceConfig.getResourceTypeRetention(),
+                false);
       }
 
-      for(USCoreOtherResourceTypeConfig otherResourceTypes : usCoreConfig.getOtherResourceTypes()) {
-        expungeDataByType(fhirDataProvider,
-                otherResourceTypes.getResourceType(),
-                false,
-                dataGovernanceConfig.getPatientDataRetention(),
-                request,
-                user);
+      for(USCoreOtherResourceTypeConfig otherResourceType : usCoreConfig.getOtherResourceTypes()) {
+        expungeCountByTypeAndRetentionAndPatientFilter(request,
+                user,
+                dataGovernanceConfig.getExpungeChunkSize(),
+                otherResourceType.getResourceType(),
+                dataGovernanceConfig.getOtherTypeRetention(),
+                false);
       }
 
-      // Individual MeasureReport for patient will be tagged.  Others have no PHI.
-      expungeDataByType(fhirDataProvider,
-              "MeasureReport",
-              true,
-              dataGovernanceConfig.getReportRetention(),
-              request,
-              user);
     }
 
-    response.setMessage("All specified items submitted to Data Store for removal.");
+    response.setMessage("All identified items submitted to Data Store for removal.");
     return ResponseEntity.ok(response);
   }
 
-  /**
-   * @param fhirDataProvider used to work with data on the server.
-   * @param resourceType the type of FHIR Resource for the data.
-   * @param filterPatientData if looking for patientDataBundles and not other bundles.
-   * @param retention how long to keep the data.
-   * @throws DatatypeConfigurationException
-   * if a retention period exists for the data, expunge the data.
-   * if the data being expunged are patientDataBundles, only expunge bundles with the patient data tag.
-   */
-  private void expungeDataByType(FhirDataProvider fhirDataProvider, String resourceType, boolean filterPatientData, String retention, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
-    Bundle bundle = fhirDataProvider.getAllResourcesByType(resourceType);
-    if(bundle != null)
-    {
-      for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
-        String tag = entry.getResource().getMeta().getTag().isEmpty()? "" :entry.getResource().getMeta().getTag().get(0).getCode();
-        Date lastUpdate = entry.getResource().getMeta().getLastUpdated();
+  private Date SubtractDurationFromNow(String retentionPeriod) throws DatatypeConfigurationException {
 
-        if((StringUtils.isNotBlank(retention)) && (!filterPatientData || tag.equals(Constants.patientDataTag))) {
-          expungeSpecificData(fhirDataProvider,
-                  retention,
-                  lastUpdate,
-                  entry.getResource().getIdElement().getIdPart(),
+    Calendar rightNow = Calendar.getInstance();
+    rightNow.setTime(new Date());
+
+    Duration durationRetention = DatatypeFactory.newInstance().newDuration(retentionPeriod);
+
+    // Subtract the duration from the current date
+    rightNow.add(Calendar.YEAR, -durationRetention.getYears());
+    rightNow.add(Calendar.MONTH, -durationRetention.getMonths());
+    rightNow.add(Calendar.DAY_OF_MONTH, -durationRetention.getDays());
+    rightNow.add(Calendar.HOUR_OF_DAY, -durationRetention.getHours());
+    rightNow.add(Calendar.MINUTE, -durationRetention.getMinutes());
+    rightNow.add(Calendar.SECOND, -durationRetention.getSeconds());
+
+    return rightNow.getTime();
+  }
+
+  private void expungeCountByTypeAndRetentionAndPatientFilter(HttpServletRequest request, LinkCredentials user, Integer count, String resourceType, String retention, Boolean filterPatientTag) throws DatatypeConfigurationException {
+    int bundleEntrySize = 1;
+    int expunged = 0;
+    Bundle bundle;
+    FhirDataProvider fhirDataProvider = getFhirDataProvider();
+
+    Date searchBeforeDate = SubtractDurationFromNow(retention);
+
+    logger.info("Searching for {} last updated before {}, in chunks of {}", resourceType, searchBeforeDate, count);
+
+    while (bundleEntrySize > 0) {
+
+      if (filterPatientTag) {
+        bundle = fhirDataProvider.getResourcesSummaryByCountTagLastUpdated(resourceType, count, Constants.MainSystem, Constants.patientDataTag, searchBeforeDate);
+      } else {
+        bundle = fhirDataProvider.getResourcesSummaryByCountLastUpdated(resourceType, count, searchBeforeDate);
+      }
+
+      if( (bundle != null) && (bundle.getEntry().size() > 0) ) {
+        bundleEntrySize = bundle.getEntry().size();
+
+        for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+
+          expungeResourceById(entry.getResource().getIdElement().getIdPart(),
                   entry.getResource().getResourceType().toString(),
                   request,
                   user);
+
+          expunged++;
+
         }
+      } else {
+        bundleEntrySize = 0;
       }
+
+    }
+
+    logger.info("Total {} {} found and expunged.", expunged, resourceType);
+
+  }
+
+  private void expungeResourceById(String id, String type, HttpServletRequest request, LinkCredentials user) {
+    FhirDataProvider fhirDataProvider = getFhirDataProvider();
+    try {
+      fhirDataProvider.deleteResource(type, id, true);
+      getFhirDataProvider().audit(request,
+              user.getJwt(),
+              FhirHelper.AuditEventTypes.Delete,
+              String.format("Resource of Type '%s' with Id of '%s' has been expunged.", type, id));
+      logger.info("Resource of Type '{}' with Id of '{}' has been expunged.", type, id);
+    } catch (Exception ex) {
+      logger.error("Issue Deleting Resource of Type '{}' with Id of '{}'", type, id);
     }
   }
 
-  /**
-   * @param fhirDataProvider used to work with data on the server.
-   * @param retentionPeriod how long to keep the data.
-   * @param lastDatePosted when the data was last updated.
-   * @param id id of the data.
-   * @param type the type of data.
-   * @throws DatatypeConfigurationException
-   * Determines if the retention period has passed, if so then it expunges the data.
-   */
-  private void expungeSpecificData(FhirDataProvider fhirDataProvider, String retentionPeriod, Date lastDatePosted, String id, String type, HttpServletRequest request, LinkCredentials user) throws DatatypeConfigurationException {
-    Date comp = adjustTime(retentionPeriod, lastDatePosted);
-    Date today = new Date();
-
-    if(today.compareTo(comp) >= 0) {
-      try {
-        fhirDataProvider.deleteResource(type, id, true);
-        getFhirDataProvider().audit(request,
-                user.getJwt(),
-                FhirHelper.AuditEventTypes.Delete,
-                String.format("Resource of Type '%s' with Id of '%s' has been expunged.", type, id));
-        logger.info("Resource of Type '{}' with Id of '{}' has been expunged.", type, id);
-      } catch (Exception ex) {
-        logger.error("Issue Deleting Resource of Type '{}' with Id of '{}'", type, id);
-      }
-    }
-  }
-
-  /**
-   * @param retentionPeriod how long to keep the data
-   * @param lastDatePosted when the data was last updated
-   * @return the adjusted day from when the data had been last updated to the end of its specified retention period
-   * @throws DatatypeConfigurationException
-   */
-  private Date adjustTime(String retentionPeriod, Date lastDatePosted) throws DatatypeConfigurationException {
-    Duration dur = DatatypeFactory.newInstance().newDuration(retentionPeriod);
-    Calendar calendar = Calendar.getInstance();
-    calendar.setTime(lastDatePosted);
-
-    calendar.add(Calendar.YEAR, dur.getYears());
-    calendar.add(Calendar.MONTH, dur.getMonths());
-    calendar.add(Calendar.DAY_OF_MONTH, dur.getDays());
-    calendar.add(Calendar.HOUR_OF_DAY, dur.getHours());
-    calendar.add(Calendar.MINUTE, dur.getMinutes());
-    calendar.add(Calendar.SECOND, dur.getSeconds());
-
-    return calendar.getTime();
-  }
-
-  private Boolean HasExpungeRole(LinkCredentials user) {
+  public Boolean HasExpungeRole(LinkCredentials user) {
     ArrayList<String> roles = (ArrayList<String>)user.getJwt().getClaim("realm_access").asMap().get("roles");
 
     boolean hasExpungeRole = false;
