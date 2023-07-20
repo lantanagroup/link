@@ -4,27 +4,35 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.PatientIdService;
+import com.lantanagroup.link.ReportingPeriodCalculator;
+import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.BulkStatus;
-import com.lantanagroup.link.db.model.BulkStatusResult;
-import com.lantanagroup.link.db.model.BulkStatuses;
+import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.QueryList;
 import com.lantanagroup.link.model.BulkResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.link.query.auth.ICustomAuth;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class BulkQuery {
@@ -133,7 +141,7 @@ public class BulkQuery {
 
   }
 
-  public void getStatus(BulkStatus bulkStatus,
+  public BulkStatusResult getStatus(BulkStatus bulkStatus,
                         TenantService tenantService,
                         BulkStatusService bulkStatusService,
                         ApplicationContext context) throws Exception {
@@ -160,7 +168,7 @@ public class BulkQuery {
           sbuilder.append("Response Body: " + responseBody);
         }
         logger.warn(sbuilder.toString());
-        return;
+        return null;
         //throw new Exception(sbuilder.toString());
       }
 
@@ -184,6 +192,71 @@ public class BulkQuery {
     bulkStatusService.saveBulkStatus(bulkStatus);
 
     bulkStatusService.saveResult(statusResult);
+
+    return statusResult;
+  }
+
+  public void getResultSetFromBulkResultAndLoadPatientData(
+          BulkStatusResult statusResult,
+          TenantService tenantService,
+          ApplicationContext context)
+          throws Exception {
+
+
+    Map<String,IBaseResource>  parsedData = new HashMap<>();
+
+    for (var output : statusResult.getResult().getOutput()) {
+      URI uri = new URI(output.getUrl());
+      HttpClient httpClient = HttpClient.newHttpClient();
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
+      setAuthHeaders(requestBuilder, tenantService, context);
+      HttpRequest request = requestBuilder.build();
+
+      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+      IBaseResource resource = FhirContextProvider.getFhirContext().newNDJsonParser().parseResource(response.body());
+      parsedData.put(output.getType(), resource);
+    }
+
+    for (Map.Entry<String, IBaseResource> dataItem : parsedData.entrySet()) {
+      if (Objects.equals(dataItem.getKey(), "Patient")) {
+
+        QueryList queryList = tenantService.getConfig().getQueryList();
+
+        if (queryList == null) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant is not configured to query the EHR for patient lists");
+        }
+
+        for(var ehrPatientList : queryList.getLists()){
+          for(String measureId : ehrPatientList.getMeasureId()){
+            PatientList patientList = new PatientList();
+            ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth);
+
+            patientList.setLastUpdated(new Date());
+            patientList.setPeriodStart(calculator.getStart());
+            patientList.setPeriodEnd(calculator.getEnd());
+
+
+            Bundle bundle = (Bundle)dataItem.getValue();
+            patientList.setMeasureId(measureId);
+
+            bundle.getEntry().forEach(entry -> {
+              if(entry.getResource() instanceof Patient){
+                Patient patient = (Patient)entry.getResource();
+                PatientId patientId = new PatientId();
+                patientId.setIdentifier(patient.getId());
+                patientId.setReference(patient.getIdentifier().stream().findFirst().get().getSystem() + "|" + patient.getIdentifier().stream().findFirst().get().getValue());
+                patientList.getPatients().add(patientId);
+              }
+            });
+
+            PatientIdService patientIdService = new PatientIdService();
+            patientIdService.setContext(context);
+            patientIdService.storePatientList(tenantService, patientList);
+          }
+        }
+      }
+    }
   }
 
   private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {

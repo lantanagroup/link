@@ -27,7 +27,7 @@ public class Constants {
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";
   public static final String TerminologyEndpointSystem = "http://terminology.hl7.org/CodeSystem/endpoint-connection-type";
-  public static final String ConceptMappingExtension = "https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept";
+  public static final String ConceptMappingExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-mapped-concept-extension";
   public static final String OriginalElementValueExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension";
   public static final String OriginalResourceIdExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension";
   public static final String BundlingFullUrlFormat = "http://lantanagroup.com/fhir/nhsn-measures/%s";
