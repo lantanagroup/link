@@ -1,5 +1,5 @@
 # Link
-[![Build status](https://dev.azure.com/lantanagroup/nhsnlink/_apis/build/status/CI%20Build)](https://dev.azure.com/lantanagroup/nhsnlink/_build/latest?definitionId=46)
+
 ## Usage & Deployment
 
 See [Deployment](https://github.com/lantanagroup/link/wiki/Deployment) in the WIKI.
