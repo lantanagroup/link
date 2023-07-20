@@ -1,0 +1,15 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "sp-docref-period-end",
+  "name": "Search for document references by period end",
+  "status": "active",
+  "date": "2021-09-29",
+  "code": "periodEnd",
+  "base": [
+    "DocumentReference"
+  ],
+  "type": "date",
+  "expression": "DocumentReference.context.period.end",
+  "xpath": "f:DocumentReference/f:context/f:period/f:end",
+  "xpathUsage": "normal"
+}

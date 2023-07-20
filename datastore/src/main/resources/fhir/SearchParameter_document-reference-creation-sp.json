@@ -1,0 +1,16 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "document-reference-creation-sp",
+  "name": "DocumentReferenceCreationSP",
+  "status": "active",
+  "date": "2021-06-22",
+  "publisher": "Lantana Consulting Group",
+  "code": "creation",
+  "base": [
+    "DocumentReference"
+  ],
+  "type": "date",
+  "expression": "DocumentReference.content.attachment.creation",
+  "xpath": "f:DocumentReference/f:content/f:attachment/f:creation",
+  "xpathUsage": "normal"
+}

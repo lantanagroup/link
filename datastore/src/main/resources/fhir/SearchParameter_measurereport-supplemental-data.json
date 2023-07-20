@@ -1,0 +1,41 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "measurereport-supplemental-data",
+  "title": "Supplemental Data",
+  "url": "http://hl7.org/fhir/us/davinci-deqm/SearchParameter/measurereport-supplemental-data",
+  "version": "0.1.0",
+  "name": "DEQMMeasureReportSupplementalData",
+  "status": "active",
+  "date": "2022-08-20T00:00:00+00:00",
+  "publisher": "HL7 International - Clinical Quality Information Work Group",
+  "contact": [
+    {
+      "telecom": [
+        {
+          "system": "url",
+          "value": "http://www.hl7.org/Special/committees/cqi/index.cfm"
+        }
+      ]
+    }
+  ],
+  "description": "Returns resources (supplemental data) from references on extensions on the MeasureReport with urls matching http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData.",
+  "jurisdiction": [
+    {
+      "coding": [
+        {
+          "system": "urn:iso:std:iso:3166",
+          "code": "US",
+          "display": "United States of America"
+        }
+      ]
+    }
+  ],
+  "code": "supplemental-data",
+  "base": [
+    "MeasureReport"
+  ],
+  "type": "reference",
+  "expression": "MeasureReport.extension('http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData').value",
+  "xpath": "f:MeasureReport/f:extension[@url='http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData'].value",
+  "xpathUsage": "normal"
+}

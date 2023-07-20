@@ -1,0 +1,29 @@
+{
+  "resourceType": "SearchParameter",
+  "id": "list-applicable-period-end",
+  "url": "https://www.lantanagroup.com/fhir/SearchParemeter/list-applicable-period-end",
+  "name": "ListAcceptablePeriodEnd",
+  "status": "active",
+  "experimental": true,
+  "publisher": "Health Level Seven International (FHIR Infrastructure)",
+  "contact": [
+    {
+      "telecom": [
+        {
+          "system": "url",
+          "value": "http://www.lantanagroup.com"
+        }
+      ]
+    }
+  ],
+  "description": "Search parameter to find lists with an applicable-period extension by end date",
+  "code": "applicable-period-end",
+  "base": [
+    "List"
+  ],
+  "type": "date",
+  "expression": "(List.extension('https://www.lantanagroup.com/fhir/StructureDefinition/link-patient-list-applicable-period').value as Period).end",
+  "target": [
+    "List"
+  ]
+}
