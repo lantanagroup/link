@@ -5,6 +5,7 @@ swagger:
     - openid
     - profile
 api:
+  name: NHSNLink
   data-store:
     base-url: ''
     username: ''

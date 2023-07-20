@@ -344,7 +344,7 @@ public class ReportController extends BaseController {
   }
 
   public Bundle generateBundle(TenantService tenantService, Report report) {
-    FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+    FhirBundler bundler = new FhirBundler(this.eventService, tenantService, this.config);
     logger.info("Building Bundle for MeasureReport to send...");
     List<Aggregate> aggregates = tenantService.getAggregates(report.getAggregates());
     List<MeasureReport> aggregateReports = aggregates.stream().map(Aggregate::getReport).collect(Collectors.toList());

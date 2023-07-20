@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
@@ -40,7 +41,7 @@ public class FhirBundlerTests {
     TenantService tenantService = mock(TenantService.class);
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
 
-    FhirBundler bundler = new FhirBundler(null, tenantService);
+    FhirBundler bundler = new FhirBundler(null, tenantService, new ApiConfig());
 
     Report report = new Report();
     report.getPatientLists().add("test-patient-list");
