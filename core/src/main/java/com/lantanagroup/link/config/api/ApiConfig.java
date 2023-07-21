@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -18,6 +19,15 @@ import javax.validation.constraints.PositiveOrZero;
 @Validated
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
+  /**
+   * <strong>api.name</strong><br>The name of the application that's returned in Device instances of reports
+   */
+  private String name;
+
+  /**
+   * <strong>api.connection-string</strong><br>The connection string to use for tenant-agnostic data
+   */
+  private String connectionString;
 
   /**
    * <strong>api.validate-fhir-server</strong><br>Boolean for whether to check for metadata before request or not
@@ -143,4 +153,9 @@ public class ApiConfig {
    * <strong>api.skip-query</strong><br>Whether to skip the query phase of report generation; useful if patient data bundles have already been stored.
    */
   private boolean skipQuery = false;
+
+  /**
+   * <strong>api.measure-def-urls</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
+   */
+  private HashMap<String, String> measureDefUrls = new HashMap<>();
 }

@@ -5,6 +5,9 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * NOTE: Additions/changes to this class should be modified in FhirBundler and TenantController
+ */
 @Getter
 @Setter
 public class Events {

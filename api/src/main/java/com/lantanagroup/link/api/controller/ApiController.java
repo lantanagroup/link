@@ -1,8 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.victools.jsonschema.generator.*;
 import com.google.common.base.Strings;
 import com.lantanagroup.link.Helper;
@@ -10,19 +8,19 @@ import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.ApiInfoModel;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -44,56 +42,83 @@ public class ApiController {
 
   @GetMapping
   public ApiInfoModel getVersionInfo() {
-    return Helper.getVersionInfo();
+    return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+  }
+
+  private static Map<Object, Object> getYamlObj(Map<Object, Object> obj, String property) {
+    return (Map<Object, Object>) obj.get(property);
+  }
+
+  private static List<LinkedHashMap> getYamlArray(Map<Object, Object> obj, String property) {
+    return (List<LinkedHashMap>) obj.get(property);
+  }
+
+  private void updateSwaggerSpec(Map<Object, Object> spec, HttpServletRequest request) {
+    // Security
+    Map<Object, Object> components = getYamlObj(spec, "components");
+    Map<Object, Object> securitySchemes = getYamlObj(components, "securitySchemes");
+
+    if (StringUtils.isNotEmpty(this.swaggerConfig.getAuthUrl()) && StringUtils.isNotEmpty(this.swaggerConfig.getTokenUrl())) {
+      Map<Object, Object> oauth = getYamlObj(securitySchemes, "oauth");
+      Map<Object, Object> flows = getYamlObj(oauth, "flows");
+      Map<Object, Object> authorizationCode = getYamlObj(flows, "authorizationCode");
+      LinkedHashMap<String, String> scopeObj = new LinkedHashMap<>();
+      authorizationCode.put("scopes", scopeObj);
+
+      if (this.swaggerConfig.getScope() != null) {
+        for (String scope : this.swaggerConfig.getScope()) {
+          scopeObj.put(scope, scope);
+        }
+      }
+
+      if (StringUtils.isNotEmpty(this.swaggerConfig.getAuthUrl())) {
+        authorizationCode.put("authorizationUrl", this.swaggerConfig.getAuthUrl());
+      }
+
+      if (StringUtils.isNotEmpty(this.swaggerConfig.getTokenUrl())) {
+        authorizationCode.put("tokenUrl", this.swaggerConfig.getTokenUrl());
+      }
+    } else {
+      securitySchemes.remove("oauth");
+      List security = getYamlArray(spec, "security");
+      security.remove(0);
+    }
+
+    // Servers
+    List<LinkedHashMap> servers = getYamlArray(spec, "servers");
+    for (LinkedHashMap server : servers) {
+      server.put("url", this.getPublicAddress(request));
+    }
+
+    // Version
+    ApiInfoModel apiInfoModel = this.getVersionInfo();
+    Map<Object, Object> info = getYamlObj(spec, "info");
+    info.put("version", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
   }
 
   @GetMapping(value = "/docs", produces = "text/yaml")
   public String getDocs(HttpServletRequest request) throws IOException {
-    ClassPathResource resource = new ClassPathResource("swagger.yml");
-    InputStream inputStream = resource.getInputStream();
-    String content = new BufferedReader(
-            new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-            .lines()
-            .collect(Collectors.joining("\n"));
-
-    content += "\n  securitySchemes:\n" +
-            "    oauth:\n" +
-            "      type: oauth2\n" +
-            "      flows:\n" +
-            "        implicit:\n" +
-            "          authorizationUrl: " + this.swaggerConfig.getAuthUrl() + "\n" +
-            "          tokenUrl: " + this.swaggerConfig.getTokenUrl() + "\n" +
-            "          scopes:\n";
-
-    StringBuilder contentBuilder = new StringBuilder(content);
-    for (String scope : this.swaggerConfig.getScope()) {
-      contentBuilder.append(String.format("            %s: %s\n", scope, scope));
+    try (InputStream specStream = this.getClass().getClassLoader().getResourceAsStream("swagger.yml")) {
+      Yaml yaml = new Yaml();
+      Map<Object, Object> spec = yaml.load(specStream);
+      this.updateSwaggerSpec(spec, request);
+      String content = yaml.dump(spec);
+      return content;
     }
-    content = contentBuilder.toString();
-
-    String publicAddress = this.getPublicAddress();
-
-    content = content.replace("{{server-base-url}}",
-            !Strings.isNullOrEmpty(publicAddress) ?
-                    publicAddress.replace("/api", "") :
-                    request.getRequestURL().toString().replace("/api/docs", "/"));
-
-    ApiInfoModel apiInfoModel = this.getVersionInfo();
-    content = content.replace("{{version}}", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
-
-    inputStream.close();
-    return content;
   }
 
-  private String getPublicAddress() {
+  private String getPublicAddress(HttpServletRequest request) {
     if (Strings.isNullOrEmpty(this.apiConfig.getPublicAddress())) {
-      return null;
+      return request.getRequestURL().toString().replace("/api/docs", "/");
     }
 
     if (this.apiConfig.getPublicAddress().endsWith("/")) {
-      return this.apiConfig.getPublicAddress().substring(0, this.apiConfig.getPublicAddress().length() - 1);
+      return this.apiConfig.getPublicAddress()
+              .substring(0, this.apiConfig.getPublicAddress().length() - 1)
+              .replace("/api", "");
     }
 
-    return this.apiConfig.getPublicAddress();
+    return this.apiConfig.getPublicAddress()
+            .replace("/api", "");
   }
 }

@@ -1,19 +1,23 @@
 package com.lantanagroup.link.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@NoArgsConstructor
 public class ApiInfoModel {
-  private String build;
+  private String build = "dev";
   private String version;
+  private String commit;
 
-  public ApiInfoModel() {
-
-  }
-
-  public ApiInfoModel(String build, String version) {
-    this.setBuild(build);
-    this.setVersion(version);
+  @JsonProperty("cqf-version")
+  private String cqfVersion;
+  public ApiInfoModel(String cqfVersion) {
+    this.cqfVersion = cqfVersion;
   }
 }

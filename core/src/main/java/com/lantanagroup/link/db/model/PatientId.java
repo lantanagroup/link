@@ -13,8 +13,16 @@ public class PatientId {
   private String reference;
   private String identifier;
 
-  public PatientId(String reference) {
-    this.reference = reference;
+  public static PatientId createFromIdentifier(String identifier) {
+    PatientId pid = new PatientId();
+    pid.setIdentifier(identifier);
+    return pid;
+  }
+
+  public static PatientId createFromReference(String reference) {
+    PatientId pid = new PatientId();
+    pid.setReference(reference);
+    return pid;
   }
 
   private boolean referenceEquals(PatientId other) {

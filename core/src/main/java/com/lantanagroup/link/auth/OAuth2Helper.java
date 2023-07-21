@@ -1,6 +1,10 @@
 package com.lantanagroup.link.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.config.auth.LinkOAuthConfig;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -10,6 +14,13 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
@@ -51,10 +62,10 @@ public class OAuth2Helper {
         return getClientCredentialsToken(config.getTokenUrl(), config.getClientId(), config.getPassword(), config.getScope(), config.isUseBasicAuth());
       }
       case "password": {
-        return getPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getScope());
+        return getCredentialsToken(config);
       }
       case "sams-password": {
-        return getSamsPasswordCredentialsToken(config.getTokenUrl(), config.getUsername(), config.getPassword(), config.getClientId(), config.getClientSecret(), config.getScope());
+        return getSamsToken(config);
       }
 
       default:
@@ -63,180 +74,220 @@ public class OAuth2Helper {
 
   }
 
-  public static String getPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String scope) {
-    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, scope);
-    }
-    catch(IOException ex) {
-      logger.error(ex.getMessage());
-      return "";
-    }
-  }
+  public static String getCredentialsToken(LinkOAuthConfig config) {
 
-  public static String getPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String scope) {
-    HttpPost request = new HttpPost(tokenUrl);
+    // Make an HTTP request to the token endpoint to acquire an access token.
+    RestTemplate restTemplate = new RestTemplate();
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Accept", "application/json");
+    headers.add("Content-Type", "application/x-www-form-urlencoded");
 
-    request.addHeader("Accept", "application/json");
-    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+    requestBody.add("grant_type", "password");
+    requestBody.add("scope", config.getScope());
+    requestBody.add("username", config.getUsername());
+    requestBody.add("password", config.getPassword());
+    requestBody.add("client_id", config.getClientId());
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=password&");
-    sb.append("scope=" + scope + "&");
-    sb.append("username=" + username + "&");
-    sb.append("password=" + password + "&");
-    sb.append("client_id=" + clientId);
+    HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(requestBody, headers);
 
-    try {
-      request.setEntity(new StringEntity(sb.toString()));
+    try
+    {
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
+
+      if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode response = objectMapper.readTree(idpResponse.getBody());
+        return response.get("access_token").asText();
+      }
+      else {
+        return null;
+      }
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      logger.error("Failed to retrieve token from authorization service", ex);
       return null;
     }
 
-    try {
-      if (httpClient == null) {
-        httpClient = HttpClientBuilder.create().build();
-      }
-
-      HttpResponse result = httpClient.execute(request);
-
-      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
-
-      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
-      }
-
-      JSONObject jsonObject = new JSONObject(content);
-
-      if (jsonObject.has("access_token")) {
-        return jsonObject.getString("access_token");
-      }
-
-      return null;
-    } catch (IOException ex) {
-      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
-      return null;
-    }
+//    HttpPost request = new HttpPost(tokenUrl);
+//
+//    request.addHeader("Accept", "application/json");
+//    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+//
+//    StringBuilder sb = new StringBuilder();
+//    sb.append("grant_type=password&");
+//    sb.append("scope=" + scope + "&");
+//    sb.append("username=" + username + "&");
+//    sb.append("password=" + password + "&");
+//    sb.append("client_id=" + clientId);
+//
+//    try {
+//      request.setEntity(new StringEntity(sb.toString()));
+//    } catch (Exception ex) {
+//      logger.error(ex.getMessage());
+//      return null;
+//    }
+//
+//    try {
+//      if (httpClient == null) {
+//        httpClient = HttpClientBuilder.create().build();
+//      }
+//
+//      HttpResponse result = httpClient.execute(request);
+//
+//      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+//
+//      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+//        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
+//      }
+//
+//      JSONObject jsonObject = new JSONObject(content);
+//
+//      if (jsonObject.has("access_token")) {
+//        return jsonObject.getString("access_token");
+//      }
+//
+//      return null;
+//    } catch (IOException ex) {
+//      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
+//      return null;
+//    }
   }
 
-  public static String getSamsPasswordCredentialsToken(String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
-    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getSamsPasswordCredentialsToken(httpClient, tokenUrl, username, password, clientId, clientSecret, scope);
-    }
-    catch(IOException ex) {
-      logger.error(ex.getMessage());
-      return "";
-    }
-  }
+  public static String getSamsToken(LinkOAuthConfig config) {
 
-  public static String getSamsPasswordCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String username, String password, String clientId, String clientSecret, String scope) {
-    HttpPost request = new HttpPost(tokenUrl);
+    // Make an HTTP request to the token endpoint to acquire an access token.
+    RestTemplate restTemplate = new RestTemplate();
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Accept", "application/json");
+    headers.add("Content-Type", "application/x-www-form-urlencoded");
 
-    request.addHeader("Accept", "application/json");
-    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+    requestBody.add("grant_type", "password");
+    requestBody.add("scope", config.getScope());
+    requestBody.add("username", config.getUsername());
+    requestBody.add("password", config.getPassword());
+    requestBody.add("client_id", config.getClientId());
+    requestBody.add("client_secret", config.getClientSecret());
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=password");
-    sb.append("&scope=" + scope);
-    sb.append("&username=" + username);
-    sb.append("&password=" + password);
-    sb.append("&client_id=" + clientId);
-    sb.append("&client_secret" + clientSecret);
+    HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(requestBody, headers);
 
-    try {
-      request.setEntity(new StringEntity(sb.toString()));
+    try
+    {
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
+
+      if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode response = objectMapper.readTree(idpResponse.getBody());
+        return response.get("access_token").asText();
+      }
+      else {
+        return null;
+      }
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      logger.error("Failed to retrieve token from authorization service", ex);
       return null;
     }
 
-    try {
-      if (httpClient == null) {
-        httpClient = HttpClientBuilder.create().build();
-      }
-
-      HttpResponse result = httpClient.execute(request);
-
-      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
-
-      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 password token from auth service: " + content);
-      }
-
-      JSONObject jsonObject = new JSONObject(content);
-
-      if (jsonObject.has("access_token")) {
-        return jsonObject.getString("access_token");
-      }
-
-      return null;
-    } catch (IOException ex) {
-      logger.error("Failed to retrieve a password token from OAuth2 authorization service", ex);
-      return null;
-    }
   }
 
   public static String getClientCredentialsToken(String tokenUrl, String clientId, String clientSecret, String scope, boolean useBasicAuth) {
-    try(CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-      return getClientCredentialsToken(httpClient, tokenUrl, clientId, clientSecret, scope, useBasicAuth);
-    }
-    catch(IOException ex) {
-      logger.error(ex.getMessage());
-      return "";
-    }
-  }
 
-  public static String getClientCredentialsToken(CloseableHttpClient httpClient, String tokenUrl, String clientId, String clientSecret, String scope, boolean useBasicAuth) {
-    HttpPost request = new HttpPost(tokenUrl);
-
-    request.addHeader("Accept", "application/json");
-    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    // Make an HTTP request to the token endpoint to acquire an access token.
+    RestTemplate restTemplate = new RestTemplate();
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Accept", "application/json");
+    headers.add("Content-Type", "application/x-www-form-urlencoded");
     if (useBasicAuth) {
       String userPassCombo = clientId + ":" + clientSecret;
       String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes(StandardCharsets.UTF_8));
-      request.addHeader("Authorization", "Basic " + authorization);
+      headers.add("Authorization", "Basic " + authorization);
     }
-    request.addHeader("Cache-Control", "no-cache");
+    headers.add("Cache-Control", "no-cache");
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("grant_type=client_credentials");
+    MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+    requestBody.add("grant_type", "client_credentials");
+    requestBody.add("scope", scope);
     if (!useBasicAuth) {
-      sb.append("&client_id=" + clientId);
-      sb.append("&client_secret=" + clientSecret);
+      requestBody.add("client_id", clientId);
+      requestBody.add("client_secret", clientSecret);
     }
-    sb.append("&scope=" + scope);
 
-    try {
-      request.setEntity(new StringEntity(sb.toString()));
+    HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(requestBody, headers);
+
+    try
+    {
+      logger.info("Retrieving access token from identity provider");
+      ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(tokenUrl), tokenRequest, String.class);
+
+      if (idpResponse.getStatusCode() == HttpStatus.OK) {
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode response = objectMapper.readTree(idpResponse.getBody());
+        return response.get("access_token").asText();
+      }
+      else {
+        return null;
+      }
     } catch (Exception ex) {
-      logger.error(ex.getMessage());
+      logger.error("Failed to retrieve token from identity provider", ex);
       return null;
     }
 
-    try {
-      if (httpClient == null) {
-        httpClient = HttpClientBuilder.create().build();
-      }
 
-      HttpResponse result = httpClient.execute(request);
-
-      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
-
-      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
-        logger.error("Error retrieving OAuth2 client credentials token from auth service");
-      }
-
-      JSONObject jsonObject = new JSONObject(content);
-
-      if (jsonObject.has("access_token")) {
-        return jsonObject.getString("access_token");
-      }
-
-      return null;
-    } catch (IOException ex) {
-      logger.error("Failed to retrieve a client credentials token from OAuth2 authorization service", ex);
-      return null;
-    }
+    //    HttpPost request = new HttpPost(tokenUrl);
+//
+//    request.addHeader("Accept", "application/json");
+//    request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+//    if (useBasicAuth) {
+//      String userPassCombo = clientId + ":" + clientSecret;
+//      String authorization = Base64.getEncoder().encodeToString(userPassCombo.getBytes(StandardCharsets.UTF_8));
+//      request.addHeader("Authorization", "Basic " + authorization);
+//    }
+//    request.addHeader("Cache-Control", "no-cache");
+//
+//    StringBuilder sb = new StringBuilder();
+//    sb.append("grant_type=client_credentials");
+//    if (!useBasicAuth) {
+//      sb.append("&client_id=").append(clientId);
+//      sb.append("&client_secret=").append(clientSecret);
+//    }
+//    sb.append("&scope=").append(scope);
+//
+//    try {
+//      request.setEntity(new StringEntity(sb.toString()));
+//    } catch (Exception ex) {
+//      logger.error(ex.getMessage());
+//      return null;
+//    }
+//
+//    try {
+//      if (httpClient == null) {
+//        httpClient = HttpClientBuilder.create().build();
+//      }
+//
+//      HttpResponse result = httpClient.execute(request);
+//
+//      String content = EntityUtils.toString(result.getEntity(), "UTF-8");
+//
+//      if (result.getStatusLine() == null || result.getStatusLine().getStatusCode() != 200) {
+//        logger.error("Error retrieving OAuth2 client credentials token from auth service");
+//      }
+//
+//      JSONObject jsonObject = new JSONObject(content);
+//
+//      if (jsonObject.has("access_token")) {
+//        return jsonObject.getString("access_token");
+//      }
+//
+//      return null;
+//    } catch (IOException ex) {
+//      logger.error("Failed to retrieve a client credentials token from OAuth2 authorization service", ex);
+//      return null;
+//    }
   }
 
   /*
@@ -393,7 +444,6 @@ public class OAuth2Helper {
       switch (authConfig.getCredentialMode().toLowerCase(Locale.ROOT)) {
         case "client":
           token = OAuth2Helper.getClientCredentialsToken(
-                  client,
                   authConfig.getTokenUrl(),
                   authConfig.getClientId(),
                   authConfig.getPassword(),
@@ -401,23 +451,10 @@ public class OAuth2Helper {
                   authConfig.isUseBasicAuth());
           break;
         case "password":
-          token = OAuth2Helper.getPasswordCredentialsToken(
-                  client,
-                  authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
-                  authConfig.getPassword(),
-                  authConfig.getClientId(),
-                  authConfig.getScope());
+          token = OAuth2Helper.getCredentialsToken(authConfig);
           break;
         case "sams-password":
-          token = OAuth2Helper.getSamsPasswordCredentialsToken(
-                  client,
-                  authConfig.getTokenUrl(),
-                  authConfig.getUsername(),
-                  authConfig.getPassword(),
-                  authConfig.getClientId(),
-                  authConfig.getClientSecret(),
-                  authConfig.getScope());
+          token = OAuth2Helper.getSamsToken(authConfig);
           break;
       }
     } else {

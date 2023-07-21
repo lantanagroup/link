@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
@@ -40,7 +41,7 @@ public class FhirBundlerTests {
     Aggregate aggregate = new Aggregate();
     aggregate.setReport(masterMeasureReport);
 
-    FhirBundler bundler = new FhirBundler(null, tenantService);
+    FhirBundler bundler = new FhirBundler(null, tenantService, new ApiConfig());
 
     Report report = new Report();
 
@@ -48,7 +49,6 @@ public class FhirBundlerTests {
     PatientList patientList = new PatientList();
     patientList.setId(UUID.randomUUID());
     patientLists.add(patientList);
-    patientLists.get(0).getPatients().add(new PatientId("Patient/test-patient"));
 
     when(tenantService.getConfig()).thenReturn(tenant);
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);

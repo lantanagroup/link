@@ -346,7 +346,7 @@ public class ReportController extends BaseController {
   }
 
   public Bundle generateBundle(TenantService tenantService, Report report) {
-    FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+    FhirBundler bundler = new FhirBundler(this.eventService, tenantService, this.config);
     logger.info("Building Bundle for MeasureReport to send...");
     List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
     Bundle bundle = bundler.generateBundle(aggregates, report);
@@ -401,25 +401,10 @@ public class ReportController extends BaseController {
     return download ? submissionBundle : null;
   }
 
-  @GetMapping("/{reportId}/$validate")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) throws IOException {
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-
-    if (tenantService == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-    }
-
-    Report report = tenantService.getReport(reportId);
-
-    if (report == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
-    }
-
-    Bundle submissionBundle = this.generateBundle(tenantService, report);
-
+  private OperationOutcome validateBundle(TenantService tenantService, Bundle bundle, OperationOutcome.IssueSeverity severity) {
     try {
       Validator validator = new Validator(tenantService.getConfig().getValidation());
-      OperationOutcome outcome = validator.validate(submissionBundle, severity);
+      OperationOutcome outcome = validator.validate(bundle, severity);
       Path tempFile = Files.createTempFile(null, ".json");
       try (FileWriter fw = new FileWriter(tempFile.toFile())) {
         FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
@@ -444,9 +429,38 @@ public class ReportController extends BaseController {
 
       return outcome;
     } catch (IOException ex) {
-      logger.error("Error validating bundle", ex);
-      throw ex;
+      logger.error("Error storing bundle validation results to file", ex);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @PostMapping("/$validate")
+  public OperationOutcome validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    return this.validateBundle(tenantService, bundle, severity);
+  }
+
+  @GetMapping("/{reportId}/$validate")
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) throws IOException {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    Bundle submissionBundle = this.generateBundle(tenantService, report);
+    return this.validateBundle(tenantService, submissionBundle, severity);
   }
 
   @GetMapping("/{reportId}/aggregate")

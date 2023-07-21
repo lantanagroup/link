@@ -4,27 +4,35 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.PatientIdService;
+import com.lantanagroup.link.ReportingPeriodCalculator;
+import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.BulkStatus;
-import com.lantanagroup.link.db.model.BulkStatusResult;
-import com.lantanagroup.link.db.model.BulkStatuses;
+import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.QueryList;
 import com.lantanagroup.link.model.BulkResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import com.lantanagroup.link.query.auth.ICustomAuth;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class BulkQuery {
@@ -81,24 +89,53 @@ public class BulkQuery {
 
     try {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException | InterruptedException e) {
-      logger.warn("Error initiating bulk export", e);
+    } catch (IOException e) {
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
+      sbuilder.append("Stack Trace:\n");
+      sbuilder.append(e.getStackTrace());
+      bulkStatus.setStatus(BulkStatuses.cancelled);
+      bulkStatus.setErrorMessage(sbuilder.toString());
+      service.saveBulkStatus(bulkStatus);
+    } catch (InterruptedException e) {
+      logger.warn("Interrupted while initiating bulk export", e);
       bulkStatus.setStatus(BulkStatuses.pending);
       service.saveBulkStatus(bulkStatus);
+      Thread.currentThread().interrupt();
     }
 
     assert response != null;
     if(response.statusCode() > 400) {
-      logger.warn("Error initiating bulk export");
-      bulkStatus.setStatus(BulkStatuses.pending);
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
+      if(response.body().length() > 0){
+        sbuilder.append("Response Body: " + response.body());
+      }
+      bulkStatus.setStatus(BulkStatuses.cancelled);
       service.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
       return;
     }
 
     var headers = response.headers();
     String facilityHeaderNameValue = tenantService.getConfig().getBulkInitiateResponseUrlHeader();
     var statusHeader = headers.firstValue(facilityHeaderNameValue);
-    String pollingUrlresponse = statusHeader.get();
+    String pollingUrlresponse;
+    try {
+      pollingUrlresponse = statusHeader.get();
+    } catch(Exception e){
+      StringBuilder sbuilder = new StringBuilder();
+      sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
+      sbuilder.append("Stack Trace:\n");
+      sbuilder.append(e.getStackTrace());
+      bulkStatus.setStatus(BulkStatuses.cancelled);
+      bulkStatus.setErrorMessage(sbuilder.toString());
+      service.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
+      return;
+//      throw new Exception(sbuilder.toString());
+    }
+
     bulkStatus.setStatusUrl(pollingUrlresponse);
     bulkStatus.setStatus(BulkStatuses.pending);
     service.saveBulkStatus(bulkStatus);
@@ -107,7 +144,7 @@ public class BulkQuery {
 
   }
 
-  public void getStatus(BulkStatus bulkStatus,
+  public BulkStatusResult getStatus(BulkStatus bulkStatus,
                         TenantService tenantService,
                         BulkStatusService bulkStatusService,
                         ApplicationContext context) throws Exception {
@@ -127,7 +164,15 @@ public class BulkQuery {
 
       if(response.statusCode() > 400) {
         //figure out what to do here.
-        throw new Exception("Fetch failed: " + uri.toString());
+        responseBody = response.body();
+        StringBuilder sbuilder = new StringBuilder();
+        sbuilder.append("Fetch failed for URI: " + uri.toString());
+        if(responseBody.length() > 0){
+          sbuilder.append("Response Body: " + responseBody);
+        }
+        logger.warn(sbuilder.toString());
+        return null;
+        //throw new Exception(sbuilder.toString());
       }
 
       var config = tenantService.getConfig();
@@ -150,6 +195,71 @@ public class BulkQuery {
     bulkStatusService.saveBulkStatus(bulkStatus);
 
     bulkStatusService.saveBulkStatusResult(statusResult);
+
+    return statusResult;
+  }
+
+  public void getResultSetFromBulkResultAndLoadPatientData(
+          BulkStatusResult statusResult,
+          TenantService tenantService,
+          ApplicationContext context)
+          throws Exception {
+
+
+    Map<String,IBaseResource>  parsedData = new HashMap<>();
+
+    for (var output : statusResult.getResult().getOutput()) {
+      URI uri = new URI(output.getUrl());
+      HttpClient httpClient = HttpClient.newHttpClient();
+      HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
+      setAuthHeaders(requestBuilder, tenantService, context);
+      HttpRequest request = requestBuilder.build();
+
+      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+      IBaseResource resource = FhirContextProvider.getFhirContext().newNDJsonParser().parseResource(response.body());
+      parsedData.put(output.getType(), resource);
+    }
+
+    for (Map.Entry<String, IBaseResource> dataItem : parsedData.entrySet()) {
+      if (Objects.equals(dataItem.getKey(), "Patient")) {
+
+        QueryList queryList = tenantService.getConfig().getQueryList();
+
+        if (queryList == null) {
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tenant is not configured to query the EHR for patient lists");
+        }
+
+        for(var ehrPatientList : queryList.getLists()){
+          for(String measureId : ehrPatientList.getMeasureId()){
+            PatientList patientList = new PatientList();
+            ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth);
+
+            patientList.setLastUpdated(new Date());
+            patientList.setPeriodStart(calculator.getStart());
+            patientList.setPeriodEnd(calculator.getEnd());
+
+
+            Bundle bundle = (Bundle)dataItem.getValue();
+            patientList.setMeasureId(measureId);
+
+            bundle.getEntry().forEach(entry -> {
+              if(entry.getResource() instanceof Patient){
+                Patient patient = (Patient)entry.getResource();
+                PatientId patientId = new PatientId();
+                patientId.setIdentifier(patient.getId());
+                patientId.setReference(patient.getIdentifier().stream().findFirst().get().getSystem() + "|" + patient.getIdentifier().stream().findFirst().get().getValue());
+                patientList.getPatients().add(patientId);
+              }
+            });
+
+            PatientIdService patientIdService = new PatientIdService();
+            patientIdService.setContext(context);
+            patientIdService.storePatientList(tenantService, patientList);
+          }
+        }
+      }
+    }
   }
 
   private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {

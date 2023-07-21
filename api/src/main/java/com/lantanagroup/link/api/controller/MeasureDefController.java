@@ -4,10 +4,12 @@ import ca.uhn.fhir.rest.api.EncodingEnum;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.MeasurePackage;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +57,7 @@ public class MeasureDefController extends BaseController {
   }
 
   private Bundle getBundleFromUrl(String url) throws URISyntaxException {
-    URI uri = new URI(url);
+    URI uri = new URI(Helper.sanitizeUrl(url));
 
     if (this.config.isRequireHttps() && !"https".equalsIgnoreCase(uri.getScheme())) {
       throw new IllegalStateException("URL is not HTTPS");
@@ -75,6 +77,7 @@ public class MeasureDefController extends BaseController {
       return null;
     } catch (InterruptedException e) {
       logger.warn("Error retrieving measure def", e);
+      Thread.currentThread().interrupt();
       return null;
     }
 
@@ -89,11 +92,16 @@ public class MeasureDefController extends BaseController {
   }
 
   @PutMapping
-  public void createOrUpdateMeasureDef(@RequestBody(required = false) Bundle bundleBody, @RequestParam(required = false) String url) throws Exception {
-    if (bundleBody == null && url == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either a Bundle must be specified in a JSON body of the request, or a \"url\" query parameter must be specified");
+  public void createOrUpdateMeasureDef(@RequestBody(required = false) Bundle bundleBody, @RequestParam(required = false) String measureId) throws Exception {
+    if (bundleBody == null && StringUtils.isEmpty(measureId)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either a Bundle must be specified in a JSON body of the request, or a \"measureId\" query parameter must be specified");
     }
 
+    if (StringUtils.isNotEmpty(measureId) && this.apiConfig.getMeasureDefUrls().get(measureId) == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The specified measureId is not configured with a measure definition URL");
+    }
+
+    String url = StringUtils.isNotEmpty(measureId) ? this.apiConfig.getMeasureDefUrls().get(measureId) : null;
     Bundle bundle = bundleBody == null ? this.getBundleFromUrl(url) : bundleBody;
 
     if (bundle == null) {

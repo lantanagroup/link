@@ -30,6 +30,7 @@
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
             <version>4.31.1</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -51,12 +52,6 @@
             <artifactId>query</artifactId>
             <scope>compile</scope>
             <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.lantanagroup.fhir.transform</groupId>
-            <artifactId>FHIRTransforms</artifactId>
-            <version>0.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>

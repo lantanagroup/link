@@ -4,6 +4,7 @@ import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.BulkStatus;
+import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.db.model.BulkStatuses;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.query.uscore.BulkQuery;
@@ -53,13 +54,23 @@ public class BulkManagerService {
           BulkQuery bulkQuery = new BulkQuery();
           status.setStatus(BulkStatuses.inProgress);
           bulkStatusService.saveBulkStatus(status);
+          BulkStatusResult statusResult = null;
           try {
-            bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
+            statusResult = bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
           } catch (Exception e) {
             status.setStatus(BulkStatuses.pending);
             bulkStatusService.saveBulkStatus(status);
             throw new RuntimeException(e);
           }
+
+          if(statusResult != null){
+            try {
+              bulkQuery.getResultSetFromBulkResultAndLoadPatientData(statusResult,TenantService.create(sharedService, tenantId),this.applicationContext);
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
+          }
+
         });
       } catch (Exception e) {
         logger.error(e.getMessage());
@@ -80,5 +91,16 @@ public class BulkManagerService {
     BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
     BulkStatus status = bulkStatusService.getBulkStatusById(id);
     return status;
+  }
+
+  public BulkStatusResult getBulkStatusResultByStatusId(String id){
+    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
+    return bulkStatusService
+            .getBulkStatusResults()
+            .stream()
+            .filter(r -> r.getStatusId()
+            .equals(id))
+            .findFirst()
+            .orElse(null);
   }
 }

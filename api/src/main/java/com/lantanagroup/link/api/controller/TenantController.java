@@ -4,7 +4,6 @@ import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +45,10 @@ public class TenantController extends BaseController {
   }
 
   private void validateTenantConfig(Tenant newTenantConfig, Tenant existingTenantConfig) {
+    if (StringUtils.isEmpty(newTenantConfig.getId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'id' is required");
+    }
+
     if (!isIdValid(newTenantConfig.getId())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Id \"%s\" is not valid. The only special characters that are allowed are dashes (-) and underscores (_).", newTenantConfig.getId()));
     }
@@ -130,10 +133,6 @@ public class TenantController extends BaseController {
 
   @PostMapping
   public Tenant createTenant(@RequestBody Tenant tenant) {
-    if (StringUtils.isEmpty(tenant.getId())) {
-      tenant.setId((new ObjectId()).toString());
-    }
-
     this.validateTenantConfig(tenant, null);
 
     this.sharedService.saveTenantConfig(tenant);
