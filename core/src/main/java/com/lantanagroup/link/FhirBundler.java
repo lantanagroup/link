@@ -1,11 +1,14 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.ConceptMap;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -25,8 +28,11 @@ public class FhirBundler {
   private final EventService eventService;
 
   private final TenantService tenantService;
+  private final ApiConfig apiConfig;
 
   private Organization org;
+
+  private Device device;
 
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
@@ -41,9 +47,10 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(EventService eventService, TenantService tenantService) {
+  public FhirBundler(EventService eventService, TenantService tenantService, ApiConfig apiConfig) {
     this.eventService = eventService;
     this.tenantService = tenantService;
+    this.apiConfig = apiConfig;
   }
 
   private Bundling getBundlingConfig() {
@@ -60,9 +67,32 @@ public class FhirBundler {
     return this.org;
   }
 
+  private static void addPropertyToDevice(Device device, String category, List<String> events) {
+    if (events == null) {
+      return;
+    }
+
+    for (String event : events) {
+      Device.DevicePropertyComponent property = device.addProperty();
+      property.getType().addCoding().setCode("event");
+
+      String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
+      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
+    }
+  }
+
+  private Device getDevice() {
+    if (this.device == null) {
+      this.device = this.createDevice();
+    }
+
+    return this.device;
+  }
+
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
+    bundle.addEntry().setResource(this.getDevice());
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
@@ -79,6 +109,73 @@ public class FhirBundler {
     this.cleanEntries(bundle);
 
     return bundle;
+  }
+
+  private Device createDevice() {
+    ApiInfoModel apiInfoModel = Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+    Device device = new Device();
+    device.setId(UUID.randomUUID().toString());
+    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
+    device.addDeviceName().setName(this.apiConfig.getName());
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getVersion());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getBuild());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getCommit());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setComponent(new Identifier().setValue("cqf-ruler"))
+              .setValue(apiInfoModel.getCqfVersion());
+    }
+
+    addPropertyToDevice(device, "BeforeMeasureResolution", this.tenantService.getConfig().getEvents().getBeforeMeasureResolution());
+    addPropertyToDevice(device, "AfterMeasureResolution", this.tenantService.getConfig().getEvents().getAfterMeasureResolution());
+    addPropertyToDevice(device, "OnRegeneration", this.tenantService.getConfig().getEvents().getOnRegeneration());
+    addPropertyToDevice(device, "BeforePatientOfInterestLookup", this.tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
+    addPropertyToDevice(device, "AfterPatientOfInterestLookup", this.tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
+    addPropertyToDevice(device, "BeforePatientDataQuery", this.tenantService.getConfig().getEvents().getBeforePatientDataQuery());
+    addPropertyToDevice(device, "AfterPatientResourceQuery", this.tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
+    addPropertyToDevice(device, "AfterPatientDataQuery", this.tenantService.getConfig().getEvents().getAfterPatientDataQuery());
+    addPropertyToDevice(device, "AfterApplyConceptMaps", this.tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
+    addPropertyToDevice(device, "BeforePatientDataStore", this.tenantService.getConfig().getEvents().getBeforePatientDataStore());
+    addPropertyToDevice(device, "AfterPatientDataStore", this.tenantService.getConfig().getEvents().getAfterPatientDataStore());
+    addPropertyToDevice(device, "BeforeMeasureEval", this.tenantService.getConfig().getEvents().getBeforeMeasureEval());
+    addPropertyToDevice(device, "AfterMeasureEval", this.tenantService.getConfig().getEvents().getAfterMeasureEval());
+    addPropertyToDevice(device, "BeforeReportStore", this.tenantService.getConfig().getEvents().getBeforeReportStore());
+    addPropertyToDevice(device, "AfterReportStore", this.tenantService.getConfig().getEvents().getAfterReportStore());
+    addPropertyToDevice(device, "BeforeBundling", this.tenantService.getConfig().getEvents().getBeforeBundling());
+    addPropertyToDevice(device, "AfterBundling", this.tenantService.getConfig().getEvents().getAfterBundling());
+
+    List<ConceptMap> conceptMaps = this.tenantService.getAllConceptMaps();
+
+    if (!conceptMaps.isEmpty()) {
+      Device.DevicePropertyComponent property = device.addProperty();
+      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
+
+      for (ConceptMap conceptMap : this.tenantService.getAllConceptMaps()) {
+        property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
+      }
+    }
+
+    return device;
   }
 
   private Organization createOrganization() {
@@ -426,10 +523,20 @@ public class FhirBundler {
   }
 
   private String getNonLocalId(IBaseResource resource) {
-    return String.format("%s/%s", resource.fhirType(), getIdPart(resource));
+    String id = getIdPart(resource);
+
+    if (StringUtils.isEmpty(id)) {
+      return null;
+    }
+
+    return String.format("%s/%s", resource.fhirType(), id);
   }
 
   private String getIdPart(IBaseResource resource) {
+    if (resource.getIdElement() == null || resource.getIdElement().getIdPart() == null) {
+      return null;
+    }
+
     return resource.getIdElement().getIdPart().replaceAll("^#", "");
   }
 }

@@ -4,18 +4,19 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ValidationResult;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.model.tenant.Validation;
 import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r5.utils.validation.constants.BestPracticeWarningLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,19 @@ public class Validator {
     }
   }
 
+  private Device findDevice(Resource resource) {
+    if (resource.getResourceType() != ResourceType.Bundle) {
+      return null;
+    }
+
+    return ((Bundle) resource).getEntry().stream()
+            .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.Device)
+            .map(e -> (Device) e.getResource())
+            .filter(d -> d.getMeta() != null && d.getMeta().hasProfile(Constants.SubmittingDeviceProfile))
+            .findFirst()
+            .orElse(null);
+  }
+
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
     Date start = new Date();
@@ -76,6 +90,19 @@ public class Validator {
             })
             .collect(Collectors.toList()));
     logger.debug("Done validating and found {} errors", outcome.getIssue().size());
+
+    Device device = this.findDevice(resource);
+
+    if (device != null) {
+      logger.debug("Found submitting device in validation input, attaching to OperationOutcome as contained resource");
+      outcome.addContained(device);
+
+      if (!device.hasId()) {
+        device.setId(UUID.randomUUID().toString());
+      }
+
+      outcome.addExtension("http://test.com/submitting-device", new Reference().setReference("Device/" + device.getIdElement().getIdPart()));
+    }
 
     return outcome;
   }

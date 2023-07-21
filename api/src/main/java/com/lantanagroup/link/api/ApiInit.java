@@ -6,6 +6,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
@@ -99,9 +100,10 @@ public class ApiInit {
     List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
-      if (StringUtils.isEmpty(tenant.getFhirQuery().getFhirServerBase())) {
+      FhirQuery fhirQuery = tenant.getFhirQuery();
+      if (fhirQuery == null || StringUtils.isEmpty(fhirQuery.getFhirServerBase())) {
         logger.error("Tenant {} does not specify FHIR server base", tenant.getId());
-      } else if (this.config.isRequireHttps() && !tenant.getFhirQuery().getFhirServerBase().toLowerCase().startsWith("https://")) {
+      } else if (this.config.isRequireHttps() && !fhirQuery.getFhirServerBase().toLowerCase().startsWith("https://")) {
         logger.error("HTTPS is required, but tenant %s does not have an HTTPS FHIR server base", tenant.getId());
       }
     }

@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.hl7.fhir.r4.model.CapabilityStatement;
 
 import java.io.IOException;
 import java.net.URL;
@@ -27,7 +28,23 @@ public class Helper {
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
   public static final String RFC_1123_DATE_TIME_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
 
-  public static ApiInfoModel getVersionInfo() {
+  public static ApiInfoModel getVersionInfo(String evaluationService) {
+    String cqfVersion = null;
+
+    if (StringUtils.isNotEmpty(evaluationService)) {
+      CapabilityStatement cs = new FhirDataProvider(evaluationService)
+              .getClient()
+              .capabilities()
+              .ofType(CapabilityStatement.class)
+              .execute();
+
+      if (cs != null) {
+        cqfVersion = cs.getImplementation().getDescription();
+      } else {
+        logger.warn("Could not retrieve capabilities of evaluation service, using cqf-version specified in build.yml");
+      }
+    }
+
     try {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -36,13 +53,19 @@ public class Helper {
 
       if (buildFile == null) {
         logger.warn("No build.yml file found, returning default \"dev\" build and \"0.9.0\" version");
-        return new ApiInfoModel();
+        return new ApiInfoModel(cqfVersion);
       }
 
-      return mapper.readValue(buildFile, ApiInfoModel.class);
+      ApiInfoModel apiInfo = mapper.readValue(buildFile, ApiInfoModel.class);
+
+      if (StringUtils.isNotEmpty(cqfVersion)) {
+        apiInfo.setCqfVersion(cqfVersion);
+      }
+
+      return apiInfo;
     } catch (IOException ex) {
       logger.error("Error deserializing build.yml file", ex);
-      return new ApiInfoModel();
+      return new ApiInfoModel(cqfVersion);
     }
   }
 

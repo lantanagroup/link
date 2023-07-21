@@ -19,6 +19,11 @@ import javax.validation.constraints.PositiveOrZero;
 @PropertySource(value = "classpath:application.yml", factory = YamlPropertySourceFactory.class)
 public class ApiConfig {
   /**
+   * <strong>api.name</strong><br>The name of the application that's returned in Device instances of reports
+   */
+  private String name;
+
+  /**
    * <strong>api.connection-string</strong><br>The connection string to use for tenant-agnostic data
    */
   private String connectionString;

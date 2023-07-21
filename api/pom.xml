@@ -30,6 +30,7 @@
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
             <version>4.31.1</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
