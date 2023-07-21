@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
+import java.util.HashMap;
 
 @Getter
 @Setter
@@ -152,4 +153,9 @@ public class ApiConfig {
    * <strong>api.skip-query</strong><br>Whether to skip the query phase of report generation; useful if patient data bundles have already been stored.
    */
   private boolean skipQuery = false;
+
+  /**
+   * <strong>api.measure-def-urls</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
+   */
+  private HashMap<String, String> measureDefUrls = new HashMap<>();
 }
