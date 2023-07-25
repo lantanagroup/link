@@ -3,10 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.PatientIdService;
-import com.lantanagroup.link.ReportingPeriodCalculator;
-import com.lantanagroup.link.ReportingPeriodMethods;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -271,10 +268,10 @@ public class BulkQuery {
     String authHeader = authorizer.getAuthHeader();
 
     if (authHeader != null && !authHeader.isEmpty()) {
-      requestBuilder.setHeader("Authorization", authHeader);
+      requestBuilder.setHeader("Authorization", Helper.sanitizeHeader(authHeader));
     }
     if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.setHeader("apikey", apiKey);
+      requestBuilder.setHeader("apikey", Helper.sanitizeHeader(apiKey));
     }
   }
 }

@@ -128,6 +128,10 @@ public class Helper {
     return value.replaceAll(whiteList, "");
   }
 
+  public static String sanitizeHeader(String value) {
+    return value.replaceAll("[^\\u0020-\\u007e]", "");
+  }
+
   public static String quoteApostrophe(String input) {
     if (!StringUtils.isEmpty(input))
       return input.replaceAll("[\']", "&rsquo;");

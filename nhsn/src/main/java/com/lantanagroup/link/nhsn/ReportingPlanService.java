@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.model.tenant.ReportingPlan;
 import lombok.Getter;
 import lombok.Setter;
@@ -139,8 +140,8 @@ public class ReportingPlanService {
     builder.addParameter("year", Integer.toString(year));
     builder.addParameter("month", Integer.toString(month));
     HttpGet request = new HttpGet(builder.build());
-    request.addHeader(HttpHeaders.AUTHORIZATION, String.format("Bearer %s", accessToken));
-    request.addHeader("Access-Token", config.getSamsAuth().getEmailAddress());
+    request.addHeader(HttpHeaders.AUTHORIZATION, Helper.sanitizeHeader(String.format("Bearer %s", accessToken)));
+    request.addHeader("Access-Token", Helper.sanitizeHeader(config.getSamsAuth().getEmailAddress()));
     return httpClient.execute(request, response -> {
       logger.info("Response: {}", response.getStatusLine());
       String body = EntityUtils.toString(response.getEntity());
