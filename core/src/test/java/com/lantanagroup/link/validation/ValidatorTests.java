@@ -122,7 +122,7 @@ public class ValidatorTests {
   @Ignore
   public void validateUsCore_Encounter_Class_Remove() throws IOException {
 
-    var bundle = this.getBundle("large-submission-example.json");
+    var bundle = this.getBundle("new-sira-bundle.json");
 
     var encounter = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -141,9 +141,58 @@ public class ValidatorTests {
 
   @Test
   @Ignore
+  public void validateUsCore_Encounter_Status_Remove() throws IOException {
+
+    var bundle = this.getBundle("new-sira-bundle.json");
+
+    var encounter = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Encounter)
+            .map(r -> (Encounter) r)
+            .findFirst();
+
+    var issueTextToFind = "Encounter.status: minimum required = 1, but only found 0";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    encounter.get().setStatus(null);
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
+  public void validateUsCore_Encounter_Type_Remove() throws IOException {
+
+    var bundle = this.getBundle("new-sira-bundle.json");
+
+    var encounters = bundle.getEntry().stream()
+            .filter(r -> r.getResource() instanceof Encounter)
+            .collect(Collectors.toList());
+
+    for(var encounter : encounters)
+    {
+      if(!((Encounter)encounter.getResource()).hasType())
+        bundle.getEntry().remove(encounter);
+    }
+
+    var issueTextToFind = "Encounter.type: minimum required = 1, but only found 0 ";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    for(var encounter : encounters)
+    {
+      ((Encounter)encounter.getResource()).setType(null);
+    }
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  @Ignore
   public void validateUsCore_Encounter_Class_Change() throws IOException {
 
-    var bundle = this.getBundle("large-submission-example.json");
+    var bundle = this.getBundle("new-sira-bundle.json");
 
     var encounter = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
@@ -185,16 +234,46 @@ public class ValidatorTests {
   @Test
   public void validateNhsnMeasureIg_Location_Remove() throws IOException {
 
-    var bundle = this.getBundle("large-submission-example2.json");
+    var bundle = this.getBundle("new-sira-bundle.json");
 
-    var locations = bundle.getEntry().stream().filter(r -> r.getResource() instanceof Location).collect(Collectors.toList());
+    var encounter = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Encounter)
+            .map(r -> (Encounter) r)
+            .findFirst();
 
-    var issueTextToFind = "location";
+    var issueTextToFind = "Encounter.location.location: minimum required = 1, but only found 0";
 
     ValidateBundle(bundle, issueTextToFind, true);
 
-    for(var location : locations) {
-      bundle.getEntry().remove(location);
+    if(!encounter.get().getLocation().isEmpty()) {
+      for(var encLoc : encounter.get().getLocation()){
+        encLoc.setLocation(null);
+      }
+    }
+
+    ValidateBundle(bundle, issueTextToFind, false);
+  }
+
+  @Test
+  public void validateNhsnMeasureIg_LocationStatus_NULL() throws IOException {
+
+    var bundle = this.getBundle("new-sira-bundle.json");
+
+    var encounter = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r instanceof Encounter)
+            .map(r -> (Encounter) r)
+            .findFirst();
+
+    var issueTextToFind = "The value provided ('?') is not in the value set 'EncounterLocationStatus'";
+
+    ValidateBundle(bundle, issueTextToFind, true);
+
+    if(!encounter.get().getLocation().isEmpty()) {
+      for(var encLoc : encounter.get().getLocation()){
+        encLoc.setStatus(Encounter.EncounterLocationStatus.NULL);
+      }
     }
 
     ValidateBundle(bundle, issueTextToFind, false);
@@ -204,21 +283,24 @@ public class ValidatorTests {
   @Ignore
   public void validateNhsnMeasureIg_MedicationAdministration_Remove() throws IOException {
 
-    //Currently, no Locations are found in the bundle with the code below
+    var bundle = this.getBundle("new-sira-bundle.json");
 
-    var bundle = this.getBundle("large-submission-example2.json");
-
-    var encounterResource = bundle.getEntry().stream()
+    var observations = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Observation)
             .map(r -> (Observation) r)
             .collect(Collectors.toList());
 
-    var issueTextToFind = "encounter";
+    var issueTextToFind = "Observation.code: minimum required = 1, but only found 0";
 
     ValidateBundle(bundle, issueTextToFind, true);
 
-
+    for(var obs: observations)
+    {
+      obs.setId("");
+      obs.setCode(null);
+      obs.setEncounter(null);
+    }
 
     ValidateBundle(bundle, issueTextToFind, false);
   }
