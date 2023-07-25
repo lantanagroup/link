@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,6 +22,11 @@ public class UserController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields("passwordSalt", "passwordHash");
+  }
 
   @GetMapping
   public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled) {

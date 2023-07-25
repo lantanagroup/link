@@ -5,6 +5,7 @@ import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,11 @@ import java.util.List;
 public class ConceptMapController extends BaseController {
   @Autowired
   private SharedService sharedService;
+
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields();
+  }
 
   @PutMapping
   public void createOrUpdateConceptMap(@RequestBody ConceptMap conceptMap, @PathVariable String tenantId) {

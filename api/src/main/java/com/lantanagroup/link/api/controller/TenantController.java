@@ -6,6 +6,7 @@ import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,6 +21,11 @@ public class TenantController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields();
+  }
 
   @GetMapping
   public List<Tenant> searchTenants() {
