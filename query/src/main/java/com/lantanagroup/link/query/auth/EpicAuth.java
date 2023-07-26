@@ -2,6 +2,7 @@ package com.lantanagroup.link.query.auth;
 
 import com.google.gson.Gson;
 import com.google.gson.internal.LinkedTreeMap;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.TenantService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -94,7 +95,7 @@ public class EpicAuth implements ICustomAuth {
           logger.debug("Acquired access token for Epic");
           return "Bearer " + accessToken;
         } else {
-          logger.error("Response from auth token request does not include an 'access_token' property:\n" + responseBody);
+          logger.error("Response from auth token request does not include an 'access_token' property:\n" + Helper.sanitizeString(responseBody));
         }
       }
     } catch (Exception ex) {
