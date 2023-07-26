@@ -10,6 +10,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,14 +84,16 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     return Paths.get(path, fileName);
   }
 
-  public static Cipher getCipher(String password, byte[] salt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
+  public static Cipher getCipher(String password, byte[] salt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchProviderException {
     byte[] passAndSalt = concat(password.getBytes(StandardCharsets.UTF_8), salt);
     MessageDigest md = MessageDigest.getInstance("SHA-256");
     byte[] key = md.digest(passAndSalt);
     SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
     md.reset();
     byte[] iv = Arrays.copyOfRange(md.digest(concat(key, passAndSalt)), 0, 16);
-    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    //Adding BouncyCastle provider ("BC") to allow for GCM
+    Security.addProvider(new BouncyCastleProvider());
+    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
     cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
     return cipher;
   }
