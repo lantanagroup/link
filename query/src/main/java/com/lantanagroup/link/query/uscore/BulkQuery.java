@@ -165,7 +165,7 @@ public class BulkQuery {
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append("Fetch failed for URI: " + uri.toString() + " Status Code: " + response.statusCode());
         if(responseBody.length() > 0){
-          sbuilder.append("Response Body: " + responseBody);
+          sbuilder.append("Response Body: " + Helper.sanitizeString(responseBody));
         }
         logger.warn(sbuilder.toString());
         return null;
