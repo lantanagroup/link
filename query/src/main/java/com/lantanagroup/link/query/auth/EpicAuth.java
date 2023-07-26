@@ -95,7 +95,7 @@ public class EpicAuth implements ICustomAuth {
           logger.debug("Acquired access token for Epic");
           return "Bearer " + accessToken;
         } else {
-          logger.error("Response from auth token request does not include an 'access_token' property for Tenant {}", this.tenantService.getConfig().getId());
+          logger.error("Response from auth token request does not include an 'access_token' property:\n" + Helper.sanitizeString(responseBody));
         }
       }
     } catch (Exception ex) {

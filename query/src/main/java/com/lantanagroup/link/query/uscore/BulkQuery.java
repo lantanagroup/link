@@ -105,7 +105,6 @@ public class BulkQuery {
     if(response.statusCode() > 400) {
       StringBuilder sbuilder = new StringBuilder();
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
-// Fortity does not want to allow the response body to be added to the log, even after sanitization
       if(response.body().length() > 0){
         sbuilder.append("Response Body: " + Helper.sanitizeString(response.body()));
       }
@@ -165,10 +164,9 @@ public class BulkQuery {
         responseBody = response.body();
         StringBuilder sbuilder = new StringBuilder();
         sbuilder.append("Fetch failed for URI: " + uri.toString() + " Status Code: " + response.statusCode());
-        //Fortity does not want to allow the response body to be added to the log, even after sanitization
-//        if(responseBody.length() > 0){
-//          sbuilder.append("Response Body: " + responseBody);
-//        }
+        if(responseBody.length() > 0){
+          sbuilder.append("Response Body: " + responseBody);
+        }
         logger.warn(sbuilder.toString());
         return null;
         //throw new Exception(sbuilder.toString());
