@@ -33,8 +33,7 @@ public class SharedService {
   private ApiConfig config;
 
   private Connection getSQLConnection() {
-    try {
-      Connection conn = DriverManager.getConnection(this.config.getConnectionString());
+    try(Connection conn = DriverManager.getConnection(this.config.getConnectionString())) {
       if (conn != null) {
         DatabaseMetaData dm = conn.getMetaData();
         return conn;
