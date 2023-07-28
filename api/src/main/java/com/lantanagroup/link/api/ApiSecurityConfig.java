@@ -1,13 +1,10 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.api.auth.PreAuthTokenHeaderFilter;
-import com.lantanagroup.link.api.error.CustomAccessDeniedHandler;
-import com.lantanagroup.link.api.error.CustomAuthenticationEntryPoint;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
@@ -18,8 +15,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -39,18 +34,6 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 
 //  @Autowired
 //  private CsrfTokenRepository customCsrfTokenRepository; //custom csrfToken repository
-
-  //Bean for catching requests that the user is forbidden from performing (403)
-  @Bean
-  public AuthenticationEntryPoint authenticationEntryPoint(){
-    return new CustomAuthenticationEntryPoint();
-  }
-
-  //Bean for catching requests that the user lacks valid credentials for (401)
-  @Bean
-  public AccessDeniedHandler accessDeniedHandler(){
-    return new CustomAccessDeniedHandler();
-  }
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
@@ -95,13 +78,7 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
             .addFilter(authFilter)
             .authorizeRequests()
             .anyRequest()
-            .authenticated()
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint(authenticationEntryPoint())
-            .and()
-            .exceptionHandling()
-            .accessDeniedHandler(accessDeniedHandler());
+            .authenticated();
 
     //set content security policy
     String csp = "script-src 'self'";
