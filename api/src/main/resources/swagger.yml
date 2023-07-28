@@ -25,6 +25,10 @@ paths:
             'application/json':
               schema:
                 type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/$tenant-schema:
@@ -40,6 +44,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApiInfoModel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/docs:
@@ -55,6 +63,10 @@ paths:
             text/yaml:
               schema:
                 type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/user:
@@ -76,6 +88,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Users
@@ -88,6 +104,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/user/{userId}:
     put:
       tags:
@@ -114,6 +134,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Users
@@ -129,6 +153,10 @@ paths:
       responses:
         '204':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/user/{userId}/$change-password:
     put:
       tags:
@@ -150,6 +178,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/tenant:
     get:
       tags:
@@ -165,6 +197,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TenantItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Tenants
@@ -181,6 +217,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/tenant/{id}:
     get:
       tags:
@@ -201,6 +241,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Tenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Tenants
@@ -224,6 +268,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tenants
@@ -239,6 +287,10 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi:
     get:
       tags:
@@ -261,6 +313,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/{id}:
     get:
       tags:
@@ -287,6 +343,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/fhir/List:
     post:
       tags:
@@ -312,6 +372,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/$query-list:
     get:
       tags:
@@ -328,6 +392,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generate:
     post:
       tags:
@@ -354,6 +422,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generateMultiMeasure:
     post:
       tags:
@@ -399,6 +471,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/$send:
     post:
       tags:
@@ -427,6 +503,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$validate:
     post:
       tags:
@@ -453,6 +533,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/$validate:
     get:
       tags:
@@ -479,6 +563,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/aggregate:
     get:
       tags:
@@ -507,6 +595,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/patientList:
     get:
       tags:
@@ -535,6 +627,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/individual:
     get:
       tags:
@@ -561,6 +657,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/individual/{patientMeasureReportId}:
     get:
       tags:
@@ -593,6 +693,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef:
     get:
       tags:
@@ -606,6 +710,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/MeasureDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Measure Definitions
@@ -627,6 +735,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef/{measureId}:
     delete:
       tags:
@@ -643,6 +755,10 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measurePackage:
     get:
       tags:
@@ -656,6 +772,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/MeasurePackage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Measure Packages
@@ -670,6 +790,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measurePackage/{id}:
     delete:
       tags:
@@ -686,6 +810,10 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/conceptMap:
     put:
       tags:
@@ -707,6 +835,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     get:
       tags:
         - Concept Maps
@@ -728,6 +860,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ConceptMapItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/conceptMap/{id}:
     get:
       tags:
@@ -754,6 +890,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ConceptMap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/data/$expunge:
     delete:
       tags:
@@ -770,6 +910,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/data/$test-fhir:
     get:
       tags:
@@ -824,6 +968,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/TestResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$initiate-bulk-data:
     post:
       tags:
@@ -839,6 +987,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/status/{id}:
     get:
       tags:
@@ -864,6 +1016,10 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/BulkStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$execute-query-and-retrieval:
     post:
       tags:
@@ -879,6 +1035,10 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   schemas:
     ApiInfoModel:
@@ -1545,6 +1705,16 @@ components:
           type: string
         valueInteger:
           type: number
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
   securitySchemes:
     oauth:
       type: oauth2
@@ -1556,3 +1726,16 @@ components:
     basic:
       type: http
       scheme: basic
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
