@@ -27,6 +27,8 @@ paths:
                 type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
       security:
@@ -46,6 +48,8 @@ paths:
                 $ref: '#/components/schemas/ApiInfoModel'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
       security:
@@ -64,6 +68,8 @@ paths:
               schema:
                 type: string
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -90,6 +96,8 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     post:
@@ -105,6 +113,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -136,6 +146,8 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
@@ -154,6 +166,8 @@ paths:
         '204':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -180,6 +194,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/tenant:
@@ -198,6 +214,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/TenantItem'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -218,6 +236,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -242,6 +262,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Tenant'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -270,6 +292,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
@@ -288,6 +312,8 @@ paths:
         '204':
           description: successful response with no content returned
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -314,6 +340,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/PatientList'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -345,6 +373,8 @@ paths:
                 $ref: '#/components/schemas/PatientList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/fhir/List:
@@ -374,6 +404,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/$query-list:
@@ -393,6 +425,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -423,6 +457,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Report'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -473,6 +509,8 @@ paths:
                 $ref: '#/components/schemas/Report'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/$send:
@@ -505,6 +543,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$validate:
@@ -535,6 +575,8 @@ paths:
                 $ref: '#/components/schemas/FHIR.OperationOutcome'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/$validate:
@@ -564,6 +606,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FHIR.OperationOutcome'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -597,6 +641,8 @@ paths:
                   $ref: '#/components/schemas/FHIR.MeasureReport'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/patientList:
@@ -629,6 +675,8 @@ paths:
                   $ref: '#/components/schemas/PatientList'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/individual:
@@ -658,6 +706,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -695,6 +745,8 @@ paths:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/measureDef:
@@ -711,6 +763,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MeasureDefinition'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -737,6 +791,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/measureDef/{measureId}:
@@ -757,6 +813,8 @@ paths:
           description: successful response with no content returned
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/measurePackage:
@@ -773,6 +831,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MeasurePackage'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -791,6 +851,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -811,6 +873,8 @@ paths:
         '204':
           description: successful response with no content returned
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -837,6 +901,8 @@ paths:
           description: successful response
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     get:
@@ -861,6 +927,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/ConceptMapItem'
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -892,6 +960,8 @@ paths:
                 $ref: '#/components/schemas/ConceptMap'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/data/$expunge:
@@ -911,6 +981,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -970,6 +1042,8 @@ paths:
                 $ref: '#/components/schemas/TestResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$initiate-bulk-data:
@@ -988,6 +1062,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
@@ -1018,6 +1094,8 @@ paths:
                 $ref: '#/components/schemas/BulkStatus'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$execute-query-and-retrieval:
@@ -1036,6 +1114,8 @@ paths:
         '200':
           description: successful response
         '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
