@@ -41,12 +41,6 @@ public class ApiConfig {
   private String publicAddress;
 
   /**
-   * <strong>api.require-https</strong><br>Indicates if HTTPS is required for submission urls.
-   */
-  @Getter
-  private boolean requireHttps;
-
-  /**
    * <strong>api.measure-location</strong><br>Location information to be included in all MeasureReport resources exported/sent from the system
    */
   @Getter

@@ -42,4 +42,5 @@ public class Constants {
   public static final String MeasureReportBundleProfileUrl = "https://www.lantanagroup.com/fhir/StructureDefinition/measure-report-bundle";
   public static final String LINK_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version";
   public static final String MEASURE_VERSION_URL = "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version";
+  public static final String LinkUser = "link-user";
 }
