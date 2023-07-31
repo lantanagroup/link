@@ -38,6 +38,9 @@ public class PreAuthTokenHeaderFilter extends AbstractPreAuthenticatedProcessing
     if (apiConfig.getCheckIpAddress() && authHeader != null && authHeader.startsWith("Bearer ")) {
       logger.info("Validating the requesting IP address against the token IP address.");
       DecodedJWT jwt = JWT.decode(authHeader.substring(7));
+      if (jwt.getClaim("ip").isNull()) {
+        throw new JWTVerificationException("IP Not in JWT, but check-ip-address is set to true");
+      }
       if (!jwt.getClaim("ip").isNull() && !"0:0:0:0:0:0:0:1(0:0:0:0:0:0:0:1)".equals(ipAddress) && !jwt.getClaim("ip").asString().equals(ipAddress)) {
         throw new JWTVerificationException("IP Address does not match.");
       }
