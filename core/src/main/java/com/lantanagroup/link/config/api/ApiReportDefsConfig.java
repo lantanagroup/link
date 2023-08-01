@@ -4,8 +4,6 @@ import com.lantanagroup.link.config.auth.LinkOAuthConfig;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @Getter @Setter
