@@ -1,6 +1,7 @@
 package com.lantanagroup.link.config.api;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import com.lantanagroup.link.config.auth.LinkAuthManager;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -76,40 +77,10 @@ public class ApiConfig {
   @Getter @Setter @NotNull
   private String evaluationService;
 
-  /**
-   * <strong>api.auth-jwks-url</strong><br>The url endpoint for certs from the identity provider, which is used to verify any JSON Web Token (JWT)
-   */
   @Getter
   @Setter
-  private String authJwksUrl;
-
-  /**
-   * <strong>api.issuer</strong><br>This issuer is used during token validation to ensure that the JWT has been issued by a trusted system
-   */
-  @Getter
-  @Setter
-  private String issuer;
-
-  /**
-   * <strong>api.algorithm</strong><br>The algorithm used by the identity provider to sign the jwt token
-   */
-  @Getter
-  @Setter
-  private String algorithm;
-
-  /**
-   * <strong>api.tokenVerificationClass</strong><br>The class configured to verify a jwt token in the api
-   */
-  @Getter
-  @Setter
-  private String tokenVerificationClass;
-
-  /**
-   * <strong>api.tokenValidationEndpoint</strong><br>The url for the identity provider's token validation endpoint
-   */
-  @Getter
-  @Setter
-  private String tokenValidationEndpoint;
+  @NotNull
+  private LinkAuthManager linkAuthManager;
 
   /**
    * <strong>api.check-ip-address</strong><br>Check if the IP address in the jwt token matches the ip address of the request
