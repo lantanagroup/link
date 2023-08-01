@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * Ensures that Period.start has the same precision as Period.end
+ */
 public class FixPeriodDates implements IReportGenerationDataEvent
 {
   private static final Logger logger = LoggerFactory.getLogger(FixPeriodDates.class);

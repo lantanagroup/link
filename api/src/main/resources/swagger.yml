@@ -1105,10 +1105,6 @@ components:
           type: boolean
           default: true
           description: 'Whether to merge multiple censuses into a single list.'
-        includeIndividualMeasureReports:
-          type: boolean
-          default: true
-          description: 'Whether to include individual measure reports in the submission bundle.'
         promoteLineLevelResources:
           type: boolean
           default: false

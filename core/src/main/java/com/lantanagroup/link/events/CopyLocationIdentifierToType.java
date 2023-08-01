@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Populates the Location.type with the first value from Location.identifier
+ */
 public class CopyLocationIdentifierToType implements IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(CopyLocationIdentifierToType.class);
