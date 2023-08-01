@@ -106,11 +106,11 @@ public class BulkQuery {
       StringBuilder sbuilder = new StringBuilder();
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
       if(response.body().length() > 0){
-        sbuilder.append("Response Body: " + response.body());
+        sbuilder.append("Response Body: " + Helper.sanitizeString(response.body()));
       }
       bulkStatus.setStatus(BulkStatuses.cancelled);
       service.saveBulkStatus(bulkStatus);
-      logger.warn(Helper.sanitizeString(sbuilder.toString()));
+      logger.warn(sbuilder.toString());
       return;
     }
 
@@ -163,11 +163,11 @@ public class BulkQuery {
         //figure out what to do here.
         responseBody = response.body();
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Fetch failed for URI: " + uri.toString());
+        sbuilder.append("Fetch failed for URI: " + uri.toString() + " Status Code: " + response.statusCode());
         if(responseBody.length() > 0){
-          sbuilder.append("Response Body: " + responseBody);
+          sbuilder.append("Response Body: " + Helper.sanitizeString(responseBody));
         }
-        logger.warn(Helper.sanitizeString(sbuilder.toString()));
+        logger.warn(sbuilder.toString());
         return null;
         //throw new Exception(sbuilder.toString());
       }

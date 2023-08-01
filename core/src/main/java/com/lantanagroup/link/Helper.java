@@ -100,7 +100,7 @@ public class Helper {
 
   public static String sanitizeString(String value) {
     if (StringUtils.isEmpty(value)) {
-      return value;
+      return "";
     }
 
     //redundant checks to satisfy fortify scans
