@@ -14,8 +14,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -42,7 +40,16 @@ public class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     PreAuthTokenHeaderFilter authFilter = new PreAuthTokenHeaderFilter("Authorization", linkCredentials, config);
-    authFilter.setAuthenticationManager(new LinkAuthManager(config.getIssuer(), config.getAlgorithm(), config.getAuthJwksUrl(), config.getTokenVerificationClass(), null, config.getTokenValidationEndpoint()));
+    authFilter.setAuthenticationManager(
+            new LinkAuthManager(
+                    config.getLinkAuthManager().getIssuer(),
+                    config.getLinkAuthManager().getAlgorithm(),
+                    config.getLinkAuthManager().getAuthJwksUrl(),
+                    config.getLinkAuthManager().getTokenVerificationClass(),
+                    null,
+                    config.getLinkAuthManager().getTokenValidationEndpoint()
+            )
+    );
     authFilter.setAuthenticationSuccessHandler(new LinkAuthenticationSuccessHandler(this.config));
     http
             .sessionManagement()

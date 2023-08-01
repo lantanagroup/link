@@ -21,6 +21,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,27 +37,28 @@ public class PatientIdentifierController extends BaseController {
   /**
    * Posts a csv file with Patient Identifiers and Dates to the Fhir server.
    * @param csvContent The content of the CSV
-   * @param reportTypeId - the type of the report (ex covid-min) and the format should be system|value
+   * @param listIdentifier - the type of the report (ex covid-min) and the format should be system|value
    */
   @PostMapping(value = "/csv", consumes = "text/csv")
   public void storeCSV(
           @RequestBody() String csvContent,
-          @RequestParam String reportTypeId) throws Exception {
-    logger.debug("Receiving RR FHIR CSV. Parsing...");
-    if (reportTypeId == null || reportTypeId.isBlank()) {
-      String msg = "Report Type should be provided.";
+          @RequestParam String listIdentifier) throws Exception {
+    logger.debug("Receiving Patient List CSV. Parsing...");
+    if (listIdentifier == null || listIdentifier.isBlank()) {
+      String msg = "List Identifier should be provided.";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
-    if (!reportTypeId.contains("|")) {
-      String msg = "Report type should be of format: system|value";
+    if (!listIdentifier.contains("|")) {
+      String msg = "List Identifier should be of format: system|value";
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
     List<CsvEntry> list = this.getCsvEntries(csvContent);
-      Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
+    Map<String, List<CsvEntry>> csvMap = list.stream().collect(Collectors.groupingBy(CsvEntry::getPeriodIdentifier));
     for (String key : csvMap.keySet()) {
-      ListResource listResource = getListResource(reportTypeId, csvMap.get(key));
+      ListResource listResource = getListResource(listIdentifier, csvMap.get(key));
+      checkMeasureIdentifier(listResource);
       this.receiveFHIR(listResource);
     }
   }
@@ -92,7 +94,7 @@ public class PatientIdentifierController extends BaseController {
     FhirDataProvider evaluationDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     Measure measure = evaluationDataProvider.findMeasureByIdentifier(measureIdentifier);
     if (measure == null) {
-      String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
+      String msg = String.format("Measure Identified With Value '%s' and System '%s' not found on CQF Evaluation Service", measureIdentifier.getValue(), measureIdentifier.getSystem());
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
@@ -145,7 +147,7 @@ public class PatientIdentifierController extends BaseController {
           logger.error(msg);
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
         }
-        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3], line[4]);
+        CsvEntry entry = new CsvEntry(line[0], line[1], line[2], line[3]);
         list.add(entry);
       }
     }
@@ -238,6 +240,16 @@ public class PatientIdentifierController extends BaseController {
     applicablePeriodExtensionUrl.get(0).setValue(csvList.get(0).getPeriod());
     list.setExtension(applicablePeriodExtensionUrl);
     //list.setDateElement(new DateTimeType(listDate));
+    list.setStatus(ListResource.ListStatus.CURRENT);
+    list.setMode(ListResource.ListMode.WORKING);
+    list.setTitle(String.format("Census List for %s", IdentifierHelper.fromString(reportTypeId).getValue()));
+
+    CodeableConcept cc = new CodeableConcept();
+    cc.setText("PatientList");
+    list.setCode(cc);
+
+    list.setDate(new Date());
+
     csvList.stream().parallel().forEach(csvEntry -> {
       ListResource.ListEntryComponent listEntry = new ListResource.ListEntryComponent();
       Reference reference = new Reference();

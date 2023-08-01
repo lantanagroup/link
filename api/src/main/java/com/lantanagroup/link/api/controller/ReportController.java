@@ -506,34 +506,8 @@ public class ReportController extends BaseController {
 
   @GetMapping(value = "/{reportId}/patient")
   public List<PatientReportModel> getReportPatients(
-          @PathVariable("reportId") String reportId) {
-
-    List<PatientReportModel> patientsReportModelList = new ArrayList<>();
-
-    List<Bundle> patientBundles =  new ArrayList<>();
-
-    String allPatientsBundleId = reportId;
-    String[] idParts = reportId.split("-");
-    if (idParts.length > 1) {
-      allPatientsBundleId = idParts[0];
-    }
-
-    Bundle retrievePatientBundle = this.getFhirDataProvider().getBundleById(allPatientsBundleId);
-
-    patientBundles.add(retrievePatientBundle);
-
-    for (Bundle patientBundle : patientBundles) {
-      if (patientBundle != null && !patientBundle.getEntry().isEmpty()) {
-        for (Bundle.BundleEntryComponent entry : patientBundle.getEntry()) {
-          if (entry.getResource() != null && entry.getResource().getResourceType().toString().equals("Patient")) {
-            Patient patient = (Patient) entry.getResource();
-            PatientReportModel patientModel = FhirHelper.setPatientFields(patient, false);
-            patientsReportModelList.add(patientModel);
-          }
-        }
-      }
-    }
-    return patientsReportModelList;
+          @PathVariable("reportId") String reportId) throws Exception {
+    throw new Exception("Get Patient Reports Not Implemented");
   }
 
 
@@ -705,7 +679,6 @@ public class ReportController extends BaseController {
           Authentication authentication,
           HttpServletRequest request,
           @RequestParam(required = false, defaultValue = "1") Integer page,
-          @RequestParam(required = false) String bundleId,
           @RequestParam(required = false) String author,
           @RequestParam(required = false) String identifier,
           @RequestParam(required = false) String periodStartDate,
@@ -719,52 +692,49 @@ public class ReportController extends BaseController {
     ReportBundle reportBundle = new ReportBundle();
 
     String url = this.config.getDataStore().getBaseUrl();
-    if (bundleId != null) {
-      url += "?_getpages=" + bundleId + "&_getpagesoffset=" + (page - 1) * 20 + "&_count=20";
-    } else {
-      if (!url.endsWith("/")) url += "/";
-      url += "DocumentReference?";
-      if (author != null) {
-        url += "author=" + author;
-        andCond = true;
-      }
-      if (identifier != null) {
-        if (andCond) {
-          url += "&";
-        }
-        url += "identifier=" + Helper.URLEncode(identifier);
-        andCond = true;
-      }
-      if (periodStartDate != null) {
-        if (andCond) {
-          url += "&";
-        }
-        url += PeriodStartParamName + "=ge" + periodStartDate;
-        andCond = true;
-      }
-      if (periodEndDate != null) {
-        if (andCond) {
-          url += "&";
-        }
-        url += PeriodEndParamName + "=le" + periodEndDate;
-        andCond = true;
-      }
-      if (docStatus != null) {
-        if (andCond) {
-          url += "&";
-        }
-        url += "docStatus=" + docStatus.toLowerCase();
-      }
-      if (submittedDate != null) {
-        if (andCond) {
-          url += "&";
-        }
-        Date submittedDateAsDate = Helper.parseFhirDate(submittedDate);
-        Date theDayAfterSubmittedDateEnd = Helper.addDays(submittedDateAsDate, 1);
-        String theDayAfterSubmittedDateEndAsString = Helper.getFhirDate(theDayAfterSubmittedDateEnd);
-        url += "date=ge" + submittedDate + "&date=le" + theDayAfterSubmittedDateEndAsString;
-      }
+    if (!url.endsWith("/")) url += "/";
+    url += "DocumentReference?";
+    if (author != null) {
+      url += "author=" + author;
+      andCond = true;
     }
+    if (identifier != null) {
+      if (andCond) {
+        url += "&";
+      }
+      url += "identifier=" + Helper.URLEncode(identifier);
+      andCond = true;
+    }
+    if (periodStartDate != null) {
+      if (andCond) {
+        url += "&";
+      }
+      url += PeriodStartParamName + "=ge" + periodStartDate;
+      andCond = true;
+    }
+    if (periodEndDate != null) {
+      if (andCond) {
+        url += "&";
+      }
+      url += PeriodEndParamName + "=le" + periodEndDate;
+      andCond = true;
+    }
+    if (docStatus != null) {
+      if (andCond) {
+        url += "&";
+      }
+      url += "docStatus=" + docStatus.toLowerCase();
+    }
+    if (submittedDate != null) {
+      if (andCond) {
+        url += "&";
+      }
+      Date submittedDateAsDate = Helper.parseFhirDate(submittedDate);
+      Date theDayAfterSubmittedDateEnd = Helper.addDays(submittedDateAsDate, 1);
+      String theDayAfterSubmittedDateEndAsString = Helper.getFhirDate(theDayAfterSubmittedDateEnd);
+      url += "date=ge" + submittedDate + "&date=le" + theDayAfterSubmittedDateEndAsString;
+    }
+
 
     bundle = this.getFhirDataProvider().fetchResourceFromUrl(url);
     List<Report> lst = bundle.getEntry().parallelStream().map(Report::new).collect(Collectors.toList());
@@ -781,7 +751,7 @@ public class ReportController extends BaseController {
         }
       }
     });
-    reportBundle.setReportTypeId(bundleId != null ? bundleId : bundle.getId());
+    reportBundle.setReportTypeId(bundle.getId());
     reportBundle.setList(lst);
     reportBundle.setTotalSize(bundle.getTotal());
 

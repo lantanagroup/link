@@ -8,12 +8,12 @@ public class CorsConfig {
   /**
    * <strong>api.cors.allowed-origins</strong><br>Space-separated list of allowed origins. Asterisk is allowed.
    */
-  private String allowedOrigins;
+  private String[] allowedOrigins;
 
   /**
    * <strong>api.cors.allowed-headers</strong><br>Space-separated list of allowed headers. Asterisk is allowed.
    */
-  private String allowedHeaders;
+  private String[] allowedHeaders;
 
   /**
    * <strong>api.cors.allowed-credentials</strong><br>True or false to allow credentials in CORS.

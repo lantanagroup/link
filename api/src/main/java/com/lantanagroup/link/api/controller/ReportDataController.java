@@ -57,7 +57,7 @@ public class ReportDataController extends BaseController {
   }
 
   @PostMapping(value = "/data/{type}")
-  public void retrieveData(@RequestBody() byte[] content, @PathVariable("type") String type) throws Exception {
+  public void receiveData(@RequestBody() byte[] content, @PathVariable("type") String type) throws Exception {
     if (config.getDataProcessor() == null || config.getDataProcessor().get(type) == null || config.getDataProcessor().get(type).equals("")) {
       throw new IllegalStateException("Cannot find data processor.");
     }
