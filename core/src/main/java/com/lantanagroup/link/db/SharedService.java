@@ -34,6 +34,7 @@ public class SharedService {
 
   private Connection getSQLConnection() {
     try {
+      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
       Connection conn = DriverManager.getConnection(this.config.getConnectionString());
       if (conn != null) {
         DatabaseMetaData dm = conn.getMetaData();
@@ -41,6 +42,8 @@ public class SharedService {
       }
     } catch (SQLException ex) {
       logger.error("Could not establish connection to database", ex);
+    } catch (ClassNotFoundException ex) {
+      logger.error("Could not load driver for SQL server database", ex);
     }
 
     return null;
