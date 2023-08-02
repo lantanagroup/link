@@ -40,7 +40,7 @@ public class SharedService {
         return conn;
       }
     } catch (SQLException ex) {
-      ex.printStackTrace();
+      logger.error("Could not establish connection to database", ex);
     }
 
     return null;
