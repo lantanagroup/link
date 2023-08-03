@@ -96,7 +96,12 @@ public class JpaRestfulServer extends RestfulServer {
     JpaCapabilityStatementProvider confProvider = new JpaCapabilityStatementProvider(this, this.fhirSystemDao, this.daoConfig, this.searchParamRegistry, validationSupport);
     this.setServerConformanceProvider(confProvider);
 
-    this.registerInterceptor(new UserInterceptor(consumerConfig.getIssuer(), consumerConfig.getAuthJwksUrl()));
+    this.registerInterceptor(
+            new UserInterceptor(
+                    consumerConfig.getLinkAuthManager().getIssuer(),
+                    consumerConfig.getLinkAuthManager().getAuthJwksUrl()
+            )
+    );
     this.registerInterceptor(new AuthInterceptor(consumerConfig));
 
     reportCsvOperationProvider.initialize();
