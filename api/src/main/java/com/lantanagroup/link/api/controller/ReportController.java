@@ -630,9 +630,12 @@ public class ReportController extends BaseController {
   @DeleteMapping(value = "/{id}")
   public void deleteReport(
           @PathVariable("id") String id,
+          @RequestParam(required = false) Boolean ignoreVersionCheck,
           Authentication authentication,
           HttpServletRequest request) throws Exception {
     Bundle deleteRequest = new Bundle();
+
+    Boolean skipVersionCheck = ignoreVersionCheck != null ? ignoreVersionCheck : false;
 
     // TODO - revisit this.
     // ALM 15May2023
@@ -651,7 +654,9 @@ public class ReportController extends BaseController {
 
     Extension existingVersionExt = documentReference.getExtensionByUrl(Constants.DocumentReferenceVersionUrl);
     Float existingVersion = Float.parseFloat(existingVersionExt.getValue().toString());
-    if (existingVersion >= 1.0f) {
+
+    // only ignore the version check of ignoreVersionCheck is passed via command line
+    if ( (existingVersion >= 1.0f) && (!skipVersionCheck) ) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Report version is greater than or equal to 1.0");
     }
 
