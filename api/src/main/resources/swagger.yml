@@ -105,6 +105,12 @@ paths:
         - Users
       summary: Create a new user
       operationId: createUser
+      requestBody:
+        description: 'A user object created'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
       responses:
         '200':
           description: successful response
@@ -112,6 +118,33 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/user/$bulk:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: createBulkUsers
+      requestBody:
+        description: 'An array of user objects that should be created'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.BulkCreateUserOperationOutcome'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -212,7 +245,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TenantItem'
+                  $ref: '#/components/schemas/SearchTenantResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1267,15 +1300,22 @@ components:
           type: boolean
         message:
           type: string
-    TenantItem:
+    SearchTenantResponse:
       type: object
       properties:
         id:
           type: string
+          description: 'A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.'
         name:
           type: string
-        description:
+          description: 'The internal name of the tenant, such as the facility''s name.'
+        retentionPeriod:
           type: string
+          description: ISO 8601 formatted duration in which to keep data for each tenant.
+          default: 'P3M'
+        cdcOrgId:
+          type: string
+          description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
     Tenant:
       type: object
       required:
@@ -1287,14 +1327,11 @@ components:
           description: 'A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.'
         name:
           type: string
-          description: 'The name of the tenant, such as the facility''s name.'
+          description: 'The internal name of the tenant, such as the facility''s name.'
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
-        description:
-          type: string
-          description: 'A description of the tenant that is more meaningful/useful than the id.'
-        database:
+        connectionString:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
         bundling:
@@ -1750,6 +1787,26 @@ components:
       type: object
     FHIR.Bundle:
       type: object
+    FHIR.BulkCreateUserOperationOutcome:
+      type: object
+      example: {
+        "issue": [ {
+          "severity": "info",
+          "diagnostics": "Successfully created user with email XX@YY.com"
+        }, {
+          "severity": "error",
+          "diagnostics": "Error creating user with email AA@BB.com: A user with that email already exists"
+        } ]
+      }
+      properties:
+        extension:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.Extension'
+        issue:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.OperationOutcomeIssue'
     FHIR.OperationOutcome:
       type: object
       properties:

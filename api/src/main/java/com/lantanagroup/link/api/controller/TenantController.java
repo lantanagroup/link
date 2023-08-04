@@ -2,20 +2,28 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.SearchTenantResponse;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tenant")
 public class TenantController extends BaseController {
+  private static final Logger logger = LoggerFactory.getLogger(TenantController.class);
+
   @Autowired
   private Scheduler scheduler;
 
@@ -28,8 +36,10 @@ public class TenantController extends BaseController {
   }
 
   @GetMapping
-  public List<Tenant> searchTenants() {
-    return this.sharedService.getTenantConfigs();
+  public List<SearchTenantResponse> searchTenants() {
+    return this.sharedService.getTenantConfigs().stream()
+            .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId()))
+            .collect(Collectors.toList());
   }
 
   @GetMapping("{tenantId}")
@@ -128,6 +138,17 @@ public class TenantController extends BaseController {
 
     if (existingTenantConfig == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    } else if (!existingTenantConfig.getConnectionString().equals(tenant.getConnectionString())) {
+      TenantService tenantService = TenantService.create(tenant);
+
+      try {
+        tenantService.testConnection();
+      } catch (SQLException e) {
+        logger.error("Failed to test connection to new tenant database", e);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not connect to database specified for tenant. Updates to tenant not persisted.");
+      }
+
+      tenantService.initDatabase();
     }
 
     this.validateTenantConfig(tenant, existingTenantConfig);
@@ -140,6 +161,17 @@ public class TenantController extends BaseController {
   @PostMapping
   public Tenant createTenant(@RequestBody Tenant tenant) {
     this.validateTenantConfig(tenant, null);
+
+    TenantService tenantService = TenantService.create(tenant);
+
+    try {
+      tenantService.testConnection();
+    } catch (SQLException e) {
+      logger.error("Failed to test connection to new tenant database", e);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not connect to database specified for new tenant. Tenant not created.");
+    }
+
+    tenantService.initDatabase();
 
     this.sharedService.saveTenantConfig(tenant);
     this.scheduler.reset(tenant.getId());

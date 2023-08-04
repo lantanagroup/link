@@ -17,6 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +52,36 @@ public class SharedService {
     }
 
     return null;
+  }
+
+  public void initDatabase() {
+    logger.info("Initializing shared database");
+
+    URL resource = this.getClass().getClassLoader().getResource("shared-db.sql");
+
+    if (resource == null) {
+      logger.warn("Could not find shared-db.sql file in class path");
+      return;
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      String sql = Files.readString(Path.of(resource.toURI()));
+      for (String stmtSql : sql.split("GO")) {
+        try {
+          Statement stmt = conn.createStatement();
+          stmt.execute(stmtSql);
+        } catch (SQLException e) {
+          logger.error("Failed to execute statement to initialize shared db", e);
+          return;
+        }
+      }
+    } catch (SQLException | NullPointerException e) {
+      logger.error("Failed to connect to shared database", e);
+    } catch (IOException | URISyntaxException e) {
+      logger.error("Could not read shared-db.sql file", e);
+    }
   }
 
   public Tenant getTenantConfig(String tenantId) {
