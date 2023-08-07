@@ -6,11 +6,14 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hl7.fhir.r4.model.CapabilityStatement;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -137,5 +140,20 @@ public class Helper {
       return input.replaceAll("[\']", "&rsquo;");
     else
       return null;
+  }
+
+  public static String readInputStream(InputStream is) throws IOException {
+    Reader inputStreamReader = new InputStreamReader(is);
+    StringBuilder sb = new StringBuilder();
+
+    int data = inputStreamReader.read();
+    while (data != -1) {
+      sb.append((char) data);
+      data = inputStreamReader.read();
+    }
+
+    inputStreamReader.close();
+
+    return sb.toString();
   }
 }

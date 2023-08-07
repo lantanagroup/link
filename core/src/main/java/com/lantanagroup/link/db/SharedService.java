@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
@@ -18,10 +19,7 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -67,7 +65,7 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      String sql = Files.readString(Path.of(resource.toURI()));
+      String sql = Helper.readInputStream(resource.openStream());
       for (String stmtSql : sql.split("GO")) {
         try {
           Statement stmt = conn.createStatement();
@@ -79,7 +77,7 @@ public class SharedService {
       }
     } catch (SQLException | NullPointerException e) {
       logger.error("Failed to connect to shared database", e);
-    } catch (IOException | URISyntaxException e) {
+    } catch (IOException e) {
       logger.error("Could not read shared-db.sql file", e);
     }
   }

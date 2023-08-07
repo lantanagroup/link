@@ -1,5 +1,6 @@
 package com.lantanagroup.link.db;
 
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.*;
@@ -13,10 +14,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -73,7 +71,7 @@ public class TenantService {
     try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
-      String sql = Files.readString(Path.of(resource.toURI()));
+      String sql = Helper.readInputStream(resource.openStream());
       for (String stmtSql : sql.split("GO")) {
         try {
           Statement stmt = conn.createStatement();
@@ -86,7 +84,7 @@ public class TenantService {
       logger.error("Failed to connect to tenant {} database: {}", this.config.getId(), e.getMessage());
     } catch (SQLException | NullPointerException e) {
       logger.error("Failed to initialize tenant {} database", this.config.getId(), e);
-    } catch (IOException | URISyntaxException e) {
+    } catch (IOException e) {
       logger.error("Could not read tenant-db.sql file for tenant {}", this.config.getId(), e);
     }
   }
