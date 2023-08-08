@@ -143,23 +143,25 @@ public class FhirBundler {
               .setValue(apiInfoModel.getCqfVersion());
     }
 
-    addPropertyToDevice(device, "BeforeMeasureResolution", this.tenantService.getConfig().getEvents().getBeforeMeasureResolution());
-    addPropertyToDevice(device, "AfterMeasureResolution", this.tenantService.getConfig().getEvents().getAfterMeasureResolution());
-    addPropertyToDevice(device, "OnRegeneration", this.tenantService.getConfig().getEvents().getOnRegeneration());
-    addPropertyToDevice(device, "BeforePatientOfInterestLookup", this.tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
-    addPropertyToDevice(device, "AfterPatientOfInterestLookup", this.tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
-    addPropertyToDevice(device, "BeforePatientDataQuery", this.tenantService.getConfig().getEvents().getBeforePatientDataQuery());
-    addPropertyToDevice(device, "AfterPatientResourceQuery", this.tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
-    addPropertyToDevice(device, "AfterPatientDataQuery", this.tenantService.getConfig().getEvents().getAfterPatientDataQuery());
-    addPropertyToDevice(device, "AfterApplyConceptMaps", this.tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
-    addPropertyToDevice(device, "BeforePatientDataStore", this.tenantService.getConfig().getEvents().getBeforePatientDataStore());
-    addPropertyToDevice(device, "AfterPatientDataStore", this.tenantService.getConfig().getEvents().getAfterPatientDataStore());
-    addPropertyToDevice(device, "BeforeMeasureEval", this.tenantService.getConfig().getEvents().getBeforeMeasureEval());
-    addPropertyToDevice(device, "AfterMeasureEval", this.tenantService.getConfig().getEvents().getAfterMeasureEval());
-    addPropertyToDevice(device, "BeforeReportStore", this.tenantService.getConfig().getEvents().getBeforeReportStore());
-    addPropertyToDevice(device, "AfterReportStore", this.tenantService.getConfig().getEvents().getAfterReportStore());
-    addPropertyToDevice(device, "BeforeBundling", this.tenantService.getConfig().getEvents().getBeforeBundling());
-    addPropertyToDevice(device, "AfterBundling", this.tenantService.getConfig().getEvents().getAfterBundling());
+    if (this.tenantService.getConfig().getEvents() != null) {
+      addPropertyToDevice(device, "BeforeMeasureResolution", this.tenantService.getConfig().getEvents().getBeforeMeasureResolution());
+      addPropertyToDevice(device, "AfterMeasureResolution", this.tenantService.getConfig().getEvents().getAfterMeasureResolution());
+      addPropertyToDevice(device, "OnRegeneration", this.tenantService.getConfig().getEvents().getOnRegeneration());
+      addPropertyToDevice(device, "BeforePatientOfInterestLookup", this.tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
+      addPropertyToDevice(device, "AfterPatientOfInterestLookup", this.tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
+      addPropertyToDevice(device, "BeforePatientDataQuery", this.tenantService.getConfig().getEvents().getBeforePatientDataQuery());
+      addPropertyToDevice(device, "AfterPatientResourceQuery", this.tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
+      addPropertyToDevice(device, "AfterPatientDataQuery", this.tenantService.getConfig().getEvents().getAfterPatientDataQuery());
+      addPropertyToDevice(device, "AfterApplyConceptMaps", this.tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
+      addPropertyToDevice(device, "BeforePatientDataStore", this.tenantService.getConfig().getEvents().getBeforePatientDataStore());
+      addPropertyToDevice(device, "AfterPatientDataStore", this.tenantService.getConfig().getEvents().getAfterPatientDataStore());
+      addPropertyToDevice(device, "BeforeMeasureEval", this.tenantService.getConfig().getEvents().getBeforeMeasureEval());
+      addPropertyToDevice(device, "AfterMeasureEval", this.tenantService.getConfig().getEvents().getAfterMeasureEval());
+      addPropertyToDevice(device, "BeforeReportStore", this.tenantService.getConfig().getEvents().getBeforeReportStore());
+      addPropertyToDevice(device, "AfterReportStore", this.tenantService.getConfig().getEvents().getAfterReportStore());
+      addPropertyToDevice(device, "BeforeBundling", this.tenantService.getConfig().getEvents().getBeforeBundling());
+      addPropertyToDevice(device, "AfterBundling", this.tenantService.getConfig().getEvents().getAfterBundling());
+    }
 
     List<ConceptMap> conceptMaps = this.tenantService.getAllConceptMaps();
 

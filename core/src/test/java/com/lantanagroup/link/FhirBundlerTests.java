@@ -2,7 +2,10 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.hl7.fhir.r4.model.Bundle;
@@ -64,15 +67,16 @@ public class FhirBundlerTests {
     Bundle bundle = bundler.generateBundle(List.of(aggregate), report);
 
     Assert.assertNotNull(bundle);
-    Assert.assertEquals(4, bundle.getEntry().size());
+    Assert.assertEquals(5, bundle.getEntry().size());
 
     // Organization tests
     Assert.assertEquals(ResourceType.Organization, bundle.getEntry().get(0).getResource().getResourceType());
-    Assert.assertEquals(ResourceType.List, bundle.getEntry().get(1).getResource().getResourceType());
-    Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(2).getResource().getResourceType());
+    Assert.assertEquals(ResourceType.Device, bundle.getEntry().get(1).getResource().getResourceType());
+    Assert.assertEquals(ResourceType.List, bundle.getEntry().get(2).getResource().getResourceType());
     Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(3).getResource().getResourceType());
+    Assert.assertEquals(ResourceType.MeasureReport, bundle.getEntry().get(4).getResource().getResourceType());
 
-    MeasureReport indMeasureReport = (MeasureReport) bundle.getEntry().get(3).getResource();
+    MeasureReport indMeasureReport = (MeasureReport) bundle.getEntry().get(4).getResource();
     Assert.assertEquals(MeasureReport.MeasureReportType.INDIVIDUAL, indMeasureReport.getType());
   }
 }
