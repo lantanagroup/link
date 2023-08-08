@@ -35,8 +35,9 @@ public class FhirBundler {
 
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
-          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
-          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+          //Removing these two extensions prevents users from knowing what SDE pulls in which resource
+          //"http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
+          //"http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
           "http://open.epic.com/FHIR/StructureDefinition/extension/accidentrelated",
           "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",
           "http://open.epic.com/FHIR/StructureDefinition/extension/ip-admit-datetime",

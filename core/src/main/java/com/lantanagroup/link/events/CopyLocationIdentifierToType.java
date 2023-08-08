@@ -17,7 +17,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    //This is a specific transform to move data from an extension to the type of a Location resource for UMich
+    //This is a specific transform to move data from a Location's identifier to its type
     //This must happen BEFORE ApplyConceptMaps as an event
     logger.info("Called: " + CopyLocationIdentifierToType.class.getName());
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
