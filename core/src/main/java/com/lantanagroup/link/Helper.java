@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.lantanagroup.link.model.ApiInfoModel;
+import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
@@ -15,12 +16,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.sql.Driver;
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -155,5 +160,20 @@ public class Helper {
     inputStreamReader.close();
 
     return sb.toString();
+  }
+
+  public static String getDatabaseName(String connectionString) {
+    Driver driver = new SQLServerDriver();
+    try {
+      DriverPropertyInfo[] properties = driver.getPropertyInfo(connectionString, null);
+      return Arrays.stream(properties)
+              .filter(property -> property.name.equals("databaseName"))
+              .findFirst()
+              .map(property -> StringUtils.isNotEmpty(property.value) ? property.value : null)
+              .orElse(null);
+    } catch (SQLException e) {
+      logger.warn("Parsing database connection string failed", e);
+      return null;
+    }
   }
 }

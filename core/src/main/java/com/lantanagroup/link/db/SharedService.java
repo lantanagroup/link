@@ -110,6 +110,32 @@ public class SharedService {
     }
   }
 
+  public List<String> getTenantConnectionStrings(String excludeTenantId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps;
+
+      if (StringUtils.isNotEmpty(excludeTenantId)) {
+        ps = conn.prepareStatement("SELECT JSON_VALUE([json], '$.connectionString') AS connectionString FROM [dbo].[tenantConfig] WHERE JSON_VALUE([json], '$.id') != ?");
+        ps.setNString(1, excludeTenantId);
+      } else {
+        ps = conn.prepareStatement("SELECT JSON_VALUE([json], '$.connectionString') AS connectionString FROM [dbo].[tenantConfig]");
+      }
+
+      ResultSet rs = ps.executeQuery();
+      List<String> connectionStrings = new ArrayList<>();
+
+      while (rs.next()) {
+        connectionStrings.add(rs.getNString("connectionString"));
+      }
+
+      return connectionStrings;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<Tenant> getTenantConfigs() {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
@@ -126,11 +152,7 @@ public class SharedService {
       }
 
       return tenants;
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -165,9 +187,7 @@ public class SharedService {
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -286,11 +306,7 @@ public class SharedService {
 
       return measurePackage;
 
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -311,11 +327,7 @@ public class SharedService {
       }
 
       return packages;
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonMappingException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -332,9 +344,7 @@ public class SharedService {
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
-    } catch (SQLException | NullPointerException e) {
-      throw new RuntimeException(e);
-    } catch (JsonProcessingException e) {
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -550,5 +560,15 @@ public class SharedService {
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public List<String> getAllDatabaseNames(String excludeTenantId) {
+    List<String> databaseNames = new ArrayList<>();
+    databaseNames.add(Helper.getDatabaseName(this.config.getConnectionString()));
+    for (String connectionString : this.getTenantConnectionStrings(excludeTenantId)) {
+      String tenantDatabaseName = Helper.getDatabaseName(connectionString);
+      databaseNames.add(tenantDatabaseName);
+    }
+    return databaseNames;
   }
 }
