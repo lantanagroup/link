@@ -96,8 +96,6 @@ public class ApiInit {
   }
 
   private void initDatabases(List<Tenant> tenants) {
-    this.sharedService.initDatabase();
-
     for (Tenant tenant : tenants) {
       TenantService tenantService = TenantService.create(this.sharedService, tenant.getId());
       assert tenantService != null : "Could not create tenant service for tenant " + tenant.getId();
@@ -108,6 +106,7 @@ public class ApiInit {
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
+    this.sharedService.initDatabase();
     List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
