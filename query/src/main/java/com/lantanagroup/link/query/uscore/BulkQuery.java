@@ -191,7 +191,7 @@ public class BulkQuery {
     bulkStatus.setStatus(BulkStatuses.complete);
     bulkStatusService.saveBulkStatus(bulkStatus);
 
-    bulkStatusService.saveResult(statusResult);
+    bulkStatusService.saveBulkStatusResult(statusResult);
 
     return statusResult;
   }

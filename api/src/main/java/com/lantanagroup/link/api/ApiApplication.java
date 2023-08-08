@@ -7,9 +7,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -33,7 +31,6 @@ import java.util.TimeZone;
         "com.lantanagroup.link.spring"
 })
 @EnableScheduling
-@EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class})
 @EnableAsync
 public class ApiApplication extends SpringBootServletInitializer implements InitializingBean {
   /**

@@ -83,7 +83,7 @@ public class BulkController  extends BaseController {
   public List<BulkStatus> getAllBulkStatuses(@PathVariable String tenantId) {
     //retrieve all pending bulk status requests for a tenantId
     Tenant tenantConfig = sharedService.getTenantConfig(tenantId);
-    List<BulkStatus> statuses = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatusByTenantId(tenantId);
+    List<BulkStatus> statuses = new BulkManagerService(tenantConfig, executorService, sharedService, applicationContext).getBulkStatuses();
     return statuses;
   }
 

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ import java.util.concurrent.ScheduledFuture;
  * registering scheduled tasks with the TaskScheduler.
  */
 @Component
+@DependsOn({"apiInit"})
 public class Scheduler {
   private static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 
