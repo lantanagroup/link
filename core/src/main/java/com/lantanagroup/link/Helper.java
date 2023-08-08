@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.lantanagroup.link.model.ApiInfoModel;
+import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
@@ -15,16 +16,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
+import java.sql.Driver;
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Helper {
   private static final Logger logger = LoggerFactory.getLogger(Helper.class);
@@ -160,27 +163,17 @@ public class Helper {
   }
 
   public static String getDatabaseName(String connectionString) {
-    Pattern regex = Pattern.compile("^jdbc:sqlserver:\\/\\/.+?[\\/|;]");
-    Matcher matcher = regex.matcher(connectionString);
-
-    if (matcher.find()) {
-      String path = connectionString.substring(matcher.end());
-      String[] params = path.split(";");
-
-      if (params.length > 0) {
-        if (params[0].split("=").length == 1) {
-          return params[0];
-        } else {
-          for (String param : params) {
-            String[] paramSplit = param.split("=");
-            if (paramSplit.length == 2 && (paramSplit[0].equalsIgnoreCase("databasename") || paramSplit[0].equalsIgnoreCase("database"))) {
-              return paramSplit[1];
-            }
-          }
-        }
-      }
+    Driver driver = new SQLServerDriver();
+    try {
+      DriverPropertyInfo[] properties = driver.getPropertyInfo(connectionString, null);
+      return Arrays.stream(properties)
+              .filter(property -> property.name.equals("databaseName"))
+              .findFirst()
+              .map(property -> StringUtils.isNotEmpty(property.value) ? property.value : null)
+              .orElse(null);
+    } catch (SQLException e) {
+      logger.warn("Parsing database connection string failed", e);
+      return null;
     }
-
-    return null;
   }
 }
