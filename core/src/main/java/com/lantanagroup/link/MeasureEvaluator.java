@@ -1,8 +1,5 @@
-package com.lantanagroup.link.api;
+package com.lantanagroup.link;
 
-import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
-import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.PatientData;
@@ -12,18 +9,24 @@ import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import org.hl7.fhir.r4.model.*;
+import org.opencds.cqf.fhir.cr.measure.MeasureEvaluationOptions;
+import org.opencds.cqf.fhir.cr.measure.r4.R4MeasureService;
+import org.opencds.cqf.fhir.utility.monad.Eithers;
+import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 public class MeasureEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(MeasureEvaluator.class);
-  private ReportCriteria criteria;
-  private ReportContext reportContext;
-  private ReportContext.MeasureContext measureContext;
-  private ApiConfig config;
-  private String patientId;
-  private StopwatchManager stopwatchManager;
-  private TenantService tenantService;
+  private final ReportCriteria criteria;
+  private final ReportContext reportContext;
+  private final ReportContext.MeasureContext measureContext;
+  private final ApiConfig config;
+  private final String patientId;
+  private final StopwatchManager stopwatchManager;
+  private final TenantService tenantService;
 
   private MeasureEvaluator(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.tenantService = tenantService;
@@ -51,37 +54,37 @@ public class MeasureEvaluator {
   }
 
   private MeasureReport generateMeasureReport() {
-    MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
     String start = this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."));
     String end = this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."));
 
-    Bundle patientBundle;
+    InMemoryFhirRepository repo = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
     try (Stopwatch stopwatch = this.stopwatchManager.start("retrieve-patient-data")) {
-      patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+      List<PatientData> patientDataList = tenantService.findPatientData(patientId);
+      for (PatientData patientData : patientDataList) {
+        repo.update(patientData.getResource());
+      }
     }
 
-    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
+    MeasureEvaluationOptions options = new MeasureEvaluationOptions();
+    R4MeasureService measureService = new R4MeasureService(repo, options);
+    Endpoint terminologyEndpoint = null;
 
-    Parameters parameters = new Parameters();
-    parameters.addParameter().setName("periodStart").setValue(new StringType(start));
-    parameters.addParameter().setName("periodEnd").setValue(new StringType(end));
-    parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-    parameters.addParameter().setName("additionalData").setResource(patientBundle);
     if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-      Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
-      parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
+      terminologyEndpoint = getTerminologyEndpoint(this.config);
       logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
     }
 
     logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
-
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
-    //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
-      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
-    }
+    MeasureReport measureReport = measureService.evaluate(
+            Eithers.forRight3(this.measureContext.getMeasure()),
+            criteria.getPeriodStart(),
+            criteria.getPeriodEnd(),
+            null,
+            patientId,
+            null, null,
+            terminologyEndpoint, null, null);
 
     // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
     // fhirContext.setNarrativeGenerator(new DefaultThymeleafNarrativeGenerator());

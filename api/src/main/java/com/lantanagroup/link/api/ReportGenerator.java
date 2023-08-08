@@ -29,16 +29,15 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
-
-  private ReportContext reportContext;
-  private ReportContext.MeasureContext measureContext;
-  private ReportCriteria criteria;
-  private ApiConfig config;
-  private IReportAggregator reportAggregator;
-  private StopwatchManager stopwatchManager;
-  private SharedService sharedService;
-  private TenantService tenantService;
-  private Report report;
+  private final ReportContext reportContext;
+  private final ReportContext.MeasureContext measureContext;
+  private final ReportCriteria criteria;
+  private final ApiConfig config;
+  private final IReportAggregator reportAggregator;
+  private final StopwatchManager stopwatchManager;
+  private final SharedService sharedService;
+  private final TenantService tenantService;
+  private final Report report;
 
   public ReportGenerator(SharedService sharedService, TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
     this.sharedService = sharedService;
@@ -95,7 +94,6 @@ public class ReportGenerator {
     patientMeasureReport.setPatientId(patient.getId());
 
     logger.info("Generating measure report for patient " + patient);
-
     MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.tenantService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
     measureReport.setId(measureReportId);
     patientMeasureReport.setMeasureReport(measureReport);
