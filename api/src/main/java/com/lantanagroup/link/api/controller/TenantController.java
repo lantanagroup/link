@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -139,6 +140,13 @@ public class TenantController extends BaseController {
     if (existingTenantConfig == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     } else if (!existingTenantConfig.getConnectionString().equals(tenant.getConnectionString())) {
+      String newDatabaseName = Helper.getDatabaseName(tenant.getConnectionString());
+      List<String> allDatabaseNames = this.sharedService.getAllDatabaseNames(tenantId);
+
+      if (allDatabaseNames.contains(newDatabaseName)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Database connection string uses the same database name as another");
+      }
+
       TenantService tenantService = TenantService.create(tenant);
 
       try {
@@ -161,6 +169,13 @@ public class TenantController extends BaseController {
   @PostMapping
   public Tenant createTenant(@RequestBody Tenant tenant) {
     this.validateTenantConfig(tenant, null);
+
+    String newDatabaseName = Helper.getDatabaseName(tenant.getConnectionString());
+    List<String> allDatabaseNames = this.sharedService.getAllDatabaseNames(null);
+
+    if (allDatabaseNames.contains(newDatabaseName)) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Database connection string uses the same database name as another");
+    }
 
     TenantService tenantService = TenantService.create(tenant);
 

@@ -23,6 +23,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Helper {
   private static final Logger logger = LoggerFactory.getLogger(Helper.class);
@@ -155,5 +157,30 @@ public class Helper {
     inputStreamReader.close();
 
     return sb.toString();
+  }
+
+  public static String getDatabaseName(String connectionString) {
+    Pattern regex = Pattern.compile("^jdbc:sqlserver:\\/\\/.+?[\\/|;]");
+    Matcher matcher = regex.matcher(connectionString);
+
+    if (matcher.find()) {
+      String path = connectionString.substring(matcher.end());
+      String[] params = path.split(";");
+
+      if (params.length > 0) {
+        if (params[0].split("=").length == 1) {
+          return params[0];
+        } else {
+          for (String param : params) {
+            String[] paramSplit = param.split("=");
+            if (paramSplit.length == 2 && (paramSplit[0].equalsIgnoreCase("databasename") || paramSplit[0].equalsIgnoreCase("database"))) {
+              return paramSplit[1];
+            }
+          }
+        }
+      }
+    }
+
+    return null;
   }
 }
