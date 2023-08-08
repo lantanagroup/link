@@ -53,11 +53,31 @@ public class ValidatorTests {
     });
   }
 
+//  @Test
+//  public void validateUsCore_Location_Name() throws IOException {
+//    var bundle = this.getBundle("LINK_888_Location.json");
+//
+//    var resources = bundle.getEntry().stream()
+//            .map(Bundle.BundleEntryComponent::getResource)
+//            .filter(r -> r instanceof Location)
+//            .map(r -> (Location) r)
+//            .collect(Collectors.toList());
+//
+//    var issueTextToFind = "location";
+//
+//    resources.stream().forEach(l -> l.setNameElement(null));
+//    String str = null;
+//    resources.stream().forEach(l -> l.setId(str));
+//    resources.stream().forEach(l -> l.setStatus(null));
+//
+//    ValidateBundle(bundle, issueTextToFind, false);
+//  }
+
   @Test
   public void validateUsCore_Patient_Name() throws IOException {
     var bundle = this.getBundle("large-submission-example2.json");
 
-    var patientResource = bundle.getEntry().stream()
+    var resource = bundle.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Patient)
             .map(r -> (Patient) r)
@@ -65,7 +85,7 @@ public class ValidatorTests {
 
     var issueTextToFind = "Patient.name: minimum required = 1, but only found 0";
 
-    patientResource.get().getName().clear();
+    resource.get().getName().clear();
 
     ValidateBundle(bundle, issueTextToFind, false);
   }
@@ -443,7 +463,7 @@ public class ValidatorTests {
     ValidateBundle(bundle, issueTextToFind, false);
   }
 
-  private void ValidateBundle(Bundle bundle, String IssueTextToFind, Boolean failOnTextFound)
+  private boolean ValidateBundle(Bundle bundle, String IssueTextToFind, Boolean failOnTextFound)
   {
     logger.info("Beginning Validation. Fail State: {}", failOnTextFound ? "'" + IssueTextToFind + "'" + " Found" : "'" + IssueTextToFind + "'" + " Not Found");
 
@@ -474,6 +494,8 @@ public class ValidatorTests {
       //If we want to fail the test if the bundle errors do not contain the correct pattern
     else
       Assert.assertTrue(errorDetected);
+
+    return errorDetected;
   }
 
   private OperationOutcome GetValidationErrors(Bundle bundle)
