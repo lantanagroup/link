@@ -35,7 +35,7 @@ public class SharedService {
   @Autowired
   private ApiConfig config;
 
-  private Connection getSQLConnection() {
+  public Connection getSQLConnection() {
     try {
       Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
       Connection conn = DriverManager.getConnection(this.config.getConnectionString());
