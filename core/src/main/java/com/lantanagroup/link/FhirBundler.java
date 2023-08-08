@@ -2,11 +2,8 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.ConceptMap;
-import com.lantanagroup.link.db.model.PatientList;
-import com.lantanagroup.link.db.model.PatientMeasureReport;
-import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -439,10 +436,6 @@ public class FhirBundler {
     logger.debug("Adding measure reports: {}", aggregateMeasureReport.getMeasure());
 
     this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
-
-    if (!this.getBundlingConfig().isIncludeIndividualMeasureReports()) {
-      return;
-    }
 
     List<PatientMeasureReport> individualMeasureReports =
             this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());

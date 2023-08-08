@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
@@ -17,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,16 +37,49 @@ public class SharedService {
 
   public Connection getSQLConnection() {
     try {
+      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
       Connection conn = DriverManager.getConnection(this.config.getConnectionString());
       if (conn != null) {
         DatabaseMetaData dm = conn.getMetaData();
         return conn;
       }
     } catch (SQLException ex) {
-      ex.printStackTrace();
+      logger.error("Could not establish connection to database", ex);
+    } catch (ClassNotFoundException ex) {
+      logger.error("Could not load driver for SQL server database", ex);
     }
 
     return null;
+  }
+
+  public void initDatabase() {
+    logger.info("Initializing shared database");
+
+    URL resource = this.getClass().getClassLoader().getResource("shared-db.sql");
+
+    if (resource == null) {
+      logger.warn("Could not find shared-db.sql file in class path");
+      return;
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      String sql = Helper.readInputStream(resource.openStream());
+      for (String stmtSql : sql.split("GO")) {
+        try {
+          Statement stmt = conn.createStatement();
+          stmt.execute(stmtSql);
+        } catch (SQLException e) {
+          logger.error("Failed to execute statement to initialize shared db", e);
+          return;
+        }
+      }
+    } catch (SQLException | NullPointerException e) {
+      logger.error("Failed to connect to shared database", e);
+    } catch (IOException e) {
+      logger.error("Could not read shared-db.sql file", e);
+    }
   }
 
   public Tenant getTenantConfig(String tenantId) {

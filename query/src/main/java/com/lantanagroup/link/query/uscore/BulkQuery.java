@@ -3,10 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.PatientIdService;
-import com.lantanagroup.link.ReportingPeriodCalculator;
-import com.lantanagroup.link.ReportingPeriodMethods;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -109,7 +106,7 @@ public class BulkQuery {
       StringBuilder sbuilder = new StringBuilder();
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
       if(response.body().length() > 0){
-        sbuilder.append("Response Body: " + response.body());
+        sbuilder.append("Response Body: " + Helper.sanitizeString(response.body()));
       }
       bulkStatus.setStatus(BulkStatuses.cancelled);
       service.saveBulkStatus(bulkStatus);
@@ -166,9 +163,9 @@ public class BulkQuery {
         //figure out what to do here.
         responseBody = response.body();
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Fetch failed for URI: " + uri.toString());
+        sbuilder.append("Fetch failed for URI: " + uri.toString() + " Status Code: " + response.statusCode());
         if(responseBody.length() > 0){
-          sbuilder.append("Response Body: " + responseBody);
+          sbuilder.append("Response Body: " + Helper.sanitizeString(responseBody));
         }
         logger.warn(sbuilder.toString());
         return null;
@@ -271,10 +268,10 @@ public class BulkQuery {
     String authHeader = authorizer.getAuthHeader();
 
     if (authHeader != null && !authHeader.isEmpty()) {
-      requestBuilder.setHeader("Authorization", authHeader);
+      requestBuilder.setHeader("Authorization", Helper.sanitizeHeader(authHeader));
     }
     if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.setHeader("apikey", apiKey);
+      requestBuilder.setHeader("apikey", Helper.sanitizeHeader(apiKey));
     }
   }
 }

@@ -4,10 +4,12 @@ import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.User;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,6 +23,11 @@ public class UserController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields("passwordSalt", "passwordHash");
+  }
 
   @GetMapping
   public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled) {
@@ -55,6 +62,29 @@ public class UserController extends BaseController {
     user.setEnabled(true);
     this.saveUser(user);
     return user;
+  }
+
+  @PostMapping("/$bulk")
+  public OperationOutcome createBulkUsers(@RequestBody List<User> users) {
+    OperationOutcome oo = new OperationOutcome();
+    for (User user : users) {
+      try {
+        this.saveUser(user);
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
+                .setDiagnostics(String.format("Successfully created user with email %s", user.getEmail())));
+      } catch (ResponseStatusException ex) {
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.ERROR)
+                .setDiagnostics(String.format("Error creating user with email %s: %s", user.getEmail(), ex.getReason())));
+      } catch (Exception ex) {
+        logger.error("Error creating user with email {}", user.getEmail(), ex);
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.ERROR)
+                .setDiagnostics(String.format("Error creating user with email %s", user.getEmail())));
+      }
+    }
+    return oo;
   }
 
   @PutMapping("/{userId}")

@@ -1,9 +1,11 @@
 package com.lantanagroup.link.db;
 
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -11,6 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -27,19 +34,59 @@ public class TenantService {
   private final PatientDataRepository patientDatas;
   private final PatientMeasureReportRepository patientMeasureReports;
   private final AggregateRepository aggregates;
+  private final DataSource dataSource;
 
   protected TenantService(Tenant config) {
     this.config = config;
-    DataSource dataSource = DataSourceBuilder.create()
+    this.dataSource = DataSourceBuilder.create()
             .type(SQLServerDataSource.class)
             .url(config.getConnectionString())
             .build();
-    this.conceptMaps = new ConceptMapRepository(dataSource);
-    this.patientLists = new PatientListRepository(dataSource);
-    this.reports = new ReportRepository(dataSource);
-    this.patientDatas = new PatientDataRepository(dataSource);
-    this.patientMeasureReports = new PatientMeasureReportRepository(dataSource);
-    this.aggregates = new AggregateRepository(dataSource);
+    this.conceptMaps = new ConceptMapRepository(this.dataSource);
+    this.patientLists = new PatientListRepository(this.dataSource);
+    this.reports = new ReportRepository(this.dataSource);
+    this.patientDatas = new PatientDataRepository(this.dataSource);
+    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource);
+    this.aggregates = new AggregateRepository(this.dataSource);
+  }
+
+  public static TenantService create(Tenant tenant) {
+    return new TenantService(tenant);
+  }
+
+  public void testConnection() throws SQLException {
+    this.dataSource.getConnection().getMetaData();
+  }
+
+  public void initDatabase() {
+    logger.info("Initializing database for tenant {}", this.getConfig().getId());
+
+    URL resource = this.getClass().getClassLoader().getResource("tenant-db.sql");
+
+    if (resource == null) {
+      logger.warn("Could not find tenant-db.sql file in class path");
+      return;
+    }
+
+    try (Connection conn = this.dataSource.getConnection()) {
+      assert conn != null;
+
+      String sql = Helper.readInputStream(resource.openStream());
+      for (String stmtSql : sql.split("GO")) {
+        try {
+          Statement stmt = conn.createStatement();
+          stmt.execute(stmtSql);
+        } catch (SQLException e) {
+          logger.error("Failed to execute statement for tenant {}", this.config.getId(), e);
+        }
+      }
+    } catch (SQLServerException e) {
+      logger.error("Failed to connect to tenant {} database: {}", this.config.getId(), e.getMessage());
+    } catch (SQLException | NullPointerException e) {
+      logger.error("Failed to initialize tenant {} database", this.config.getId(), e);
+    } catch (IOException e) {
+      logger.error("Could not read tenant-db.sql file for tenant {}", this.config.getId(), e);
+    }
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {

@@ -78,6 +78,11 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.70</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -103,10 +108,11 @@
                 <configuration>
                     <reportOutputDirectory>./</reportOutputDirectory>
                     <destDir>docs</destDir>
+                    <excludePackageNames>org.bson.*</excludePackageNames>
                     <sourcepath>
-                        api/target/generated-sources/delombok;
-                        query/target/generated-sources/delombok;
-                        core/target/generated-sources/delombok;
+                        api/target/delombok;
+                        query/target/delombok;
+                        core/target/delombok;
                     </sourcepath>
                     <additionalOptions>-Xdoclint:none</additionalOptions>
                     <additionalJOption>-Xdoclint:none</additionalJOption>
