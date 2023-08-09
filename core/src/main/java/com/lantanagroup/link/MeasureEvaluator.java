@@ -8,6 +8,7 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 import org.opencds.cqf.fhir.cr.measure.MeasureEvaluationOptions;
 import org.opencds.cqf.fhir.cr.measure.r4.R4MeasureService;
@@ -53,6 +54,12 @@ public class MeasureEvaluator {
     return terminologyEndpoint;
   }
 
+  private static R4MeasureService getR4MeasureService(InMemoryFhirRepository repo) {
+
+    // TODO: setup the measure evaluation options to share library / terminology dependencies
+    return new R4MeasureService(repo, MeasureEvaluationOptions.defaultOptions());
+  }
+
   private MeasureReport generateMeasureReport() {
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
@@ -62,18 +69,19 @@ public class MeasureEvaluator {
     InMemoryFhirRepository repo = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
     try (Stopwatch stopwatch = this.stopwatchManager.start("retrieve-patient-data")) {
       List<PatientData> patientDataList = tenantService.findPatientData(patientId);
+      //Bundle additionalDataBundle = PatientData.asBundle(patientDataList);
+      //String json = FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(additionalData)
       for (PatientData patientData : patientDataList) {
         repo.update(patientData.getResource());
       }
     }
 
-    MeasureEvaluationOptions options = new MeasureEvaluationOptions();
-    R4MeasureService measureService = new R4MeasureService(repo, options);
+    R4MeasureService measureService = getR4MeasureService(repo);
     Endpoint terminologyEndpoint = null;
 
-    if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-      terminologyEndpoint = getTerminologyEndpoint(this.config);
+    if (StringUtils.isNotEmpty(this.config.getTerminologyService())) {
       logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
+      terminologyEndpoint = getTerminologyEndpoint(this.config);
     }
 
     logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
