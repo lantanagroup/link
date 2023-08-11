@@ -93,6 +93,21 @@ public class FhirHelper {
     return "Unknown";
   }
 
+  public static CodeableConcept createCodeableConcept(String code, String system){
+    CodeableConcept type = new CodeableConcept();
+    List<Coding> codings = new ArrayList<>();
+    Coding coding = new Coding();
+
+    coding.setCode(code);
+    coding.setSystem(system);
+
+    codings.add(coding);
+
+    type.setCoding(codings);
+
+    return type;
+  }
+
   /**
    * @param report
    */

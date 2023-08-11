@@ -14,40 +14,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CopyLocationIdentifierToType implements IReportGenerationDataEvent {
 
-  private static final Logger logger = LoggerFactory.getLogger(CopyLocationIdentifierToType.class);
+public class CopyLocationAliasToType implements IReportGenerationDataEvent {
+  private static final Logger logger = LoggerFactory.getLogger(CopyLocationAliasToType.class);
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    //This is a specific transform to move data from a Location's identifier to its type
+    //This is a specific transform to move data from a Location's alias to its type
     //This must happen BEFORE ApplyConceptMaps as an event
-    logger.info("Called: " + CopyLocationIdentifierToType.class.getName());
+    logger.info("Called: " + CopyLocationAliasToType.class.getName());
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
       if (entry.getResource().getResourceType().equals(ResourceType.Location)) {
         Location locationResource = (Location) entry.getResource();
-        //Check for ConceptMap extension indicating that the identifier move to type and ConceptMapping has already been performed on this Location
+        //Check for ConceptMap extension indicating that the alias move to type and ConceptMapping has already been performed on this Location
         List<CodeableConcept> conceptMapExtensionCheck =
                 locationResource.getType().stream().filter(t ->
-                                t.getExtension().stream().anyMatch(e -> e.getUrl().equals(Constants.ConceptMappingExtension)))
+                                t.getCoding().stream().anyMatch(c ->
+                                        c.getExtension().stream().anyMatch(e ->
+                                                e.getUrl().equals(Constants.ConceptMappingExtension))))
                         .collect(Collectors.toList());
+
         //If not already performed, continue
-        if (conceptMapExtensionCheck.size() == 0) {
-          List<Identifier> identifiers = locationResource.getIdentifier();
+        if(conceptMapExtensionCheck.size() == 0){
+
+          List<StringType> aliases = locationResource.getAlias();
           List<CodeableConcept> types = locationResource.getType();
-          if (identifiers.size() > 0) {
-            for (Identifier identifier : identifiers) {
-              String idValue = identifier.getValue();
-              String idSystem = identifier.getSystem();
+          if (aliases.size() > 0) {
+            for (StringType alias : aliases) {
+              String value = alias.toString();
 
               List<CodeableConcept> existingType = types.stream()
-                      .filter(t -> t.getCoding().stream().anyMatch(c -> c.getCode().equals(idValue) && c.getSystem().equals(idSystem)))
+                      .filter(t -> t.getCoding().stream().anyMatch(c -> c.getCode().equals(value)))
                       .collect(Collectors.toList());
 
-              //Check for a full identifier (both system and value) and no existing type element with the values from identifier
-              if (existingType.isEmpty() && idValue != null && idSystem != null) {
+              //Check for a value in alias
+              if (value != null && existingType.isEmpty()) {
                 //Add type to list of existing types
-                types.add(FhirHelper.createCodeableConcept(idValue, idSystem));
+                types.add(FhirHelper.createCodeableConcept(value, "placeholder"));
               }
             }
           }
