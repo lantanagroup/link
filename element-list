@@ -17,7 +17,6 @@ com.lantanagroup.link.db.model.tenant.auth
 com.lantanagroup.link.db.repositories
 com.lantanagroup.link.events
 com.lantanagroup.link.model
-com.lantanagroup.link.nhsn
 com.lantanagroup.link.query
 com.lantanagroup.link.query.auth
 com.lantanagroup.link.query.uscore
