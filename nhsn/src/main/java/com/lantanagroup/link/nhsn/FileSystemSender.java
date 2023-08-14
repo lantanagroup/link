@@ -76,7 +76,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     if (this.config == null || this.config.getPath() == null || this.config.getPath().length() == 0) {
       logger.info("Not configured with a path to store the submission bundle. Using the system temporary directory");
-      path = System.getProperty("java.io.tmpdir");
+      throw new IllegalArgumentException("Error: Not configured with a path in FileSystemSender to store the submission bundle");
     } else {
       path = expandEnvVars(this.config.getPath());
     }
