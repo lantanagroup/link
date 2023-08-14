@@ -275,7 +275,8 @@ public class FhirBundler {
    * @param resource
    */
   private void cleanupResource(Resource resource) {
-    resource.getMeta().getProfile().clear();
+    //Profiles are being set in the measure itself now.  This is no longer needed.
+    /*resource.getMeta().getProfile().clear();
 
     List<String> profiles = null;
 
@@ -306,7 +307,7 @@ public class FhirBundler {
           resource.getMeta().addProfile(profile);
         }
       });
-    }
+    }*/
 
     if (resource instanceof DomainResource) {
       DomainResource domainResource = (DomainResource) resource;
