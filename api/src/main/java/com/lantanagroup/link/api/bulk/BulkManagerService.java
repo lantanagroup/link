@@ -37,7 +37,7 @@ public class BulkManagerService {
     this.sharedService = sharedService;
     this.applicationContext = applicationContext;
     this.tenantService = TenantService.create(sharedService, tenantConfig.getId());
-    this.bulkStatusService = BulkStatusService.create(tenantService, tenantConfig);
+    this.bulkStatusService = BulkStatusService.create(tenantConfig);
   }
 
   public void InitiateBulkDataRequest(BulkStatus status) throws Exception {
