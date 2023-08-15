@@ -30,9 +30,9 @@ public class SQLCSHelper {
 
   public void setDateTime(String parameterName, Long value) throws SQLException {
     if (value == null) {
-      this.callableStatement.setNull(parameterName, Types.TIME);
+      this.callableStatement.setNull(parameterName, Types.TIMESTAMP);
     } else {
-      this.callableStatement.setTime(parameterName, new java.sql.Time(value));
+      this.callableStatement.setTimestamp(parameterName, new java.sql.Timestamp(value));
     }
   }
 
