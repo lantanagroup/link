@@ -81,6 +81,11 @@ BEGIN
 END
 GO
 
+-- LNK-1150: Remove non-null constraint from dbo.audit.userId
+ALTER TABLE dbo.audit
+ALTER COLUMN userId UNIQUEIDENTIFIER;
+GO
+
 CREATE OR ALTER PROCEDURE saveUser
     -- Add the parameters for the stored procedure here
     @id UNIQUEIDENTIFIER,
