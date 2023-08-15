@@ -7,10 +7,13 @@ import com.lantanagroup.link.db.model.BulkStatus;
 import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.BulkResponse;
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,21 +27,32 @@ public class BulkStatusService {
 
   @Getter
   private Tenant tenantConfig;
+  private TenantService tenantService;
 
-  private SharedService sharedService;
+  private final DataSource dataSource;
 
-  protected BulkStatusService(SharedService sharedService, Tenant tenantConfig) {
-    this.sharedService = sharedService;
+  protected BulkStatusService(TenantService tenantService, Tenant tenantConfig) {
+    this.tenantService = tenantService;
     this.tenantConfig = tenantConfig;
+
+    this.dataSource = DataSourceBuilder.create()
+            .type(SQLServerDataSource.class)
+            .url(tenantConfig.getConnectionString())
+            .build();
   }
 
   public static BulkStatusService create(SharedService sharedService, String tenantId) {
     var tenantConfig = sharedService.getTenantConfig(tenantId);
-    return new BulkStatusService(sharedService, tenantConfig);
+    var tenantService = TenantService.create(tenantConfig);
+    return new BulkStatusService(tenantService, tenantConfig);
+  }
+
+  public static BulkStatusService create(TenantService tenantService, Tenant tenantConfig) {
+    return new BulkStatusService(tenantService, tenantConfig);
   }
 
   public List<BulkStatus> getBulkStatuses() {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       PreparedStatement ps = conn.prepareStatement("SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ?");
@@ -69,7 +83,7 @@ public class BulkStatusService {
   }
 
   public BulkStatus getBulkStatusById(String id) {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       String query = "SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ? AND id = ?";
@@ -101,7 +115,7 @@ public class BulkStatusService {
   }
 
   public List<BulkStatusResult> getBulkStatusResults() {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       PreparedStatement ps = conn.prepareStatement("SELECT id, statusId, resultJson FROM [dbo].[bulkStatusResult]");
@@ -136,7 +150,7 @@ public class BulkStatusService {
   }
 
   public BulkStatus saveBulkStatus(BulkStatus bulkStatus) {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveBulkStatus (?, ?, ?, ?, ?) }");
@@ -156,7 +170,7 @@ public class BulkStatusService {
   }
 
   public List<BulkStatus> getBulkPendingStatusesWithPopulatedUrl() {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       PreparedStatement ps = conn.prepareStatement("SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ? AND [status] = 'Pending' AND statusURL IS NOT NULL");
@@ -187,7 +201,7 @@ public class BulkStatusService {
   }
 
   public void saveBulkStatusResult(BulkStatusResult result) {
-    try (Connection conn = this.sharedService.getSQLConnection()) {
+    try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveBulkStatusResult (?, ?, ?) }");
