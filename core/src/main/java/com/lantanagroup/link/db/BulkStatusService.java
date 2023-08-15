@@ -24,15 +24,11 @@ import java.util.List;
 public class BulkStatusService {
   private static final Logger logger = LoggerFactory.getLogger(BulkStatusService.class);
   private static final ObjectMapper mapper = new ObjectMapper();
-
   @Getter
   private Tenant tenantConfig;
-  private TenantService tenantService;
-
   private final DataSource dataSource;
 
-  protected BulkStatusService(TenantService tenantService, Tenant tenantConfig) {
-    this.tenantService = tenantService;
+  protected BulkStatusService(Tenant tenantConfig) {
     this.tenantConfig = tenantConfig;
 
     this.dataSource = DataSourceBuilder.create()
@@ -43,12 +39,11 @@ public class BulkStatusService {
 
   public static BulkStatusService create(SharedService sharedService, String tenantId) {
     var tenantConfig = sharedService.getTenantConfig(tenantId);
-    var tenantService = TenantService.create(tenantConfig);
-    return new BulkStatusService(tenantService, tenantConfig);
+    return new BulkStatusService(tenantConfig);
   }
 
-  public static BulkStatusService create(TenantService tenantService, Tenant tenantConfig) {
-    return new BulkStatusService(tenantService, tenantConfig);
+  public static BulkStatusService create(Tenant tenantConfig) {
+    return new BulkStatusService(tenantConfig);
   }
 
   public List<BulkStatus> getBulkStatuses() {
