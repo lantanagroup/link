@@ -25,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -75,7 +74,7 @@ public class BulkQuery {
 
     var config = tenantService.getConfig();
 
-    URI uri = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase() + tenantService.getConfig().getRelativeBulkUrl().replace("{groupId}", tenantService.getConfig().getBulkGroupId()));
+    URI uri = new URI(config.getFhirQuery().getFhirServerBase() + config.getRelativeBulkUrl().replace("{groupId}", config.getBulkGroupId()));
     HttpClient httpClient = HttpClient.newHttpClient();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
     requestBuilder.setHeader("Accept", "application/fhir+json");
