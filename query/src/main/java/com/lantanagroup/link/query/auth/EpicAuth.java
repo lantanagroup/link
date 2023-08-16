@@ -30,6 +30,9 @@ public class EpicAuth implements ICustomAuth {
   @Setter
   private TenantService tenantService;
 
+  @Setter
+  private HttpClient client = HttpClient.newHttpClient();
+
   public static String getJwt(com.lantanagroup.link.db.model.tenant.auth.EpicAuth config) {
     Key key = null;
 
@@ -76,14 +79,13 @@ public class EpicAuth implements ICustomAuth {
 
     logger.debug("Requesting token from " + this.tenantService.getConfig().getFhirQuery().getEpicAuth().getTokenUrl() + " with JWT:\n" + jwt);
 
-    HttpClient client = HttpClient.newHttpClient();
     HttpRequest request = HttpRequest.newBuilder(new URI(this.tenantService.getConfig().getFhirQuery().getEpicAuth().getTokenUrl()))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .POST(HttpRequest.BodyPublishers.ofString(requestBody))
             .build();
 
     try {
-      HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+      HttpResponse<String> response = this.client.send(request, HttpResponse.BodyHandlers.ofString());
       String responseBody = response.body();
       Object responseObj = new Gson().fromJson(responseBody, Object.class);
 
