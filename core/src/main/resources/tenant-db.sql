@@ -71,3 +71,86 @@ CREATE TABLE dbo.[aggregate]
     report    nvarchar(max) NOT NULL,
     UNIQUE (reportId, measureId)
 );
+
+IF OBJECT_ID(N'[dbo].[bulkStatus]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[bulkStatus](
+        [id] [uniqueidentifier] NOT NULL,
+        [tenantId] [nvarchar](128) NULL,
+        [statusUrl] [nvarchar](max) NULL,
+        [status] [nvarchar](128) NULL,
+        [date] [datetime2] NOT NULL
+        PRIMARY KEY CLUSTERED
+    (
+    [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+        ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+    ALTER TABLE [dbo].[bulkStatus] ADD  DEFAULT (newid()) FOR [id]
+    ALTER TABLE [dbo].[bulkStatus] ADD  DEFAULT (getdate()) FOR [date]
+    ALTER TABLE [dbo].[bulkStatus]  WITH CHECK ADD FOREIGN KEY([tenantId])
+    REFERENCES [dbo].[tenantConfig] ([id])
+END
+
+IF OBJECT_ID(N'[dbo].[bulkStatusResult]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [dbo].[bulkStatusResult](
+        [id] [uniqueidentifier] NOT NULL,
+        [statusId] [nvarchar](256) NOT NULL,
+        [result] [nvarchar](max) NOT NULL,
+        PRIMARY KEY CLUSTERED
+    (
+    [id] ASC
+    )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+        ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+    ALTER TABLE [dbo].[bulkStatusResult] ADD  DEFAULT (newid()) FOR [id]
+END
+
+DROP PROCEDURE IF EXISTS saveBulkStatusResult
+GO
+
+CREATE PROCEDURE [dbo].[saveBulkStatusResult]
+    @id NVARCHAR(64),
+    @statusId NVARCHAR(256),
+    @result NVARCHAR(MAX)
+AS
+BEGIN
+    IF NOT EXISTS(SELECT * FROM dbo.bulkStatusResult t WHERE t.id = @id)
+    BEGIN
+        INSERT INTO dbo.bulkStatusResult(statusId, result)
+        VALUES(@statusId, @result)
+    END
+    ELSE
+        BEGIN
+            UPDATE dbo.bulkStatusResult
+            SET statusId = @statusId, result = @result
+            WHERE id = @id
+        END
+    END
+GO
+
+DROP PROCEDURE IF EXISTS saveBulkStatus
+GO
+
+CREATE PROCEDURE [dbo].[saveBulkStatus]
+    @id NVARCHAR(64),
+    @tenantId NVARCHAR(128),
+    @statusUrl NVARCHAR(MAX),
+    @status NVARCHAR(128),
+    @date DateTime2(7)
+AS
+BEGIN
+    IF NOT EXISTS(SELECT * FROM dbo.bulkStatus t WHERE t.id = @id)
+    BEGIN
+        INSERT INTO dbo.bulkStatus(tenantId, statusUrl, [status], [date])
+        VALUES(@tenantId, @statusUrl, @status, @date)
+    END
+    ELSE
+        BEGIN
+            UPDATE dbo.bulkStatus
+            SET tenantId = @tenantId, statusUrl = @statusUrl, [status] = @status, [date] = @date
+            WHERE id = @id
+        END
+    END
+GO
