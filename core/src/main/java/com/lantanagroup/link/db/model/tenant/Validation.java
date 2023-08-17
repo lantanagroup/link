@@ -9,5 +9,5 @@ import java.util.List;
 @Getter
 @Setter
 public class Validation {
-  private List<String> npmPackages = new ArrayList<>(List.of("uscore.tgz", "qicore.tgz", "deqm.tgz"));
+  private List<String> npmPackages = new ArrayList<>(List.of("uscore.tgz", "qicore.tgz", "deqm.tgz", "cqfmeasures.tgz"));
 }
