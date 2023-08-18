@@ -105,6 +105,14 @@ public class FhirBundler {
 
     this.cleanEntries(bundle);
 
+    long noProfileResources = bundle.getEntry().stream()
+            .filter(e -> e.getResource().getMeta().getProfile().isEmpty())
+            .count();
+
+    if (noProfileResources > 0) {
+      logger.warn("{} resources in the bundle don't have profiles", noProfileResources);
+    }
+
     return bundle;
   }
 
@@ -114,6 +122,7 @@ public class FhirBundler {
     device.setId(UUID.randomUUID().toString());
     device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
     device.addDeviceName().setName(this.apiConfig.getName());
+    device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
 
     if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
       device.addVersion()
@@ -274,39 +283,6 @@ public class FhirBundler {
    * @param resource
    */
   private void cleanupResource(Resource resource) {
-    resource.getMeta().getProfile().clear();
-
-    List<String> profiles = null;
-
-    switch (resource.getResourceType()) {
-      case Patient:
-        profiles = List.of(Constants.QiCorePatientProfileUrl, Constants.UsCorePatientProfileUrl);
-        break;
-      case Encounter:
-        profiles = List.of(Constants.UsCoreEncounterProfileUrl);
-        break;
-      case MedicationRequest:
-        profiles = List.of(Constants.UsCoreMedicationRequestProfileUrl);
-        break;
-      case Medication:
-        profiles = List.of(Constants.UsCoreMedicationProfileUrl);
-        break;
-      case Condition:
-        profiles = List.of(Constants.UsCoreConditionProfileUrl);
-        break;
-      case Observation:
-        profiles = List.of(Constants.UsCoreObservationProfileUrl);
-        break;
-    }
-
-    if (profiles != null) {
-      profiles.forEach(profile -> {
-        if (resource.getMeta().getProfile().stream().noneMatch(p -> p.getValue().equals(profile))) {   // Don't duplicate profile if it already exists
-          resource.getMeta().addProfile(profile);
-        }
-      });
-    }
-
     if (resource instanceof DomainResource) {
       DomainResource domainResource = (DomainResource) resource;
 

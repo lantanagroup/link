@@ -580,70 +580,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/report/$validate:
-    post:
-      tags:
-        - Reports
-      summary: Validate a report provided in the request body
-      operationId: validateRequest
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant, used to determine validation options
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/FHIR.Bundle'
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/FHIR.OperationOutcome'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/report/{reportId}/$validate:
-    get:
-      tags:
-        - Reports
-      summary: Validate the report against FHIR standards and implementation guides
-      operationId: validateReport
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
-          required: true
-          schema:
-            type: string
-        - name: reportId
-          in: path
-          description: The logical id of the report to submit
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/FHIR.OperationOutcome'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/aggregate:
     get:
       tags:
@@ -776,6 +712,170 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate a report provided in the request body
+      operationId: validateRequest
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant, used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      requestBody:
+        description: The FHIR Bundle to validate
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/summary:
+    post:
+      tags:
+        - Validation
+      summary: Provides a summary of unique messages from validation results of the request body
+      operationId: validateRequestSummary
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      requestBody:
+        description: The FHIR Bundle to validate
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'text/plain':
+              schema:
+                type: string
+                example: |
+                  * Device.deviceName.type: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Device)
+                  * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
+                  * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
+                  * if a date has a time, it must have a timezone
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/{reportId}:
+    get:
+      tags:
+        - Validation
+      summary: Validate a generated report
+      operationId: validateReport
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/{reportId}/summary:
+    get:
+      tags:
+        - Validation
+      summary: Provides a summary of unique messages from validation results
+      operationId: validateReportSummary
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      responses:
+        '200':
+          description: successful response
+          content:
+            'text/plain':
+              schema:
+                type: string
+                example: |
+                  * Device.deviceName.type: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Device)
+                  * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
+                  * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
+                  * if a date has a time, it must have a timezone
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

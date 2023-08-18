@@ -70,3 +70,6 @@ data-governance:
   census-list-retention:
   patient-data-retention: P0Y3M     # default of three months
   report-retention:
+sender:
+  file:
+    path: '%TEMP%'

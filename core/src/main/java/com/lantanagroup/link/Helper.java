@@ -3,10 +3,15 @@ package com.lantanagroup.link;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.ApiInfoModel;
 import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +29,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Helper {
   private static final Logger logger = LoggerFactory.getLogger(Helper.class);
@@ -175,5 +177,24 @@ public class Helper {
       logger.warn("Parsing database connection string failed", e);
       return null;
     }
+  }
+
+  public static String expandEnvVars(String text) {
+    Map<String, String> envMap = System.getenv();
+    for (Map.Entry<String, String> entry : envMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      text = text.replace("%" + key + "%", value);
+    }
+    return text;
+  }
+
+  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) {
+    FhirBundler bundler = new FhirBundler(eventService, tenantService, config);
+    logger.info("Building Bundle for MeasureReport to send...");
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
+    Bundle bundle = bundler.generateBundle(aggregates, report);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
   }
 }

@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.GenericSender;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
@@ -31,7 +32,6 @@ import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -44,16 +44,6 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   private FileSystemSenderConfig config;
 
   private SecureRandom random = new SecureRandom();
-
-  public static String expandEnvVars(String text) {
-    Map<String, String> envMap = System.getenv();
-    for (Map.Entry<String, String> entry : envMap.entrySet()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
-      text = text.replaceAll("%" + key + "%", value);
-    }
-    return text;
-  }
 
   private FileSystemSenderConfig.Formats getFormat() {
     if (this.config == null || this.config.getFormat() == null) {
@@ -78,7 +68,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       logger.info("Not configured with a path to store the submission bundle. Using the system temporary directory");
       throw new IllegalArgumentException("Error: Not configured with a path in FileSystemSender to store the submission bundle");
     } else {
-      path = expandEnvVars(this.config.getPath());
+      path = Helper.expandEnvVars(this.config.getPath());
     }
 
     return Paths.get(path, fileName);
