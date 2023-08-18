@@ -24,10 +24,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Helper {
   private static final Logger logger = LoggerFactory.getLogger(Helper.class);
@@ -175,5 +172,15 @@ public class Helper {
       logger.warn("Parsing database connection string failed", e);
       return null;
     }
+  }
+
+  public static String expandEnvVars(String text) {
+    Map<String, String> envMap = System.getenv();
+    for (Map.Entry<String, String> entry : envMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      text = text.replace("%" + key + "%", value);
+    }
+    return text;
   }
 }
