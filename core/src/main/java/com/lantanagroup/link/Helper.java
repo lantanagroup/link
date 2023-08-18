@@ -3,10 +3,15 @@ package com.lantanagroup.link;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.ApiInfoModel;
 import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,5 +187,14 @@ public class Helper {
       text = text.replace("%" + key + "%", value);
     }
     return text;
+  }
+
+  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) {
+    FhirBundler bundler = new FhirBundler(eventService, tenantService, config);
+    logger.info("Building Bundle for MeasureReport to send...");
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
+    Bundle bundle = bundler.generateBundle(aggregates, report);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
   }
 }

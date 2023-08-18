@@ -6,16 +6,20 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
-import com.lantanagroup.link.model.*;
+import com.lantanagroup.link.model.GenerateRequest;
+import com.lantanagroup.link.model.PatientOfInterestModel;
+import com.lantanagroup.link.model.ReportContext;
+import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
-import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,19 +31,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 
 @RestController
 @RequestMapping("/api/{tenantId}/report")
@@ -345,15 +344,6 @@ public class ReportController extends BaseController {
     }
   }
 
-  public Bundle generateBundle(TenantService tenantService, Report report) {
-    FhirBundler bundler = new FhirBundler(this.eventService, tenantService, this.config);
-    logger.info("Building Bundle for MeasureReport to send...");
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
-    Bundle bundle = bundler.generateBundle(aggregates, report);
-    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
-    return bundle;
-  }
-
   /**
    * Sends the specified report to the recipients configured in <strong>api.send-urls</strong>
    *
@@ -387,7 +377,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = this.generateBundle(tenantService, report);
+    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
     sender.send(tenantService, submissionBundle, report, request, user);
 
     FhirHelper.incrementMajorVersion(report);
@@ -399,68 +389,6 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
 
     return download ? submissionBundle : null;
-  }
-
-  private OperationOutcome validateBundle(TenantService tenantService, Bundle bundle, OperationOutcome.IssueSeverity severity) {
-    try {
-      Validator validator = new Validator(tenantService.getConfig().getValidation());
-      OperationOutcome outcome = validator.validate(bundle, severity);
-      Path tempFile = Files.createTempFile(null, ".json");
-      try (FileWriter fw = new FileWriter(tempFile.toFile())) {
-        FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
-      }
-      logger.info("Validation results saved to {}", tempFile);
-
-      // Add an extension (which doesn't formally exist) that shows the total issues
-      outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
-
-      // Don't return more than 2k issues to the response... We can just look at the temp file instead
-      if (outcome.getIssue().size() > 2000) {
-        outcome.setIssue(null);
-      } else {
-        outcome.getIssue().forEach(i -> {
-          i.setExtension(null);
-          i.setDetails(null);
-          if (i.getLocation().size() == 2) {
-            i.getLocation().remove(1);    // Remove the line number - it's useless.
-          }
-        });
-      }
-
-      return outcome;
-    } catch (IOException ex) {
-      logger.error("Error storing bundle validation results to file", ex);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  @PostMapping("/$validate")
-  public OperationOutcome validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) {
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-
-    if (tenantService == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-    }
-
-    return this.validateBundle(tenantService, bundle, severity);
-  }
-
-  @GetMapping("/{reportId}/$validate")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "ERROR") OperationOutcome.IssueSeverity severity) throws IOException {
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-
-    if (tenantService == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-    }
-
-    Report report = tenantService.getReport(reportId);
-
-    if (report == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
-    }
-
-    Bundle submissionBundle = this.generateBundle(tenantService, report);
-    return this.validateBundle(tenantService, submissionBundle, severity);
   }
 
   @GetMapping("/{reportId}/aggregate")
