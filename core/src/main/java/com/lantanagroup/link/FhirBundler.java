@@ -419,6 +419,22 @@ public class FhirBundler {
             this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
 
     for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
+      boolean inIP = patientMeasureReport.getMeasureReport()
+              .getGroup()
+              .stream()
+              .anyMatch(g -> {
+                return g.getPopulation().stream().anyMatch(p ->
+                        p.getCode() != null &&
+                                p.getCode().getCodingFirstRep() != null &&
+                                p.getCode().getCodingFirstRep().getCode() != null &&
+                                p.getCode().getCodingFirstRep().getCode().equals(Constants.MeasureReportGroupPopulationInitialPopulation) &&
+                                p.getCount() > 0);
+              });
+
+      if (!inIP) {
+        continue;
+      }
+
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
