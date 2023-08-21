@@ -1,5 +1,6 @@
 package com.lantanagroup.link.spring;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
@@ -10,5 +11,6 @@ public class YamlMessageConverter extends AbstractJackson2HttpMessageConverter {
     // cased property names. Can't use a mix of strategies though, so defaulting to the strategy that
     // most closely aligns with the property names defined on the classes
     super(new YAMLMapper(), MediaType.parseMediaType("application/x-yaml"));
+    this.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 }
