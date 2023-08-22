@@ -10,6 +10,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -427,7 +428,7 @@ public class FhirBundler {
                         p.getCode() != null &&
                                 p.getCode().getCodingFirstRep() != null &&
                                 p.getCode().getCodingFirstRep().getCode() != null &&
-                                p.getCode().getCodingFirstRep().getCode().equals(Constants.MeasureReportGroupPopulationInitialPopulation) &&
+                                p.getCode().getCodingFirstRep().getCode().equals(MeasurePopulation.INITIALPOPULATION.toCode()) &&
                                 p.getCount() > 0);
               });
 

@@ -9,6 +9,7 @@ import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -38,7 +39,7 @@ public class FhirBundlerTests {
     mr.setType(MeasureReport.MeasureReportType.INDIVIDUAL);
     mr.setSubject(new Reference("Patient/test-patient" + this.patientMeasureReportCount));
     mr.addGroup().addPopulation()
-            .setCode(new CodeableConcept(new Coding().setCode(Constants.MeasureReportGroupPopulationInitialPopulation)))
+            .setCode(new CodeableConcept(new Coding().setCode(MeasurePopulation.INITIALPOPULATION.toCode())))
             .setCount(populationCount);
 
     patient.setId("test-patient" + this.patientMeasureReportCount);
