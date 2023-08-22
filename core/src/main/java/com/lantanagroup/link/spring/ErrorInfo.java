@@ -1,6 +1,10 @@
 package com.lantanagroup.link.spring;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
@@ -11,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorInfo {
   private static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
   private static final String MESSAGE_WITHOUT_ID = "An error occurred while processing your request; "
@@ -26,8 +31,29 @@ public class ErrorInfo {
   public ErrorInfo(HttpServletRequest request, HttpServletResponse response) {
     statusCode = response.getStatus();
     errorId = (UUID) request.getAttribute(ErrorFilter.ERROR_ID);
-    message = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+    message = this.getMessage(request);
     path = (String) request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
+  }
+
+  private String getMessage(HttpServletRequest request) {
+    String msg = null;
+
+    if (request.getAttribute(DispatcherServlet.EXCEPTION_ATTRIBUTE) != null) {
+      Exception ex = (Exception) request.getAttribute(DispatcherServlet.EXCEPTION_ATTRIBUTE);
+
+      // Only for certain exceptions should we return the details of the issue
+      if (ex instanceof HttpMessageNotReadableException) {
+        HttpMessageNotReadableException nrex = (HttpMessageNotReadableException) ex;
+        msg = nrex.getMessage();
+      }
+    }
+
+    // Fall back to the error message in the request dispatcher, if any
+    if (StringUtils.isEmpty(msg)) {
+      msg = (String) request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+    }
+
+    return msg;
   }
 
   public Map<String, Object> getProperties() {
