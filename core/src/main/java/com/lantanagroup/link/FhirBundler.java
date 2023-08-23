@@ -416,10 +416,53 @@ public class FhirBundler {
 
     this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
 
-    List<PatientMeasureReport> individualMeasureReports =
-            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
+    String subjectListId = null;
 
-    for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
+    for (MeasureReport.MeasureReportGroupComponent group : aggregateMeasureReport.getGroup()) {
+      // Find the initial-population
+      MeasureReport.MeasureReportGroupPopulationComponent population = group.getPopulation().stream()
+              .filter(p -> p.getCode() != null && p.getCode().getCodingFirstRep() != null && p.getCode().getCodingFirstRep().getCode() != null && p.getCode().getCodingFirstRep().getCode().equals(MeasurePopulation.INITIALPOPULATION.toCode()))
+              .findFirst()
+              .orElse(null);
+
+      // Make sure there is a refefence to a contained subject list
+      if (population != null && population.hasSubjectResults() && !population.getSubjectResults().getReference().contains("/")) {
+        subjectListId = population.getSubjectResults().getReference().replace("#", "");
+      }
+    }
+
+    if (subjectListId == null) {
+      logger.warn("No subject list for initial-population on aggregate measure report {}", aggregateMeasureReport.getIdElement().getIdPart());
+      return;
+    }
+
+    String finalSubjectListId = subjectListId;
+    ListResource subjectList = aggregateMeasureReport.getContained().stream()
+            .filter(c -> c.getResourceType() == ResourceType.List && c.getIdElement().getIdPart().replace("#", "").equals(finalSubjectListId))
+            .map(c -> (ListResource) c)
+            .findFirst()
+            .orElse(null);
+
+    if (subjectList == null) {
+      logger.error("Aggregate measure report {} does not have a contained subject list", aggregateMeasureReport.getIdElement().getIdPart());
+      return;
+    }
+
+    // Get all individual measure reports in the DB for the report and filter them
+    // based on the aggregate
+    List<PatientMeasureReport> allIndMeasureReports =
+            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
+    List<PatientMeasureReport> indMeasureReports = allIndMeasureReports
+            .stream().filter(imr -> {
+              String imrId = imr.getMeasureReport().getIdElement().getIdPart();
+              return subjectList.getEntry().stream().anyMatch(e ->
+                      e.getItem() != null &&
+                              e.getItem().getReference() != null &&
+                              e.getItem().getReference().equalsIgnoreCase("MeasureReport/" + imrId));
+            })
+            .collect(Collectors.toList());
+
+    for (PatientMeasureReport patientMeasureReport : indMeasureReports) {
       boolean inIP = patientMeasureReport.getMeasureReport()
               .getGroup()
               .stream()
