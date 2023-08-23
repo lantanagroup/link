@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.scheduling;
 
 import com.lantanagroup.link.api.bulk.BulkStatusFetchTask;
 import com.lantanagroup.link.api.bulk.InitiateBulkDataRequestTask;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Schedule;
@@ -41,6 +42,9 @@ public class Scheduler {
   @Autowired
   private SharedService sharedService;
 
+  @Autowired
+  private ApiConfig apiConfig;
+
   private Dictionary<String, List<ScheduledFuture>> schedules = new Hashtable<>();
 
   public void reset(String tenantId) {
@@ -72,6 +76,10 @@ public class Scheduler {
   }
 
   private void init(String tenantId, Schedule config) {
+    if (this.apiConfig.isNoScheduling()) {
+      return;
+    }
+
     // TODO: Make sure this.context.getBean() doesn't return a singleton
 
     if (StringUtils.isNotEmpty(config.getDataRetentionCheckCron())) {
