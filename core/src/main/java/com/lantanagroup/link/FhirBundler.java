@@ -463,22 +463,6 @@ public class FhirBundler {
             .collect(Collectors.toList());
 
     for (PatientMeasureReport patientMeasureReport : indMeasureReports) {
-      boolean inIP = patientMeasureReport.getMeasureReport()
-              .getGroup()
-              .stream()
-              .anyMatch(g -> {
-                return g.getPopulation().stream().anyMatch(p ->
-                        p.getCode() != null &&
-                                p.getCode().getCodingFirstRep() != null &&
-                                p.getCode().getCodingFirstRep().getCode() != null &&
-                                p.getCode().getCodingFirstRep().getCode().equals(MeasurePopulation.INITIALPOPULATION.toCode()) &&
-                                p.getCount() > 0);
-              });
-
-      if (!inIP) {
-        continue;
-      }
-
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
