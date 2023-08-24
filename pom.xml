@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
-            <version>2.5.5</version>
+            <version>3.0.10</version>
         </dependency>
 
         <dependency>
