@@ -34,7 +34,7 @@ public class GenerateAndSubmitReportTask implements Runnable {
 
   @Override
   public void run() {
-    if (this.measureIds == null || this.measureIds.size() == 0) {
+    if (this.measureIds == null || this.measureIds.isEmpty()) {
       logger.error("Measure Ids must be configured");
       throw new IllegalArgumentException("measureIds");
     }
@@ -54,6 +54,8 @@ public class GenerateAndSubmitReportTask implements Runnable {
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
+
+      logger.info("Scheduled task generating report for measure(s) {} with start {} and end {} from reporting period method {}", String.join("|", this.measureIds), rpc.getStart(), rpc.getEnd(), this.reportingPeriodMethod);
       report = this.reportController.generateReport(null, null, this.tenantId, generateRequest);
     } catch (Exception e) {
       logger.error("Error generating report", e);
