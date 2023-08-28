@@ -3,6 +3,7 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
@@ -14,6 +15,7 @@ import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -232,7 +233,6 @@ public class FhirHelper {
   public static Device getDevice(ApiConfig apiConfig) {
     ApiInfoModel apiInfoModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
     Device device = new Device();
-    device.setId(UUID.randomUUID().toString());
     device.addDeviceName().setName(apiConfig.getName());
     device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
 
@@ -316,5 +316,25 @@ public class FhirHelper {
       String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
       property.addValueCode().addCoding().setCode(category + "-" + theEvent);
     }
+  }
+
+  public static ImplementationGuide getImplementationGuide(NpmPackage npmPackage) {
+    ImplementationGuide ig = new ImplementationGuide()
+            .setUrl(npmPackage.canonical())
+            .setVersion(npmPackage.version())
+            .setName(npmPackage.name())
+            .setTitle(npmPackage.title())
+            .setStatus(Enumerations.PublicationStatus.UNKNOWN)
+            .setDate(npmPackage.dateAsDate())
+            .setPackageId(npmPackage.id());
+    if (npmPackage.getNpm().has("fhirVersions")) {
+      JsonElement fhirVersions = npmPackage.getNpm().get("fhirVersions");
+      if (fhirVersions.isJsonArray()) {
+        for (JsonElement fhirVersion : fhirVersions.getAsJsonArray()) {
+          ig.addFhirVersion(Enumerations.FHIRVersion.fromCode(fhirVersion.getAsString()));
+        }
+      }
+    }
+    return ig;
   }
 }

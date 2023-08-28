@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.util.ClasspathUtil;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
@@ -8,8 +9,10 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.tenant.Validation;
 import com.lantanagroup.link.validation.Validator;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +22,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/{tenantId}/validate")
@@ -42,10 +47,23 @@ public class ValidationController {
               .setType(Bundle.BundleType.COLLECTION);
 
       Device device = FhirHelper.getDevice(config);
+      device.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(device);
 
-      Validator validator = new Validator(tenantService.getConfig().getValidation());
+      Validation validation = tenantService.getConfig().getValidation();
+      for (String npmPackageName : validation.getNpmPackages()) {
+        NpmPackage npmPackage;
+        try (InputStream stream = ClasspathUtil.loadResourceAsStream(npmPackageName)) {
+          npmPackage = NpmPackage.fromPackage(stream);
+          ImplementationGuide ig = FhirHelper.getImplementationGuide(npmPackage);
+          ig.setId(UUID.randomUUID().toString());
+          result.addEntry().setResource(ig);
+        }
+      }
+
+      Validator validator = new Validator(validation);
       OperationOutcome outcome = validator.validate(bundle, severity);
+      outcome.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(outcome);
 
       Path tempFile = Files.createTempFile(null, ".json");

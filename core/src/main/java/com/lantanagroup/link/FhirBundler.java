@@ -66,6 +66,7 @@ public class FhirBundler {
   private Device getDevice() {
     if (this.device == null) {
       this.device = FhirHelper.getDevice(apiConfig, tenantService);
+      this.device.setId(UUID.randomUUID().toString());
       this.device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
     }
 
