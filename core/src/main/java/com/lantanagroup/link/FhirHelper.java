@@ -3,8 +3,12 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.ConceptMap;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Address;
+import com.lantanagroup.link.model.ApiInfoModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -222,5 +227,94 @@ public class FhirHelper {
             .flatMap(group -> group.getPopulation().stream())
             .mapToInt(MeasureReport.MeasureReportGroupPopulationComponent::getCount)
             .anyMatch(count -> count > 0);
+  }
+
+  public static Device getDevice(ApiConfig apiConfig) {
+    ApiInfoModel apiInfoModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
+    Device device = new Device();
+    device.setId(UUID.randomUUID().toString());
+    device.addDeviceName().setName(apiConfig.getName());
+    device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getVersion());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getBuild());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
+              .setComponent(new Identifier().setValue("api"))
+              .setValue(apiInfoModel.getCommit());
+    }
+
+    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
+      device.addVersion()
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setComponent(new Identifier().setValue("cqf-ruler"))
+              .setValue(apiInfoModel.getCqfVersion());
+    }
+
+    return device;
+  }
+
+  public static Device getDevice(ApiConfig apiConfig, TenantService tenantService) {
+    Device device = getDevice(apiConfig);
+
+    if (tenantService.getConfig().getEvents() != null) {
+      addPropertyToDevice(device, "BeforeMeasureResolution", tenantService.getConfig().getEvents().getBeforeMeasureResolution());
+      addPropertyToDevice(device, "AfterMeasureResolution", tenantService.getConfig().getEvents().getAfterMeasureResolution());
+      addPropertyToDevice(device, "OnRegeneration", tenantService.getConfig().getEvents().getOnRegeneration());
+      addPropertyToDevice(device, "BeforePatientOfInterestLookup", tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
+      addPropertyToDevice(device, "AfterPatientOfInterestLookup", tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
+      addPropertyToDevice(device, "BeforePatientDataQuery", tenantService.getConfig().getEvents().getBeforePatientDataQuery());
+      addPropertyToDevice(device, "AfterPatientResourceQuery", tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
+      addPropertyToDevice(device, "AfterPatientDataQuery", tenantService.getConfig().getEvents().getAfterPatientDataQuery());
+      addPropertyToDevice(device, "AfterApplyConceptMaps", tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
+      addPropertyToDevice(device, "BeforePatientDataStore", tenantService.getConfig().getEvents().getBeforePatientDataStore());
+      addPropertyToDevice(device, "AfterPatientDataStore", tenantService.getConfig().getEvents().getAfterPatientDataStore());
+      addPropertyToDevice(device, "BeforeMeasureEval", tenantService.getConfig().getEvents().getBeforeMeasureEval());
+      addPropertyToDevice(device, "AfterMeasureEval", tenantService.getConfig().getEvents().getAfterMeasureEval());
+      addPropertyToDevice(device, "BeforeReportStore", tenantService.getConfig().getEvents().getBeforeReportStore());
+      addPropertyToDevice(device, "AfterReportStore", tenantService.getConfig().getEvents().getAfterReportStore());
+      addPropertyToDevice(device, "BeforeBundling", tenantService.getConfig().getEvents().getBeforeBundling());
+      addPropertyToDevice(device, "AfterBundling", tenantService.getConfig().getEvents().getAfterBundling());
+    }
+
+    List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps = tenantService.getAllConceptMaps();
+
+    if (!conceptMaps.isEmpty()) {
+      Device.DevicePropertyComponent property = device.addProperty();
+      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
+
+      for (ConceptMap conceptMap : tenantService.getAllConceptMaps()) {
+        property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
+      }
+    }
+
+    return device;
+  }
+
+  private static void addPropertyToDevice(Device device, String category, List<String> events) {
+    if (events == null) {
+      return;
+    }
+
+    for (String event : events) {
+      Device.DevicePropertyComponent property = device.addProperty();
+      property.getType().addCoding().setCode("event");
+
+      String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
+      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
+    }
   }
 }
