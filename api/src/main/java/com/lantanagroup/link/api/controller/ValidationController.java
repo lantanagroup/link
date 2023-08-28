@@ -2,15 +2,14 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.validation.Validator;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.IntegerType;
-import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +36,18 @@ public class ValidationController {
   @Autowired
   private EventService eventService;
 
-  private OperationOutcome validateBundle(TenantService tenantService, Bundle bundle, OperationOutcome.IssueSeverity severity) {
+  private Bundle validateBundle(TenantService tenantService, Bundle bundle, OperationOutcome.IssueSeverity severity) {
     try {
+      Bundle result = new Bundle()
+              .setType(Bundle.BundleType.COLLECTION);
+
+      Device device = FhirHelper.getDevice(config);
+      result.addEntry().setResource(device);
+
       Validator validator = new Validator(tenantService.getConfig().getValidation());
       OperationOutcome outcome = validator.validate(bundle, severity);
+      result.addEntry().setResource(outcome);
+
       Path tempFile = Files.createTempFile(null, ".json");
       try (FileWriter fw = new FileWriter(tempFile.toFile())) {
         FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
@@ -63,11 +70,20 @@ public class ValidationController {
         });
       }
 
-      return outcome;
+      return result;
     } catch (IOException ex) {
       logger.error("Error storing bundle validation results to file", ex);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  private OperationOutcome getOperationOutcome(Bundle bundle) {
+    return bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(resource -> resource instanceof OperationOutcome)
+            .map(resource -> (OperationOutcome) resource)
+            .findFirst()
+            .orElseThrow();
   }
 
   /**
@@ -78,7 +94,7 @@ public class ValidationController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
   @PostMapping
-  public OperationOutcome validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) {
+  public Bundle validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -114,7 +130,8 @@ public class ValidationController {
    */
   @PostMapping("/summary")
   public String validateSummary(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) {
-    OperationOutcome outcome = this.validate(tenantId, bundle, severity);
+    Bundle result = this.validate(tenantId, bundle, severity);
+    OperationOutcome outcome = this.getOperationOutcome(result);
     return this.getValidationSummary(outcome);
   }
 
@@ -128,7 +145,7 @@ public class ValidationController {
    * @throws IOException
    */
   @GetMapping("/{reportId}")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) throws IOException {
+  public Bundle validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) throws IOException {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -156,7 +173,8 @@ public class ValidationController {
    */
   @GetMapping("/{reportId}/summary")
   public String validateSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) throws IOException {
-    OperationOutcome outcome = this.validate(tenantId, reportId, severity);
+    Bundle result = this.validate(tenantId, reportId, severity);
+    OperationOutcome outcome = this.getOperationOutcome(result);
     return this.getValidationSummary(outcome);
   }
 }
