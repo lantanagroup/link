@@ -2,10 +2,8 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.ConceptMap;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
-import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -65,23 +63,11 @@ public class FhirBundler {
     return this.org;
   }
 
-  private static void addPropertyToDevice(Device device, String category, List<String> events) {
-    if (events == null) {
-      return;
-    }
-
-    for (String event : events) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event");
-
-      String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
-      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
-    }
-  }
-
   private Device getDevice() {
     if (this.device == null) {
-      this.device = this.createDevice();
+      this.device = FhirHelper.getDevice(apiConfig, tenantService);
+      this.device.setId(UUID.randomUUID().toString());
+      this.device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
     }
 
     return this.device;
@@ -115,76 +101,6 @@ public class FhirBundler {
     }
 
     return bundle;
-  }
-
-  private Device createDevice() {
-    ApiInfoModel apiInfoModel = Helper.getVersionInfo(this.apiConfig.getEvaluationService());
-    Device device = new Device();
-    device.setId(UUID.randomUUID().toString());
-    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
-    device.addDeviceName().setName(this.apiConfig.getName());
-    device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getVersion());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getBuild());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getCommit());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
-              .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiInfoModel.getCqfVersion());
-    }
-
-    if (this.tenantService.getConfig().getEvents() != null) {
-      addPropertyToDevice(device, "BeforeMeasureResolution", this.tenantService.getConfig().getEvents().getBeforeMeasureResolution());
-      addPropertyToDevice(device, "AfterMeasureResolution", this.tenantService.getConfig().getEvents().getAfterMeasureResolution());
-      addPropertyToDevice(device, "OnRegeneration", this.tenantService.getConfig().getEvents().getOnRegeneration());
-      addPropertyToDevice(device, "BeforePatientOfInterestLookup", this.tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
-      addPropertyToDevice(device, "AfterPatientOfInterestLookup", this.tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
-      addPropertyToDevice(device, "BeforePatientDataQuery", this.tenantService.getConfig().getEvents().getBeforePatientDataQuery());
-      addPropertyToDevice(device, "AfterPatientResourceQuery", this.tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
-      addPropertyToDevice(device, "AfterPatientDataQuery", this.tenantService.getConfig().getEvents().getAfterPatientDataQuery());
-      addPropertyToDevice(device, "AfterApplyConceptMaps", this.tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
-      addPropertyToDevice(device, "BeforePatientDataStore", this.tenantService.getConfig().getEvents().getBeforePatientDataStore());
-      addPropertyToDevice(device, "AfterPatientDataStore", this.tenantService.getConfig().getEvents().getAfterPatientDataStore());
-      addPropertyToDevice(device, "BeforeMeasureEval", this.tenantService.getConfig().getEvents().getBeforeMeasureEval());
-      addPropertyToDevice(device, "AfterMeasureEval", this.tenantService.getConfig().getEvents().getAfterMeasureEval());
-      addPropertyToDevice(device, "BeforeReportStore", this.tenantService.getConfig().getEvents().getBeforeReportStore());
-      addPropertyToDevice(device, "AfterReportStore", this.tenantService.getConfig().getEvents().getAfterReportStore());
-      addPropertyToDevice(device, "BeforeBundling", this.tenantService.getConfig().getEvents().getBeforeBundling());
-      addPropertyToDevice(device, "AfterBundling", this.tenantService.getConfig().getEvents().getAfterBundling());
-    }
-
-    List<ConceptMap> conceptMaps = this.tenantService.getAllConceptMaps();
-
-    if (!conceptMaps.isEmpty()) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
-
-      for (ConceptMap conceptMap : this.tenantService.getAllConceptMaps()) {
-        property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
-      }
-    }
-
-    return device;
   }
 
   private Organization createOrganization() {
