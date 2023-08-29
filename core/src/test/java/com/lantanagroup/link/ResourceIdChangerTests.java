@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.FhirContext;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,11 +9,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ResourceIdChangerTests {
+
+  private FhirContext ctx = FhirContext.forR4();
+
   @Test
   public void findReferencesBundleTest() {
     Bundle bundle = new Bundle();
@@ -30,6 +35,29 @@ public class ResourceIdChangerTests {
     Assert.assertEquals(2, references.size());
     Assert.assertEquals("Patient/123", references.get(0).getReference());
     Assert.assertEquals("Composition/xyz", references.get(1).getReference());
+  }
+  private Bundle getBundle(String resourcePath) {
+    return this.ctx.newJsonParser().parseResource(
+            Bundle.class,
+            Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(resourcePath)));
+  }
+  @Test
+  public void changeDuplicateIdsTest() {
+    String rId = "e78CCvcwM7PBTwp9Zfv3bHeqOp9wvxDIr8I4Dpn2TvX6TX8FQJisfse6GQda9N5dasxC5XSGG4t3J2eebVmnHGw3";
+    String hashedId = "hash-8cd79b77964b2c0f69792f15c958af3a83e01509";
+
+    var bundle = this.getBundle("duplicate-observation-bundle.json");
+    var resources = bundle.getEntry().stream()
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(r -> r.getIdElement().getIdPart().equals(rId))
+            .collect(Collectors.toList());
+
+
+    Assert.assertTrue(resources.size() > 1);
+
+    ResourceIdChanger.changeIds(bundle);
+
+    Assert.assertTrue(resources.stream().allMatch(r-> r.getIdElement().getIdPart().equals(hashedId)));
   }
 
   @Test
