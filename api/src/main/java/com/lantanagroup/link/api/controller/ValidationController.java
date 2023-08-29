@@ -72,8 +72,9 @@ public class ValidationController {
       }
       logger.info("Validation results saved to {}", tempFile);
 
-      // Add an extension (which doesn't formally exist) that shows the total issues
+      // Add extensions (which don't formally exist) that show the total issue count and severity threshold
       outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
+      outcome.addExtension("http://nhsnlink.org/oo-severity", new CodeType(severity.toCode()));
 
       // Don't return more than 2k issues to the response... We can just look at the temp file instead
       if (outcome.getIssue().size() > 2000) {
