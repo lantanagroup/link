@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Duration;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -217,7 +217,7 @@ public class PatientData {
       case "patientid":
         return patientId;
       case "lookbackstart":
-        Duration lookback = Duration.parse(plan.getLookback());
+        Period lookback = Period.parse(plan.getLookback());
         return criteria.getPeriodStartDate().minus(lookback) + "T00:00:00Z";
       case "periodstart":
         return criteria.getPeriodStartDate().toString() + "T00:00:00Z";
