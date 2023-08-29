@@ -76,18 +76,13 @@ public class ValidationController {
       outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
       outcome.addExtension("http://nhsnlink.org/oo-severity", new CodeType(severity.toCode()));
 
-      // Don't return more than 2k issues to the response... We can just look at the temp file instead
-      if (outcome.getIssue().size() > 2000) {
-        outcome.setIssue(null);
-      } else {
-        outcome.getIssue().forEach(i -> {
-          i.setExtension(null);
-          i.setDetails(null);
-          if (i.getLocation().size() == 2) {
-            i.getLocation().remove(1);    // Remove the line number - it's useless.
-          }
-        });
-      }
+      outcome.getIssue().forEach(i -> {
+        i.setExtension(null);
+        i.setDetails(null);
+        if (i.getLocation().size() == 2) {
+          i.getLocation().remove(1);    // Remove the line number - it's useless.
+        }
+      });
 
       return result;
     } catch (IOException ex) {
