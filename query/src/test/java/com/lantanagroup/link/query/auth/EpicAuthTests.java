@@ -20,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.Date;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -44,8 +45,8 @@ public class EpicAuthTests {
     config.setKey(Base64.getEncoder().encodeToString(key.getEncoded()));
 
     String jwtContent = com.lantanagroup.link.query.auth.EpicAuth.getJwt(config);
+    Date expectedExp = new Date(System.currentTimeMillis() + (1000 * 60 * 4));
 
-    //Date expectedExp = new Date(System.currentTimeMillis() + (1000 * 60 * 4) / 1000);
     Jwt<?, DefaultClaims> jwt = Jwts.parser()
             //.requireExpiration(expectedExp)
             .setSigningKey(kp.getPublic())
@@ -57,9 +58,8 @@ public class EpicAuthTests {
     Assert.assertEquals(body.get("aud"), config.getAudience());
     Assert.assertNotNull(body.get("jti"));
     Assert.assertNotEquals(0, ((String) body.get("jti")).length());
-    // Should be four minutes in the future
-    Assert.assertEquals((int) (System.currentTimeMillis() / 1000) + (60 * 4), body.get("exp"));
-    Assert.assertNotEquals((Integer) 0, (Integer) body.get("exp"));
+    // Should be four minutes in the future (within five seconds)
+    Assert.assertTrue(Math.abs(expectedExp.getTime() - body.getExpiration().getTime()) < 5000);
   }
 
   @Test
