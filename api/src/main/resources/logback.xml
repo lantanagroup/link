@@ -2,6 +2,7 @@
 <configuration>
     <property name="LOG_FILE" value="logs/link-api.log"/>
     <property name="LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE" value="100MB"/>
+    <property name="LOGBACK_ROLLINGPOLICY_MAX_HISTORY" value="0"/>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
