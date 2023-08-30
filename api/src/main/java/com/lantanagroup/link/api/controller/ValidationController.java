@@ -108,7 +108,7 @@ public class ValidationController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
   @PostMapping
-  public Bundle validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) {
+  public Bundle validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -143,7 +143,7 @@ public class ValidationController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
   @PostMapping("/summary")
-  public String validateSummary(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) {
+  public String validateSummary(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     Bundle result = this.validate(tenantId, bundle, severity);
     OperationOutcome outcome = this.getOperationOutcome(result);
     return this.getValidationSummary(outcome);
@@ -159,7 +159,7 @@ public class ValidationController {
    * @throws IOException
    */
   @GetMapping("/{reportId}")
-  public Bundle validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) throws IOException {
+  public Bundle validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -186,7 +186,7 @@ public class ValidationController {
    * @throws IOException
    */
   @GetMapping("/{reportId}/summary")
-  public String validateSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "WARNING") OperationOutcome.IssueSeverity severity) throws IOException {
+  public String validateSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
     Bundle result = this.validate(tenantId, reportId, severity);
     OperationOutcome outcome = this.getOperationOutcome(result);
     return this.getValidationSummary(outcome);
