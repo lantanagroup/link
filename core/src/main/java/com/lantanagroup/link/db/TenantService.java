@@ -72,7 +72,7 @@ public class TenantService {
       assert conn != null;
 
       String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("GO")) {
+      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
         try {
           Statement stmt = conn.createStatement();
           stmt.execute(stmtSql);
