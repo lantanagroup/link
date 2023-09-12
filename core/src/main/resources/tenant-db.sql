@@ -5,6 +5,7 @@ CREATE TABLE dbo.conceptMap
     contexts   nvarchar(1024) NOT NULL,
     conceptMap nvarchar(max)  NOT NULL
 );
+GO
 
 IF OBJECT_ID(N'dbo.patientList', N'U') IS NULL
 CREATE TABLE dbo.patientList
@@ -17,6 +18,7 @@ CREATE TABLE dbo.patientList
     lastUpdated datetime2        NOT NULL,
     UNIQUE (measureId, periodStart, periodEnd)
 );
+GO
 
 IF OBJECT_ID(N'dbo.report', N'U') IS NULL
 CREATE TABLE dbo.report
@@ -30,6 +32,7 @@ CREATE TABLE dbo.report
     generatedTime datetime2,
     submittedTime datetime2
 );
+GO
 
 IF OBJECT_ID(N'dbo.reportPatientList', N'U') IS NULL
 CREATE TABLE dbo.reportPatientList
@@ -38,6 +41,7 @@ CREATE TABLE dbo.reportPatientList
     patientListId uniqueidentifier NOT NULL REFERENCES dbo.patientList (id),
     PRIMARY KEY (reportId, patientListId)
 );
+GO
 
 IF OBJECT_ID(N'dbo.patientData', N'U') IS NULL
 CREATE TABLE dbo.patientData
@@ -50,6 +54,7 @@ CREATE TABLE dbo.patientData
     retrieved    datetime2        NOT NULL,
     UNIQUE (patientId, resourceType, resourceId)
 );
+GO
 
 IF OBJECT_ID(N'dbo.patientMeasureReport', N'U') IS NULL
 CREATE TABLE dbo.patientMeasureReport
@@ -61,6 +66,7 @@ CREATE TABLE dbo.patientMeasureReport
     measureReport nvarchar(max) NOT NULL,
     UNIQUE (reportId, measureId, patientId)
 );
+GO
 
 IF OBJECT_ID(N'dbo.[aggregate]', N'U') IS NULL
 CREATE TABLE dbo.[aggregate]
@@ -71,6 +77,7 @@ CREATE TABLE dbo.[aggregate]
     report    nvarchar(max) NOT NULL,
     UNIQUE (reportId, measureId)
 );
+GO
 
 IF OBJECT_ID(N'[dbo].[bulkStatus]', N'U') IS NULL
 BEGIN
@@ -91,6 +98,7 @@ BEGIN
     ALTER TABLE [dbo].[bulkStatus]  WITH CHECK ADD FOREIGN KEY([tenantId])
     REFERENCES [dbo].[tenantConfig] ([id])
 END
+GO
 
 IF OBJECT_ID(N'[dbo].[bulkStatusResult]', N'U') IS NULL
 BEGIN
