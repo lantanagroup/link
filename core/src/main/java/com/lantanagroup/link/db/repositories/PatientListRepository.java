@@ -141,6 +141,25 @@ public class PatientListRepository extends BaseRepository<PatientList> {
     }
   }
 
+  @SneakyThrows(SQLException.class)
+  public void deleteById(String id){
+    String sql = "DELETE FROM dbo.patientList WHERE id = ?;";
+    try (Connection connection = dataSource.getConnection();
+         PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setString(1, id);
+      statement.executeUpdate(sql);
+    }
+  }
+
+  @SneakyThrows(SQLException.class)
+  public void deleteAllPatientData(){
+    String sql = "TRUNCATE TABLE dbo.patientList;";
+    try (Connection connection = dataSource.getConnection();
+         PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.executeUpdate(sql);
+    }
+  }
+
   private class Parameters {
     private final PatientList model;
     private final PreparedStatement statement;
