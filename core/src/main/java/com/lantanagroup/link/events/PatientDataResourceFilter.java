@@ -13,6 +13,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Filters out resources (MedicationRequest, ServiceRequest, Specimen, Condition) if the date of the resource is outside the reporting period
+ */
 public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(PatientDataResourceFilter.class);
 

@@ -3,6 +3,7 @@ package com.lantanagroup.link.nhsn;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.GenericSender;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.IReportSender;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
@@ -10,6 +11,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,6 @@ import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Map;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -42,15 +43,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   @Setter
   private FileSystemSenderConfig config;
 
-  public static String expandEnvVars(String text) {
-    Map<String, String> envMap = System.getenv();
-    for (Map.Entry<String, String> entry : envMap.entrySet()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
-      text = text.replaceAll("%" + key + "%", value);
-    }
-    return text;
-  }
+  private SecureRandom random = new SecureRandom();
 
   private FileSystemSenderConfig.Formats getFormat() {
     if (this.config == null || this.config.getFormat() == null) {
@@ -73,22 +66,24 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     if (this.config == null || this.config.getPath() == null || this.config.getPath().length() == 0) {
       logger.info("Not configured with a path to store the submission bundle. Using the system temporary directory");
-      path = System.getProperty("java.io.tmpdir");
+      throw new IllegalArgumentException("Error: Not configured with a path in FileSystemSender to store the submission bundle");
     } else {
-      path = expandEnvVars(this.config.getPath());
+      path = Helper.expandEnvVars(this.config.getPath());
     }
 
     return Paths.get(path, fileName);
   }
 
-  public static Cipher getCipher(String password, byte[] salt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
+  public static Cipher getCipher(String password, byte[] salt) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException, InvalidKeyException, NoSuchProviderException {
     byte[] passAndSalt = concat(password.getBytes(StandardCharsets.UTF_8), salt);
     MessageDigest md = MessageDigest.getInstance("SHA-256");
     byte[] key = md.digest(passAndSalt);
     SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
     md.reset();
     byte[] iv = Arrays.copyOfRange(md.digest(concat(key, passAndSalt)), 0, 16);
-    Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+    //Adding BouncyCastle provider ("BC") to allow for GCM
+    Security.addProvider(new BouncyCastleProvider());
+    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
     cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
     return cipher;
   }
@@ -123,7 +118,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
       try (OutputStream os = new FileOutputStream(path)) {
         byte[] salt = new byte[8];
-        new SecureRandom().nextBytes(salt);// Create key
+        this.random.nextBytes(salt);// Create key
         Cipher cipher = getCipher(this.config.getEncryptSecret(), salt);
         CipherOutputStream cipherOut = new CipherOutputStream(os, cipher);
         Writer writer = new OutputStreamWriter(cipherOut, StandardCharsets.UTF_8);

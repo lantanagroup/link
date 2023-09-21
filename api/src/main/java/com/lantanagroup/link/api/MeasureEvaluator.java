@@ -54,13 +54,19 @@ public class MeasureEvaluator {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
-    logger.info(String.format("Executing $evaluate-measure for %s", measureId));
+    String start = this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."));
+    String end = this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."));
 
-    Bundle patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+    Bundle patientBundle;
+    try (Stopwatch stopwatch = this.stopwatchManager.start("retrieve-patient-data")) {
+      patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+    }
+
+    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
 
     Parameters parameters = new Parameters();
-    parameters.addParameter().setName("periodStart").setValue(new StringType(this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."))));
-    parameters.addParameter().setName("periodEnd").setValue(new StringType(this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."))));
+    parameters.addParameter().setName("periodStart").setValue(new StringType(start));
+    parameters.addParameter().setName("periodEnd").setValue(new StringType(end));
     parameters.addParameter().setName("subject").setValue(new StringType(patientId));
     parameters.addParameter().setName("additionalData").setResource(patientBundle);
     if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {

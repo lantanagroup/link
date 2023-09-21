@@ -17,7 +17,6 @@ public class ApiInfoModel {
 
   @JsonProperty("cqf-version")
   private String cqfVersion;
-
   public ApiInfoModel(String cqfVersion) {
     this.cqfVersion = cqfVersion;
   }

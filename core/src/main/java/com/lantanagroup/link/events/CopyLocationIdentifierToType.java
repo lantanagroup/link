@@ -1,6 +1,5 @@
 package com.lantanagroup.link.events;
 
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
@@ -13,14 +12,18 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.lantanagroup.link.Constants;
 
+/**
+ * Populates the Location.type with the first value from Location.identifier
+ */
 public class CopyLocationIdentifierToType implements IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(CopyLocationIdentifierToType.class);
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    //This is a specific transform to move data from a Location's identifier to its type
+    //This is a specific transform to move data from an extension to the type of a Location resource for UMich
     //This must happen BEFORE ApplyConceptMaps as an event
     logger.info("Called: " + CopyLocationIdentifierToType.class.getName());
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
@@ -46,6 +49,7 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
 
               //Check for a full identifier (both system and value) and no existing type element with the values from identifier
               if (existingType.isEmpty() && idValue != null && idSystem != null) {
+
                 //Add type to list of existing types
                 types.add(FhirHelper.createCodeableConcept(idValue, idSystem));
               }

@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * Looks for resources that have an ID with more than 64 characters and replaces it with a hash of the ID. Updates references to the old ID to use the new hashed ID.
+ */
 public class FixResourceId implements IReportGenerationDataEvent {
 
   private static final Logger logger = LoggerFactory.getLogger(FixResourceId.class);

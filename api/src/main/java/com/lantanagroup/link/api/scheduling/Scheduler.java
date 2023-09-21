@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.scheduling;
 
 import com.lantanagroup.link.api.bulk.BulkStatusFetchTask;
 import com.lantanagroup.link.api.bulk.InitiateBulkDataRequestTask;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Schedule;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,7 @@ import java.util.concurrent.ScheduledFuture;
  * registering scheduled tasks with the TaskScheduler.
  */
 @Component
+@DependsOn({"apiInit"})
 public class Scheduler {
   private static final Logger logger = LoggerFactory.getLogger(Scheduler.class);
 
@@ -38,6 +41,9 @@ public class Scheduler {
 
   @Autowired
   private SharedService sharedService;
+
+  @Autowired
+  private ApiConfig apiConfig;
 
   private Dictionary<String, List<ScheduledFuture>> schedules = new Hashtable<>();
 
@@ -70,6 +76,10 @@ public class Scheduler {
   }
 
   private void init(String tenantId, Schedule config) {
+    if (this.apiConfig.isNoScheduling()) {
+      return;
+    }
+
     // TODO: Make sure this.context.getBean() doesn't return a singleton
 
     if (StringUtils.isNotEmpty(config.getDataRetentionCheckCron())) {
@@ -118,7 +128,7 @@ public class Scheduler {
 
   @PostConstruct
   public void init() {
-    List<Tenant> tenants = this.sharedService.getTenantSchedules();
+    List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     // Loop through each of the tenants and register their scheduled tasks
     for (Tenant tenant : tenants) {

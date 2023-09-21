@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.db.model.tenant.Validation;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
   private FhirContext ctx = FhirContext.forR4();

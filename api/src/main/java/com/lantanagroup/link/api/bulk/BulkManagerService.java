@@ -25,6 +25,10 @@ public class BulkManagerService {
   @Setter
   private SharedService sharedService;
   @Setter
+  private TenantService tenantService;
+  @Setter
+  private BulkStatusService bulkStatusService;
+  @Setter
   ApplicationContext applicationContext;
 
   public BulkManagerService(Tenant tenantConfig, ExecutorService executorService, SharedService sharedService, ApplicationContext applicationContext) {
@@ -32,22 +36,17 @@ public class BulkManagerService {
     this.executorService = executorService;
     this.sharedService = sharedService;
     this.applicationContext = applicationContext;
+    this.tenantService = TenantService.create(sharedService, tenantConfig.getId());
+    this.bulkStatusService = BulkStatusService.create(tenantConfig);
   }
 
   public void InitiateBulkDataRequest(BulkStatus status) throws Exception {
-
-    //status.setStatus(BulkStatuses.pending);
-    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    //bulkStatusService.saveBulkStatus(status);
-
-    TenantService tenantService = TenantService.create(sharedService, tenantConfig.getId());
     BulkQuery bulkQuery = new BulkQuery();
     bulkQuery.executeInitiateRequest(tenantService, bulkStatusService, status, this.applicationContext);
   }
 
   public void getPendingRequestsAndGetStatusResults(String tenantId) {
     //get pending statuses
-    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
     var statuses = bulkStatusService.getBulkPendingStatusesWithPopulatedUrl();
 
     //loop through statuses and fire off thread to get results
@@ -84,21 +83,23 @@ public class BulkManagerService {
     }
   }
 
-  public List<BulkStatus> getBulkStatusByTenantId(String tenantId) {
-    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    List<BulkStatus> status = bulkStatusService.getBulkStatusesByTenantId(tenantId);
+  public List<BulkStatus> getBulkStatuses() {
+    List<BulkStatus> status = bulkStatusService.getBulkStatuses();
     return status;
   }
 
   public BulkStatus getBulkStatusById(String id) {
-    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
     BulkStatus status = bulkStatusService.getBulkStatusById(id);
     return status;
   }
 
   public BulkStatusResult getBulkStatusResultByStatusId(String id){
-    BulkStatusService bulkStatusService = BulkStatusService.create(sharedService, tenantConfig.getId());
-    BulkStatusResult result = bulkStatusService.getResultByStatusId(id);
-    return result;
+    return bulkStatusService
+            .getBulkStatusResults()
+            .stream()
+            .filter(r -> r.getStatusId()
+            .equals(id))
+            .findFirst()
+            .orElse(null);
   }
 }

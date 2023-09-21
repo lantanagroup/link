@@ -3,7 +3,6 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.api.controller.ReportController;
-import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -31,14 +30,11 @@ public class GenerateAndSubmitReportTask implements Runnable {
   private String tenantId;
 
   @Autowired
-  private SharedService sharedService;
-
-  @Autowired
   private ReportController reportController;
 
   @Override
   public void run() {
-    if (this.measureIds == null || this.measureIds.size() == 0) {
+    if (this.measureIds == null || this.measureIds.isEmpty()) {
       logger.error("Measure Ids must be configured");
       throw new IllegalArgumentException("measureIds");
     }
@@ -58,6 +54,8 @@ public class GenerateAndSubmitReportTask implements Runnable {
       generateRequest.setPeriodStart(rpc.getStart());
       generateRequest.setPeriodEnd(rpc.getEnd());
       generateRequest.setRegenerate(this.regenerateIfExists);
+
+      logger.info("Scheduled task generating report for measure(s) {} with start {} and end {} from reporting period method {}", String.join("|", this.measureIds), rpc.getStart(), rpc.getEnd(), this.reportingPeriodMethod);
       report = this.reportController.generateReport(null, null, this.tenantId, generateRequest);
     } catch (Exception e) {
       logger.error("Error generating report", e);

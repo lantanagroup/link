@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RulePack xmlns="xmlns://www.fortifysoftware.com/schema/rules">
+    <RulePackID>61C9A741-5EC5-40D8-81E7-017A8A001A21</RulePackID>
+    <SKU>SKU-header-manipulation</SKU>
+    <Name><![CDATA[header-manipulation]]></Name>
+    <Version>1.0</Version>
+    <Description><![CDATA[]]></Description>
+    <Rules version="22.2.2">
+        <RuleDefinitions>
+            <DataflowCleanseRule formatVersion="22.2.2" language="java">
+                <RuleID>0224D617-E07C-420D-A0A2-3E24C08FFE33</RuleID>
+                <TaintFlags>+VALIDATED_HEADER_MANIPULATION,+VALIDATED_HEADER_MANIPULATION_COOKIES</TaintFlags>
+                <FunctionIdentifier>
+                    <NamespaceName>
+                        <Pattern>com\.lantanagroup\.link</Pattern>
+                    </NamespaceName>
+                    <ClassName>
+                        <Pattern>Helper</Pattern>
+                    </ClassName>
+                    <FunctionName>
+                        <Pattern>sanitizeHeader</Pattern>
+                    </FunctionName>
+                    <ApplyTo implements="true" overrides="true" extends="true"/>
+                </FunctionIdentifier>
+                <OutArguments>return</OutArguments>
+            </DataflowCleanseRule>
+            <DataflowCleanseRule formatVersion="22.2.2" language="java">
+                <RuleID>0BCF84AD-554E-4CCC-A6A1-ED87A1F3C795</RuleID>
+                <TaintFlags>+VALIDATED_HEADER_MANIPULATION,+VALIDATED_HEADER_MANIPULATION_COOKIES</TaintFlags>
+                <FunctionIdentifier>
+                    <NamespaceName>
+                        <Pattern>com\.lantanagroup\.link\.query\.auth</Pattern>
+                    </NamespaceName>
+                    <ClassName>
+                        <Pattern>HapiFhirAuthenticationInterceptor</Pattern>
+                    </ClassName>
+                    <FunctionName>
+                        <Pattern>getEntity</Pattern>
+                    </FunctionName>
+                    <ApplyTo implements="true" overrides="true" extends="true"/>
+                </FunctionIdentifier>
+                <OutArguments>return</OutArguments>
+            </DataflowCleanseRule>
+        </RuleDefinitions>
+    </Rules>
+</RulePack>

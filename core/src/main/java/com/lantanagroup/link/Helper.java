@@ -3,23 +3,33 @@ package com.lantanagroup.link;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.ApiInfoModel;
+import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
+import java.sql.Driver;
+import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class Helper {
   private static final Logger logger = LoggerFactory.getLogger(Helper.class);
@@ -98,21 +108,38 @@ public class Helper {
     return list;
   }
 
-  public static String encodeLogging(String message) {
-    if (StringUtils.isEmpty(message)) {
-      return message;
+  public static String sanitizeString(String value) {
+    if (StringUtils.isEmpty(value)) {
+      return "";
     }
 
     //redundant checks to satisfy fortify scans
-    message = message.replace('\n', '_').replace('\r', '_')
+    value = value.replace('\n', '_').replace('\r', '_')
             .replace('\t', '_');
 
     String whiteList = "[^A-Za-z0-9\\-\\._~\\+\\/]";
-    message = message.replaceAll(whiteList, "");
+    value = value.replaceAll(whiteList, "");
 
-    message = quoteApostrophe(message);
-    message = StringEscapeUtils.escapeHtml4(message);
-    return message;
+    value = quoteApostrophe(value);
+    value = StringEscapeUtils.escapeHtml4(value);
+    return value;
+  }
+
+  public static String sanitizeUrl(String value) {
+    if (StringUtils.isEmpty(value)) {
+      return value;
+    }
+
+    //redundant checks to satisfy fortify scans
+    value = value.replace('\n', '_').replace('\r', '_')
+            .replace('\t', '_');
+
+    String whiteList = "[^:/?#\\[\\]@!$&'()*+,;=A-Za-z0-9-_.~]";
+    return value.replaceAll(whiteList, "");
+  }
+
+  public static String sanitizeHeader(String value) {
+    return value.replaceAll("[^\\u0020-\\u007e]", "");
   }
 
   public static String quoteApostrophe(String input) {
@@ -120,5 +147,54 @@ public class Helper {
       return input.replaceAll("[\']", "&rsquo;");
     else
       return null;
+  }
+
+  public static String readInputStream(InputStream is) throws IOException {
+    Reader inputStreamReader = new InputStreamReader(is);
+    StringBuilder sb = new StringBuilder();
+
+    int data = inputStreamReader.read();
+    while (data != -1) {
+      sb.append((char) data);
+      data = inputStreamReader.read();
+    }
+
+    inputStreamReader.close();
+
+    return sb.toString();
+  }
+
+  public static String getDatabaseName(String connectionString) {
+    Driver driver = new SQLServerDriver();
+    try {
+      DriverPropertyInfo[] properties = driver.getPropertyInfo(connectionString, null);
+      return Arrays.stream(properties)
+              .filter(property -> property.name.equals("databaseName"))
+              .findFirst()
+              .map(property -> StringUtils.isNotEmpty(property.value) ? property.value : null)
+              .orElse(null);
+    } catch (SQLException e) {
+      logger.warn("Parsing database connection string failed", e);
+      return null;
+    }
+  }
+
+  public static String expandEnvVars(String text) {
+    Map<String, String> envMap = System.getenv();
+    for (Map.Entry<String, String> entry : envMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      text = text.replace("%" + key + "%", value);
+    }
+    return text;
+  }
+
+  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) {
+    FhirBundler bundler = new FhirBundler(eventService, tenantService, config);
+    logger.info("Building Bundle for MeasureReport to send...");
+    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
+    Bundle bundle = bundler.generateBundle(aggregates, report);
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
+    return bundle;
   }
 }

@@ -18,5 +18,7 @@ query/src/main/resources/query-*.yml
 .idea/usage.statistics.xml
 .idea/shelf/
 .idea/libraries/
+.idea/dataSources/
+.idea/dataSources.xml
 spring-shell.log
 .idea/.name

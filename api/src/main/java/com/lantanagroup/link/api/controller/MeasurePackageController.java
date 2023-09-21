@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,6 +24,11 @@ public class MeasurePackageController extends BaseController {
   @Autowired
   private SharedService sharedService;
 
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields();
+  }
+
   @PutMapping
   public void createOrUpdateMeasurePackage(@RequestBody(required = false) MeasurePackage measurePackage) {
     if (StringUtils.isEmpty(measurePackage.getId())) {
@@ -33,7 +39,7 @@ public class MeasurePackageController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure package must specify one or more measure ids");
     }
 
-    List<MeasureDefinition> measureDefinitions = this.sharedService.getAllMeasureDefinitions();
+    List<MeasureDefinition> measureDefinitions = this.sharedService.getMeasureDefinitions();
 
     List<String> notFoundMeasureIds = measurePackage.getMeasureIds().stream()
             .filter(measureId ->
@@ -49,13 +55,13 @@ public class MeasurePackageController extends BaseController {
 
   @GetMapping
   public List<MeasurePackage> searchMeasurePackages() {
-    return this.sharedService.getAllMeasurePackages();
+    return this.sharedService.getMeasurePackages();
   }
 
   @DeleteMapping("/{id}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteMeasurePackage(@PathVariable String id) {
-    Optional<MeasurePackage> measurePackage = this.sharedService.getAllMeasurePackages()
+    Optional<MeasurePackage> measurePackage = this.sharedService.getMeasurePackages()
             .stream().filter(mp -> mp.getId().equals(id))
             .findFirst();
 

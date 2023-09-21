@@ -2,16 +2,13 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.ConceptMap;
-import com.lantanagroup.link.db.model.PatientList;
-import com.lantanagroup.link.db.model.PatientMeasureReport;
-import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
-import com.lantanagroup.link.model.ApiInfoModel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +32,8 @@ public class FhirBundler {
 
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
-          //Removing these two extensions prevents users from knowing what SDE pulls in which resource
-          //"http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
-          //"http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
+          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
+          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-criteriaReference",
           "http://open.epic.com/FHIR/StructureDefinition/extension/accidentrelated",
           "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",
           "http://open.epic.com/FHIR/StructureDefinition/extension/ip-admit-datetime",
@@ -67,29 +63,17 @@ public class FhirBundler {
     return this.org;
   }
 
-  private static void addPropertyToDevice(Device device, String category, List<String> events) {
-    if (events == null) {
-      return;
-    }
-
-    for (String event : events) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event");
-
-      String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
-      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
-    }
-  }
-
   private Device getDevice() {
     if (this.device == null) {
-      this.device = this.createDevice();
+      this.device = FhirHelper.getDevice(apiConfig, tenantService);
+      this.device.setId(UUID.randomUUID().toString());
+      this.device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
     }
 
     return this.device;
   }
 
-  public Bundle generateBundle(Collection<MeasureReport> aggregateMeasureReports, Report report) {
+  public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
@@ -100,82 +84,23 @@ public class FhirBundler {
       this.addCensuses(bundle, report);
     }
 
-    for (MeasureReport aggregateMeasureReport : aggregateMeasureReports) {
-      this.addMeasureReports(bundle, aggregateMeasureReport);
+    for (Aggregate aggregate : aggregates) {
+      this.addMeasureReports(bundle, aggregate);
     }
 
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
 
     this.cleanEntries(bundle);
 
+    long noProfileResources = bundle.getEntry().stream()
+            .filter(e -> e.getResource().getMeta().getProfile().isEmpty())
+            .count();
+
+    if (noProfileResources > 0) {
+      logger.warn("{} resources in the bundle don't have profiles", noProfileResources);
+    }
+
     return bundle;
-  }
-
-  private Device createDevice() {
-    ApiInfoModel apiInfoModel = Helper.getVersionInfo(this.apiConfig.getEvaluationService());
-    Device device = new Device();
-    device.setId(UUID.randomUUID().toString());
-    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
-    device.addDeviceName().setName(this.apiConfig.getName());
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getVersion());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getBuild());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
-              .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getCommit());
-    }
-
-    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
-              .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiInfoModel.getCqfVersion());
-    }
-
-    addPropertyToDevice(device, "BeforeMeasureResolution", this.tenantService.getConfig().getEvents().getBeforeMeasureResolution());
-    addPropertyToDevice(device, "AfterMeasureResolution", this.tenantService.getConfig().getEvents().getAfterMeasureResolution());
-    addPropertyToDevice(device, "OnRegeneration", this.tenantService.getConfig().getEvents().getOnRegeneration());
-    addPropertyToDevice(device, "BeforePatientOfInterestLookup", this.tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
-    addPropertyToDevice(device, "AfterPatientOfInterestLookup", this.tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
-    addPropertyToDevice(device, "BeforePatientDataQuery", this.tenantService.getConfig().getEvents().getBeforePatientDataQuery());
-    addPropertyToDevice(device, "AfterPatientResourceQuery", this.tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
-    addPropertyToDevice(device, "AfterPatientDataQuery", this.tenantService.getConfig().getEvents().getAfterPatientDataQuery());
-    addPropertyToDevice(device, "AfterApplyConceptMaps", this.tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
-    addPropertyToDevice(device, "BeforePatientDataStore", this.tenantService.getConfig().getEvents().getBeforePatientDataStore());
-    addPropertyToDevice(device, "AfterPatientDataStore", this.tenantService.getConfig().getEvents().getAfterPatientDataStore());
-    addPropertyToDevice(device, "BeforeMeasureEval", this.tenantService.getConfig().getEvents().getBeforeMeasureEval());
-    addPropertyToDevice(device, "AfterMeasureEval", this.tenantService.getConfig().getEvents().getAfterMeasureEval());
-    addPropertyToDevice(device, "BeforeReportStore", this.tenantService.getConfig().getEvents().getBeforeReportStore());
-    addPropertyToDevice(device, "AfterReportStore", this.tenantService.getConfig().getEvents().getAfterReportStore());
-    addPropertyToDevice(device, "BeforeBundling", this.tenantService.getConfig().getEvents().getBeforeBundling());
-    addPropertyToDevice(device, "AfterBundling", this.tenantService.getConfig().getEvents().getAfterBundling());
-
-    List<ConceptMap> conceptMaps = this.tenantService.getAllConceptMaps();
-
-    if (!conceptMaps.isEmpty()) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
-
-      for (ConceptMap conceptMap : this.tenantService.getAllConceptMaps()) {
-        property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
-      }
-    }
-
-    return device;
   }
 
   private Organization createOrganization() {
@@ -275,40 +200,6 @@ public class FhirBundler {
    * @param resource
    */
   private void cleanupResource(Resource resource) {
-    //Profiles are being set in the measure itself now.  This is no longer needed.
-    /*resource.getMeta().getProfile().clear();
-
-    List<String> profiles = null;
-
-    switch (resource.getResourceType()) {
-      case Patient:
-        profiles = List.of(Constants.QiCorePatientProfileUrl, Constants.UsCorePatientProfileUrl);
-        break;
-      case Encounter:
-        profiles = List.of(Constants.UsCoreEncounterProfileUrl);
-        break;
-      case MedicationRequest:
-        profiles = List.of(Constants.UsCoreMedicationRequestProfileUrl);
-        break;
-      case Medication:
-        profiles = List.of(Constants.UsCoreMedicationProfileUrl);
-        break;
-      case Condition:
-        profiles = List.of(Constants.UsCoreConditionProfileUrl);
-        break;
-      case Observation:
-        profiles = List.of(Constants.UsCoreObservationProfileUrl);
-        break;
-    }
-
-    if (profiles != null) {
-      profiles.forEach(profile -> {
-        if (resource.getMeta().getProfile().stream().noneMatch(p -> p.getValue().equals(profile))) {   // Don't duplicate profile if it already exists
-          resource.getMeta().addProfile(profile);
-        }
-      });
-    }*/
-
     if (resource instanceof DomainResource) {
       DomainResource domainResource = (DomainResource) resource;
 
@@ -360,11 +251,11 @@ public class FhirBundler {
   }
 
   public List<ListResource> getPatientLists(Report report) {
-    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getPatientLists());
+    List<PatientList> patientLists = this.tenantService.getPatientLists(report.getId());
 
     return patientLists.stream().map(pl -> {
       ListResource listResource = new ListResource();
-      listResource.setId(pl.getId());
+      listResource.setId(pl.getId().toString());
       listResource.addExtension()
               .setUrl(Constants.ApplicablePeriodExtensionUrl)
               .setValue(new Period()
@@ -378,7 +269,7 @@ public class FhirBundler {
         ListResource.ListEntryComponent entry = new ListResource.ListEntryComponent();
 
         if (StringUtils.isNotEmpty(pid.getIdentifier())) {
-          String[] identifierSplit = pid.getIdentifier().split("|");
+          String[] identifierSplit = pid.getIdentifier().split("\\|");
           Identifier identifier = new Identifier();
           entry.getItem().setIdentifier(identifier);
 
@@ -435,30 +326,59 @@ public class FhirBundler {
     }
   }
 
-  private void addMeasureReports(Bundle bundle, MeasureReport aggregateMeasureReport) {
+  private void addMeasureReports(Bundle bundle, Aggregate aggregate) {
+    MeasureReport aggregateMeasureReport = aggregate.getReport();
     logger.debug("Adding measure reports: {}", aggregateMeasureReport.getMeasure());
 
     this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
 
-    if (!this.getBundlingConfig().isIncludeIndividualMeasureReports()) {
+    String subjectListId = null;
+
+    for (MeasureReport.MeasureReportGroupComponent group : aggregateMeasureReport.getGroup()) {
+      // Find the initial-population
+      MeasureReport.MeasureReportGroupPopulationComponent population = group.getPopulation().stream()
+              .filter(p -> p.getCode() != null && p.getCode().getCodingFirstRep() != null && p.getCode().getCodingFirstRep().getCode() != null && p.getCode().getCodingFirstRep().getCode().equals(MeasurePopulation.INITIALPOPULATION.toCode()))
+              .findFirst()
+              .orElse(null);
+
+      // Make sure there is a refefence to a contained subject list
+      if (population != null && population.hasSubjectResults() && !population.getSubjectResults().getReference().contains("/")) {
+        subjectListId = population.getSubjectResults().getReference().replace("#", "");
+      }
+    }
+
+    if (subjectListId == null) {
+      logger.warn("No subject list for initial-population on aggregate measure report {}", aggregateMeasureReport.getIdElement().getIdPart());
       return;
     }
 
-    List<String> individualMeasureReportIds = new ArrayList<>();
-    aggregateMeasureReport.getContained()
-            .stream().filter(c -> c.getResourceType() == ResourceType.List)
-            .forEach(c -> {
-              ListResource listResource = (ListResource) c;
-              listResource.getEntry().forEach(e -> {
-                String[] referenceSplit = e.getItem().getReference().split("/");
-                individualMeasureReportIds.add(referenceSplit[1]);
-              });
-            });
+    String finalSubjectListId = subjectListId;
+    ListResource subjectList = aggregateMeasureReport.getContained().stream()
+            .filter(c -> c.getResourceType() == ResourceType.List && c.getIdElement().getIdPart().replace("#", "").equals(finalSubjectListId))
+            .map(c -> (ListResource) c)
+            .findFirst()
+            .orElse(null);
 
-    List<PatientMeasureReport> individualMeasureReports =
-            this.tenantService.getPatientMeasureReports(individualMeasureReportIds);
+    if (subjectList == null) {
+      logger.error("Aggregate measure report {} does not have a contained subject list", aggregateMeasureReport.getIdElement().getIdPart());
+      return;
+    }
 
-    for (PatientMeasureReport patientMeasureReport : individualMeasureReports) {
+    // Get all individual measure reports in the DB for the report and filter them
+    // based on the aggregate
+    List<PatientMeasureReport> allIndMeasureReports =
+            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
+    List<PatientMeasureReport> indMeasureReports = allIndMeasureReports
+            .stream().filter(imr -> {
+              String imrId = imr.getMeasureReport().getIdElement().getIdPart();
+              return subjectList.getEntry().stream().anyMatch(e ->
+                      e.getItem() != null &&
+                              e.getItem().getReference() != null &&
+                              e.getItem().getReference().equalsIgnoreCase("MeasureReport/" + imrId));
+            })
+            .collect(Collectors.toList());
+
+    for (PatientMeasureReport patientMeasureReport : indMeasureReports) {
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);

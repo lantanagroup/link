@@ -3,10 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.PatientIdService;
-import com.lantanagroup.link.ReportingPeriodCalculator;
-import com.lantanagroup.link.ReportingPeriodMethods;
+import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -28,7 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -78,7 +74,7 @@ public class BulkQuery {
 
     var config = tenantService.getConfig();
 
-    URI uri = new URI(tenantService.getConfig().getFhirQuery().getFhirServerBase() + tenantService.getConfig().getRelativeBulkUrl().replace("{groupId}", tenantService.getConfig().getBulkGroupId()));
+    URI uri = new URI(config.getFhirQuery().getFhirServerBase() + config.getRelativeBulkUrl().replace("{groupId}", config.getBulkGroupId()));
     HttpClient httpClient = HttpClient.newHttpClient();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
     requestBuilder.setHeader("Accept", "application/fhir+json");
@@ -89,7 +85,7 @@ public class BulkQuery {
 
     try {
       response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       StringBuilder sbuilder = new StringBuilder();
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
       sbuilder.append("Stack Trace:\n");
@@ -97,8 +93,11 @@ public class BulkQuery {
       bulkStatus.setStatus(BulkStatuses.cancelled);
       bulkStatus.setErrorMessage(sbuilder.toString());
       service.saveBulkStatus(bulkStatus);
-      logger.warn(sbuilder.toString());
-      return;
+    } catch (InterruptedException e) {
+      logger.warn("Interrupted while initiating bulk export", e);
+      bulkStatus.setStatus(BulkStatuses.pending);
+      service.saveBulkStatus(bulkStatus);
+      Thread.currentThread().interrupt();
     }
 
     assert response != null;
@@ -106,7 +105,7 @@ public class BulkQuery {
       StringBuilder sbuilder = new StringBuilder();
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Status Code: " + response.statusCode());
       if(response.body().length() > 0){
-        sbuilder.append("Response Body: " + response.body());
+        sbuilder.append("Response Body: " + Helper.sanitizeString(response.body()));
       }
       bulkStatus.setStatus(BulkStatuses.cancelled);
       service.saveBulkStatus(bulkStatus);
@@ -163,9 +162,9 @@ public class BulkQuery {
         //figure out what to do here.
         responseBody = response.body();
         StringBuilder sbuilder = new StringBuilder();
-        sbuilder.append("Fetch failed for URI: " + uri.toString());
+        sbuilder.append("Fetch failed for URI: " + uri.toString() + " Status Code: " + response.statusCode());
         if(responseBody.length() > 0){
-          sbuilder.append("Response Body: " + responseBody);
+          sbuilder.append("Response Body: " + Helper.sanitizeString(responseBody));
         }
         logger.warn(sbuilder.toString());
         return null;
@@ -191,7 +190,7 @@ public class BulkQuery {
     bulkStatus.setStatus(BulkStatuses.complete);
     bulkStatusService.saveBulkStatus(bulkStatus);
 
-    bulkStatusService.saveResult(statusResult);
+    bulkStatusService.saveBulkStatusResult(statusResult);
 
     return statusResult;
   }
@@ -268,10 +267,10 @@ public class BulkQuery {
     String authHeader = authorizer.getAuthHeader();
 
     if (authHeader != null && !authHeader.isEmpty()) {
-      requestBuilder.setHeader("Authorization", authHeader);
+      requestBuilder.setHeader("Authorization", Helper.sanitizeHeader(authHeader));
     }
     if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.setHeader("apikey", apiKey);
+      requestBuilder.setHeader("apikey", Helper.sanitizeHeader(apiKey));
     }
   }
 }

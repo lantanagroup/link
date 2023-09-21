@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * Changes the Encounter.status to "finished" if the Encounter has an end date
+ */
 public class EncounterStatusTransformer implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(EncounterStatusTransformer.class);
 

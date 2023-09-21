@@ -23,11 +23,6 @@ public class Bundling {
   private boolean mergeCensuses = true;
 
   /**
-   * Whether to include individual measure reports in the submission bundle.
-   */
-  private boolean includeIndividualMeasureReports = true;
-
-  /**
    * Whether to move contained line-level resources to the top level of the submission bundle.
    */
   private boolean promoteLineLevelResources = true;

@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -51,16 +52,18 @@ public class PatientIdentifierController extends BaseController {
     }
 
     return tenantService.getAllPatientLists()
-            .stream().map(pl -> {
-              pl.setPatients(null);
-              return pl;
-            })
+            .stream().peek(pl -> pl.setPatients(null))
             .collect(Collectors.toList());
   }
 
   @GetMapping("/{id}")
-  public PatientList getPatientList(@PathVariable String id, @PathVariable String tenantId) {
+  public PatientList getPatientList(@PathVariable UUID id, @PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Tenant with id %s not found", tenantId));
+    }
+
     return tenantService.getPatientList(id);
   }
 
@@ -148,7 +151,7 @@ public class PatientIdentifierController extends BaseController {
         reference = listEntry.getItem().getReference();
       }
 
-      return new PatientId(reference);
+      return PatientId.createFromReference(reference);
     } else if (listEntry.getItem().hasIdentifier()) {
       PatientId patientId = new PatientId();
       patientId.setIdentifier(listEntry.getItem().getIdentifier().getSystem() + "|" + listEntry.getItem().getIdentifier().getValue());
@@ -207,7 +210,7 @@ public class PatientIdentifierController extends BaseController {
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
 
-    MeasureDefinition measureDefinition = this.sharedService.findMeasureDefinition(measureIdentifier.getValue());
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(measureIdentifier.getValue());
 
     if (measureDefinition == null) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
@@ -218,7 +221,7 @@ public class PatientIdentifierController extends BaseController {
 
   private void storePatientList(TenantService tenantService, PatientList patientList) throws Exception {
     logger.info("Storing patient list");
-    PatientList found = tenantService.findPatientList(patientList.getPeriodStart(), patientList.getPeriodEnd(), patientList.getMeasureId());
+    PatientList found = tenantService.findPatientList(patientList.getMeasureId(), patientList.getPeriodStart(), patientList.getPeriodEnd());
 
     // Merge the list of patients found with the new list
     if (found != null) {

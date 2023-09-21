@@ -1,26 +1,27 @@
 package com.lantanagroup.link.db;
 
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.ReportBase;
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.*;
+import com.lantanagroup.link.db.repositories.*;
+import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 
-import java.util.ArrayList;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Projections.include;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
@@ -28,18 +29,65 @@ public class TenantService {
   @Getter
   private Tenant config;
 
-  private MongoDatabase database;
+  private final ConceptMapRepository conceptMaps;
+  private final PatientListRepository patientLists;
+  private final ReportRepository reports;
+  private final PatientDataRepository patientDatas;
+  private final PatientMeasureReportRepository patientMeasureReports;
+  private final AggregateRepository aggregates;
+  private final DataSource dataSource;
 
-  public static final String PATIENT_LIST_COLLECTION = "patientList";
-  public static final String PATIENT_DATA_COLLECTION = "patientData";
-  public static final String REPORT_COLLECTION = "report";
-  public static final String PATIENT_MEASURE_REPORT_COLLECTION = "patientMeasureReport";
-  public static final String AGGREGATE_COLLECTION = "aggregate";
-  public static final String CONCEPT_MAP_COLLECTION = "conceptMap";
-
-  protected TenantService(MongoDatabase database, Tenant config) {
-    this.database = database;
+  protected TenantService(Tenant config) {
     this.config = config;
+    this.dataSource = DataSourceBuilder.create()
+            .type(SQLServerDataSource.class)
+            .url(config.getConnectionString())
+            .build();
+    this.conceptMaps = new ConceptMapRepository(this.dataSource);
+    this.patientLists = new PatientListRepository(this.dataSource);
+    this.reports = new ReportRepository(this.dataSource);
+    this.patientDatas = new PatientDataRepository(this.dataSource);
+    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource);
+    this.aggregates = new AggregateRepository(this.dataSource);
+  }
+
+  public static TenantService create(Tenant tenant) {
+    return new TenantService(tenant);
+  }
+
+  public void testConnection() throws SQLException {
+    this.dataSource.getConnection().getMetaData();
+  }
+
+  public void initDatabase() {
+    logger.info("Initializing database for tenant {}", this.getConfig().getId());
+
+    URL resource = this.getClass().getClassLoader().getResource("tenant-db.sql");
+
+    if (resource == null) {
+      logger.warn("Could not find tenant-db.sql file in class path");
+      return;
+    }
+
+    try (Connection conn = this.dataSource.getConnection()) {
+      assert conn != null;
+
+      String sql = Helper.readInputStream(resource.openStream());
+      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
+        try {
+          Statement stmt = conn.createStatement();
+          stmt.execute(stmtSql);
+        } catch (SQLException e) {
+          logger.error("Failed to execute statement for tenant {}", this.config.getId(), e);
+        }
+      }
+    } catch (SQLServerException e) {
+      logger.error("Failed to connect to tenant {} database: {}", this.config.getId(), e.getMessage());
+    } catch (SQLException | NullPointerException e) {
+      logger.error("Failed to initialize tenant {} database", this.config.getId(), e);
+    } catch (IOException e) {
+      logger.error("Could not read tenant-db.sql file for tenant {}", this.config.getId(), e);
+    }
   }
 
   public static TenantService create(SharedService sharedService, String tenantId) {
@@ -54,207 +102,122 @@ public class TenantService {
       return null;
     }
 
-    TenantService tenantService = new TenantService(sharedService.getClient().getDatabase(tenant.getDatabase()), tenant);
-
-    // Ensure that the patientData collection has the necessary indexes
-    tenantService.getPatientDataCollection().createIndex(
-            Indexes.ascending("patientId", "resourceType", "resourceId"),
-            new IndexOptions().name("pid_rt_rid"));
-
-    return tenantService;
+    return new TenantService(tenant);
   }
 
-  public MongoCollection<PatientList> getPatientListCollection() {
-    return this.database.getCollection(PATIENT_LIST_COLLECTION, PatientList.class);
-  }
-
-  public MongoCollection<PatientData> getPatientDataCollection() {
-    return this.database.getCollection(PATIENT_DATA_COLLECTION, PatientData.class);
-  }
-
-  public MongoCollection<Report> getReportCollection() {
-    return this.database.getCollection(REPORT_COLLECTION, Report.class);
-  }
-
-  public MongoCollection<PatientMeasureReport> getPatientMeasureReportCollection() {
-    return this.database.getCollection(PATIENT_MEASURE_REPORT_COLLECTION, PatientMeasureReport.class);
-  }
-
-  public MongoCollection<Aggregate> getAggregateCollection() {
-    return this.database.getCollection(AGGREGATE_COLLECTION, Aggregate.class);
-  }
-
-  public MongoCollection<ConceptMap> getConceptMapCollection() {
-    return this.database.getCollection(CONCEPT_MAP_COLLECTION, ConceptMap.class);
-  }
-
-  public List<PatientList> getPatientLists(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    List<PatientList> patientLists = new ArrayList<>();
-    this.getPatientListCollection()
-            .find(criteria)
-            .into(patientLists);
-    return patientLists;
+  public List<PatientList> getPatientLists(String reportId) {
+    return this.patientLists.findByReportId(reportId);
   }
 
   public List<PatientList> getAllPatientLists() {
-    List<PatientList> patientLists = new ArrayList<>();
-    this.getPatientListCollection()
-            .find()
-            .projection(include("measureId", "_id", "periodStart", "periodEnd"))
-            .into(patientLists);
-    return patientLists;
+    return this.patientLists.findAll();
   }
 
-  public void deletePatientLists(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    this.getPatientListCollection().deleteMany(criteria);
+  public int deletePatientListsLastUpdatedBefore(Date date) {
+    return this.patientLists.deleteByLastUpdatedBefore(date);
   }
 
-  public PatientList getPatientList(String id) {
-    return this.getPatientListCollection()
-            .find(eq("_id", id))
-            .first();
+  public PatientList getPatientList(UUID id) {
+    return this.patientLists.findById(id);
   }
 
-  public PatientList findPatientList(String periodStart, String periodEnd, String measureId) {
-    Bson criteria = and(eq("periodStart", periodStart), eq("periodEnd", periodEnd), eq("measureId", measureId));
-    return this.getPatientListCollection().find(criteria).first();
+  public PatientList findPatientList(String measureId, String periodStart, String periodEnd) {
+    return this.patientLists.findByMeasureIdAndReportingPeriod(measureId, periodStart, periodEnd);
   }
 
   public void savePatientList(PatientList patientList) {
-    Bson criteria = and(eq("periodStart", patientList.getPeriodStart()), eq("periodEnd", patientList.getPeriodEnd()), eq("measureId", patientList.getMeasureId()));
-    this.getPatientListCollection().replaceOne(criteria, patientList, new ReplaceOptions().upsert(true));
+    this.patientLists.save(patientList);
   }
 
   public List<PatientData> findPatientData(String patientId) {
-    List<PatientData> patientData = new ArrayList<>();
-    this.getPatientDataCollection()
-            .find(eq("patientId", patientId))
-            .into(patientData);
-    return patientData;
+    return this.patientDatas.findByPatientId(patientId);
   }
 
-  public List<PatientData> getAllPatientData() {
-    List<PatientData> allPatientData = new ArrayList<>();
-    this.getPatientDataCollection().find()
-            .projection(include("_id", "retrieved"))
-            .into(allPatientData);
-    return allPatientData;
+  public int deletePatientDataRetrievedBefore(Date date) {
+    return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
-  public void deletePatientData(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    this.getPatientDataCollection().deleteMany(criteria);
+  public void deletePatientListById(String id) { this.patientLists.deleteById(id);}
+
+  public void deleteAllPatientData(){
+    this.patientLists.deleteAllPatientData();
+    this.patientDatas.deleteAllPatientData();
   }
 
-  @Async
+  public void deletePatientByListAndPatientId(String patientId, String listId) {
+    PatientList patientList = this.getPatientList(UUID.fromString(listId));
+    var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
+    patientList.setPatients(filteredList);
+    this.patientDatas.deleteByPatientId(patientId);
+  }
+
   public void savePatientData(List<PatientData> patientData) {
-    List<WriteModel<PatientData>> writeOperations = patientData.stream().map(pd -> {
-      Bson criteria = and(
-              eq("patientId", pd.getPatientId()),
-              eq("resourceType", pd.getResourceType()),
-              eq("resourceId", pd.getResourceId()));
-      BasicDBObject setOnInsert = new BasicDBObject();
-      setOnInsert.put("_id", (new ObjectId()).toString());
-      BasicDBObject update = new BasicDBObject();
-      update.put("$set", pd);
-      update.put("$setOnInsert", setOnInsert);
-      return new UpdateOneModel<PatientData>(criteria, update, new UpdateOptions().upsert(true));
-    }).collect(Collectors.toList());
-
-    this.getPatientDataCollection().bulkWrite(writeOperations);
+    this.patientDatas.saveAll(patientData);
   }
 
   public Report getReport(String id) {
-    return this.getReportCollection().find(eq("_id", id)).first();
+    return this.reports.findById(id);
   }
 
-  public List<ReportBase> searchReports() {
-    List<ReportBase> reports = new ArrayList<>();
-    this.getReportCollection().find()
-            .projection(include("_id", "measureIds", "periodStart", "periodEnd"))
-            .map(r -> {
-              ReportBase reportBase = new ReportBase();
-              reportBase.setId(r.getId());
-              reportBase.setMeasureIds(r.getMeasureIds());
-              reportBase.setPeriodEnd(r.getPeriodEnd());
-              reportBase.setPeriodStart(r.getPeriodStart());
-              return reportBase;
-            })
-            .into(reports);
-    return reports;
+  public List<Report> searchReports() {
+    return this.reports.findAll();
   }
 
   public void saveReport(Report report) {
-    Bson criteria = and(eq("periodStart", report.getPeriodStart()), eq("periodEnd", report.getPeriodEnd()), eq("measureIds", report.getMeasureIds()));
-    this.getReportCollection().replaceOne(criteria, report, new ReplaceOptions().upsert(true));
+    this.reports.save(report);
+  }
+
+  public void saveReport(Report report, List<PatientList> patientLists) {
+    this.reports.save(report, patientLists);
+  }
+
+  public void deleteReport(String reportId){
+    var report = this.reports.findById(reportId);
+    this.reports.deletePatientLists(report);
+    this.reports.deleteReport(report);
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
-    return this.getPatientMeasureReportCollection().find(eq("_id", id)).first();
+    return this.patientMeasureReports.findById(id);
   }
 
-  public List<PatientMeasureReport> getPatientMeasureReports(List<String> ids) {
-    List<PatientMeasureReport> patientMeasureReports = new ArrayList<>();
-    Bson criteria = in("_id", ids);
-    this.getPatientMeasureReportCollection()
-            .find(criteria)
-            .into(patientMeasureReports);
-    return patientMeasureReports;
+  public List<PatientMeasureReport> getPatientMeasureReports(String reportId) {
+    return this.patientMeasureReports.findByReportId(reportId);
+  }
+
+  public List<PatientMeasureReport> getPatientMeasureReports(String reportId, String measureId) {
+    return this.patientMeasureReports.findByReportIdAndMeasureId(reportId, measureId);
   }
 
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {
-    Bson criteria = eq("_id", patientMeasureReport.getId());
-    this.getPatientMeasureReportCollection().replaceOne(criteria, patientMeasureReport, new ReplaceOptions().upsert(true));
+    this.patientMeasureReports.save(patientMeasureReport);
   }
 
-  public List<Aggregate> getAggregates(List<String> ids) {
-    List<Bson> matchIds = ids.stream().map(id -> eq("_id", id)).collect(Collectors.toList());
-    Bson criteria = or(matchIds);
-    List<Aggregate> aggregates = new ArrayList<>();
-    this.getAggregateCollection()
-            .find(criteria)
-            .into(aggregates);
-    return aggregates;
+  public List<Aggregate> getAggregates(String reportId) {
+    return this.aggregates.findByReportId(reportId);
   }
 
   public void saveAggregate(Aggregate aggregate) {
-    Bson criteria = eq("_id", aggregate.getId());
-    this.getAggregateCollection().replaceOne(criteria, aggregate, new ReplaceOptions().upsert(true));
+    this.aggregates.save(aggregate);
   }
 
   public ConceptMap getConceptMap(String id) {
-    Bson criteria = eq("_id", id);
-    return this.getConceptMapCollection().find(criteria).first();
+    return this.conceptMaps.findById(id);
   }
 
   public List<ConceptMap> searchConceptMaps() {
-    List<ConceptMap> conceptMaps = new ArrayList<>();
-
-    // resourceType is needed in the projection for HAPI to deserialize it
-    this.getConceptMapCollection()
-            .find()
-            .projection(include("_id", "name", "contexts"))
-            .into(conceptMaps);
+    List<ConceptMap> conceptMaps = this.conceptMaps.findAll();
+    for (ConceptMap conceptMap : conceptMaps) {
+      conceptMap.setConceptMap(null);
+    }
     return conceptMaps;
   }
 
   public List<ConceptMap> getAllConceptMaps() {
-    List<ConceptMap> conceptMaps = new ArrayList<>();
-
-    // resourceType is needed in the projection for HAPI to deserialize it
-    this.getConceptMapCollection()
-            .find()
-            .into(conceptMaps);
-    return conceptMaps;
+    return this.conceptMaps.findAll();
   }
 
   public void saveConceptMap(ConceptMap conceptMap) {
-    Bson criteria = eq("_id", conceptMap.getId());
-    this.getConceptMapCollection().replaceOne(criteria, conceptMap, new ReplaceOptions().upsert(true));
+    this.conceptMaps.save(conceptMap);
   }
 }

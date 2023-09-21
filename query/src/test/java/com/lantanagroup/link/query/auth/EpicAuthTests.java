@@ -9,16 +9,21 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.impl.DefaultClaims;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.Date;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class EpicAuthTests {
   private static KeyPair getKeyPair() throws NoSuchAlgorithmException {
@@ -40,8 +45,8 @@ public class EpicAuthTests {
     config.setKey(Base64.getEncoder().encodeToString(key.getEncoded()));
 
     String jwtContent = com.lantanagroup.link.query.auth.EpicAuth.getJwt(config);
+    Date expectedExp = new Date(System.currentTimeMillis() + (1000 * 60 * 4));
 
-    //Date expectedExp = new Date(System.currentTimeMillis() + (1000 * 60 * 4) / 1000);
     Jwt<?, DefaultClaims> jwt = Jwts.parser()
             //.requireExpiration(expectedExp)
             .setSigningKey(kp.getPublic())
@@ -53,19 +58,28 @@ public class EpicAuthTests {
     Assert.assertEquals(body.get("aud"), config.getAudience());
     Assert.assertNotNull(body.get("jti"));
     Assert.assertNotEquals(0, ((String) body.get("jti")).length());
-    Assert.assertNotNull(body.get("exp"));
-    Assert.assertNotEquals((Integer) 0, (Integer) body.get("exp"));
+    // Should be four minutes in the future (within five seconds)
+    Assert.assertTrue(Math.abs(expectedExp.getTime() - body.getExpiration().getTime()) < 5000);
   }
 
   @Test
   public void testRequestJwt() throws Exception {
+    HttpClient mockClient = mock(HttpClient.class);
+    HttpResponse<Object> tokenResponse = mock(HttpResponse.class);
+    when(tokenResponse.body()).thenReturn("{ \"access_token\": \"test\" }");
+    when(mockClient.send(any(), any())).thenReturn(tokenResponse);
+
     EpicAuth epicAuthConfig = new EpicAuth();
-    epicAuthConfig.setKey("MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCgD6vyqHMUK4NFhnc3coOSbZ/pH2Tg8zYrl2ROYXrVJSrf5JRkjk+zOdszf4k17xjCPZvpi42CzVQlpX8/b56c8/mlI5nncl4Loz4WGjx3/KRdIoVaBxr1cY4gzYQZuaHzSUAVnYfgSJ8WhUG2mnwMe5TLsamBEvQoA2T/z4FQf5yhqefOITe3+C5RHDwT0IuSV6GukvlRNbg1Rg8jkkjrSUqD8xyh28RtFrQDz4Pd4VlXsG6AYTdTKqwEjw1fQPOFHb/NGbgv9FhC/PdLqRzqpCeyp+CKQjIUOT+0y8O5I8RE8tMWxvo2EN73r+bcLz31gN7jxjAK8KVxpMZ2t5dBAgMBAAECggEAX6heC/yuIezLXD67evC+P0Gy4wD3KhVQV4b31Hwfi8jVsc8K/HmsmiFGpqVe3FPTiSqGxnG3leeelY0t2jycH5MTrKT1MsQ//laGIXF2mALuPBcIeUBr1SoTVfldLH6rkhlB6mkmLl1Ybn4fQsFax58H0yCPe+tW7Z7xuoxJ7VAUhwWZVM/sH2FGtCX5I5fZlsjN8EKNqVWQ8MmNJ0DxjmigaOyLRIOZttTURgJBuiXjHKBatmQ+8+8Kwktf7uJFWQjONUQvCssvhPQR/1hy3zMsAZP/InabEfp4vtLXEgRVjvek4RUXdX+nnHWc1ivkwRaSyTKEMVSq19bNgoJLLQKBgQDVFbDYiO05uWWVNSFeFjd5PE8K+8c8ITyms4VUO//Uwgtxyb0sml3G7bJ+eV0Wh5YfIazBqp0Th2qflWCGKnNZ698TqxBOWF4kHmDuuCs/fatO7107edkm/N+X2FQGKThFtUTVb2lXMrRrHLokwW/yegZXmQwu0IhrZm8BLf8PgwKBgQDATCxM7D0Gh1M+M8YFUj2d+4gs6TZbS/cyf7QuX3NIxaZNKiewCKZgGT9+vxDWjYUfYif+fguVdtvyXAsKxsyKJS6ZN4togJvyZuAU0MjQKouUxpymFKrCrik2OpqDZ59CicNdbDbQtAgVa7hr3/uY99UlYDjNiPcyUkKKOMEe6wKBgCIrKUF/q3KfLQ/hBim9LEYPiqk7OHaG6d/dV5rrSBnIx+cGL4SQeEsm4IFxWqD7OvJhBv/DKQ7xnwJaBLFe60JXFV1lB+dYOjhWerqs45p5v1eYAH5CCrU6xWvm74pRX8mlyJTlGaI26kFmyN6N+jKKqKuxSgfTvpxiP5iT1JubAoGASgGG0xvf6JFQIhI+1XFvMUvKfq5KMxyrSA4JxAcMESev9uaQW5kYnsdYvmi+DDRu1UMrbTAJOT6DK2TtAvq7YTcqFeFgj5lfawzYlGo9vo+BJILDas9tYHsydSJcsNHCYxMt0tiAyBVhPw0z7qBG7foDV90OP1vE9uLdpOBuwn0CgYEAkV3rDEWd8ndJUEibYqhYyEO9+J2dmAcup9mmrjxMsIybFOPCl0nHtf54A7l+jNayaw6jjut85J6QKtZlks1S5tlUnIBCD/OiZAiUQ9WdMnRq8mDE1I9MmX8jpSi/4B04BGT8V8U6OrnbQ/V6ADdINzhjeiqS65REmY/mDeb764Q=");
-    epicAuthConfig.setTokenUrl("https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token");
-    epicAuthConfig.setAudience("https://fhir.epic.com/interconnect-fhir-oauth/oauth2/token");
-    epicAuthConfig.setClientId("a1923cf4-2e9f-44bc-954d-01ae67350b62");
+
+    // Fake key generated just for this unit test
+    epicAuthConfig.setKey("MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDOSDVPprAuGfTdFgYwppoX+wMY30Kz3N6fMFghXCsf7M4tkWXLTMnmsw5L1/o6s55JU994CqZ4XMuMWxnGeuKvg3Bk1J+wrgoz1Veb3o7RTgKvIgis0TlrJLGpjdz5QooUDD/jdfgt0sCg4+6OnKIiXcG+jFf8NiZEP5aR2AdzVwW7vnQ8wNsElvJ3VPzJGfx/m1sw4oClKmrf8sNat4S2XFngVXI5ztIZ0rGvQoKC19ZT46LFcvfgsxAyl27Y67iwgc1Wd7oWJleJYStsoP9bPSDuQhtvJNxZeMF7hSEZoi6FogejkEP6IgtVaiOmWRKKL8X4LrrTwT+YAC9/B3t5AgMBAAECggEAEKr9/8cgwkDfq8OdUW4M0nY6XFah7aWhqWw/Gsb3Rxeb20u91W0JfWYneBJmCjs8RYGM84asx9n7qoYr8YE5cuQkf0k89ApEEcch0prroFb02ZDe8ZPgV1t6LZCkc9GgFZmdyfPcz1sRrI5uVsCqSyuXPZ3aeCsp8WbP9E3n4DZZIk6jSbxMWh+Ljych3moqIqgA5oEjhITzWpw+4+jsaL2ZQ8Q2jIc67dL7gGj62j9xmM9df41I5XFtaxXgwlI8jAeknm1ZBtt5veKkBemeqHbIPdZTUTgh/ldOOIUbMkX3c1zOvm8nQfn2oUA2yEDKEEYEZYu5PuJFmBk5fhZ5gQKBgQD5PFUESXjSJoTkq+hJoQsthkbwufbKZMeP2Oje72HHJfXEt23bwvEmXQhfG++ANwxeHkYrXGubRY2wlyyvvniY9CGtaY6dpYkM+tlKcbsrX8jf/60oM+ZTIhFAjQKVDdQOAJw+A1zWZNVXRTb37i8I/CWrMG3yEO8YtTlsUCen4QKBgQDT4XAtMeGdq7nwqI9ihKg47RefNM9VY4hyxeRIC+o8C6BgWgWqfaUD1v8Y6FYQ6Kc+ecfMybNw3/h+ZqLngiU/97s+c1qZLc3rYFIT28INBdnJvJeNnMdP4gpYBJAMZwU6Jk5q7zjuDFuKHYzSNsuJJylsL84vb6uTRudExoDmmQKBgQCds6snt0WX03+rIYsta5UjDR++Gi0qC3KqdlmDFn0MAdzsyBPfRg5Ic/1kEM0Ol8Zfl1BXB3efG/d3kXBZE3BDd9YHYA85eRCrAd6T2DrSSx1TfvgVxCEs4RWBfrfvkHxpD8HNC1um3M6RFd6eKjvgt4suMsqerFBdle3rtxwggQKBgGe9gYcfXTAt3KSQY2QBP7xfmalB2iIc0bogWl1MOCueJbAHY67ORfVTVyOC3mD5CKn2RnVmbI1fm/OHnUts1YA0c2FoaXuGicQtLQK8Ho7xxmiYBjw3/v6F1jqyQTVRW6XVC6Af8Ofc9RTy0vg6C/3jRszJu1JOgtthY+qwpnxBAoGBAOawtKtKR9wN+VJvhJxks8fPct9ShDa9YocMvytv4qgBD2ma2+ec/8kyB2qzpOiOfF6HCbeRCfe63LH71oYWr5MeIisnfuts8EJuNYoPKusk/1cACJtZ+T+XH4hcMYvDhs7cTxG3RWCehW10ReQk/jJY9h3eD4x05vWlGkKQyuhc");
+    epicAuthConfig.setTokenUrl("http://test.com/auth/token");
+    epicAuthConfig.setAudience("http://some-audience.com");
+    epicAuthConfig.setClientId("some-fake-client-id");
 
     com.lantanagroup.link.query.auth.EpicAuth auth = new com.lantanagroup.link.query.auth.EpicAuth();
+    auth.setClient(mockClient);
+
     TenantService tenantService = mock(TenantService.class);
     Tenant tenant = new Tenant();
     tenant.setFhirQuery(new FhirQuery());
@@ -77,8 +91,12 @@ public class EpicAuthTests {
     String token = auth.getAuthHeader();
 
     Assert.assertNotNull(token);
-    Assert.assertNotEquals(0, token.length());
+    Assert.assertEquals("Bearer test", token);
 
-    System.out.println("Access token is: " + token);
+    ArgumentCaptor<HttpRequest> requestArg = ArgumentCaptor.forClass(HttpRequest.class);
+    verify(mockClient).send(requestArg.capture(), any());
+    Assert.assertNotNull(requestArg.getValue());
+    Assert.assertEquals("POST", requestArg.getValue().method());
+    Assert.assertEquals("http://test.com/auth/token", requestArg.getValue().uri().toString());
   }
 }

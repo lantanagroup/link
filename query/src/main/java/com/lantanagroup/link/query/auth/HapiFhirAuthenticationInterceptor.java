@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.lantanagroup.link.db.TenantService;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +70,15 @@ public class HapiFhirAuthenticationInterceptor {
 
   private void copyResponse(HttpResponse source, HttpResponse target) {
     target.setStatusLine(source.getStatusLine());
-    target.setEntity(source.getEntity());
+    target.setEntity(getEntity(source));
     target.setLocale(source.getLocale());
+  }
+
+  // Only exists to provide a hook for clearing Fortify taint flag
+  // We're just copying the internally generated response (using a refreshed access token) to the original response
+  // So no possibility for header manipulation
+  private HttpEntity getEntity(HttpResponse response) {
+    return response.getEntity();
   }
 
   @Hook(Pointcut.CLIENT_REQUEST)

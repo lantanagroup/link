@@ -3,7 +3,9 @@ package com.lantanagroup.link;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
-import org.hl7.fhir.r4.model.*;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.Period;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,12 @@ public abstract class GenericAggregator implements IReportAggregator {
     masterMeasureReport.setPeriod(new Period());
     masterMeasureReport.getPeriod().setStart(Helper.parseFhirDate(criteria.getPeriodStart()));
     masterMeasureReport.getPeriod().setEnd(Helper.parseFhirDate(criteria.getPeriodEnd()));
-    masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
+
+    if (StringUtils.isNotEmpty(measureContext.getMeasure().getVersion())) {
+      masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl() + "|" + measureContext.getMeasure().getVersion());
+    } else {
+      masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
+    }
 
     // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
     this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());

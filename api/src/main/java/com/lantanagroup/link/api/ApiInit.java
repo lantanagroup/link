@@ -6,6 +6,7 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
@@ -67,6 +68,8 @@ public class ApiInit {
       try {
         Thread.sleep(config.getRetryWait());
       } catch (InterruptedException ignored) {
+        logger.warn("Thread was interrupted, while sleeping, while waiting for other services to come online");
+        Thread.currentThread().interrupt();
       }
     }
 
@@ -86,23 +89,32 @@ public class ApiInit {
       try {
         socketTimeout = Integer.parseInt(config.getSocketTimeout());
       } catch (Exception ex) {
-        logger.error(String.format("Error % in socket-timeout %s ", ex.getMessage(), config.getSocketTimeout()));
+        logger.error("Error {} in socket-timeout {} ", ex.getMessage(), config.getSocketTimeout());
       }
     }
     return socketTimeout;
   }
 
+  private void initDatabases(List<Tenant> tenants) {
+    for (Tenant tenant : tenants) {
+      TenantService tenantService = TenantService.create(this.sharedService, tenant.getId());
+      assert tenantService != null : "Could not create tenant service for tenant " + tenant.getId();
+      tenantService.initDatabase();
+    }
+  }
+
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
-    List<Tenant> tenants = this.sharedService.getTenantFhirQueries();
+    this.sharedService.initDatabase();
+    List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
       FhirQuery fhirQuery = tenant.getFhirQuery();
       if (fhirQuery == null || StringUtils.isEmpty(fhirQuery.getFhirServerBase())) {
         logger.error("Tenant {} does not specify FHIR server base", tenant.getId());
       } else if (this.config.isRequireHttps() && !fhirQuery.getFhirServerBase().toLowerCase().startsWith("https://")) {
-        logger.error("HTTPS is required, but tenant %s does not have an HTTPS FHIR server base", tenant.getId());
+        logger.error("HTTPS is required, but tenant {} does not have an HTTPS FHIR server base", tenant.getId());
       }
     }
 
@@ -110,6 +122,8 @@ public class ApiInit {
       logger.info("Skipping API initialization processes to load report defs and search parameters");
       return;
     }
+
+    this.initDatabases(tenants);
 
     if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
       FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);

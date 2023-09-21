@@ -28,7 +28,7 @@ public class StoredListProvider implements IPatientIdProvider {
     context.getPatientsOfInterest().clear();
 
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      PatientList found = tenantService.findPatientList(criteria.getPeriodStart(), criteria.getPeriodEnd(), measureContext.getBundleId());
+      PatientList found = tenantService.findPatientList(measureContext.getBundleId(), criteria.getPeriodStart(), criteria.getPeriodEnd());
 
       if (found == null) {
         logger.warn("No patient census lists found");

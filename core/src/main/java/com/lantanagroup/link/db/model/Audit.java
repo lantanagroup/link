@@ -2,17 +2,17 @@ package com.lantanagroup.link.db.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.bson.types.ObjectId;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Getter
 @Setter
 public class Audit {
-  private String id = (new ObjectId()).toString();
+  private UUID id = UUID.randomUUID();
   private Date timestamp = new Date();
   private String tenantId;
-  private String userId;
+  private UUID userId;
   private String name;
   private String network;
   private AuditTypes type;

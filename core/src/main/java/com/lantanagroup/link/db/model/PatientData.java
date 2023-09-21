@@ -8,17 +8,18 @@ import org.hl7.fhir.r4.model.Resource;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
 public class PatientData {
-  private String id;
+  private UUID id;
   private String patientId;
   private String resourceType;
   private String resourceId;
-  private Date retrieved = new Date();
   private IBaseResource resource;
+  private Date retrieved;
 
   public static Bundle asBundle(List<PatientData> patientData) {
     Bundle bundle = new Bundle();

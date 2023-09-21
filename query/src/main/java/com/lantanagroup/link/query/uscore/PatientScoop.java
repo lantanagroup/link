@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -140,9 +141,9 @@ public class PatientScoop {
                     .execute();
 
             if (response.getEntry().size() > 1) {
-              logger.error("Found {} (more than one) Patient with identifier {}", response.getEntry().size(), Helper.encodeLogging(poi.getIdentifier()));
+              logger.error("Found {} (more than one) Patient with identifier {}", response.getEntry().size(), Helper.sanitizeString(poi.getIdentifier()));
             } else if (response.getEntry().size() == 0) {
-              logger.error("Did not find any Patient with identifier {}", Helper.encodeLogging(poi.getIdentifier()));
+              logger.error("Did not find any Patient with identifier {}", Helper.sanitizeString(poi.getIdentifier()));
               return null;
             }
 
@@ -155,7 +156,7 @@ public class PatientScoop {
             }
           }
         } catch (Exception e) {
-          logger.error("Unable to retrieve patient with identifier " + Helper.encodeLogging(poi.toString()), e);
+          logger.error("Unable to retrieve patient with identifier " + Helper.sanitizeString(poi.toString()), e);
         }
 
         return null;
@@ -245,6 +246,7 @@ public class PatientScoop {
         dbpd.setResourceType(entry.getResource().getResourceType().toString());
         dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
         dbpd.setResource(entry.getResource());
+        dbpd.setRetrieved(new Date());
         return dbpd;
       }).collect(Collectors.toList());
 

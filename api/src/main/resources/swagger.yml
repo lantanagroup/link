@@ -25,6 +25,12 @@ paths:
             'application/json':
               schema:
                 type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/$tenant-schema:
@@ -40,6 +46,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ApiInfoModel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/docs:
@@ -55,6 +67,12 @@ paths:
             text/yaml:
               schema:
                 type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       security:
         - { }
   /api/user:
@@ -76,11 +94,23 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Users
       summary: Create a new user
       operationId: createUser
+      requestBody:
+        description: 'A user object created'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
       responses:
         '200':
           description: successful response
@@ -88,6 +118,39 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/user/$bulk:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      operationId: createBulkUsers
+      requestBody:
+        description: 'An array of user objects that should be created'
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.BulkCreateUserOperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/user/{userId}:
     put:
       tags:
@@ -114,6 +177,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Users
@@ -129,6 +198,12 @@ paths:
       responses:
         '204':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/user/{userId}/$change-password:
     put:
       tags:
@@ -150,6 +225,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/tenant:
     get:
       tags:
@@ -164,7 +245,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TenantItem'
+                  $ref: '#/components/schemas/SearchTenantResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Tenants
@@ -181,6 +268,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/tenant/{id}:
     get:
       tags:
@@ -201,6 +294,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Tenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Tenants
@@ -224,6 +323,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tenants
@@ -239,6 +344,12 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi:
     get:
       tags:
@@ -261,6 +372,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/{id}:
     get:
       tags:
@@ -287,6 +404,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/fhir/List:
     post:
       tags:
@@ -312,6 +435,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/$query-list:
     get:
       tags:
@@ -328,6 +457,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generate:
     post:
       tags:
@@ -354,6 +489,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generateMultiMeasure:
     post:
       tags:
@@ -399,6 +540,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/$send:
     post:
       tags:
@@ -427,58 +574,12 @@ paths:
       responses:
         '200':
           description: successful response
-  /api/{tenantId}/report/$validate:
-    post:
-      tags:
-        - Reports
-      summary: Validate a report provided in the request body
-      operationId: validateRequest
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant, used to determine validation options
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          'application/json':
-            schema:
-              $ref: '#/components/schemas/FHIR.Bundle'
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/FHIR.OperationOutcome'
-  /api/{tenantId}/report/{reportId}/$validate:
-    get:
-      tags:
-        - Reports
-      summary: Validate the report against FHIR standards and implementation guides
-      operationId: validateReport
-      parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
-          required: true
-          schema:
-            type: string
-        - name: reportId
-          in: path
-          description: The logical id of the report to submit
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/aggregate:
     get:
       tags:
@@ -507,6 +608,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/patientList:
     get:
       tags:
@@ -535,6 +642,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PatientList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/individual:
     get:
       tags:
@@ -561,6 +674,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/{reportId}/individual/{patientMeasureReportId}:
     get:
       tags:
@@ -593,6 +712,176 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/FHIR.MeasureReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate:
+    post:
+      tags:
+        - Validation
+      summary: Validate a report provided in the request body
+      operationId: validateRequest
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant, used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      requestBody:
+        description: The FHIR Bundle to validate
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/summary:
+    post:
+      tags:
+        - Validation
+      summary: Provides a summary of unique messages from validation results of the request body
+      operationId: validateRequestSummary
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      requestBody:
+        description: The FHIR Bundle to validate
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Bundle'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'text/plain':
+              schema:
+                type: string
+                example: |
+                  * Device.deviceName.type: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Device)
+                  * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
+                  * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
+                  * if a date has a time, it must have a timezone
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/{reportId}:
+    get:
+      tags:
+        - Validation
+      summary: Validate a generated report
+      operationId: validateReport
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/validate/{reportId}/summary:
+    get:
+      tags:
+        - Validation
+      summary: Provides a summary of unique messages from validation results
+      operationId: validateReportSummary
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            default: ERROR
+            enum: [ ERROR, WARN, INFO ]
+      responses:
+        '200':
+          description: successful response
+          content:
+            'text/plain':
+              schema:
+                type: string
+                example: |
+                  * Device.deviceName.type: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/Device)
+                  * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
+                  * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
+                  * if a date has a time, it must have a timezone
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef:
     get:
       tags:
@@ -606,15 +895,21 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/MeasureDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Measure Definitions
       summary: Loads the measure bundle from the request into Link. Either the request body must have a FHIR Bundle, or the url parameter must be specified.
       operationId: createOrUpdateMeasureDef
       parameters:
-        - name: url
+        - name: measureId
           in: query
-          description: A url reference to the measure definition bundle that should be loaded
+          description: The ID of a measure that should be loaded. The ID specified represents a URL in the system config.
           required: false
           schema:
             type: string
@@ -627,6 +922,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef/{measureId}:
     delete:
       tags:
@@ -643,6 +944,12 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measurePackage:
     get:
       tags:
@@ -656,6 +963,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/MeasurePackage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Measure Packages
@@ -670,6 +983,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measurePackage/{id}:
     delete:
       tags:
@@ -686,6 +1005,12 @@ paths:
       responses:
         '204':
           description: successful response with no content returned
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/conceptMap:
     put:
       tags:
@@ -707,6 +1032,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     get:
       tags:
         - Concept Maps
@@ -728,6 +1059,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ConceptMapItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/conceptMap/{id}:
     get:
       tags:
@@ -754,6 +1091,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ConceptMap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/data/$expunge:
     delete:
       tags:
@@ -770,6 +1113,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/data/$test-fhir:
     get:
       tags:
@@ -824,6 +1173,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/TestResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$initiate-bulk-data:
     post:
       tags:
@@ -839,6 +1194,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/status/{id}:
     get:
       tags:
@@ -864,6 +1225,12 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/BulkStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/bulk/$execute-query-and-retrieval:
     post:
       tags:
@@ -879,6 +1246,12 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   schemas:
     ApiInfoModel:
@@ -1027,15 +1400,22 @@ components:
           type: boolean
         message:
           type: string
-    TenantItem:
+    SearchTenantResponse:
       type: object
       properties:
         id:
           type: string
+          description: 'A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.'
         name:
           type: string
-        description:
+          description: 'The internal name of the tenant, such as the facility''s name.'
+        retentionPeriod:
           type: string
+          description: ISO 8601 formatted duration in which to keep data for each tenant.
+          default: 'P3M'
+        cdcOrgId:
+          type: string
+          description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
     Tenant:
       type: object
       required:
@@ -1047,14 +1427,11 @@ components:
           description: 'A unique ID of the tenant. Cannot contain special characters other than dashes and underscores.'
         name:
           type: string
-          description: 'The name of the tenant, such as the facility''s name.'
+          description: 'The internal name of the tenant, such as the facility''s name.'
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
-        description:
-          type: string
-          description: 'A description of the tenant that is more meaningful/useful than the id.'
-        database:
+        connectionString:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
         bundling:
@@ -1105,10 +1482,6 @@ components:
           type: boolean
           default: true
           description: 'Whether to merge multiple censuses into a single list.'
-        includeIndividualMeasureReports:
-          type: boolean
-          default: true
-          description: 'Whether to include individual measure reports in the submission bundle.'
         promoteLineLevelResources:
           type: boolean
           default: false
@@ -1514,6 +1887,26 @@ components:
       type: object
     FHIR.Bundle:
       type: object
+    FHIR.BulkCreateUserOperationOutcome:
+      type: object
+      example: {
+        "issue": [ {
+          "severity": "info",
+          "diagnostics": "Successfully created user with email XX@YY.com"
+        }, {
+          "severity": "error",
+          "diagnostics": "Error creating user with email AA@BB.com: A user with that email already exists"
+        } ]
+      }
+      properties:
+        extension:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.Extension'
+        issue:
+          type: array
+          items:
+            $ref: '#/components/schemas/FHIR.OperationOutcomeIssue'
     FHIR.OperationOutcome:
       type: object
       properties:
@@ -1545,6 +1938,16 @@ components:
           type: string
         valueInteger:
           type: number
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
   securitySchemes:
     oauth:
       type: oauth2
@@ -1556,3 +1959,16 @@ components:
     basic:
       type: http
       scheme: basic
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

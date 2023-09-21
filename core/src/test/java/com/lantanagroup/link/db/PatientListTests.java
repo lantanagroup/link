@@ -15,12 +15,12 @@ public class PatientListTests {
   public void testMerge() throws ParseException {
     PatientList patientList1 = new PatientList();
     patientList1.setLastUpdated(dateFormat.parse("2023-03-25 04:30:01"));
-    patientList1.getPatients().add(new PatientId("test1"));
+    patientList1.getPatients().add(PatientId.createFromReference("test1"));
 
     PatientList patientList2 = new PatientList();
     patientList2.setLastUpdated(dateFormat.parse("2023-03-26 02:30:01"));
-    patientList2.getPatients().add(new PatientId("test1"));
-    patientList2.getPatients().add(new PatientId("test2"));
+    patientList2.getPatients().add(PatientId.createFromReference("test1"));
+    patientList2.getPatients().add(PatientId.createFromReference("test2"));
 
     patientList1.merge(patientList2);
 

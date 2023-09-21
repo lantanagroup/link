@@ -4,15 +4,17 @@ import com.lantanagroup.link.Hasher;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.User;
 import org.apache.commons.lang3.StringUtils;
-import org.bson.types.ObjectId;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,6 +23,11 @@ public class UserController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @InitBinder
+  public void initializeBinder(WebDataBinder binder) {
+    binder.setDisallowedFields("passwordSalt", "passwordHash");
+  }
 
   @GetMapping
   public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled) {
@@ -33,7 +40,7 @@ public class UserController extends BaseController {
     }
 
     // Don't let the user's password or enabled status change via this operation
-    if (StringUtils.isNotEmpty(user.getId())) {
+    if (user.getId() != null) {
       User found = this.sharedService.getUser(user.getId());
 
       if (found != null) {
@@ -51,25 +58,56 @@ public class UserController extends BaseController {
 
   @PostMapping
   public User createUser(@RequestBody User user) {
-    user.setId((new ObjectId()).toString());
+    user.setId(null);
     user.setEnabled(true);
     this.saveUser(user);
     return user;
   }
 
+  @PostMapping("/$bulk")
+  public OperationOutcome createBulkUsers(@RequestBody List<User> users) {
+    OperationOutcome oo = new OperationOutcome();
+    for (User user : users) {
+      try {
+        this.saveUser(user);
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
+                .setDiagnostics(String.format("Successfully created user with email %s", user.getEmail())));
+      } catch (ResponseStatusException ex) {
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.ERROR)
+                .setDiagnostics(String.format("Error creating user with email %s: %s", user.getEmail(), ex.getReason())));
+      } catch (Exception ex) {
+        logger.error("Error creating user with email {}", user.getEmail(), ex);
+        oo.getIssue().add(new OperationOutcome.OperationOutcomeIssueComponent()
+                .setSeverity(OperationOutcome.IssueSeverity.ERROR)
+                .setDiagnostics(String.format("Error creating user with email %s", user.getEmail())));
+      }
+    }
+    return oo;
+  }
+
   @PutMapping("/{userId}")
-  public User updateUser(@RequestBody User user, @PathVariable String userId) {
-    if (StringUtils.isNotEmpty(userId) && this.sharedService.getUser(userId) == null) {
+  public User updateUser(@RequestBody User user, @PathVariable UUID userId) {
+    User current = this.sharedService.getUser(userId);
+
+    if (current == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("User with id %s is not found", userId));
     }
 
     user.setId(userId);
+    user.setPasswordHash(current.getPasswordHash());    // Don't change the password
+    user.setPasswordSalt(current.getPasswordSalt());
+
     this.saveUser(user);
+
+    user.setPasswordHash(null);                         // Don't return the password hash/salt in the response
+    user.setPasswordSalt(null);
     return user;
   }
 
   @PutMapping("/{userId}/$change-password")
-  public void updateUserPassword(@PathVariable String userId, @RequestBody String newPassword) {
+  public void updateUserPassword(@PathVariable UUID userId, @RequestBody String newPassword) {
     User user = this.sharedService.getUser(userId);
 
     if (user == null) {
@@ -77,7 +115,7 @@ public class UserController extends BaseController {
     }
 
     try {
-      String salt = Hasher.getRandomSalt();
+      byte[] salt = Hasher.getRandomSalt();
       user.setPasswordSalt(salt);
       user.setPasswordHash(Hasher.hash(newPassword, salt));
     } catch (Exception ex) {
@@ -90,7 +128,7 @@ public class UserController extends BaseController {
 
   @DeleteMapping("/{userId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteUser(@PathVariable String userId) {
+  public void deleteUser(@PathVariable UUID userId) {
     User user = this.sharedService.getUser(userId);
 
     if (user == null) {
