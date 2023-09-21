@@ -27,6 +27,6 @@ public class PolicyAdvisor implements IValidationPolicyAdvisor {
 
   @Override
   public CodedContentValidationPolicy policyForCodedContent(IResourceValidator iResourceValidator, Object o, String s, ElementDefinition elementDefinition, StructureDefinition structureDefinition, BindingKind bindingKind, ValueSet valueSet, List<String> list) {
-    return CodedContentValidationPolicy.CODE;
+    return CodedContentValidationPolicy.IGNORE;
   }
 }

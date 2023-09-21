@@ -1,15 +1,18 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.db.model.tenant.Validation;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -17,11 +20,16 @@ import java.util.stream.Collectors;
 @Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
-  private FhirContext ctx = FhirContext.forR4();
-  private Validator validator;
+  private static FhirContext ctx = FhirContext.forR4();
+  private static Validator validator;
 
-  private Validator getValidator() {
-    if (this.validator == null) {
+  /**
+   * The validator should be initialized outside the actual tests so that we can determine the difference between the
+   * time to initialize the validator and the time it takes to validate a single bundle post-initialization
+   */
+  @BeforeClass
+  public static void init() {
+    if (validator == null) {
       Validation validation = new Validation();
       validation.getNpmPackages().add("nhsn-measures.tgz");
       validation.getNpmPackages().add("cqfmeasures.tgz");
@@ -29,18 +37,16 @@ public class ValidatorTests {
       validation.getNpmPackages().add("uscore.tgz");
       validation.getNpmPackages().add("deqm.tgz");
       validation.getNpmPackages().add("terminology.tgz");
-      this.validator = new Validator(validation);
+      validator = new Validator(validation);
 
       // Perform a single validation to pre-load all the packages and profiles
-      this.validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
+      validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
       logger.info("Done initializing validator");
     }
-
-    return this.validator;
   }
 
   private Bundle getBundle(String resourcePath) {
-    return this.ctx.newJsonParser().parseResource(
+    return ctx.newJsonParser().parseResource(
             Bundle.class,
             Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(resourcePath)));
   }
@@ -48,7 +54,7 @@ public class ValidatorTests {
   @Test
   public void testPerformance() throws IOException {
     Bundle bundle = this.getBundle("large-submission-example.json");
-    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
+    OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
 
     logger.info("Issues:");
     oo.getIssue().forEach(i -> {
@@ -65,11 +71,11 @@ public class ValidatorTests {
             .map(r -> (Patient) r)
             .findFirst();
 
-    validateBundle(bundle, true);
+    validate(bundle, true);
 
     patientResource.get().getName().clear();
 
-    validateBundle(bundle, false);
+    validate(bundle, false);
   }
 
   @Test
@@ -88,34 +94,45 @@ public class ValidatorTests {
             .map(r -> (Encounter) r)
             .findFirst();
 
-    validateBundle(bundle, true);
+    validate(bundle, true);
 
     organizationResource.forEach(o ->bundle.getEntry().remove(o));
 
     encounter.get().getClass_().setCode("UNKNOWNCODE");
 
-    validateBundle(bundle, false);
+    validate(bundle, false);
   }
 
   @Test
-  public void validateDqmIg() throws IOException {
-    var bundle = this.getBundle("large-submission-example.json");
+  public void validateDeqmProfiles() {
+    MeasureReport report = new MeasureReport();
+    report.setMeta(new Meta().addProfile(Constants.IndividualMeasureReportProfileUrl));
+    report.setMeasure("http://test.com");
+    report.setType(MeasureReport.MeasureReportType.INDIVIDUAL);
+    report.setStatus(MeasureReport.MeasureReportStatus.COMPLETE);
+    report.setPeriod(new Period().setStart(new Date(2023, 1, 1)).setEnd(new Date(2023, 1, 31)));
+    report.setDate(new Date());
+    report.setReporter(new Reference("Organization/123"));
+    report.setSubject(new Reference("Patient/321"));
+    report.addExtension(Constants.MeasureScoringExtension, new CodeableConcept(new Coding().setSystem(Constants.MeasureScoringCodeSystem).setCode("proportion")));
+    report.setImprovementNotation(new CodeableConcept(new Coding().setSystem(Constants.MeasureImprovementNotationCodeSystem).setCode("increase")));
 
-    var measureReport = bundle.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
-            .filter(r -> r instanceof MeasureReport)
-            .map(r -> (MeasureReport) r)
-            .findFirst();
+    // Expect valid
+    OperationOutcome outcome = validator.validate(report, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertTrue(outcome.getIssue().isEmpty());
 
-    validateBundle(bundle, true);
-
-    measureReport.get().setMeasure("");
-
-    validateBundle(bundle, false);
+    // Break the report, should be invalid, 2 errors from DEQM IG, one from core FHIR
+    report.setMeasure(null);
+    report.setImprovementNotation(null);
+    outcome = validator.validate(report, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(3, outcome.getIssue().size());
+    Assert.assertEquals("MeasureReport.measure: minimum required = 1, but only found 0 (from http://hl7.org/fhir/StructureDefinition/MeasureReport)", outcome.getIssue().get(0).getDiagnostics());
+    Assert.assertEquals("Rule deqm-2: 'If the measure scoring type is 'proportion','ratio', or 'continuous-variable' then the improvementNotation element is required' Failed", outcome.getIssue().get(1).getDiagnostics());
+    Assert.assertEquals("MeasureReport.measure: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm)", outcome.getIssue().get(2).getDiagnostics());
   }
 
-  private void validateBundle(Bundle bundle, Boolean failOnIssueFound) {
-    OperationOutcome oo = this.getValidator().validate(bundle, OperationOutcome.IssueSeverity.ERROR);
+  private void validate(Resource resource, Boolean failOnIssueFound) {
+    OperationOutcome oo = validator.validate(resource, OperationOutcome.IssueSeverity.ERROR);
 
     List<String> allMessages = oo.getIssue().stream().map(i -> {
       return i.getDiagnostics()
