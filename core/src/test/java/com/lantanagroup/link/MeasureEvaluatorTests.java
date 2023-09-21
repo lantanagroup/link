@@ -57,18 +57,20 @@ public class MeasureEvaluatorTests {
       return newPatientData;
     }).collect(Collectors.toList());
 
-    when(this.tenantService.findPatientData("test1")).thenReturn(patientData);
+    when(this.tenantService.findPatientData("Hypo-Patient1-REQ")).thenReturn(patientData);
 
     ReportCriteria criteria = new ReportCriteria("test-measure", "2022-04-01T00:00:00.000Z", "2022-04-30T23:59:59.000Z");
     String masterReportId = ReportIdHelper.getMasterIdentifierValue(criteria);
 
-    PatientOfInterestModel poi = new PatientOfInterestModel("Patient/test-patient1", null);
-    poi.setId("test-patient1");
+    PatientOfInterestModel poi = new PatientOfInterestModel("Patient/Hypo-Patient1-REQ", null);
+    poi.setId("Hypo-Patient1-REQ");
 
     ReportContext context = new ReportContext();
     context.setMasterIdentifierValue(masterReportId);
     ReportContext.MeasureContext measureContext = new ReportContext.MeasureContext();
     measureContext.setMeasure(this.getMeasure());
+    measureContext.setReportDefBundle(this.measureBundle);
+
 
     MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(
             this.tenantService,

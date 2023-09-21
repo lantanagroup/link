@@ -76,6 +76,15 @@ public class MeasureEvaluator {
       }
     }
 
+
+    // TODO: We actually need to integrate the caching layer such that is isn't recompiled
+    // every time
+
+    for (var e : this.measureContext.getReportDefBundle().getEntry()) {
+      repo.update(e.getResource());
+    }
+
+
     R4MeasureService measureService = getR4MeasureService(repo);
     Endpoint terminologyEndpoint = null;
 

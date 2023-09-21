@@ -343,10 +343,10 @@ public class FhirHelper {
             .setDate(npmPackage.dateAsDate())
             .setPackageId(npmPackage.id());
     if (npmPackage.getNpm().has("fhirVersions")) {
-      JsonElement fhirVersions = npmPackage.getNpm().get("fhirVersions");
+      var fhirVersions = npmPackage.getNpm().get("fhirVersions");
       if (fhirVersions.isJsonArray()) {
-        for (JsonElement fhirVersion : fhirVersions.getAsJsonArray()) {
-          ig.addFhirVersion(Enumerations.FHIRVersion.fromCode(fhirVersion.getAsString()));
+        for (var fhirVersion : fhirVersions.asJsonArray()) {
+          ig.addFhirVersion(Enumerations.FHIRVersion.fromCode(fhirVersion.asString()));
         }
       }
     }
