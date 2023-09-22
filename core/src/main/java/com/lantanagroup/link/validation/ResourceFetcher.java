@@ -31,7 +31,6 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
           "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version",
           "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
           "urn:ietf:rfc:3986",
-          "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNRespiratoryPathogenSurveillanceInitialPopulation",
           "http://hl7.org/fhir/sid/us-ssn"
   ));
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
@@ -73,14 +72,16 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
 
   @Override
   public boolean resolveURL(IResourceValidator iResourceValidator, Object o, String s, String s1, String s2) throws IOException, FHIRException {
-    logger.debug("resolveURL {}, {}, {}", s, s1, s2);
-
     boolean found = false;
 
     if (s1 != null && s1.indexOf("|") > 0) {
       found = this.canonicalUrls.contains(s1.substring(0, s1.lastIndexOf("|")));
     } else {
       found = this.canonicalUrls.contains(s1);
+    }
+
+    if (!found) {
+      logger.warn("Did not find {}, {}, {}", s, s1, s2);
     }
 
     return found;
