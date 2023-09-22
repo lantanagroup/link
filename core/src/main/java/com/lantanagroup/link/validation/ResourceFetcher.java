@@ -1,10 +1,12 @@
 package com.lantanagroup.link.validation;
 
-import org.hl7.fhir.common.hapi.validation.support.NpmPackageValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.CodeSystem;
+import org.hl7.fhir.r4.model.Measure;
+import org.hl7.fhir.r4.model.StructureDefinition;
+import org.hl7.fhir.r4.model.ValueSet;
 import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.model.CanonicalResource;
 import org.hl7.fhir.r5.utils.validation.IResourceValidator;
@@ -30,6 +32,7 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
           "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
           "urn:ietf:rfc:3986",
           "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNRespiratoryPathogenSurveillanceInitialPopulation",
+          "http://hl7.org/fhir/sid/us-ssn",
           "http://hl7.org/fhir/R4/v3/ActCode/cs.html"   // TODO: fix?
   ));
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
