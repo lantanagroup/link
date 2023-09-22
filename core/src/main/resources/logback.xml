@@ -6,4 +6,5 @@
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="ca.uhn.fhir.context.ModelScanner" level="INFO"/>
 </configuration>

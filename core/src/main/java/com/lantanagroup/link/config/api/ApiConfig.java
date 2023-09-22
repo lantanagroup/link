@@ -155,7 +155,17 @@ public class ApiConfig {
   private boolean skipQuery = false;
 
   /**
+   * <strong>api.no-scheduling</strong><br>When true, won't initialize the scheduling system. Primarily used for debugging purposes.
+   */
+  private boolean noScheduling = false;
+
+  /**
    * <strong>api.measure-def-urls</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
    */
   private HashMap<String, String> measureDefUrls = new HashMap<>();
+
+  /**
+   * Allows use of QA debugging endpoints. DO NOT ALLOW IN PRODUCTION!!!!
+   */
+  private boolean allowQaEndpoints = false;
 }

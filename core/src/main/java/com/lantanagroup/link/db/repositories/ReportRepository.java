@@ -89,6 +89,27 @@ public class ReportRepository extends BaseRepository<Report> {
     }
   }
 
+  @SneakyThrows(SQLException.class)
+  public void deleteReport(Report report) {
+    String sql = "DELETE FROM dbo.report WHERE id = ?;";
+    try (PreparedStatement statement = dataSource.getConnection().prepareStatement(sql)) {
+      statement.setNString(1, report.getId());
+      statement.executeUpdate();
+    }
+  }
+
+  @SneakyThrows(SQLException.class)
+  public void deletePatientLists(Report report) {
+    try (Connection connection = dataSource.getConnection()) {
+      connection.setAutoCommit(false);
+      try {
+        deletePatientLists(report, connection);
+      } catch (SQLException e) {
+        throw e;
+      }
+    }
+  }
+
   private void deletePatientLists(Report report, Connection connection) throws SQLException {
     String sql = "DELETE FROM dbo.reportPatientList WHERE reportId = ?;";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {

@@ -21,6 +21,7 @@ import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
@@ -72,7 +73,7 @@ public class TenantService {
       assert conn != null;
 
       String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("GO")) {
+      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
         try {
           Statement stmt = conn.createStatement();
           stmt.execute(stmtSql);
@@ -136,6 +137,20 @@ public class TenantService {
     return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
+  public void deletePatientListById(String id) { this.patientLists.deleteById(id);}
+
+  public void deleteAllPatientData(){
+    this.patientLists.deleteAllPatientData();
+    this.patientDatas.deleteAllPatientData();
+  }
+
+  public void deletePatientByListAndPatientId(String patientId, String listId) {
+    PatientList patientList = this.getPatientList(UUID.fromString(listId));
+    var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
+    patientList.setPatients(filteredList);
+    this.patientDatas.deleteByPatientId(patientId);
+  }
+
   public void savePatientData(List<PatientData> patientData) {
     this.patientDatas.saveAll(patientData);
   }
@@ -154,6 +169,12 @@ public class TenantService {
 
   public void saveReport(Report report, List<PatientList> patientLists) {
     this.reports.save(report, patientLists);
+  }
+
+  public void deleteReport(String reportId){
+    var report = this.reports.findById(reportId);
+    this.reports.deletePatientLists(report);
+    this.reports.deleteReport(report);
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {

@@ -1,0 +1,4383 @@
+{
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [ "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-measurereport-bundle" ],
+    "tag": [ {
+      "system": "https://nhsnlink.org",
+      "code": "report",
+      "display": "Report"
+    } ]
+  },
+  "identifier": {
+    "system": "urn:ietf:rfc:3986",
+    "value": "urn:uuid:e372d246-17ef-470e-8812-3499a07c879d"
+  },
+  "type": "collection",
+  "timestamp": "2023-06-09T20:18:38.333+00:00",
+  "entry": [ {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Organization/de083ed7-b869-4010-9791-5286169bf078",
+    "resource": {
+      "resourceType": "Organization",
+      "id": "de083ed7-b869-4010-9791-5286169bf078",
+      "meta": {
+        "profile": [ "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-submitting-organization" ]
+      },
+      "identifier": [ {
+        "system": "https://www.cdc.gov/nhsn/OrgID",
+        "value": "someTestOrgId"
+      } ],
+      "active": true,
+      "type": [ {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+          "code": "prov",
+          "display": "Healthcare Provider"
+        } ]
+      } ],
+      "name": "Some Test Tenant",
+      "telecom": [ {
+        "extension": [ {
+          "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+          "valueCode": "unknown"
+        } ]
+      } ],
+      "address": [ {
+        "extension": [ {
+          "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+          "valueCode": "unknown"
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/List/6467b5f9afc40f4b54402f1f",
+    "resource": {
+      "resourceType": "List",
+      "id": "6467b5f9afc40f4b54402f1f",
+      "meta": {
+        "profile": [ "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/poi-list" ]
+      },
+      "extension": [ {
+        "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-patient-list-applicable-period-extension",
+        "valuePeriod": {
+          "start": "2022-01-01T00:00:00.000Z",
+          "end": "2022-01-31T23:59:59.000Z"
+        }
+      } ],
+      "identifier": [ {
+        "system": "https://nhsnlink.org",
+        "value": "NHSNGlycemicControlHypoglycemicInitialPopulation"
+      } ],
+      "status": "current",
+      "mode": "snapshot",
+      "entry": [ {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip101"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip102"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip103"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip104"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip105"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip106"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip107"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip108"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip109"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip110"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip111"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip112"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip113"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip114"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip115"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip116"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip117"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip118"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip137"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip138"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip139"
+        }
+      }, {
+        "item": {
+          "reference": "Patient/nhsn-iip-ip140"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59",
+      "meta": {
+        "profile": [ "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/subjectlist-measurereport" ]
+      },
+      "contained": [ {
+        "resourceType": "List",
+        "id": "1",
+        "status": "current",
+        "mode": "snapshot",
+        "entry": [ {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-fbbefc1d"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c7c"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7cda"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c9a"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c7b"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7cdb"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c78"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c98"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7cd9"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c96"
+          }
+        }, {
+          "item": {
+            "reference": "MeasureReport/d3c56e35-e11b1a59-356e7c76"
+          }
+        } ]
+      } ],
+      "extension": [ {
+        "url": "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version",
+        "valueString": "0.9.0"
+      }, {
+        "url": "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
+        "valueString": "0.0.008"
+      } ],
+      "status": "complete",
+      "type": "subject-list",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 19,
+          "subjectResults": {
+            "reference": "#1"
+          }
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-fbbefc1d",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-fbbefc1d",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/27e08061-a446-d475-b99f-ada753b0cd32"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "MedicationRequest/a8ed0b91-baca-3259-7893-a04cf1d9ce97"
+      }, {
+        "reference": "Patient/27e08061-a446-d475-b99f-ada753b0cd32"
+      }, {
+        "reference": "Encounter/da705422-2357-fb35-6ecb-8696c83bac94"
+      }, {
+        "reference": "Location/RtmUR6-JAN21"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/a8ed0b91-baca-3259-7893-a04cf1d9ce97",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "a8ed0b91-baca-3259-7893-a04cf1d9ce97",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#13a9ed8e6eac7e54",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "plan",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1008501",
+          "display": "insulin isophane / insulin, regular, human"
+        } ],
+        "text": "insulin isophane / insulin, regular, human"
+      },
+      "subject": {
+        "reference": "Patient/27e08061-a446-d475-b99f-ada753b0cd32",
+        "display": "Allison gilbert"
+      },
+      "authoredOn": "2022-01-06",
+      "dosageInstruction": [ {
+        "route": {
+          "coding": [ {
+            "system": "http://snomed.info/sct",
+            "code": "47625008",
+            "display": "Intravenous route (qualifier value)"
+          } ],
+          "text": "Intravenous route (qualifier value)"
+        },
+        "doseAndRate": [ {
+          "doseQuantity": {
+            "value": 100,
+            "unit": "MG"
+          }
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/da705422-2357-fb35-6ecb-8696c83bac94",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "da705422-2357-fb35-6ecb-8696c83bac94",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#64cc7eebb5ae901c",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "identifier": [ {
+        "use": "usual",
+        "type": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/319",
+            "code": "1077",
+            "display": "FIN NBR",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "AN",
+            "display": "Account number",
+            "userSelected": false
+          } ],
+          "text": "FIN NBR"
+        },
+        "_system": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        },
+        "value": "16048"
+      } ],
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter",
+        "userSelected": false
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://snomed.info/sct",
+          "code": "32485007",
+          "display": "Inpatient",
+          "userSelected": false
+        }, {
+          "system": "http://terminology.hl7.org/CodeSystem/v2-0004",
+          "code": "I",
+          "display": "Inpatient",
+          "userSelected": false
+        } ],
+        "text": "Inpatient"
+      } ],
+      "serviceType": {
+        "coding": [ {
+          "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/34",
+          "code": "313017",
+          "display": "Pulmonology",
+          "userSelected": true
+        }, {
+          "system": "http://snomed.info/sct",
+          "code": "722174002",
+          "display": "Pulmonary medicine service (qualifier value)",
+          "userSelected": false
+        } ],
+        "text": "Pulmonology"
+      },
+      "priority": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActPriority",
+          "code": "EM",
+          "display": "emergency",
+          "userSelected": false
+        } ],
+        "text": "Emergency"
+      },
+      "subject": {
+        "reference": "Patient/27e08061-a446-d475-b99f-ada753b0cd32",
+        "display": "COVID, ALLISON"
+      },
+      "participant": [ {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1116",
+            "display": "Admitting Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "ADM",
+            "display": "admitter",
+            "userSelected": false
+          } ],
+          "text": "Admitting Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/11817978-JAN21\"/>\n                        <display value=\"Carter, Kristin\"/>\n                    </individual>" ],
+          "start": "2021-01-03T05:00:00.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1119",
+            "display": "Attending Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "ATND",
+            "display": "attender",
+            "userSelected": false
+          } ],
+          "text": "Attending Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/11817978-JAN21\"/>\n                        <display value=\"Carter, Kristin\"/>\n                    </individual>" ],
+          "start": "2021-01-03T05:00:00.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1121",
+            "display": "Consulting Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "CON",
+            "display": "consultant",
+            "userSelected": false
+          } ],
+          "text": "Consulting Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/4122625\"/>\n                        <display value=\"Cerner Test, Physician - Cardiovascular Cerner\"/>\n                    </individual>" ],
+          "start": "2021-01-03T21:32:00.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1121",
+            "display": "Consulting Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "CON",
+            "display": "consultant",
+            "userSelected": false
+          } ],
+          "text": "Consulting Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/4122622\"/>\n                        <display value=\"Cerner Test, Physician - Hospitalist Cerner\"/>\n                    </individual>" ],
+          "start": "2021-01-28T19:47:00.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1125",
+            "display": "Registered Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "Registered Nurse"
+        } ],
+        "period": {
+          "start": "2022-01-02T13:56:00.000Z",
+          "end": "2022-01-06T06:01:53.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1125",
+            "display": "Registered Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "Registered Nurse"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/607928\"/>\n                        <display value=\"Cerner Test, Nurse Cerner\"/>\n                    </individual>" ],
+          "start": "2021-01-03T18:11:50.000Z",
+          "end": "2021-01-04T11:01:38.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "1126",
+            "display": "Referring Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "REF",
+            "display": "referrer",
+            "userSelected": false
+          } ],
+          "text": "Referring Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/11938004\"/>\n                        <display value=\"Bradford, MD, Michael Cerner\"/>\n                    </individual>" ],
+          "start": "2021-01-03T05:00:00.000Z"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/333",
+            "code": "18883355",
+            "display": "Covering Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PPRF",
+            "display": "primary performer",
+            "userSelected": false
+          } ],
+          "text": "Covering Physician"
+        } ],
+        "period": {
+          "fhir_comments": [ "<individual>\n                        <reference value=\"Practitioner/12742575\"/>\n                        <display value=\"Torres, Drew\"/>\n                    </individual>" ],
+          "start": "2021-01-03T18:08:42.000Z"
+        }
+      } ],
+      "period": {
+        "start": "2021-01-01T05:00:00.000Z"
+      },
+      "reasonCode": [ {
+        "text": "Covid-19 rule out"
+      } ],
+      "diagnosis": [ {
+        "rank": 1
+      } ],
+      "hospitalization": {
+        "admitSource": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/2",
+            "code": "309191",
+            "display": "Clinic or Physician Office Referral",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/admit-source",
+            "code": "gp",
+            "display": "General Practitioner referral",
+            "userSelected": false
+          } ],
+          "text": "Clinic or Physician Office Referral"
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/RtmUR6-JAN21",
+          "display": "Some Location"
+        },
+        "physicalType": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
+            "code": "ro",
+            "display": "Room"
+          } ],
+          "text": "Room"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/RtmUR6-JAN21",
+    "resource": {
+      "resourceType": "Location",
+      "id": "RtmUR6-JAN21",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#04ea320cd2709af0"
+      },
+      "name": "Some Location",
+      "type": [ {
+        "coding": [ {
+          "extension": [ {
+            "url": "https://www.lantanagroup.com/fhir/StructureDefinition/mapped-concept",
+            "valueCoding": {
+              "system": "http://some-system.com",
+              "code": "some-type"
+            }
+          } ],
+          "system": "http://loinc.org",
+          "code": "75310-3",
+          "display": "Health concerns"
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/27e08061-a446-d475-b99f-ada753b0cd32",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "27e08061-a446-d475-b99f-ada753b0cd32",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#cf5b03cf567407c1",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+        "valueCode": "F"
+      }, {
+        "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+        "extension": [ {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2106-3",
+            "display": "White",
+            "userSelected": false
+          }
+        }, {
+          "url": "text",
+          "valueString": "White"
+        } ]
+      }, {
+        "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+        "extension": [ {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2186-5",
+            "display": "Non Hispanic or Latino",
+            "userSelected": false
+          }
+        }, {
+          "url": "text",
+          "valueString": "Not Hispanic, Latino, or Spanish Origin"
+        } ]
+      } ],
+      "identifier": [ {
+        "id": "27e08061-a446-d475-b99f-ada753b0cd32",
+        "use": "usual",
+        "type": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/4",
+            "code": "10",
+            "display": "MRN",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "MR",
+            "display": "Medical record number",
+            "userSelected": false
+          } ],
+          "text": "MRN"
+        },
+        "system": "urn:oid:2.16.840.1.113883.6.1000",
+        "value": "123456001",
+        "period": {
+          "start": "2020-12-02T11:01:29.000Z"
+        }
+      } ],
+      "active": true,
+      "name": [ {
+        "id": "CI-12742728-1",
+        "use": "official",
+        "text": "COVID, ALLISON",
+        "family": "COVID",
+        "given": [ "ALLISON" ],
+        "period": {
+          "start": "2021-01-03T11:01:29.000Z"
+        }
+      }, {
+        "id": "CI-490061307-0",
+        "use": "usual",
+        "text": "COVID-MAIDEN, ALLISON",
+        "family": "COVID-MAIDEN",
+        "given": [ "ALLISON" ],
+        "period": {
+          "start": "2021-01-03T11:01:29.000Z"
+        }
+      } ],
+      "telecom": [ {
+        "id": "CI-PH-29822997-7",
+        "system": "phone",
+        "value": "5555555555",
+        "use": "mobile",
+        "rank": 1,
+        "period": {
+          "start": "2021-01-03T11:01:29.000Z"
+        }
+      } ],
+      "gender": "female",
+      "birthDate": "1939-09-16",
+      "address": [ {
+        "id": "CI-24327194-0",
+        "use": "home",
+        "text": "2801 ANY \nANY, MO 64117\nUS",
+        "line": [ "2801 ANY" ],
+        "city": "ANY",
+        "state": "MO",
+        "postalCode": "64117",
+        "country": "US",
+        "period": {
+          "start": "2021-01-03T11:01:29.000Z"
+        }
+      } ],
+      "contact": [ {
+        "relationship": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/351",
+            "code": "1152",
+            "display": "Emergency Contact",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0131",
+            "code": "C",
+            "display": "Emergency Contact",
+            "userSelected": false
+          } ],
+          "text": "Emergency Contact"
+        } ],
+        "name": {
+          "id": "CI-12742541-0",
+          "use": "official",
+          "text": "HARRIS, DANA",
+          "family": "HARRIS",
+          "given": [ "DANA" ]
+        },
+        "telecom": [ {
+          "system": "phone",
+          "value": "2125555553",
+          "use": "home",
+          "rank": 1,
+          "period": {
+            "start": "2020-12-27T16:36:47.000Z"
+          }
+        }, {
+          "system": "email",
+          "value": "dharris@gmail.com",
+          "use": "home",
+          "rank": 1,
+          "period": {
+            "start": "2020-12-28T14:53:41.000Z"
+          }
+        } ],
+        "period": {
+          "start": "2020-12-02T11:01:29.000Z"
+        }
+      }, {
+        "relationship": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/351",
+            "code": "1156",
+            "display": "Guardian",
+            "userSelected": true
+          } ],
+          "text": "Guardian"
+        } ],
+        "name": {
+          "id": "CI-12742541-0",
+          "use": "official",
+          "text": "HARRIS, DANA",
+          "family": "HARRIS",
+          "given": [ "DANA" ]
+        },
+        "telecom": [ {
+          "system": "phone",
+          "value": "2125555553",
+          "use": "home",
+          "rank": 1,
+          "period": {
+            "start": "2020-12-27T16:36:47.000Z"
+          }
+        }, {
+          "system": "email",
+          "value": "dharris@gmail.com",
+          "use": "home",
+          "rank": 1,
+          "period": {
+            "start": "2020-07-28T14:53:41.000Z"
+          }
+        } ],
+        "period": {
+          "start": "2020-12-02T11:01:29.000Z"
+        }
+      } ],
+      "communication": [ {
+        "language": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/ec2458f2-1e24-41c8-b71b-0e701af7583d/codeSet/36",
+            "code": "151",
+            "display": "English",
+            "userSelected": true
+          }, {
+            "system": "urn:ietf:bcp:47",
+            "code": "en",
+            "display": "English",
+            "userSelected": false
+          } ],
+          "text": "English"
+        },
+        "preferred": true
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c98",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c98",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip114"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/nhsn-iip-en114"
+      }, {
+        "reference": "Patient/nhsn-iip-ip114"
+      }, {
+        "reference": "Location/nhsn-iip-loc107-allminreqelement-1loctype"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add114"
+      }, {
+        "reference": "Location/nhsn-iip-loc101-1patientallelement"
+      }, {
+        "reference": "Location/nhsn-iip-loc103-1patient1minreqelement-id"
+      }, {
+        "reference": "Encounter/nhsn-iip-obs114"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc101-1patientallelement",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc101-1patientallelement",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#ef1cde9d237cea48"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active",
+      "name": "Health Level Seven International - Amherst",
+      "alias": [ "UH ED", "MAIN ED", "ESA" ],
+      "description": "HL7 Headquarters - East",
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.696784.13260",
+          "code": "1",
+          "display": "inpatient"
+        } ]
+      } ],
+      "telecom": [ {
+        "system": "phone",
+        "value": "(+1) 734-677-7777"
+      } ],
+      "address": {
+        "line": [ "3300 Washtenaw Avenue, Suite 227" ],
+        "city": "Amherst",
+        "state": "MA",
+        "postalCode": "01002",
+        "country": "USA"
+      },
+      "position": {
+        "longitude": -72.519854,
+        "latitude": 42.373222
+      },
+      "managingOrganization": {
+        "display": "Health Level Seven International"
+      },
+      "partOf": {
+        "reference": "Location/eiZnL1k4-oetoASMgRd4GLQ3",
+        "display": "UNIVERSITY HOSPITAL"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add114",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add114",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip114",
+        "display": "Diane R. Zeem"
+      },
+      "authoredOn": "2022-01-01T10:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc107-allminreqelement-1loctype",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc107-allminreqelement-1loctype",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#6a08267184836ca7"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active",
+      "name": "Health Level Seven International - Amherst",
+      "description": "HL7 Headquarters - East",
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.696784.13260",
+          "code": "1165-0",
+          "display": "Inpatient Hospice"
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en114",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en114",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#132e0eb9e8914ec3",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip114"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.000Z",
+        "end": "2022-01-31T08:00:00.000Z"
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc107-allminreqelement-1loctype"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc103-1patient1minreqelement-id"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101-1patientallelement"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc103-1patient1minreqelement-id",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc103-1patient1minreqelement-id",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#1ec2d0c54afc8361"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip114",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip114",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "5676525656"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Zeem",
+        "given": [ "Diane", "R." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1954-07-07"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c78",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c78",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip103"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/nhsn-iip-en103"
+      }, {
+        "reference": "Patient/nhsn-iip-ip103"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add103"
+      }, {
+        "reference": "Location/nhsn-iip-loc103-1patient1minreqelement-id"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add103",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add103",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#56630fb279b3c7a2",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip103",
+        "display": "John Doe"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-en103"
+      },
+      "authoredOn": "2022-01-01T10:00:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en103",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en103",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#926451d2e9369680",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip103"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0"
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc103-1patient1minreqelement-id"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip103",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip103",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "urn:oid:2.16.840.1.113883.6.1000",
+        "value": "nhsn-iip-ip103"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Doe",
+        "given": [ "John", "V." ]
+      } ],
+      "gender": "male",
+      "birthDate": "1955-11-11",
+      "deceasedDateTime": "2022-02-02",
+      "address": [ {
+        "postalCode": "80111",
+        "country": "US",
+        "period": {
+          "start": "2022-12-06"
+        }
+      }, {
+        "postalCode": "80246",
+        "country": "US",
+        "period": {
+          "start": "2015-07-22",
+          "end": "2022-12-06"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7cda",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7cda",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip138"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/nhsn-iip-ed138"
+      }, {
+        "reference": "Patient/nhsn-iip-ip138"
+      }, {
+        "reference": "Encounter/nhsn-iip-en138-2"
+      }, {
+        "reference": "Encounter/nhsn-iip-en138"
+      }, {
+        "reference": "Encounter/nhsn-iip-ed138-2"
+      }, {
+        "reference": "Encounter/nhsn-iip-obs138-2"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add138-2"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add138-2",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add138-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip138",
+        "display": "Deb Kurtz"
+      },
+      "authoredOn": "2022-01-09T23:30:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-obs138-2",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-obs138-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip138"
+      },
+      "period": {
+        "start": "2022-01-09T23:00:00.000Z",
+        "end": "2022-01-10T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip138",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip138",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "138"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Kurtz",
+        "given": [ "Deb", "Y." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1959-08-28"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7cd9",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7cd9",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip137"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 2
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/nhsn-iip-en137"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add137-2"
+      }, {
+        "reference": "Patient/nhsn-iip-ip137"
+      }, {
+        "reference": "Encounter/nhsn-iip-en137-2"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add137"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add137-2",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add137-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip137",
+        "display": "Jen F. Myers"
+      },
+      "authoredOn": "2022-01-11T08:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en137",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en137",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip137"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.000Z",
+        "end": "2022-01-05T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en137-2",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en137-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip137"
+      },
+      "period": {
+        "start": "2022-01-10T08:00:00.000Z",
+        "end": "2022-01-15T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add137",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add137",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip137",
+        "display": "Jen F. Myers"
+      },
+      "authoredOn": "2022-01-02T08:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip137",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip137",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "63w257"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Myers",
+        "given": [ "Jen", "F." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1984-10-21"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c96",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c96",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip112"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Patient/nhsn-iip-ip112"
+      }, {
+        "reference": "Encounter/nhsn-iip-en112"
+      }, {
+        "reference": "Encounter/nhsn-iip-ed112"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add112"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add112",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add112",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#56630fb279b3c7a2",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip112",
+        "display": "Anne B. Miller"
+      },
+      "authoredOn": "2022-01-01T10:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip112",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip112",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "5665325"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Miller",
+        "given": [ "Anne", "B." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1942-03-30"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en112",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en112",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "in-progress",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip112"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c7c",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c7c",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip107"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "MedicationRequest/nhsn-iip-add107"
+      }, {
+        "reference": "Location/nhsn-iip-loc107-allminreqelement-1loctype"
+      }, {
+        "reference": "Encounter/nhsn-iip-en107"
+      }, {
+        "reference": "Patient/nhsn-iip-ip107"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip107",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip107",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "5635352"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Louise",
+        "given": [ "Alayna", "T." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1933-03-11",
+      "deceasedDateTime": "2022-01-25T08:00:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en107",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en107",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#af93cfe9c3ee1e15",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "triaged",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip107"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-01-31T08:00:00.0"
+      },
+      "diagnosis": [ {
+        "use": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+            "code": "CC"
+          } ]
+        }
+      } ],
+      "hospitalization": {
+        "dischargeDisposition": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+            "code": "home",
+            "display": "home"
+          } ]
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc107-allminreqelement-1loctype"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add107",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add107",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip107",
+        "display": "Alayna Louise"
+      },
+      "authoredOn": "2022-01-01T10:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c9a",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c9a",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip116"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 2
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/nhsn-iip-ed116"
+      }, {
+        "reference": "Patient/nhsn-iip-ip116"
+      }, {
+        "reference": "Encounter/nhsn-iip-en116"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add116"
+      }, {
+        "reference": "Location/RtmUR6-JAN21"
+      }, {
+        "reference": "Encounter/nhsn-iip-obs116"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-ed116",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-ed116",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "EMER",
+        "display": "emergerncy encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "108219001"
+        } ],
+        "text": "Physician visit with evaluation AND/OR management service"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip116"
+      },
+      "period": {
+        "start": "2021-12-30T08:00:00.000Z",
+        "end": "2022-12-31T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en116",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en116",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#c62ae25d0b1705a8",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip116"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.000Z",
+        "end": "2022-01-31T08:00:00.000Z"
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/RtmUR6-JAN21"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip116",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip116",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "123445652"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Henderson",
+        "given": [ "Kristen", "I." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1966-10-02"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add116",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add116",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip116",
+        "display": "Kristen I. Henderson"
+      },
+      "authoredOn": "2022-01-01T10:00:00.000Z"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7cdb",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7cdb",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 3
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "MedicationRequest/nhsn-iip-add139"
+      }, {
+        "reference": "Encounter/nhsn-iip-ed139"
+      }, {
+        "reference": "Patient/nhsn-iip-ip139"
+      }, {
+        "reference": "Encounter/nhsn-iip-en139-2"
+      }, {
+        "reference": "Encounter/nhsn-iip-en139"
+      }, {
+        "reference": "Encounter/nhsn-iip-obs139-2"
+      }, {
+        "reference": "Encounter/nhsn-iip-ed139-2"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add139-2"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add139-2",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add139-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139",
+        "display": "Kris C. Anderson"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-ed139-2"
+      },
+      "authoredOn": "2022-01-09T20:30:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-ed139-2",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-ed139-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "EMER",
+        "display": "emergency encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139"
+      },
+      "period": {
+        "start": "2022-01-09T08:00:00.000Z",
+        "end": "2022-01-09T23:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en139",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en139",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139"
+      },
+      "period": {
+        "start": "2021-01-01T08:00:00.000Z",
+        "end": "2022-01-05T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en139-2",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en139-2",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "finished",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139"
+      },
+      "period": {
+        "start": "2021-01-10T08:00:00.000Z",
+        "end": "2022-01-15T08:00:00.000Z"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add139",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add139",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#04ea320cd2709af0",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip139",
+        "display": "Amy Shaw"
+      },
+      "authoredOn": "2022-01-02T23:30:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip139",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip139",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://hospital.smarthealthit.org",
+        "value": "139"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Anderson",
+        "given": [ "Kris", "C." ]
+      } ],
+      "gender": "female",
+      "birthDate": "1989-09-12"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c7b",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c7b",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip106"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 1
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "MedicationRequest/nhsn-iip-add106"
+      }, {
+        "reference": "Patient/nhsn-iip-ip106"
+      }, {
+        "reference": "Location/nhsn-iip-loc101-allminreqelement"
+      }, {
+        "reference": "Encounter/nhsn-iip-en106"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en106",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en106",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#766ff13d950aaf85",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "planned",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "http://www.ama-assn.org/go/cpt",
+          "code": "53923005"
+        } ],
+        "text": "Medical consultation on inpatient"
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip106"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-02-02T08:00:00.0"
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101-allminreqelement"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc101-allminreqelement",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc101-allminreqelement",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#5c0f7e0f1b5e13bb"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active",
+      "name": "Health Level Seven International - Amherst",
+      "description": "HL7 Headquarters - East",
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.696784.13260",
+          "code": "1165-0",
+          "display": "Inpatient Hospice"
+        } ]
+      } ],
+      "telecom": [ {
+        "system": "phone",
+        "value": "(+1) 734-677-7777"
+      } ],
+      "address": {
+        "line": [ "3300 Washtenaw Avenue, Suite 227" ],
+        "city": "Amherst",
+        "state": "MA",
+        "postalCode": "01002",
+        "country": "USA"
+      },
+      "position": {
+        "longitude": -72.519854,
+        "latitude": 42.373222
+      },
+      "managingOrganization": {
+        "display": "Health Level Seven International"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add106",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add106",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#faa8e66fe6ecb043",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip106",
+        "display": "Curtis Bean"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-en106"
+      },
+      "authoredOn": "2022-01-31T10:00:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip106",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip106",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:55+00:00"
+        } ],
+        "source": "#782fc42037b6ddb9",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "identifier": [ {
+        "system": "http://www.acme.com/identifiers/patient",
+        "value": "106"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Bean",
+        "given": [ "Curtis", "W." ]
+      } ],
+      "gender": "male",
+      "birthDate": "1978-06-08",
+      "deceasedDateTime": "2022-02-01"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/d3c56e35-e11b1a59-356e7c76",
+    "resource": {
+      "resourceType": "MeasureReport",
+      "id": "d3c56e35-e11b1a59-356e7c76",
+      "meta": {
+        "profile": [ "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+            "code": "cohort",
+            "display": "Cohort"
+          } ]
+        }
+      } ],
+      "status": "complete",
+      "type": "individual",
+      "measure": "http://lantanagroup.com/fhir/nhsn-measures/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101"
+      },
+      "date": "2023-06-09T20:18:11+00:00",
+      "reporter": {
+        "reference": "Organization/de083ed7-b869-4010-9791-5286169bf078"
+      },
+      "period": {
+        "start": "2022-01-01T00:00:00+00:00",
+        "end": "2022-01-31T23:59:59+00:00"
+      },
+      "improvementNotation": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+          "code": "increase"
+        } ]
+      },
+      "group": [ {
+        "population": [ {
+          "code": {
+            "coding": [ {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+              "code": "initial-population",
+              "display": "Initial Population"
+            } ]
+          },
+          "count": 5
+        } ],
+        "measureScore": {
+          "extension": [ {
+            "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+            "valueCode": "unknown"
+          } ]
+        }
+      } ],
+      "evaluatedResource": [ {
+        "reference": "Encounter/6230b422-470d-49a1-9f48-fbf0a989cc0b"
+      }, {
+        "reference": "Location/nhsn-iip-loc101"
+      }, {
+        "reference": "Medication/nhsn-iip-add-sde-mcl-med"
+      }, {
+        "reference": "Encounter/nhsn-iip-en87"
+      }, {
+        "reference": "Location/nhsn-iip-loc102"
+      }, {
+        "reference": "Encounter/97962650"
+      }, {
+        "reference": "Location/33488151"
+      }, {
+        "reference": "Coverage/nhsn-iip-cov101"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add101-10"
+      }, {
+        "reference": "Patient/nhsn-iip-ip101"
+      }, {
+        "reference": "Condition/nhsn-iip-con101-3"
+      }, {
+        "reference": "Encounter/50ca4307-0a00-4ec5-8ef1-af6f50ec4791"
+      }, {
+        "reference": "Specimen/nhsn-iip-bg-spec-101"
+      }, {
+        "reference": "Condition/nhsn-iip-con101-2"
+      }, {
+        "reference": "Encounter/nhsn-iip-en101"
+      }, {
+        "reference": "Location/nhsn-iip-loc101-1patientallelement"
+      }, {
+        "reference": "Condition/nhsn-iip-con101"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add101"
+      }, {
+        "reference": "MedicationRequest/nhsn-iip-add-sde-mcl-mr"
+      }, {
+        "reference": "Condition/nhsn-iip-con101-5"
+      }, {
+        "reference": "Condition/nhsn-iip-con101-4"
+      }, {
+        "reference": "Observation/nhsn-iip-sde-obs-bg-101"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/6230b422-470d-49a1-9f48-fbf0a989cc0b",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "6230b422-470d-49a1-9f48-fbf0a989cc0b",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#167a1f09503f7d3d",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "triaged",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-01-31T08:00:00.0"
+      },
+      "diagnosis": [ {
+        "use": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+            "code": "CC"
+          } ]
+        }
+      } ],
+      "hospitalization": {
+        "dischargeDisposition": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+            "code": "home",
+            "display": "home"
+          } ]
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101-1patientallelement"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc102"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc102",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc102",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:58+00:00"
+        } ],
+        "source": "#1890e51b81b773c8"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active",
+      "name": "Health Level Seven International - Amherst",
+      "description": "HL7 Headquarters - East",
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.696784.13260",
+          "code": "1165-0",
+          "display": "Inpatient Hospice"
+        } ]
+      } ],
+      "telecom": [ {
+        "system": "phone",
+        "value": "(+1) 734-677-1234"
+      } ],
+      "address": {
+        "line": [ "1200 deer drive " ],
+        "city": "sunburn",
+        "state": "MA",
+        "postalCode": "01002",
+        "country": "USA"
+      },
+      "managingOrganization": {
+        "display": "Health Level Seven International"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Specimen/nhsn-iip-bg-spec-101",
+    "resource": {
+      "resourceType": "Specimen",
+      "id": "nhsn-iip-bg-spec-101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:18:08+00:00"
+        } ],
+        "source": "#7a9bf4a1464b7bc8"
+      },
+      "identifier": [ {
+        "system": "http://ehr.acme.org/identifiers/collections",
+        "value": "23234352356"
+      } ],
+      "accessionIdentifier": {
+        "system": "http://lab.acme.org/specimens/2011",
+        "value": "X352356"
+      },
+      "status": "available",
+      "type": {
+        "coding": [ {
+          "system": "http://snomed.info/sct",
+          "code": "122555007",
+          "display": "Venous blood specimen"
+        } ]
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Peter Patient"
+      },
+      "receivedTime": "2011-03-04T07:03:00Z",
+      "request": [ {
+        "reference": "ServiceRequest/example",
+        "_reference": {
+          "fhir_comments": [ "    this points to the order that caused the sample to be drawn    " ]
+        }
+      } ],
+      "collection": {
+        "collector": {
+          "reference": "Practitioner/example",
+          "_reference": {
+            "fhir_comments": [ "    in practice, collecter is almost always recorded    " ]
+          }
+        },
+        "collectedDateTime": "2022-01-03T08:00:00Z",
+        "_collectedDateTime": {
+          "fhir_comments": [ "    the time of collection is usually required. Usually a point in time, but can be a period\n      (collectedPeriod) if it's a timed collection (e.g. a 24 hour urine)    " ]
+        },
+        "quantity": {
+          "value": 6,
+          "unit": "mL",
+          "_unit": {
+            "fhir_comments": [ "    e.g. full    " ]
+          }
+        },
+        "method": {
+          "fhir_comments": [ "    method is usually implied by type    " ],
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0488",
+            "code": "LNV"
+          } ]
+        },
+        "bodySite": {
+          "fhir_comments": [ "    bodysite is usually implied by type too its here to demonstrate its usage to indicating\n     the draw site in this case   " ],
+          "coding": [ {
+            "system": "http://snomed.info/sct",
+            "code": "49852007",
+            "display": "Structure of median cubital vein (body structure)"
+          } ],
+          "text": "Right median cubital vein"
+        }
+      },
+      "container": [ {
+        "fhir_comments": [ "   \n      the container identifier is not the same as the specimen identifier\n      usually, it is pre-printed/implanted etc.on the container prior to\n      use. It might a RFID in the container, or it might be a UDI\n      (http://www.fda.gov/MedicalDevices/DeviceRegulationandGuidance/UniqueDeviceIdentification/)\n       " ],
+        "identifier": [ {
+          "value": "48736-15394-75465",
+          "_value": {
+            "fhir_comments": [ "    this is a serial number off the tube - there's no context such as a system    " ]
+          }
+        } ],
+        "description": "Green Gel tube",
+        "type": {
+          "text": "Vacutainer",
+          "_text": {
+            "fhir_comments": [ "    again, this might easily be used to cover additives and capacity as well    " ]
+          }
+        },
+        "capacity": {
+          "value": 10,
+          "unit": "mL"
+        },
+        "specimenQuantity": {
+          "fhir_comments": [ "    if there's only one container, then this value is the same\n     as .collection.quantity (usually). This is for when there is more\n     than one container    " ],
+          "value": 6,
+          "unit": "mL"
+        },
+        "additiveReference": {
+          "reference": "Substance/hep"
+        }
+      } ],
+      "note": [ {
+        "text": "Specimen is grossly lipemic"
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/nhsn-iip-loc101",
+    "resource": {
+      "resourceType": "Location",
+      "id": "nhsn-iip-loc101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#136f74af1ce19a7a"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "system": "http://www.acme.org/location",
+        "value": "29"
+      } ],
+      "status": "active",
+      "name": "Health Level Seven International - Amherst",
+      "description": "HL7 Headquarters - East",
+      "type": [ {
+        "coding": [ {
+          "system": "https://www.cdc.gov/nhsn/cdaportal/terminology/codesystem/hsloc.html",
+          "code": "1005-8",
+          "display": "Cardiac Catheterization Room/Suite"
+        } ]
+      } ],
+      "telecom": [ {
+        "system": "phone",
+        "value": "(+1) 734-677-7777"
+      } ],
+      "address": {
+        "line": [ "3300 Washtenaw Avenue, Suite 227" ],
+        "city": "Amherst",
+        "state": "MA",
+        "postalCode": "01002",
+        "country": "USA"
+      },
+      "position": {
+        "longitude": -72.519854,
+        "latitude": 42.373222
+      },
+      "managingOrganization": {
+        "display": "Health Level Seven International"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/nhsn-iip-ip101",
+    "resource": {
+      "resourceType": "Patient",
+      "id": "nhsn-iip-ip101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:56+00:00"
+        } ],
+        "source": "#31e49df7d89d4269",
+        "profile": [ "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient" ]
+      },
+      "extension": [ {
+        "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+        "extension": [ {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2106-3",
+            "display": "White"
+          }
+        }, {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "1002-5",
+            "display": "American Indian or Alaska Native"
+          }
+        }, {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2028-9",
+            "display": "Asian"
+          }
+        }, {
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "1586-7",
+            "display": "Shoshone"
+          }
+        }, {
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2036-2",
+            "display": "Filipino"
+          }
+        }, {
+          "url": "text",
+          "valueString": "Mixed"
+        } ]
+      }, {
+        "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+        "extension": [ {
+          "url": "ombCategory",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2135-2",
+            "display": "Hispanic or Latino"
+          }
+        }, {
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2184-0",
+            "display": "Dominican"
+          }
+        }, {
+          "url": "detailed",
+          "valueCoding": {
+            "system": "urn:oid:2.16.840.1.113883.6.238",
+            "code": "2148-5",
+            "display": "Mexican"
+          }
+        }, {
+          "url": "text",
+          "valueString": "Hispanic or Latino"
+        } ]
+      } ],
+      "identifier": [ {
+        "system": "urn:oid:2.16.840.1.113883.6.1000",
+        "value": "nhsn-iip-ip101"
+      } ],
+      "active": true,
+      "name": [ {
+        "family": "Doe",
+        "given": [ "Jane", "E." ]
+      } ],
+      "birthDate": "1987-04-08"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add-sde-mcl-mr",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add-sde-mcl-mr",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#351a71a1def16d30",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "identifier": [ {
+        "use": "official",
+        "system": "http://acme.org/prescriptions",
+        "value": "34557"
+      } ],
+      "status": "completed",
+      "intent": "plan",
+      "reportedBoolean": true,
+      "medicationReference": {
+        "reference": "Medication/nhsn-iip-add-sde-mcl-med"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Amy V. Shaw"
+      },
+      "authoredOn": "2022-01-24"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en87",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en87",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#9047d902d0593476",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "triaged",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "classHistory": [ {
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient encounter"
+        },
+        "period": {
+          "start": "2022-01-01T08:00:00.0",
+          "end": "2022-01-31T08:00:00.0"
+        }
+      } ],
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.13.247.3.7.10.698084.10110",
+          "code": "101",
+          "display": "Inpatient"
+        } ]
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-01-31T08:00:00.0"
+      },
+      "diagnosis": [ {
+        "use": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+            "code": "CC"
+          } ]
+        }
+      } ],
+      "hospitalization": {
+        "dischargeDisposition": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+            "code": "home",
+            "display": "home"
+          } ]
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101"
+        },
+        "status": "completed",
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101_NL1"
+        },
+        "status": "completed",
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/50ca4307-0a00-4ec5-8ef1-af6f50ec4791",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "50ca4307-0a00-4ec5-8ef1-af6f50ec4791",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#49ebaa3f48ea5874",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "triaged",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-01-31T08:00:00.0"
+      },
+      "diagnosis": [ {
+        "use": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+            "code": "CC"
+          } ]
+        }
+      } ],
+      "hospitalization": {
+        "dischargeDisposition": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+            "code": "home",
+            "display": "home"
+          } ]
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101-1patientallelement"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc102"
+        },
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Observation/nhsn-iip-sde-obs-bg-101",
+    "resource": {
+      "resourceType": "Observation",
+      "id": "nhsn-iip-sde-obs-bg-101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:18:07+00:00"
+        } ],
+        "source": "#f3e9b460f361d12c",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab" ]
+      },
+      "status": "final",
+      "category": [ {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+          "code": "laboratory",
+          "display": "Laboratory"
+        } ],
+        "text": "Laboratory"
+      } ],
+      "code": {
+        "coding": [ {
+          "system": "http://loinc.org",
+          "code": "2339-0",
+          "display": "Glucose [Mass/volume] in Blood"
+        } ],
+        "text": "Glucose [Mass/volume] in Blood"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Amy Shaw"
+      },
+      "effectiveDateTime": "2022-01-03T08:00:00.0",
+      "specimen": {
+        "reference": "Specimen/nhsn-iip-bg-spec-101"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add101-10",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add101-10",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#38a260bf532c8aae",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "identifier": [ {
+        "use": "usual",
+        "system": "urn:oid:1.2.840.114350.1.13.310.3.7.2.798268",
+        "value": "336609269"
+      } ],
+      "status": "active",
+      "intent": "proposal",
+      "category": [ {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+          "code": "inpatient",
+          "display": "Inpatient"
+        } ],
+        "text": "Inpatient"
+      } ],
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Amy Shaw"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-en101"
+      },
+      "authoredOn": "2022-01-15T16:50:26Z",
+      "requester": {
+        "reference": "Practitioner/e9PX1XlXc.HNoRNOB8.Ip3g3",
+        "display": "Justin R Birge, MD"
+      },
+      "recorder": {
+        "reference": "Practitioner/ejGwdFhqg0AasCfx7NXLO5Q3",
+        "display": "Brian L Schmer, PharmD"
+      },
+      "courseOfTherapyType": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+          "code": "acute",
+          "display": "Short course (acute) therapy"
+        } ],
+        "text": "Short course (acute) therapy"
+      },
+      "dosageInstruction": [ {
+        "timing": {
+          "repeat": {
+            "boundsPeriod": {
+              "start": "2021-02-15T16:43:55Z",
+              "end": "2021-02-22T21:32:24Z"
+            },
+            "frequency": 1,
+            "period": 1,
+            "periodUnit": "d"
+          },
+          "code": {
+            "text": "PRN"
+          }
+        },
+        "asNeededBoolean": true,
+        "route": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.13.310.3.7.4.798268.7025",
+            "code": "6",
+            "display": "Intramuscular"
+          } ],
+          "text": "Intramuscular"
+        },
+        "doseAndRate": [ {
+          "type": {
+            "coding": [ {
+              "system": "http://epic.com/CodeSystem/dose-rate-type",
+              "code": "calculated",
+              "display": "calculated"
+            } ],
+            "text": "calculated"
+          },
+          "doseQuantity": {
+            "value": 1,
+            "unit": "mg",
+            "system": "http://unitsofmeasure.org",
+            "code": "mg"
+          }
+        }, {
+          "type": {
+            "coding": [ {
+              "system": "http://epic.com/CodeSystem/dose-rate-type",
+              "code": "admin-amount",
+              "display": "admin-amount"
+            } ],
+            "text": "admin-amount"
+          },
+          "doseQuantity": {
+            "value": 1,
+            "unit": "mL",
+            "system": "http://unitsofmeasure.org",
+            "code": "mL"
+          }
+        }, {
+          "type": {
+            "coding": [ {
+              "system": "http://epic.com/CodeSystem/dose-rate-type",
+              "code": "ordered",
+              "display": "ordered"
+            } ],
+            "text": "ordered"
+          },
+          "doseQuantity": {
+            "value": 1,
+            "unit": "mg",
+            "system": "http://unitsofmeasure.org",
+            "code": "mg"
+          }
+        } ]
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Medication/nhsn-iip-add-sde-mcl-med",
+    "resource": {
+      "resourceType": "Medication",
+      "id": "nhsn-iip-add-sde-mcl-med",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#2c1bd5ed050c72d4",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medication" ]
+      },
+      "code": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1007184",
+          "display": "insulin aspart protamine, human / insulin aspart, human"
+        } ],
+        "text": "insulin aspart protamine, human / insulin aspart, human"
+      },
+      "status": "active",
+      "form": {
+        "coding": [ {
+          "system": "http://snomed.info/sct",
+          "code": "385219001",
+          "display": "Injection Solution (qualifier value)"
+        } ]
+      },
+      "ingredient": [ {
+        "itemCodeableConcept": {
+          "coding": [ {
+            "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+            "code": "66955",
+            "display": "Vancomycin Hydrochloride"
+          } ]
+        },
+        "isActive": true,
+        "strength": {
+          "numerator": {
+            "value": 500,
+            "system": "http://unitsofmeasure.org",
+            "code": "mg"
+          },
+          "denominator": {
+            "value": 10,
+            "system": "http://unitsofmeasure.org",
+            "code": "mL"
+          }
+        }
+      } ],
+      "batch": {
+        "lotNumber": "9494788",
+        "expirationDate": "2017-05-22"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Location/33488151",
+    "resource": {
+      "resourceType": "Location",
+      "id": "33488151",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:59+00:00"
+        } ],
+        "source": "#5f2eb52e8ce1b658"
+      },
+      "extension": [ {
+        "url": "https://open.epic.com/fhir/extensions/specialty",
+        "valueCodeableConcept": {
+          "coding": [ {
+            "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+            "code": "21",
+            "display": "Surgery"
+          } ]
+        }
+      } ],
+      "identifier": [ {
+        "use": "official",
+        "type": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/73",
+            "code": "2572090023",
+            "display": "AMWELL",
+            "userSelected": true
+          } ],
+          "text": "AMWELL"
+        },
+        "system": "AMWELL",
+        "value": "33488151"
+      } ],
+      "status": "active",
+      "name": "B",
+      "alias": [ "B" ],
+      "mode": "instance",
+      "physicalType": {
+        "coding": [ {
+          "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/222",
+          "code": "777",
+          "display": "Bed(s)",
+          "userSelected": true
+        }, {
+          "system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
+          "code": "bd",
+          "display": "Bed"
+        } ],
+        "text": "Bed(s)"
+      },
+      "managingOrganization": {
+        "reference": "Organization/675844",
+        "display": "Model Hospital"
+      },
+      "partOf": {
+        "reference": "Location/33488139"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Condition/nhsn-iip-con101",
+    "resource": {
+      "resourceType": "Condition",
+      "id": "nhsn-iip-con101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:18:06+00:00"
+        } ],
+        "source": "#199c62d77e98778c",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition" ]
+      },
+      "clinicalStatus": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+          "code": "active",
+          "display": "Active"
+        } ],
+        "text": "Active"
+      },
+      "verificationStatus": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+          "code": "confirmed",
+          "display": "Confirmed"
+        } ],
+        "text": "Confirmed"
+      },
+      "category": [ {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+          "code": "problem-list-item",
+          "display": "Problem List Item"
+        } ],
+        "text": "Problem"
+      } ],
+      "code": {
+        "coding": [ {
+          "system": "http://snomed.info/sct",
+          "code": "267036007",
+          "display": "Dyspnea (finding)"
+        } ],
+        "text": "Shortness of breath"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Jane E. Doe"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-en101",
+        "display": "inpatient encounter"
+      },
+      "onsetDateTime": "2022-01-01T10:00:00.0",
+      "recordedDate": "2022-01-01T10:00:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MedicationRequest/nhsn-iip-add101",
+    "resource": {
+      "resourceType": "MedicationRequest",
+      "id": "nhsn-iip-add101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#3595fc81f2403b07",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest" ]
+      },
+      "status": "active",
+      "intent": "proposal",
+      "medicationCodeableConcept": {
+        "coding": [ {
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "code": "1161609",
+          "display": "metFORMIN Oral Liquid Product"
+        } ],
+        "text": "metFORMIN Oral Liquid Product"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Jane E. Doe"
+      },
+      "encounter": {
+        "reference": "Encounter/nhsn-iip-en101"
+      },
+      "authoredOn": "2022-01-01T10:00:00.0"
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/97962650",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "97962650",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#dd7f1ea7a1621b46",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "extension": [ {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:3339151",
+          "url": "custom-attribute-name",
+          "valueString": "Previous Patient Type"
+        }, {
+          "url": "custom-attribute-value",
+          "valueCodeableConcept": {
+            "coding": [ {
+              "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/71",
+              "code": "309308",
+              "display": "Inpatient",
+              "userSelected": true
+            } ],
+            "text": "Inpatient"
+          }
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:204298207",
+          "url": "custom-attribute-name",
+          "valueString": "Full Reg User ID"
+        }, {
+          "url": "custom-attribute-value",
+          "valueString": "PJ023467"
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:17368048",
+          "url": "custom-attribute-name",
+          "valueString": "Full Reg Date/Time"
+        }, {
+          "url": "custom-attribute-value",
+          "valueDateTime": "2021-07-26T21:33:43.000Z"
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:684109",
+          "url": "custom-attribute-name",
+          "valueString": "Accident Related Visit"
+        }, {
+          "url": "custom-attribute-value",
+          "valueCodeableConcept": {
+            "coding": [ {
+              "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/100700",
+              "code": "684155",
+              "display": "No",
+              "userSelected": true
+            } ],
+            "text": "No"
+          }
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:4047481",
+          "url": "custom-attribute-name",
+          "valueString": "Conversation"
+        }, {
+          "url": "custom-attribute-value",
+          "valueCodeableConcept": {
+            "coding": [ {
+              "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/100040",
+              "code": "4630114",
+              "display": "Register Patient",
+              "userSelected": true
+            } ],
+            "text": "Register Patient"
+          }
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/custom-attribute",
+        "extension": [ {
+          "id": "ENCNTR:34310433",
+          "url": "custom-attribute-name",
+          "valueString": "Complete Reg?"
+        }, {
+          "url": "custom-attribute-value",
+          "valueCodeableConcept": {
+            "coding": [ {
+              "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/20322",
+              "code": "3542949",
+              "display": "Yes",
+              "userSelected": true
+            } ],
+            "text": "Yes"
+          }
+        } ]
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/client-organization",
+        "valueReference": {
+          "reference": "Organization/675844"
+        }
+      }, {
+        "url": "https://fhir-ehr.cerner.com/r4/StructureDefinition/estimated-financial-responsibility-amount",
+        "valueMoney": {
+          "value": 0,
+          "currency": "USD"
+        }
+      } ],
+      "identifier": [ {
+        "use": "usual",
+        "type": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/319",
+            "code": "1077",
+            "display": "FIN NBR",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "code": "AN",
+            "display": "Account number",
+            "userSelected": false
+          } ],
+          "text": "FIN NBR"
+        },
+        "system": "urn:oid:5.5.5.5.5.5.",
+        "value": "17640",
+        "period": {
+          "start": "2021-07-13T14:49:29.000Z"
+        }
+      } ],
+      "status": "in-progress",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter",
+        "userSelected": false
+      },
+      "type": [ {
+        "coding": [ {
+          "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/71",
+          "code": "309308",
+          "display": "Inpatient",
+          "userSelected": true
+        }, {
+          "system": "http://terminology.hl7.org/CodeSystem/v2-0004",
+          "code": "I",
+          "display": "Inpatient",
+          "userSelected": false
+        } ],
+        "text": "Inpatient"
+      } ],
+      "serviceType": {
+        "coding": [ {
+          "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/34",
+          "code": "313012",
+          "display": "Medicine-General",
+          "userSelected": true
+        }, {
+          "system": "http://snomed.info/sct",
+          "code": "700232004",
+          "display": "General medical service (qualifier value)",
+          "userSelected": false
+        } ],
+        "text": "Medicine-General"
+      },
+      "priority": {
+        "coding": [ {
+          "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/3",
+          "code": "309203",
+          "display": "Emergency",
+          "userSelected": true
+        }, {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActPriority",
+          "code": "EM",
+          "display": "emergency",
+          "userSelected": false
+        } ],
+        "text": "Emergency"
+      },
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101",
+        "display": "Jane Doe"
+      },
+      "participant": [ {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "1116",
+            "display": "Admitting Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "ADM",
+            "display": "admitter",
+            "userSelected": false
+          } ],
+          "text": "Admitting Physician"
+        } ],
+        "period": {
+          "start": "2021-07-26T21:35:16.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/11817978",
+          "display": "Carter, Kristin Cerner"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "1119",
+            "display": "Attending Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "ATND",
+            "display": "attender",
+            "userSelected": false
+          } ],
+          "text": "Attending Physician"
+        } ],
+        "period": {
+          "start": "2021-07-13T14:55:17.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/11817978",
+          "display": "Carter, Kristin Cerner"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "1125",
+            "display": "Registered Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "Registered Nurse"
+        } ],
+        "period": {
+          "start": "2021-11-04T15:29:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/607928",
+          "display": "Cerner Test, Nurse Cerner"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "1125",
+            "display": "Registered Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "Registered Nurse"
+        } ],
+        "period": {
+          "start": "2021-07-14T14:45:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/607928",
+          "display": "Cerner Test, Nurse Cerner"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "1126",
+            "display": "Referring Physician",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "REF",
+            "display": "referrer",
+            "userSelected": false
+          } ],
+          "text": "Referring Physician"
+        } ],
+        "period": {
+          "start": "2021-07-26T21:35:16.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12720688",
+          "display": "Test, ASD Physician"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2022-01-25T16:43:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12744260",
+          "display": "Joyce, Patrick"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2021-12-10T04:49:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12744260",
+          "display": "Joyce, Patrick"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "3362682",
+            "display": "ED Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "ED Nurse"
+        } ],
+        "period": {
+          "start": "2021-07-21T23:31:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12726350",
+          "display": "PWMednition, EDRN"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2021-07-21T20:11:57.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12744260",
+          "display": "Joyce, Patrick"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2021-07-15T21:40:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12720065",
+          "display": "Scott, Justin"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2021-07-14T14:37:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12720065",
+          "display": "Scott, Justin"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "681274",
+            "display": "Database Coordinator",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "PART",
+            "display": "Participation",
+            "userSelected": false
+          } ],
+          "text": "Database Coordinator"
+        } ],
+        "period": {
+          "start": "2021-07-13T21:55:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/12720065",
+          "display": "Scott, Justin"
+        }
+      }, {
+        "type": [ {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/333",
+            "code": "3362682",
+            "display": "ED Nurse",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+            "code": "SPRF",
+            "display": "secondary performer",
+            "userSelected": false
+          } ],
+          "text": "ED Nurse"
+        } ],
+        "period": {
+          "start": "2021-07-13T14:49:00.000Z"
+        },
+        "individual": {
+          "reference": "Practitioner/744111",
+          "display": "Cerner Test, Emergency Medicine - Nurse Cerner"
+        }
+      } ],
+      "period": {
+        "start": "2021-07-13T14:48:59.000Z"
+      },
+      "reasonCode": [ {
+        "text": "COVID Symptoms"
+      } ],
+      "hospitalization": {
+        "admitSource": {
+          "coding": [ {
+            "system": "https://fhir.cerner.com/e8a84236-c258-4952-98b7-a6ff8a9c587a/codeSet/2",
+            "code": "309191",
+            "display": "Clinic or Physician Office Referral",
+            "userSelected": true
+          }, {
+            "system": "http://terminology.hl7.org/CodeSystem/admit-source",
+            "code": "gp",
+            "display": "General Practitioner referral",
+            "userSelected": false
+          } ],
+          "text": "Clinic or Physician Office Referral"
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/33488151",
+          "display": "Model Hospital, MX Hospital, ICU, 101, B"
+        },
+        "status": "active"
+      } ],
+      "serviceProvider": {
+        "reference": "Organization/675844",
+        "display": "Model Hospital"
+      }
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Encounter/nhsn-iip-en101",
+    "resource": {
+      "resourceType": "Encounter",
+      "id": "nhsn-iip-en101",
+      "meta": {
+        "extension": [ {
+          "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
+          "valueDateTime": "2023-06-09T20:17:57+00:00"
+        } ],
+        "source": "#7618b5bf706fcdaf",
+        "profile": [ "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter" ]
+      },
+      "status": "triaged",
+      "class": {
+        "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+        "code": "IMP",
+        "display": "inpatient encounter"
+      },
+      "classHistory": [ {
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient encounter"
+        },
+        "period": {
+          "start": "2022-01-01T08:00:00.0",
+          "end": "2022-01-31T08:00:00.0"
+        }
+      } ],
+      "type": [ {
+        "coding": [ {
+          "system": "urn:oid:1.2.840.114350.1.13.247.3.7.10.698084.10110",
+          "code": "101",
+          "display": "Inpatient"
+        } ]
+      } ],
+      "subject": {
+        "reference": "Patient/nhsn-iip-ip101"
+      },
+      "period": {
+        "start": "2022-01-01T08:00:00.0",
+        "end": "2022-01-31T08:00:00.0"
+      },
+      "diagnosis": [ {
+        "use": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/diagnosis-role",
+            "code": "CC"
+          } ]
+        }
+      } ],
+      "hospitalization": {
+        "dischargeDisposition": {
+          "coding": [ {
+            "system": "http://terminology.hl7.org/CodeSystem/discharge-disposition",
+            "code": "home",
+            "display": "home"
+          } ]
+        }
+      },
+      "location": [ {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101"
+        },
+        "status": "completed",
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      }, {
+        "location": {
+          "reference": "Location/nhsn-iip-loc101_NL1"
+        },
+        "status": "completed",
+        "period": {
+          "start": "2022-01-02T08:00:00.0",
+          "end": "2022-01-30T08:00:00.0"
+        }
+      } ]
+    }
+  }, {
+    "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Substance/hep",
+    "resource": {
+      "resourceType": "Substance",
+      "id": "hep",
+      "code": {
+        "coding": [ {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-EntityCode",
+          "code": "HEPL"
+        } ]
+      }
+    }
+  } ]
+}

@@ -5,6 +5,7 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,12 +48,15 @@ public class ResourceIdChanger {
                     (e.getResource().getIdElement().getIdPart().length() > 64 || e.getResource().getIdElement().getIdPart().contains(Constants.UuidPrefix)))
             .collect(Collectors.toList());
     // Create a map where key = old id, value = new id (a hash of the old id)
-    Map<IdType, IdType> newIds = invalidEntries.stream().map(Bundle.BundleEntryComponent::getResource).map(res -> {
+    Map<IdType, IdType> newIds = new IdentityHashMap<>();
+    invalidEntries.stream().map(Bundle.BundleEntryComponent::getResource).forEach(res -> {
       IdType rId = res.getIdElement();
 
       String newId = getNewId(rId.getIdPart());
-      return new IdType[]{rId, new IdType(res.getResourceType().toString(), newId)};
-    }).collect(Collectors.toMap(e -> e[0], e -> e[1]));
+      if(!newIds.containsKey(rId)) {
+        newIds.put(rId, new IdType(res.getResourceType().toString(), newId));
+      }
+    });
 
     logger.debug("Found {} invalid entries", invalidEntries.size());
 
