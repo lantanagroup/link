@@ -32,8 +32,7 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
           "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
           "urn:ietf:rfc:3986",
           "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNRespiratoryPathogenSurveillanceInitialPopulation",
-          "http://hl7.org/fhir/sid/us-ssn",
-          "http://hl7.org/fhir/R4/v3/ActCode/cs.html"   // TODO: fix?
+          "http://hl7.org/fhir/sid/us-ssn"
   ));
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
 

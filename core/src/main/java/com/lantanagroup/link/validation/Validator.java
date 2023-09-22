@@ -2,7 +2,9 @@ package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.validation.*;
+import ca.uhn.fhir.validation.IValidationContext;
+import ca.uhn.fhir.validation.ValidationContext;
+import ca.uhn.fhir.validation.ValidationOptions;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.model.tenant.Validation;
@@ -31,7 +33,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
@@ -152,36 +153,6 @@ public class Validator {
       default:
         throw new RuntimeException("Unexpected severity " + severity);
     }
-  }
-
-  private static OperationOutcome getOperationOutcome(List<ValidationMessage> messages, OperationOutcome.IssueSeverity severity) {
-    OperationOutcome outcome = new OperationOutcome();
-
-    List<ValidationMessage> filtered = messages.stream().filter(m -> {
-      boolean isError = m.getLevel() == ValidationMessage.IssueSeverity.ERROR;
-      boolean isWarning = m.getLevel() == ValidationMessage.IssueSeverity.WARNING;
-      boolean isInfo = m.getLevel() == ValidationMessage.IssueSeverity.INFORMATION;
-
-      if (severity == OperationOutcome.IssueSeverity.ERROR && !isError) {
-        return false;
-      } else if (severity == OperationOutcome.IssueSeverity.WARNING && !isError && !isWarning) {
-        return false;
-      } else if (severity == OperationOutcome.IssueSeverity.INFORMATION && !isError && !isWarning && !isInfo) {
-        return false;
-      }
-      return true;
-    }).collect(Collectors.toList());
-
-    outcome.setIssue(filtered.stream().map(f -> {
-      OperationOutcome.OperationOutcomeIssueComponent issue = new OperationOutcome.OperationOutcomeIssueComponent();
-      issue.setDiagnostics(f.getMessage());
-      issue.setSeverity(getIssueSeverity(f.getLevel()));
-      issue.getLocation().add(new StringType(f.getLocation()));
-      issue.getLocation().add(new StringType(f.getLine() + ":" + f.getCol()));
-      return issue;
-    }).collect(Collectors.toList()));
-
-    return outcome;
   }
 
   private void validateResource(Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity, Integer entryIndex) {

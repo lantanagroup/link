@@ -64,43 +64,63 @@ public class ValidatorTests {
 
   @Test
   public void validateUsCore() throws IOException {
-    var bundle = this.getBundle("large-submission-example.json");
-    var patientResource = bundle.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
-            .filter(r -> r instanceof Patient)
-            .map(r -> (Patient) r)
-            .findFirst();
+    Patient patient = new Patient();
+    patient.getMeta().addProfile("http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient");
+    patient.addIdentifier()
+            .setSystem("http://terminology.hl7.org/CodeSystem/v2-0203")
+            .setValue("103");
+    patient.addName()
+            .addGiven("Joe")
+            .setFamily("Somebody");
+    patient.setGender(Enumerations.AdministrativeGender.MALE);
 
-    validate(bundle, true);
+    OperationOutcome oo = validator.validate(patient, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(0, oo.getIssue().size());
 
-    patientResource.get().getName().clear();
-
-    validate(bundle, false);
+    patient.setGender(null);
+    oo = validator.validate(patient, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(1, oo.getIssue().size());
+    Assert.assertEquals("Patient.gender: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient)", oo.getIssue().get(0).getDiagnostics());
   }
 
   @Test
   public void validateNhsnMeasureIg() throws IOException {
-    var bundle = this.getBundle("large-submission-example.json");
+    var bundle1 = this.getBundle("single-submission-example.json");
 
-    var organizationResource = bundle.getEntry().stream()
+    var organizationResource = bundle1.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Organization)
             .map(r -> (Organization) r)
             .collect(Collectors.toList());
 
-    var encounter = bundle.getEntry().stream()
+    var encounter = bundle1.getEntry().stream()
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(r -> r instanceof Encounter)
             .map(r -> (Encounter) r)
             .findFirst();
 
-    validate(bundle, true);
+    OperationOutcome oo = validator.validate(bundle1, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(0, oo.getIssue().size());
 
-    organizationResource.forEach(o ->bundle.getEntry().remove(o));
+    // Remove the organization from the bundle which is required by the top level bundle profile
+    Bundle bundle2 = bundle1.copy();
+    bundle2.getEntry().removeIf(e -> e.getResource().getResourceType() == ResourceType.Organization);
+    oo = validator.validate(bundle2, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(2, oo.getIssue().size());
+    Assert.assertEquals("Rule bundle-contain-all-measurereport-references: 'MeasureReport Bundle: must contain all Resources that are references by MeasureReport references' Failed", oo.getIssue().get(0).getDiagnostics());
+    Assert.assertEquals("Bundle.entry:submitting-organization: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)", oo.getIssue().get(1).getDiagnostics());
 
-    encounter.get().getClass_().setCode("UNKNOWNCODE");
+    // Remove MeasureReport.group.population.count which is required by subject-list profiles
+    Bundle bundle3 = bundle1.copy();
+    bundle3.getEntry().stream()
+            .filter(e -> e.getResource().getResourceType() == ResourceType.MeasureReport)
+            .map(e -> (MeasureReport) e.getResource())
+            .forEach(mr -> mr.getGroup().forEach(g -> g.getPopulation().forEach(p -> p.setCountElement(null))));
 
-    validate(bundle, false);
+    oo = validator.validate(bundle3, OperationOutcome.IssueSeverity.ERROR);
+    Assert.assertEquals(2, oo.getIssue().size());
+    Assert.assertEquals("MeasureReport.group.population.count: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/subjectlist-measurereport)", oo.getIssue().get(0).getDiagnostics());
+    Assert.assertEquals("Bundle.entry:subject-list: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)", oo.getIssue().get(1).getDiagnostics());
   }
 
   @Test
