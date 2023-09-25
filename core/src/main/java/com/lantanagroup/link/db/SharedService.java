@@ -498,6 +498,17 @@ public class SharedService {
     }
   }
 
+  private User createUser(ResultSet rs) throws SQLException {
+    User user = new User();
+    user.setId(rs.getObject("id", UUID.class));
+    user.setEmail(rs.getString("email"));
+    user.setName(rs.getString("name"));
+    user.setEnabled(rs.getBoolean("enabled"));
+    user.setPasswordHash(rs.getString("passwordHash"));
+    user.setPasswordSalt(rs.getBytes("passwordSalt"));
+    return user;
+  }
+
   public User getUser(UUID id) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
@@ -510,7 +521,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -526,7 +537,7 @@ public class SharedService {
       List<User> users = new ArrayList<>();
 
       while (rs.next()) {
-        User next = User.create(rs);
+        User next = createUser(rs);
         next.setPasswordSalt(null);
         next.setPasswordHash(null);
         users.add(next);
@@ -556,7 +567,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
