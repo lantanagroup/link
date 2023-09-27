@@ -7,7 +7,8 @@ import ca.uhn.fhir.validation.ValidationContext;
 import ca.uhn.fhir.validation.ValidationOptions;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.db.model.tenant.Validation;
+import com.lantanagroup.link.db.SharedService;
+import lombok.Setter;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.input.ReaderInputStream;
 import org.hl7.fhir.common.hapi.validation.support.*;
@@ -38,26 +39,32 @@ public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
 
   private InstanceValidator instanceValidator;
-  private final Validation config;
   private VersionSpecificWorkerContextWrapper workerContext;
   private DefaultProfileValidationSupport defaultProfileValidationSupport;
   private CommonCodeSystemsTerminologyService commonCodeSystemsTerminologyService;
   private InMemoryTerminologyServerValidationSupport inMemoryTerminologyServerValidationSupport;
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
 
-  private IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser();
-  private IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
+  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser();
+  private final IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
+  private final ResourceFetcher resourceFetcher;
 
-  public Validator(Validation config) {
-    this.config = config;
+  @Setter
+  private SharedService sharedService;
+
+  public Validator(SharedService sharedService) {
+    this.sharedService = sharedService;
+    this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
+    this.resourceFetcher = new ResourceFetcher(this.prePopulatedValidationSupport);
 
     try {
       this.defaultProfileValidationSupport = new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
       this.commonCodeSystemsTerminologyService = new CommonCodeSystemsTerminologyService(FhirContextProvider.getFhirContext());
       this.inMemoryTerminologyServerValidationSupport = new InMemoryTerminologyServerValidationSupport(FhirContextProvider.getFhirContext());
-      this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
 
       this.loadFiles();
+      this.resourceFetcher.refreshCanonicalUrls();
+      this.updateMeasures();
 
       CachingValidationSupport validationSupport = this.getCachingValidationSupport();
 
@@ -66,8 +73,7 @@ public class Validator {
       XVerExtensionManager xverManager = new XVerExtensionManager(this.workerContext);
 
       this.instanceValidator = new InstanceValidator(this.workerContext, evaluationCtx, xverManager);
-      this.instanceValidator.setPolicyAdvisor(new PolicyAdvisor());
-      this.instanceValidator.setFetcher(new ResourceFetcher(this.prePopulatedValidationSupport));
+      this.instanceValidator.setFetcher(this.resourceFetcher);
       //this.instanceValidator.setDebug(true);
       this.instanceValidator.setAnyExtensionsAllowed(true);
 
@@ -78,6 +84,17 @@ public class Validator {
     } catch (IOException ex) {
       logger.error("Error initializing validator", ex);
     }
+  }
+
+  public void updateMeasures() {
+    // Add each measure canonical url to the resource fetcher
+    this.sharedService.getMeasureDefinitions().forEach(md -> {
+      md.getBundle().getEntry()
+              .stream()
+              .filter(e -> e.getResource().getResourceType() == ResourceType.Measure)
+              .map(e -> ((Measure) e.getResource()).getUrl())
+              .forEach(this.resourceFetcher::addCanonicalUrl);
+    });
   }
 
   private void loadClassResources(org.springframework.core.io.Resource[] classResources) throws IOException {

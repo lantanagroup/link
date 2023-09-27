@@ -19,7 +19,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 public class ResourceFetcher implements IValidatorResourceFetcher {
   protected static final Logger logger = LoggerFactory.getLogger(ResourceFetcher.class);
@@ -33,21 +32,33 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
           "urn:ietf:rfc:3986",
           "http://hl7.org/fhir/sid/us-ssn"
   ));
+
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
 
   public ResourceFetcher(PrePopulatedValidationSupport prePopulatedValidationSupport) {
     this.prePopulatedValidationSupport = prePopulatedValidationSupport;
+    this.refreshCanonicalUrls();
+  }
 
+  public void addCanonicalUrl(String url) {
+    if (!this.canonicalUrls.contains(url)) {
+      this.canonicalUrls.add(url);
+    }
+  }
+
+  public void refreshCanonicalUrls() {
     List<IBaseResource> allConformanceResources = this.prePopulatedValidationSupport.fetchAllConformanceResources();
 
     if (allConformanceResources != null) {
-      this.canonicalUrls.addAll(
-              allConformanceResources
-                      .stream()
-                      .filter(r -> this.getCanonicalUrl(r) != null)
-                      .map(this::getCanonicalUrl)
-                      .collect(Collectors.toList())
-      );
+      allConformanceResources
+              .stream()
+              .filter(r -> this.getCanonicalUrl(r) != null)
+              .map(this::getCanonicalUrl)
+              .forEach(url -> {
+                if (!this.canonicalUrls.contains(url)) {
+                  this.canonicalUrls.add(url);
+                }
+              });
     }
   }
 

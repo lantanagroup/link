@@ -77,11 +77,6 @@ public class Tenant {
   private String retentionPeriod = "P3M";
 
   /**
-   * Configuration for how to validate submission bundles.
-   */
-  private Validation validation = new Validation();
-
-  /**
    *
    */
   private String bulkGroupId;

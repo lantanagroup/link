@@ -2,7 +2,8 @@ package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.db.model.tenant.Validation;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.model.MeasureDefinition;
 import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -17,6 +18,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 @Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
@@ -29,15 +33,15 @@ public class ValidatorTests {
    */
   @BeforeClass
   public static void init() {
+    MeasureDefinition measureDefinition = new MeasureDefinition();
+    measureDefinition.setBundle(new Bundle());
+    measureDefinition.getBundle().addEntry()
+            .setResource(new Measure().setUrl("http://test.com/fhir/Measure/a"));
+    SharedService sharedService = mock(SharedService.class);
+    when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
+
     if (validator == null) {
-      Validation validation = new Validation();
-      validation.getNpmPackages().add("nhsn-measures.tgz");
-      validation.getNpmPackages().add("cqfmeasures.tgz");
-      validation.getNpmPackages().add("qicore.tgz");
-      validation.getNpmPackages().add("uscore.tgz");
-      validation.getNpmPackages().add("deqm.tgz");
-      validation.getNpmPackages().add("terminology.tgz");
-      validator = new Validator(validation);
+      validator = new Validator(sharedService);
 
       // Perform a single validation to pre-load all the packages and profiles
       validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
