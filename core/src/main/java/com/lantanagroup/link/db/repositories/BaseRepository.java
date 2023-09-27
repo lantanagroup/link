@@ -16,6 +16,22 @@ public abstract class BaseRepository<T> {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private static final FhirContext fhirContext = FhirContextProvider.getFhirContext();
 
+  protected String serializeObject(Object object) {
+    try {
+      return objectMapper.writeValueAsString(object);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected <U> U deserializeObject(Class<U> type, String json) {
+    try {
+      return objectMapper.readValue(json, type);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   protected String serializeList(List<?> list) {
     try {
       return objectMapper.writeValueAsString(list);
@@ -37,12 +53,12 @@ public abstract class BaseRepository<T> {
     return fhirContext.newJsonParser().encodeResourceToString(resource);
   }
 
-  protected <U extends IBaseResource> U deserializeResource(Class<U> resourceType, String string) {
-    return fhirContext.newJsonParser().parseResource(resourceType, string);
+  protected <U extends IBaseResource> U deserializeResource(Class<U> resourceType, String json) {
+    return fhirContext.newJsonParser().parseResource(resourceType, json);
   }
 
-  protected IBaseResource deserializeResource(String string) {
-    return fhirContext.newJsonParser().parseResource(string);
+  protected IBaseResource deserializeResource(String json) {
+    return fhirContext.newJsonParser().parseResource(json);
   }
 
   protected abstract T mapOne(ResultSet resultSet) throws SQLException;

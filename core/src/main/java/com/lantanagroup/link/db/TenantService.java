@@ -27,15 +27,17 @@ public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
 
   @Getter
-  private Tenant config;
+  private final Tenant config;
 
+  private final DataSource dataSource;
   private final ConceptMapRepository conceptMaps;
   private final PatientListRepository patientLists;
   private final ReportRepository reports;
   private final PatientDataRepository patientDatas;
   private final PatientMeasureReportRepository patientMeasureReports;
   private final AggregateRepository aggregates;
-  private final DataSource dataSource;
+  private final BulkStatusRepository bulkStatuses;
+  private final BulkStatusResultRepository bulkStatusResults;
 
   protected TenantService(Tenant config) {
     this.config = config;
@@ -49,6 +51,8 @@ public class TenantService {
     this.patientDatas = new PatientDataRepository(this.dataSource);
     this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource);
     this.aggregates = new AggregateRepository(this.dataSource);
+    this.bulkStatuses = new BulkStatusRepository(this.dataSource);
+    this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource);
   }
 
   public static TenantService create(Tenant tenant) {
@@ -219,5 +223,29 @@ public class TenantService {
 
   public void saveConceptMap(ConceptMap conceptMap) {
     this.conceptMaps.save(conceptMap);
+  }
+
+  public List<BulkStatus> getBulkStatuses() {
+    return this.bulkStatuses.findAll();
+  }
+
+  public BulkStatus getBulkStatusById(UUID id) {
+    return this.bulkStatuses.findById(id);
+  }
+
+  public List<BulkStatus> getBulkPendingStatusesWithPopulatedUrl() {
+    return this.bulkStatuses.findPendingWithUrl();
+  }
+
+  public void saveBulkStatus(BulkStatus bulkStatus) {
+    this.bulkStatuses.save(bulkStatus);
+  }
+
+  public List<BulkStatusResult> getBulkStatusResults() {
+    return this.bulkStatusResults.findAll();
+  }
+
+  public void saveBulkStatusResult(BulkStatusResult bulkStatusResult) {
+    this.bulkStatusResults.save(bulkStatusResult);
   }
 }
