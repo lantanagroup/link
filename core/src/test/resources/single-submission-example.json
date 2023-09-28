@@ -2,7 +2,7 @@
   "resourceType": "Bundle",
   "meta": {
     "profile": [
-      "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-measurereport-bundle"
+      "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle"
     ],
     "tag": [
       {
@@ -14,19 +14,19 @@
   },
   "identifier": {
     "system": "urn:ietf:rfc:3986",
-    "value": "urn:uuid:de18bb79-04bf-48f4-8960-4a31b14f3a97"
+    "value": "urn:uuid:455cdc6f-0bca-42b0-9699-87a824af395e"
   },
   "type": "collection",
-  "timestamp": "2023-06-14T16:17:06.935+00:00",
+  "timestamp": "2023-09-22T20:05:01.674+00:00",
   "entry": [
     {
-      "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Organization/7e7ea3af-5dc6-472a-8a49-41687d240ab1",
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Organization/8e1013d2-56a9-4154-88db-a7c0671da297",
       "resource": {
         "resourceType": "Organization",
-        "id": "7e7ea3af-5dc6-472a-8a49-41687d240ab1",
+        "id": "8e1013d2-56a9-4154-88db-a7c0671da297",
         "meta": {
           "profile": [
-            "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/nhsn-submitting-organization"
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-organization"
           ]
         },
         "identifier": [
@@ -71,28 +71,192 @@
       }
     },
     {
-      "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/List/6488e7695f963736cd64284c",
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Device/5f9d5655-5a54-4605-80e8-8d75b6ccd2d6",
       "resource": {
-        "resourceType": "List",
-        "id": "6488e7695f963736cd64284c",
+        "resourceType": "Device",
+        "id": "5f9d5655-5a54-4605-80e8-8d75b6ccd2d6",
         "meta": {
           "profile": [
-            "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/poi-list"
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-device"
+          ]
+        },
+        "deviceName": [
+          {
+            "name": "NHSNLink",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "version"
+                }
+              ]
+            },
+            "component": {
+              "value": "api"
+            },
+            "value": "0.9.0"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "build"
+                }
+              ]
+            },
+            "component": {
+              "value": "api"
+            },
+            "value": "20230713.1"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "commit"
+                }
+              ]
+            },
+            "component": {
+              "value": "api"
+            },
+            "value": "3f9662a8"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "version"
+                }
+              ]
+            },
+            "component": {
+              "value": "cqf-ruler"
+            },
+            "value": "CQF-Ruler 0.14.0"
+          }
+        ],
+        "property": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-FixResourceId"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-CodeSystemCleanup"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-ContainedResourceCleanup"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-CopyLocationIdentifierToType"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-EncounterStatusTransformer"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/List/a3f2bbc9-39b4-4a95-9dba-605e816304aa",
+      "resource": {
+        "resourceType": "List",
+        "id": "a3f2bbc9-39b4-4a95-9dba-605e816304aa",
+        "meta": {
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list"
           ]
         },
         "extension": [
           {
-            "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-patient-list-applicable-period-extension",
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-patient-list-applicable-period-extension",
             "valuePeriod": {
-              "start": "2022-07-01T00:00:00.000Z",
-              "end": "2022-07-31T23:59:59.000Z"
+              "start": "2022-04-01T00:00:00.000Z",
+              "end": "2022-04-30T23:59:59.000Z"
             }
           }
         ],
         "identifier": [
           {
             "system": "https://nhsnlink.org",
-            "value": "AdultPatients"
+            "value": "NHSNGlycemicControlHypoglycemicInitialPopulation"
           }
         ],
         "status": "current",
@@ -100,40 +264,32 @@
         "entry": [
           {
             "item": {
-              "reference": "Patient/384a3e90-d668-a409-175b-a68ad964f1b0"
+              "reference": "Patient/Hypo-Patient1-REQ"
             }
           }
         ]
       }
     },
     {
-      "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/62a53124-28b0d1c8",
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MeasureReport/7763f694-e11b1a59",
       "resource": {
         "resourceType": "MeasureReport",
-        "id": "62a53124-28b0d1c8",
+        "id": "7763f694-e11b1a59",
         "meta": {
           "profile": [
-            "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/subjectlist-measurereport"
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/subjectlist-measurereport"
           ]
-        },
-        "text": {
-          "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\t\t\t<table>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Name</td>\n\t\t\t\t\t\t<td>Peter James \n              <b>Chalmers</b> (&quot;Jim&quot;)\n            </td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Address</td>\n\t\t\t\t\t\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Contacts</td>\n\t\t\t\t\t\t<td>Home: unknown. Work: (03) 5555 6473</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Id</td>\n\t\t\t\t\t\t<td>MRN: 12345 (Acme Healthcare)</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>"
         },
         "contained": [
           {
             "resourceType": "List",
-            "text": {
-              "status": "generated",
-              "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\t\t\t<table>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Name</td>\n\t\t\t\t\t\t<td>Peter James \n              <b>Chalmers</b> (&quot;Jim&quot;)\n            </td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Address</td>\n\t\t\t\t\t\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Contacts</td>\n\t\t\t\t\t\t<td>Home: unknown. Work: (03) 5555 6473</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Id</td>\n\t\t\t\t\t\t<td>MRN: 12345 (Acme Healthcare)</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>"
-            },
             "id": "1",
             "status": "current",
             "mode": "snapshot",
             "entry": [
               {
                 "item": {
-                  "reference": "MeasureReport/62a53124-28b0d1c8-106c1c5a"
+                  "reference": "MeasureReport/7763f694-e11b1a59-4cec10da"
                 }
               }
             ]
@@ -141,23 +297,23 @@
         ],
         "extension": [
           {
-            "url": "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version",
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-version",
             "valueString": "0.9.0"
           },
           {
-            "url": "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
-            "valueString": "0.0.001"
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/measure-version",
+            "valueString": "0.0.012"
           }
         ],
         "status": "complete",
         "type": "subject-list",
-        "measure": "http://nhsnlink.org/fhir/Measure/AdultPatients",
+        "measure": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01",
         "reporter": {
-          "reference": "Organization/7e7ea3af-5dc6-472a-8a49-41687d240ab1"
+          "reference": "Organization/8e1013d2-56a9-4154-88db-a7c0671da297"
         },
         "period": {
-          "start": "2022-07-01T00:00:00+00:00",
-          "end": "2022-07-31T23:59:59+00:00"
+          "start": "2022-04-01T00:00:00+00:00",
+          "end": "2022-04-30T23:59:59+00:00"
         },
         "group": [
           {
@@ -183,18 +339,14 @@
       }
     },
     {
-      "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/MeasureReport/62a53124-28b0d1c8-106c1c5a",
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MeasureReport/7763f694-e11b1a59-4cec10da",
       "resource": {
         "resourceType": "MeasureReport",
-        "id": "62a53124-28b0d1c8-106c1c5a",
+        "id": "7763f694-e11b1a59-4cec10da",
         "meta": {
           "profile": [
             "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm"
           ]
-        },
-        "text": {
-          "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\t\t\t<table>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Name</td>\n\t\t\t\t\t\t<td>Peter James \n              <b>Chalmers</b> (&quot;Jim&quot;)\n            </td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Address</td>\n\t\t\t\t\t\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Contacts</td>\n\t\t\t\t\t\t<td>Home: unknown. Work: (03) 5555 6473</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Id</td>\n\t\t\t\t\t\t<td>MRN: 12345 (Acme Healthcare)</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>"
         },
         "extension": [
           {
@@ -212,17 +364,17 @@
         ],
         "status": "complete",
         "type": "individual",
-        "measure": "http://nhsnlink.org/fhir/Measure/AdultPatients",
+        "measure": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01",
         "subject": {
-          "reference": "Patient/384a3e90-d668-a409-175b-a68ad964f1b0"
+          "reference": "Patient/Hypo-Patient1-REQ"
         },
-        "date": "2023-06-14T15:52:14+00:00",
+        "date": "2023-09-22T20:04:42+00:00",
         "reporter": {
-          "reference": "Organization/7e7ea3af-5dc6-472a-8a49-41687d240ab1"
+          "reference": "Organization/8e1013d2-56a9-4154-88db-a7c0671da297"
         },
         "period": {
-          "start": "2022-07-01T00:00:00+00:00",
-          "end": "2022-07-31T23:59:59+00:00"
+          "start": "2022-04-01T00:00:00+00:00",
+          "end": "2022-04-30T23:59:59+00:00"
         },
         "improvementNotation": {
           "coding": [
@@ -260,193 +412,209 @@
         ],
         "evaluatedResource": [
           {
-            "reference": "Patient/384a3e90-d668-a409-175b-a68ad964f1b0"
+            "reference": "Location/Hypo-Location1-REQ"
+          },
+          {
+            "reference": "Encounter/Hypo-Encounter1-REQ"
+          },
+          {
+            "reference": "Patient/Hypo-Patient1-REQ"
+          },
+          {
+            "reference": "MedicationRequest/Hypo-MEDREQuest-REQ1"
           }
         ]
       }
     },
     {
-      "fullUrl": "http://lantanagroup.com/fhir/nhsn-measures/Patient/384a3e90-d668-a409-175b-a68ad964f1b0",
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MedicationRequest/Hypo-MEDREQuest-REQ1",
       "resource": {
-        "resourceType": "Patient",
-        "id": "384a3e90-d668-a409-175b-a68ad964f1b0",
+        "resourceType": "MedicationRequest",
+        "id": "Hypo-MEDREQuest-REQ1",
         "meta": {
           "extension": [
             {
-              "url": "http://lantanagroup.com/fhir/nhsn-measures/StructureDefinition/link-received-date-extension",
-              "valueDateTime": "2023-06-14T15:52:07+00:00"
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-09-22T20:04:29+00:00"
             }
           ],
-          "source": "#bab9758dba863e3a",
           "profile": [
-            "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient",
-            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest"
           ]
         },
-        "text": {
-          "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">\n\t\t\t<table>\n\t\t\t\t<tbody>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Name</td>\n\t\t\t\t\t\t<td>Peter James \n              <b>Chalmers</b> (&quot;Jim&quot;)\n            </td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Address</td>\n\t\t\t\t\t\t<td>534 Erewhon, Pleasantville, Vic, 3999</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Contacts</td>\n\t\t\t\t\t\t<td>Home: unknown. Work: (03) 5555 6473</td>\n\t\t\t\t\t</tr>\n\t\t\t\t\t<tr>\n\t\t\t\t\t\t<td>Id</td>\n\t\t\t\t\t\t<td>MRN: 12345 (Acme Healthcare)</td>\n\t\t\t\t\t</tr>\n\t\t\t\t</tbody>\n\t\t\t</table>\n\t\t</div>"
+        "status": "active",
+        "intent": "proposal",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1161609",
+              "display": "metFORMIN Oral Liquid Product"
+            }
+          ],
+          "text": "metFORMIN Oral Liquid Product"
         },
-        "extension": [
-          {
-            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
-            "extension": [
-              {
-                "url": "ombCategory",
-                "valueCoding": {
-                  "system": "urn:oid:2.16.840.1.113883.6.238",
-                  "code": "2106-3",
-                  "display": "White"
-                }
-              },
-              {
-                "url": "text",
-                "valueString": "White"
-              }
-            ]
-          },
-          {
-            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
-            "extension": [
-              {
-                "url": "ombCategory",
-                "valueCoding": {
-                  "system": "urn:oid:2.16.840.1.113883.6.238",
-                  "code": "2186-5",
-                  "display": "Not Hispanic or Latino"
-                }
-              },
-              {
-                "url": "text",
-                "valueString": "Not Hispanic or Latino"
-              }
-            ]
-          },
-          {
-            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
-            "valueCode": "F"
-          }
-        ],
+        "subject": {
+          "reference": "Patient/Hypo-Patient1-REQ",
+          "display": "Curtis Bean"
+        },
+        "encounter": {
+          "reference": "Encounter/Hypo-Encounter1-REQ"
+        },
+        "authoredOn": "2022-04-15T16:50:26Z",
+        "requester": {
+          "reference": "Practitioner/SomeTestPractitioner"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Patient/Hypo-Patient1-REQ",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "Hypo-Patient1-REQ",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-09-22T20:04:29+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient"
+          ]
+        },
         "identifier": [
           {
-            "system": "https://github.com/synthetichealth/synthea",
-            "value": "384a3e90-d668-a409-175b-a68ad964f1b0"
-          },
-          {
-            "type": {
-              "coding": [
-                {
-                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                  "code": "MR",
-                  "display": "Medical Record Number"
-                }
-              ],
-              "text": "Medical Record Number"
-            },
-            "system": "http://hospital.smarthealthit.org",
-            "value": "384a3e90-d668-a409-175b-a68ad964f1b0"
-          },
-          {
-            "type": {
-              "coding": [
-                {
-                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                  "code": "SS",
-                  "display": "Social Security Number"
-                }
-              ],
-              "text": "Social Security Number"
-            },
-            "system": "http://hl7.org/fhir/sid/us-ssn",
-            "value": "999-19-3153"
-          },
-          {
-            "type": {
-              "coding": [
-                {
-                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                  "code": "DL",
-                  "display": "Driver's License"
-                }
-              ],
-              "text": "Driver's License"
-            },
-            "system": "urn:oid:2.16.840.1.113883.4.3.25",
-            "value": "S99914975"
-          },
-          {
-            "type": {
-              "coding": [
-                {
-                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                  "code": "PPN",
-                  "display": "Passport Number"
-                }
-              ],
-              "text": "Passport Number"
-            },
-            "system": "http://standardhealthrecord.org/fhir/StructureDefinition/passportNumber",
-            "value": "X51723949X"
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "value": "106"
           }
         ],
         "name": [
           {
-            "use": "official",
-            "family": "Cruickshank494",
+            "family": "Bean",
             "given": [
-              "Bok974"
-            ],
-            "prefix": [
-              "Ms."
+              "Curtis"
             ]
           }
         ],
         "telecom": [
           {
             "system": "phone",
-            "value": "555-441-1756",
-            "use": "home"
+            "value": "(03) 3410 5613"
           }
         ],
-        "gender": "female",
-        "birthDate": "1995-09-04",
-        "address": [
-          {
-            "extension": [
-              {
-                "url": "http://hl7.org/fhir/StructureDefinition/geolocation",
-                "extension": [
-                  {
-                    "url": "latitude",
-                    "valueDecimal": 41.966965449196756
-                  },
-                  {
-                    "url": "longitude",
-                    "valueDecimal": -71.29408632402294
-                  }
-                ]
-              }
-            ],
-            "line": [
-              "254 Kulas Ramp"
-            ],
-            "city": "Attleboro",
-            "state": "MA",
-            "postalCode": "02861",
-            "country": "US"
-          }
-        ],
+        "gender": "male",
+        "birthDate": "1978-06-08",
         "communication": [
           {
             "language": {
               "coding": [
                 {
                   "system": "urn:ietf:bcp:47",
-                  "code": "en-US",
-                  "display": "English"
+                  "code": "nl",
+                  "display": "Dutch"
                 }
               ],
-              "text": "English"
+              "text": "Nederlands"
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Location/Hypo-Location1-REQ",
+      "resource": {
+        "resourceType": "Location",
+        "id": "Hypo-Location1-REQ",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-09-22T20:04:29+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-location"
+          ]
+        },
+        "status": "active",
+        "name": "Any Hospital",
+        "description": "This is the physical location of Any Hospital",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-RoleCode",
+                "code": "HOSP",
+                "display": "Hospital"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Encounter/Hypo-Encounter1-REQ",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "Hypo-Encounter1-REQ",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-09-22T20:04:29+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-encounter"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension",
+            "valueCode": "TRIAGED"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "official",
+            "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+            "value": "1234213.52345873"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient encounter"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "183452005"
+              }
+            ],
+            "text": "Emergency hospital admission (procedure)"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/Hypo-Patient1-REQ"
+        },
+        "period": {
+          "start": "2022-04-01T08:00:00+00:00",
+          "end": "2022-04-30T08:00:00+00:00"
+        },
+        "location": [
+          {
+            "location": {
+              "reference": "Location/Hypo-Location1-REQ"
+            },
+            "period": {
+              "start": "2022-04-02T08:00:00+00:00",
+              "end": "2022-04-30T08:00:00+00:00"
             }
           }
         ]
