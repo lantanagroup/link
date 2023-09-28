@@ -20,6 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * I'm actually not entirely sure _why_ this ResourceFetcher is needed. I just know that I saw it in the HAPI
+ * validation implementation and it seemed to be required (through a null exception if it was not provided). I added
+ * all these logs in each method to find out which of the methods validation was using, and found it was only using the
+ * `resolveUrl()` method. It seems that it uses `resolveUrl()` to do a pre-check on what URLs/resources the validator
+ * has available to it. If `resolveUrl()` returns false, then the validator includes a "Cannot resolve url XX" as
+ * an error.
+ */
 public class ResourceFetcher implements IValidatorResourceFetcher {
   protected static final Logger logger = LoggerFactory.getLogger(ResourceFetcher.class);
   private List<String> canonicalUrls = new ArrayList<>(List.of(

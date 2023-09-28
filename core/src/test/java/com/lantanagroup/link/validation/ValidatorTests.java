@@ -91,18 +91,6 @@ public class ValidatorTests {
   public void validateNhsnMeasureIg() throws IOException {
     var bundle1 = this.getBundle("single-submission-example.json");
 
-    var organizationResource = bundle1.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
-            .filter(r -> r instanceof Organization)
-            .map(r -> (Organization) r)
-            .collect(Collectors.toList());
-
-    var encounter = bundle1.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
-            .filter(r -> r instanceof Encounter)
-            .map(r -> (Encounter) r)
-            .findFirst();
-
     OperationOutcome oo = validator.validate(bundle1, OperationOutcome.IssueSeverity.ERROR);
     Assert.assertEquals(0, oo.getIssue().size());
 
@@ -122,9 +110,10 @@ public class ValidatorTests {
             .forEach(mr -> mr.getGroup().forEach(g -> g.getPopulation().forEach(p -> p.setCountElement(null))));
 
     oo = validator.validate(bundle3, OperationOutcome.IssueSeverity.ERROR);
-    Assert.assertEquals(2, oo.getIssue().size());
+    Assert.assertEquals(3, oo.getIssue().size());
     Assert.assertEquals("MeasureReport.group.population.count: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/subjectlist-measurereport)", oo.getIssue().get(0).getDiagnostics());
-    Assert.assertEquals("Bundle.entry:subject-list: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)", oo.getIssue().get(1).getDiagnostics());
+    Assert.assertEquals("MeasureReport.group.population.count: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/subjectlist-measurereport)", oo.getIssue().get(1).getDiagnostics());
+    Assert.assertEquals("Bundle.entry:subject-list: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)", oo.getIssue().get(2).getDiagnostics());
   }
 
   @Test

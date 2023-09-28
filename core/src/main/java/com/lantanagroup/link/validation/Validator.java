@@ -174,7 +174,6 @@ public class Validator {
 
   private void validateResource(Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity, Integer entryIndex) {
     ValidationOptions opts = new ValidationOptions();
-    resource.getMeta().getProfile().forEach(p -> opts.addProfile(p.getValue()));
 
     IValidationContext<IBaseResource> validationContext = ValidationContext.forResource(FhirContextProvider.getFhirContext(), resource, opts);
     String resourceString = validationContext.getResourceAsString();
