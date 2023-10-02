@@ -1,137 +1,71 @@
 package com.lantanagroup.link.db.repositories;
 
+import com.lantanagroup.link.StreamUtils;
+import com.lantanagroup.link.db.mappers.BulkStatusMapper;
 import com.lantanagroup.link.db.model.BulkStatus;
 import com.lantanagroup.link.db.model.BulkStatuses;
-import lombok.SneakyThrows;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.sql.*;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-public class BulkStatusRepository extends BaseRepository<BulkStatus> {
-  private final DataSource dataSource;
+public class BulkStatusRepository {
+  private static final BulkStatusMapper mapper = new BulkStatusMapper();
 
-  public BulkStatusRepository(DataSource dataSource) {
-    this.dataSource = dataSource;
+  private final TransactionTemplate txTemplate;
+  private final NamedParameterJdbcTemplate jdbc;
+
+  public BulkStatusRepository(DataSource dataSource, PlatformTransactionManager txManager) {
+    txTemplate = new TransactionTemplate(txManager);
+    txTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
+    jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  @Override
-  protected BulkStatus mapOne(ResultSet resultSet) throws SQLException {
-    BulkStatus model = new BulkStatus();
-    model.setId(resultSet.getObject("id", UUID.class));
-    model.setStatusUrl(resultSet.getNString("statusUrl"));
-    model.setStatus(resultSet.getNString("status"));
-    model.setDate(resultSet.getTimestamp("date"));
-    return model;
-  }
-
-  @SneakyThrows(SQLException.class)
   public List<BulkStatus> findAll() {
-    String sql = "SELECT * FROM dbo.bulkStatus";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql);
-         ResultSet resultSet = statement.executeQuery()) {
-      return mapAll(resultSet);
-    }
+    String sql = "SELECT * FROM dbo.bulkStatus;";
+    return jdbc.query(sql, mapper);
   }
 
-  @SneakyThrows(SQLException.class)
   public BulkStatus findById(UUID id) {
-    String sql = "SELECT * FROM dbo.bulkStatus WHERE id = ?";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setObject(1, id);
-      try (ResultSet resultSet = statement.executeQuery()) {
-        return resultSet.next() ? mapOne(resultSet) : null;
-      }
-    }
+    String sql = "SELECT * FROM dbo.bulkStatus WHERE id = :id;";
+    Map<String, ?> parameters = Map.of("id", id);
+    return jdbc.query(sql, parameters, mapper).stream()
+            .reduce(StreamUtils::toOnlyElement)
+            .orElse(null);
   }
 
-  @SneakyThrows(SQLException.class)
   public List<BulkStatus> findPendingWithUrl() {
-    String sql = "SELECT * FROM dbo.bulkStatus WHERE statusUrl IS NOT NULL AND status = ?";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setNString(1, BulkStatuses.PENDING);
-      try (ResultSet resultSet = statement.executeQuery()) {
-        return mapAll(resultSet);
-      }
-    }
+    String sql = "SELECT * FROM dbo.bulkStatus WHERE statusUrl IS NOT NULL AND status = :status;";
+    Map<String, ?> parameters = Map.of("status", BulkStatuses.PENDING);
+    return jdbc.query(sql, parameters, mapper);
   }
 
-  private int insert(BulkStatus bulkStatus, Connection connection) throws SQLException {
-    if (bulkStatus.getId() == null) {
-      bulkStatus.setId(UUID.randomUUID());
+  private int insert(BulkStatus model) {
+    if (model.getId() == null) {
+      model.setId(UUID.randomUUID());
     }
-    String sql = "INSERT INTO dbo.bulkStatus " +
-            "(id, statusUrl, status, date) " +
-            "VALUES " +
-            "(?, ?, ?, ?);";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(bulkStatus, statement);
-      parameters.addId();
-      parameters.addStatusUrl();
-      parameters.addStatus();
-      parameters.addDate();
-      return statement.executeUpdate();
-    }
+    String sql = "INSERT INTO dbo.bulkStatus (id, statusUrl, status, date) " +
+            "VALUES (:id, :statusUrl, :status, :date);";
+    return jdbc.update(sql, mapper.toParameters(model));
   }
 
-  private int update(BulkStatus bulkStatus, Connection connection) throws SQLException {
+  private int update(BulkStatus model) {
     String sql = "UPDATE dbo.bulkStatus " +
-            "SET statusUrl = ?, status = ?, date = ? " +
-            "WHERE id = ?;";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(bulkStatus, statement);
-      parameters.addStatusUrl();
-      parameters.addStatus();
-      parameters.addDate();
-      parameters.addId();
-      return statement.executeUpdate();
-    }
+            "SET statusUrl = :statusUrl, status = :status, date = :date " +
+            "WHERE id = :id;";
+    return jdbc.update(sql, mapper.toParameters(model));
   }
 
-  @SneakyThrows(SQLException.class)
-  public void save(BulkStatus bulkStatus) {
-    try (Connection connection = dataSource.getConnection()) {
-      connection.setAutoCommit(false);
-      try {
-        if (update(bulkStatus, connection) == 0) {
-          insert(bulkStatus, connection);
-        }
-        connection.commit();
-      } catch (Exception e) {
-        connection.rollback();
-        throw e;
+  public void save(BulkStatus model) {
+    txTemplate.executeWithoutResult(tx -> {
+      if (update(model) == 0) {
+        insert(model);
       }
-    }
-  }
-
-  private class Parameters {
-    private final BulkStatus model;
-    private final PreparedStatement statement;
-    private int nextParameterIndex = 1;
-
-    public Parameters(BulkStatus model, PreparedStatement statement) {
-      this.model = model;
-      this.statement = statement;
-    }
-
-    public void addId() throws SQLException {
-      statement.setObject(nextParameterIndex++, model.getId());
-    }
-
-    public void addStatusUrl() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getStatusUrl());
-    }
-
-    public void addStatus() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getStatus());
-    }
-
-    public void addDate() throws SQLException {
-      statement.setTimestamp(nextParameterIndex++, new Timestamp(model.getDate().getTime()));
-    }
+    });
   }
 }

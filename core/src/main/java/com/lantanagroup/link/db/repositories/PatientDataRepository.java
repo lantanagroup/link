@@ -1,152 +1,107 @@
 package com.lantanagroup.link.db.repositories;
 
+import com.lantanagroup.link.db.mappers.PatientDataMapper;
 import com.lantanagroup.link.db.model.PatientData;
-import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.sql.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-public class PatientDataRepository extends BaseRepository<PatientData> {
-  private final DataSource dataSource;
+public class PatientDataRepository {
+  private static final Logger logger = LoggerFactory.getLogger(PatientDataRepository.class);
+  private static final PatientDataMapper mapper = new PatientDataMapper();
 
-  public PatientDataRepository(DataSource dataSource) {
-    this.dataSource = dataSource;
+  private final TransactionTemplate txTemplate;
+  private final NamedParameterJdbcTemplate jdbc;
+
+  public PatientDataRepository(DataSource dataSource, PlatformTransactionManager txManager) {
+    txTemplate = new TransactionTemplate(txManager);
+    txTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
+    jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  @Override
-  protected PatientData mapOne(ResultSet resultSet) throws SQLException {
-    PatientData model = new PatientData();
-    model.setId(resultSet.getObject("id", UUID.class));
-    model.setPatientId(resultSet.getNString("patientId"));
-    model.setResourceType(resultSet.getNString("resourceType"));
-    model.setResourceId(resultSet.getNString("resourceId"));
-    model.setResource(deserializeResource(resultSet.getNString("resource")));
-    model.setRetrieved(resultSet.getTimestamp("retrieved"));
-    return model;
-  }
-
-  @SneakyThrows(SQLException.class)
   public List<PatientData> findByPatientId(String patientId) {
-    String sql = "SELECT * FROM dbo.patientData WHERE patientId = ?;";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setNString(1, patientId);
-      try (ResultSet resultSet = statement.executeQuery()) {
-        return mapAll(resultSet);
-      }
-    }
+    String sql = "SELECT * FROM dbo.patientData WHERE patientId = :patientId;";
+    Map<String, ?> parameters = Map.of("patientId", patientId);
+    return jdbc.query(sql, parameters, mapper);
   }
 
-  private int insert(PatientData patientData, Connection connection) throws SQLException {
-    if (patientData.getId() == null) {
-      patientData.setId(UUID.randomUUID());
+  private void upsert(PatientData model) {
+    if (model.getId() == null) {
+      model.setId(UUID.randomUUID());
     }
-    String sql = "INSERT INTO dbo.patientData " +
-            "(id, patientId, resourceType, resourceId, resource, retrieved) " +
-            "VALUES " +
-            "(?, ?, ?, ?, ?, ?);";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(patientData, statement);
-      parameters.addId();
-      parameters.addPatientId();
-      parameters.addResourceType();
-      parameters.addResourceId();
-      parameters.addResource();
-      parameters.addRetrieved();
-      return statement.executeUpdate();
-    }
+    String sql = "INSERT INTO dbo.patientData (id, patientId, resourceType, resourceId, resource, retrieved) " +
+            "SELECT :id, :patientId, :resourceType, :resourceId, :resource, :retrieved " +
+            "WHERE NOT EXISTS (" +
+            "    SELECT * FROM dbo.patientData " +
+            "    WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId" +
+            "); " +
+            "IF @@ROWCOUNT = 0 " +
+            "UPDATE dbo.patientData " +
+            "SET resource = :resource, retrieved = :retrieved " +
+            "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
+    jdbc.update(sql, mapper.toParameters(model));
   }
 
-  private int update(PatientData patientData, Connection connection) throws SQLException {
+  private int insert(PatientData model) {
+    if (model.getId() == null) {
+      model.setId(UUID.randomUUID());
+    }
+    String sql = "INSERT INTO dbo.patientData (id, patientId, resourceType, resourceId, resource, retrieved) " +
+            "VALUES (:id, :patientId, :resourceType, :resourceId, :resource, :retrieved);";
+    return jdbc.update(sql, mapper.toParameters(model));
+  }
+
+  private int update(PatientData model) {
     String sql = "UPDATE dbo.patientData " +
-            "SET resource = ?, retrieved = ? " +
-            "WHERE patientId = ? AND resourceType = ? AND resourceId = ?;";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(patientData, statement);
-      parameters.addResource();
-      parameters.addRetrieved();
-      parameters.addPatientId();
-      parameters.addResourceType();
-      parameters.addResourceId();
-      return statement.executeUpdate();
-    }
+            "SET resource = :resource, retrieved = :retrieved " +
+            "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
+    return jdbc.update(sql, mapper.toParameters(model));
   }
 
-  @SneakyThrows(SQLException.class)
-  public void saveAll(List<PatientData> patientDatas) {
-    try (Connection connection = dataSource.getConnection()) {
-      for (PatientData patientData : patientDatas) {
-        if (update(patientData, connection) == 0) {
-          insert(patientData, connection);
-        }
+  public void saveAll(List<PatientData> models) {
+    for (PatientData model : models) {
+      try {
+        // Try a non-transacted insert-first strategy, which is not 100% safe
+        // Simultaneous queries could satisfy the WHERE before attempting the INSERT (I think)
+        // An intervening DELETE could occur (between a failed INSERT and the subsequent UPDATE)
+        // Both of these situations will (correctly) result in an unhandled exception
+        upsert(model);
+      } catch (DataAccessException e) {
+        logger.error("Error in patient data upsert", e);
+        // Fall back to a transacted update-first strategy
+        txTemplate.executeWithoutResult(tx -> {
+          if (update(model) == 0) {
+            insert(model);
+          }
+        });
       }
     }
   }
 
-  @SneakyThrows(SQLException.class)
-  public int deleteByRetrievedBefore(Date date) {
-    String sql = "DELETE FROM dbo.patientData WHERE retrieved < ?";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setTimestamp(1, new Timestamp(date.getTime()));
-      return statement.executeUpdate();
-    }
+  public void deleteAll() {
+    String sql = "TRUNCATE TABLE dbo.patientData;";
+    jdbc.update(sql, Map.of());
   }
 
-  @SneakyThrows(SQLException.class)
-  public void deleteAllPatientData(){
-    String sql = "TRUNCATE TABLE dbo.patientData";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.executeUpdate();
-    }
-  }
-
-  @SneakyThrows(SQLException.class)
   public void deleteByPatientId(String patientId) {
-    String sql = "DELETE FROM dbo.patientData WHERE patientId = ?";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setString(1, patientId);
-      statement.executeUpdate();
-    }
+    String sql = "DELETE FROM dbo.patientData WHERE patientId = :patientId;";
+    Map<String, ?> parameters = Map.of("patientId", patientId);
+    jdbc.update(sql, parameters);
   }
 
-  private class Parameters {
-    private final PatientData model;
-    private final PreparedStatement statement;
-    private int nextParameterIndex = 1;
-
-    public Parameters(PatientData model, PreparedStatement statement) {
-      this.model = model;
-      this.statement = statement;
-    }
-
-    public void addId() throws SQLException {
-      statement.setObject(nextParameterIndex++, model.getId());
-    }
-
-    public void addPatientId() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getPatientId());
-    }
-
-    public void addResourceType() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getResourceType());
-    }
-
-    public void addResourceId() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getResourceId());
-    }
-
-    public void addResource() throws SQLException {
-      statement.setNString(nextParameterIndex++, serializeResource(model.getResource()));
-    }
-
-    public void addRetrieved() throws SQLException {
-      statement.setTimestamp(nextParameterIndex++, new Timestamp(model.getRetrieved().getTime()));
-    }
+  public int deleteByRetrievedBefore(Date date) {
+    String sql = "DELETE FROM dbo.patientData WHERE retrieved < :date;";
+    Map<String, ?> parameters = Map.of("date", date);
+    return jdbc.update(sql, parameters);
   }
 }

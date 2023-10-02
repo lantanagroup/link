@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -41,14 +43,15 @@ public class TenantService {
             .type(SQLServerDataSource.class)
             .url(config.getConnectionString())
             .build();
-    this.conceptMaps = new ConceptMapRepository(this.dataSource);
-    this.patientLists = new PatientListRepository(this.dataSource);
-    this.reports = new ReportRepository(this.dataSource);
-    this.patientDatas = new PatientDataRepository(this.dataSource);
-    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource);
-    this.aggregates = new AggregateRepository(this.dataSource);
-    this.bulkStatuses = new BulkStatusRepository(this.dataSource);
-    this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource);
+    PlatformTransactionManager txManager = new DataSourceTransactionManager(this.dataSource);
+    this.conceptMaps = new ConceptMapRepository(this.dataSource, txManager);
+    this.patientLists = new PatientListRepository(this.dataSource, txManager);
+    this.reports = new ReportRepository(this.dataSource, txManager);
+    this.patientDatas = new PatientDataRepository(this.dataSource, txManager);
+    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource, txManager);
+    this.aggregates = new AggregateRepository(this.dataSource, txManager);
+    this.bulkStatuses = new BulkStatusRepository(this.dataSource, txManager);
+    this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource, txManager);
   }
 
   public static TenantService create(Tenant tenant) {
@@ -119,8 +122,8 @@ public class TenantService {
   public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
 
   public void deleteAllPatientData(){
-    this.patientLists.deleteAllPatientData();
-    this.patientDatas.deleteAllPatientData();
+    this.patientLists.deleteAll();
+    this.patientDatas.deleteAll();
   }
 
   public void deletePatientByListAndPatientId(String patientId, UUID listId) {
@@ -151,9 +154,7 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
-    var report = this.reports.findById(reportId);
-    this.reports.deletePatientLists(report);
-    this.reports.deleteReport(report);
+    this.reports.deleteById(reportId);
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
