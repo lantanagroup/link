@@ -15,11 +15,10 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,31 +53,11 @@ public class SharedService {
 
   public void initDatabase() {
     logger.info("Initializing shared database");
-
-    URL resource = this.getClass().getClassLoader().getResource("shared-db.sql");
-
-    if (resource == null) {
-      logger.warn("Could not find shared-db.sql file in class path");
-      return;
-    }
-
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
-        try {
-          Statement stmt = conn.createStatement();
-          stmt.execute(stmtSql);
-        } catch (SQLException e) {
-          logger.error("Failed to execute statement to initialize shared db", e);
-          return;
-        }
-      }
-    } catch (SQLException | NullPointerException e) {
-      logger.error("Failed to connect to shared database", e);
-    } catch (IOException e) {
-      logger.error("Could not read shared-db.sql file", e);
+    try (Connection connection = this.getSQLConnection()) {
+      SQLScriptExecutor.execute(connection, new ClassPathResource("shared-db.sql"));
+    } catch (Exception e) {
+      logger.error("Failed to initialize shared database", e);
+      throw new RuntimeException(e);
     }
   }
 

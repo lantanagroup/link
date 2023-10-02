@@ -1,23 +1,19 @@
 package com.lantanagroup.link.db;
 
-import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
-import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.core.io.ClassPathResource;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -64,33 +60,12 @@ public class TenantService {
   }
 
   public void initDatabase() {
-    logger.info("Initializing database for tenant {}", this.getConfig().getId());
-
-    URL resource = this.getClass().getClassLoader().getResource("tenant-db.sql");
-
-    if (resource == null) {
-      logger.warn("Could not find tenant-db.sql file in class path");
-      return;
-    }
-
-    try (Connection conn = this.dataSource.getConnection()) {
-      assert conn != null;
-
-      String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
-        try {
-          Statement stmt = conn.createStatement();
-          stmt.execute(stmtSql);
-        } catch (SQLException e) {
-          logger.error("Failed to execute statement for tenant {}", this.config.getId(), e);
-        }
-      }
-    } catch (SQLServerException e) {
-      logger.error("Failed to connect to tenant {} database: {}", this.config.getId(), e.getMessage());
-    } catch (SQLException | NullPointerException e) {
-      logger.error("Failed to initialize tenant {} database", this.config.getId(), e);
-    } catch (IOException e) {
-      logger.error("Could not read tenant-db.sql file for tenant {}", this.config.getId(), e);
+    logger.info("Initializing tenant database: {}", this.getConfig().getId());
+    try (Connection connection = this.dataSource.getConnection()) {
+      SQLScriptExecutor.execute(connection, new ClassPathResource("tenant-db.sql"));
+    } catch (Exception e) {
+      logger.error("Failed to initialize tenant database", e);
+      throw new RuntimeException(e);
     }
   }
 
