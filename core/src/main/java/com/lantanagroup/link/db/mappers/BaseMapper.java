@@ -68,23 +68,23 @@ public abstract class BaseMapper<T> implements RowMapper<T> {
 
     public <U extends IBaseResource> U getResource(String columnName, Class<U> type) throws SQLException {
       String json = getString(columnName);
-      return fhirContext.newJsonParser().parseResource(type, json);
+      return json == null ? null : fhirContext.newJsonParser().parseResource(type, json);
     }
 
     public IBaseResource getResource(String columnName) throws SQLException {
       String json = getString(columnName);
-      return fhirContext.newJsonParser().parseResource(json);
+      return json == null ? null : fhirContext.newJsonParser().parseResource(json);
     }
 
     public <U> U getJsonObject(String columnName, Class<U> type) throws JsonProcessingException, SQLException {
       String json = getString(columnName);
-      return objectMapper.readValue(json, type);
+      return json == null ? null : objectMapper.readValue(json, type);
     }
 
     public <U> List<U> getJsonList(String columnName, Class<U> type) throws JsonProcessingException, SQLException {
       String json = getString(columnName);
       JavaType javaType = objectMapper.getTypeFactory().constructCollectionType(List.class, type);
-      return objectMapper.readValue(json, javaType);
+      return json == null ? null : objectMapper.readValue(json, javaType);
     }
   }
 
@@ -102,12 +102,12 @@ public abstract class BaseMapper<T> implements RowMapper<T> {
     }
 
     public void addResource(String name, IBaseResource value) {
-      String json = fhirContext.newJsonParser().encodeResourceToString(value);
+      String json = value == null ? null : fhirContext.newJsonParser().encodeResourceToString(value);
       addString(name, json);
     }
 
     public void addJsonObject(String name, Object value) throws JsonProcessingException {
-      String json = objectMapper.writeValueAsString(value);
+      String json = value == null ? null : objectMapper.writeValueAsString(value);
       addString(name, json);
     }
 
