@@ -183,7 +183,7 @@ public class SharedService {
       cs.setNString("tenantId", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -277,7 +277,7 @@ public class SharedService {
       cs.setNString("bundle", FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
       cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -340,7 +340,7 @@ public class SharedService {
       cs.setNString("packageId", measurePackage.getId());
       cs.setNString("measures", mapper.writeValueAsString(measurePackage));
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -416,7 +416,7 @@ public class SharedService {
       cs.setNString("type", audit.getType().toString());
       cs.setUUID("userID", audit.getUserId());
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
