@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,7 +59,7 @@ public class QAController extends BaseController {
 
 
   @DeleteMapping("/$deletePatientListById/{id}")
-  public void deletePatientListById(@PathVariable String tenantId, @PathVariable String id){
+  public void deletePatientListById(@PathVariable String tenantId, @PathVariable UUID id){
 //    var tenantConfig = sharedService.getTenantConfig(tenantId);
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientListById(id);
@@ -71,7 +72,7 @@ public class QAController extends BaseController {
   }
 
   @DeleteMapping("/$deletePatientFromList/{patientListId}/{patientId}")
-  public void deletePatientByIDAndListId(@PathVariable String tenantId, @PathVariable String patientListId, @PathVariable String patientId){
+  public void deletePatientByIDAndListId(@PathVariable String tenantId, @PathVariable UUID patientListId, @PathVariable String patientId){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientByListAndPatientId(patientId,patientListId);
   }

@@ -141,15 +141,15 @@ public class TenantService {
     return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
-  public void deletePatientListById(String id) { this.patientLists.deleteById(id);}
+  public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
 
   public void deleteAllPatientData(){
     this.patientLists.deleteAllPatientData();
     this.patientDatas.deleteAllPatientData();
   }
 
-  public void deletePatientByListAndPatientId(String patientId, String listId) {
-    PatientList patientList = this.getPatientList(UUID.fromString(listId));
+  public void deletePatientByListAndPatientId(String patientId, UUID listId) {
+    PatientList patientList = this.getPatientList(listId);
     var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
     patientList.setPatients(filteredList);
     this.patientDatas.deleteByPatientId(patientId);
