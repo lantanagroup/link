@@ -4,8 +4,8 @@ import com.lantanagroup.link.db.mappers.PatientDataMapper;
 import com.lantanagroup.link.db.model.PatientData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -35,10 +35,7 @@ public class PatientDataRepository {
     return jdbc.query(sql, parameters, mapper);
   }
 
-  private void upsert(PatientData model) {
-    if (model.getId() == null) {
-      model.setId(UUID.randomUUID());
-    }
+  public void saveAll(List<PatientData> models) {
     String sql = "INSERT INTO dbo.patientData (id, patientId, resourceType, resourceId, resource, retrieved) " +
             "SELECT :id, :patientId, :resourceType, :resourceId, :resource, :retrieved " +
             "WHERE NOT EXISTS (" +
@@ -49,42 +46,22 @@ public class PatientDataRepository {
             "UPDATE dbo.patientData " +
             "SET resource = :resource, retrieved = :retrieved " +
             "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
-    jdbc.update(sql, mapper.toParameters(model));
-  }
-
-  private int insert(PatientData model) {
-    if (model.getId() == null) {
-      model.setId(UUID.randomUUID());
-    }
-    String sql = "INSERT INTO dbo.patientData (id, patientId, resourceType, resourceId, resource, retrieved) " +
-            "VALUES (:id, :patientId, :resourceType, :resourceId, :resource, :retrieved);";
-    return jdbc.update(sql, mapper.toParameters(model));
-  }
-
-  private int update(PatientData model) {
-    String sql = "UPDATE dbo.patientData " +
-            "SET resource = :resource, retrieved = :retrieved " +
-            "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
-    return jdbc.update(sql, mapper.toParameters(model));
-  }
-
-  public void saveAll(List<PatientData> models) {
-    for (PatientData model : models) {
-      try {
-        // Try a non-transacted insert-first strategy, which is not 100% safe
-        // Simultaneous queries could satisfy the WHERE before attempting the INSERT (I think)
-        // An intervening DELETE could occur (between a failed INSERT and the subsequent UPDATE)
-        // Both of these situations will (correctly) result in an unhandled exception
-        upsert(model);
-      } catch (DataAccessException e) {
-        logger.error("Error in patient data upsert", e);
-        // Fall back to a transacted update-first strategy
-        txTemplate.executeWithoutResult(tx -> {
-          if (update(model) == 0) {
-            insert(model);
-          }
-        });
+    int batchSize = 100;
+    for (int batchIndex = 0; ; batchIndex++) {
+      SqlParameterSource[] parameters = models.stream()
+              .skip((long) batchIndex * batchSize)
+              .limit(batchSize)
+              .peek(model -> {
+                if (model.getId() == null) {
+                  model.setId(UUID.randomUUID());
+                }
+              })
+              .map(mapper::toParameters)
+              .toArray(SqlParameterSource[]::new);
+      if (parameters.length == 0) {
+        break;
       }
+      jdbc.batchUpdate(sql, parameters);
     }
   }
 
