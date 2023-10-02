@@ -129,6 +129,7 @@ IF NOT EXISTS (SELECT *
         CREATE TABLE dbo.bulkStatus
         (
             id        uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            tenantId  nvarchar(128)    NULL,
             statusUrl nvarchar(max)    NULL,
             status    nvarchar(128)    NULL,
             date      datetime2        NOT NULL             DEFAULT GETDATE()
@@ -157,12 +158,16 @@ IF NOT EXISTS (SELECT *
 
 GO
 
-ALTER TABLE dbo.bulkStatusResult
-    ALTER COLUMN statusId uniqueidentifier;
-
-GO
-
-ALTER TABLE dbo.bulkStatusResult
-    ADD FOREIGN KEY (statusId) REFERENCES dbo.bulkStatus (id);
+IF (SELECT DATA_TYPE
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = 'dbo'
+      AND TABLE_NAME = 'bulkStatusResult'
+      AND COLUMN_NAME = 'statusId') = 'nvarchar'
+    BEGIN
+        ALTER TABLE dbo.bulkStatusResult
+            ALTER COLUMN statusId uniqueidentifier;
+        ALTER TABLE dbo.bulkStatusResult
+            ADD FOREIGN KEY (statusId) REFERENCES dbo.bulkStatus (id);
+    END
 
 GO
