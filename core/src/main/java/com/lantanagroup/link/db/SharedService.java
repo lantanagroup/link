@@ -180,7 +180,7 @@ public class SharedService {
       assert conn != null;
 
       SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenantConfig (?, ?) }");
-      cs.setNString("tenantId", tenant.getId());
+      cs.setNString("id", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
       cs.execute();
