@@ -35,9 +35,7 @@ public class Query {
     IGenericClient fhirQueryClient = FhirContextProvider.getFhirContext()
             .newRestfulGenericClient(tenantService.getConfig().getFhirQuery().getFhirServerBase());
 
-    LoggingInterceptor loggingInterceptor = new LoggingInterceptor();
-    loggingInterceptor.setLogRequestBody(true);
-    fhirQueryClient.registerInterceptor(loggingInterceptor);
+    fhirQueryClient.registerInterceptor(new LoggingInterceptor());
 
     if (StringUtils.isNotEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
       logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
