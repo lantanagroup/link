@@ -191,7 +191,7 @@ IF NOT EXISTS (SELECT *
 GO
 
 ALTER TABLE dbo.audit
-    ALTER COLUMN userId uniqueidentifier;
+    ALTER COLUMN userId uniqueidentifier NULL;
 
 GO
 

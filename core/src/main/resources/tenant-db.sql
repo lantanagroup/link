@@ -170,7 +170,7 @@ IF (SELECT DATA_TYPE
       AND COLUMN_NAME = 'statusId') = 'nvarchar'
     BEGIN
         ALTER TABLE dbo.bulkStatusResult
-            ALTER COLUMN statusId uniqueidentifier;
+            ALTER COLUMN statusId uniqueidentifier NULL;
         ALTER TABLE dbo.bulkStatusResult
             ADD FOREIGN KEY (statusId) REFERENCES dbo.bulkStatus (id);
     END
