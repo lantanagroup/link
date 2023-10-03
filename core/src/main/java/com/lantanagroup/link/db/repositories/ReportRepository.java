@@ -88,10 +88,10 @@ public class ReportRepository {
 
   public void deleteById(String id) {
     txTemplate.executeWithoutResult(tx -> {
+      savePatientListIds(id, List.of());
       String sql = "DELETE FROM dbo.report WHERE id = :id;";
       Map<String, ?> parameters = Map.of("id", id);
       jdbc.update(sql, parameters);
-      savePatientListIds(id, List.of());
     });
   }
 }
