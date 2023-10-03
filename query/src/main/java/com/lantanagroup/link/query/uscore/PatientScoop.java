@@ -76,8 +76,8 @@ public class PatientScoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
-      patientData.loadInitialData(this.tenantService, patient);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadInitialData(patient);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -90,8 +90,8 @@ public class PatientScoop {
     if (patientBundle == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
-      patientData.loadSupplementalData(this.tenantService, patientId, patientBundle);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadSupplementalData(patientId, patientBundle);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patientId, e);

@@ -13,6 +13,7 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -38,13 +39,17 @@ public class PatientData {
   private final ReportContext context;
   private final QueryPlan plan;
   private final IGenericClient fhirQueryServer;
+  private final TenantService tenantService;
+  private final EventService eventService;
+  private final StopwatchManager stopwatchManager;
   private String patientId;
-  private Bundle bundle;
-  private EventService eventService;
-  private StopwatchManager stopwatchManager;
 
-  public PatientData(StopwatchManager stopwatchManager, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, FhirQuery fhirQuery) {
+  @Getter
+  private Bundle bundle;
+
+  public PatientData(StopwatchManager stopwatchManager, TenantService tenantService, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, FhirQuery fhirQuery) {
     this.stopwatchManager = stopwatchManager;
+    this.tenantService = tenantService;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
@@ -56,11 +61,7 @@ public class PatientData {
     }
   }
 
-  public Bundle getBundle() {
-    return bundle;
-  }
-
-  public void loadInitialData(TenantService tenantService, Patient patient) {
+  public void loadInitialData(Patient patient) {
     this.patientId = patient.getIdElement().getIdPart();
     this.bundle = new Bundle();
     this.bundle.setType(BundleType.TRANSACTION);
@@ -70,19 +71,19 @@ public class PatientData {
             .getRequest()
             .setMethod(Bundle.HTTPVerb.PUT)
             .setUrl("Patient/" + this.patientId);
-    loadData(tenantService, plan.getInitial());
+    loadData(plan.getInitial());
   }
 
-  public void loadSupplementalData(TenantService tenantService, String patientId, Bundle bundle) {
+  public void loadSupplementalData(String patientId, Bundle bundle) {
     this.patientId = patientId;
     this.bundle = bundle;
-    loadData(tenantService, plan.getSupplemental());
+    loadData(plan.getSupplemental());
   }
 
-  private void loadData(TenantService tenantService, List<TypedQueryPlan> plans) {
+  private void loadData(List<TypedQueryPlan> plans) {
     for (TypedQueryPlan plan : plans) {
       int beforeCount = bundle.getEntry().size();
-      search(tenantService, plan);
+      search(plan);
       int afterCount = bundle.getEntry().size();
       if (afterCount == beforeCount && plan.isEarlyExit()) {
         logger.info("No resources found; exiting early");
@@ -92,7 +93,7 @@ public class PatientData {
     logResourceTypeCounts();
   }
 
-  private void search(TenantService tenantService, TypedQueryPlan plan) {
+  private void search(TypedQueryPlan plan) {
     logger.info("Querying for patient {} and resource type {}", patientId, plan.getResourceType());
     try (Stopwatch stopwatch = stopwatchManager.start("query-" + plan.getResourceType())) {
       if (plan.getReferences() == null) {
