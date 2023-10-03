@@ -86,6 +86,11 @@ IF NOT EXISTS (SELECT *
 
 GO
 
+ALTER TABLE dbo.patientData
+    DROP COLUMN IF EXISTS retrieved;
+
+GO
+
 IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'

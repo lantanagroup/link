@@ -16,7 +16,6 @@ public class PatientDataMapper extends BaseMapper<PatientData> {
     model.setResourceType(row.getString("resourceType"));
     model.setResourceId(row.getString("resourceId"));
     model.setResource(row.getResource("resource"));
-    model.setRetrieved(row.getDate("retrieved"));
     return model;
   }
 
@@ -28,7 +27,6 @@ public class PatientDataMapper extends BaseMapper<PatientData> {
     parameters.addString("resourceType", model.getResourceType());
     parameters.addString("resourceId", model.getResourceId());
     parameters.addResource("resource", model.getResource());
-    parameters.addDate("retrieved", model.getRetrieved());
     return parameters;
   }
 }
