@@ -19,6 +19,7 @@ public class PatientData {
   private String resourceType;
   private String resourceId;
   private IBaseResource resource;
+  private Date retrieved;
 
   public static Bundle asBundle(List<PatientData> patientData) {
     Bundle bundle = new Bundle();

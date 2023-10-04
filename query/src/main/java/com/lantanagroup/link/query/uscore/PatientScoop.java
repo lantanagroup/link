@@ -245,6 +245,7 @@ public class PatientScoop {
         dbpd.setResourceType(entry.getResource().getResourceType().toString());
         dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
         dbpd.setResource(entry.getResource());
+        dbpd.setRetrieved(new Date());
         return dbpd;
       }).collect(Collectors.toList());
 
