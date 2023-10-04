@@ -36,15 +36,15 @@ public class PatientDataRepository {
   }
 
   public void saveAll(List<PatientData> models) {
-    String sql = "INSERT INTO dbo.patientData (id, patientId, resourceType, resourceId, resource, retrieved) " +
-            "SELECT :id, :patientId, :resourceType, :resourceId, :resource, :retrieved " +
+    String sql = "INSERT INTO dbo.patientData (id, dataTraceId, patientId, resourceType, resourceId, resource, retrieved) " +
+            "SELECT :id, :dataTraceId, :patientId, :resourceType, :resourceId, :resource, :retrieved " +
             "WHERE NOT EXISTS (" +
             "    SELECT * FROM dbo.patientData " +
             "    WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId" +
             "); " +
             "IF @@ROWCOUNT = 0 " +
             "UPDATE dbo.patientData " +
-            "SET resource = :resource, retrieved = :retrieved " +
+            "SET dataTraceId = :dataTraceId, resource = :resource, retrieved = :retrieved " +
             "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
     int batchSize = 100;
     for (int batchIndex = 0; ; batchIndex++) {

@@ -70,6 +70,42 @@ GO
 IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'query')
+    BEGIN
+        CREATE TABLE dbo.query
+        (
+            id        uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            reportId  nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            queryType nvarchar(128)    NOT NULL,
+            url       nvarchar(max)    NOT NULL,
+            body      nvarchar(max)    NULL,
+            retrieved datetime2        NOT NULL
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'dataTrace')
+    BEGIN
+        CREATE TABLE dbo.dataTrace
+        (
+            id               uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            queryId          uniqueidentifier NULL REFERENCES dbo.query (id),
+            patientId        nvarchar(64)     NULL,
+            resourceType     nvarchar(64)     NOT NULL,
+            resourceId       nvarchar(256)    NOT NULL,
+            originalResource nvarchar(max)    NOT NULL
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
                  AND TABLE_NAME = 'patientData')
     BEGIN
         CREATE TABLE dbo.patientData
@@ -82,6 +118,18 @@ IF NOT EXISTS (SELECT *
             retrieved    datetime2        NOT NULL,
             UNIQUE (patientId, resourceType, resourceId)
         );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'patientData'
+                 AND COLUMN_NAME = 'dataTraceId')
+    BEGIN
+        ALTER TABLE dbo.patientData
+            ADD dataTraceId uniqueidentifier NULL REFERENCES dbo.dataTrace (id);
     END
 
 GO

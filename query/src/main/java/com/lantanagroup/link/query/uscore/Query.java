@@ -26,7 +26,7 @@ public class Query {
   @Setter
   private ApplicationContext applicationContext;
 
-  public IGenericClient getFhirQueryClient(TenantService tenantService) {
+  public IGenericClient getFhirQueryClient(TenantService tenantService, String reportId) {
     if (this.fhirQueryClient != null) {
       return this.fhirQueryClient;
     }
@@ -36,6 +36,7 @@ public class Query {
             .newRestfulGenericClient(tenantService.getConfig().getFhirQuery().getFhirServerBase());
 
     fhirQueryClient.registerInterceptor(new LoggingInterceptor());
+    fhirQueryClient.registerInterceptor(new QuerySaver(tenantService, reportId, "FhirQuery"));
 
     if (StringUtils.isNotEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
       logger.debug(String.format("Authenticating queries using %s", tenantService.getConfig().getFhirQuery().getAuthClass()));
@@ -60,7 +61,7 @@ public class Query {
     if (patientsOfInterest.size() > 0) {
       try {
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
-        scoop.setFhirQueryServer(this.getFhirQueryClient(tenantService));
+        scoop.setFhirQueryServer(this.getFhirQueryClient(tenantService, context.getMasterIdentifierValue()));
         scoop.setTenantService(tenantService);
         scoop.execute(criteria, context, patientsOfInterest, queryPhase);
       } catch (Exception ex) {

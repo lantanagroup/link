@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @Setter
 public class PatientData {
   private UUID id;
+  private UUID dataTraceId;
   private String patientId;
   private String resourceType;
   private String resourceId;

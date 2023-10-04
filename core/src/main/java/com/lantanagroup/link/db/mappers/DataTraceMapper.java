@@ -1,36 +1,34 @@
 package com.lantanagroup.link.db.mappers;
 
-import com.lantanagroup.link.db.model.PatientData;
+import com.lantanagroup.link.db.model.DataTrace;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PatientDataMapper extends BaseMapper<PatientData> {
+public class DataTraceMapper extends BaseMapper<DataTrace> {
   @Override
-  protected PatientData doToModel(ResultSet resultSet) throws SQLException {
+  protected DataTrace doToModel(ResultSet resultSet) throws SQLException {
     Row row = new Row(resultSet);
-    PatientData model = new PatientData();
+    DataTrace model = new DataTrace();
     model.setId(row.getUUID("id"));
-    model.setDataTraceId(row.getUUID("dataTraceId"));
+    model.setQueryId(row.getUUID("queryId"));
     model.setPatientId(row.getString("patientId"));
     model.setResourceType(row.getString("resourceType"));
     model.setResourceId(row.getString("resourceId"));
-    model.setResource(row.getResource("resource"));
-    model.setRetrieved(row.getDate("retrieved"));
+    model.setOriginalResource(row.getString("originalResource"));
     return model;
   }
 
   @Override
-  protected SqlParameterSource doToParameters(PatientData model) {
+  protected SqlParameterSource doToParameters(DataTrace model) {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
-    parameters.addUUID("dataTraceId", model.getDataTraceId());
+    parameters.addUUID("queryId", model.getQueryId());
     parameters.addString("patientId", model.getPatientId());
     parameters.addString("resourceType", model.getResourceType());
     parameters.addString("resourceId", model.getResourceId());
-    parameters.addResource("resource", model.getResource());
-    parameters.addDate("retrieved", model.getRetrieved());
+    parameters.addString("originalResource", model.getOriginalResource());
     return parameters;
   }
 }

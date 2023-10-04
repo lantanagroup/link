@@ -270,6 +270,19 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
+    Report report = new Report();
+    report.setId(masterIdentifierValue);
+    report.setPeriodStart(criteria.getPeriodStart());
+    report.setPeriodEnd(criteria.getPeriodEnd());
+    report.setMeasureIds(measureIds);
+
+    // Preserve the version of the already-existing report
+    if (existingReport != null) {
+      report.setVersion(existingReport.getVersion());
+    }
+
+    tenantService.saveReport(report, reportContext.getPatientLists());
+
     this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Scoop the data for the patients and store it
@@ -287,18 +300,6 @@ public class ReportController extends BaseController {
 
     logger.info("Statistics after query:\n{}", this.stopwatchManager.getStatistics());
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
-
-    Report report = new Report();
-    report.setId(masterIdentifierValue);
-    report.setPeriodStart(criteria.getPeriodStart());
-    report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(measureIds);
-    tenantService.saveReport(report, reportContext.getPatientLists());
-
-    // Preserve the version of the already-existing report
-    if (existingReport != null) {
-      report.setVersion(existingReport.getVersion());
-    }
 
     logger.info("Beginning initial measure evaluation");
     this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL);

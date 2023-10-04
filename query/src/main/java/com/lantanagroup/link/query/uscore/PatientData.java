@@ -26,11 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ca.uhn.fhir.rest.api.Constants.HEADER_REQUEST_ID;
 
 public class PatientData {
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
@@ -132,11 +131,11 @@ public class PatientData {
       }
     }
     if (pagedName == null) {
-      IQuery<Bundle> response = fhirQueryServer.search()
+      IQuery<Bundle> query = fhirQueryServer.search()
               .forResource(resourceType)
               .whereMap(unpagedMap)
               .returnBundle(Bundle.class);
-      addAllResources(response);
+      addAllResources(query);
     } else {
       for (List<String> ids : pagedIds) {
         String joinedIds = String.join(",", ids);
@@ -158,10 +157,13 @@ public class PatientData {
       case READ:
         for (String id : unpagedIds) {
           try {
+            UUID queryId = UUID.randomUUID();
             IBaseResource resource = fhirQueryServer.read()
                     .resource(resourceType)
                     .withId(id)
+                    .withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString())
                     .execute();
+            tenantService.saveDataTraces(queryId, patientId, List.of(resource));
             addResource((Resource) resource);
           } catch (ResourceNotFoundException | ResourceGoneException e) {
             logger.error("Resource not found or gone: {}/{}", resourceType, id, e);
@@ -258,16 +260,20 @@ public class PatientData {
   }
 
   private void addAllResources(IQuery<Bundle> query) {
-    Bundle bundle = query.execute();
+    UUID queryId = UUID.randomUUID();
+    Bundle bundle = query.withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString()).execute();
     while (true) {
+      List<IBaseResource> resources = new ArrayList<>();
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         Resource resource = entry.getResource();
         if (resource instanceof OperationOutcome) {
           logIssues((OperationOutcome) resource);
         } else {
+          resources.add(resource);
           addResource(resource);
         }
       }
+      tenantService.saveDataTraces(queryId, patientId, resources);
       if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
         break;
       }
