@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.validation.Validator;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -61,6 +63,11 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   public ApiInit apiInit() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
+  }
+
+  @Bean
+  public Validator validator(SharedService sharedService) {
+    return new Validator(sharedService);
   }
 
   /**

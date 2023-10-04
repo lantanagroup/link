@@ -13,6 +13,7 @@ public class Constants {
   public static final String SubmittingOrganizationProfile = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-organization";
   public static final String SubmittingDeviceProfile = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-device";
   public static final String MeasureScoringExtension = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring";
+  public static final String MeasureScoringCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-scoring";
   public static final String MeasureImprovementNotationCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-improvement-notation";
   public static final String QiCorePatientProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient";
   public static final String UsCorePatientProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";

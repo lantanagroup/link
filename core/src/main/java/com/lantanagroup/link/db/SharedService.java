@@ -1,6 +1,7 @@
 package com.lantanagroup.link.db;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
@@ -33,6 +34,10 @@ public class SharedService {
 
   @Autowired
   private ApiConfig config;
+
+  static {
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
 
   public Connection getSQLConnection() {
     try {
