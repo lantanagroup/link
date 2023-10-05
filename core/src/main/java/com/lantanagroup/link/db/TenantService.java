@@ -124,7 +124,10 @@ public class TenantService {
   }
 
   public int deletePatientDataRetrievedBefore(Date date) {
-    return this.patientDatas.deleteByRetrievedBefore(date);
+    int result = this.patientDatas.deleteByRetrievedBefore(date);
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
+    return result;
   }
 
   public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
@@ -132,6 +135,8 @@ public class TenantService {
   public void deleteAllPatientData(){
     this.patientLists.deleteAll();
     this.patientDatas.deleteAll();
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
   }
 
   public void deletePatientByListAndPatientId(String patientId, UUID listId) {
@@ -139,6 +144,8 @@ public class TenantService {
     var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
     patientList.setPatients(filteredList);
     this.patientDatas.deleteByPatientId(patientId);
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
   }
 
   public void savePatientData(List<PatientData> patientData) {

@@ -11,6 +11,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class DataTraceRepository {
   private static final DataTraceMapper mapper = new DataTraceMapper();
@@ -34,5 +35,11 @@ public class DataTraceRepository {
       return 0;
     }
     return Arrays.stream(jdbc.batchUpdate(sql, parameters)).sum();
+  }
+
+  public int deleteUnreferenced() {
+    String sql = "DELETE FROM dbo.dataTrace WHERE id NOT IN " +
+            "(SELECT dataTraceId FROM dbo.patientData WHERE dataTraceId IS NOT NULL);";
+    return jdbc.update(sql, Map.of());
   }
 }

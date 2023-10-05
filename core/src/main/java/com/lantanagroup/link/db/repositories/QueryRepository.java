@@ -8,6 +8,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.util.Map;
 import java.util.UUID;
 
 public class QueryRepository {
@@ -26,8 +27,14 @@ public class QueryRepository {
     if (model.getId() == null) {
       model.setId(UUID.randomUUID());
     }
-    String sql = "INSERT INTO dbo.Query (id, reportId, queryType, url, body, retrieved) " +
+    String sql = "INSERT INTO dbo.query (id, reportId, queryType, url, body, retrieved) " +
             "VALUES (:id, :reportId, :queryType, :url, :body, :retrieved);";
     return jdbc.update(sql, mapper.toParameters(model));
+  }
+
+  public int deleteUnreferenced() {
+    String sql = "DELETE FROM dbo.query WHERE id NOT IN " +
+            "(SELECT queryId FROM dbo.dataTrace WHERE queryId IS NOT NULL);";
+    return jdbc.update(sql, Map.of());
   }
 }
