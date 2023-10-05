@@ -55,6 +55,9 @@ public class PatientDataRepository {
                 if (model.getId() == null) {
                   model.setId(UUID.randomUUID());
                 }
+                if (model.getRetrieved() == null) {
+                  model.setRetrieved(new Date());
+                }
               })
               .map(mapper::toParameters)
               .toArray(SqlParameterSource[]::new);

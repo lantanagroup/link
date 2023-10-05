@@ -1,10 +1,11 @@
 package com.lantanagroup.link.db.model;
 
+import com.lantanagroup.link.Constants;
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.instance.model.api.IBaseMetaType;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.*;
 
 import java.util.Date;
 import java.util.List;
@@ -30,5 +31,31 @@ public class PatientData {
       return newEntry;
     }).collect(Collectors.toList()));
     return bundle;
+  }
+
+  public void setResource(IBaseResource resource) {
+    this.resource = resource;
+    if (retrieved == null) {
+      retrieved = getRetrievedFromResource();
+    }
+  }
+
+  private Date getRetrievedFromResource() {
+    if (resource == null) {
+      return null;
+    }
+    IBaseMetaType meta = resource.getMeta();
+    if (!(meta instanceof Meta)) {
+      return null;
+    }
+    Extension extension = ((Meta) meta).getExtensionByUrl(Constants.ReceivedDateExtensionUrl);
+    if (extension == null) {
+      return null;
+    }
+    Type value = extension.getValue();
+    if (!(value instanceof DateTimeType)) {
+      return null;
+    }
+    return ((DateTimeType) value).getValue();
   }
 }
