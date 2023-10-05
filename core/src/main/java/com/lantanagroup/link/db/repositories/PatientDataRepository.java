@@ -44,7 +44,7 @@ public class PatientDataRepository {
             "); " +
             "IF @@ROWCOUNT = 0 " +
             "UPDATE dbo.patientData " +
-            "SET dataTraceId = :dataTraceId, resource = :resource, retrieved = :retrieved " +
+            "SET dataTraceId = ISNULL(:dataTraceId, dataTraceId), resource = :resource, retrieved = :retrieved " +
             "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
     int batchSize = 100;
     for (int batchIndex = 0; ; batchIndex++) {
