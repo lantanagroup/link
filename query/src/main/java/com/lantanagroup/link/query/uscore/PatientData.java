@@ -284,6 +284,16 @@ public class PatientData {
   }
 
   private void addResource(Resource resource) {
+    String id = resource.getIdPart();
+    bundle.getEntry().removeIf(entry -> {
+      Resource existingResource = entry.getResource();
+      String existingId = existingResource.getIdPart();
+      if (StringUtils.equals(existingId, id)) {
+        return true;
+      }
+      String originalId = getOriginalId(existingResource);
+      return StringUtils.equals(originalId, id);
+    });
     resource.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
     bundle.addEntry().setResource(resource);
   }
