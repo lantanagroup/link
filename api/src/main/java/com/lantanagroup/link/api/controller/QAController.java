@@ -18,11 +18,7 @@ import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/api/qa/{tenantId}")
-@ConditionalOnProperty(
-        value = "allow",
-        havingValue = "true",
-        matchIfMissing = false
-)
+@ConditionalOnProperty("api.allowQaEndpoints")
 public class QAController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(QAController.class);
@@ -39,12 +35,9 @@ public class QAController extends BaseController {
   @Setter
   private ExecutorService executorService;
 
-  private boolean allow;
-
   public QAController() {
 
     this.executorService = Executors.newFixedThreadPool(10);
-    this.allow = config.isAllowQaEndpoints();
   }
 
   // Disallow binding of sensitive attributes
@@ -59,7 +52,6 @@ public class QAController extends BaseController {
 
   @DeleteMapping("/$deletePatientListById/{id}")
   public void deletePatientListById(@PathVariable String tenantId, @PathVariable String id){
-//    var tenantConfig = sharedService.getTenantConfig(tenantId);
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientListById(id);
   }
