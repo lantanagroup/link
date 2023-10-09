@@ -142,12 +142,12 @@ public class PatientListRepository extends BaseRepository<PatientList> {
   }
 
   @SneakyThrows(SQLException.class)
-  public void deleteById(String id){
+  public void deleteById(UUID id){
     String sql = "DELETE FROM dbo.patientList WHERE id = ?;";
     try (Connection connection = dataSource.getConnection();
          PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setString(1, id);
-      statement.executeUpdate(sql);
+      statement.setObject(1, id);
+      statement.executeUpdate();
     }
   }
 
@@ -156,7 +156,7 @@ public class PatientListRepository extends BaseRepository<PatientList> {
     String sql = "TRUNCATE TABLE dbo.patientList;";
     try (Connection connection = dataSource.getConnection();
          PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.executeUpdate(sql);
+      statement.executeUpdate();
     }
   }
 

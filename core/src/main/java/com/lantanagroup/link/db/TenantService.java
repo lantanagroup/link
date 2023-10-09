@@ -137,7 +137,7 @@ public class TenantService {
     return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
-  public void deletePatientListById(String id) { this.patientLists.deleteById(id);}
+  public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
 
   public void deleteAllPatientData(){
     this.patientLists.deleteAllPatientData();
