@@ -225,3 +225,19 @@ BEGIN
 END
 
 GO
+
+DROP PROCEDURE IF EXISTS dbo.saveBulkStatusResult;
+
+GO
+
+DROP TABLE IF EXISTS dbo.bulkStatusResult;
+
+GO
+
+DROP PROCEDURE IF EXISTS dbo.saveBulkStatus;
+
+GO
+
+DROP TABLE IF EXISTS dbo.bulkStatus;
+
+GO
