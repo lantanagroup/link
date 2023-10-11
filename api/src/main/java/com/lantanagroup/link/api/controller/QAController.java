@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,7 +52,7 @@ public class QAController extends BaseController {
 
 
   @DeleteMapping("/$deletePatientListById/{id}")
-  public void deletePatientListById(@PathVariable String tenantId, @PathVariable String id){
+  public void deletePatientListById(@PathVariable String tenantId, @PathVariable UUID id){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientListById(id);
   }
