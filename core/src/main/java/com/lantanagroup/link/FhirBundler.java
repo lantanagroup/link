@@ -2,8 +2,12 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -11,6 +15,7 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,10 +78,38 @@ public class FhirBundler {
     return this.device;
   }
 
+  private Binary getQueryPlanBinary(List<String> measureIds) {
+    Binary binary = new Binary();
+    binary.setContentType("text/yml");
+    binary.setId("queryPlan");
+
+    // Build a subset of the query plans that were used for this report
+    Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
+    measureIds.forEach(mid -> {
+      QueryPlan queryPlan = this.tenantService.getConfig().getFhirQuery().getQueryPlans().get(mid);
+
+      if (queryPlan != null) {
+        queryPlans.put(mid, queryPlan);
+      } else {
+        logger.warn("Could not find query plan for {}", mid);
+      }
+    });
+
+    Yaml yaml = new Yaml();
+    String queryPlansYaml = yaml.dump(queryPlans);
+    binary.setContentAsBase64(Base64.getEncoder().encodeToString(queryPlansYaml.getBytes()));
+
+    return binary;
+  }
+
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
+
+    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans()) {
+      bundle.addEntry().setResource(this.getQueryPlanBinary(report.getMeasureIds()));
+    }
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
