@@ -113,7 +113,7 @@ public class PatientScoop {
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("query-Patient")) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.QUERY_PATIENT)) {
           if (poi.getReference() != null) {
             String id = poi.getReference();
 

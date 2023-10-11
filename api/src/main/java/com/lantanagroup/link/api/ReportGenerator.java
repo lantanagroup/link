@@ -102,7 +102,7 @@ public class ReportGenerator {
 
     logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
     //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.STORE_MEASURE_REPORT)) {
       this.tenantService.savePatientMeasureReport(patientMeasureReport);
     }
 

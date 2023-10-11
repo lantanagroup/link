@@ -35,4 +35,19 @@ public class Constants {
   public static final String BundlingFullUrlFormat = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/%s";
   public static final String MEASURE_VERSION_URL = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/measure-version";
   public static final String LINK_VERSION_URL = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-version";
+
+  //Metric taskName Constants
+  public static final String SUBMIT = "submit";
+  public static final String RETRIEVE_PATIENT_DATA = "retrieve-patient-data";
+  public static final String EVALUATE_MEASURE = "evaluate-measure";
+  public static final String STORE_MEASURE_REPORT = "store-measure-report";
+  public static final String VALIDATE = "validate";
+  public static final String QUERY_PATIENT = "query-Patient";
+
+  //Metric category Constants
+  public static final String SUBMISSION = "submission";
+  public static final String VALIDATION = "validation";
+  public static final String TEST_QUERY = "test-query";
+  public static final String QUERY = "query";
+  public static final String REPORT = "report";
 }

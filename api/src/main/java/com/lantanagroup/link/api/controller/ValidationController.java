@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
@@ -8,7 +9,10 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.Validator;
+import lombok.Setter;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,20 +28,21 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/validate")
-public class ValidationController {
+public class ValidationController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ValidationController.class);
   @Autowired
-  private SharedService sharedService;
+  private Validator validator;
   @Autowired
   private ApiConfig config;
   @Autowired
   private EventService eventService;
   @Autowired
-  private Validator validator;
+  private SharedService sharedService;
 
   private Bundle validateBundle(Bundle bundle, OperationOutcome.IssueSeverity severity) {
     try {
@@ -48,7 +53,21 @@ public class ValidationController {
       device.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(device);
 
-      OperationOutcome outcome = this.validator.validate(bundle, severity);
+      OperationOutcome outcome = null;
+
+      boolean isReportValidation = bundle.getEntry().stream().anyMatch(e -> e.getResource().getResourceType().toString().equals("MeasureReport"));
+
+      StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
+      //Only start a metric entry if this validation is for a report bundle with measure reports within it (IP > 0)
+      if(isReportValidation){
+        try(Stopwatch stopwatch = stopwatchManager.start(Constants.VALIDATE)){
+          outcome = this.validator.validate(bundle, severity);
+        }
+      }else {
+        outcome = this.validator.validate(bundle, severity);
+      }
+
+      //noinspection unused
       outcome.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(outcome);
 
@@ -69,6 +88,21 @@ public class ValidationController {
           i.getLocation().remove(1);    // Remove the line number - it's useless.
         }
       });
+
+      if(isReportValidation) {
+        //Will only be one Organization in the bundle. Find the first, collect it, and get the Identifier for the tenantId
+        String tenantId = ((Organization) bundle.getEntry().stream().filter(
+                e -> e.getResource().getResourceType().toString().equals("Organization")).collect(Collectors.toList()).get(0).getResource())
+                .getIdentifier().get(0).getValue();
+
+        //Get the master measure reportId
+        String reportId = bundle.getEntry().stream().filter(
+                        e -> e.getResource().getResourceType().toString().equals("MeasureReport") &&
+                                ((MeasureReport) e.getResource()).getType().toString().equals("SUBJECTLIST"))
+                .collect(Collectors.toList()).get(0).getResource().getIdPart();
+
+        stopwatchManager.storeMetrics(tenantId, reportId, Constants.VALIDATION);
+      }
 
       return result;
     } catch (IOException ex) {

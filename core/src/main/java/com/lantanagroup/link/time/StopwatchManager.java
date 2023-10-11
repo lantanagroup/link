@@ -1,20 +1,28 @@
 package com.lantanagroup.link.time;
 
+import com.lantanagroup.link.db.model.MetricData;
+import com.lantanagroup.link.db.model.Metrics;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import com.lantanagroup.link.db.SharedService;
 
 @Component
 public class StopwatchManager {
   private static final int COUNT_WIDTH = 6;
   private static final int DURATION_WIDTH = 11;
 
+  private SharedService sharedService;
+
   private final Map<String, List<Duration>> durationsByTask = new LinkedHashMap<>();
+
+  public StopwatchManager(SharedService sharedService){
+    this.sharedService = sharedService;
+  }
 
   public Stopwatch start(String task) {
     return new ManagedStopwatch(task);
@@ -36,14 +44,35 @@ public class StopwatchManager {
       String task = entry.getKey();
       List<Duration> durations = entry.getValue();
       statistics.append(formatter.getValueLine(
-              task,
-              durations.size(),
-              getTotal(durations),
-              getMin(durations),
-              getMean(durations),
-              getMax(durations)));
+            task,
+            durations.size(),
+            getTotal(durations),
+            getMin(durations),
+            getMean(durations),
+            getMax(durations)));
     }
     return statistics.toString();
+  }
+
+  public synchronized void storeMetrics(String tenantId, String reportId, String category) {
+    List<Metrics> metrics = new ArrayList<>();
+    for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
+      List<Duration> durations = entry.getValue();
+      Metrics metric = new Metrics();
+      metric.setTenantId(tenantId);
+      metric.setReportId(reportId);
+      metric.setTaskName(entry.getKey());
+      metric.setCategory(category);
+      metric.setTimestamp(new Date());
+
+      MetricData data = new MetricData();
+      data.count = durations.size();
+      data.duration = getTotal(durations).toMillis();
+      metric.setData(data);
+
+      metrics.add(metric);
+    }
+    this.sharedService.saveMetrics(metrics);
   }
 
   private Duration getTotal(List<Duration> durations) {
