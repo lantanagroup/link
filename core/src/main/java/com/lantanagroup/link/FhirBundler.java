@@ -107,7 +107,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
 
-    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans()) {
+    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
       bundle.addEntry().setResource(this.getQueryPlanBinary(report.getMeasureIds()));
     }
 
