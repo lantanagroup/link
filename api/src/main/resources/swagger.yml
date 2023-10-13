@@ -1478,6 +1478,10 @@ components:
           type: boolean
           default: true
           description: 'Whether to include censuses in the submission bundle.'
+        includesQueryPlans:
+          type: boolean
+          default: true
+          description: 'Whether to include the query plans used to generate the report in the submission bundle as a Binary resource entry'
         mergeCensuses:
           type: boolean
           default: true
