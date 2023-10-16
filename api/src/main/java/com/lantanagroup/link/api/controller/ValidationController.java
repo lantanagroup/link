@@ -12,7 +12,6 @@ import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.Validator;
-import lombok.Setter;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,19 +52,7 @@ public class ValidationController extends BaseController {
       device.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(device);
 
-      OperationOutcome outcome = null;
-
-      boolean isReportValidation = bundle.getEntry().stream().anyMatch(e -> e.getResource().getResourceType().toString().equals("MeasureReport"));
-
-      StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
-      //Only start a metric entry if this validation is for a report bundle with measure reports within it (IP > 0)
-      if(isReportValidation){
-        try(Stopwatch stopwatch = stopwatchManager.start(Constants.VALIDATE)){
-          outcome = this.validator.validate(bundle, severity);
-        }
-      }else {
-        outcome = this.validator.validate(bundle, severity);
-      }
+      OperationOutcome outcome = this.validator.validate(bundle, severity);
 
       //noinspection unused
       outcome.setId(UUID.randomUUID().toString());
@@ -89,20 +76,6 @@ public class ValidationController extends BaseController {
         }
       });
 
-      if(isReportValidation) {
-        //Will only be one Organization in the bundle. Find the first, collect it, and get the Identifier for the tenantId
-        String tenantId = ((Organization) bundle.getEntry().stream().filter(
-                e -> e.getResource().getResourceType().toString().equals("Organization")).collect(Collectors.toList()).get(0).getResource())
-                .getIdentifier().get(0).getValue();
-
-        //Get the master measure reportId
-        String reportId = bundle.getEntry().stream().filter(
-                        e -> e.getResource().getResourceType().toString().equals("MeasureReport") &&
-                                ((MeasureReport) e.getResource()).getType().toString().equals("SUBJECTLIST"))
-                .collect(Collectors.toList()).get(0).getResource().getIdPart();
-
-        stopwatchManager.storeMetrics(tenantId, reportId, Constants.VALIDATION);
-      }
 
       return result;
     } catch (IOException ex) {
@@ -193,7 +166,17 @@ public class ValidationController extends BaseController {
     }
 
     Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-    return this.validateBundle(submissionBundle, severity);
+    StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
+
+    //Only determine metrics for validation explicitly done on a stored report (through request path vars)
+    Bundle validation;
+    try(Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
+      validation = this.validateBundle(submissionBundle, severity);
+    }
+    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    return validation;
+
   }
 
   /**

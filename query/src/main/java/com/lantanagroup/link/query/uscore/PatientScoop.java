@@ -113,7 +113,7 @@ public class PatientScoop {
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.QUERY_PATIENT)) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_PATIENT, Constants.CATEGORY_QUERY)) {
           if (poi.getReference() != null) {
             String id = poi.getReference();
 
@@ -257,7 +257,7 @@ public class PatientScoop {
 
         // store data
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_STORE_PATIENT_DATA, Constants.CATEGORY_QUERY)) {
           this.tenantService.savePatientData(dbPatientData);
         }
       } else {

@@ -37,17 +37,21 @@ public class Constants {
   public static final String LINK_VERSION_URL = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-version";
 
   //Metric taskName Constants
-  public static final String SUBMIT = "submit";
-  public static final String RETRIEVE_PATIENT_DATA = "retrieve-patient-data";
-  public static final String EVALUATE_MEASURE = "evaluate-measure";
-  public static final String STORE_MEASURE_REPORT = "store-measure-report";
-  public static final String VALIDATE = "validate";
-  public static final String QUERY_PATIENT = "query-Patient";
+  public static final String TASK_SUBMIT = "submit";
+  public static final String TASK_RETRIEVE_PATIENT_DATA = "retrieve-patient-data";
+  public static final String TASK_STORE_PATIENT_DATA = "store-patient-data";
+  public static final String TASK_MEASURE = "measure";
+  public static final String TASK_STORE_MEASURE_REPORT = "store-measure-report";
+  public static final String TASK_VALIDATE = "validate";
+  public static final String TASK_PATIENT = "patient";
+
 
   //Metric category Constants
-  public static final String SUBMISSION = "submission";
-  public static final String VALIDATION = "validation";
-  public static final String TEST_QUERY = "test-query";
-  public static final String QUERY = "query";
-  public static final String REPORT = "report";
+  public static final String CATEGORY_SUBMISSION = "submission";
+  public static final String CATEGORY_VALIDATION = "validation";
+  public static final String CATEGORY_TEST = "test";
+  public static final String CATEGORY_QUERY = "query";
+  public static final String CATEGORY_EVALUATE = "evaluate";
+  public static final String CATEGORY_REPORT = "report";
+  public static final String CATEGORY_EVENT = "event";
 }

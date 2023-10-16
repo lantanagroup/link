@@ -134,7 +134,7 @@ public class DataController extends BaseController {
       patientScoop.loadInitialPatientData(criteria, context, pois);
       patientScoop.loadSupplementalPatientData(criteria, context, pois);
       //No report to get an id from, set the reportId to the tenant to indicate this metric applies to the tenant as a whole
-      patientScoop.getStopwatchManager().storeMetrics(tenantId, tenantId, Constants.TEST_QUERY);
+      patientScoop.getStopwatchManager().storeMetrics(tenantId, tenantId);
     } catch (Exception ex) {
       testResponse.setSuccess(false);
       testResponse.setMessage(ex.getMessage());

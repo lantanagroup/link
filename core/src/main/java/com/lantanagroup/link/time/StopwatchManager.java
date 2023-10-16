@@ -24,12 +24,12 @@ public class StopwatchManager {
     this.sharedService = sharedService;
   }
 
-  public Stopwatch start(String task) {
-    return new ManagedStopwatch(task);
+  public Stopwatch start(String task, String category) {
+    return new ManagedStopwatch(task, category);
   }
 
-  private synchronized void record(String task, Duration duration) {
-    durationsByTask.computeIfAbsent(task, _task -> new ArrayList<>()).add(duration);
+  private synchronized void record(String task, String category, Duration duration) {
+    durationsByTask.computeIfAbsent(task + ":" + category, _task -> new ArrayList<>()).add(duration);
   }
 
   public synchronized String getStatistics() {
@@ -41,7 +41,8 @@ public class StopwatchManager {
     StringBuilder statistics = new StringBuilder();
     statistics.append(formatter.getHeaderLine("Task", "Count", "Total", "Min", "Mean", "Max"));
     for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
-      String task = entry.getKey();
+      String key = entry.getKey();
+      String task = key.substring(0, key.indexOf(":"));
       List<Duration> durations = entry.getValue();
       statistics.append(formatter.getValueLine(
             task,
@@ -54,14 +55,17 @@ public class StopwatchManager {
     return statistics.toString();
   }
 
-  public synchronized void storeMetrics(String tenantId, String reportId, String category) {
+  public synchronized void storeMetrics(String tenantId, String reportId) {
     List<Metrics> metrics = new ArrayList<>();
     for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
       List<Duration> durations = entry.getValue();
+      String key = entry.getKey();
+      String task = key.substring(0, key.indexOf(":"));
+      String category = key.substring(key.indexOf(":") + 1);
       Metrics metric = new Metrics();
       metric.setTenantId(tenantId);
       metric.setReportId(reportId);
-      metric.setTaskName(entry.getKey());
+      metric.setTaskName(task);
       metric.setCategory(category);
       metric.setTimestamp(new Date());
 
@@ -130,14 +134,14 @@ public class StopwatchManager {
   }
 
   private class ManagedStopwatch extends Stopwatch {
-    public ManagedStopwatch(String task) {
-      super(task);
+    public ManagedStopwatch(String task, String category) {
+      super(task, category);
     }
 
     @Override
     protected void onStopped(Duration duration) {
       super.onStopped(duration);
-      record(task, duration);
+      record(task, category, duration);
     }
   }
 }

@@ -119,7 +119,7 @@ public class ReportController extends BaseController {
 
     Query query = new Query();
     query.setApplicationContext(this.context);
-    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-phase-%s", queryPhase))) {
+    try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_QUERY)) {
       query.execute(tenantService, criteria, context, queryPhase);
     }
   }
@@ -291,7 +291,6 @@ public class ReportController extends BaseController {
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), Constants.QUERY);
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
 
@@ -317,7 +316,7 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}", report.getId());
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), Constants.REPORT);
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 
     return report;
@@ -334,7 +333,7 @@ public class ReportController extends BaseController {
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-phase-%s", queryPhase))) {
+      try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_EVALUATE)) {
         generator.generate(queryPhase);
       }
 
@@ -381,14 +380,14 @@ public class ReportController extends BaseController {
 
     Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
     //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.SUBMIT)) {
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
       sender.send(tenantService, submissionBundle, report, request, user);
     }
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    stopwatchManager.storeMetrics(tenantId, reportId, Constants.SUBMISSION);
+    stopwatchManager.storeMetrics(tenantId, reportId);
 
     tenantService.saveReport(report);
 
