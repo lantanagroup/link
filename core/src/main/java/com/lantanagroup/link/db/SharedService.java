@@ -372,6 +372,62 @@ public class SharedService {
     }
   }
 
+  public void saveMetrics(List<Metrics> metrics){
+    metrics.forEach(metric -> {
+      try (Connection conn = this.getSQLConnection()) {
+        assert conn != null;
+        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?) }");
+        cs.setNString("id", metric.getId().toString());
+        cs.setNString("tenantId", metric.getTenantId());
+        cs.setNString("reportId", metric.getReportId());
+        cs.setNString("category", metric.getCategory().toString());
+        cs.setNString("taskName", metric.getTaskName().toString());
+        cs.setNString("timestamp", metric.getTimestamp().toString());
+        cs.setNString("data", mapper.writeValueAsString(metric.getData()));
+
+        cs.executeUpdate();
+      } catch(SQLServerException e){
+        SQLServerHelper.handleException(e);
+      } catch (SQLException | NullPointerException | JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  public List<Metrics> getMetrics(Date start, Date end) {
+    if(start.compareTo(end) > 0){
+      throw new RuntimeException("Start date must be before end date");
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [dbo].[metrics] WHERE timestamp > ? AND timestamp < ?");
+      ps.setNString(1, start.toString());
+      ps.setNString(2, end.toString());
+
+      ResultSet rs = ps.executeQuery();
+      var metrics = new ArrayList<Metrics>();
+
+      while(rs.next()) {
+        Metrics metric = new Metrics();
+        metric.setId(rs.getObject(1, UUID.class));
+        metric.setTenantId(rs.getString(2));
+        metric.setReportId(rs.getString(3));
+        metric.setCategory(rs.getString(4));
+        metric.setTaskName(rs.getString(5));
+        metric.setTimestamp(new Date(rs.getString(6)));
+        metric.setData(mapper.readValue(rs.getString(7), MetricData.class));
+
+        metrics.add(metric);
+      }
+
+      return metrics;
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<Audit> getAudits() {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;

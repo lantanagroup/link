@@ -1,27 +1,35 @@
 package com.lantanagroup.link.time;
 
+import com.lantanagroup.link.db.model.MetricData;
+import com.lantanagroup.link.db.model.Metrics;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import com.lantanagroup.link.db.SharedService;
 
 @Component
 public class StopwatchManager {
   private static final int COUNT_WIDTH = 6;
   private static final int DURATION_WIDTH = 11;
 
+  private SharedService sharedService;
+
   private final Map<String, List<Duration>> durationsByTask = new LinkedHashMap<>();
 
-  public Stopwatch start(String task) {
-    return new ManagedStopwatch(task);
+  public StopwatchManager(SharedService sharedService){
+    this.sharedService = sharedService;
   }
 
-  private synchronized void record(String task, Duration duration) {
-    durationsByTask.computeIfAbsent(task, _task -> new ArrayList<>()).add(duration);
+  public Stopwatch start(String task, String category) {
+    return new ManagedStopwatch(task, category);
+  }
+
+  private synchronized void record(String task, String category, Duration duration) {
+    durationsByTask.computeIfAbsent(task + ":" + category, _task -> new ArrayList<>()).add(duration);
   }
 
   public synchronized String getStatistics() {
@@ -33,17 +41,42 @@ public class StopwatchManager {
     StringBuilder statistics = new StringBuilder();
     statistics.append(formatter.getHeaderLine("Task", "Count", "Total", "Min", "Mean", "Max"));
     for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
-      String task = entry.getKey();
+      String key = entry.getKey();
+      String task = key.substring(0, key.indexOf(":"));
       List<Duration> durations = entry.getValue();
       statistics.append(formatter.getValueLine(
-              task,
-              durations.size(),
-              getTotal(durations),
-              getMin(durations),
-              getMean(durations),
-              getMax(durations)));
+            task,
+            durations.size(),
+            getTotal(durations),
+            getMin(durations),
+            getMean(durations),
+            getMax(durations)));
     }
     return statistics.toString();
+  }
+
+  public synchronized void storeMetrics(String tenantId, String reportId) {
+    List<Metrics> metrics = new ArrayList<>();
+    for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
+      List<Duration> durations = entry.getValue();
+      String key = entry.getKey();
+      String task = key.substring(0, key.indexOf(":"));
+      String category = key.substring(key.indexOf(":") + 1);
+      Metrics metric = new Metrics();
+      metric.setTenantId(tenantId);
+      metric.setReportId(reportId);
+      metric.setTaskName(task);
+      metric.setCategory(category);
+      metric.setTimestamp(new Date());
+
+      MetricData data = new MetricData();
+      data.count = durations.size();
+      data.duration = getTotal(durations).toMillis();
+      metric.setData(data);
+
+      metrics.add(metric);
+    }
+    this.sharedService.saveMetrics(metrics);
   }
 
   private Duration getTotal(List<Duration> durations) {
@@ -101,14 +134,14 @@ public class StopwatchManager {
   }
 
   private class ManagedStopwatch extends Stopwatch {
-    public ManagedStopwatch(String task) {
-      super(task);
+    public ManagedStopwatch(String task, String category) {
+      super(task, category);
     }
 
     @Override
     protected void onStopped(Duration duration) {
       super.onStopped(duration);
-      record(task, duration);
+      record(task, category, duration);
     }
   }
 }

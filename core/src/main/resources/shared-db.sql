@@ -81,6 +81,22 @@ BEGIN
 END
 GO
 
+-- LNK-1359: Adding metrics table to SQL database
+IF OBJECT_ID(N'dbo.metrics', N'U') IS NULL
+    BEGIN
+        CREATE TABLE dbo.[metrics]
+        (
+            id           UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            tenantId     NVARCHAR(128)    NOT NULL,
+            reportId     NVARCHAR(128)    NOT NULL,
+            category     NVARCHAR(128),
+            taskName     NVARCHAR(128),
+            timestamp    NVARCHAR(128) DEFAULT GETDATE(),
+            data         NVARCHAR(max)
+        );
+    END
+GO
+
 -- LNK-1150: Remove non-null constraint from dbo.audit.userId
 ALTER TABLE dbo.audit
 ALTER COLUMN userId UNIQUEIDENTIFIER;
@@ -180,6 +196,22 @@ BEGIN
         SET measures = @measures
         WHERE packageId = @packageId
     END
+END
+GO
+
+-- LNK-1359
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
 END
 GO
 
