@@ -50,8 +50,7 @@ public class BulkStatusService {
     try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ?");
-      ps.setNString(1, tenantConfig.getId());
+      PreparedStatement ps = conn.prepareStatement("SELECT id, statusUrl, [status], [date] FROM [dbo].[bulkStatus]");
 
       ResultSet rs = ps.executeQuery();
 
@@ -61,10 +60,9 @@ public class BulkStatusService {
         var status = new BulkStatus();
 
         status.setId(rs.getString(1));
-        status.setTenantId(rs.getString(2));
-        status.setStatusUrl(rs.getString(3));
-        status.setStatus(rs.getString(4));
-        status.setLastChecked(new java.util.Date(rs.getDate(5).getTime()));
+        status.setStatusUrl(rs.getString(2));
+        status.setStatus(rs.getString(3));
+        status.setLastChecked(new java.util.Date(rs.getDate(4).getTime()));
 
         statuses.add(status);
       }
@@ -81,10 +79,9 @@ public class BulkStatusService {
     try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
-      String query = "SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ? AND id = ?";
+      String query = "SELECT id, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE id = ?";
       PreparedStatement ps = conn.prepareStatement(query);
-      ps.setNString(1, tenantConfig.getId());
-      ps.setNString(2, id);
+      ps.setNString(1, id);
 
       ResultSet rs = ps.executeQuery();
 
@@ -94,10 +91,9 @@ public class BulkStatusService {
         status = new BulkStatus();
 
         status.setId(rs.getString(1));
-        status.setTenantId(rs.getString(2));
-        status.setStatusUrl(rs.getString(3));
-        status.setStatus(rs.getString(4));
-        status.setLastChecked(new java.util.Date(rs.getDate(5).getTime()));
+        status.setStatusUrl(rs.getString(2));
+        status.setStatus(rs.getString(3));
+        status.setLastChecked(new java.util.Date(rs.getDate(4).getTime()));
       }
 
       assert status != null;
@@ -148,9 +144,8 @@ public class BulkStatusService {
     try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
-      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveBulkStatus (?, ?, ?, ?, ?) }");
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveBulkStatus (?, ?, ?, ?) }");
       cs.setNString("id", bulkStatus.getId());
-      cs.setNString("tenantId", bulkStatus.getTenantId());
       cs.setNString("status", bulkStatus.getStatus());
       cs.setNString("statusUrl", bulkStatus.getStatusUrl());
       cs.setDateTime("date", bulkStatus.getLastChecked().getTime());
@@ -168,8 +163,7 @@ public class BulkStatusService {
     try (Connection conn = this.dataSource.getConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT id, tenantId, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE tenantId = ? AND [status] = 'Pending' AND statusURL IS NOT NULL");
-      ps.setNString(1, tenantConfig.getId());
+      PreparedStatement ps = conn.prepareStatement("SELECT id, statusUrl, [status], [date] FROM [dbo].[bulkStatus] WHERE [status] = 'Pending' AND statusURL IS NOT NULL");
 
       ResultSet rs = ps.executeQuery();
 
@@ -179,10 +173,9 @@ public class BulkStatusService {
         var status = new BulkStatus();
 
         status.setId(rs.getString(1));
-        status.setTenantId(rs.getString(2));
-        status.setStatusUrl(rs.getString(3));
-        status.setStatus(rs.getString(4));
-        status.setLastChecked(new java.util.Date(rs.getDate(5).getTime()));
+        status.setStatusUrl(rs.getString(2));
+        status.setStatus(rs.getString(3));
+        status.setLastChecked(new java.util.Date(rs.getDate(4).getTime()));
 
         statuses.add(status);
       }
