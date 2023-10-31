@@ -250,8 +250,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Tenants
@@ -274,6 +272,51 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/tenant/summary:
+    get:
+      tags:
+        - Tenants
+        - UI
+      summary: Summary search for tenants
+      operationId: searchTenantSummaries
+      parameters:
+        - name: searchCriteria
+          in: query
+          description: Criteria that is used to filter the response. Can be name, NHSN org id, etc.
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number of the results to return
+          schema:
+            type: number
+            default: 1
+        - name: sort
+          in: query
+          description: The field to sort the results by
+          schema:
+            type: string
+            default: NAME
+            enum:
+              - NAME
+              - NHSN_ORG_ID
+              - SUBMISSION_DATE
+        - name: sortAscend
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TenantSummaryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
   /api/tenant/{id}:
     get:
       tags:
@@ -1952,6 +1995,39 @@ components:
       required:
         - code
         - message
+    TenantSummaryResponse:
+      type: object
+      properties:
+        total:
+          type: number
+        tenants:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSummary'
+    TenantSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        nhsnOrgId:
+          type: string
+        lastSubmissionId:
+          type: string
+        lastSubmissionDate:
+          type: string
+        measures:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSummaryMeasure'
+    TenantSummaryMeasure:
+      type: object
+      properties:
+        id:
+          type: string
+        shortName:
+          type: string
+        longName:
+          type: string
   securitySchemes:
     oauth:
       type: oauth2

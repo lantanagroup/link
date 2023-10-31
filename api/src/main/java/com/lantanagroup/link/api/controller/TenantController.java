@@ -5,7 +5,7 @@ import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.SearchTenantResponse;
+import com.lantanagroup.link.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,6 +42,32 @@ public class TenantController extends BaseController {
     return this.sharedService.getTenantConfigs().stream()
             .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId()))
             .collect(Collectors.toList());
+  }
+
+  @GetMapping("summary")
+  public TenantSummaryResponse searchTenantSummaries(@RequestParam String searchCriteria, @RequestParam(defaultValue = "NAME") TenantSummarySort sort, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "true") boolean sortAscend) {
+    // TODO: Replace with actual functionality
+
+    TenantSummary tenant1 = new TenantSummary();
+    tenant1.setId("tenant1");
+    tenant1.setName("Tenant 1");
+    tenant1.setLastSubmissionDate(new Date());
+    tenant1.setLastSubmissionId("2u3423d");
+    tenant1.getMeasures().add(new TenantSummaryMeasure("cdihob", "CDI-HOB", "C-Difficile and HOB"));
+    tenant1.getMeasures().add(new TenantSummaryMeasure("hypo", "HYPO", "Hypoglycemia"));
+    TenantSummary tenant2 = new TenantSummary();
+    tenant2.setId("tenant2");
+    tenant2.setName("Tenant 2");
+    tenant2.setLastSubmissionDate(new Date());
+    tenant2.setLastSubmissionId("ds3lg03");
+    tenant2.getMeasures().add(new TenantSummaryMeasure("hypo", "HYPO", "Hypoglycemia"));
+    tenant2.getMeasures().add(new TenantSummaryMeasure("rps", "RPS", "Whatever RPS stands for"));
+
+    TenantSummaryResponse response = new TenantSummaryResponse();
+    response.setTotal(2);
+    response.getTenants().add(tenant1);
+    response.getTenants().add(tenant2);
+    return response;
   }
 
   @GetMapping("{tenantId}")
