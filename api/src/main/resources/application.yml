@@ -34,6 +34,26 @@ api:
     retry-wait: 5000
   measure-evaluation-threads: 10
 
+  info-groups:
+    - name: 'DQM: INFO, SPECS AND HISTORY'
+      sections:
+        - name: 'INSTRUCTION BOOK'
+          links:
+            - title: 'dQM Instruction Book'
+              url: 'http://dqminstructionbook.com'
+        - name: 'MEASURES'
+          links:
+            - title: 'Hospital-associated enous thromboembolism (HVT)'
+              url: 'http://test.com'
+            - title: 'Medication-related hypoglycemia (HYP)'
+              url: 'http://test2.com'
+    - name: 'ECQI: TOOLS AND RESOURCE KEY'
+      sections:
+        - name: 'TOOLS AND RESOURCES'
+          links:
+            - title: 'eCQI Tools and Resources Library'
+              url: 'http://test.com'
+
 # For scheduled tasks
 # CRON format is "<sec> <min> <hour> <day of month> <month> <day of week - 0 index>" and expects UTC
 # Examples:

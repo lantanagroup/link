@@ -10,7 +10,9 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @Getter
 @Setter
@@ -168,4 +170,6 @@ public class ApiConfig {
    * Allows use of QA debugging endpoints. DO NOT ALLOW IN PRODUCTION!!!!
    */
   private boolean allowQaEndpoints = false;
+
+  private List<ApiInfoGroup> infoGroups = new ArrayList<>();
 }

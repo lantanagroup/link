@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiInfoGroup;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.ApiVersionModel;
 import org.apache.commons.lang3.StringUtils;
@@ -43,6 +44,11 @@ public class ApiController {
   @GetMapping
   public ApiVersionModel getVersionInfo() {
     return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+  }
+
+  @GetMapping("/info")
+  public List<ApiInfoGroup> getInfo() {
+    return this.apiConfig.getInfoGroups();
   }
 
   private static Map<Object, Object> getYamlObj(Map<Object, Object> obj, String property) {
