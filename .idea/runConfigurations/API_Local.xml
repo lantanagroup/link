@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="API" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+  <configuration default="false" name="API Local" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
     <envs>
       <env name="SPRING_CONFIG_LOCATION" value="file:/${USERPROFILE}\Lantana Consulting Group\Link - Configs\application-dev-multitenant-local.yml" />
     </envs>
