@@ -10,14 +10,15 @@ import lombok.Setter;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
-public class ApiInfoModel {
+public class ApiVersionModel {
   private String build = "dev";
   private String version;
   private String commit;
 
   @JsonProperty("cqf-version")
   private String cqfVersion;
-  public ApiInfoModel(String cqfVersion) {
+
+  public ApiVersionModel(String cqfVersion) {
     this.cqfVersion = cqfVersion;
   }
 }

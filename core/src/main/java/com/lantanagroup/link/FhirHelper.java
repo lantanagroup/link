@@ -9,7 +9,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Address;
-import com.lantanagroup.link.model.ApiInfoModel;
+import com.lantanagroup.link.model.ApiVersionModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
@@ -246,37 +246,37 @@ public class FhirHelper {
   }
 
   public static Device getDevice(ApiConfig apiConfig) {
-    ApiInfoModel apiInfoModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
+    ApiVersionModel apiVersionModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
     Device device = new Device();
     device.addDeviceName().setName(apiConfig.getName());
     device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getVersion())) {
       device.addVersion()
               .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getVersion());
+              .setValue(apiVersionModel.getVersion());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getBuild())) {
       device.addVersion()
               .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getBuild());
+              .setValue(apiVersionModel.getBuild());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getCommit())) {
       device.addVersion()
               .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getCommit());
+              .setValue(apiVersionModel.getCommit());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
       device.addVersion()
               .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
               .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiInfoModel.getCqfVersion());
+              .setValue(apiVersionModel.getCqfVersion());
     }
 
     return device;
