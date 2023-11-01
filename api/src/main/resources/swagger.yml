@@ -1317,6 +1317,55 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/log:
+    get:
+      tags:
+        - Auditing and Logging
+        - UI
+      summary: Searches the logs
+      operationId: getLogs
+      parameters:
+        - name: startDate
+          in: query
+          description: The minimum/start date to return logs for
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: The maximum/end date to return logs for
+          schema:
+            type: string
+        - name: content
+          in: query
+          description: What content to look for in the message
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page of logs to return
+          schema:
+            type: number
+        - name: severity
+          in: query
+          description: One or more severities to filter the results by
+          schema:
+            type: array
+            items:
+              type: string
+            enum:
+              - ERROR
+              - WARNING
+              - INFO
+              - DEBUG
+      responses:
+        '200':
+          description: successful response
+          content:
+            $ref: '#/components/schemas/LogSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
     ApiInfoModel:
@@ -2085,6 +2134,31 @@ components:
         commit:
           type: string
         cqfVersion:
+          type: string
+    LogSearchResponse:
+      type: object
+      properties:
+        total:
+          type: number
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogMessage'
+    LogMessage:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+            - DEBUG
+        message:
+          type: string
+        caller:
           type: string
   securitySchemes:
     oauth:
