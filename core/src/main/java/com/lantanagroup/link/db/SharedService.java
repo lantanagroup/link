@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -394,17 +395,34 @@ public class SharedService {
     });
   }
 
-  public List<Metrics> getMetrics(Date start, Date end) {
-    if(start.compareTo(end) > 0){
+  public List<Metrics> getMetrics(LocalDate start, LocalDate end, String tenantId, String reportId) {
+
+    if(start.isAfter(end)){
       throw new RuntimeException("Start date must be before end date");
     }
 
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [dbo].[metrics] WHERE timestamp > ? AND timestamp < ?");
-      ps.setNString(1, start.toString());
-      ps.setNString(2, end.toString());
+      StringBuilder sql = new StringBuilder();
+      sql.append("SELECT * FROM [dbo].[metrics] WHERE timestamp >= ? AND timestamp < ?");
+
+      //filter on tenant id if supplied
+      if(!StringUtils.isEmpty(tenantId)) {
+        sql.append(" AND tenantId = ?");
+      }
+
+      //filter on report id if supplied
+      if(!StringUtils.isEmpty(reportId)) {
+        sql.append(" AND  reportId = ?");
+      }
+
+      PreparedStatement ps = conn.prepareStatement(sql.toString());
+      ps.setDate(1, java.sql.Date.valueOf(start));
+      ps.setDate(2, java.sql.Date.valueOf(end));
+      int paramIndex = 2;
+      if(!StringUtils.isEmpty(tenantId)) { paramIndex++; ps.setNString(paramIndex, tenantId); }
+      if(!StringUtils.isEmpty(reportId)) { paramIndex++; ps.setNString(paramIndex, reportId); }
 
       ResultSet rs = ps.executeQuery();
       var metrics = new ArrayList<Metrics>();
