@@ -45,7 +45,7 @@ public class TenantController extends BaseController {
   }
 
   @GetMapping("summary")
-  public TenantSummaryResponse searchTenantSummaries(@RequestParam String searchCriteria, @RequestParam(defaultValue = "NAME") TenantSummarySort sort, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "true") boolean sortAscend) {
+  public TenantSummaryResponse searchTenantSummaries(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) TenantSummarySort sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
     // TODO: Replace with actual functionality
 
     TenantSummary tenant1 = new TenantSummary();
