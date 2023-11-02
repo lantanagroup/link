@@ -13,8 +13,10 @@
         </connectionSource>
     </appender>
 
-    <logger name="com.lantanagroup.link" level="DEBUG">
-        <appender-ref ref="link-db"/>
-    </logger>
+    <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
+
+    <root>
+        <appender-ref ref="link-db"/>
+    </root>
 </configuration>
