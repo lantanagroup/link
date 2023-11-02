@@ -102,6 +102,58 @@ ALTER TABLE dbo.audit
 ALTER COLUMN userId UNIQUEIDENTIFIER;
 GO
 
+-- LOGBACK tables
+IF OBJECT_ID(N'dbo.logging_event', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event
+        (
+            timestmp          DECIMAL(20)   NOT NULL,
+            formatted_message VARCHAR(4000) NOT NULL,
+            logger_name       VARCHAR(254)  NOT NULL,
+            level_string      VARCHAR(254)  NOT NULL,
+            thread_name       VARCHAR(254),
+            reference_flag    SMALLINT,
+            arg0              VARCHAR(254),
+            arg1              VARCHAR(254),
+            arg2              VARCHAR(254),
+            arg3              VARCHAR(254),
+            caller_filename   VARCHAR(254)  NOT NULL,
+            caller_class      VARCHAR(254)  NOT NULL,
+            caller_method     VARCHAR(254)  NOT NULL,
+            caller_line       CHAR(4)       NOT NULL,
+            event_id          DECIMAL(38)   NOT NULL identity,
+            PRIMARY KEY (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_property', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_property
+        (
+            event_id     DECIMAL(38)  NOT NULL,
+            mapped_key   VARCHAR(254) NOT NULL,
+            mapped_value VARCHAR(1024),
+            PRIMARY KEY (event_id, mapped_key),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_exception', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_exception
+        (
+            event_id   DECIMAL(38)  NOT NULL,
+            i          SMALLINT     NOT NULL,
+            trace_line VARCHAR(254) NOT NULL,
+            PRIMARY KEY (event_id, i),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
+GO
+
+
 CREATE OR ALTER PROCEDURE saveUser
     -- Add the parameters for the stored procedure here
     @id UNIQUEIDENTIFIER,
@@ -262,3 +314,4 @@ BEGIN
     END
 END
 GO
+
