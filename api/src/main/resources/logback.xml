@@ -3,7 +3,20 @@
     <property name="LOG_FILE" value="logs/link-api.log"/>
     <property name="LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE" value="100MB"/>
     <property name="LOGBACK_ROLLINGPOLICY_MAX_HISTORY" value="0"/>
+    <springProperty name="dbUrl" source="api.connection-string"/>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="link-db" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+            <driverClass>com.microsoft.sqlserver.jdbc.SQLServerDriver</driverClass>
+            <url>${dbUrl}</url>
+        </connectionSource>
+    </appender>
+
     <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
+
+    <root>
+        <appender-ref ref="link-db"/>
+    </root>
 </configuration>
