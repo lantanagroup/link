@@ -10,6 +10,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.LogMessage;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -20,12 +21,11 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -631,5 +631,68 @@ public class SharedService {
       databaseNames.add(tenantDatabaseName);
     }
     return databaseNames;
+  }
+
+  public List<LogMessage> findLogMessages(Date startDate, Date endDate, String[] severities, int page, String content) {
+    int countPerPage = 10;
+
+    if (severities != null && severities.length > 0) {
+      for (String s : severities) {
+        if (Arrays.stream(LogMessage.SEVERITIES).noneMatch(s::equals)) {
+          throw new IllegalArgumentException("Invalid severity, must be one of " + String.join(", ", LogMessage.SEVERITIES));
+        }
+      }
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      String sql = "SELECT * FROM [logging_event] WHERE event_id IS NOT NULL";
+      List<Object> params = new ArrayList<>();
+
+      if (startDate != null) {
+        sql += " AND timestmp >= ?";
+        params.add(BigDecimal.valueOf(startDate.getTime()));
+      }
+
+      if (endDate != null) {
+        sql += " AND timestmp <= ?";
+        params.add(BigDecimal.valueOf(endDate.getTime()));
+      }
+
+      if (severities != null && severities.length > 0) {
+        sql += " AND level_string IN ('";
+        sql += String.join("','", severities);
+        sql += "')";
+      }
+
+      if (content != null && !content.isEmpty()) {
+        sql += " AND formatted_message LIKE ?";
+        params.add("%" + content + "%");
+      }
+
+      sql += " ORDER BY timestmp DESC";
+
+      // paging
+      sql += " OFFSET ? ROWS FETCH NEXT " + countPerPage + " ROWS ONLY";
+      params.add((page - 1) * countPerPage);
+
+      PreparedStatement ps = conn.prepareStatement(sql);
+      for (int i = 0; i < params.size(); i++) {
+        ps.setObject(i + 1, params.get(i));
+      }
+
+      ResultSet rs = ps.executeQuery();
+      List<LogMessage> logMessages = new ArrayList<>();
+
+      while (rs.next()) {
+        LogMessage next = LogMessage.create(rs);
+        logMessages.add(next);
+      }
+
+      return logMessages;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
