@@ -4,6 +4,7 @@ import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
 import com.lantanagroup.link.model.MetricsReportResponse;
+import com.lantanagroup.link.model.PatientsQueriedMetric;
 import com.lantanagroup.link.model.QueryTimeMetric;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -117,51 +118,59 @@ public class MetricController extends BaseController {
   private MetricsReportResponse CalculateWeeklyMetrics(String period, LocalDate end, List<Metrics> metrics) {
     MetricsReportResponse report = new MetricsReportResponse();
 
-    //-------------------------------------------------------------------
-    // calculate query time metrics, category = query
-    //-------------------------------------------------------------------
     //get current period metrics
     LocalDate start = end.minusWeeks(1);
     List<Metrics> periodMetrics = GetPeriodMetrics(start, end, metrics);
 
-    //calculate average query time for the current period
+    //-------------------------------------------------------------------
+    // calculate current query time metrics, category = query
+    //-------------------------------------------------------------------
     double currentQueryTimeAvg = CalculateQueryTimeAvg(periodMetrics);
-
     QueryTimeMetric queryTimeMetric = new QueryTimeMetric();
     queryTimeMetric.setAverage(currentQueryTimeAvg);
-    report.setQueryTime(queryTimeMetric);
+
+
+    //-------------------------------------------------------------------
+    // calculate current patients queried metrics
+    //-------------------------------------------------------------------
+    long currentTotalPatientsQueried = CalculatePatientsQueried(periodMetrics);
+    PatientsQueriedMetric patientsQueriedMetric = new PatientsQueriedMetric();
+    patientsQueriedMetric.setTotal(currentTotalPatientsQueried);
+
+    //-------------------------------------------------------------------
+    // calculate current patients reported metrics
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    // calculate current validation metrics
+    //-------------------------------------------------------------------
+
+    //-------------------------------------------------------------------
+    // calculate current evaluation metrics
+    //-------------------------------------------------------------------
 
     //loop back through this historical data to produce previous 10 query time averages
-    List<Double> historicalAvgs = new ArrayList<Double>();
+    double[] queryTimeHistory = new double[10];
+    long[] patientsQueriedHistory = new long[10];
     for (int i = 1; i <= 10; i++) {
+      //get historical period
       LocalDate historicalStart = start.minusWeeks(i);
       LocalDate historicalEnd = end.minusWeeks(i);
       List<Metrics> historicalMetrics = GetPeriodMetrics(historicalStart, historicalEnd, metrics);
-      historicalAvgs.add(CalculateQueryTimeAvg(historicalMetrics));
+
+      //Calculate historical metrics
+      queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics);
+      patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
     }
 
-    //add historical averages to QueryTimeMetric
-    double[] history = new double[historicalAvgs.size()];
-    for (int i = 0; i < historicalAvgs.size(); i++) {
-      history[i] = historicalAvgs.get(i);
-    }
-    queryTimeMetric.setHistory(history);
+    //add historical averages for query time
+    queryTimeMetric.setHistory(queryTimeHistory);
+    report.setQueryTime(queryTimeMetric);
 
-    //-------------------------------------------------------------------
-    // calculate patients queried metrics
-    //-------------------------------------------------------------------
+    //add historical totals for patients queried
+    patientsQueriedMetric.setHistory(patientsQueriedHistory);
+    report.setPatientsQueried(patientsQueriedMetric);
 
-    //-------------------------------------------------------------------
-    // calculate patients reported metrics
-    //-------------------------------------------------------------------
-
-    //-------------------------------------------------------------------
-    // calculate validation metrics
-    //-------------------------------------------------------------------
-
-    //-------------------------------------------------------------------
-    // calculate evaluation metrics
-    //-------------------------------------------------------------------
 
     return report;
   }
@@ -211,6 +220,23 @@ public class MetricController extends BaseController {
     return currentQueryTimeAvg;
   }
 
+  private long CalculatePatientsQueried(List<Metrics> periodMetrics) {
+    //get total patients queried in the metric period
+    long totalPatientsQueried = 0;
+
+    //if no period metrics exist, return 0
+    if(!(periodMetrics.size() > 0)) {
+      return totalPatientsQueried;
+    }
+
+    List<MetricData> periodQueryMetrics = GetPeriodMetricData(QUERY_CATEGORY, "patient", periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalPatientsQueried += data.count;
+    }
+
+    return totalPatientsQueried;
+  }
+
   private List<String> GetUniqueReportIds(List<Metrics> metrics) {
 
     //Build a unique list of report ids for processing
@@ -226,6 +252,15 @@ public class MetricController extends BaseController {
             .map(Metrics::getData)
             .collect(Collectors.toList());
   }
+
+  private List<MetricData> GetPeriodMetricData(String category, String task, List<Metrics> periodMetrics) {
+    return periodMetrics.stream()
+            .filter(obj -> obj.getCategory().equals(category))
+            .filter(obj -> obj.getTaskName().equals(task))
+            .map(Metrics::getData)
+            .collect(Collectors.toList());
+  }
+
   private List<MetricData> GetReportMetricData(String reportId, String category, List<Metrics> periodMetrics) {
     return periodMetrics.stream()
             .filter(obj -> obj.getReportId().equals(reportId))
