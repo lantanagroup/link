@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -383,7 +384,7 @@ public class SharedService {
         cs.setNString("reportId", metric.getReportId());
         cs.setNString("category", metric.getCategory().toString());
         cs.setNString("taskName", metric.getTaskName().toString());
-        cs.setNString("timestamp", metric.getTimestamp().toString());
+        cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
         cs.setNString("data", mapper.writeValueAsString(metric.getData()));
 
         cs.executeUpdate();
@@ -405,7 +406,7 @@ public class SharedService {
       assert conn != null;
 
       StringBuilder sql = new StringBuilder();
-      sql.append("SELECT * FROM [dbo].[metrics] WHERE timestamp >= ? AND timestamp < ?");
+      sql.append("SELECT * FROM [dbo].[metrics] WHERE CONVERT(datetime, timestamp) >= ? AND CONVERT(datetime, timestamp) < ?");
 
       //filter on tenant id if supplied
       if(!StringUtils.isEmpty(tenantId)) {
