@@ -3,10 +3,7 @@ package com.lantanagroup.link.api.controller;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
-import com.lantanagroup.link.model.MetricsReportResponse;
-import com.lantanagroup.link.model.PatientsQueriedMetric;
-import com.lantanagroup.link.model.PatientsReportedMetric;
-import com.lantanagroup.link.model.QueryTimeMetric;
+import com.lantanagroup.link.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,6 +145,9 @@ public class MetricController extends BaseController {
     //-------------------------------------------------------------------
     // calculate current validation metrics
     //-------------------------------------------------------------------
+    double currentValidationTimeAvg = CalculateValidationTimeAvg(periodMetrics);
+    ValidationMetric validationTimeMetric = new ValidationMetric();
+    validationTimeMetric.setAverage(currentValidationTimeAvg);
 
     //-------------------------------------------------------------------
     // calculate current evaluation metrics
@@ -157,6 +157,7 @@ public class MetricController extends BaseController {
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
     long[] patientsReportedHistory = new long[10];
+    double[] validationTimeHistory = new double[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
       LocalDate historicalStart = start.minusWeeks(i);
@@ -167,6 +168,7 @@ public class MetricController extends BaseController {
       queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics);
       patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
       patientsReportedHistory[i-1] = CalculatePatientsReported(historicalMetrics);
+      validationTimeHistory[i-1] = CalculateValidationTimeAvg(historicalMetrics);
 
     }
 
@@ -182,6 +184,9 @@ public class MetricController extends BaseController {
     patientsReportedMetric.setHistory(patientsReportedHistory);
     report.setPatientsReported(patientsReportedMetric);
 
+    //add historical averages for validation time
+    validationTimeMetric.setHistory(validationTimeHistory);
+    report.setValidation(validationTimeMetric);
 
     return report;
   }
@@ -212,7 +217,7 @@ public class MetricController extends BaseController {
   }
   private double CalculateQueryTimeAvg(List<Metrics> periodMetrics) {
     //get total query time spent in the metric period
-    long totalQueryTimeSpent = 0;
+    double totalQueryTimeSpent = 0;
 
     //if no period metrics exist, return 0
     if(!(periodMetrics.size() > 0)) {
@@ -226,7 +231,7 @@ public class MetricController extends BaseController {
 
     //determine query time averages
     List<String> reportIds = GetUniqueReportIds(periodMetrics);
-    double currentQueryTimeAvg = (double) (totalQueryTimeSpent / (long) reportIds.size());
+    double currentQueryTimeAvg = (totalQueryTimeSpent / reportIds.size());
 
     return currentQueryTimeAvg;
   }
@@ -263,6 +268,27 @@ public class MetricController extends BaseController {
     }
 
     return totalPatientsReported;
+  }
+
+  private double CalculateValidationTimeAvg(List<Metrics> periodMetrics) {
+    //get total patients queried in the metric period
+    double totalValidationTimeSpent = 0;
+
+    //if no period metrics exist, return 0
+    if(!(periodMetrics.size() > 0)) {
+      return totalValidationTimeSpent;
+    }
+
+    List<MetricData> periodQueryMetrics = GetPeriodMetricData(VALIDATION_CATEGORY, "validate", periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalValidationTimeSpent += data.duration;
+    }
+
+    //determine query time averages
+    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    double currentValidationTimeAvg = (totalValidationTimeSpent / reportIds.size());
+
+    return currentValidationTimeAvg;
   }
 
   private List<String> GetUniqueReportIds(List<Metrics> metrics) {
