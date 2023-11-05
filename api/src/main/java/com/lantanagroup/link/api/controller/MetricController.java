@@ -120,44 +120,37 @@ public class MetricController extends BaseController {
     LocalDate start = end.minusWeeks(1);
     List<Metrics> periodMetrics = GetPeriodMetrics(start, end, metrics);
 
-    //-------------------------------------------------------------------
     // calculate current query time metrics, category = query
-    //-------------------------------------------------------------------
     double currentQueryTimeAvg = CalculateQueryTimeAvg(periodMetrics);
     QueryTimeMetric queryTimeMetric = new QueryTimeMetric();
     queryTimeMetric.setAverage(currentQueryTimeAvg);
 
-
-    //-------------------------------------------------------------------
     // calculate current patients queried metrics
-    //-------------------------------------------------------------------
     long currentTotalPatientsQueried = CalculatePatientsQueried(periodMetrics);
     PatientsQueriedMetric patientsQueriedMetric = new PatientsQueriedMetric();
     patientsQueriedMetric.setTotal(currentTotalPatientsQueried);
 
-    //-------------------------------------------------------------------
     // calculate current patients reported metrics
-    //-------------------------------------------------------------------
     long currentTotalPatientsReported = CalculatePatientsReported(periodMetrics);
     PatientsReportedMetric patientsReportedMetric = new PatientsReportedMetric();
     patientsReportedMetric.setTotal(currentTotalPatientsReported);
 
-    //-------------------------------------------------------------------
     // calculate current validation metrics
-    //-------------------------------------------------------------------
     double currentValidationTimeAvg = CalculateValidationTimeAvg(periodMetrics);
     ValidationMetric validationTimeMetric = new ValidationMetric();
     validationTimeMetric.setAverage(currentValidationTimeAvg);
 
-    //-------------------------------------------------------------------
     // calculate current evaluation metrics
-    //-------------------------------------------------------------------
+    double currentEvaluationTimeAvg = CalculateEvaluationTimeAvg(periodMetrics);
+    EvaluationMetric evaluationTimeMetric = new EvaluationMetric();
+    evaluationTimeMetric.setAverage(currentEvaluationTimeAvg);
 
     //loop back through this historical data to produce previous 10 query time averages
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
     long[] patientsReportedHistory = new long[10];
     double[] validationTimeHistory = new double[10];
+    double[] evaluationTimeHistory = new double[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
       LocalDate historicalStart = start.minusWeeks(i);
@@ -169,7 +162,7 @@ public class MetricController extends BaseController {
       patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
       patientsReportedHistory[i-1] = CalculatePatientsReported(historicalMetrics);
       validationTimeHistory[i-1] = CalculateValidationTimeAvg(historicalMetrics);
-
+      evaluationTimeHistory[i-1] = CalculateEvaluationTimeAvg(historicalMetrics);
     }
 
     //add historical averages for query time
@@ -187,6 +180,10 @@ public class MetricController extends BaseController {
     //add historical averages for validation time
     validationTimeMetric.setHistory(validationTimeHistory);
     report.setValidation(validationTimeMetric);
+
+    //add historical averages for evaluation time
+    evaluationTimeMetric.setHistory(evaluationTimeHistory);
+    report.setEvaluation(evaluationTimeMetric);
 
     return report;
   }
@@ -289,6 +286,27 @@ public class MetricController extends BaseController {
     double currentValidationTimeAvg = (totalValidationTimeSpent / reportIds.size());
 
     return currentValidationTimeAvg;
+  }
+
+  private double CalculateEvaluationTimeAvg(List<Metrics> periodMetrics) {
+    //get total patients queried in the metric period
+    double totalEvaluationTimeSpent = 0;
+
+    //if no period metrics exist, return 0
+    if(!(periodMetrics.size() > 0)) {
+      return totalEvaluationTimeSpent;
+    }
+
+    List<MetricData> periodQueryMetrics = GetPeriodMetricData(EVALUATION_CATEGORY, periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalEvaluationTimeSpent += data.duration;
+    }
+
+    //determine query time averages
+    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    double currentEvaluationTimeAvg = (totalEvaluationTimeSpent / reportIds.size());
+
+    return currentEvaluationTimeAvg;
   }
 
   private List<String> GetUniqueReportIds(List<Metrics> metrics) {
