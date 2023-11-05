@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -135,9 +134,10 @@ public class MetricController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
     }
     List<Metrics> periodMetrics = GetPeriodMetrics(start, end, metrics);
+    List<String> reportIds = GetUniqueReportIds(periodMetrics);
 
     // calculate current query time metrics, category = query
-    double currentQueryTimeAvg = CalculateQueryTimeAvg(periodMetrics);
+    double currentQueryTimeAvg = CalculateQueryTimeAvg(periodMetrics, reportIds);
     QueryTimeMetric queryTimeMetric = new QueryTimeMetric();
     queryTimeMetric.setAverage(currentQueryTimeAvg);
 
@@ -152,16 +152,16 @@ public class MetricController extends BaseController {
     patientsReportedMetric.setTotal(currentTotalPatientsReported);
 
     // calculate current validation metrics
-    double currentValidationTimeAvg = CalculateValidationTimeAvg(periodMetrics);
+    double currentValidationTimeAvg = CalculateValidationTimeAvg(periodMetrics, reportIds);
     ValidationMetric validationTimeMetric = new ValidationMetric();
     validationTimeMetric.setAverage(currentValidationTimeAvg);
 
     // calculate current evaluation metrics
-    double currentEvaluationTimeAvg = CalculateEvaluationTimeAvg(periodMetrics);
+    double currentEvaluationTimeAvg = CalculateEvaluationTimeAvg(periodMetrics, reportIds);
     EvaluationMetric evaluationTimeMetric = new EvaluationMetric();
     evaluationTimeMetric.setAverage(currentEvaluationTimeAvg);
 
-    //loop back through this historical data to produce previous 10 query time averages
+    //loop back through the historical data to produce previous 10 totals/averages
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
     long[] patientsReportedHistory = new long[10];
@@ -193,13 +193,14 @@ public class MetricController extends BaseController {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
       }
       List<Metrics> historicalMetrics = GetPeriodMetrics(historicalStart, historicalEnd, metrics);
+      reportIds = GetUniqueReportIds(historicalMetrics);
 
       //Calculate historical metrics
-      queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics);
+      queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics, reportIds);
       patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
       patientsReportedHistory[i-1] = CalculatePatientsReported(historicalMetrics);
-      validationTimeHistory[i-1] = CalculateValidationTimeAvg(historicalMetrics);
-      evaluationTimeHistory[i-1] = CalculateEvaluationTimeAvg(historicalMetrics);
+      validationTimeHistory[i-1] = CalculateValidationTimeAvg(historicalMetrics, reportIds);
+      evaluationTimeHistory[i-1] = CalculateEvaluationTimeAvg(historicalMetrics, reportIds);
     }
 
     //add historical averages for query time
@@ -230,9 +231,9 @@ public class MetricController extends BaseController {
     return metrics.stream()
             .filter(obj -> obj.getTimestamp().after(java.sql.Date.valueOf(start)) && obj .getTimestamp().before(java.sql.Date.valueOf(end)))
             .collect(Collectors.toList());
-
   }
-  private double CalculateQueryTimeAvg(List<Metrics> periodMetrics) {
+
+  private double CalculateQueryTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total query time spent in the metric period
     double totalQueryTimeSpent = 0;
 
@@ -247,7 +248,7 @@ public class MetricController extends BaseController {
     }
 
     //determine query time averages
-    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    //List<String> reportIds = GetUniqueReportIds(periodMetrics);
     double currentQueryTimeAvg = (totalQueryTimeSpent / reportIds.size());
 
     return currentQueryTimeAvg;
@@ -287,7 +288,7 @@ public class MetricController extends BaseController {
     return totalPatientsReported;
   }
 
-  private double CalculateValidationTimeAvg(List<Metrics> periodMetrics) {
+  private double CalculateValidationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total patients queried in the metric period
     double totalValidationTimeSpent = 0;
 
@@ -302,13 +303,13 @@ public class MetricController extends BaseController {
     }
 
     //determine query time averages
-    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    //List<String> reportIds = GetUniqueReportIds(periodMetrics);
     double currentValidationTimeAvg = (totalValidationTimeSpent / reportIds.size());
 
     return currentValidationTimeAvg;
   }
 
-  private double CalculateEvaluationTimeAvg(List<Metrics> periodMetrics) {
+  private double CalculateEvaluationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total patients queried in the metric period
     double totalEvaluationTimeSpent = 0;
 
@@ -323,7 +324,7 @@ public class MetricController extends BaseController {
     }
 
     //determine query time averages
-    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    //List<String> reportIds = GetUniqueReportIds(periodMetrics);
     double currentEvaluationTimeAvg = (totalEvaluationTimeSpent / reportIds.size());
 
     return currentEvaluationTimeAvg;
