@@ -84,40 +84,56 @@ public class MetricController extends BaseController {
 
     if(metrics.isEmpty()) {
       logger.info(String.format("No metrics where found for reporting period '%s'.", period));
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("No reporting metrics could be found for the reporting period of '%s'.", period));
+
+      //generate 404 message for user
+      StringBuilder sb = new StringBuilder();
+      sb.append(String.format("No reporting metrics could be found for the reporting period of '%s'", period));
+
+      //add tenant id if provided
+      if(!StringUtils.isEmpty(tenantId)) {
+        sb.append(String.format(" and Tenant Id of '%s'", tenantId));
+      }
+
+      //add report id if provided
+      if(!StringUtils.isEmpty(reportId)) {
+        sb.append(String.format(" and Report Id of '%s'", reportId));
+      }
+      sb.append(".");
+
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, sb.toString());
     }
 
     //calculate metrics based on period, we can assume that all categories have already been
     //filtered down based on tenant and/or report if those parameters were provided
-    MetricsReportResponse report;
-    switch(period) {
-      case(WEEKLY_PERIOD):
-        report = this.CalculateWeeklyMetrics(period, endDate, metrics);
-        break;
-      case(MONTHLY_PERIOD):
-        report = this.CalculateMonthlyMetrics(period, endDate, metrics);
-        break;
-      case(QUARTERLY_PERIOD):
-        report = this.CalculateQuarterlyMetrics(period, endDate, metrics);
-        break;
-      case(YEARLY_PERIOD):
-        report = this.CalculateYearlyMetrics(period, endDate, metrics);
-        break;
-      default:
-        logger.warn(String.format("An invalid report period of '%s' was submitted when requesting a metric report.", period));
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
-    }
+    MetricsReportResponse report = this.CalculatePeriodMetrics(period, endDate, metrics);
 
     return report;
   }
 
   //TODO: This functionality probably should be broken out into a service
 
-  private MetricsReportResponse CalculateWeeklyMetrics(String period, LocalDate end, List<Metrics> metrics) {
+  private MetricsReportResponse CalculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics) {
     MetricsReportResponse report = new MetricsReportResponse();
 
     //get current period metrics
-    LocalDate start = end.minusWeeks(1);
+    LocalDate start;
+    switch(period) {
+      case(WEEKLY_PERIOD):
+        start = end.minusWeeks(1);
+        break;
+      case(MONTHLY_PERIOD):
+        start = end.minusMonths(1);
+        break;
+      case(QUARTERLY_PERIOD):
+        start = end.minusMonths(3); //3 months in a quarter x 1
+        break;
+      case(YEARLY_PERIOD):
+        start = end.minusYears(1);
+        break;
+      default:
+        logger.warn(String.format("An invalid report period of '%s' was submitted when requesting a metric report.", period));
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
+    }
     List<Metrics> periodMetrics = GetPeriodMetrics(start, end, metrics);
 
     // calculate current query time metrics, category = query
@@ -153,8 +169,29 @@ public class MetricController extends BaseController {
     double[] evaluationTimeHistory = new double[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
-      LocalDate historicalStart = start.minusWeeks(i);
-      LocalDate historicalEnd = end.minusWeeks(i);
+      LocalDate historicalStart;
+      LocalDate historicalEnd;
+      switch(period) {
+        case(WEEKLY_PERIOD):
+          historicalStart = start.minusWeeks(i);
+          historicalEnd = end.minusWeeks(i);
+          break;
+        case(MONTHLY_PERIOD):
+          historicalStart = start.minusMonths(i);
+          historicalEnd = end.minusMonths(i);
+          break;
+        case(QUARTERLY_PERIOD):
+          historicalStart = start.minusMonths(3*i); //3 months in a quarter x i
+          historicalEnd = end.minusMonths(3*i);
+          break;
+        case(YEARLY_PERIOD):
+          historicalStart = start.minusYears(i);
+          historicalEnd = end.minusYears(i);
+          break;
+        default:
+          logger.warn(String.format("An invalid report period of '%s' was submitted when requesting a metric report.", period));
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
+      }
       List<Metrics> historicalMetrics = GetPeriodMetrics(historicalStart, historicalEnd, metrics);
 
       //Calculate historical metrics
@@ -184,23 +221,6 @@ public class MetricController extends BaseController {
     //add historical averages for evaluation time
     evaluationTimeMetric.setHistory(evaluationTimeHistory);
     report.setEvaluation(evaluationTimeMetric);
-
-    return report;
-  }
-
-  private MetricsReportResponse CalculateMonthlyMetrics(String period, LocalDate end, List<Metrics> metrics) {
-    MetricsReportResponse report = new MetricsReportResponse();
-    return report;
-  }
-
-  private MetricsReportResponse CalculateQuarterlyMetrics(String period, LocalDate end, List<Metrics> metrics) {
-    MetricsReportResponse report = new MetricsReportResponse();
-
-    return report;
-  }
-
-  private MetricsReportResponse CalculateYearlyMetrics(String period, LocalDate end, List<Metrics> metrics) {
-    MetricsReportResponse report = new MetricsReportResponse();
 
     return report;
   }
@@ -329,14 +349,6 @@ public class MetricController extends BaseController {
     return periodMetrics.stream()
             .filter(obj -> obj.getCategory().equals(category))
             .filter(obj -> obj.getTaskName().equals(task))
-            .map(Metrics::getData)
-            .collect(Collectors.toList());
-  }
-
-  private List<MetricData> GetReportMetricData(String reportId, String category, List<Metrics> periodMetrics) {
-    return periodMetrics.stream()
-            .filter(obj -> obj.getReportId().equals(reportId))
-            .filter(obj -> obj.getCategory().equals(category))
             .map(Metrics::getData)
             .collect(Collectors.toList());
   }
