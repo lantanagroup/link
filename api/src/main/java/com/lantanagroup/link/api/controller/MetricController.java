@@ -5,6 +5,7 @@ import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
 import com.lantanagroup.link.model.MetricsReportResponse;
 import com.lantanagroup.link.model.PatientsQueriedMetric;
+import com.lantanagroup.link.model.PatientsReportedMetric;
 import com.lantanagroup.link.model.QueryTimeMetric;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -140,6 +141,9 @@ public class MetricController extends BaseController {
     //-------------------------------------------------------------------
     // calculate current patients reported metrics
     //-------------------------------------------------------------------
+    long currentTotalPatientsReported = CalculatePatientsReported(periodMetrics);
+    PatientsReportedMetric patientsReportedMetric = new PatientsReportedMetric();
+    patientsReportedMetric.setTotal(currentTotalPatientsReported);
 
     //-------------------------------------------------------------------
     // calculate current validation metrics
@@ -152,6 +156,7 @@ public class MetricController extends BaseController {
     //loop back through this historical data to produce previous 10 query time averages
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
+    long[] patientsReportedHistory = new long[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
       LocalDate historicalStart = start.minusWeeks(i);
@@ -161,6 +166,8 @@ public class MetricController extends BaseController {
       //Calculate historical metrics
       queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics);
       patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
+      patientsReportedHistory[i-1] = CalculatePatientsReported(historicalMetrics);
+
     }
 
     //add historical averages for query time
@@ -170,6 +177,10 @@ public class MetricController extends BaseController {
     //add historical totals for patients queried
     patientsQueriedMetric.setHistory(patientsQueriedHistory);
     report.setPatientsQueried(patientsQueriedMetric);
+
+    //add historical totals for patients reported
+    patientsReportedMetric.setHistory(patientsReportedHistory);
+    report.setPatientsReported(patientsReportedMetric);
 
 
     return report;
@@ -235,6 +246,23 @@ public class MetricController extends BaseController {
     }
 
     return totalPatientsQueried;
+  }
+
+  private long CalculatePatientsReported(List<Metrics> periodMetrics) {
+    //get total patients queried in the metric period
+    long totalPatientsReported = 0;
+
+    //if no period metrics exist, return 0
+    if(!(periodMetrics.size() > 0)) {
+      return totalPatientsReported;
+    }
+
+    List<MetricData> periodQueryMetrics = GetPeriodMetricData(REPORT_CATEGORY, "store-measure-report", periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalPatientsReported += data.count;
+    }
+
+    return totalPatientsReported;
   }
 
   private List<String> GetUniqueReportIds(List<Metrics> metrics) {
