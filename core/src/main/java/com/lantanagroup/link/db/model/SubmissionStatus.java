@@ -11,7 +11,7 @@ import java.util.UUID;
 public class SubmissionStatus {
   private UUID id = UUID.randomUUID();
   private String tenantId;
-  private String bundleId;
+  private String reportId;
   private SubmissionStatusTypes status;
   private Date startDate;
   private Date endDate;

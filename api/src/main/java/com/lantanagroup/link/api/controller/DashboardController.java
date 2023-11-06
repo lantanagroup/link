@@ -21,7 +21,7 @@ public class DashboardController extends BaseController {
     SubmissionStatus inProgressStatus = new SubmissionStatus();
     inProgressStatus.setTenantId("Tenant 1");
     inProgressStatus.setStatus(SubmissionStatusTypes.InProgress);
-    inProgressStatus.setBundleId("1");
+    inProgressStatus.setReportId("1");
     inProgressStatus.setStartDate(new Date());
 
     List<SubmissionStatus> inProgressSubmissionStatuses = new ArrayList<>();
@@ -30,7 +30,7 @@ public class DashboardController extends BaseController {
     SubmissionStatus completedStatus = new SubmissionStatus();
     completedStatus.setTenantId("Tenant 2");
     completedStatus.setStatus(SubmissionStatusTypes.Success);
-    completedStatus.setBundleId("2");
+    completedStatus.setReportId("2");
     completedStatus.setStartDate(new Date());
     completedStatus.setEndDate(new Date());
 
@@ -40,7 +40,7 @@ public class DashboardController extends BaseController {
     SubmissionStatus failedStatus = new SubmissionStatus();
     failedStatus.setTenantId("Tenant 3");
     failedStatus.setStatus(SubmissionStatusTypes.Failed);
-    failedStatus.setBundleId("3");
+    failedStatus.setReportId("3");
     failedStatus.setStartDate(new Date());
     failedStatus.setEndDate(new Date());
 
