@@ -52,6 +52,21 @@ public class ReportRepository extends BaseRepository<Report> {
     }
   }
 
+  @SneakyThrows(SQLException.class)
+  public List<Report> findReportsByPatientListId(String patientListId) {
+    String sql = "SELECT r.* FROM dbo.reportPatientList rpl" +
+            "INNER JOIN dbo.report r ON rpl.reportId = r.id" +
+            "WHERE rpl.patientListId = ?";
+
+    try(Connection connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)) {
+      statement.setNString(1, patientListId);
+      try(ResultSet resultSet = statement.executeQuery()){
+        return mapAll(resultSet);
+      }
+    }
+  }
+
   private int insert(Report report, Connection connection) throws SQLException {
     String sql = "INSERT INTO dbo.report " +
             "(id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime) " +
@@ -110,6 +125,26 @@ public class ReportRepository extends BaseRepository<Report> {
     }
   }
 
+  @SneakyThrows(SQLException.class)
+  public void deleteAllReports(){
+    deleteAllPatientLists();
+    deleteAllReportsFromReportTable();
+  }
+
+  private void deleteAllPatientLists() throws SQLException {
+    String sql = "DELETE FROM dbo.reportPatientList";
+    try (PreparedStatement statement = dataSource.getConnection().prepareStatement(sql)) {
+      statement.executeUpdate();
+    }
+  }
+
+  private void deleteAllReportsFromReportTable() throws SQLException {
+    String sql = "DELETE FROM dbo.report";
+    try (PreparedStatement statement = dataSource.getConnection().prepareStatement(sql)) {
+      statement.executeUpdate();
+    }
+  }
+
   private void deletePatientLists(Report report, Connection connection) throws SQLException {
     String sql = "DELETE FROM dbo.reportPatientList WHERE reportId = ?;";
     try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -117,6 +152,8 @@ public class ReportRepository extends BaseRepository<Report> {
       statement.executeUpdate();
     }
   }
+
+
 
   private void insertPatientLists(Report report, List<PatientList> patientLists, Connection connection) throws SQLException {
     String sql = "INSERT INTO dbo.reportPatientList (reportId, patientListId) VALUES (?, ?);";

@@ -137,9 +137,16 @@ public class TenantService {
     return this.patientDatas.deleteByRetrievedBefore(date);
   }
 
-  public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
+  public void deletePatientListById(String id) {
+    var reports = this.reports.findReportsByPatientListId(id);
+    for(var r : reports){
+      this.reports.deletePatientLists(r);
+    }
+    this.patientLists.deleteById(UUID.fromString(id));
+  }
 
   public void deleteAllPatientData(){
+    this.reports.deleteAllReports();
     this.patientLists.deleteAllPatientData();
     this.patientDatas.deleteAllPatientData();
   }
@@ -173,7 +180,11 @@ public class TenantService {
 
   public void deleteReport(String reportId){
     var report = this.reports.findById(reportId);
+    var patientLists = this.patientLists.findByReportId(report.getId());
     this.reports.deletePatientLists(report);
+    for(var pl : patientLists){
+      this.patientLists.deleteById(pl.getId());
+    }
     this.reports.deleteReport(report);
   }
 

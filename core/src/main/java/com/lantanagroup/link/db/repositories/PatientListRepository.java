@@ -153,7 +153,7 @@ public class PatientListRepository extends BaseRepository<PatientList> {
 
   @SneakyThrows(SQLException.class)
   public void deleteAllPatientData(){
-    String sql = "TRUNCATE TABLE dbo.patientList;";
+    String sql = "DELETE FROM dbo.patientList;";
     try (Connection connection = dataSource.getConnection();
          PreparedStatement statement = connection.prepareStatement(sql)) {
       statement.executeUpdate();
