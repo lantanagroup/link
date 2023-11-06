@@ -105,6 +105,7 @@ IF OBJECT_ID(N'dbo.SubmissionStatus') IS NULL
           tenantId      NVARCHAR(128)   NOT NULL,
           reportId      NVARCHAR(128)   NOT NULL,
           status        NVARCHAR(50)    NOT NULL,
+          measureIds    nvarchar(1024)  NOT NULL,
           startDate     DATETIME2       NOT NULL,
           endDate       DATETIME2
       );

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -15,4 +16,5 @@ public class SubmissionStatus {
   private SubmissionStatusTypes status;
   private Date startDate;
   private Date endDate;
+  private List<String> measureIds;
 }
