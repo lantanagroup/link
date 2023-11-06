@@ -97,6 +97,20 @@ IF OBJECT_ID(N'dbo.metrics', N'U') IS NULL
     END
 GO
 
+IF OBJECT_ID(N'dbo.SubmissionStatus') IS NULL
+  BEGIN
+      CREATE TABLE dbo.[submissionStatus]
+      (
+          id            UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+          tenantId      NVARCHAR(128)   NOT NULL,
+          reportId      NVARCHAR(128)   NOT NULL,
+          status        NVARCHAR(50)    NOT NULL,
+          startDate     DATETIME2       NOT NULL,
+          endDate       DATETIME2
+      );
+    END
+GO
+
 -- LNK-1150: Remove non-null constraint from dbo.audit.userId
 ALTER TABLE dbo.audit
 ALTER COLUMN userId UNIQUEIDENTIFIER;
