@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
@@ -20,18 +21,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/metric")
 public class MetricController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(MetricController.class);
-  private static final String QUERY_CATEGORY = "query";
-  private static final String EVALUATION_CATEGORY = "evaluate";
-  private static final String VALIDATION_CATEGORY = "validation";
-  private static final String REPORT_CATEGORY = "report";
-  private static final String Submission_CATEGORY = "submission";
-  private static final String EVENT_CATEGORY = "event";
-  private static final String WEEKLY_PERIOD = "lastWeek";
-  private static final String MONTHLY_PERIOD = "lastMonth";
-  private static final String QUARTERLY_PERIOD = "lastQuarter";
-  private static final String YEARLY_PERIOD = "lastYear";
-  private static final List<String> validPeriods = List.of(WEEKLY_PERIOD, MONTHLY_PERIOD, QUARTERLY_PERIOD, YEARLY_PERIOD);
-
+  private static final List<String> validPeriods = List.of(Constants.WEEKLY_PERIOD, Constants.MONTHLY_PERIOD, Constants.QUARTERLY_PERIOD, Constants.YEARLY_PERIOD);
 
   @Autowired
   private SharedService sharedService;
@@ -61,16 +51,16 @@ public class MetricController extends BaseController {
     LocalDate endDate = LocalDate.now().plusDays(1);
     LocalDate startDate;
     switch(period) {
-      case(WEEKLY_PERIOD):
+      case(Constants.WEEKLY_PERIOD):
         startDate = endDate.minusWeeks(11);
         break;
-      case(MONTHLY_PERIOD):
+      case(Constants.MONTHLY_PERIOD):
         startDate = endDate.minusMonths(11);
         break;
-      case(QUARTERLY_PERIOD):
+      case(Constants.QUARTERLY_PERIOD):
         startDate = endDate.minusMonths(33); //3 months in a quarter x 11
         break;
-      case(YEARLY_PERIOD):
+      case(Constants.YEARLY_PERIOD):
         startDate = endDate.minusYears(11);
         break;
       default:
@@ -104,60 +94,60 @@ public class MetricController extends BaseController {
 
     //calculate metrics based on period, we can assume that all categories have already been
     //filtered down based on tenant and/or report if those parameters were provided
-    MetricsReportResponse report = this.CalculatePeriodMetrics(period, endDate, metrics);
+    MetricsReportResponse report = this.calculatePeriodMetrics(period, endDate, metrics);
 
     return report;
   }
 
   //TODO: This functionality probably should be broken out into a service
 
-  private MetricsReportResponse CalculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics) {
+  private MetricsReportResponse calculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics) {
     MetricsReportResponse report = new MetricsReportResponse();
 
     //get current period metrics
     LocalDate start;
     switch(period) {
-      case(WEEKLY_PERIOD):
+      case(Constants.WEEKLY_PERIOD):
         start = end.minusWeeks(1);
         break;
-      case(MONTHLY_PERIOD):
+      case(Constants.MONTHLY_PERIOD):
         start = end.minusMonths(1);
         break;
-      case(QUARTERLY_PERIOD):
+      case(Constants.QUARTERLY_PERIOD):
         start = end.minusMonths(3); //3 months in a quarter x 1
         break;
-      case(YEARLY_PERIOD):
+      case(Constants.YEARLY_PERIOD):
         start = end.minusYears(1);
         break;
       default:
         logger.warn(String.format("An invalid report period of '%s' was submitted when requesting a metric report.", period));
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
     }
-    List<Metrics> periodMetrics = GetPeriodMetrics(start, end, metrics);
-    List<String> reportIds = GetUniqueReportIds(periodMetrics);
+    List<Metrics> periodMetrics = getPeriodMetrics(start, end, metrics);
+    List<String> reportIds = getUniqueReportIds(periodMetrics);
 
     // calculate current query time metrics, category = query
-    double currentQueryTimeAvg = CalculateQueryTimeAvg(periodMetrics, reportIds);
+    double currentQueryTimeAvg = calculateQueryTimeAvg(periodMetrics, reportIds);
     QueryTimeMetric queryTimeMetric = new QueryTimeMetric();
     queryTimeMetric.setAverage(currentQueryTimeAvg);
 
     // calculate current patients queried metrics
-    long currentTotalPatientsQueried = CalculatePatientsQueried(periodMetrics);
+    long currentTotalPatientsQueried = calculatePatientsQueried(periodMetrics);
     PatientsQueriedMetric patientsQueriedMetric = new PatientsQueriedMetric();
     patientsQueriedMetric.setTotal(currentTotalPatientsQueried);
 
     // calculate current patients reported metrics
-    long currentTotalPatientsReported = CalculatePatientsReported(periodMetrics);
+    long currentTotalPatientsReported = calculatePatientsReported(periodMetrics);
     PatientsReportedMetric patientsReportedMetric = new PatientsReportedMetric();
     patientsReportedMetric.setTotal(currentTotalPatientsReported);
 
     // calculate current validation metrics
-    double currentValidationTimeAvg = CalculateValidationTimeAvg(periodMetrics, reportIds);
+    double currentValidationTimeAvg = calculateValidationTimeAvg(periodMetrics, reportIds);
     ValidationMetric validationTimeMetric = new ValidationMetric();
     validationTimeMetric.setAverage(currentValidationTimeAvg);
 
     // calculate current evaluation metrics
-    double currentEvaluationTimeAvg = CalculateEvaluationTimeAvg(periodMetrics, reportIds);
+    double currentEvaluationTimeAvg = calculateEvaluationTimeAvg(periodMetrics, reportIds);
     EvaluationMetric evaluationTimeMetric = new EvaluationMetric();
     evaluationTimeMetric.setAverage(currentEvaluationTimeAvg);
 
@@ -172,19 +162,19 @@ public class MetricController extends BaseController {
       LocalDate historicalStart;
       LocalDate historicalEnd;
       switch(period) {
-        case(WEEKLY_PERIOD):
+        case(Constants.WEEKLY_PERIOD):
           historicalStart = start.minusWeeks(i);
           historicalEnd = end.minusWeeks(i);
           break;
-        case(MONTHLY_PERIOD):
+        case(Constants.MONTHLY_PERIOD):
           historicalStart = start.minusMonths(i);
           historicalEnd = end.minusMonths(i);
           break;
-        case(QUARTERLY_PERIOD):
+        case(Constants.QUARTERLY_PERIOD):
           historicalStart = start.minusMonths(3*i); //3 months in a quarter x i
           historicalEnd = end.minusMonths(3*i);
           break;
-        case(YEARLY_PERIOD):
+        case(Constants.YEARLY_PERIOD):
           historicalStart = start.minusYears(i);
           historicalEnd = end.minusYears(i);
           break;
@@ -192,15 +182,15 @@ public class MetricController extends BaseController {
           logger.warn(String.format("An invalid report period of '%s' was submitted when requesting a metric report.", period));
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
       }
-      List<Metrics> historicalMetrics = GetPeriodMetrics(historicalStart, historicalEnd, metrics);
-      reportIds = GetUniqueReportIds(historicalMetrics);
+      List<Metrics> historicalMetrics = getPeriodMetrics(historicalStart, historicalEnd, metrics);
+      reportIds = getUniqueReportIds(historicalMetrics);
 
       //Calculate historical metrics
-      queryTimeHistory[i-1] = CalculateQueryTimeAvg(historicalMetrics, reportIds);
-      patientsQueriedHistory[i-1] = CalculatePatientsQueried(historicalMetrics);
-      patientsReportedHistory[i-1] = CalculatePatientsReported(historicalMetrics);
-      validationTimeHistory[i-1] = CalculateValidationTimeAvg(historicalMetrics, reportIds);
-      evaluationTimeHistory[i-1] = CalculateEvaluationTimeAvg(historicalMetrics, reportIds);
+      queryTimeHistory[i-1] = calculateQueryTimeAvg(historicalMetrics, reportIds);
+      patientsQueriedHistory[i-1] = calculatePatientsQueried(historicalMetrics);
+      patientsReportedHistory[i-1] = calculatePatientsReported(historicalMetrics);
+      validationTimeHistory[i-1] = calculateValidationTimeAvg(historicalMetrics, reportIds);
+      evaluationTimeHistory[i-1] = calculateEvaluationTimeAvg(historicalMetrics, reportIds);
     }
 
     //add historical averages for query time
@@ -226,14 +216,14 @@ public class MetricController extends BaseController {
     return report;
   }
 
-  private List<Metrics> GetPeriodMetrics(LocalDate start, LocalDate end, List<Metrics> metrics)  {
+  private List<Metrics> getPeriodMetrics(LocalDate start, LocalDate end, List<Metrics> metrics)  {
 
     return metrics.stream()
             .filter(obj -> obj.getTimestamp().after(java.sql.Date.valueOf(start)) && obj .getTimestamp().before(java.sql.Date.valueOf(end)))
             .collect(Collectors.toList());
   }
 
-  private double CalculateQueryTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateQueryTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total query time spent in the metric period
     double totalQueryTimeSpent = 0;
 
@@ -242,7 +232,7 @@ public class MetricController extends BaseController {
       return totalQueryTimeSpent;
     }
 
-    List<MetricData> periodQueryMetrics = GetPeriodMetricData(QUERY_CATEGORY, periodMetrics);
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_QUERY, periodMetrics);
     for(MetricData data: periodQueryMetrics) {
       totalQueryTimeSpent += data.duration;
     }
@@ -254,7 +244,7 @@ public class MetricController extends BaseController {
     return currentQueryTimeAvg;
   }
 
-  private long CalculatePatientsQueried(List<Metrics> periodMetrics) {
+  private long calculatePatientsQueried(List<Metrics> periodMetrics) {
     //get total patients queried in the metric period
     long totalPatientsQueried = 0;
 
@@ -263,7 +253,7 @@ public class MetricController extends BaseController {
       return totalPatientsQueried;
     }
 
-    List<MetricData> periodQueryMetrics = GetPeriodMetricData(QUERY_CATEGORY, "patient", periodMetrics);
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_QUERY, "patient", periodMetrics);
     for(MetricData data: periodQueryMetrics) {
       totalPatientsQueried += data.count;
     }
@@ -271,7 +261,7 @@ public class MetricController extends BaseController {
     return totalPatientsQueried;
   }
 
-  private long CalculatePatientsReported(List<Metrics> periodMetrics) {
+  private long calculatePatientsReported(List<Metrics> periodMetrics) {
     //get total patients queried in the metric period
     long totalPatientsReported = 0;
 
@@ -280,7 +270,7 @@ public class MetricController extends BaseController {
       return totalPatientsReported;
     }
 
-    List<MetricData> periodQueryMetrics = GetPeriodMetricData(REPORT_CATEGORY, "store-measure-report", periodMetrics);
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_REPORT, "store-measure-report", periodMetrics);
     for(MetricData data: periodQueryMetrics) {
       totalPatientsReported += data.count;
     }
@@ -288,7 +278,7 @@ public class MetricController extends BaseController {
     return totalPatientsReported;
   }
 
-  private double CalculateValidationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateValidationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total patients queried in the metric period
     double totalValidationTimeSpent = 0;
 
@@ -297,7 +287,7 @@ public class MetricController extends BaseController {
       return totalValidationTimeSpent;
     }
 
-    List<MetricData> periodQueryMetrics = GetPeriodMetricData(VALIDATION_CATEGORY, "validate", periodMetrics);
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_VALIDATION, "validate", periodMetrics);
     for(MetricData data: periodQueryMetrics) {
       totalValidationTimeSpent += data.duration;
     }
@@ -309,7 +299,7 @@ public class MetricController extends BaseController {
     return currentValidationTimeAvg;
   }
 
-  private double CalculateEvaluationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateEvaluationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
     //get total patients queried in the metric period
     double totalEvaluationTimeSpent = 0;
 
@@ -318,7 +308,7 @@ public class MetricController extends BaseController {
       return totalEvaluationTimeSpent;
     }
 
-    List<MetricData> periodQueryMetrics = GetPeriodMetricData(EVALUATION_CATEGORY, periodMetrics);
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_EVALUATE, periodMetrics);
     for(MetricData data: periodQueryMetrics) {
       totalEvaluationTimeSpent += data.duration;
     }
@@ -330,7 +320,7 @@ public class MetricController extends BaseController {
     return currentEvaluationTimeAvg;
   }
 
-  private List<String> GetUniqueReportIds(List<Metrics> metrics) {
+  private List<String> getUniqueReportIds(List<Metrics> metrics) {
 
     //Build a unique list of report ids for processing
     return metrics.stream()
@@ -339,14 +329,14 @@ public class MetricController extends BaseController {
             .collect(Collectors.toList());
   }
 
-  private List<MetricData> GetPeriodMetricData(String category, List<Metrics> periodMetrics) {
+  private List<MetricData> getPeriodMetricData(String category, List<Metrics> periodMetrics) {
     return periodMetrics.stream()
             .filter(obj -> obj.getCategory().equals(category))
             .map(Metrics::getData)
             .collect(Collectors.toList());
   }
 
-  private List<MetricData> GetPeriodMetricData(String category, String task, List<Metrics> periodMetrics) {
+  private List<MetricData> getPeriodMetricData(String category, String task, List<Metrics> periodMetrics) {
     return periodMetrics.stream()
             .filter(obj -> obj.getCategory().equals(category))
             .filter(obj -> obj.getTaskName().equals(task))
