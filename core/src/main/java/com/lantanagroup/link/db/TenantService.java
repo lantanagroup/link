@@ -130,13 +130,16 @@ public class TenantService {
     return result;
   }
 
-  public void deletePatientListById(UUID id) { this.patientLists.deleteById(id);}
+  public void deletePatientListById(UUID id) {
+    this.patientLists.deleteById(id);
+  }
 
   public void deleteAllPatientData(){
-    this.patientLists.deleteAll();
     this.patientDatas.deleteAll();
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
+    this.reports.deleteAll();
+    this.patientLists.deleteAll();
   }
 
   public void deletePatientByListAndPatientId(String patientId, UUID listId) {
@@ -169,7 +172,9 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
-    // TODO: Delete references to the specified report
+    this.patientDatas.deleteByReportId(reportId);
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
     this.reports.deleteById(reportId);
   }
 

@@ -94,4 +94,17 @@ public class ReportRepository {
       jdbc.update(sql, parameters);
     });
   }
+
+  public void deleteAll() {
+    txTemplate.executeWithoutResult(tx -> {
+      {
+        String sql = "TRUNCATE TABLE dbo.reportPatientList;";
+        jdbc.update(sql, Map.of());
+      }
+      {
+        String sql = "TRUNCATE TABLE dbo.report;";
+        jdbc.update(sql, Map.of());
+      }
+    });
+  }
 }

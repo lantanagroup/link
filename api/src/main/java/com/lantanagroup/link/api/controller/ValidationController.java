@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
@@ -8,6 +9,8 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.time.Stopwatch;
+import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.Validator;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -24,20 +27,21 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/validate")
-public class ValidationController {
+public class ValidationController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ValidationController.class);
   @Autowired
-  private SharedService sharedService;
+  private Validator validator;
   @Autowired
   private ApiConfig config;
   @Autowired
   private EventService eventService;
   @Autowired
-  private Validator validator;
+  private SharedService sharedService;
 
   private Bundle validateBundle(Bundle bundle, OperationOutcome.IssueSeverity severity) {
     try {
@@ -49,6 +53,8 @@ public class ValidationController {
       result.addEntry().setResource(device);
 
       OperationOutcome outcome = this.validator.validate(bundle, severity);
+
+      //noinspection unused
       outcome.setId(UUID.randomUUID().toString());
       result.addEntry().setResource(outcome);
 
@@ -69,6 +75,7 @@ public class ValidationController {
           i.getLocation().remove(1);    // Remove the line number - it's useless.
         }
       });
+
 
       return result;
     } catch (IOException ex) {
@@ -159,7 +166,17 @@ public class ValidationController {
     }
 
     Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-    return this.validateBundle(submissionBundle, severity);
+    StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
+
+    //Only determine metrics for validation explicitly done on a stored report (through request path vars)
+    Bundle validation;
+    try(Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
+      validation = this.validateBundle(submissionBundle, severity);
+    }
+    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    return validation;
+
   }
 
   /**

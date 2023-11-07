@@ -79,6 +79,15 @@ public class PatientDataRepository {
     jdbc.update(sql, parameters);
   }
 
+  public void deleteByReportId(String reportId) {
+    String sql = "DELETE FROM dbo.patientData WHERE dataTraceId IN " +
+            "(SELECT dataTraceId FROM dbo.dataTrace AS DT " +
+            "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+            "WHERE Q.reportId = :reportId);";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    jdbc.update(sql, parameters);
+  }
+
   public int deleteByRetrievedBefore(Date date) {
     String sql = "DELETE FROM dbo.patientData WHERE retrieved < :date;";
     Map<String, ?> parameters = Map.of("date", date);

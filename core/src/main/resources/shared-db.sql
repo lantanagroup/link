@@ -241,3 +241,85 @@ GO
 DROP TABLE IF EXISTS dbo.bulkStatus;
 
 GO
+
+-- LNK-1359: Adding metrics table to SQL database
+IF OBJECT_ID(N'dbo.metrics', N'U') IS NULL
+    BEGIN
+        CREATE TABLE dbo.[metrics]
+        (
+            id           UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            tenantId     NVARCHAR(128)    NOT NULL,
+            reportId     NVARCHAR(128)    NOT NULL,
+            category     NVARCHAR(128),
+            taskName     NVARCHAR(128),
+            timestamp    NVARCHAR(128) DEFAULT GETDATE(),
+            data         NVARCHAR(max)
+        );
+    END
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
+END
+GO
+
+-- LOGBACK tables
+IF OBJECT_ID(N'dbo.logging_event', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event
+        (
+            timestmp          DECIMAL(20)   NOT NULL,
+            formatted_message VARCHAR(4000) NOT NULL,
+            logger_name       VARCHAR(254)  NOT NULL,
+            level_string      VARCHAR(254)  NOT NULL,
+            thread_name       VARCHAR(254),
+            reference_flag    SMALLINT,
+            arg0              VARCHAR(254),
+            arg1              VARCHAR(254),
+            arg2              VARCHAR(254),
+            arg3              VARCHAR(254),
+            caller_filename   VARCHAR(254)  NOT NULL,
+            caller_class      VARCHAR(254)  NOT NULL,
+            caller_method     VARCHAR(254)  NOT NULL,
+            caller_line       CHAR(4)       NOT NULL,
+            event_id          DECIMAL(38)   NOT NULL identity,
+            PRIMARY KEY (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_property', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_property
+        (
+            event_id     DECIMAL(38)  NOT NULL,
+            mapped_key   VARCHAR(254) NOT NULL,
+            mapped_value VARCHAR(1024),
+            PRIMARY KEY (event_id, mapped_key),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_exception', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_exception
+        (
+            event_id   DECIMAL(38)  NOT NULL,
+            i          SMALLINT     NOT NULL,
+            trace_line VARCHAR(254) NOT NULL,
+            PRIMARY KEY (event_id, i),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
+GO

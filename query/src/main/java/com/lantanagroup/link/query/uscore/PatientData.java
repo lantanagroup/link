@@ -94,7 +94,7 @@ public class PatientData {
 
   private void search(TypedQueryPlan plan) {
     logger.info("Querying for patient {} and resource type {}", patientId, plan.getResourceType());
-    try (Stopwatch stopwatch = stopwatchManager.start("query-" + plan.getResourceType())) {
+    try (Stopwatch stopwatch = stopwatchManager.start(plan.getResourceType(), Constants.CATEGORY_QUERY)) {
       if (plan.getReferences() == null) {
         searchByParameters(plan.getResourceType(), plan.getParameters());
       } else {

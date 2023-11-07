@@ -41,7 +41,7 @@ public class EventService {
       if (bean instanceof IReportGenerationEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean);
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(bean.getClass().getSimpleName(), Constants.CATEGORY_EVENT)) {
           ((IReportGenerationEvent) bean).execute(tenantService, criteria, reportContext, measureContext);
         }
       } else {
@@ -61,7 +61,7 @@ public class EventService {
       if (bean instanceof IReportGenerationDataEvent) {
         logger.info("Executing event " + eventType.toString() + " for bean " + bean);
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start(String.format("event-%s", bean.getClass().getSimpleName()))) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(bean.getClass().getSimpleName(), Constants.CATEGORY_EVENT)) {
           ((IReportGenerationDataEvent) bean).execute(tenantService, bundle, criteria, reportContext, measureContext);
         }
       } else {

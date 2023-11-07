@@ -21,6 +21,8 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -347,6 +349,79 @@ public class SharedService {
       return rowsAffected;
 
     } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void saveMetrics(List<Metrics> metrics){
+    metrics.forEach(metric -> {
+      try (Connection conn = this.getSQLConnection()) {
+        assert conn != null;
+        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?) }");
+        cs.setNString("id", metric.getId().toString());
+        cs.setNString("tenantId", metric.getTenantId());
+        cs.setNString("reportId", metric.getReportId());
+        cs.setNString("category", metric.getCategory().toString());
+        cs.setNString("taskName", metric.getTaskName().toString());
+        cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
+        cs.setNString("data", mapper.writeValueAsString(metric.getData()));
+
+        cs.executeUpdate();
+      } catch(SQLServerException e){
+        SQLServerHelper.handleException(e);
+      } catch (SQLException | NullPointerException | JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  public List<Metrics> getMetrics(LocalDate start, LocalDate end, String tenantId, String reportId) {
+
+    if(start.isAfter(end)){
+      throw new RuntimeException("Start date must be before end date");
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("SELECT * FROM [dbo].[metrics] WHERE CONVERT(datetime, timestamp) >= ? AND CONVERT(datetime, timestamp) < ?");
+
+      //filter on tenant id if supplied
+      if(!StringUtils.isEmpty(tenantId)) {
+        sql.append(" AND tenantId = ?");
+      }
+
+      //filter on report id if supplied
+      if(!StringUtils.isEmpty(reportId)) {
+        sql.append(" AND  reportId = ?");
+      }
+
+      PreparedStatement ps = conn.prepareStatement(sql.toString());
+      ps.setDate(1, java.sql.Date.valueOf(start));
+      ps.setDate(2, java.sql.Date.valueOf(end));
+      int paramIndex = 2;
+      if(!StringUtils.isEmpty(tenantId)) { paramIndex++; ps.setNString(paramIndex, tenantId); }
+      if(!StringUtils.isEmpty(reportId)) { paramIndex++; ps.setNString(paramIndex, reportId); }
+
+      ResultSet rs = ps.executeQuery();
+      var metrics = new ArrayList<Metrics>();
+
+      while(rs.next()) {
+        Metrics metric = new Metrics();
+        metric.setId(rs.getObject(1, UUID.class));
+        metric.setTenantId(rs.getString(2));
+        metric.setReportId(rs.getString(3));
+        metric.setCategory(rs.getString(4));
+        metric.setTaskName(rs.getString(5));
+        metric.setTimestamp(new Date(rs.getString(6)));
+        metric.setData(mapper.readValue(rs.getString(7), MetricData.class));
+
+        metrics.add(metric);
+      }
+
+      return metrics;
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }

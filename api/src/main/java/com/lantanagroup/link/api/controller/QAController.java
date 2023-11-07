@@ -51,7 +51,7 @@ public class QAController extends BaseController {
   }
 
 
-  @DeleteMapping("/$deletePatientListById/{id}")
+  @DeleteMapping("/$deleteByPatientListId/{id}")
   public void deletePatientListById(@PathVariable String tenantId, @PathVariable UUID id){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientListById(id);
@@ -69,7 +69,7 @@ public class QAController extends BaseController {
     tenantService.deletePatientByListAndPatientId(patientId,patientListId);
   }
 
-  @DeleteMapping("/$deleteReport/{reportId}")
+  @DeleteMapping("/$deletebyReportId/{reportId}")
   public void deleteReport(@PathVariable String tenantId,@PathVariable String reportId){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deleteReport(reportId);
