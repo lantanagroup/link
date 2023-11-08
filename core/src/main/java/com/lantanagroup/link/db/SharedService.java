@@ -10,6 +10,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.GlobalReportResponse;
 import com.lantanagroup.link.model.LogMessage;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
@@ -691,6 +692,51 @@ public class SharedService {
       }
 
       return logMessages;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public List<GlobalReportResponse> getAllReports() {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("exec getTenantReports");
+      ResultSet rs = ps.executeQuery();
+      var reports = new ArrayList<GlobalReportResponse>();
+
+      while(rs.next()) {
+        var id = rs.getString(1);
+        var tenantName = rs.getString(2);
+        var cdcOrgId = rs.getString(3);
+        var reportId = rs.getString(4);
+        var measureIds = rs.getString(5);
+        var periodStart = rs.getString(6);
+        var periodEnd = rs.getString(7);
+        var status = rs.getString(8);
+        var version = rs.getString(9);
+        var generatedTime = rs.getDate(10);
+        var submittedTime = rs.getDate(11);
+
+        var report = new GlobalReportResponse();
+
+        report.setId(id);
+        report.setTenantName(tenantName);
+        report.setCdcOrgId(cdcOrgId);
+        report.setReportId(reportId);
+        report.setMeasureIds(Arrays.asList(measureIds.split(",")));
+        report.setPeriodStart(periodStart);
+        report.setPeriodEnd(periodEnd);
+        report.setStatus(ReportStatuses.valueOf(status));
+        report.setVersion(version);
+        report.setGeneratedTime(generatedTime);
+        report.setSubmittedTime(submittedTime);
+
+        reports.add(report);
+      }
+
+      return reports;
+
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }

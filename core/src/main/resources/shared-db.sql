@@ -330,3 +330,65 @@ BEGIN
 END
 GO
 
+CREATE OR ALTER PROCEDURE getTenantReports
+AS
+BEGIN
+    CREATE TABLE #GlobalReport
+    (
+        tenantId			nvarchar(128),
+        tenantName			nvarchar(1024),
+        cdcOrgId			nvarchar(128),
+        reportId            nvarchar(128),
+        measureIds			nvarchar(1024),
+        periodStart			nvarchar(32),
+        periodEnd			nvarchar(32),
+        status				nvarchar(64),
+        version				nvarchar(64),
+        generatedTime		datetime2,
+        submittedTime		datetime2
+    )
+
+    --Figure Out Which Databases to call
+    SELECT name as DatabaseName
+    INTO #databases
+    FROM master.sys.databases d
+    WHERE name not in ('master','model','msdb','tempdb', DB_NAME()) -- don't query system DBs or the shared Db
+
+    while((select Count(*) from #databases) > 0)
+        BEGIN
+            declare @database varchar(255) = (Select top 1 DatabaseName from #databases)
+            declare @tenantConfig TABLE
+                                  (
+                                      Id nvarchar(128),
+                                      Name nvarchar(1024),
+                                      CdcOrgId nvarchar(128)
+                                  );
+
+            -- We can get the id, name and cdcOrgId from the shared tenantConfig table
+            insert into @tenantConfig
+            select top 1
+                JSON_VALUE(json, '$.id') as Id,
+                JSON_VALUE(json, '$.name') as Name,
+                JSON_VALUE(json, '$.cdcOrgId') as cdcOrgId
+            from tenantConfig
+            where json like '%databaseName=' + @database + ';%'
+
+            -- Construct query to run on each tenant db
+            declare @query nvarchar(max) = 'IF OBJECT_ID(''[' + @database + N'].[dbo].addReportToGlobal'', ''P'') IS NOT NULL
+		BEGIN
+			exec [' + @database + '].dbo.addReportToGlobal @TenantId = '''
+                + (select top 1 Id from @tenantConfig)
+                + ''', @Name = '''
+                + (select top 1 Name from @tenantConfig)
+                + ''', @CdcOrgId = '''
+                + (select top 1 CdcOrgId from @tenantConfig)
+                + ''' END'
+
+            EXEC sp_executesql @query
+
+            delete from #databases where Databasename = @database
+        END
+
+    select * from #GlobalReport
+END
+GO
