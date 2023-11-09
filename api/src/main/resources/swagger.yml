@@ -528,6 +528,68 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/report:
+    get:
+      tags:
+        - Reports
+        - UI
+      summary: Get report information for all tenants
+      description: Get report information for all tenants
+      operationId: get_report
+      parameters:
+        - name: count
+          in: query
+          description: The maximum report list count that is returned per status 
+          required: true
+          schema:
+            type: number
+        - name: page
+          in: query
+          description: The page number of the results to return 
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/GlobalReportByStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/report/status:
+    get:
+      tags:
+        - Reports
+        - UI
+      summary: Get report information for all tenants by status
+      description: Will return separate report lists per status for all tenants
+      operationId: get_report_by_status
+      parameters:
+        - name: count
+          in: query
+          description: The maximum report list count that is returned per status 
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/GlobalReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generate:
     post:
       tags:
@@ -1360,8 +1422,7 @@ paths:
       responses:
         '200':
           description: successful response
-          content:
-            $ref: '#/components/schemas/LogSearchResponse'
+          $ref: '#/components/schemas/LogSearchResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1444,6 +1505,59 @@ components:
           type: array
           items:
             type: string
+    GlobalReportResponse:
+        type: object
+        properties:
+          id:
+            type: string
+          measureId:
+            type: array
+            items:
+              type: string
+          periodStart:
+            type: string
+          periodEnd:
+            type: string
+          status:
+            type: string
+            enum:
+              - Draft
+              - Submitted
+          submittedTime:
+            type: string
+          generatedTime:
+            type: string
+          version:
+            type: string
+          patientLists:
+            type: array
+            items:
+              type: string
+          aggregates:
+            type: array
+            items:
+              type: string
+          tenantName:
+            type: string
+          cdcOrgId:
+            type: string
+          reportId:
+            type: string
+    GlobalReportByStatus:
+      type: object
+      properties:
+        completedReports: 
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
+        failedReports: 
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
+        pendingReports: 
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
     MeasureDefinition:
       type: object
       properties:

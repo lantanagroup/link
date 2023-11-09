@@ -20,10 +20,9 @@ public class GlobalReportController extends BaseController {
   private SharedService sharedService;
 
   @GetMapping
-  public List<GlobalReportResponse> getAllReports() {
-    //TODO - Daniel: Add paging and size
-
-    return this.sharedService.getAllReports();
+  public List<GlobalReportResponse> getAllReports(@RequestParam int count, @RequestParam int page) {
+    //TODO - Daniel: Add paging
+    return this.sharedService.getAllReports().stream().limit(count).collect(Collectors.toList());
   }
 
   @GetMapping("status")
