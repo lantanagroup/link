@@ -29,6 +29,11 @@ public class UserController extends BaseController {
     binder.setDisallowedFields("passwordSalt", "passwordHash");
   }
 
+  @GetMapping("/{userId}")
+  public  User getUser(@PathVariable UUID userId) {
+    return this.sharedService.getUser(userId);
+  }
+
   @GetMapping
   public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled) {
     return this.sharedService.searchUsers(includeDisabled);
