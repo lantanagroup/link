@@ -50,8 +50,9 @@ public class QAController extends BaseController {
     binder.setDisallowedFields(DISALLOWED_FIELDS);
   }
 
+
   @DeleteMapping("/$deleteByPatientListId/{id}")
-  public void deletePatientListById(@PathVariable String tenantId, @PathVariable String id){
+  public void deletePatientListById(@PathVariable String tenantId, @PathVariable UUID id){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientListById(id);
   }
@@ -63,7 +64,7 @@ public class QAController extends BaseController {
   }
 
   @DeleteMapping("/$deletePatientFromList/{patientListId}/{patientId}")
-  public void deletePatientByIDAndListId(@PathVariable String tenantId, @PathVariable String patientListId, @PathVariable String patientId){
+  public void deletePatientByIDAndListId(@PathVariable String tenantId, @PathVariable UUID patientListId, @PathVariable String patientId){
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     tenantService.deletePatientByListAndPatientId(patientId,patientListId);
   }

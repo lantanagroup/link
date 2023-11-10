@@ -16,11 +16,10 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -61,31 +60,11 @@ public class SharedService {
 
   public void initDatabase() {
     logger.info("Initializing shared database");
-
-    URL resource = this.getClass().getClassLoader().getResource("shared-db.sql");
-
-    if (resource == null) {
-      logger.warn("Could not find shared-db.sql file in class path");
-      return;
-    }
-
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
-        try {
-          Statement stmt = conn.createStatement();
-          stmt.execute(stmtSql);
-        } catch (SQLException e) {
-          logger.error("Failed to execute statement to initialize shared db", e);
-          return;
-        }
-      }
-    } catch (SQLException | NullPointerException e) {
-      logger.error("Failed to connect to shared database", e);
-    } catch (IOException e) {
-      logger.error("Could not read shared-db.sql file", e);
+    try (Connection connection = this.getSQLConnection()) {
+      SQLScriptExecutor.execute(connection, new ClassPathResource("shared-db.sql"));
+    } catch (Exception e) {
+      logger.error("Failed to initialize shared database", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -186,11 +165,11 @@ public class SharedService {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenant (?, ?) }");
-      cs.setNString("tenantId", tenant.getId());
+      SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveTenantConfig (?, ?) }");
+      cs.setNString("id", tenant.getId());
       cs.setNString("json", mapper.writeValueAsString(tenant));
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -284,7 +263,7 @@ public class SharedService {
       cs.setNString("bundle", FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToString(measureDefinition.getBundle()));
       cs.setDateTime("lastUpdated", measureDefinition.getLastUpdated().getTime());
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -347,7 +326,7 @@ public class SharedService {
       cs.setNString("packageId", measurePackage.getId());
       cs.setNString("measures", mapper.writeValueAsString(measurePackage));
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -496,7 +475,7 @@ public class SharedService {
       cs.setNString("type", audit.getType().toString());
       cs.setUUID("userID", audit.getUserId());
 
-      cs.executeUpdate();
+      cs.execute();
 
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
@@ -578,6 +557,17 @@ public class SharedService {
     }
   }
 
+  private User createUser(ResultSet rs) throws SQLException {
+    User user = new User();
+    user.setId(rs.getObject("id", UUID.class));
+    user.setEmail(rs.getString("email"));
+    user.setName(rs.getString("name"));
+    user.setEnabled(rs.getBoolean("enabled"));
+    user.setPasswordHash(rs.getString("passwordHash"));
+    user.setPasswordSalt(rs.getBytes("passwordSalt"));
+    return user;
+  }
+
   public User getUser(UUID id) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
@@ -590,7 +580,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -606,7 +596,7 @@ public class SharedService {
       List<User> users = new ArrayList<>();
 
       while (rs.next()) {
-        User next = User.create(rs);
+        User next = createUser(rs);
         next.setPasswordSalt(null);
         next.setPasswordHash(null);
         users.add(next);
@@ -636,7 +626,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }

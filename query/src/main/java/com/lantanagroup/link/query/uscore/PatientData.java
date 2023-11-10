@@ -13,6 +13,7 @@ import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -25,11 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static ca.uhn.fhir.rest.api.Constants.HEADER_REQUEST_ID;
 
 public class PatientData {
   private static final Logger logger = LoggerFactory.getLogger(PatientData.class);
@@ -38,13 +38,17 @@ public class PatientData {
   private final ReportContext context;
   private final QueryPlan plan;
   private final IGenericClient fhirQueryServer;
+  private final TenantService tenantService;
+  private final EventService eventService;
+  private final StopwatchManager stopwatchManager;
   private String patientId;
-  private Bundle bundle;
-  private EventService eventService;
-  private StopwatchManager stopwatchManager;
 
-  public PatientData(StopwatchManager stopwatchManager, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, FhirQuery fhirQuery) {
+  @Getter
+  private Bundle bundle;
+
+  public PatientData(StopwatchManager stopwatchManager, TenantService tenantService, EventService eventService, IGenericClient fhirQueryServer, ReportCriteria criteria, ReportContext context, FhirQuery fhirQuery) {
     this.stopwatchManager = stopwatchManager;
+    this.tenantService = tenantService;
     this.eventService = eventService;
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
@@ -56,11 +60,7 @@ public class PatientData {
     }
   }
 
-  public Bundle getBundle() {
-    return bundle;
-  }
-
-  public void loadInitialData(TenantService tenantService, Patient patient) {
+  public void loadInitialData(Patient patient) {
     this.patientId = patient.getIdElement().getIdPart();
     this.bundle = new Bundle();
     this.bundle.setType(BundleType.TRANSACTION);
@@ -70,19 +70,19 @@ public class PatientData {
             .getRequest()
             .setMethod(Bundle.HTTPVerb.PUT)
             .setUrl("Patient/" + this.patientId);
-    loadData(tenantService, plan.getInitial());
+    loadData(plan.getInitial());
   }
 
-  public void loadSupplementalData(TenantService tenantService, String patientId, Bundle bundle) {
+  public void loadSupplementalData(String patientId, Bundle bundle) {
     this.patientId = patientId;
     this.bundle = bundle;
-    loadData(tenantService, plan.getSupplemental());
+    loadData(plan.getSupplemental());
   }
 
-  private void loadData(TenantService tenantService, List<TypedQueryPlan> plans) {
+  private void loadData(List<TypedQueryPlan> plans) {
     for (TypedQueryPlan plan : plans) {
       int beforeCount = bundle.getEntry().size();
-      search(tenantService, plan);
+      search(plan);
       int afterCount = bundle.getEntry().size();
       if (afterCount == beforeCount && plan.isEarlyExit()) {
         logger.info("No resources found; exiting early");
@@ -92,7 +92,7 @@ public class PatientData {
     logResourceTypeCounts();
   }
 
-  private void search(TenantService tenantService, TypedQueryPlan plan) {
+  private void search(TypedQueryPlan plan) {
     logger.info("Querying for patient {} and resource type {}", patientId, plan.getResourceType());
     try (Stopwatch stopwatch = stopwatchManager.start(plan.getResourceType(), Constants.CATEGORY_QUERY)) {
       if (plan.getReferences() == null) {
@@ -131,11 +131,11 @@ public class PatientData {
       }
     }
     if (pagedName == null) {
-      IQuery<Bundle> response = fhirQueryServer.search()
+      IQuery<Bundle> query = fhirQueryServer.search()
               .forResource(resourceType)
               .whereMap(unpagedMap)
               .returnBundle(Bundle.class);
-      addAllResources(response);
+      addAllResources(query);
     } else {
       for (List<String> ids : pagedIds) {
         String joinedIds = String.join(",", ids);
@@ -157,10 +157,13 @@ public class PatientData {
       case READ:
         for (String id : unpagedIds) {
           try {
+            UUID queryId = UUID.randomUUID();
             IBaseResource resource = fhirQueryServer.read()
                     .resource(resourceType)
                     .withId(id)
+                    .withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString())
                     .execute();
+            tenantService.saveDataTraces(queryId, patientId, List.of(resource));
             addResource((Resource) resource);
           } catch (ResourceNotFoundException | ResourceGoneException e) {
             logger.error("Resource not found or gone: {}/{}", resourceType, id, e);
@@ -257,16 +260,20 @@ public class PatientData {
   }
 
   private void addAllResources(IQuery<Bundle> query) {
-    Bundle bundle = query.execute();
+    UUID queryId = UUID.randomUUID();
+    Bundle bundle = query.withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString()).execute();
     while (true) {
+      List<IBaseResource> resources = new ArrayList<>();
       for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
         Resource resource = entry.getResource();
         if (resource instanceof OperationOutcome) {
           logIssues((OperationOutcome) resource);
         } else {
+          resources.add(resource);
           addResource(resource);
         }
       }
+      tenantService.saveDataTraces(queryId, patientId, resources);
       if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
         break;
       }
@@ -277,6 +284,16 @@ public class PatientData {
   }
 
   private void addResource(Resource resource) {
+    String id = resource.getIdPart();
+    bundle.getEntry().removeIf(entry -> {
+      Resource existingResource = entry.getResource();
+      String existingId = existingResource.getIdPart();
+      if (StringUtils.equals(existingId, id)) {
+        return true;
+      }
+      String originalId = getOriginalId(existingResource);
+      return StringUtils.equals(originalId, id);
+    });
     resource.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
     bundle.addEntry().setResource(resource);
   }

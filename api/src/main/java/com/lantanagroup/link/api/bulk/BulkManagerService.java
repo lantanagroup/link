@@ -1,6 +1,5 @@
 package com.lantanagroup.link.api.bulk;
 
-import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.BulkStatus;
@@ -14,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 public class BulkManagerService {
@@ -27,8 +27,6 @@ public class BulkManagerService {
   @Setter
   private TenantService tenantService;
   @Setter
-  private BulkStatusService bulkStatusService;
-  @Setter
   ApplicationContext applicationContext;
 
   public BulkManagerService(Tenant tenantConfig, ExecutorService executorService, SharedService sharedService, ApplicationContext applicationContext) {
@@ -37,31 +35,30 @@ public class BulkManagerService {
     this.sharedService = sharedService;
     this.applicationContext = applicationContext;
     this.tenantService = TenantService.create(sharedService, tenantConfig.getId());
-    this.bulkStatusService = BulkStatusService.create(tenantConfig);
   }
 
   public void InitiateBulkDataRequest(BulkStatus status) throws Exception {
     BulkQuery bulkQuery = new BulkQuery();
-    bulkQuery.executeInitiateRequest(tenantService, bulkStatusService, status, this.applicationContext);
+    bulkQuery.executeInitiateRequest(tenantService, status, this.applicationContext);
   }
 
   public void getPendingRequestsAndGetStatusResults(String tenantId) {
     //get pending statuses
-    var statuses = bulkStatusService.getBulkPendingStatusesWithPopulatedUrl();
+    var statuses = tenantService.getBulkPendingStatusesWithPopulatedUrl();
 
     //loop through statuses and fire off thread to get results
     for(var status : statuses) {
       try{
         executorService.execute(() -> {
           BulkQuery bulkQuery = new BulkQuery();
-          status.setStatus(BulkStatuses.inProgress);
-          bulkStatusService.saveBulkStatus(status);
+          status.setStatus(BulkStatuses.IN_PROGRESS);
+          tenantService.saveBulkStatus(status);
           BulkStatusResult statusResult = null;
           try {
-            statusResult = bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), bulkStatusService, this.applicationContext);
+            statusResult = bulkQuery.getStatus(status, TenantService.create(sharedService, tenantId), this.applicationContext);
           } catch (Exception e) {
-            status.setStatus(BulkStatuses.pending);
-            bulkStatusService.saveBulkStatus(status);
+            status.setStatus(BulkStatuses.PENDING);
+            tenantService.saveBulkStatus(status);
             throw new RuntimeException(e);
           }
 
@@ -76,25 +73,25 @@ public class BulkManagerService {
         });
       } catch (Exception e) {
         logger.error(e.getMessage());
-        status.setStatus(BulkStatuses.pending);
-        bulkStatusService.saveBulkStatus(status);
+        status.setStatus(BulkStatuses.PENDING);
+        tenantService.saveBulkStatus(status);
         throw new RuntimeException(e);
       }
     }
   }
 
   public List<BulkStatus> getBulkStatuses() {
-    List<BulkStatus> status = bulkStatusService.getBulkStatuses();
+    List<BulkStatus> status = tenantService.getBulkStatuses();
     return status;
   }
 
-  public BulkStatus getBulkStatusById(String id) {
-    BulkStatus status = bulkStatusService.getBulkStatusById(id);
+  public BulkStatus getBulkStatusById(UUID id) {
+    BulkStatus status = tenantService.getBulkStatusById(id);
     return status;
   }
 
   public BulkStatusResult getBulkStatusResultByStatusId(String id){
-    return bulkStatusService
+    return tenantService
             .getBulkStatusResults()
             .stream()
             .filter(r -> r.getStatusId()

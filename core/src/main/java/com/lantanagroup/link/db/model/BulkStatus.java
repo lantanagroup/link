@@ -11,11 +11,8 @@ import java.util.UUID;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BulkStatus {
-  private String id = UUID.randomUUID().toString();
-  private String tenantId;
+  private UUID id;
   private String statusUrl;
   private String status;
-  private String errorMessage;
-  private Date lastChecked;
+  private Date date;
 }
-
