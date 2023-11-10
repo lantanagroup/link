@@ -36,7 +36,6 @@ public class PatientData {
 
   private final ReportCriteria criteria;
   private final ReportContext context;
-  private final QueryPlan plan;
   private final IGenericClient fhirQueryServer;
   private final TenantService tenantService;
   private final EventService eventService;
@@ -54,10 +53,11 @@ public class PatientData {
     this.criteria = criteria;
     this.context = context;
     String planId = criteria.getQueryPlanId();
-    this.plan = fhirQuery.getQueryPlans().get(planId);
+    QueryPlan plan = fhirQuery.getQueryPlans().get(planId);
     if (plan == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + planId);
     }
+    context.setQueryPlan(plan);
   }
 
   public void loadInitialData(Patient patient) {
@@ -70,13 +70,13 @@ public class PatientData {
             .getRequest()
             .setMethod(Bundle.HTTPVerb.PUT)
             .setUrl("Patient/" + this.patientId);
-    loadData(plan.getInitial());
+    loadData(context.getQueryPlan().getInitial());
   }
 
   public void loadSupplementalData(String patientId, Bundle bundle) {
     this.patientId = patientId;
     this.bundle = bundle;
-    loadData(plan.getSupplemental());
+    loadData(context.getQueryPlan().getSupplemental());
   }
 
   private void loadData(List<TypedQueryPlan> plans) {
@@ -220,7 +220,7 @@ public class PatientData {
       case "patientid":
         return patientId;
       case "lookbackstart":
-        Period lookback = Period.parse(plan.getLookback());
+        Period lookback = Period.parse(context.getQueryPlan().getLookback());
         return criteria.getPeriodStartDate().minus(lookback) + "T00:00:00Z";
       case "periodstart":
         return criteria.getPeriodStartDate().toString() + "T00:00:00Z";
