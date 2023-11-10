@@ -66,4 +66,10 @@ public class PatientMeasureReportRepository {
       }
     });
   }
+
+  public void deleteByReportId(String reportId) {
+    String sql = "DELETE FROM dbo.patientMeasureReport WHERE reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    jdbc.update(sql, parameters);
+  }
 }
