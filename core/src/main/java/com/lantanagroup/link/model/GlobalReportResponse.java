@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GlobalReportResponse extends Report {
+  private String tenantId;
   private String tenantName;
   private String cdcOrgId;
-  private String reportId;
 }

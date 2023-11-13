@@ -706,7 +706,7 @@ public class SharedService {
       var reports = new ArrayList<GlobalReportResponse>();
 
       while(rs.next()) {
-        var id = rs.getString(1);
+        var tenantId = rs.getString(1);
         var tenantName = rs.getString(2);
         var cdcOrgId = rs.getString(3);
         var reportId = rs.getString(4);
@@ -720,10 +720,10 @@ public class SharedService {
 
         var report = new GlobalReportResponse();
 
-        report.setId(id);
+        report.setTenantId(tenantId);
         report.setTenantName(tenantName);
         report.setCdcOrgId(cdcOrgId);
-        report.setReportId(reportId);
+        report.setId(reportId);
         report.setMeasureIds(Arrays.asList(measureIds.split(",")));
         report.setPeriodStart(periodStart);
         report.setPeriodEnd(periodEnd);
