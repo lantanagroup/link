@@ -40,6 +40,14 @@ public class ReportRepository {
             .orElse(null);
   }
 
+  public List<Report> findByPatientListId(UUID patientListId) {
+    String sql = "SELECT R.* FROM dbo.report AS R " +
+            "INNER JOIN dbo.reportPatientList AS RPL ON R.id = RPL.reportId " +
+            "WHERE RPL.patientListId = :patientListId;";
+    Map<String, ?> parameters = Map.of("patientListId", patientListId);
+    return jdbc.query(sql, parameters, mapper);
+  }
+
   private int insert(Report model) {
     String sql = "INSERT INTO dbo.report (id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime) " +
             "VALUES (:id, :measureIds, :periodStart, :periodEnd, :status, :version, :generatedTime, :submittedTime);";

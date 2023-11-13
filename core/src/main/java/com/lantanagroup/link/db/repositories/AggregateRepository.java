@@ -49,4 +49,10 @@ public class AggregateRepository {
       }
     });
   }
+
+  public void deleteByReportId(String reportId) {
+    String sql = "DELETE FROM dbo.[aggregate] WHERE reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    jdbc.update(sql, parameters);
+  }
 }

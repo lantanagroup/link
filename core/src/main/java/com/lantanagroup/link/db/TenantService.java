@@ -159,6 +159,10 @@ public class TenantService {
     return this.reports.findById(id);
   }
 
+  public List<Report> getReportsByPatientListId(UUID id) {
+    return this.reports.findByPatientListId(id);
+  }
+
   public List<Report> searchReports() {
     return this.reports.findAll();
   }
@@ -175,6 +179,8 @@ public class TenantService {
     this.patientDatas.deleteByReportId(reportId);
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
     this.reports.deleteById(reportId);
   }
 
