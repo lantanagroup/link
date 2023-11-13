@@ -1,162 +1,223 @@
-IF OBJECT_ID(N'dbo.conceptMap', N'U') IS NULL
-CREATE TABLE dbo.conceptMap
-(
-    id         nvarchar(128)  NOT NULL PRIMARY KEY,
-    contexts   nvarchar(1024) NOT NULL,
-    conceptMap nvarchar(max)  NOT NULL
-);
-GO
-
-IF OBJECT_ID(N'dbo.patientList', N'U') IS NULL
-CREATE TABLE dbo.patientList
-(
-    id          uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    measureId   nvarchar(64)     NOT NULL,
-    periodStart nvarchar(32)     NOT NULL,
-    periodEnd   nvarchar(32)     NOT NULL,
-    patients    nvarchar(max)    NOT NULL,
-    lastUpdated datetime2        NOT NULL,
-    UNIQUE (measureId, periodStart, periodEnd)
-);
-GO
-
-IF OBJECT_ID(N'dbo.report', N'U') IS NULL
-CREATE TABLE dbo.report
-(
-    id            nvarchar(128)  NOT NULL PRIMARY KEY,
-    measureIds    nvarchar(1024) NOT NULL,
-    periodStart   nvarchar(32)   NOT NULL,
-    periodEnd     nvarchar(32)   NOT NULL,
-    status        nvarchar(64)   NOT NULL,
-    version       nvarchar(64)   NOT NULL,
-    generatedTime datetime2,
-    submittedTime datetime2
-);
-GO
-
-IF OBJECT_ID(N'dbo.reportPatientList', N'U') IS NULL
-CREATE TABLE dbo.reportPatientList
-(
-    reportId      nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
-    patientListId uniqueidentifier NOT NULL REFERENCES dbo.patientList (id),
-    PRIMARY KEY (reportId, patientListId)
-);
-GO
-
-IF OBJECT_ID(N'dbo.patientData', N'U') IS NULL
-CREATE TABLE dbo.patientData
-(
-    id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-    patientId    nvarchar(64)     NOT NULL,
-    resourceType nvarchar(64)     NOT NULL,
-    resourceId   nvarchar(64)     NOT NULL,
-    resource     nvarchar(max)    NOT NULL,
-    retrieved    datetime2        NOT NULL,
-    UNIQUE (patientId, resourceType, resourceId)
-);
-GO
-
-IF OBJECT_ID(N'dbo.patientMeasureReport', N'U') IS NULL
-CREATE TABLE dbo.patientMeasureReport
-(
-    id            nvarchar(128) NOT NULL PRIMARY KEY,
-    reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
-    measureId     nvarchar(64)  NOT NULL,
-    patientId     nvarchar(64)  NOT NULL,
-    measureReport nvarchar(max) NOT NULL,
-    UNIQUE (reportId, measureId, patientId)
-);
-GO
-
-IF OBJECT_ID(N'dbo.[aggregate]', N'U') IS NULL
-CREATE TABLE dbo.[aggregate]
-(
-    id        nvarchar(128) NOT NULL PRIMARY KEY,
-    reportId  nvarchar(128) NOT NULL REFERENCES dbo.report (id),
-    measureId nvarchar(64)  NOT NULL,
-    report    nvarchar(max) NOT NULL,
-    UNIQUE (reportId, measureId)
-);
-GO
-
-IF OBJECT_ID(N'[dbo].[bulkStatus]', N'U') IS NULL
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'conceptMap')
     BEGIN
-        CREATE TABLE [dbo].[bulkStatus](
-                                           [id] [uniqueidentifier] NOT NULL,
-                                           [statusUrl] [nvarchar](max) NULL,
-                                           [status] [nvarchar](128) NULL,
-                                           [date] [datetime2] NOT NULL
-                                               PRIMARY KEY CLUSTERED
-                                                   (
-                                                    [id] ASC
-                                                       )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-        ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
-        ALTER TABLE [dbo].[bulkStatus] ADD  DEFAULT (newid()) FOR [id]
-        ALTER TABLE [dbo].[bulkStatus] ADD  DEFAULT (getdate()) FOR [date]
-    END
-GO
-
-IF OBJECT_ID(N'[dbo].[bulkStatusResult]', N'U') IS NULL
-    BEGIN
-        CREATE TABLE [dbo].[bulkStatusResult](
-                                                 [id] [uniqueidentifier] NOT NULL,
-                                                 [statusId] [nvarchar](256) NOT NULL,
-                                                 [result] [nvarchar](max) NOT NULL,
-                                                 PRIMARY KEY CLUSTERED
-                                                     (
-                                                      [id] ASC
-                                                         )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
-        ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
-
-        ALTER TABLE [dbo].[bulkStatusResult] ADD  DEFAULT (newid()) FOR [id]
+        CREATE TABLE dbo.conceptMap
+        (
+            id         nvarchar(128)  NOT NULL PRIMARY KEY,
+            contexts   nvarchar(1024) NOT NULL,
+            conceptMap nvarchar(max)  NOT NULL
+        );
     END
 
-DROP PROCEDURE IF EXISTS saveBulkStatusResult
 GO
 
-CREATE PROCEDURE [dbo].[saveBulkStatusResult]
-    @id NVARCHAR(64),
-    @statusId NVARCHAR(256),
-    @result NVARCHAR(MAX)
-AS
-BEGIN
-    IF NOT EXISTS(SELECT * FROM dbo.bulkStatusResult t WHERE t.id = @id)
-        BEGIN
-            INSERT INTO dbo.bulkStatusResult(statusId, result)
-            VALUES(@statusId, @result)
-        END
-    ELSE
-        BEGIN
-            UPDATE dbo.bulkStatusResult
-            SET statusId = @statusId, result = @result
-            WHERE id = @id
-        END
-END
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'patientList')
+    BEGIN
+        CREATE TABLE dbo.patientList
+        (
+            id          uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            measureId   nvarchar(64)     NOT NULL,
+            periodStart nvarchar(32)     NOT NULL,
+            periodEnd   nvarchar(32)     NOT NULL,
+            patients    nvarchar(max)    NOT NULL,
+            lastUpdated datetime2        NOT NULL,
+            UNIQUE (measureId, periodStart, periodEnd)
+        );
+    END
+
 GO
 
-DROP PROCEDURE IF EXISTS saveBulkStatus
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'report')
+    BEGIN
+        CREATE TABLE dbo.report
+        (
+            id            nvarchar(128)  NOT NULL PRIMARY KEY,
+            measureIds    nvarchar(1024) NOT NULL,
+            periodStart   nvarchar(32)   NOT NULL,
+            periodEnd     nvarchar(32)   NOT NULL,
+            status        nvarchar(64)   NOT NULL,
+            version       nvarchar(64)   NOT NULL,
+            generatedTime datetime2      NULL,
+            submittedTime datetime2      NULL
+        );
+    END
+
 GO
 
-CREATE PROCEDURE [dbo].[saveBulkStatus]
-    @id NVARCHAR(64),
-    @statusUrl NVARCHAR(MAX),
-    @status NVARCHAR(128),
-    @date DateTime2(7)
-AS
-BEGIN
-    IF NOT EXISTS(SELECT * FROM dbo.bulkStatus t WHERE t.id = @id)
-        BEGIN
-            INSERT INTO dbo.bulkStatus(statusUrl, [status], [date])
-            VALUES(@statusUrl, @status, @date)
-        END
-    ELSE
-        BEGIN
-            UPDATE dbo.bulkStatus
-            SET statusUrl = @statusUrl, [status] = @status, [date] = @date
-            WHERE id = @id
-        END
-END
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'reportPatientList')
+    BEGIN
+        CREATE TABLE dbo.reportPatientList
+        (
+            reportId      nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            patientListId uniqueidentifier NOT NULL REFERENCES dbo.patientList (id),
+            PRIMARY KEY (reportId, patientListId)
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'query')
+    BEGIN
+        CREATE TABLE dbo.query
+        (
+            id        uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            reportId  nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            queryType nvarchar(128)    NOT NULL,
+            url       nvarchar(max)    NOT NULL,
+            body      nvarchar(max)    NULL,
+            retrieved datetime2        NOT NULL
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'dataTrace')
+    BEGIN
+        CREATE TABLE dbo.dataTrace
+        (
+            id               uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            queryId          uniqueidentifier NULL REFERENCES dbo.query (id),
+            patientId        nvarchar(64)     NULL,
+            resourceType     nvarchar(64)     NOT NULL,
+            resourceId       nvarchar(256)    NOT NULL,
+            originalResource nvarchar(max)    NOT NULL
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'patientData')
+    BEGIN
+        CREATE TABLE dbo.patientData
+        (
+            id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            patientId    nvarchar(64)     NOT NULL,
+            resourceType nvarchar(64)     NOT NULL,
+            resourceId   nvarchar(64)     NOT NULL,
+            resource     nvarchar(max)    NOT NULL,
+            retrieved    datetime2        NOT NULL,
+            UNIQUE (patientId, resourceType, resourceId)
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'patientData'
+                 AND COLUMN_NAME = 'dataTraceId')
+    BEGIN
+        ALTER TABLE dbo.patientData
+            ADD dataTraceId uniqueidentifier NULL REFERENCES dbo.dataTrace (id);
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'patientMeasureReport')
+    BEGIN
+        CREATE TABLE dbo.patientMeasureReport
+        (
+            id            nvarchar(128) NOT NULL PRIMARY KEY,
+            reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
+            measureId     nvarchar(64)  NOT NULL,
+            patientId     nvarchar(64)  NOT NULL,
+            measureReport nvarchar(max) NOT NULL,
+            UNIQUE (reportId, measureId, patientId)
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'aggregate')
+    BEGIN
+        CREATE TABLE dbo.[aggregate]
+        (
+            id        nvarchar(128) NOT NULL PRIMARY KEY,
+            reportId  nvarchar(128) NOT NULL REFERENCES dbo.report (id),
+            measureId nvarchar(64)  NOT NULL,
+            report    nvarchar(max) NOT NULL,
+            UNIQUE (reportId, measureId)
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'bulkStatus')
+    BEGIN
+        CREATE TABLE dbo.bulkStatus
+        (
+            id        uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            tenantId  nvarchar(128)    NULL,
+            statusUrl nvarchar(max)    NULL,
+            status    nvarchar(128)    NULL,
+            date      datetime2        NOT NULL             DEFAULT GETDATE()
+        );
+    END
+
+GO
+
+ALTER TABLE dbo.bulkStatus
+    DROP COLUMN IF EXISTS tenantId;
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'bulkStatusResult')
+    BEGIN
+        CREATE TABLE dbo.bulkStatusResult
+        (
+            id       uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            statusId nvarchar(256)    NOT NULL,
+            result   nvarchar(max)    NOT NULL
+        );
+    END
+
+GO
+
+IF (SELECT DATA_TYPE
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = 'dbo'
+      AND TABLE_NAME = 'bulkStatusResult'
+      AND COLUMN_NAME = 'statusId') = 'nvarchar'
+    BEGIN
+        ALTER TABLE dbo.bulkStatusResult
+            ALTER COLUMN statusId uniqueidentifier NULL;
+        ALTER TABLE dbo.bulkStatusResult
+            ADD FOREIGN KEY (statusId) REFERENCES dbo.bulkStatus (id);
+    END
+
 GO
 
 CREATE OR ALTER PROCEDURE addReportToGlobal @TenantId nvarchar(128), @Name nvarchar(1024), @CdcOrgId nvarchar(128)

@@ -11,7 +11,7 @@ import java.util.UUID;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BulkStatusResult {
-  private String id = UUID.randomUUID().toString();
-  private String statusId;
+  private UUID id;
+  private UUID statusId;
   private BulkResponse result;
 }

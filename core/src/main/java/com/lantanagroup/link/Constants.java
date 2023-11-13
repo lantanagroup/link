@@ -54,4 +54,10 @@ public class Constants {
   public static final String CATEGORY_EVALUATE = "evaluate";
   public static final String CATEGORY_REPORT = "report";
   public static final String CATEGORY_EVENT = "event";
+
+  //Metric report periods
+  public static final String WEEKLY_PERIOD = "lastWeek";
+  public static final String MONTHLY_PERIOD = "lastMonth";
+  public static final String QUARTERLY_PERIOD = "lastQuarter";
+  public static final String YEARLY_PERIOD = "lastYear";
 }

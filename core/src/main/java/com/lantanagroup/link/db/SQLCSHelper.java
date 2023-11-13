@@ -12,6 +12,10 @@ public class SQLCSHelper {
     this.callableStatement = conn.prepareCall(statement);
   }
 
+  public boolean execute() throws SQLException {
+    return this.callableStatement.execute();
+  }
+
   public ResultSet executeQuery() throws SQLException {
     return this.callableStatement.executeQuery();
   }

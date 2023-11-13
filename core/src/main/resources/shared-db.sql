@@ -115,6 +115,20 @@ GO
 -- LNK-1150: Remove non-null constraint from dbo.audit.userId
 ALTER TABLE dbo.audit
 ALTER COLUMN userId UNIQUEIDENTIFIER;
+
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
+END
 GO
 
 -- LOGBACK tables

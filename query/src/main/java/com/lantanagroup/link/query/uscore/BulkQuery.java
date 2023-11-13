@@ -4,7 +4,6 @@ import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.google.gson.Gson;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.db.BulkStatusService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.QueryList;
@@ -70,7 +69,7 @@ public class BulkQuery {
     return fhirQueryClient;
   }
 
-  public void executeInitiateRequest(TenantService tenantService, BulkStatusService service, BulkStatus bulkStatus, ApplicationContext context) throws Exception {
+  public void executeInitiateRequest(TenantService tenantService, BulkStatus bulkStatus, ApplicationContext context) throws Exception {
 
     var config = tenantService.getConfig();
 
@@ -90,13 +89,14 @@ public class BulkQuery {
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
       sbuilder.append("Stack Trace:\n");
       sbuilder.append(e.getStackTrace());
-      bulkStatus.setStatus(BulkStatuses.cancelled);
-      bulkStatus.setErrorMessage(sbuilder.toString());
-      service.saveBulkStatus(bulkStatus);
+      bulkStatus.setStatus(BulkStatuses.CANCELLED);
+//      bulkStatus.setErrorMessage(sbuilder.toString());
+      tenantService.saveBulkStatus(bulkStatus);
+      logger.warn(sbuilder.toString());
     } catch (InterruptedException e) {
       logger.warn("Interrupted while initiating bulk export", e);
-      bulkStatus.setStatus(BulkStatuses.pending);
-      service.saveBulkStatus(bulkStatus);
+      bulkStatus.setStatus(BulkStatuses.PENDING);
+      tenantService.saveBulkStatus(bulkStatus);
       Thread.currentThread().interrupt();
     }
 
@@ -107,8 +107,8 @@ public class BulkQuery {
       if(response.body().length() > 0){
         sbuilder.append("Response Body: " + Helper.sanitizeString(response.body()));
       }
-      bulkStatus.setStatus(BulkStatuses.cancelled);
-      service.saveBulkStatus(bulkStatus);
+      bulkStatus.setStatus(BulkStatuses.CANCELLED);
+      tenantService.saveBulkStatus(bulkStatus);
       logger.warn(sbuilder.toString());
       return;
     }
@@ -124,17 +124,17 @@ public class BulkQuery {
       sbuilder.append("Error encountered running initiate bulk data request. Cancelling bulk status with id " + bulkStatus.getId() + " Exception: " + e.getMessage());
       sbuilder.append("Stack Trace:\n");
       sbuilder.append(e.getStackTrace());
-      bulkStatus.setStatus(BulkStatuses.cancelled);
-      bulkStatus.setErrorMessage(sbuilder.toString());
-      service.saveBulkStatus(bulkStatus);
+      bulkStatus.setStatus(BulkStatuses.CANCELLED);
+//      bulkStatus.setErrorMessage(sbuilder.toString());
+      tenantService.saveBulkStatus(bulkStatus);
       logger.warn(sbuilder.toString());
       return;
 //      throw new Exception(sbuilder.toString());
     }
 
     bulkStatus.setStatusUrl(pollingUrlresponse);
-    bulkStatus.setStatus(BulkStatuses.pending);
-    service.saveBulkStatus(bulkStatus);
+    bulkStatus.setStatus(BulkStatuses.PENDING);
+    tenantService.saveBulkStatus(bulkStatus);
   }
   public void executeStatusCheck(TenantService tenantService, BulkStatus bulkStatus) {
 
@@ -142,7 +142,6 @@ public class BulkQuery {
 
   public BulkStatusResult getStatus(BulkStatus bulkStatus,
                         TenantService tenantService,
-                        BulkStatusService bulkStatusService,
                         ApplicationContext context) throws Exception {
 
     boolean progressComplete = false;
@@ -187,10 +186,10 @@ public class BulkQuery {
     BulkResponse bulkResponse = gson.fromJson(responseBody, BulkResponse.class);
     statusResult.setResult(bulkResponse);
 
-    bulkStatus.setStatus(BulkStatuses.complete);
-    bulkStatusService.saveBulkStatus(bulkStatus);
+    bulkStatus.setStatus(BulkStatuses.COMPLETE);
+    tenantService.saveBulkStatus(bulkStatus);
 
-    bulkStatusService.saveBulkStatusResult(statusResult);
+    tenantService.saveBulkStatusResult(statusResult);
 
     return statusResult;
   }

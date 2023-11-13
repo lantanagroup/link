@@ -3,6 +3,7 @@ package com.lantanagroup.link.model;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.query.QueryPhase;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +24,7 @@ public class ReportContext {
   private List<PatientList> patientLists = new ArrayList<>();
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<MeasureContext> measureContexts = new ArrayList<>();
+  private QueryPlan queryPlan;
 
   public ReportContext() {
   }
