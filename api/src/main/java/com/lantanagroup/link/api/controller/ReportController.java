@@ -16,6 +16,7 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
@@ -301,13 +302,18 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
     logger.info("Beginning initial measure evaluation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL);
+    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    logger.info("Beginning supplemental query and store");
-    this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-
-    logger.info("Beginning supplemental measure evaluation and aggregation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
+    if (CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+      logger.info("No supplemental query plan; skipping supplemental query and store");
+      logger.info("Beginning aggregation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
+    } else {
+      logger.info("Beginning supplemental query and store");
+      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
+      logger.info("Beginning supplemental measure evaluation and aggregation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
+    }
 
     report.setGeneratedTime(new Date());
     tenantService.saveReport(report);
@@ -323,7 +329,7 @@ public class ReportController extends BaseController {
     return report;
   }
 
-  private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase) throws Exception {
+  private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
       if (queryPhase == QueryPhase.INITIAL) {
         measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
@@ -332,13 +338,15 @@ public class ReportController extends BaseController {
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
       ReportGenerator generator = new ReportGenerator(sharedService, tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
-      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      if (!aggregateOnly) {
+        this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_EVALUATE)) {
-        generator.generate(queryPhase);
+        try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_EVALUATE)) {
+          generator.generate(queryPhase);
+        }
+
+        this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
       }
-
-      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
       if (queryPhase == QueryPhase.SUPPLEMENTAL) {
         generator.aggregate();
