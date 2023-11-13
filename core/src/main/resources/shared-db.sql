@@ -114,7 +114,8 @@ GO
 
 -- LNK-1150: Remove non-null constraint from dbo.audit.userId
 ALTER TABLE dbo.audit
-ALTER COLUMN userId UNIQUEIDENTIFIER;
+    ALTER COLUMN userId UNIQUEIDENTIFIER;
+GO
 
 CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
     @id UNIQUEIDENTIFIER,
@@ -181,7 +182,6 @@ IF OBJECT_ID(N'dbo.logging_event_exception', N'U') IS NULL
         )
     END
 GO
-
 
 CREATE OR ALTER PROCEDURE saveUser
     -- Add the parameters for the stored procedure here

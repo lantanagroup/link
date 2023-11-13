@@ -10,6 +10,8 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.GlobalReportResponse;
+import com.lantanagroup.link.model.LogMessage;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -23,12 +25,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -397,17 +396,40 @@ public class SharedService {
     });
   }
 
-  public List<Metrics> getMetrics(Date start, Date end) {
-    if(start.compareTo(end) > 0){
+  public List<Metrics> getMetrics(LocalDate start, LocalDate end, String tenantId, String reportId) {
+
+    if (start.isAfter(end)) {
       throw new RuntimeException("Start date must be before end date");
     }
 
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
-      PreparedStatement ps = conn.prepareStatement("SELECT * FROM [dbo].[metrics] WHERE timestamp > ? AND timestamp < ?");
-      ps.setNString(1, start.toString());
-      ps.setNString(2, end.toString());
+      StringBuilder sql = new StringBuilder();
+      sql.append("SELECT * FROM [dbo].[metrics] WHERE CONVERT(datetime, timestamp) >= ? AND CONVERT(datetime, timestamp) < ?");
+
+      //filter on tenant id if supplied
+      if (!StringUtils.isEmpty(tenantId)) {
+        sql.append(" AND tenantId = ?");
+      }
+
+      //filter on report id if supplied
+      if (!StringUtils.isEmpty(reportId)) {
+        sql.append(" AND  reportId = ?");
+      }
+
+      PreparedStatement ps = conn.prepareStatement(sql.toString());
+      ps.setDate(1, java.sql.Date.valueOf(start));
+      ps.setDate(2, java.sql.Date.valueOf(end));
+      int paramIndex = 2;
+      if (!StringUtils.isEmpty(tenantId)) {
+        paramIndex++;
+        ps.setNString(paramIndex, tenantId);
+      }
+      if (!StringUtils.isEmpty(reportId)) {
+        paramIndex++;
+        ps.setNString(paramIndex, reportId);
+      }
 
       ResultSet rs = ps.executeQuery();
       var metrics = new ArrayList<Metrics>();
@@ -562,6 +584,17 @@ public class SharedService {
     }
   }
 
+  private User createUser(ResultSet rs) throws SQLException {
+    User user = new User();
+    user.setId(rs.getObject("id", UUID.class));
+    user.setEmail(rs.getString("email"));
+    user.setName(rs.getString("name"));
+    user.setEnabled(rs.getBoolean("enabled"));
+    user.setPasswordHash(rs.getString("passwordHash"));
+    user.setPasswordSalt(rs.getBytes("passwordSalt"));
+    return user;
+  }
+
   public User getUser(UUID id) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
@@ -574,7 +607,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -590,7 +623,7 @@ public class SharedService {
       List<User> users = new ArrayList<>();
 
       while (rs.next()) {
-        User next = User.create(rs);
+        User next = createUser(rs);
         next.setPasswordSalt(null);
         next.setPasswordHash(null);
         users.add(next);
@@ -620,7 +653,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -634,5 +667,113 @@ public class SharedService {
       databaseNames.add(tenantDatabaseName);
     }
     return databaseNames;
+  }
+
+  public List<LogMessage> findLogMessages(Date startDate, Date endDate, String[] severities, int page, String content) {
+    int countPerPage = 10;
+
+    if (severities != null) {
+      for (String s : severities) {
+        if (Arrays.stream(LogMessage.SEVERITIES).noneMatch(s::equals)) {
+          throw new IllegalArgumentException("Invalid severity, must be one of " + String.join(", ", LogMessage.SEVERITIES));
+        }
+      }
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      String sql = "SELECT * FROM [logging_event] WHERE event_id IS NOT NULL";
+      List<Object> params = new ArrayList<>();
+
+      if (startDate != null) {
+        sql += " AND timestmp >= ?";
+        params.add(BigDecimal.valueOf(startDate.getTime()));
+      }
+
+      if (endDate != null) {
+        sql += " AND timestmp <= ?";
+        params.add(BigDecimal.valueOf(endDate.getTime()));
+      }
+
+      if (severities != null && severities.length > 0) {
+        sql += " AND level_string IN ('";
+        sql += String.join("','", severities);
+        sql += "')";
+      }
+
+      if (content != null && !content.isEmpty()) {
+        sql += " AND formatted_message LIKE ?";
+        params.add("%" + content + "%");
+      }
+
+      sql += " ORDER BY timestmp DESC";
+
+      // paging
+      sql += " OFFSET ? ROWS FETCH NEXT " + countPerPage + " ROWS ONLY";
+      params.add((page - 1) * countPerPage);
+
+      PreparedStatement ps = conn.prepareStatement(sql);
+      for (int i = 0; i < params.size(); i++) {
+        ps.setObject(i + 1, params.get(i));
+      }
+
+      ResultSet rs = ps.executeQuery();
+      List<LogMessage> logMessages = new ArrayList<>();
+
+      while (rs.next()) {
+        LogMessage next = LogMessage.create(rs);
+        logMessages.add(next);
+      }
+
+      return logMessages;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public List<GlobalReportResponse> getAllReports() {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("exec getTenantReports");
+      ResultSet rs = ps.executeQuery();
+      var reports = new ArrayList<GlobalReportResponse>();
+
+      while (rs.next()) {
+        var tenantId = rs.getString(1);
+        var tenantName = rs.getString(2);
+        var cdcOrgId = rs.getString(3);
+        var reportId = rs.getString(4);
+        var measureIds = rs.getString(5);
+        var periodStart = rs.getString(6);
+        var periodEnd = rs.getString(7);
+        var status = rs.getString(8);
+        var version = rs.getString(9);
+        var generatedTime = rs.getDate(10);
+        var submittedTime = rs.getDate(11);
+
+        var report = new GlobalReportResponse();
+
+        report.setTenantId(tenantId);
+        report.setTenantName(tenantName);
+        report.setCdcOrgId(cdcOrgId);
+        report.setId(reportId);
+        report.setMeasureIds(Arrays.asList(measureIds.split(",")));
+        report.setPeriodStart(periodStart);
+        report.setPeriodEnd(periodEnd);
+        report.setStatus(ReportStatuses.valueOf(status));
+        report.setVersion(version);
+        report.setGeneratedTime(generatedTime);
+        report.setSubmittedTime(submittedTime);
+
+        reports.add(report);
+      }
+
+      return reports;
+
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
