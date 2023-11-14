@@ -57,7 +57,7 @@ public class AggregateRepository {
   }
 
   public void deleteAll() {
-    String sql = "TRUNCATE TABLE dbo.[aggregate];";
+    String sql = "DELETE FROM dbo.[aggregate];";
     jdbc.update(sql, Map.of());
   }
 }

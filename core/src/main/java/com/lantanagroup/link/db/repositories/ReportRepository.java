@@ -105,11 +105,11 @@ public class ReportRepository {
 
   public void deleteAll() {
     {
-      String sql = "TRUNCATE TABLE dbo.reportPatientList;";
+      String sql = "DELETE FROM dbo.reportPatientList;";
       jdbc.update(sql, Map.of());
     }
     {
-      String sql = "TRUNCATE TABLE dbo.report;";
+      String sql = "DELETE FROM dbo.report;";
       jdbc.update(sql, Map.of());
     }
   }

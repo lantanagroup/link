@@ -74,7 +74,7 @@ public class PatientMeasureReportRepository {
   }
 
   public void deleteAll() {
-    String sql = "TRUNCATE TABLE dbo.patientMeasureReport;";
+    String sql = "DELETE FROM dbo.patientMeasureReport;";
     jdbc.update(sql, Map.of());
   }
 }
