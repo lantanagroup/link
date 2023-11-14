@@ -144,11 +144,26 @@ public class TenantService {
 
   public void deletePatientByListAndPatientId(String patientId, UUID listId) {
     PatientList patientList = this.getPatientList(listId);
-    var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
+    if (patientList == null) {
+      return;
+    }
+    var filteredList = patientList.getPatients().stream().filter(x -> {
+      String identifier = x.getIdentifier();
+      if (identifier != null && identifier.equals(patientId)) {
+        return false;
+      }
+      String reference = x.getReference();
+      if (reference != null) {
+        String id = StringUtils.removeStartIgnoreCase(reference, "Patient/");
+        if (id.equals(patientId)) {
+          return false;
+        }
+      }
+      return true;
+    }).collect(Collectors.toList());
     patientList.setPatients(filteredList);
-    this.patientDatas.deleteByPatientId(patientId);
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    patientList.setLastUpdated(new Date());
+    this.savePatientList(patientList);
   }
 
   public void savePatientData(List<PatientData> patientData) {
