@@ -72,4 +72,9 @@ public class PatientMeasureReportRepository {
     Map<String, ?> parameters = Map.of("reportId", reportId);
     jdbc.update(sql, parameters);
   }
+
+  public void deleteAll() {
+    String sql = "DELETE FROM dbo.patientMeasureReport;";
+    jdbc.update(sql, Map.of());
+  }
 }
