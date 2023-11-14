@@ -1447,7 +1447,56 @@ paths:
       responses:
         '200':
           description: successful response
-          $ref: '#/components/schemas/LogSearchResponse'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/LogSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+  /api/metric/{period}:
+    get:
+      tags:
+        - UI
+        - Metrics
+      summary: Gets metrics for the system, tenant, or report
+      description: Returns calculated metrics based on the supplied reporting period and optional parameters. If no
+        parameters are supplied, the metrics returned are for the entire system. If a tenantId is supplied,
+        the metrics returned are for the specified tenant. If a reportId is supplied, the metrics returned are for the
+        specified report.
+      operationId: getMetric
+      parameters:
+        - name: period
+          in: path
+          description: The reporting period for the metrics
+          required: true
+          schema:
+            type: string
+            enum:
+              - lastWeek
+              - lastMonth
+              - lastQuarter
+              - lastYear
+        - name: reportId
+          in: query
+          description: Filter metrics by a specific report
+          required: false
+          schema:
+            type: string
+        - name: tenantId
+          in: query
+          description: Filter metrics by the specific tenant
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MetricsReportResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2299,6 +2348,73 @@ components:
           type: string
         caller:
           type: string
+    MetricsReportResponse:
+      type: object
+      description: Information about the metrics for the system as a whole, a tenant, or a report. The response includes the
+        average time to query for patients of interest, the average time to query for clinical data, the number of
+        patients queried, the number of patients reported, and the average time to validate and evaluate the measure. The
+        history of each metric is also included, up to a maximum of 10 entries.
+      properties:
+        queryTime:
+          $ref: '#/components/schemas/QueryTimeMetric'
+        patientsQueried:
+          $ref: '#/components/schemas/PatientsQueriedMetric'
+        patientsReported:
+          $ref: '#/components/schemas/PatientsReportedMetric'
+        validation:
+          $ref: '#/components/schemas/ValidationMetric'
+        evaluation:
+          $ref: '#/components/schemas/EvaluationMetric'
+    QueryTimeMetric:
+      type: object
+      description: The average time to query for patients of interest, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    PatientsQueriedMetric:
+      type: object
+      description: The number of patients queried, and the history of the metric.
+      properties:
+        total:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    PatientsReportedMetric:
+      type: object
+      description: The number of patients reported, and the history of the metric.
+      properties:
+        total:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    ValidationMetric:
+      type: object
+      description: The average time to validate reports, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    EvaluationMetric:
+      type: object
+      description: The average time to evaluate reports, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
   securitySchemes:
     oauth:
       type: oauth2

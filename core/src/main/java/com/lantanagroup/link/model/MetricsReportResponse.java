@@ -6,10 +6,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MetricsReportResponse {
-  private QueryTimeMetric QueryTime;
-  private PatientsQueriedMetric PatientsQueried;
-  private PatientsReportedMetric PatientsReported;
-  private ValidationMetric Validation;
-  private EvaluationMetric Evaluation;
+  private QueryTimeMetric queryTime;
+  private PatientsQueriedMetric patientsQueried;
+  private PatientsReportedMetric patientsReported;
+  private ValidationMetric validation;
+  private EvaluationMetric evaluation;
 }
 
