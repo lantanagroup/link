@@ -1,5 +1,8 @@
 package com.lantanagroup.link.db;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.db.DBAppender;
+import ch.qos.logback.core.db.DriverManagerConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -59,6 +62,26 @@ public class SharedService {
     return null;
   }
 
+  private void initDatabaseLogging() {
+    LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+    DriverManagerConnectionSource source = new DriverManagerConnectionSource();
+    source.setContext(logCtx);
+    source.setDriverClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    source.setUrl(this.config.getConnectionString());
+    source.start();
+
+    DBAppender appender = new DBAppender();
+    appender.setContext(logCtx);
+    appender.setConnectionSource(source);
+    appender.setName("link-db");
+    appender.start();
+
+    logCtx.getLogger("ROOT").addAppender(appender);
+
+    logger.warn("test");
+  }
+
   public void initDatabase() {
     logger.info("Initializing shared database");
 
@@ -82,6 +105,8 @@ public class SharedService {
           return;
         }
       }
+
+      this.initDatabaseLogging();
     } catch (SQLException | NullPointerException e) {
       logger.error("Failed to connect to shared database", e);
     } catch (IOException e) {
