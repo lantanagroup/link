@@ -1,0 +1,21 @@
+{
+  "resourceType": "CodeSystem",
+  "id": "codesystem-link-device-version",
+  "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version",
+  "version": "1.0.0",
+  "content": "complete",
+  "concept": [
+    {
+      "code": "version",
+      "display": "The version of the application/service/system that produced the report"
+    },
+    {
+      "code": "build",
+      "display": "The build number of the application/service/system that produced the report"
+    },
+    {
+      "code": "commit",
+      "display": "The VCS commit number of the application/service/system that produced the report"
+    }
+  ]
+}

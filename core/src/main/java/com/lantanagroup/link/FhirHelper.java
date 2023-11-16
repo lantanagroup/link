@@ -3,7 +3,6 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
-import com.google.gson.JsonElement;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
@@ -15,7 +14,6 @@ import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
-import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,21 +258,21 @@ public class FhirHelper {
 
     if (StringUtils.isNotEmpty(apiVersionModel.getBuild())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getBuild());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCommit())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getCommit());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
               .setComponent(new Identifier().setValue("cqf-ruler"))
               .setValue(apiVersionModel.getCqfVersion());
     }
@@ -309,7 +307,7 @@ public class FhirHelper {
 
     if (!conceptMaps.isEmpty()) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
+      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties")));
 
       for (ConceptMap conceptMap : tenantService.getAllConceptMaps()) {
         property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
@@ -326,30 +324,10 @@ public class FhirHelper {
 
     for (String event : events) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event");
+      property.getType().addCoding().setCode("event").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties");
 
       String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
-      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
+      property.addValueCode().setText(category + "-" + theEvent);
     }
-  }
-
-  public static ImplementationGuide getImplementationGuide(NpmPackage npmPackage) {
-    ImplementationGuide ig = new ImplementationGuide()
-            .setUrl(npmPackage.canonical())
-            .setVersion(npmPackage.version())
-            .setName(npmPackage.name())
-            .setTitle(npmPackage.title())
-            .setStatus(Enumerations.PublicationStatus.UNKNOWN)
-            .setDate(npmPackage.dateAsDate())
-            .setPackageId(npmPackage.id());
-    if (npmPackage.getNpm().has("fhirVersions")) {
-      JsonElement fhirVersions = npmPackage.getNpm().get("fhirVersions");
-      if (fhirVersions.isJsonArray()) {
-        for (JsonElement fhirVersion : fhirVersions.getAsJsonArray()) {
-          ig.addFhirVersion(Enumerations.FHIRVersion.fromCode(fhirVersion.getAsString()));
-        }
-      }
-    }
-    return ig;
   }
 }

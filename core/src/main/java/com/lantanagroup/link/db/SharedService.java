@@ -78,8 +78,6 @@ public class SharedService {
     appender.start();
 
     logCtx.getLogger("ROOT").addAppender(appender);
-
-    logger.warn("test");
   }
 
   public void initDatabase() {

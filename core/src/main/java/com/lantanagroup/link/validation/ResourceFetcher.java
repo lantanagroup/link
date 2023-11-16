@@ -3,10 +3,7 @@ package com.lantanagroup.link.validation;
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.CodeSystem;
-import org.hl7.fhir.r4.model.Measure;
-import org.hl7.fhir.r4.model.StructureDefinition;
-import org.hl7.fhir.r4.model.ValueSet;
+import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r5.elementmodel.Element;
 import org.hl7.fhir.r5.model.CanonicalResource;
 import org.hl7.fhir.r5.utils.validation.IResourceValidator;
@@ -19,6 +16,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * I'm actually not entirely sure _why_ this ResourceFetcher is needed. I just know that I saw it in the HAPI
@@ -35,10 +33,8 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
           "https://www.cdc.gov/nhsn/OrgID",
           "https://nhsnlink.org",
           "http://hospital.smarthealthit.org",
-          "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/link-version",
           "https://www.cdc.gov/nhsn/fhir/nhsnlink/StructureDefinition/measure-version",
-          "urn:ietf:rfc:3986",
-          "http://hl7.org/fhir/sid/us-ssn"
+          "urn:ietf:rfc:3986"
   ));
 
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
@@ -57,14 +53,23 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
   public void refreshCanonicalUrls() {
     List<IBaseResource> allConformanceResources = this.prePopulatedValidationSupport.fetchAllConformanceResources();
 
+    for (ResourceType value : ResourceType.values()) {
+      if (!this.canonicalUrls.contains(value.toString())) {
+        this.canonicalUrls.add(value.toString());
+      }
+    }
+
     if (allConformanceResources != null) {
       allConformanceResources
               .stream()
-              .filter(r -> this.getCanonicalUrl(r) != null)
-              .map(this::getCanonicalUrl)
-              .forEach(url -> {
-                if (!this.canonicalUrls.contains(url)) {
-                  this.canonicalUrls.add(url);
+              .filter(r -> this.getCanonicalUrls(r) != null)
+              .map(this::getCanonicalUrls)
+              .filter(Objects::nonNull)
+              .forEach(urls -> {
+                for (String url : urls) {
+                  if (!this.canonicalUrls.contains(url)) {
+                    this.canonicalUrls.add(url);
+                  }
                 }
               });
     }
@@ -76,15 +81,32 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
     return null;
   }
 
-  private String getCanonicalUrl(IBaseResource resource) {
+  private List<String> getCanonicalUrls(IBaseResource resource) {
     if (resource instanceof StructureDefinition) {
-      return ((StructureDefinition) resource).getUrl();
+      List<String> ret = new ArrayList<>();
+      ret.add(((StructureDefinition) resource).getUrl());
+      ((StructureDefinition) resource).getSnapshot().getElement().forEach(element -> {
+        if (element.getFixed() instanceof CanonicalType) {
+          ret.add(((CanonicalType) element.getFixed()).getValue());
+        } else if (element.getFixed() instanceof UriType) {
+          ret.add(((UriType) element.getFixed()).getValue());
+        } else if (element.getFixed() instanceof UrlType) {
+          ret.add(((UrlType) element.getFixed()).getValue());
+        }
+      });
+      return ret;
     } else if (resource instanceof CodeSystem) {
-      return ((CodeSystem) resource).getUrl();
+      return List.of(((CodeSystem) resource).getUrl());
     } else if (resource instanceof ValueSet) {
-      return ((ValueSet) resource).getUrl();
+      return List.of(((ValueSet) resource).getUrl());
     } else if (resource instanceof Measure) {
-      return ((Measure) resource).getUrl();
+      return List.of(((Measure) resource).getUrl());
+    } else if (resource instanceof NamingSystem) {
+      NamingSystem namingSystem = (NamingSystem) resource;
+      List<String> ret = new ArrayList<>();
+      ret.add(namingSystem.getUrl());
+      namingSystem.getUniqueId().forEach(uniqueId -> ret.add(uniqueId.getValue()));
+      return ret;
     }
     return null;
   }

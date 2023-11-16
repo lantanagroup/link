@@ -3,6 +3,7 @@ package com.lantanagroup.link.db.mappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.ReportStatuses;
+import org.hl7.fhir.r4.model.Device;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
@@ -21,6 +22,8 @@ public class ReportMapper extends BaseMapper<Report> {
     model.setVersion(row.getString("version"));
     model.setGeneratedTime(row.getDate("generatedTime"));
     model.setSubmittedTime(row.getDate("submittedTime"));
+    model.setDeviceInfo(row.getResource("deviceInfo", Device.class));
+
     return model;
   }
 
@@ -35,6 +38,8 @@ public class ReportMapper extends BaseMapper<Report> {
     parameters.addString("version", model.getVersion());
     parameters.addDate("generatedTime", model.getGeneratedTime());
     parameters.addDate("submittedTime", model.getSubmittedTime());
+    parameters.addResource("deviceInfo", model.getDeviceInfo());
+
     return parameters;
   }
 }

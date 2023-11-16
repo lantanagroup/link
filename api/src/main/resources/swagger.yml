@@ -870,25 +870,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate:
+  /api/validate:
     post:
       tags:
         - Validation
       summary: Validate a report provided in the request body
       operationId: validateRequest
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant, used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -909,25 +903,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/summary:
+  /api/validate/summary:
     post:
       tags:
         - Validation
       summary: Provides a summary of unique messages from validation results of the request body
       operationId: validateRequestSummary
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -953,7 +941,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}:
+  /api/validate/{tenantId}/{reportId}:
     get:
       tags:
         - Validation
@@ -976,8 +964,8 @@ paths:
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       responses:
         '200':
           description: successful response
@@ -991,7 +979,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}/summary:
+  /api/validate/{tenantId}/{reportId}/summary:
     get:
       tags:
         - Validation
@@ -1014,8 +1002,8 @@ paths:
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       responses:
         '200':
           description: successful response

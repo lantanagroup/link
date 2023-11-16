@@ -2,8 +2,6 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
-import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
@@ -12,7 +10,9 @@ import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.Validator;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Device;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +20,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/{tenantId}/validate")
+@RequestMapping("/api/validate")
 public class ValidationController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ValidationController.class);
@@ -43,56 +38,6 @@ public class ValidationController extends BaseController {
   @Autowired
   private SharedService sharedService;
 
-  private Bundle validateBundle(Bundle bundle, OperationOutcome.IssueSeverity severity) {
-    try {
-      Bundle result = new Bundle()
-              .setType(Bundle.BundleType.COLLECTION);
-
-      Device device = FhirHelper.getDevice(config);
-      device.setId(UUID.randomUUID().toString());
-      result.addEntry().setResource(device);
-
-      OperationOutcome outcome = this.validator.validate(bundle, severity);
-
-      //noinspection unused
-      outcome.setId(UUID.randomUUID().toString());
-      result.addEntry().setResource(outcome);
-
-      Path tempFile = Files.createTempFile(null, ".json");
-      try (FileWriter fw = new FileWriter(tempFile.toFile())) {
-        FhirContextProvider.getFhirContext().newJsonParser().encodeResourceToWriter(outcome, fw);
-      }
-      logger.info("Validation results saved to {}", tempFile);
-
-      // Add extensions (which don't formally exist) that show the total issue count and severity threshold
-      outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
-      outcome.addExtension("http://nhsnlink.org/oo-severity", new CodeType(severity.toCode()));
-
-      outcome.getIssue().forEach(i -> {
-        i.setExtension(null);
-        i.setDetails(null);
-        if (i.getLocation().size() == 2) {
-          i.getLocation().remove(1);    // Remove the line number - it's useless.
-        }
-      });
-
-
-      return result;
-    } catch (IOException ex) {
-      logger.error("Error storing bundle validation results to file", ex);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  private OperationOutcome getOperationOutcome(Bundle bundle) {
-    return bundle.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
-            .filter(resource -> resource instanceof OperationOutcome)
-            .map(resource -> (OperationOutcome) resource)
-            .findFirst()
-            .orElseThrow();
-  }
-
   /**
    * Validates a Bundle provided in the request body
    *
@@ -101,31 +46,20 @@ public class ValidationController extends BaseController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
   @PostMapping
-  public Bundle validate(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+  public OperationOutcome validate(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
+    OperationOutcome outcome = this.validator.validate(bundle, severity);
 
-    if (tenantService == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    Device found = bundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Device)
+            .map(e -> (Device) e.getResource())
+            .findFirst()
+            .orElse(null);
+
+    if (found != null) {
+      outcome.addContained(found);
     }
 
-    return this.validateBundle(bundle, severity);
-  }
-
-  private String getValidationSummary(OperationOutcome outcome) {
-    List<String> uniqueMessages = new ArrayList<>();
-
-    for (OperationOutcome.OperationOutcomeIssueComponent issue : outcome.getIssue()) {
-      String message = issue.getSeverity().toString() + ": " + issue.getDiagnostics();
-      if (!uniqueMessages.contains(message)) {
-        uniqueMessages.add(message);
-      }
-    }
-
-    if (!uniqueMessages.isEmpty()) {
-      return "* " + String.join("\n* ", uniqueMessages);
-    }
-
-    return "No issues found";
+    return outcome;
   }
 
   /**
@@ -136,9 +70,8 @@ public class ValidationController extends BaseController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
   @PostMapping("/summary")
-  public String validateSummary(@PathVariable String tenantId, @RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
-    Bundle result = this.validate(tenantId, bundle, severity);
-    OperationOutcome outcome = this.getOperationOutcome(result);
+  public String validateSummary(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
+    OperationOutcome outcome = this.validator.validate(bundle, severity);
     return this.getValidationSummary(outcome);
   }
 
@@ -151,8 +84,8 @@ public class ValidationController extends BaseController {
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    * @throws IOException
    */
-  @GetMapping("/{reportId}")
-  public Bundle validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
+  @GetMapping("/{tenantId}/{reportId}")
+  public OperationOutcome getValidation(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -169,14 +102,17 @@ public class ValidationController extends BaseController {
     StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
 
     //Only determine metrics for validation explicitly done on a stored report (through request path vars)
-    Bundle validation;
+    OperationOutcome outcome;
     try(Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
-      validation = this.validateBundle(submissionBundle, severity);
+      outcome = this.validator.validate(submissionBundle, severity);
     }
     stopwatchManager.storeMetrics(tenantId, reportId);
 
-    return validation;
+    if (report.getDeviceInfo() != null) {
+      outcome.addContained(report.getDeviceInfo());
+    }
 
+    return outcome;
   }
 
   /**
@@ -188,10 +124,49 @@ public class ValidationController extends BaseController {
    * @return Returns a plain string, each line representing a single message (including severity)
    * @throws IOException
    */
-  @GetMapping("/{reportId}/summary")
-  public String validateSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
-    Bundle result = this.validate(tenantId, reportId, severity);
-    OperationOutcome outcome = this.getOperationOutcome(result);
+  @GetMapping("/{tenantId}/{reportId}/summary")
+  public String getValidationSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
+    OperationOutcome outcome = this.validate(tenantId, reportId, severity);
     return this.getValidationSummary(outcome);
+  }
+
+  @PostMapping("/{tenantId}/{reportId}/$validate")
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
+    OperationOutcome outcome = this.validator.validate(bundle, severity);
+
+    tenantService.deleteValidationResults(reportId);
+    tenantService.insertValidationResults(reportId, outcome.getIssue());
+
+    return outcome;
+  }
+
+  private String getValidationSummary(OperationOutcome outcome) {
+    List<String> uniqueMessages = new ArrayList<>();
+
+    for (OperationOutcome.OperationOutcomeIssueComponent issue : outcome.getIssue()) {
+      String message = issue.getSeverity().toString() + ": " + issue.getDetails().getText();
+      if (!uniqueMessages.contains(message)) {
+        uniqueMessages.add(message);
+      }
+    }
+
+    if (!uniqueMessages.isEmpty()) {
+      return "* " + String.join("\n* ", uniqueMessages);
+    }
+
+    return "No issues found";
   }
 }

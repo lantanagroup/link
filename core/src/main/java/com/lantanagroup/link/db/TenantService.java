@@ -9,6 +9,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -42,6 +43,7 @@ public class TenantService {
   private final BulkStatusResultRepository bulkStatusResults;
   private final QueryRepository queries;
   private final DataTraceRepository dataTraces;
+  private final ValidationRepository validations;
 
   protected TenantService(Tenant config) {
     this.config = config;
@@ -60,6 +62,7 @@ public class TenantService {
     this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource, txManager);
     this.queries = new QueryRepository(this.dataSource, txManager);
     this.dataTraces = new DataTraceRepository(this.dataSource, txManager);
+    this.validations = new ValidationRepository(this.dataSource, txManager);
   }
 
   public static TenantService create(Tenant tenant) {
@@ -295,5 +298,17 @@ public class TenantService {
     } catch (Exception e) {
       logger.error("Failed to save data traces", e);
     }
+  }
+
+  public void deleteValidationResults(String reportId) {
+    this.validations.deleteByReport(reportId);
+  }
+
+  public void insertValidationResults(String reportId, List<OperationOutcome.OperationOutcomeIssueComponent> models) {
+    this.validations.insertAll(reportId, models);
+  }
+
+  public List<OperationOutcome.OperationOutcomeIssueComponent> getValidationResults(String reportId) {
+    return this.validations.findByReportId(reportId);
   }
 }

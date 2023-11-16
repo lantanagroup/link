@@ -33,8 +33,6 @@ public class Constants {
   public static final String OriginalElementValueExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension";
   public static final String OriginalResourceIdExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension";
   public static final String BundlingFullUrlFormat = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/%s";
-  public static final String MEASURE_VERSION_URL = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/measure-version";
-  public static final String LINK_VERSION_URL = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-version";
 
   //Metric taskName Constants
   public static final String TASK_SUBMIT = "submit";

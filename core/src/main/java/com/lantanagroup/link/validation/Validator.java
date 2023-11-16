@@ -5,7 +5,6 @@ import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.validation.IValidationContext;
 import ca.uhn.fhir.validation.ValidationContext;
 import ca.uhn.fhir.validation.ValidationOptions;
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.db.SharedService;
 import lombok.Setter;
@@ -45,7 +44,7 @@ public class Validator {
   private InMemoryTerminologyServerValidationSupport inMemoryTerminologyServerValidationSupport;
   private PrePopulatedValidationSupport prePopulatedValidationSupport;
 
-  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser();
+  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser().setPrettyPrint(true);
   private final IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
   private final ResourceFetcher resourceFetcher;
 
@@ -142,19 +141,6 @@ public class Validator {
     return new CachingValidationSupport(validationSupportChain);
   }
 
-  private Device findDevice(Resource resource) {
-    if (resource.getResourceType() != ResourceType.Bundle) {
-      return null;
-    }
-
-    return ((Bundle) resource).getEntry().stream()
-            .filter(e -> e.getResource() != null && e.getResource().getResourceType() == ResourceType.Device)
-            .map(e -> (Device) e.getResource())
-            .filter(d -> d.getMeta() != null && d.getMeta().hasProfile(Constants.SubmittingDeviceProfile))
-            .findFirst()
-            .orElse(null);
-  }
-
   private static OperationOutcome.IssueSeverity getIssueSeverity(ValidationMessage.IssueSeverity severity) {
     switch (severity) {
       case ERROR:
@@ -172,10 +158,17 @@ public class Validator {
     }
   }
 
+  private static OperationOutcome.IssueType getIssueCode(ValidationMessage.IssueType issueType) {
+    return OperationOutcome.IssueType.fromCode(issueType.toCode());
+  }
+
   private void validateResource(Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity, Integer entryIndex) {
     ValidationOptions opts = new ValidationOptions();
 
-    IValidationContext<IBaseResource> validationContext = ValidationContext.forResource(FhirContextProvider.getFhirContext(), resource, opts);
+    String resourceJson = this.jsonParser.encodeResourceToString(resource);
+    IValidationContext<IBaseResource> validationContext = ValidationContext.forText(FhirContextProvider.getFhirContext(), resourceJson, opts);
+
+    // Have to encode to string here with pretty printing turned on, otherwise the validation messages don't have line/col info
     String resourceString = validationContext.getResourceAsString();
     InputStream inputStream = new ReaderInputStream(new StringReader(resourceString), Charsets.UTF_8);
     Manager.FhirFormat format = Manager.FhirFormat.JSON;
@@ -202,17 +195,22 @@ public class Validator {
       String location = message.getLocation();
 
       if (entryIndex != null) {
+        String ofTypeString = ".ofType(" + resource.getResourceType().toString() + ")";
+
         if (location.indexOf(".") > 0) {
-          location = "Bundle.entry[" + entryIndex + "].resource." + location.substring(location.indexOf(".") + 1);
+          location = "Bundle.entry[" + entryIndex + "].resource" + ofTypeString + "." + location.substring(location.indexOf(".") + 1);
         } else {
-          location = "Bundle.entry[" + entryIndex + "].resource";
+          location = "Bundle.entry[" + entryIndex + "].resource" + ofTypeString;
         }
       }
 
       outcome.addIssue()
               .setSeverity(messageSeverity)
-              .setDiagnostics(message.getMessage())
-              .setLocation(List.of(new StringType(location)));
+              .setCode(getIssueCode(message.getType()))
+              .setDetails(new CodeableConcept().setText(message.getMessage()))
+              .setExpression(List.of(
+                      new StringType(location),
+                      new StringType(message.getLine() + ":" + message.getCol())));
     }
   }
 
@@ -221,6 +219,9 @@ public class Validator {
 
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
+
+    //noinspection unused
+    outcome.setId(UUID.randomUUID().toString());
 
     if (resource instanceof Bundle) {
       Bundle bundle = (Bundle) resource;
@@ -236,18 +237,9 @@ public class Validator {
     logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));
     logger.debug("Validation found {} issues", outcome.getIssue().size());
 
-    Device device = this.findDevice(resource);
-
-    if (device != null) {
-      logger.debug("Found submitting device in validation input, attaching to OperationOutcome as contained resource");
-      outcome.addContained(device);
-
-      if (!device.hasId()) {
-        device.setId(UUID.randomUUID().toString());
-      }
-
-      outcome.addExtension("http://test.com/submitting-device", new Reference().setReference("Device/" + device.getIdElement().getIdPart()));
-    }
+    // Add extensions (which don't formally exist) that show the total issue count and severity threshold
+    outcome.addExtension("http://nhsnlink.org/oo-total", new IntegerType(outcome.getIssue().size()));
+    outcome.addExtension("http://nhsnlink.org/oo-severity", new CodeType(severity.toCode()));
 
     return outcome;
   }

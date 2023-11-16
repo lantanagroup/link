@@ -276,6 +276,7 @@ public class ReportController extends BaseController {
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
+    report.setDeviceInfo(FhirHelper.getDevice(this.config));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
