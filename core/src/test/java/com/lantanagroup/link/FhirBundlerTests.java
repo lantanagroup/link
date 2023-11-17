@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 
@@ -125,5 +126,59 @@ public class FhirBundlerTests {
 
     MeasureReport indMeasureReport = (MeasureReport) bundle.getEntry().get(4).getResource();
     Assert.assertEquals(MeasureReport.MeasureReportType.INDIVIDUAL, indMeasureReport.getType());
+  }
+
+  private static MeasureReport createMeasureReport(String id, MeasureReport.MeasureReportType type, String patientId) {
+    MeasureReport mr = new MeasureReport();
+    mr.setId(id);
+    mr.setType(type);
+    if (patientId != null) {
+      mr.setSubject(new Reference("Patient/" + patientId));
+    }
+    return mr;
+  }
+
+  private static MedicationRequest createMedicationRequest(String id, String patientId, String medicationId) {
+    MedicationRequest mr = new MedicationRequest();
+    mr.setId(id);
+    mr.setSubject(new Reference("Patient/" + patientId));
+    mr.setMedication(new Reference("Medication/" + medicationId));
+    return mr;
+  }
+
+  private static DocumentReference createDocumentReference(String id, String type) {
+    DocumentReference dr = new DocumentReference();
+    dr.setId(id);
+    dr.setType(new CodeableConcept().addCoding(new Coding().setSystem(Constants.LinkDocRefTypeSystem).setCode(type)));
+    return dr;
+  }
+
+  @Test
+  public void fhirBundleSortTest() {
+    Bundle bundle = new Bundle();
+    bundle.addEntry().setResource(new Patient().setId("patient1"));
+    bundle.addEntry().setResource(new Device().setId("device1"));
+    bundle.addEntry().setResource(new Organization().setId("organization1"));
+    bundle.addEntry().setResource(createMedicationRequest("medicationRequest1", "patient1", "medication1"));
+    bundle.addEntry().setResource(createMeasureReport("indMeasureReport1", MeasureReport.MeasureReportType.INDIVIDUAL, "patient1"));
+    bundle.addEntry().setResource(createDocumentReference("documentReference1", "query-plan"));
+    bundle.addEntry().setResource(createMeasureReport("aggMeasureReport1", MeasureReport.MeasureReportType.SUMMARY, null));
+    bundle.addEntry().setResource(new Medication().setId("medication1"));
+
+    FhirBundlerEntrySorter.sort(bundle);
+
+    List<String> sortedResourceReferences = bundle.getEntry().stream()
+            .map(e -> e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart())
+            .collect(Collectors.toList());
+
+    System.out.println(sortedResourceReferences);
+    Assert.assertEquals("Organization/organization1", sortedResourceReferences.get(0));
+    Assert.assertEquals("Device/device1", sortedResourceReferences.get(1));
+    Assert.assertEquals("DocumentReference/documentReference1", sortedResourceReferences.get(2));
+    Assert.assertEquals("MeasureReport/aggMeasureReport1", sortedResourceReferences.get(3));
+    Assert.assertEquals("MeasureReport/indMeasureReport1", sortedResourceReferences.get(4));
+    Assert.assertEquals("Patient/patient1", sortedResourceReferences.get(5));
+    Assert.assertEquals("MedicationRequest/medicationRequest1", sortedResourceReferences.get(6));
+    Assert.assertEquals("Medication/medication1", sortedResourceReferences.get(7));
   }
 }

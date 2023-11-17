@@ -6,6 +6,7 @@ public class Constants {
   public static final String MainSystem = "https://nhsnlink.org";
   public static final String UuidPrefix = "urn:uuid:";
   public static final String CdcOrgIdSystem = "https://www.cdc.gov/nhsn/OrgID";
+  public static final String LinkDocRefTypeSystem = "http://nhsnlink.org/document-ref-types";
   public static final String OrganizationTypeSystem = "http://terminology.hl7.org/CodeSystem/organization-type";
   public static final String ApplicablePeriodExtensionUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-patient-list-applicable-period-extension";
   public static final String ReceivedDateExtensionUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension";

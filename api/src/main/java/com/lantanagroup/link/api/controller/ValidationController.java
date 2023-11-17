@@ -76,8 +76,7 @@ public class ValidationController extends BaseController {
   }
 
   /**
-   * Validates a generated report
-   *
+   * Gets the validation results for a stored report
    * @param tenantId The id of the tenant
    * @param reportId The id of the report to validate against
    * @param severity The minimum severity level to report on
@@ -98,15 +97,8 @@ public class ValidationController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-    StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
-
-    //Only determine metrics for validation explicitly done on a stored report (through request path vars)
-    OperationOutcome outcome;
-    try(Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
-      outcome = this.validator.validate(submissionBundle, severity);
-    }
-    stopwatchManager.storeMetrics(tenantId, reportId);
+    OperationOutcome outcome = new OperationOutcome();
+    outcome.setIssue(tenantService.getValidationResults(reportId));
 
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());
@@ -117,7 +109,6 @@ public class ValidationController extends BaseController {
 
   /**
    * Provides a summary of unique messages from validation results
-   *
    * @param tenantId The id of the tenant
    * @param reportId The id of the report to validate against
    * @param severity The minimum severity level to report on
@@ -130,6 +121,15 @@ public class ValidationController extends BaseController {
     return this.getValidationSummary(outcome);
   }
 
+  /**
+   * Re-validates a generated report
+   *
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @param severity The minimum severity level to report on
+   * @return Returns an OperationOutcome resource that provides details about each of the issues found
+   * @throws IOException
+   */
   @PostMapping("/{tenantId}/{reportId}/$validate")
   public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
@@ -145,7 +145,18 @@ public class ValidationController extends BaseController {
     }
 
     Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-    OperationOutcome outcome = this.validator.validate(bundle, severity);
+
+    //Only determine metrics for validation explicitly done on a stored report (through request path vars)
+    StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
+    OperationOutcome outcome;
+    try (Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
+      outcome = this.validator.validate(bundle, severity);
+    }
+    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    if (report.getDeviceInfo() != null) {
+      outcome.addContained(report.getDeviceInfo());
+    }
 
     tenantService.deleteValidationResults(reportId);
     tenantService.insertValidationResults(reportId, outcome.getIssue());

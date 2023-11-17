@@ -78,10 +78,13 @@ public class FhirBundler {
     return this.device;
   }
 
-  private Binary getQueryPlanBinary(List<String> measureIds) {
-    Binary binary = new Binary();
-    binary.setContentType("text/yml");
-    binary.setId("queryPlan");
+  private DocumentReference getQueryPlanDocRef(List<String> measureIds) {
+    DocumentReference documentReference = new DocumentReference();
+    documentReference.setId(UUID.randomUUID().toString());
+    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
+    documentReference.setType(new CodeableConcept().addCoding(new Coding()
+            .setSystem(Constants.LinkDocRefTypeSystem)
+            .setCode("query-plan")));
 
     // Build a subset of the query plans that were used for this report
     Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
@@ -97,9 +100,10 @@ public class FhirBundler {
 
     Yaml yaml = new Yaml();
     String queryPlansYaml = yaml.dump(queryPlans);
-    binary.setContentAsBase64(Base64.getEncoder().encodeToString(queryPlansYaml.getBytes()));
+    String queryPlansBase64 = Base64.getEncoder().encodeToString(queryPlansYaml.getBytes());
+    documentReference.addContent().getAttachment().setData(queryPlansBase64.getBytes());
 
-    return binary;
+    return documentReference;
   }
 
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
@@ -108,7 +112,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(this.getDevice());
 
     if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
-      bundle.addEntry().setResource(this.getQueryPlanBinary(report.getMeasureIds()));
+      bundle.addEntry().setResource(this.getQueryPlanDocRef(report.getMeasureIds()));
     }
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
@@ -132,6 +136,9 @@ public class FhirBundler {
     if (noProfileResources > 0) {
       logger.warn("{} resources in the bundle don't have profiles", noProfileResources);
     }
+
+    // Sort the entries so they're always in the same order
+    FhirBundlerEntrySorter.sort(bundle);
 
     return bundle;
   }
