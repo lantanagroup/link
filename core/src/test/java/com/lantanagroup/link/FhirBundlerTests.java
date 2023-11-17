@@ -146,11 +146,11 @@ public class FhirBundlerTests {
     return mr;
   }
 
-  private static DocumentReference createDocumentReference(String id, String type) {
-    DocumentReference dr = new DocumentReference();
-    dr.setId(id);
-    dr.setType(new CodeableConcept().addCoding(new Coding().setSystem(Constants.LinkDocRefTypeSystem).setCode(type)));
-    return dr;
+  private static Library createLibrary(String id, String type) {
+    Library lib = new Library();
+    lib.setId(id);
+    lib.setType(new CodeableConcept().addCoding(new Coding().setSystem(Constants.LibraryTypeSystem).setCode(type)));
+    return lib;
   }
 
   @Test
@@ -161,7 +161,7 @@ public class FhirBundlerTests {
     bundle.addEntry().setResource(new Organization().setId("organization1"));
     bundle.addEntry().setResource(createMedicationRequest("medicationRequest1", "patient1", "medication1"));
     bundle.addEntry().setResource(createMeasureReport("indMeasureReport1", MeasureReport.MeasureReportType.INDIVIDUAL, "patient1"));
-    bundle.addEntry().setResource(createDocumentReference("documentReference1", "query-plan"));
+    bundle.addEntry().setResource(createLibrary("library1", Constants.LibraryTypeModelDefinitionCode));
     bundle.addEntry().setResource(createMeasureReport("aggMeasureReport1", MeasureReport.MeasureReportType.SUMMARY, null));
     bundle.addEntry().setResource(new Medication().setId("medication1"));
 
@@ -174,7 +174,7 @@ public class FhirBundlerTests {
     System.out.println(sortedResourceReferences);
     Assert.assertEquals("Organization/organization1", sortedResourceReferences.get(0));
     Assert.assertEquals("Device/device1", sortedResourceReferences.get(1));
-    Assert.assertEquals("DocumentReference/documentReference1", sortedResourceReferences.get(2));
+    Assert.assertEquals("Library/library1", sortedResourceReferences.get(2));
     Assert.assertEquals("MeasureReport/aggMeasureReport1", sortedResourceReferences.get(3));
     Assert.assertEquals("MeasureReport/indMeasureReport1", sortedResourceReferences.get(4));
     Assert.assertEquals("Patient/patient1", sortedResourceReferences.get(5));

@@ -78,13 +78,13 @@ public class FhirBundler {
     return this.device;
   }
 
-  private DocumentReference getQueryPlanDocRef(List<String> measureIds) {
-    DocumentReference documentReference = new DocumentReference();
-    documentReference.setId(UUID.randomUUID().toString());
-    documentReference.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
-    documentReference.setType(new CodeableConcept().addCoding(new Coding()
-            .setSystem(Constants.LinkDocRefTypeSystem)
-            .setCode("query-plan")));
+  private Library getQueryPlanLibrary(List<String> measureIds) {
+    Library lib = new Library();
+    lib.setId(UUID.randomUUID().toString());
+    lib.setStatus(Enumerations.PublicationStatus.ACTIVE);
+    lib.setType(new CodeableConcept().addCoding(new Coding()
+            .setSystem(Constants.LibraryTypeSystem)
+            .setCode(Constants.LibraryTypeModelDefinitionCode)));
 
     // Build a subset of the query plans that were used for this report
     Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
@@ -101,9 +101,9 @@ public class FhirBundler {
     Yaml yaml = new Yaml();
     String queryPlansYaml = yaml.dump(queryPlans);
     String queryPlansBase64 = Base64.getEncoder().encodeToString(queryPlansYaml.getBytes());
-    documentReference.addContent().getAttachment().setData(queryPlansBase64.getBytes());
+    lib.addContent().setData(queryPlansBase64.getBytes());
 
-    return documentReference;
+    return lib;
   }
 
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
@@ -112,7 +112,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(this.getDevice());
 
     if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
-      bundle.addEntry().setResource(this.getQueryPlanDocRef(report.getMeasureIds()));
+      bundle.addEntry().setResource(this.getQueryPlanLibrary(report.getMeasureIds()));
     }
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);

@@ -37,12 +37,11 @@ public class FhirBundlerEntrySorter {
             .orElse(null);
   }
 
-  private static DocumentReference getLinkDocumentReference(Bundle bundle) {
+  private static Library getLinkQueryPlanLibrary(Bundle bundle) {
     return bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.DocumentReference))
-            .map(e -> (DocumentReference) e.getResource())
-            .filter(e -> e.getType().getCoding().stream().anyMatch(c ->
-                    c.getSystem().equals(Constants.LinkDocRefTypeSystem) && c.getCode().equals("query-plan")))
+            .filter(e -> e.getResource().getResourceType().equals(ResourceType.Library))
+            .map(e -> (Library) e.getResource())
+            .filter(e -> e.getType().getCoding().stream().anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode)))
             .findFirst()
             .orElse(null);
   }
@@ -60,7 +59,7 @@ public class FhirBundlerEntrySorter {
     List<String> patientIds = getPatientIds(bundle);
     Organization organization = getLinkOrganization(bundle);
     Device device = getLinkDevice(bundle);
-    DocumentReference documentReference = getLinkDocumentReference(bundle);
+    Library queryPlanLibrary = getLinkQueryPlanLibrary(bundle);
 
     // Link Organization is first
     if (organization != null) {
@@ -73,8 +72,8 @@ public class FhirBundlerEntrySorter {
     }
 
     // Link DocumentReference is next
-    if (documentReference != null) {
-      newEntriesList.add(documentReference);
+    if (queryPlanLibrary != null) {
+      newEntriesList.add(queryPlanLibrary);
     }
 
     List<Resource> aggregateMeasureReports = bundle.getEntry().stream()
