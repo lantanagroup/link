@@ -109,10 +109,14 @@ public class Validator {
       if (classResource.getFilename() != null && classResource.getFilename().endsWith(".json")) {
         try (InputStream is = new FileInputStream(classResource.getFile())) {
           resource = this.jsonParser.parseResource(is);
+        } catch (IOException ex) {
+          logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else if (classResource.getFilename() != null && classResource.getFilename().endsWith(".xml")) {
         try (InputStream is = new FileInputStream(classResource.getFile())) {
           resource = this.xmlParser.parseResource(is);
+        } catch (IOException ex) {
+          logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       }
 
@@ -216,6 +220,8 @@ public class Validator {
 
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
+
+    this.resourceFetcher.logCanonicalUrls();
 
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();

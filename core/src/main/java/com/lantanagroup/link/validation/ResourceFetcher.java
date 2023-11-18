@@ -45,6 +45,11 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
     this.refreshCanonicalUrls();
   }
 
+  public void logCanonicalUrls() {
+    logger.debug("Canonical URLs:");
+    this.canonicalUrls.forEach(url -> logger.debug("  {}", url));
+  }
+
   public void addCanonicalUrl(String url) {
     if (!this.canonicalUrls.contains(url)) {
       this.canonicalUrls.add(url);
