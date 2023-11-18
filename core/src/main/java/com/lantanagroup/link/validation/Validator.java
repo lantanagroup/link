@@ -217,8 +217,6 @@ public class Validator {
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
-    this.resourceFetcher.logCanonicalUrls();
-
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
 
