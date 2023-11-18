@@ -99,6 +99,7 @@ public class Validator {
   private void loadClassResources(org.springframework.core.io.Resource[] classResources) throws IOException {
     logger.debug("Loading {} class resources for validation", classResources.length);
 
+    List<IBaseResource> resources = new ArrayList<>();
     for (org.springframework.core.io.Resource classResource : classResources) {
       IBaseResource resource = null;
 
@@ -121,8 +122,13 @@ public class Validator {
       }
 
       if (resource != null) {
-        this.prePopulatedValidationSupport.addResource(resource);
+        resources.add(resource);
       }
+    }
+
+    logger.debug("Adding {} resources to pre-populated validation support", resources.size());
+    for (IBaseResource resource : resources) {
+      this.prePopulatedValidationSupport.addResource(resource);
     }
   }
 
