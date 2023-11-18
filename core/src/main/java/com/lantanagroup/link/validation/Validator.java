@@ -10,6 +10,7 @@ import com.lantanagroup.link.db.SharedService;
 import lombok.Setter;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.input.ReaderInputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.common.hapi.validation.validator.VersionSpecificWorkerContextWrapper;
@@ -24,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -103,26 +103,30 @@ public class Validator {
     for (org.springframework.core.io.Resource classResource : classResources) {
       IBaseResource resource = null;
 
-      if (!classResource.isFile()) {
+      if (StringUtils.isEmpty(classResource.getFilename())) {
         continue;
       }
 
       if (classResource.getFilename() != null && classResource.getFilename().endsWith(".json")) {
-        try (InputStream is = new FileInputStream(classResource.getFile())) {
+        try (InputStream is = classResource.getInputStream()) {
           resource = this.jsonParser.parseResource(is);
         } catch (IOException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else if (classResource.getFilename() != null && classResource.getFilename().endsWith(".xml")) {
-        try (InputStream is = new FileInputStream(classResource.getFile())) {
+        try (InputStream is = classResource.getInputStream()) {
           resource = this.xmlParser.parseResource(is);
         } catch (IOException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
+      } else {
+        logger.warn("Unexpected file name {}", classResource.getFilename());
       }
 
       if (resource != null) {
         resources.add(resource);
+      } else {
+        logger.warn("Unable to parse resource {}", classResource.getFilename());
       }
     }
 
@@ -226,8 +230,6 @@ public class Validator {
 
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
-
-    this.resourceFetcher.logCanonicalUrls();
 
     OperationOutcome outcome = new OperationOutcome();
     Date start = new Date();
