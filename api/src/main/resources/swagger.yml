@@ -873,9 +873,9 @@ paths:
   /api/validate:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Validate a report provided in the request body
-      operationId: validateRequest
+      operationId: validate
       parameters:
         - name: severity
           in: query
@@ -906,9 +906,9 @@ paths:
   /api/validate/summary:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Provides a summary of unique messages from validation results of the request body
-      operationId: validateRequestSummary
+      operationId: validateSummary
       parameters:
         - name: severity
           in: query
@@ -942,11 +942,42 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
   /api/validate/{tenantId}/{reportId}:
+    post:
+      tags:
+        - Validation
+      summary: Re-validate a generated report and persist results
+      operationId: validateReport
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     get:
       tags:
         - Validation
-      summary: Validate a generated report
-      operationId: validateReport
+      summary: Get validation results for a given tenant and report
+      operationId: getValidation
       parameters:
         - name: tenantId
           in: path
@@ -983,8 +1014,8 @@ paths:
     get:
       tags:
         - Validation
-      summary: Provides a summary of unique messages from validation results
-      operationId: validateReportSummary
+      summary: Get summary of validation results for a given tenant and report
+      operationId: getValidationSummary
       parameters:
         - name: tenantId
           in: path

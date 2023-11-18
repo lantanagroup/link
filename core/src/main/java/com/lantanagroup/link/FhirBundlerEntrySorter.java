@@ -19,47 +19,47 @@ public class FhirBundlerEntrySorter {
             .collect(Collectors.toList());
   }
 
-  private static Organization getLinkOrganization(Bundle bundle) {
+  private static Bundle.BundleEntryComponent getLinkOrganization(Bundle bundle) {
     // TODO: Need a better way to identify the link organization
     return bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.Organization))
-            .map(e -> (Organization) e.getResource())
             .findFirst()
             .orElse(null);
   }
 
-  private static Device getLinkDevice(Bundle bundle) {
+  private static Bundle.BundleEntryComponent getLinkDevice(Bundle bundle) {
     // TODO: Need a better way to identify the link device
     return bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.Device))
-            .map(e -> (Device) e.getResource())
             .findFirst()
             .orElse(null);
   }
 
-  private static Library getLinkQueryPlanLibrary(Bundle bundle) {
+  private static Bundle.BundleEntryComponent getLinkQueryPlanLibrary(Bundle bundle) {
     return bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.Library))
-            .map(e -> (Library) e.getResource())
-            .filter(e -> e.getType().getCoding().stream().anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode)))
+            .filter(e -> {
+              Library library = (Library) e.getResource();
+              return library.getType().getCoding().stream()
+                      .anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode));
+            })
             .findFirst()
             .orElse(null);
   }
 
-  private static List<Resource> getRelatedPatientResources(Bundle bundle, String patientId) {
+  private static List<Bundle.BundleEntryComponent> getRelatedPatientResources(Bundle bundle, String patientId) {
     return bundle.getEntry().stream()
             .filter(e -> isResourceRelatedToPatient(e.getResource(), patientId))
-            .map(Bundle.BundleEntryComponent::getResource)
             .collect(Collectors.toList());
   }
 
   public static void sort(Bundle bundle) {
-    List<Resource> newEntriesList = new ArrayList<>();
+    List<Bundle.BundleEntryComponent> newEntriesList = new ArrayList<>();
 
     List<String> patientIds = getPatientIds(bundle);
-    Organization organization = getLinkOrganization(bundle);
-    Device device = getLinkDevice(bundle);
-    Library queryPlanLibrary = getLinkQueryPlanLibrary(bundle);
+    Bundle.BundleEntryComponent organization = getLinkOrganization(bundle);
+    Bundle.BundleEntryComponent device = getLinkDevice(bundle);
+    Bundle.BundleEntryComponent queryPlanLibrary = getLinkQueryPlanLibrary(bundle);
 
     // Link Organization is first
     if (organization != null) {
@@ -76,9 +76,8 @@ public class FhirBundlerEntrySorter {
       newEntriesList.add(queryPlanLibrary);
     }
 
-    List<Resource> aggregateMeasureReports = bundle.getEntry().stream()
+    List<Bundle.BundleEntryComponent> aggregateMeasureReports = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUMMARY))
-            .map(Bundle.BundleEntryComponent::getResource)
             .sorted(new ResourceComparator())
             .collect(Collectors.toList());
     newEntriesList.addAll(aggregateMeasureReports);
@@ -86,9 +85,15 @@ public class FhirBundlerEntrySorter {
     // Loop through each patient and add the patients resources in the following order:
     // MeasureReport, Patient, All other resources sorted by resourceType/id
     for (String patientId : patientIds) {
-      List<Resource> relatedPatientResources = getRelatedPatientResources(bundle, patientId);
-      MeasureReport indMeasureReport = relatedPatientResources.stream().filter(r -> r.getResourceType().equals(ResourceType.MeasureReport)).map(r -> (MeasureReport) r).findFirst().orElse(null);
-      Patient patient = relatedPatientResources.stream().filter(r -> r.getResourceType().equals(ResourceType.Patient)).map(r -> (Patient) r).findFirst().orElse(null);
+      List<Bundle.BundleEntryComponent> relatedPatientResources = getRelatedPatientResources(bundle, patientId);
+      Bundle.BundleEntryComponent indMeasureReport = relatedPatientResources.stream()
+              .filter(r -> r.getResource().getResourceType().equals(ResourceType.MeasureReport))
+              .findFirst()
+              .orElse(null);
+      Bundle.BundleEntryComponent patient = relatedPatientResources.stream()
+              .filter(r -> r.getResource().getResourceType().equals(ResourceType.Patient))
+              .findFirst()
+              .orElse(null);
 
       if (indMeasureReport == null || patient == null) {
         logger.warn("Patient {} is missing a MeasureReport or Patient resource", patientId);
@@ -102,16 +107,15 @@ public class FhirBundlerEntrySorter {
       newEntriesList.add(patient);
 
       // All other resources are next, sorted by resourceType/id
-      List<Resource> otherPatientResources = relatedPatientResources.stream()
-              .filter(r -> !r.getResourceType().equals(ResourceType.MeasureReport) && !r.getResourceType().equals(ResourceType.Patient))
+      List<Bundle.BundleEntryComponent> otherPatientResources = relatedPatientResources.stream()
+              .filter(r -> !r.getResource().getResourceType().equals(ResourceType.MeasureReport) && !r.getResource().getResourceType().equals(ResourceType.Patient))
               .sorted(new ResourceComparator())
               .collect(Collectors.toList());
       newEntriesList.addAll(otherPatientResources);
     }
 
     // Get all resources not already in the bundle
-    List<Resource> otherNonPatientResources = bundle.getEntry().stream()
-            .map(Bundle.BundleEntryComponent::getResource)
+    List<Bundle.BundleEntryComponent> otherNonPatientResources = bundle.getEntry().stream()
             .filter(r -> !newEntriesList.contains(r))
             .sorted(new ResourceComparator())
             .collect(Collectors.toList());
@@ -119,7 +123,7 @@ public class FhirBundlerEntrySorter {
 
     // Clear the bundle entries and add the sorted entries
     bundle.getEntry().clear();
-    bundle.getEntry().addAll(newEntriesList.stream().map(r -> new Bundle.BundleEntryComponent().setResource(r)).collect(Collectors.toList()));
+    bundle.getEntry().addAll(newEntriesList);
   }
 
   /**
@@ -231,11 +235,11 @@ public class FhirBundlerEntrySorter {
     return false;
   }
 
-  static class ResourceComparator implements Comparator<Resource> {
+  static class ResourceComparator implements Comparator<Bundle.BundleEntryComponent> {
     @Override
-    public int compare(Resource r1, Resource r2) {
-      String r1Reference = r1.getResourceType().toString() + "/" + r1.getIdElement().getIdPart();
-      String r2Reference = r2.getResourceType().toString() + "/" + r2.getIdElement().getIdPart();
+    public int compare(Bundle.BundleEntryComponent r1, Bundle.BundleEntryComponent r2) {
+      String r1Reference = r1.getResource().getResourceType().toString() + "/" + r1.getResource().getIdElement().getIdPart();
+      String r2Reference = r2.getResource().getResourceType().toString() + "/" + r2.getResource().getIdElement().getIdPart();
       return r1Reference.compareTo(r2Reference);
     }
   }

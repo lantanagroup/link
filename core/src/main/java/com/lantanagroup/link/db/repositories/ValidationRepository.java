@@ -24,8 +24,30 @@ public class ValidationRepository {
     jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  public List<OperationOutcome.OperationOutcomeIssueComponent> findByReportId(String reportId) {
-    String sql = "SELECT * FROM dbo.[validationResult] WHERE reportId = :reportId;";
+  public List<OperationOutcome.OperationOutcomeIssueComponent> findValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
+    String sql = "SELECT * FROM dbo.[validationResult] WHERE reportId = :reportId";
+
+    if (severity != null) {
+      // Look for validation results based on the severity, if specified. Error severity includes only errors. Warning
+      // severity includes both errors and warnings. Information severity includes all three.
+      switch (severity) {
+        case FATAL:
+          sql += " AND severity = 'fatal'";
+          break;
+        case ERROR:
+          sql += " AND severity in ('error', 'fatal')";
+          break;
+        case WARNING:
+          sql += " AND severity in ('warning', 'error', 'fatal')";
+          break;
+        case INFORMATION:
+        case NULL:
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid severity: " + severity);
+      }
+    }
+
     Map<String, ?> parameters = Map.of("reportId", reportId);
     return jdbc.query(sql, parameters, mapper);
   }

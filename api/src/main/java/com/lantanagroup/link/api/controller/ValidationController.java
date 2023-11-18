@@ -98,7 +98,7 @@ public class ValidationController extends BaseController {
     }
 
     OperationOutcome outcome = new OperationOutcome();
-    outcome.setIssue(tenantService.getValidationResults(reportId));
+    outcome.setIssue(tenantService.getValidationResults(reportId, severity));
 
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());
@@ -117,21 +117,19 @@ public class ValidationController extends BaseController {
    */
   @GetMapping("/{tenantId}/{reportId}/summary")
   public String getValidationSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
-    OperationOutcome outcome = this.validate(tenantId, reportId, severity);
+    OperationOutcome outcome = this.getValidation(tenantId, reportId, severity);
     return this.getValidationSummary(outcome);
   }
 
   /**
-   * Re-validates a generated report
-   *
+   * Re-validates a generated report and persists the validation results. Always validates at INFORMATION severity level.
    * @param tenantId The id of the tenant
    * @param reportId The id of the report to validate against
-   * @param severity The minimum severity level to report on
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    * @throws IOException
    */
-  @PostMapping("/{tenantId}/{reportId}/$validate")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
+  @PostMapping("/{tenantId}/{reportId}")
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -150,7 +148,9 @@ public class ValidationController extends BaseController {
     StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
     OperationOutcome outcome;
     try (Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
-      outcome = this.validator.validate(bundle, severity);
+      // Always get information severity level so that we persist all possible issues, but only return the severity asked
+      // for when making requests to the REST API.
+      outcome = this.validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
     }
     stopwatchManager.storeMetrics(tenantId, reportId);
 

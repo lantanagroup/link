@@ -78,13 +78,20 @@ public class FhirBundler {
     return this.device;
   }
 
-  private Library getQueryPlanLibrary(List<String> measureIds) {
+  /**
+   * Creates a Library resource that contains the query plans used for the report
+   *
+   * @param measureIds The measure ids that were used for the report
+   * @return
+   */
+  private Library createQueryPlanLibrary(List<String> measureIds) {
     Library lib = new Library();
     lib.setId(UUID.randomUUID().toString());
     lib.setStatus(Enumerations.PublicationStatus.ACTIVE);
     lib.setType(new CodeableConcept().addCoding(new Coding()
             .setSystem(Constants.LibraryTypeSystem)
             .setCode(Constants.LibraryTypeModelDefinitionCode)));
+    lib.setName("Link Query Plan");
 
     // Build a subset of the query plans that were used for this report
     Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
@@ -112,7 +119,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(this.getDevice());
 
     if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
-      bundle.addEntry().setResource(this.getQueryPlanLibrary(report.getMeasureIds()));
+      bundle.addEntry().setResource(this.createQueryPlanLibrary(report.getMeasureIds()));
     }
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);

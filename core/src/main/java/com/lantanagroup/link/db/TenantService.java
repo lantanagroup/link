@@ -308,7 +308,7 @@ public class TenantService {
     this.validations.insertAll(reportId, models);
   }
 
-  public List<OperationOutcome.OperationOutcomeIssueComponent> getValidationResults(String reportId) {
-    return this.validations.findByReportId(reportId);
+  public List<OperationOutcome.OperationOutcomeIssueComponent> getValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
+    return this.validations.findValidationResults(reportId, severity);
   }
 }
