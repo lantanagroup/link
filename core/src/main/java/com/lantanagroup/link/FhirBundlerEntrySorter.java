@@ -47,6 +47,16 @@ public class FhirBundlerEntrySorter {
             .orElse(null);
   }
 
+  private static Bundle.BundleEntryComponent getLinkCensusList(Bundle bundle) {
+    return bundle.getEntry().stream()
+            .filter(e ->
+                    e.getResource().getResourceType().equals(ResourceType.List) &&
+                            e.getResource().getMeta().getProfile().stream()
+                                    .anyMatch(p -> p.getValue().equals(Constants.CensusProfileUrl)))
+            .findFirst()
+            .orElse(null);
+  }
+
   private static List<Bundle.BundleEntryComponent> getRelatedPatientResources(Bundle bundle, String patientId) {
     return bundle.getEntry().stream()
             .filter(e -> isResourceRelatedToPatient(e.getResource(), patientId))
@@ -59,6 +69,7 @@ public class FhirBundlerEntrySorter {
     List<String> patientIds = getPatientIds(bundle);
     Bundle.BundleEntryComponent organization = getLinkOrganization(bundle);
     Bundle.BundleEntryComponent device = getLinkDevice(bundle);
+    Bundle.BundleEntryComponent censusList = getLinkCensusList(bundle);
     Bundle.BundleEntryComponent queryPlanLibrary = getLinkQueryPlanLibrary(bundle);
 
     // Link Organization is first
@@ -71,13 +82,18 @@ public class FhirBundlerEntrySorter {
       newEntriesList.add(device);
     }
 
+    // Link Census List is next
+    if (censusList != null) {
+      newEntriesList.add(censusList);
+    }
+
     // Link DocumentReference is next
     if (queryPlanLibrary != null) {
       newEntriesList.add(queryPlanLibrary);
     }
 
     List<Bundle.BundleEntryComponent> aggregateMeasureReports = bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUMMARY))
+            .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST))
             .sorted(new ResourceComparator())
             .collect(Collectors.toList());
     newEntriesList.addAll(aggregateMeasureReports);

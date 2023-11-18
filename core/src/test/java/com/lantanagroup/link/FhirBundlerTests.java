@@ -162,7 +162,7 @@ public class FhirBundlerTests {
     bundle.addEntry().setResource(createMedicationRequest("medicationRequest1", "patient1", "medication1"));
     bundle.addEntry().setResource(createMeasureReport("indMeasureReport1", MeasureReport.MeasureReportType.INDIVIDUAL, "patient1"));
     bundle.addEntry().setResource(createLibrary("library1", Constants.LibraryTypeModelDefinitionCode));
-    bundle.addEntry().setResource(createMeasureReport("aggMeasureReport1", MeasureReport.MeasureReportType.SUMMARY, null));
+    bundle.addEntry().setResource(createMeasureReport("aggMeasureReport1", MeasureReport.MeasureReportType.SUBJECTLIST, null));
     bundle.addEntry().setResource(new Medication().setId("medication1"));
 
     FhirBundlerEntrySorter.sort(bundle);
