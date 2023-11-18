@@ -28,6 +28,7 @@ import java.util.Objects;
  */
 public class ResourceFetcher implements IValidatorResourceFetcher {
   protected static final Logger logger = LoggerFactory.getLogger(ResourceFetcher.class);
+
   private List<String> canonicalUrls = new ArrayList<>(List.of(
           "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
           "https://www.cdc.gov/nhsn/OrgID",
@@ -42,6 +43,11 @@ public class ResourceFetcher implements IValidatorResourceFetcher {
   public ResourceFetcher(PrePopulatedValidationSupport prePopulatedValidationSupport) {
     this.prePopulatedValidationSupport = prePopulatedValidationSupport;
     this.refreshCanonicalUrls();
+  }
+
+  public void logCanonicalUrls() {
+    logger.debug("Canonical URLs:");
+    this.canonicalUrls.forEach(url -> logger.debug("  {}", url));
   }
 
   public void addCanonicalUrl(String url) {
