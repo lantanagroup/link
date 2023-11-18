@@ -108,7 +108,9 @@ public class FhirBundler {
     Yaml yaml = new Yaml();
     String queryPlansYaml = yaml.dump(queryPlans);
     String queryPlansBase64 = Base64.getEncoder().encodeToString(queryPlansYaml.getBytes());
-    lib.addContent().setData(queryPlansBase64.getBytes());
+    lib.addContent()
+            .setContentType("text/yml")
+            .setData(queryPlansBase64.getBytes());
 
     return lib;
   }
