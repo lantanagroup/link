@@ -55,7 +55,9 @@ public class Validator {
     this.sharedService = sharedService;
     this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
     this.resourceFetcher = new ResourceFetcher(this.prePopulatedValidationSupport);
+  }
 
+  public void init() {
     try {
       this.defaultProfileValidationSupport = new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
       this.commonCodeSystemsTerminologyService = new CommonCodeSystemsTerminologyService(FhirContextProvider.getFhirContext());
