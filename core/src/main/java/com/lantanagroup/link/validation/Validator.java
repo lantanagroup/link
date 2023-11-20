@@ -105,7 +105,7 @@ public class Validator {
     for (org.springframework.core.io.Resource classResource : classResources) {
       IBaseResource resource = null;
 
-      if (StringUtils.isEmpty(classResource.getFilename())) {
+      if (StringUtils.isEmpty(classResource.getFilename()) || !classResource.isReadable()) {
         continue;
       }
 
