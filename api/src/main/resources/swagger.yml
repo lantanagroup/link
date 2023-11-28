@@ -1053,6 +1053,78 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationCategories
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationCategoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category/{categoryId}:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationResultsForCategory
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: categoryId
+          in: path
+          description: The id of the category to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef:
     get:
       tags:
@@ -2434,6 +2506,34 @@ components:
           type: array
           items:
             type: number
+    ValidationCategoryResponse:
+      type: object
+      description: Information about the validation categories for a report.
+      properties:
+        id:
+          type: string
+        count:
+          type: number
+        title:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+        acceptable:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - BEST_PRACTICE
+            - POTENTIAL_CONCERN
+            - CRITICAL
+            - NOT_IMPORTANT
+            - IMPORTANT
+        guidance:
+          type: string
   securitySchemes:
     oauth:
       type: oauth2
