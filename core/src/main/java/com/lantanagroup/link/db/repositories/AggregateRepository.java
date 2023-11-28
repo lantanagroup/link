@@ -55,4 +55,9 @@ public class AggregateRepository {
     Map<String, ?> parameters = Map.of("reportId", reportId);
     jdbc.update(sql, parameters);
   }
+
+  public void deleteAll() {
+    String sql = "DELETE FROM dbo.[aggregate];";
+    jdbc.update(sql, Map.of());
+  }
 }

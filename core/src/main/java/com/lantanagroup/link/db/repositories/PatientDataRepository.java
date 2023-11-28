@@ -69,7 +69,7 @@ public class PatientDataRepository {
   }
 
   public void deleteAll() {
-    String sql = "TRUNCATE TABLE dbo.patientData;";
+    String sql = "DELETE FROM dbo.patientData;";
     jdbc.update(sql, Map.of());
   }
 

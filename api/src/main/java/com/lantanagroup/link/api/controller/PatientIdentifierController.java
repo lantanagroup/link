@@ -26,10 +26,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -118,8 +116,11 @@ public class PatientIdentifierController extends BaseController {
     logger.info("Converting List resources to DB PatientLists");
     PatientList patientList = new PatientList();
 
+    var timeZoneId = tenantService.getConfig().getTimeZoneId();
+    var timeZone = TimeZone.getTimeZone(Objects.requireNonNullElse(timeZoneId, ZoneId.systemDefault().getId()));
+
     // TODO: Make ReportingPeriodMethods configurable
-    ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth);
+    ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth, timeZone);
 
     patientList.setLastUpdated(new Date());
     patientList.setPeriodStart(calculator.getStart());

@@ -146,6 +146,8 @@ public class TenantService {
     this.patientDatas.deleteAll();
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
+    this.aggregates.deleteAll();
+    this.patientMeasureReports.deleteAll();
     this.reports.deleteAll();
     this.patientLists.deleteAll();
   }

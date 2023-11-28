@@ -83,7 +83,7 @@ public class PatientListRepository {
   }
 
   public void deleteAll() {
-    String sql = "TRUNCATE TABLE dbo.patientList;";
+    String sql = "DELETE FROM dbo.patientList;";
     jdbc.update(sql, Map.of());
   }
 
