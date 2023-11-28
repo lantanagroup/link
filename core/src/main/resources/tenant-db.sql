@@ -275,7 +275,21 @@ IF NOT EXISTS (SELECT *
             details    nvarchar(max)    NOT NULL,
             severity   nvarchar(128)    NOT NULL,
             expression nvarchar(max)    NULL,
-            position   NVARCHAR(32)     NULL
+            position nvarchar(32) NULL
+        );
+    END
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'validationResultCategory')
+    BEGIN
+        CREATE TABLE dbo.validationResultCategory
+        (
+            id                 uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            validationResultId uniqueidentifier NOT NULL REFERENCES dbo.validationResult (id),
+            categoryCode       nvarchar(128)    NOT NULL /* Code representing the category in the shared db category table */
         );
     END
 GO

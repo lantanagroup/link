@@ -15,6 +15,7 @@ import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -22,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +68,9 @@ public class ReportController extends BaseController {
 
   @Autowired
   private Validator validator;
+
+  @Autowired
+  private ValidationService validationService;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -327,29 +330,13 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-    this.validateGeneratedReport(stopwatchManager, tenantService, report);
+    this.validationService.validate(stopwatchManager, tenantService, report);
 
     logger.info("Done validating report. Statistics are:\n{}", this.stopwatchManager.getStatistics());
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 
     return report;
-  }
-
-  private void validateGeneratedReport(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
-    // Create the bundle to be validated
-    Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-
-    // Track metrics during validation
-    OperationOutcome outcome;
-    try (Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
-      // Perform validation
-      outcome = this.validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
-    }
-
-    // Store the validation results
-    tenantService.deleteValidationResults(report.getId());
-    tenantService.insertValidationResults(report.getId(), outcome.getIssue());
   }
 
   private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {

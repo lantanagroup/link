@@ -1,17 +1,19 @@
 package com.lantanagroup.link.db.mappers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.hl7.fhir.r4.model.CodeableConcept;
+import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StringType;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class ValidationResultMapper extends BaseMapper<OperationOutcome.OperationOutcomeIssueComponent> {
-  final String regex = "^\\d+:\\d+$";
+public class ValidationResultMapper extends BaseMapper<ValidationResult> {
+  final static String regex = "^\\d+:\\d+$";
 
   private String reportId;
 
@@ -22,28 +24,68 @@ public class ValidationResultMapper extends BaseMapper<OperationOutcome.Operatio
   public ValidationResultMapper() {
   }
 
-  @Override
-  protected OperationOutcome.OperationOutcomeIssueComponent doToModel(ResultSet resultSet) throws JsonProcessingException, SQLException {
-    Row row = new Row(resultSet);
-    OperationOutcome.OperationOutcomeIssueComponent model = new OperationOutcome.OperationOutcomeIssueComponent();
+  public static List<ValidationResult> toValidationResults(OperationOutcome outcome) {
+    return outcome.getIssue().stream()
+            .map(ValidationResultMapper::toValidationResult)
+            .collect(Collectors.toList());
+  }
 
-    model.setCode(OperationOutcome.IssueType.fromCode(row.getString("code")));
-    model.setSeverity(OperationOutcome.IssueSeverity.fromCode(row.getString("severity")));
-    model.setDetails(new CodeableConcept().setText(row.getString("details")));
+  /**
+   * Convert an operation outcome issue to a persistable validation result. The validation libraries return an
+   * OperationOutcome, and this method is used to convert the OO to a persistable model.
+   */
+  private static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
+    ValidationResult result = new ValidationResult();
 
-    String expression = row.getString("expression");
-    String position = row.getString("position");
+    result.setCode(model.getCode().toCode());
+    result.setDetails(model.getDetails().getText());
+    result.setSeverity(model.getSeverity().toCode());
+    result.setExpression(getExpression(model));
+    result.setPosition(getPosition(model));
 
-    if (expression != null && position != null) {
-      model.getExpression().add(new StringType(expression));
-      model.getExpression().add(new StringType(position));
-    } else if (expression != null) {
-      model.getExpression().add(new StringType(expression));
-    } else if (position != null) {
-      model.getExpression().add(new StringType(position));
+    return result;
+  }
+
+  /**
+   * The REST API responds with an OperationOutcome,
+   * so this method is used to convert the persisted validation results into an OperationOutcome
+   * that can be returned by the REST API.
+   */
+  public static OperationOutcome toOperationOutcome(List<ValidationResult> results) {
+    OperationOutcome outcome = new OperationOutcome();
+
+    for (ValidationResult result : results) {
+      outcome.addIssue(toOperationOutcomeIssue(result));
     }
 
-    return model;
+    return outcome;
+  }
+
+  public static Parameters getReportIdParameters(String reportId) {
+    Parameters parameters = new Parameters();
+    parameters.addString("reportId", reportId);
+    return parameters;
+  }
+
+  /**
+   * Convert a validation result to an operation outcome issue. Used by the toOperationOutcome method.
+   */
+  private static OperationOutcome.OperationOutcomeIssueComponent toOperationOutcomeIssue(ValidationResult result) {
+    OperationOutcome.OperationOutcomeIssueComponent issue = new OperationOutcome.OperationOutcomeIssueComponent();
+    issue.setCode(OperationOutcome.IssueType.fromCode(result.getCode()));
+    issue.setSeverity(OperationOutcome.IssueSeverity.fromCode(result.getSeverity()));
+    issue.getDetails().setText(result.getDetails());
+
+    if (result.getExpression() != null && result.getPosition() != null) {
+      issue.getExpression().add(new StringType(result.getExpression()));
+      issue.getExpression().add(new StringType(result.getPosition()));
+    } else if (result.getExpression() != null) {
+      issue.getExpression().add(new StringType(result.getExpression()));
+    } else if (result.getPosition() != null) {
+      issue.getExpression().add(new StringType(result.getPosition()));
+    }
+
+    return issue;
   }
 
   /**
@@ -53,7 +95,7 @@ public class ValidationResultMapper extends BaseMapper<OperationOutcome.Operatio
    * @param model
    * @return
    */
-  private String getExpression(OperationOutcome.OperationOutcomeIssueComponent model) {
+  private static String getExpression(OperationOutcome.OperationOutcomeIssueComponent model) {
     if (model.getExpression().size() == 2) {
       return model.getExpression().get(0).asStringValue();
     } else if (model.getExpression().size() == 1 && !Pattern.matches(regex, model.getExpression().get(0).asStringValue())) {
@@ -69,7 +111,7 @@ public class ValidationResultMapper extends BaseMapper<OperationOutcome.Operatio
    * @param model
    * @return
    */
-  private String getPosition(OperationOutcome.OperationOutcomeIssueComponent model) {
+  private static String getPosition(OperationOutcome.OperationOutcomeIssueComponent model) {
     if (model.getExpression().size() == 2) {
       return model.getExpression().get(1).asStringValue();
     } else if (model.getExpression().size() == 1 && Pattern.matches(regex, model.getExpression().get(0).asStringValue())) {
@@ -79,18 +121,32 @@ public class ValidationResultMapper extends BaseMapper<OperationOutcome.Operatio
   }
 
   @Override
-  protected SqlParameterSource doToParameters(OperationOutcome.OperationOutcomeIssueComponent model) throws JsonProcessingException {
+  protected ValidationResult doToModel(ResultSet resultSet) throws JsonProcessingException, SQLException {
+    Row row = new Row(resultSet);
+    ValidationResult model = new ValidationResult();
+
+    model.setId(row.getUUID("id"));
+    model.setReportId(row.getString("reportId"));
+    model.setCode(row.getString("code"));
+    model.setDetails(row.getString("details"));
+    model.setSeverity(row.getString("severity"));
+    model.setExpression(row.getString("expression"));
+    model.setPosition(row.getString("position"));
+
+    return model;
+  }
+
+  @Override
+  protected SqlParameterSource doToParameters(ValidationResult model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
 
-    if (this.reportId != null) {
-      parameters.addString("reportId", this.reportId);
-    }
-
-    parameters.addString("code", model.getCode().toCode());
-    parameters.addString("severity", model.getSeverity().toCode());
-    parameters.addString("details", model.getDetails().getText());
-    parameters.addString("expression", this.getExpression(model));
-    parameters.addString("position", this.getPosition(model));
+    parameters.addUUID("id", model.getId());
+    parameters.addString("reportId", this.reportId);
+    parameters.addString("code", model.getCode());
+    parameters.addString("details", model.getDetails());
+    parameters.addString("severity", model.getSeverity());
+    parameters.addString("expression", model.getExpression());
+    parameters.addString("position", model.getPosition());
 
     return parameters;
   }

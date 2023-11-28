@@ -1,6 +1,7 @@
 package com.lantanagroup.link.db.repositories;
 
 import com.lantanagroup.link.db.mappers.ValidationResultMapper;
+import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -24,7 +25,7 @@ public class ValidationRepository {
     jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  public List<OperationOutcome.OperationOutcomeIssueComponent> findValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
+  public List<ValidationResult> findValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
     String sql = "SELECT * FROM dbo.[validationResult] WHERE reportId = :reportId";
 
     if (severity != null) {
@@ -48,11 +49,10 @@ public class ValidationRepository {
       }
     }
 
-    Map<String, ?> parameters = Map.of("reportId", reportId);
-    return jdbc.query(sql, parameters, mapper);
+    return jdbc.query(sql, ValidationResultMapper.getReportIdParameters(reportId), mapper);
   }
 
-  public int insertAll(String reportId, List<OperationOutcome.OperationOutcomeIssueComponent> models) {
+  public int insertAll(String reportId, List<ValidationResult> models) {
     ValidationResultMapper mapperWithReportId = new ValidationResultMapper(reportId);
     String sql = "INSERT INTO dbo.validationResult (reportId, code, details, severity, expression, position) " +
             "VALUES (:reportId, :code, :details, :severity, :expression, :position);";
@@ -66,7 +66,26 @@ public class ValidationRepository {
   }
 
   public int deleteByReport(String reportId) {
-    String sql = "DELETE FROM dbo.validationResult WHERE reportId = :reportId;";
+    String sql = "DELETE FROM dbo.validationResultCategory WHERE validationResultId IN (SELECT id FROM dbo.validationResult WHERE reportId = :reportId); " +
+            "DELETE FROM dbo.validationResult WHERE reportId = :reportId;";
     return jdbc.update(sql, Map.of("reportId", reportId));
+  }
+
+  public List<ValidationResult> findByCategory(String reportId, String categoryCode) {
+    String sql = "SELECT * FROM dbo.validationResult WHERE id IN (SELECT validationResultId FROM dbo.validationResultCategory WHERE categoryCode = :categoryCode) AND reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId, "categoryCode", categoryCode);
+    return jdbc.query(sql, parameters, mapper);
+  }
+
+  public Integer countUncategorized(String reportId) {
+    String sql = "SELECT COUNT(*) FROM dbo.validationResult WHERE reportId = :reportId AND id NOT IN (SELECT validationResultId FROM dbo.validationResultCategory);";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    return jdbc.queryForObject(sql, parameters, Integer.class);
+  }
+
+  public List<ValidationResult> getUncategorized(String reportId) {
+    String sql = "SELECT * FROM dbo.validationResult WHERE reportId = :reportId AND id NOT IN (SELECT validationResultId FROM dbo.validationResultCategory);";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    return jdbc.query(sql, parameters, mapper);
   }
 }
