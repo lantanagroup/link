@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,17 @@ public class TenantController extends BaseController {
 
     if (StringUtils.isEmpty(newTenantConfig.getConnectionString())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'connectionString' is required");
+    }
+
+    if (StringUtils.isEmpty(newTenantConfig.getTimeZoneId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'timeZoneId' is required");
+    }
+
+    try {
+      TimeZone timezone = TimeZone.getTimeZone(newTenantConfig.getTimeZoneId());
+    }
+    catch(Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The provided 'timeZoneId' was not a valid Java.util.TimeZone.ID value.");
     }
 
     List<Tenant> existingTenants = this.sharedService.getTenantConfigs();

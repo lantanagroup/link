@@ -30,6 +30,10 @@ public class Tenant {
   private String description;
 
   /**
+   * The Time Zone string for the Tenant
+   */
+  private String timeZoneId;
+  /**
    * The connection string to use for tenant-specific data.
    */
   private String connectionString;
