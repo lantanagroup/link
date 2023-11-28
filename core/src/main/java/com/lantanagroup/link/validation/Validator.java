@@ -55,7 +55,9 @@ public class Validator {
     this.sharedService = sharedService;
     this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
     this.resourceFetcher = new ResourceFetcher(this.prePopulatedValidationSupport);
+  }
 
+  public void init() {
     try {
       this.defaultProfileValidationSupport = new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
       this.commonCodeSystemsTerminologyService = new CommonCodeSystemsTerminologyService(FhirContextProvider.getFhirContext());
@@ -103,7 +105,7 @@ public class Validator {
     for (org.springframework.core.io.Resource classResource : classResources) {
       IBaseResource resource = null;
 
-      if (StringUtils.isEmpty(classResource.getFilename())) {
+      if (StringUtils.isEmpty(classResource.getFilename()) || !classResource.isReadable()) {
         continue;
       }
 

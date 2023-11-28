@@ -9,6 +9,7 @@ import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
 import org.slf4j.Logger;
@@ -28,6 +29,9 @@ public class ApiInit {
 
   @Autowired
   private SharedService sharedService;
+
+  @Autowired
+  private Validator validator;
 
   private boolean checkPrerequisites() {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
@@ -107,6 +111,7 @@ public class ApiInit {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
     this.sharedService.initDatabase();
+    this.validator.init();
     List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
