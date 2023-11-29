@@ -89,7 +89,7 @@ public class ValidationController extends BaseController {
    * @throws IOException
    */
   @GetMapping("/{tenantId}/{reportId}")
-  public OperationOutcome getValidation(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
+  public OperationOutcome getValidationIssuesForReport(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity, @RequestParam(required = false) String code) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -102,7 +102,7 @@ public class ValidationController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    OperationOutcome outcome = tenantService.getValidationResultsAsOO(reportId, severity);
+    OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(reportId, severity, code);
 
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());
@@ -120,11 +120,19 @@ public class ValidationController extends BaseController {
    * @throws IOException
    */
   @GetMapping("/{tenantId}/{reportId}/summary")
-  public String getValidationSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) throws IOException {
-    OperationOutcome outcome = this.getValidation(tenantId, reportId, severity);
+  public String getValidationSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity, @RequestParam(required = false) String code) {
+    OperationOutcome outcome = this.getValidationIssuesForReport(tenantId, reportId, severity, code);
     return this.getValidationSummary(outcome);
   }
 
+  /**
+   * Retrieves the validation categories for a report
+   *
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @return Returns a list of ValidationCategoryResponse objects
+   * @throws JsonProcessingException
+   */
   @GetMapping("/{tenantId}/{reportId}/category")
   public List<ValidationCategoryResponse> getValidationCategories(@PathVariable String tenantId, @PathVariable String reportId) throws JsonProcessingException {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
@@ -168,8 +176,14 @@ public class ValidationController extends BaseController {
   }
 
 
+  /**
+   * Retrieves the validation results for a report that are not categorized
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @return Returns an OperationOutcome resource that provides details about each of the issues found
+   */
   @GetMapping("/{tenantId}/{reportId}/category/uncategorized")
-  public OperationOutcome getUncategorizedValidationResults(@PathVariable String tenantId, @PathVariable String reportId) throws JsonProcessingException {
+  public OperationOutcome getUncategorizedValidationResults(@PathVariable String tenantId, @PathVariable String reportId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -193,8 +207,14 @@ public class ValidationController extends BaseController {
     return ValidationResultMapper.toOperationOutcome(uncategorizedResults);
   }
 
+  /** Retrieves the validation results for a report that are categorized
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @param categoryId The id of the category to retrieve results for
+   * @return Returns an OperationOutcome resource that provides details about each of the issues found
+   */
   @GetMapping("/{tenantId}/{reportId}/category/{categoryId}")
-  public OperationOutcome getValidationCategoryResults(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String categoryId) throws JsonProcessingException {
+  public OperationOutcome getValidationCategoryResults(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String categoryId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {

@@ -47,7 +47,7 @@ public class ValidationService {
       tenantService.insertValidationResults(report.getId(), outcome);
 
       // Re-get the results that now have a result id associated to each entry
-      List<ValidationResult> results = tenantService.getValidationResults(report.getId(), OperationOutcome.IssueSeverity.INFORMATION);
+      List<ValidationResult> results = tenantService.getValidationResults(report.getId());
       ValidationCategorizer categorizer = new ValidationCategorizer(results);
       categorizer.loadFromResources();
       List<ValidationResultCategory> categorizedResults = categorizer.categorize();

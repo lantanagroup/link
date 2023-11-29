@@ -993,10 +993,18 @@ paths:
             type: string
         - name: severity
           in: query
+          description: |
+            The severity of the validation results to retrieve. If not specified, all results will be returned.
+            Severities are stacked. For example: if "ERROR", includes "WARNING" and "INFORMATION" and if "WARNING", includes "INFORMATION".
           schema:
             type: string
             default: INFORMATION
-            enum: [ ERROR, WARNING, INFORMATION ]
+            enum: [ FATAL, ERROR, WARNING, INFORMATION ]
+        - name: code
+          in: query
+          description: The code of the validation result to retrieve
+          schema:
+            type: string
       responses:
         '200':
           description: successful response

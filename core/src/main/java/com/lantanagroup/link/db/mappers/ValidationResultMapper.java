@@ -61,9 +61,10 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
     return outcome;
   }
 
-  public static Parameters getReportIdParameters(String reportId) {
+  public static Parameters getParameters(String reportId, String code) {
     Parameters parameters = new Parameters();
     parameters.addString("reportId", reportId);
+    parameters.addString("code", code);
     return parameters;
   }
 

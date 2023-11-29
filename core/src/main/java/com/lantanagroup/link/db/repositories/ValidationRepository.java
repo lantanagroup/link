@@ -25,8 +25,12 @@ public class ValidationRepository {
     jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  public List<ValidationResult> findValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
+  public List<ValidationResult> findValidationResults(String reportId, OperationOutcome.IssueSeverity severity, String code) {
     String sql = "SELECT * FROM dbo.[validationResult] WHERE reportId = :reportId";
+
+    if (code != null) {
+      sql += " AND code = :code";
+    }
 
     if (severity != null) {
       // Look for validation results based on the severity, if specified. Error severity includes only errors. Warning
@@ -49,7 +53,7 @@ public class ValidationRepository {
       }
     }
 
-    return jdbc.query(sql, ValidationResultMapper.getReportIdParameters(reportId), mapper);
+    return jdbc.query(sql, ValidationResultMapper.getParameters(reportId, code), mapper);
   }
 
   public int insertAll(String reportId, List<ValidationResult> models) {

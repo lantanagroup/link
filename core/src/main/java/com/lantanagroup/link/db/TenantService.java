@@ -314,12 +314,16 @@ public class TenantService {
     this.validations.insertAll(reportId, models);
   }
 
-  public List<ValidationResult> getValidationResults(String reportId, OperationOutcome.IssueSeverity severity) {
-    return this.validations.findValidationResults(reportId, severity);
+  public List<ValidationResult> getValidationResults(String reportId) {
+    return this.validations.findValidationResults(reportId, null, null);
   }
 
-  public OperationOutcome getValidationResultsAsOO(String reportId, OperationOutcome.IssueSeverity severity) {
-    return ValidationResultMapper.toOperationOutcome(this.getValidationResults(reportId, severity));
+  public List<ValidationResult> getValidationResults(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return this.validations.findValidationResults(reportId, severity, code);
+  }
+
+  public OperationOutcome getValidationResultsOperationOutcome(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return ValidationResultMapper.toOperationOutcome(this.getValidationResults(reportId, severity, code));
   }
 
   public void insertValidationResultCategories(List<ValidationResultCategory> models) {
