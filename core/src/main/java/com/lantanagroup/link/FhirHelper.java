@@ -181,10 +181,7 @@ public class FhirHelper {
         if (item1.hasReference() && StringUtils.equals(item1.getReference(), item2.getReference())) {
           return true;
         }
-        if (item1.hasIdentifier() && item1.getIdentifier().equalsShallow(item2.getIdentifier())) {
-          return true;
-        }
-        return false;
+        return item1.hasIdentifier() && item1.getIdentifier().equalsShallow(item2.getIdentifier());
       });
       if (!exists) {
         list1.addEntry(entry2.copy());
@@ -258,21 +255,21 @@ public class FhirHelper {
 
     if (StringUtils.isNotEmpty(apiVersionModel.getBuild())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem(Constants.LinkDeviceCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getBuild());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCommit())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem(Constants.LinkDeviceCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getCommit());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceCodeSystem)))
               .setComponent(new Identifier().setValue("cqf-ruler"))
               .setValue(apiVersionModel.getCqfVersion());
     }

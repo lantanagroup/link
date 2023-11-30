@@ -17,13 +17,7 @@ public class Constants {
   public static final String MeasureScoringExtension = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring";
   public static final String MeasureScoringCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-scoring";
   public static final String MeasureImprovementNotationCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-improvement-notation";
-  public static final String QiCorePatientProfileUrl = "http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient";
-  public static final String UsCorePatientProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient";
-  public static final String UsCoreEncounterProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter";
-  public static final String UsCoreMedicationRequestProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest";
-  public static final String UsCoreMedicationProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medication";
-  public static final String UsCoreConditionProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition";
-  public static final String UsCoreObservationProfileUrl = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab";
+  public static final String LinkDeviceCodeSystem = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version";
   public static final String ReportBundleProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list";
