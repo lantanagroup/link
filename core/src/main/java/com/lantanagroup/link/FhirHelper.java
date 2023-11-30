@@ -255,21 +255,21 @@ public class FhirHelper {
 
     if (StringUtils.isNotEmpty(apiVersionModel.getBuild())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem(Constants.LinkDeviceCodeSystem)))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getBuild());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCommit())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem(Constants.LinkDeviceCodeSystem)))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getCommit());
     }
 
     if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceCodeSystem)))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("cqf-ruler"))
               .setValue(apiVersionModel.getCqfVersion());
     }
@@ -304,7 +304,7 @@ public class FhirHelper {
 
     if (!conceptMaps.isEmpty()) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties")));
+      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map").setSystem(Constants.LinkDevicePropertiesCodeSystem)));
 
       for (ConceptMap conceptMap : tenantService.getAllConceptMaps()) {
         property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
@@ -321,7 +321,7 @@ public class FhirHelper {
 
     for (String event : events) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event").setSystem("http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties");
+      property.getType().addCoding().setCode("event").setSystem(Constants.LinkDevicePropertiesCodeSystem);
 
       String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
       property.addValueCode().setText(category + "-" + theEvent);
