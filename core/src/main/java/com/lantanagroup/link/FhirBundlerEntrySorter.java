@@ -146,6 +146,10 @@ public class FhirBundlerEntrySorter {
     bundle.getEntry().addAll(newEntriesList);
   }
 
+  private static boolean isReferenceToPatient(Reference reference, String patientId) {
+    return reference.hasReference() && reference.getReference().equals("Patient/" + patientId);
+  }
+
   /**
    * Returns true if the resource is related to the patient
    *
@@ -159,97 +163,97 @@ public class FhirBundlerEntrySorter {
         return resource.getIdElement().getIdPart().equals(patientId);
       case Encounter:
         Encounter encounter = (Encounter) resource;
-        return encounter.getSubject().hasReference() && encounter.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(encounter.getSubject(), patientId);
       case Observation:
         Observation observation = (Observation) resource;
-        return observation.getSubject().hasReference() && observation.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(observation.getSubject(), patientId);
       case MedicationRequest:
         MedicationRequest medicationRequest = (MedicationRequest) resource;
-        return medicationRequest.getSubject().hasReference() && medicationRequest.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(medicationRequest.getSubject(), patientId);
       case MedicationAdministration:
         MedicationAdministration medicationAdministration = (MedicationAdministration) resource;
-        return medicationAdministration.getSubject().hasReference() && medicationAdministration.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(medicationAdministration.getSubject(), patientId);
       case MedicationDispense:
         MedicationDispense medicationDispense = (MedicationDispense) resource;
-        return medicationDispense.getSubject().hasReference() && medicationDispense.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(medicationDispense.getSubject(), patientId);
       case MedicationStatement:
         MedicationStatement medicationStatement = (MedicationStatement) resource;
-        return medicationStatement.getSubject().hasReference() && medicationStatement.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(medicationStatement.getSubject(), patientId);
       case Condition:
         Condition condition = (Condition) resource;
-        return condition.getSubject().hasReference() && condition.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(condition.getSubject(), patientId);
       case Procedure:
         Procedure procedure = (Procedure) resource;
-        return procedure.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(procedure.getSubject(), patientId);
       case Immunization:
         Immunization immunization = (Immunization) resource;
-        return immunization.getPatient().hasReference() && immunization.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(immunization.getPatient(), patientId);
       case DiagnosticReport:
         DiagnosticReport diagnosticReport = (DiagnosticReport) resource;
-        return diagnosticReport.getSubject().hasReference() && diagnosticReport.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(diagnosticReport.getSubject(), patientId);
       case DocumentReference:
         DocumentReference documentReference = (DocumentReference) resource;
-        return documentReference.getSubject().hasReference() && documentReference.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(documentReference.getSubject(), patientId);
       case List:
         ListResource listResource = (ListResource) resource;
-        return listResource.getSubject().hasReference() && listResource.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(listResource.getSubject(), patientId);
       case MeasureReport:
         MeasureReport measureReport = (MeasureReport) resource;
-        return measureReport.getSubject().hasReference() && measureReport.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(measureReport.getSubject(), patientId);
       case RiskAssessment:
         RiskAssessment riskAssessment = (RiskAssessment) resource;
-        return riskAssessment.getSubject().hasReference() && riskAssessment.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(riskAssessment.getSubject(), patientId);
       case CarePlan:
         CarePlan carePlan = (CarePlan) resource;
-        return carePlan.getSubject().hasReference() && carePlan.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(carePlan.getSubject(), patientId);
       case Goal:
         Goal goal = (Goal) resource;
-        return goal.getSubject().hasReference() && goal.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(goal.getSubject(), patientId);
       case ServiceRequest:
         ServiceRequest serviceRequest = (ServiceRequest) resource;
-        return serviceRequest.getSubject().hasReference() && serviceRequest.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(serviceRequest.getSubject(), patientId);
       case Communication:
         Communication communication = (Communication) resource;
-        return communication.getSubject().hasReference() && communication.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(communication.getSubject(), patientId);
       case CommunicationRequest:
         CommunicationRequest communicationRequest = (CommunicationRequest) resource;
-        return communicationRequest.getSubject().hasReference() && communicationRequest.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(communicationRequest.getSubject(), patientId);
       case DeviceRequest:
         DeviceRequest deviceRequest = (DeviceRequest) resource;
-        return deviceRequest.getSubject().hasReference() && deviceRequest.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(deviceRequest.getSubject(), patientId);
       case DeviceUseStatement:
         DeviceUseStatement deviceUseStatement = (DeviceUseStatement) resource;
-        return deviceUseStatement.getSubject().hasReference() && deviceUseStatement.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(deviceUseStatement.getSubject(), patientId);
       case Flag:
         Flag flag = (Flag) resource;
-        return flag.getSubject().hasReference() && flag.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(flag.getSubject(), patientId);
       case FamilyMemberHistory:
         FamilyMemberHistory familyMemberHistory = (FamilyMemberHistory) resource;
-        return familyMemberHistory.getPatient().hasReference() && familyMemberHistory.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(familyMemberHistory.getPatient(), patientId);
       case ClinicalImpression:
         ClinicalImpression clinicalImpression = (ClinicalImpression) resource;
-        return clinicalImpression.getSubject().hasReference() && clinicalImpression.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(clinicalImpression.getSubject(), patientId);
       case Consent:
         Consent consent = (Consent) resource;
-        return consent.getPatient().hasReference() && consent.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(consent.getPatient(), patientId);
       case DetectedIssue:
         DetectedIssue detectedIssue = (DetectedIssue) resource;
-        return detectedIssue.getPatient().hasReference() && detectedIssue.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(detectedIssue.getPatient(), patientId);
       case NutritionOrder:
         NutritionOrder nutritionOrder = (NutritionOrder) resource;
-        return nutritionOrder.getPatient().hasReference() && nutritionOrder.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(nutritionOrder.getPatient(), patientId);
       case Specimen:
         Specimen specimen = (Specimen) resource;
-        return specimen.getSubject().hasReference() && specimen.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(specimen.getSubject(), patientId);
       case BodyStructure:
         BodyStructure bodyStructure = (BodyStructure) resource;
-        return bodyStructure.getPatient().hasReference() && bodyStructure.getPatient().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(bodyStructure.getPatient(), patientId);
       case ImagingStudy:
         ImagingStudy imagingStudy = (ImagingStudy) resource;
-        return imagingStudy.getSubject().hasReference() && imagingStudy.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(imagingStudy.getSubject(), patientId);
       case Media:
         Media media = (Media) resource;
-        return media.getSubject().hasReference() && media.getSubject().getReference().equals("Patient/" + patientId);
+        return isReferenceToPatient(media.getSubject(), patientId);
     }
 
     return false;
