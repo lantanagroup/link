@@ -14,9 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,9 +46,9 @@ public class ValidationCategorizer {
 
   public void loadFromResources() {
     try {
-      String json = Files.readString(Path.of(this.getClass().getClassLoader().getResource("validation-categories.json").toURI()));
+      String json = Helper.readInputStream(this.getClass().getClassLoader().getResourceAsStream("validation-categories.json"));
       this.categories = List.of(new ObjectMapper().readValue(json, RuleBasedValidationCategory[].class));
-    } catch (IOException | URISyntaxException e) {
+    } catch (IOException e) {
       logger.error("Error loading validation categories from resources", e);
     }
   }
