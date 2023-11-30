@@ -188,7 +188,6 @@ GO
 
 ALTER TABLE dbo.bulkStatus
     DROP COLUMN IF EXISTS tenantId;
-
 GO
 
 IF NOT EXISTS (SELECT *
@@ -203,7 +202,6 @@ IF NOT EXISTS (SELECT *
             result   nvarchar(max)    NOT NULL
         );
     END
-
 GO
 
 IF (SELECT DATA_TYPE
@@ -251,4 +249,47 @@ BEGIN
         submittedTime
     FROM report
 END
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'report'
+                 AND COLUMN_NAME = 'deviceInfo')
+    BEGIN
+        ALTER TABLE dbo.report
+            ADD deviceInfo NVARCHAR(MAX) NULL;
+    END
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'validationResult')
+    BEGIN
+        CREATE TABLE dbo.validationResult
+        (
+            id         uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            reportId   nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            code       nvarchar(128)    NOT NULL,
+            details    nvarchar(max)    NOT NULL,
+            severity   nvarchar(128)    NOT NULL,
+            expression nvarchar(max)    NULL,
+            position nvarchar(32) NULL
+        );
+    END
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'validationResultCategory')
+    BEGIN
+        CREATE TABLE dbo.validationResultCategory
+        (
+            id                 uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            validationResultId uniqueidentifier NOT NULL REFERENCES dbo.validationResult (id),
+            categoryCode       nvarchar(128)    NOT NULL /* Code representing the category in the shared db category table */
+        );
+    END
 GO

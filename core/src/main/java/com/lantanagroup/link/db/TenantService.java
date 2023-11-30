@@ -2,13 +2,17 @@ package com.lantanagroup.link.db;
 
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.db.model.tenant.ValidationResult;
+import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -42,6 +46,8 @@ public class TenantService {
   private final BulkStatusResultRepository bulkStatusResults;
   private final QueryRepository queries;
   private final DataTraceRepository dataTraces;
+  private final ValidationRepository validations;
+  private final ValidationCategoryRepository validationCategories;
 
   protected TenantService(Tenant config) {
     this.config = config;
@@ -60,6 +66,8 @@ public class TenantService {
     this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource, txManager);
     this.queries = new QueryRepository(this.dataSource, txManager);
     this.dataTraces = new DataTraceRepository(this.dataSource, txManager);
+    this.validations = new ValidationRepository(this.dataSource, txManager);
+    this.validationCategories = new ValidationCategoryRepository(this.dataSource, txManager);
   }
 
   public static TenantService create(Tenant tenant) {
@@ -157,9 +165,7 @@ public class TenantService {
       String reference = x.getReference();
       if (reference != null) {
         String id = StringUtils.removeStartIgnoreCase(reference, "Patient/");
-        if (id.equals(patientId)) {
-          return false;
-        }
+        return !id.equals(patientId);
       }
       return true;
     }).collect(Collectors.toList());
@@ -297,5 +303,50 @@ public class TenantService {
     } catch (Exception e) {
       logger.error("Failed to save data traces", e);
     }
+  }
+
+  public void deleteValidationResults(String reportId) {
+    this.validations.deleteByReport(reportId);
+  }
+
+  public void insertValidationResults(String reportId, OperationOutcome outcome) {
+    List<ValidationResult> models = ValidationResultMapper.toValidationResults(outcome);
+    this.validations.insertAll(reportId, models);
+  }
+
+  public List<ValidationResult> getValidationResults(String reportId) {
+    return this.validations.findValidationResults(reportId, null, null);
+  }
+
+  public List<ValidationResult> getValidationResults(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return this.validations.findValidationResults(reportId, severity, code);
+  }
+
+  public OperationOutcome getValidationResultsOperationOutcome(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return ValidationResultMapper.toOperationOutcome(this.getValidationResults(reportId, severity, code));
+  }
+
+  public void insertValidationResultCategories(List<ValidationResultCategory> models) {
+    this.validationCategories.insertAll(models);
+  }
+
+  public void deleteValidationCategoriesForReport(String reportId) {
+    this.validationCategories.deleteForReport(reportId);
+  }
+
+  public List<ValidationResultCategory> findValidationResultCategoriesByReport(String reportId) {
+    return this.validationCategories.findByReportId(reportId);
+  }
+
+  public List<ValidationResult> findValidationResultsByCategory(String reportId, String categoryCode) {
+    return this.validations.findByCategory(reportId, categoryCode);
+  }
+
+  public Integer countUncategorizedValidationResults(String reportId) {
+    return this.validations.countUncategorized(reportId);
+  }
+
+  public List<ValidationResult> getUncategorizedValidationResults(String reportId) {
+    return this.validations.getUncategorized(reportId);
   }
 }

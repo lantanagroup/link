@@ -49,14 +49,14 @@ public class ReportRepository {
   }
 
   private int insert(Report model) {
-    String sql = "INSERT INTO dbo.report (id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime) " +
-            "VALUES (:id, :measureIds, :periodStart, :periodEnd, :status, :version, :generatedTime, :submittedTime);";
+    String sql = "INSERT INTO dbo.report (id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime, deviceInfo) " +
+            "VALUES (:id, :measureIds, :periodStart, :periodEnd, :status, :version, :generatedTime, :submittedTime, :deviceInfo);";
     return jdbc.update(sql, mapper.toParameters(model));
   }
 
   private int update(Report model) {
     String sql = "UPDATE dbo.report " +
-            "SET measureIds = :measureIds, periodStart = :periodStart, periodEnd = :periodEnd, status = :status, version = :version, generatedTime = :generatedTime, submittedTime = :submittedTime " +
+            "SET measureIds = :measureIds, periodStart = :periodStart, periodEnd = :periodEnd, status = :status, version = :version, generatedTime = :generatedTime, submittedTime = :submittedTime, deviceInfo = :deviceInfo " +
             "WHERE id = :id;";
     return jdbc.update(sql, mapper.toParameters(model));
   }

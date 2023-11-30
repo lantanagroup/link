@@ -391,7 +391,6 @@ public class SharedService {
       assert rowsAffected <= 1;
 
       return rowsAffected;
-
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -405,8 +404,8 @@ public class SharedService {
         cs.setNString("id", metric.getId().toString());
         cs.setNString("tenantId", metric.getTenantId());
         cs.setNString("reportId", metric.getReportId());
-        cs.setNString("category", metric.getCategory().toString());
-        cs.setNString("taskName", metric.getTaskName().toString());
+        cs.setNString("category", metric.getCategory());
+        cs.setNString("taskName", metric.getTaskName());
         cs.setNString("timestamp", metric.getTimestamp().toString());
         cs.setNString("data", mapper.writeValueAsString(metric.getData()));
 

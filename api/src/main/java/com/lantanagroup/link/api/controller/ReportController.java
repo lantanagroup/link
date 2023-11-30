@@ -15,6 +15,8 @@ import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.validation.ValidationService;
+import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,6 +65,12 @@ public class ReportController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @Autowired
+  private Validator validator;
+
+  @Autowired
+  private ValidationService validationService;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -276,6 +284,7 @@ public class ReportController extends BaseController {
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
+    report.setDeviceInfo(FhirHelper.getDevice(this.config));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
@@ -319,10 +328,11 @@ public class ReportController extends BaseController {
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
-    logger.info("Done generating report {}", report.getId());
+    logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-    logger.info("Statistics for entire report:\n{}", this.stopwatchManager.getStatistics());
+    this.validationService.validate(stopwatchManager, tenantService, report);
 
+    logger.info("Done validating report. Statistics are:\n{}", this.stopwatchManager.getStatistics());
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 

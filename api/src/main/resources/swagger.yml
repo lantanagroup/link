@@ -870,25 +870,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate:
+  /api/validate:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Validate a report provided in the request body
-      operationId: validateRequest
+      operationId: validate
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant, used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -909,25 +903,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/summary:
+  /api/validate/summary:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Provides a summary of unique messages from validation results of the request body
-      operationId: validateRequestSummary
+      operationId: validateSummary
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -953,16 +941,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}:
-    get:
+  /api/validate/{tenantId}/{reportId}:
+    post:
       tags:
         - Validation
-      summary: Validate a generated report
+      summary: Re-validate a generated report and persist results
       operationId: validateReport
       parameters:
         - name: tenantId
           in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
+          description: The id of the tenant in which the report resides
           required: true
           schema:
             type: string
@@ -972,12 +960,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: severity
-          in: query
-          schema:
-            type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
       responses:
         '200':
           description: successful response
@@ -991,12 +973,57 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}/summary:
     get:
       tags:
         - Validation
-      summary: Provides a summary of unique messages from validation results
-      operationId: validateReportSummary
+      summary: Get validation results for a given tenant and report
+      operationId: getValidation
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          description: |
+            The severity of the validation results to retrieve. If not specified, all results will be returned.
+            Severities are stacked. For example: if "ERROR", includes "WARNING" and "INFORMATION" and if "WARNING", includes "INFORMATION".
+          schema:
+            type: string
+            default: INFORMATION
+            enum: [ FATAL, ERROR, WARNING, INFORMATION ]
+        - name: code
+          in: query
+          description: The code of the validation result to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/summary:
+    get:
+      tags:
+        - Validation
+      summary: Get summary of validation results for a given tenant and report
+      operationId: getValidationSummary
       parameters:
         - name: tenantId
           in: path
@@ -1014,8 +1041,8 @@ paths:
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       responses:
         '200':
           description: successful response
@@ -1028,6 +1055,78 @@ paths:
                   * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
                   * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
                   * if a date has a time, it must have a timezone
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationCategories
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationCategoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category/{categoryId}:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationResultsForCategory
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: categoryId
+          in: path
+          description: The id of the category to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2415,6 +2514,34 @@ components:
           type: array
           items:
             type: number
+    ValidationCategoryResponse:
+      type: object
+      description: Information about the validation categories for a report.
+      properties:
+        id:
+          type: string
+        count:
+          type: number
+        title:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+        acceptable:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - BEST_PRACTICE
+            - POTENTIAL_CONCERN
+            - CRITICAL
+            - NOT_IMPORTANT
+            - IMPORTANT
+        guidance:
+          type: string
   securitySchemes:
     oauth:
       type: oauth2
