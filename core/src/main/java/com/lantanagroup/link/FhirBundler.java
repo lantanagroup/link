@@ -17,14 +17,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
-  private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
-          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
-          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
 
   private final EventService eventService;
 
@@ -107,10 +105,10 @@ public class FhirBundler {
 
     Yaml yaml = new Yaml();
     String queryPlansYaml = yaml.dump(queryPlans);
-    String queryPlansBase64 = Base64.getEncoder().encodeToString(queryPlansYaml.getBytes());
+    String queryPlansBase64 = Base64.getEncoder().encodeToString(queryPlansYaml.getBytes(StandardCharsets.UTF_8));
     lib.addContent()
             .setContentType("text/yml")
-            .setData(queryPlansBase64.getBytes());
+            .setData(queryPlansBase64.getBytes(StandardCharsets.UTF_8));
 
     return lib;
   }
@@ -222,7 +220,7 @@ public class FhirBundler {
             .addTag(Constants.MainSystem, "report", "Report");
     bundle.getIdentifier()
             .setSystem(Constants.IdentifierSystem)
-            .setValue("urn:uuid:" + UUID.randomUUID().toString());
+            .setValue("urn:uuid:" + UUID.randomUUID());
     bundle.setType(this.getBundlingConfig().getBundleType());
     bundle.setTimestamp(new Date());
     return bundle;
