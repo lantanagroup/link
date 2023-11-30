@@ -13,10 +13,10 @@ import com.lantanagroup.link.model.ValidationCategoryResponse;
 import com.lantanagroup.link.model.ValidationCategorySeverities;
 import com.lantanagroup.link.model.ValidationCategoryTypes;
 import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Device;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
@@ -125,9 +125,110 @@ public class ValidationController extends BaseController {
     return this.getValidationSummary(outcome);
   }
 
+  private static ValidationCategoryResponse buildUncategorizedCategory(int count) {
+    ValidationCategoryResponse response = new ValidationCategoryResponse();
+    response.setId("uncategorized");
+    response.setTitle("Uncategorized");
+    response.setSeverity(ValidationCategorySeverities.WARNING);
+    response.setType(ValidationCategoryTypes.IMPORTANT);
+    response.setAcceptable(false);
+    response.setGuidance("These issues need to be categorized.");
+    response.setCount(count);
+    return response;
+  }
+
+  /**
+   * Retrieves the validation categories for a report, for a custom set of categories
+   *
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @return Returns a list of ValidationCategoryResponse objects
+   * @throws JsonProcessingException
+   */
+  @PostMapping("/{tenantId}/{reportId}/category")
+  public List<ValidationCategoryResponse> getValidationForCustomCategories(@PathVariable String tenantId, @PathVariable String reportId, @RequestBody List<RuleBasedValidationCategory> categories) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    List<ValidationResult> results = tenantService.getValidationResults(reportId);
+    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    categorizer.setCategories(categories);
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
+      return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
+    }).collect(Collectors.toList());
+
+    List<ValidationCategoryResponse> responses = categories.stream()
+            .map(c -> {
+              ValidationCategoryResponse response = new ValidationCategoryResponse(c);
+              response.setCount(categorizedResults.stream().filter(rc -> rc.getCategoryCode().equals(c.getId())).count());
+              return response;
+            })
+            .filter(c -> c.getCount() > 0)
+            .collect(Collectors.toList());
+
+    if (!uncategorizedResults.isEmpty()) {
+      responses.add(buildUncategorizedCategory(uncategorizedResults.size()));
+    }
+
+    return responses;
+  }
+
+  /**
+   * Retrieves the validation results for a report, for a custom set of categories, for a specific category. This is used to test that construction of validation categorizes against a given report and see how well the categories work against the validation results before committing the validation categories.
+   *
+   * @param tenantId   The id of the tenant
+   * @param reportId   The id of the report to validate against
+   * @param categoryId The id of the category to retrieve results for
+   * @return Returns a list of ValidationCategoryResponse objects
+   * @throws JsonProcessingException
+   */
+  @PostMapping("/{tenantId}/{reportId}/category/{categoryId}")
+  public OperationOutcome getValidationForCustomCategory(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String categoryId, @RequestBody List<RuleBasedValidationCategory> categories) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    List<ValidationResult> results = tenantService.getValidationResults(reportId);
+    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    categorizer.setCategories(categories);
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
+      return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
+    }).collect(Collectors.toList());
+
+    if (categoryId.equals("uncategorized")) {
+      return ValidationResultMapper.toOperationOutcome(uncategorizedResults);
+    }
+
+    List<ValidationResult> resultsForCategory = categorizedResults.stream()
+            .filter(cr -> cr.getCategoryCode().equals(categoryId))
+            .map(cr -> results.stream().filter(r -> r.getId().equals(cr.getValidationResultId())).findFirst().orElse(null))
+            .filter(r -> r != null)
+            .collect(Collectors.toList());
+
+    return ValidationResultMapper.toOperationOutcome(resultsForCategory);
+  }
+
   /**
    * Retrieves the validation categories for a report
-   *
    * @param tenantId The id of the tenant
    * @param reportId The id of the report to validate against
    * @return Returns a list of ValidationCategoryResponse objects
@@ -161,20 +262,11 @@ public class ValidationController extends BaseController {
             .collect(Collectors.toList());
 
     if (uncategorizedCount > 0) {
-      ValidationCategoryResponse response = new ValidationCategoryResponse();
-      response.setId("uncategorized");
-      response.setTitle("Uncategorized");
-      response.setSeverity(ValidationCategorySeverities.WARNING);
-      response.setType(ValidationCategoryTypes.IMPORTANT);
-      response.setAcceptable(false);
-      response.setGuidance("These issues need to be categorized.");
-      response.setCount(uncategorizedCount);
-      responses.add(response);
+      responses.add(buildUncategorizedCategory(uncategorizedCount));
     }
 
     return responses;
   }
-
 
   /**
    * Retrieves the validation results for a report that are not categorized
@@ -199,43 +291,10 @@ public class ValidationController extends BaseController {
     List<ValidationResult> uncategorizedResults = tenantService.getUncategorizedValidationResults(reportId);
 
     if (uncategorizedResults.isEmpty()) {
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.INFORMATION).setDetails(new CodeableConcept().setText("No issues found"));
-      return outcome;
+      return ValidationResultMapper.toOperationOutcome(null);
     }
 
     return ValidationResultMapper.toOperationOutcome(uncategorizedResults);
-  }
-
-  /** Retrieves the validation results for a report that are categorized
-   * @param tenantId The id of the tenant
-   * @param reportId The id of the report to validate against
-   * @param categoryId The id of the category to retrieve results for
-   * @return Returns an OperationOutcome resource that provides details about each of the issues found
-   */
-  @GetMapping("/{tenantId}/{reportId}/category/{categoryId}")
-  public OperationOutcome getValidationCategoryResults(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String categoryId) {
-    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-
-    if (tenantService == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
-    }
-
-    Report report = tenantService.getReport(reportId);
-
-    if (report == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
-    }
-
-    List<ValidationResult> categoryResults = tenantService.findValidationResultsByCategory(reportId, categoryId);
-
-    if (categoryResults.isEmpty()) {
-      OperationOutcome outcome = new OperationOutcome();
-      outcome.addIssue().setSeverity(OperationOutcome.IssueSeverity.INFORMATION).setDetails(new CodeableConcept().setText("No issues found"));
-      return outcome;
-    }
-
-    return ValidationResultMapper.toOperationOutcome(categoryResults);
   }
 
   /**
@@ -285,5 +344,34 @@ public class ValidationController extends BaseController {
     }
 
     return "No issues found";
+  }
+
+  /** Retrieves the validation results for a report that are categorized
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @param categoryId The id of the category to retrieve results for
+   * @return Returns an OperationOutcome resource that provides details about each of the issues found
+   */
+  @GetMapping("/{tenantId}/{reportId}/category/{categoryId}")
+  public OperationOutcome getValidationCategoryResults(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String categoryId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    List<ValidationResult> categoryResults = tenantService.findValidationResultsByCategory(reportId, categoryId);
+
+    if (categoryResults.isEmpty()) {
+      return ValidationResultMapper.toOperationOutcome(null);
+    }
+
+    return ValidationResultMapper.toOperationOutcome(categoryResults);
   }
 }

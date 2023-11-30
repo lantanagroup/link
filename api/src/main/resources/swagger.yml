@@ -564,13 +564,13 @@ paths:
       parameters:
         - name: count
           in: query
-          description: The maximum report list count that is returned per status 
+          description: The maximum report list count that is returned per status
           required: true
           schema:
             type: number
         - name: page
           in: query
-          description: The page number of the results to return 
+          description: The page number of the results to return
           required: true
           schema:
             type: number
@@ -598,7 +598,7 @@ paths:
       parameters:
         - name: count
           in: query
-          description: The maximum report list count that is returned per status 
+          description: The maximum report list count that is returned per status
           required: true
           schema:
             type: number
@@ -1095,6 +1095,50 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Validation Testing
+      summary: Retrieves the validation categories for a report, for a custom set of categories.
+      description: This is used to test that construction of validation categorizes against a given report and see how well the
+        categories work against the validation results before committing the validation categories.
+      operationId: getValidationForCustomCategories
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of categories to retrieve validation results for
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RuleBasedValidationCategory'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationCategoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/validate/{tenantId}/{reportId}/category/{categoryId}:
     get:
       tags:
@@ -1120,6 +1164,51 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Validation Testing
+      summary: Retrieves the validation results for a report, for a custom set of categories, for a specific category.
+      description: This is used to test that construction of validation categorizes against a given report and see how well the
+        categories work against the validation results before committing the validation categories.
+      operationId: getValidationForCustomCategory
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: categoryId
+          in: path
+          description: The id of the category to return results for
+      requestBody:
+        description: The list of categories to retrieve validation results for
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RuleBasedValidationCategory'
       responses:
         '200':
           description: successful response
@@ -1679,55 +1768,55 @@ components:
           items:
             type: string
     GlobalReportResponse:
-        type: object
-        properties:
-          id:
+      type: object
+      properties:
+        id:
+          type: string
+        measureId:
+          type: array
+          items:
             type: string
-          measureId:
-            type: array
-            items:
-              type: string
-          periodStart:
+        periodStart:
+          type: string
+        periodEnd:
+          type: string
+        status:
+          type: string
+          enum:
+            - Draft
+            - Submitted
+        submittedTime:
+          type: string
+        generatedTime:
+          type: string
+        version:
+          type: string
+        patientLists:
+          type: array
+          items:
             type: string
-          periodEnd:
+        aggregates:
+          type: array
+          items:
             type: string
-          status:
-            type: string
-            enum:
-              - Draft
-              - Submitted
-          submittedTime:
-            type: string
-          generatedTime:
-            type: string
-          version:
-            type: string
-          patientLists:
-            type: array
-            items:
-              type: string
-          aggregates:
-            type: array
-            items:
-              type: string
-          tenantName:
-            type: string
-          cdcOrgId:
-            type: string
-          reportId:
-            type: string
+        tenantName:
+          type: string
+        cdcOrgId:
+          type: string
+        reportId:
+          type: string
     GlobalReportByStatusResponse:
       type: object
       properties:
-        completedReports: 
+        completedReports:
           type: array
           items:
             $ref: '#/components/schemas/GlobalReportResponse'
-        failedReports: 
+        failedReports:
           type: array
           items:
             $ref: '#/components/schemas/GlobalReportResponse'
-        pendingReports: 
+        pendingReports:
           type: array
           items:
             $ref: '#/components/schemas/GlobalReportResponse'
@@ -2532,6 +2621,7 @@ components:
             - INFO
         acceptable:
           type: boolean
+          description: Whether the category is acceptable to submit the report
         type:
           type: string
           enum:
@@ -2542,6 +2632,65 @@ components:
             - IMPORTANT
         guidance:
           type: string
+          description: Guidance on how to resolve the validation issues within the category
+    RuleBasedValidationCategory:
+      type: object
+      description: Information about the validation categories for a report.
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+        acceptable:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - BEST_PRACTICE
+            - POTENTIAL_CONCERN
+            - CRITICAL
+            - NOT_IMPORTANT
+            - IMPORTANT
+        guidance:
+          type: string
+        ruleSets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCategoryRuleSet'
+    ValidationCategoryRuleSet:
+      type: object
+      properties:
+        isAndOperator:
+          type: boolean
+          description: True if multiple rules in this set should be evaluated as an AND operation, false if they should be evaluated as an OR operation.
+          default: true
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCategoryRule'
+    ValidationCategoryRule:
+      type: object
+      properties:
+        field:
+          type: string
+          enum:
+            - DETAILS_TEXT
+            - EXPRESSION
+            - SEVERITY
+            - CODE
+        regex:
+          type: string
+          description: The regex to use to determine if the rule passes or fails against the given field
+          example: "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
+        isInverse:
+          type: boolean
+          description: True if the rule should be inverted (i.e. if the regex matches, the rule fails)
   securitySchemes:
     oauth:
       type: oauth2

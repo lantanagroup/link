@@ -2,6 +2,7 @@ package com.lantanagroup.link.db.mappers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
+import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StringType;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -54,8 +55,15 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
   public static OperationOutcome toOperationOutcome(List<ValidationResult> results) {
     OperationOutcome outcome = new OperationOutcome();
 
-    for (ValidationResult result : results) {
-      outcome.addIssue(toOperationOutcomeIssue(result));
+    if (results != null && !results.isEmpty()) {
+      for (ValidationResult result : results) {
+        outcome.addIssue(toOperationOutcomeIssue(result));
+      }
+    } else {
+      outcome.addIssue()
+              .setSeverity(OperationOutcome.IssueSeverity.INFORMATION)
+              .setCode(OperationOutcome.IssueType.INFORMATIONAL)
+              .setDetails(new CodeableConcept().setText("No issues found"));
     }
 
     return outcome;
