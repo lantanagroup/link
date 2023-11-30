@@ -157,8 +157,8 @@ public class FhirBundlerTests {
   public void fhirBundleSortTest() {
     Bundle bundle = new Bundle();
     bundle.addEntry().setResource(new Patient().setId("patient1"));
-    bundle.addEntry().setResource(new Device().setId("device1"));
-    bundle.addEntry().setResource(new Organization().setId("organization1"));
+    bundle.addEntry().setResource(new Device().setId("device1").setMeta(new Meta().addProfile(Constants.SubmittingDeviceProfile)));
+    bundle.addEntry().setResource(new Organization().setId("organization1").setMeta(new Meta().addProfile(Constants.SubmittingOrganizationProfile)));
     bundle.addEntry().setResource(createMedicationRequest("medicationRequest1", "patient1", "medication1"));
     bundle.addEntry().setResource(createMeasureReport("indMeasureReport1", MeasureReport.MeasureReportType.INDIVIDUAL, "patient1"));
     bundle.addEntry().setResource(createLibrary("library1", Constants.LibraryTypeModelDefinitionCode));

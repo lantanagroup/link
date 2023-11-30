@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FhirBundlerEntrySorter {
-  private static Logger logger = LoggerFactory.getLogger(FhirBundlerEntrySorter.class);
+  private static final Logger logger = LoggerFactory.getLogger(FhirBundlerEntrySorter.class);
 
   private static List<String> getPatientIds(Bundle bundle) {
     return bundle.getEntry().stream()
@@ -20,17 +20,21 @@ public class FhirBundlerEntrySorter {
   }
 
   private static Bundle.BundleEntryComponent getLinkOrganization(Bundle bundle) {
-    // TODO: Need a better way to identify the link organization
     return bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.Organization))
+            .filter(e -> {
+              return e.getResource().getResourceType().equals(ResourceType.Organization) &&
+                      e.getResource().getMeta().hasProfile(Constants.SubmittingOrganizationProfile);
+            })
             .findFirst()
             .orElse(null);
   }
 
   private static Bundle.BundleEntryComponent getLinkDevice(Bundle bundle) {
-    // TODO: Need a better way to identify the link device
     return bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.Device))
+            .filter(e -> {
+              return e.getResource().getResourceType().equals(ResourceType.Device) &&
+                      e.getResource().getMeta().hasProfile(Constants.SubmittingDeviceProfile);
+            })
             .findFirst()
             .orElse(null);
   }
