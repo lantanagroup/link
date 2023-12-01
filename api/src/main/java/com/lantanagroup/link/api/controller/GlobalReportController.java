@@ -28,11 +28,11 @@ public class GlobalReportController extends BaseController {
           @RequestParam(required = false, defaultValue = "") String startDate,
           @RequestParam(required = false, defaultValue = "") String endDate,
           @RequestParam(required = false, defaultValue = "") String measureIds,
-          @RequestParam(required = false, defaultValue = "") int page,
-          @RequestParam(required = false, defaultValue = "") int count) throws ParseException {
+          @RequestParam(required = false, defaultValue = "1") int page,
+          @RequestParam(required = false, defaultValue = "10") int count) throws ParseException {
 
     //TODO: Add filters for measure ids and page
-    List<GlobalReportResponse> reports = this.sharedService.getAllReports().stream().collect(Collectors.toList());
+    List<GlobalReportResponse> reports = this.sharedService.getAllReports();
 
     if (!startDate.isEmpty()) {
       Date date = Helper.parseFhirDate(startDate);

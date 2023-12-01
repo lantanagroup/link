@@ -781,7 +781,7 @@ public class SharedService {
         report.setTenantName(tenantName);
         report.setCdcOrgId(cdcOrgId);
         report.setId(reportId);
-        report.setMeasureIds(Arrays.asList(measureIds.split(",")));
+        report.setMeasureIds((List<String>) new ObjectMapper().readValue(measureIds, List.class));
         report.setPeriodStart(periodStart);
         report.setPeriodEnd(periodEnd);
         report.setStatus(ReportStatuses.valueOf(status));
@@ -794,7 +794,11 @@ public class SharedService {
 
       return reports;
 
-    } catch (SQLException | NullPointerException e) {
+    } catch (SQLException e) {
+      logger.error("SQL exception while retrieving global reports from database", e);
+      throw new RuntimeException(e);
+    } catch (NullPointerException | JsonProcessingException e) {
+      logger.error("Error parsing global reports from database", e);
       throw new RuntimeException(e);
     }
   }
