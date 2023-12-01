@@ -558,20 +558,50 @@ paths:
       tags:
         - Reports
         - UI
-      summary: Get report information for all tenants
-      description: Get report information for all tenants
+      summary: Get report information for tenants
+      description: Get report information for tenants
       operationId: get_report
       parameters:
+        - name: tenantId
+          in: query
+          description: The id of the tenant
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter based on the status of the report
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: The minimum/start date to return reports for
+          required: false
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: The maximum/end date to return reports for
+          required: false
+          schema:
+            type: string
+        - name: measureIds
+          in: query
+          description: Filter based on the ID's of the measures.
+          required: false
+          schema:
+            type: string
         - name: count
           in: query
           description: The maximum report list count that is returned per status
-          required: true
+          required: false
           schema:
             type: number
         - name: page
           in: query
           description: The page number of the results to return
-          required: true
+          required: false
           schema:
             type: number
       responses:
@@ -581,34 +611,6 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/GlobalReportByStatusResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /api/report/status:
-    get:
-      tags:
-        - Reports
-        - UI
-      summary: Get report information for all tenants by status
-      description: Will return separate report lists per status for all tenants
-      operationId: get_report_by_status
-      parameters:
-        - name: count
-          in: query
-          description: The maximum report list count that is returned per status
-          required: true
-          schema:
-            type: number
-      responses:
-        '200':
-          description: successful response
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/GlobalReportResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1200,6 +1202,9 @@ paths:
         - name: categoryId
           in: path
           description: The id of the category to return results for
+          required: true
+          schema:
+            type: string
       requestBody:
         description: The list of categories to retrieve validation results for
         required: true
