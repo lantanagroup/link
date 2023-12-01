@@ -215,40 +215,6 @@ IF (SELECT DATA_TYPE
         ALTER TABLE dbo.bulkStatusResult
             ADD FOREIGN KEY (statusId) REFERENCES dbo.bulkStatus (id);
     END
-
-GO
-
-CREATE OR ALTER PROCEDURE addReportToGlobal @TenantId nvarchar(128), @Name nvarchar(1024), @CdcOrgId nvarchar(128)
-AS
-BEGIN
-    INSERT INTO #GlobalReport
-    (
-        tenantId,
-        tenantName,
-        cdcOrgId,
-        reportId,
-        measureIds,
-        periodStart,
-        periodEnd,
-        status,
-        version,
-        generatedTime,
-        submittedTime
-    )
-    Select
-        @TenantId,
-        @Name,
-        @CdcOrgId,
-        id,
-        measureIds,
-        periodStart,
-        periodEnd,
-        status,
-        version,
-        generatedTime,
-        submittedTime
-    FROM report
-END
 GO
 
 IF NOT EXISTS (SELECT *

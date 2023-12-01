@@ -45,21 +45,23 @@ public class SharedService {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
-  public Connection getSQLConnection() {
-    try {
-      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-      Connection conn = DriverManager.getConnection(this.config.getConnectionString());
-      if (conn != null) {
-        DatabaseMetaData dm = conn.getMetaData();
-        return conn;
-      }
-    } catch (SQLException ex) {
-      logger.error("Could not establish connection to database", ex);
-    } catch (ClassNotFoundException ex) {
-      logger.error("Could not load driver for SQL server database", ex);
-    }
+  private static GlobalReportResponse getGlobalReportResponse(Tenant tenantConfig, String reportId, ResultSet rs) throws SQLException {
+    GlobalReportResponse report = new GlobalReportResponse();
+    report.setId(reportId);
+    report.setTenantId(tenantConfig.getId());
+    report.setCdcOrgId(tenantConfig.getCdcOrgId());
+    report.setTenantName(tenantConfig.getName());
+    report.setVersion(rs.getString(2));
+    report.setStatus(ReportStatuses.valueOf(rs.getString(3)));
+    report.setGeneratedTime(rs.getDate(4));
+    report.setSubmittedTime(rs.getDate(5));
+    report.setPeriodStart(rs.getString(6));
+    report.setPeriodEnd(rs.getString(7));
+    return report;
+  }
 
-    return null;
+  public Connection getSQLConnection() {
+    return this.getSQLConnection(this.config.getConnectionString());
   }
 
   private void initDatabaseLogging() {
@@ -754,52 +756,41 @@ public class SharedService {
     }
   }
 
-  public List<GlobalReportResponse> getAllReports() {
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      PreparedStatement ps = conn.prepareStatement("exec getTenantReports");
-      ResultSet rs = ps.executeQuery();
-      var reports = new ArrayList<GlobalReportResponse>();
-
-      while (rs.next()) {
-        var tenantId = rs.getString(1);
-        var tenantName = rs.getString(2);
-        var cdcOrgId = rs.getString(3);
-        var reportId = rs.getString(4);
-        var measureIds = rs.getString(5);
-        var periodStart = rs.getString(6);
-        var periodEnd = rs.getString(7);
-        var status = rs.getString(8);
-        var version = rs.getString(9);
-        var generatedTime = rs.getDate(10);
-        var submittedTime = rs.getDate(11);
-
-        var report = new GlobalReportResponse();
-
-        report.setTenantId(tenantId);
-        report.setTenantName(tenantName);
-        report.setCdcOrgId(cdcOrgId);
-        report.setId(reportId);
-        report.setMeasureIds((List<String>) new ObjectMapper().readValue(measureIds, List.class));
-        report.setPeriodStart(periodStart);
-        report.setPeriodEnd(periodEnd);
-        report.setStatus(ReportStatuses.valueOf(status));
-        report.setVersion(version);
-        report.setGeneratedTime(generatedTime);
-        report.setSubmittedTime(submittedTime);
-
-        reports.add(report);
+  public Connection getSQLConnection(String connectionString) {
+    try {
+      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+      Connection conn = DriverManager.getConnection(connectionString);
+      if (conn != null) {
+        DatabaseMetaData dm = conn.getMetaData();
+        return conn;
       }
-
-      return reports;
-
-    } catch (SQLException e) {
-      logger.error("SQL exception while retrieving global reports from database", e);
-      throw new RuntimeException(e);
-    } catch (NullPointerException | JsonProcessingException e) {
-      logger.error("Error parsing global reports from database", e);
-      throw new RuntimeException(e);
+    } catch (SQLException ex) {
+      logger.error("Could not establish connection to database", ex);
+    } catch (ClassNotFoundException ex) {
+      logger.error("Could not load driver for SQL server database", ex);
     }
+
+    return null;
+  }
+
+  public List<GlobalReportResponse> getAllReports() {
+    List<GlobalReportResponse> reports = new ArrayList<>();
+
+    for (Tenant tenantConfig : this.getTenantConfigs()) {
+      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
+        PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd FROM [dbo].[report]");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+          String reportId = rs.getString(1);
+          GlobalReportResponse report = getGlobalReportResponse(tenantConfig, reportId, rs);
+          reports.add(report);
+        }
+      } catch (SQLException e) {
+        logger.error("SQL exception while retrieving global reports from database", e);
+        throw new RuntimeException(e);
+      }
+    }
+
+    return reports;
   }
 }
