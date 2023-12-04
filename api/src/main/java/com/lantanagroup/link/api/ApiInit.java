@@ -30,8 +30,8 @@ public class ApiInit {
   @Autowired
   private SharedService sharedService;
 
-  @Autowired
-  private Validator validator;
+/*  @Autowired
+  private Validator validator;*/
 
   private boolean checkPrerequisites() {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
@@ -111,7 +111,7 @@ public class ApiInit {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
     this.sharedService.initDatabase();
-    this.validator.init();
+   // this.validator.init();
     List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
     for (Tenant tenant : tenants) {
