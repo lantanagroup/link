@@ -14,6 +14,6 @@ public class TenantSummary {
   private String name;
   private String nhsnOrgId;
   private String lastSubmissionId;
-  private Date lastSubmissionDate;
+  private String lastSubmissionDate;
   private List<TenantSummaryMeasure> measures = new ArrayList<>();
 }
