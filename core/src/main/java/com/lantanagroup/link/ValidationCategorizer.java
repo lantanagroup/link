@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,8 +46,8 @@ public class ValidationCategorizer {
   }
 
   public void loadFromResources() {
-    try {
-      String json = Helper.readInputStream(this.getClass().getClassLoader().getResourceAsStream("validation-categories.json"));
+    try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("validation-categories.json")) {
+      String json = Helper.readInputStream(is);
       this.categories = List.of(new ObjectMapper().readValue(json, RuleBasedValidationCategory[].class));
     } catch (IOException e) {
       logger.error("Error loading validation categories from resources", e);
