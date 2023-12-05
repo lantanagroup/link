@@ -343,3 +343,78 @@ BEGIN
     END
 END
 GO
+
+/*CREATE OR ALTER PROCEDURE getTenantSummary  @Search nvarchar(128) = null, @Sort nvarchar(128), @SortAscend Bit
+AS
+BEGIN
+    CREATE TABLE #TenantSummary
+    (
+        tenantId			nvarchar(128),
+        tenantName			nvarchar(1024),
+        cdcOrgId			nvarchar(128),
+        bundlingName		nvarchar(128),
+        reportId            nvarchar(128),
+        measureIds			nvarchar(1024),
+        submittedTime		datetime2
+    )
+
+    --Figure Out Which Databases to call
+    SELECT name as DatabaseName
+    INTO #databases
+    FROM master.sys.databases d
+    WHERE name not in ('master','model','msdb','tempdb', DB_NAME()) -- don't query system DBs or the shared Db
+
+    while((select Count(*) from #databases) > 0)
+        BEGIN
+            declare @database varchar(255) = (Select top 1 DatabaseName from #databases)
+            declare @tenantConfig TABLE
+                                  (
+                                      Id nvarchar(128),
+                                      Name nvarchar(1024),
+                                      CdcOrgId nvarchar(128),
+                                      bundlingName nvarchar(128)
+                                  );
+
+            -- We can get the id, name and cdcOrgId from the shared tenantConfig table
+            delete from @tenantConfig
+            insert into @tenantConfig
+            select top 1
+                JSON_VALUE(json, '$.id') as Id,
+                JSON_VALUE(json, '$.name') as Name,
+                JSON_VALUE(json, '$.cdcOrgId') as cdcOrgId,
+                JSON_VALUE(json, '$.bundling.name') as bundlingName
+            from tenantConfig
+            where json like '%databaseName=' + @database + ';%'
+              and ( @Search is not null and (JSON_VALUE(json, '$.name') like '%'+ @Search +'%' or  JSON_VALUE(json, '$.cdcOrgId') like '%'+ @Search +'%' or JSON_VALUE(json, '$.bundling.name') like '%'+ @Search +'%') or @Search is null)
+
+            declare @Id varchar(255) =  '''' + (select top 1 Id from @tenantConfig) + ''''
+            declare @cdcOrgId varchar(255) = ''''  + (select top 1 cdcOrgId from @tenantConfig) + ''''
+            declare @name varchar(255) = ''''  + (select top 1 Name from @tenantConfig) + ''''
+            declare @bundlingName varchar(255) = ''''  + (select top 1 bundlingName from @tenantConfig) + ''''
+
+
+            -- Construct query to run on each tenant db
+            if @Id is not null
+                BEGIN
+                    declare @SQL nvarchar(max) = 'IF OBJECT_ID(''[' + @database + N'].[dbo].report'', ''U'') IS NOT NULL
+							  INSERT INTO #TenantSummary
+							  SELECT ' + @Id +  ',' +   @name +  ',' +  @cdcOrgId + ','  +   @bundlingName + ',  id, measureIds, submittedTime' +
+                                                 ' FROM [' + @database + '].dbo.Report' +
+                                                 ' WHERE submittedTime IS NOT NULL' +
+                                                 ' order by submittedTime desc'
+                    EXEC sp_executesql @SQL
+                END
+
+            delete from #databases where Databasename = @database
+        END
+
+    select * from #TenantSummary
+    order by Case when @sort = 'NAME'               AND @SortAscend = 'true'  then  tenantName    end  ASC,
+             Case when @sort = 'NAME'               AND @SortAscend = 'false' then  tenantName    end  DESC,
+             Case when @sort = 'NHSN_ORG_ID'        AND @SortAscend = 'true'  then  cdcOrgId      end  ASC,
+             Case when @sort = 'NHSN_ORG_ID'        AND @SortAscend = 'false' then  cdcOrgId      end  DESC,
+             Case when @sort = 'SUBMISSION_DATE'    AND @SortAscend = 'true'  then  submittedTime end  ASC,
+             Case when @sort = 'SUBMISSION_DATE'    AND @SortAscend = 'false' then  submittedTime end  DESC
+
+END
+GO*/

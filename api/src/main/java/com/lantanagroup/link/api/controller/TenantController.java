@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -46,28 +48,32 @@ public class TenantController extends BaseController {
   }
 
   @GetMapping("summary")
-  public TenantSummaryResponse searchTenantSummaries(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) TenantSummarySort sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
-    // TODO: Replace with actual functionality
+  public TenantSummaryResponse searchTenantSummaries(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) String sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
+    // validation
+    int itemsPerPage = 5;
 
-    TenantSummary tenant1 = new TenantSummary();
-    tenant1.setId("tenant1");
-    tenant1.setName("Tenant 1");
-    tenant1.setLastSubmissionDate(new Date());
-    tenant1.setLastSubmissionId("2u3423d");
-    tenant1.getMeasures().add(new TenantSummaryMeasure("cdihob", "CDI-HOB", "C-Difficile and HOB"));
-    tenant1.getMeasures().add(new TenantSummaryMeasure("hypo", "HYPO", "Hypoglycemia"));
-    TenantSummary tenant2 = new TenantSummary();
-    tenant2.setId("tenant2");
-    tenant2.setName("Tenant 2");
-    tenant2.setLastSubmissionDate(new Date());
-    tenant2.setLastSubmissionId("ds3lg03");
-    tenant2.getMeasures().add(new TenantSummaryMeasure("hypo", "HYPO", "Hypoglycemia"));
-    tenant2.getMeasures().add(new TenantSummaryMeasure("rps", "RPS", "Whatever RPS stands for"));
+    if (page < 1) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page should be greater than 1");
+    }
+
+    int skip = (page - 1) * itemsPerPage;
+
+    // validate sort is one of the enum values
+    if (sort != null) {
+      try {
+        TenantSummarySort.valueOf(sort.trim());
+      } catch (IllegalArgumentException e) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort criteria. Valid values are NAME, NHSN_ORG_ID, SUBMISSION_DATE");
+      }
+    }
+    List<TenantSummary> tenants = this.sharedService.getTenantSummary(searchCriteria, TenantSummarySort.valueOf(sort.trim()), sortAscend).stream().collect(Collectors.toList());
+
+    List<TenantSummary> results = tenants.stream().skip(skip).limit(itemsPerPage).collect(Collectors.toList());
 
     TenantSummaryResponse response = new TenantSummaryResponse();
-    response.setTotal(2);
-    response.getTenants().add(tenant1);
-    response.getTenants().add(tenant2);
+    response.setTotal(tenants.size());
+    response.setTenants(results);
+
     return response;
   }
 

@@ -13,8 +13,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.GlobalReportResponse;
-import com.lantanagroup.link.model.LogMessage;
+import com.lantanagroup.link.model.*;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -29,8 +28,10 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -792,5 +793,77 @@ public class SharedService {
     }
 
     return reports;
+  }
+
+  private static TenantSummary getTenantSummaryResponse(Tenant tenantConfig, ResultSet rs) throws SQLException {
+    TenantSummary tenantSummary = new TenantSummary();
+    tenantSummary.setId(tenantConfig.getId());
+    tenantSummary.setName(tenantConfig.getName());
+    tenantSummary.setNhsnOrgId(tenantConfig.getCdcOrgId());
+
+    String measureIds = rs.getString(2);
+    measureIds = measureIds.replaceAll("\\[", "").replaceAll("\\]", "");
+
+    List<String> measures = Arrays.asList(measureIds.split(","));
+    // get measures from measureIds string, split on comma, convert to list of TenantSummaryMeasure
+    List<TenantSummaryMeasure> list = measures.stream().map(m -> {
+      var measure = new TenantSummaryMeasure();
+      m = m.replace("\"", "");
+      measure.setId(m);
+      measure.setShortName(m);
+      measure.setLongName(m);
+      return measure;
+    }).collect(Collectors.toList());
+
+    tenantSummary.setMeasures(list);
+    tenantSummary.setLastSubmissionId(rs.getString(1));
+    //convert time stamp to date yyyy-MM-dd HH:mm:ss
+    DateTimeFormatter dateTimeFormatter = null;
+    String date = rs.getTimestamp(3).toLocalDateTime().format(dateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));     
+    tenantSummary.setLastSubmissionDate(date);
+    return tenantSummary;
+  }
+
+  private static void sortTenantSummaryList(TenantSummarySort sort, boolean sortAscend, List<TenantSummary> tenantSummaryList) {
+
+    Map<TenantSummarySort, Function<TenantSummary, String>> sortColumnMapper = new HashMap<>();
+
+    sortColumnMapper.put(TenantSummarySort.NAME, TenantSummary::getName);
+    sortColumnMapper.put(TenantSummarySort.SUBMISSION_DATE, TenantSummary::getLastSubmissionDate);
+    sortColumnMapper.put(TenantSummarySort.NHSN_ORG_ID, TenantSummary::getNhsnOrgId);
+
+    if (sortAscend) {
+      tenantSummaryList.sort(Comparator.comparing(sortColumnMapper.get(sort)));
+    } else {
+      tenantSummaryList.sort(Comparator.comparing(sortColumnMapper.get(sort)).reversed());
+    }
+  }
+
+  public List<TenantSummary> getTenantSummary(String searchCriteria, TenantSummarySort sort, boolean sortAscend) {
+
+    List<TenantSummary> tenantSummaryList = new ArrayList<>();
+    // filter the tenants
+    for (Tenant tenantConfig : this.getTenantConfigs()) {
+      // if search criteria is not empty, filter tenants by search criteria
+      if (!StringUtils.isBlank(searchCriteria)) {
+        if (!(tenantConfig.getName().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getId().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getCdcOrgId().toLowerCase().contains(searchCriteria.toLowerCase()))) {
+          continue;
+        }
+      }
+      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
+        PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+          TenantSummary tenantSummary = getTenantSummaryResponse(tenantConfig, rs);
+          tenantSummaryList.add(tenantSummary);
+        }
+      } catch (SQLException e) {
+        logger.error("SQL exception while retrieving global reports from database", e);
+        throw new RuntimeException(e);
+      }
+    }
+    // sort  by name  or nhsnOrgId or  last submission date
+    sortTenantSummaryList(sort, sortAscend, tenantSummaryList);
+    return tenantSummaryList;
   }
 }
