@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,6 @@ public class GlobalReportController extends BaseController {
           @RequestParam(required = false, defaultValue = "1") int page,
           @RequestParam(required = false, defaultValue = "10") int count) throws ParseException {
 
-    //TODO: Add filters for measure ids and page
     List<GlobalReportResponse> reports = this.sharedService.getAllReports();
 
     if (!startDate.isEmpty()) {
@@ -51,7 +51,7 @@ public class GlobalReportController extends BaseController {
 
       reports = reports.stream().filter(x -> {
         try {
-          return Helper.parseFhirDate(x.getPeriodStart()).before(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date);
+          return Helper.parseFhirDate(x.getPeriodEnd()).before(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date);
         } catch (ParseException e) {
           throw new RuntimeException(e);
         }
@@ -66,7 +66,20 @@ public class GlobalReportController extends BaseController {
       reports = reports.stream().filter(x -> x.getStatus().equals(ReportStatuses.valueOf(status))).collect(Collectors.toList());
     }
 
-    reports = reports.stream().limit(count).collect(Collectors.toList());
+    String[] ids = measureIds.split(",");
+    if(ids.length > 0) {
+        reports = reports.stream().filter(x -> {
+            HashSet<String> measureIdsSet = new HashSet<>(x.getMeasureIds());
+            for(String measureId : ids) {
+              if(measureIdsSet.contains(measureId)) {
+                  return true;
+              }
+            }
+            return false;
+        }).collect(Collectors.toList());
+    }
+
+    reports = reports.stream().skip((long) (page -1) * count).limit(count).collect(Collectors.toList());
 
     return reports;
   }

@@ -46,7 +46,7 @@ public class SharedService {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
-  private static GlobalReportResponse getGlobalReportResponse(Tenant tenantConfig, String reportId, ResultSet rs) throws SQLException {
+  private static GlobalReportResponse getGlobalReportResponse(Tenant tenantConfig, String reportId, ResultSet rs) throws SQLException, JsonProcessingException {
     GlobalReportResponse report = new GlobalReportResponse();
     report.setId(reportId);
     report.setTenantId(tenantConfig.getId());
@@ -58,6 +58,7 @@ public class SharedService {
     report.setSubmittedTime(rs.getDate(5));
     report.setPeriodStart(rs.getString(6));
     report.setPeriodEnd(rs.getString(7));
+    report.setMeasureIds((List<String>) new ObjectMapper().readValue(rs.getString(8), List.class));
     return report;
   }
 
@@ -779,7 +780,7 @@ public class SharedService {
 
     for (Tenant tenantConfig : this.getTenantConfigs()) {
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd FROM [dbo].[report]");
+        PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd, measureIds FROM [dbo].[report]");
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           String reportId = rs.getString(1);
@@ -788,6 +789,8 @@ public class SharedService {
         }
       } catch (SQLException e) {
         logger.error("SQL exception while retrieving global reports from database", e);
+        throw new RuntimeException(e);
+      } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }
     }
