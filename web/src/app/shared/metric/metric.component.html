@@ -1,0 +1,31 @@
+<div class="metric-container text-white bg-primary mb-3">
+	<div class="metric-body">
+		<div class="card-header">
+			<h2 class="metric-title">{{ mainValue }}</h2>
+			<div class="metric-subtext">
+				<span>{{ subText }}</span>
+			</div>
+		</div>
+		<div class="card-footer d-flex align-items-center">
+			<!-- First half of the footer with items icon & changeValue -->
+			<div class="changeValueContainer col-6 d-flex flex-column justify-content-center">
+				<div class="d-flex align-items-center mb-2">
+					<img [src]="arrowIconPath"
+						alt="Metric Indicator"
+						style="width: 20px; height: 24px;">
+					<span class="changeValue ms-2">{{ changeValue }}</span>
+				</div>
+				<div class="changeValueSubtext">
+					<span>since last month</span>
+				</div>
+			</div>
+			<!-- This div includes Vertical Divider -->
+			<div class="col-6"
+				style="border-left: 2px solid rgba(9, 68, 162); height: 57px;">
+				<div class="chart-Container">
+					<app-mini-chart></app-mini-chart>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

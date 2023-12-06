@@ -1,0 +1,27 @@
+<nav 
+  [id]="navId" 
+  [attr.aria-label]="ariaLabel"
+  class="navbar"
+  [ngClass]="navLocation && 'navbar--' + navLocation"
+  >
+  <ul 
+    class="nav"
+    [ngClass]="navLocation && 'nav--' + navLocation"
+  >
+    <li 
+      *ngFor="let item of navItems"
+      class="nav__item"
+      [ngClass]="navLocation && 'nav--' + navLocation + '__item'"  
+    >
+      <a
+        [routerLink]="item.url"
+        [target]="item.target ? item.target : '_self'"
+        class="nav__link"
+        [ngClass]="navLocation && 'nav--' + navLocation + '__link'"
+        routerLinkActive="active"
+      >
+        {{ item.title }}
+      </a>
+    </li>
+  </ul>
+</nav>
