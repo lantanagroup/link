@@ -1,0 +1,21 @@
+<app-hero
+  color="shade"
+  pageTitle="System Performance"
+  [cta]="heroButton"
+/>
+
+<section>
+  <div class="container py-4">
+    <p>System Performance coming soon...</p>
+  </div>
+</section>
+
+<ng-template #heroButton>
+  <app-button
+    variant="outline--reverse"
+    type="button"
+  >
+    <app-icon filePath="../../../assets/icons/measure.svg" />
+    Manage System Health
+  </app-button>
+</ng-template>

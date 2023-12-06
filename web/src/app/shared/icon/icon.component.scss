@@ -1,0 +1,10 @@
+/* icon.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.icon {
+  display: block;
+  height: calc(#{$spacer} * 1.5);
+  width: calc(#{$spacer} * 1.5);
+}

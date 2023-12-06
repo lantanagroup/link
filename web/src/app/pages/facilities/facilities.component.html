@@ -1,0 +1,25 @@
+<app-hero
+  color="purple"
+  pageTitle="Facilities"
+  [cta]="heroButton"
+/>
+
+<section>
+  <div class="container d-flex gap-4 flex-column py-4">
+    <app-accordion title="normalizations" [isExpanded]="true">Content</app-accordion>
+    <app-accordion title="scheduling" [isExpanded]="true">Content</app-accordion>
+    <app-accordion title="native fhir query" [isExpanded]="true">Content</app-accordion>
+    <app-accordion title="census acquisition" [isExpanded]="true">Content</app-accordion>
+    <app-accordion title="query plans" [isExpanded]="true">Content</app-accordion>
+  </div>
+</section>
+
+<ng-template #heroButton>
+  <app-button
+    variant="outline--reverse"
+    type="button"
+  >
+    <app-icon filePath="../../../assets/icons/plus.svg" />
+    Add New Facility
+  </app-button>
+</ng-template>

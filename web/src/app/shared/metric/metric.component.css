@@ -1,0 +1,52 @@
+.metric-container {
+  border-radius: 0;
+  padding: 0;
+}
+
+.metric-body {
+  padding: 0 !important;
+  border-radius: 0%;
+}
+
+.card-header {
+  background-color: rgba(2, 27, 58);
+  border-radius: 0%;
+}
+
+.metric-title {
+  text-align: center;
+  color: rgba(0, 179, 255);
+  font-size: 100px;
+  line-height: 100px;
+  font-weight: 600;
+}
+.metric-subtext {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+}
+.card-footer {
+  background: white !important;
+  padding: 0;
+}
+.changeValue {
+  color: rgba(2, 27, 58, 1);
+  font-weight: 500;
+  font-size: 36px;
+  line-height: 24px;
+}
+.changeValueSubtext {
+  color: rgba(0, 0, 0);
+  font-weight: 400;
+  font-size: 12px;
+}
+.chart-Container {
+  color: red;
+}
+.changeValueContainer {
+  padding-top: 16.5px;
+  padding-right: 7px; /* Assuming you meant right instead of left twice */
+  padding-bottom: 17px;
+  padding-left: 40.77px;
+}

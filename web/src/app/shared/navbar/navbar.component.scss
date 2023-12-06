@@ -1,0 +1,75 @@
+/* navbar.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.navbar {
+  &--primary {
+    @media (min-width: map-get($grid-breakpoints, 'md')) {
+      margin-right: -1.125rem; // accounts for padding on nav links
+    }
+  }
+}
+
+.nav {
+  
+  &__item {
+    margin: 0 0.625rem;
+  }
+
+  &__link {
+    background: transparent;
+    color: $white;
+    display: block;
+    font-family: $font-family-heading;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.225em;
+    padding: 0.25rem 0.5rem;
+    text-transform: uppercase;
+  
+    &:hover,
+    &:focus-visible,
+    &.active {
+      background: $blue-100;
+      color: $gray-250;
+    }
+  }
+
+  &--secondary {
+    &__item {
+      align-items: center;
+      display: flex;
+      margin: 0;
+
+      &::after {
+        content: '|';
+        color: $black;
+        display: inline-block;
+        font-family: $font-family-heading;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+        margin: 0 0.5rem;
+      }
+
+      &:last-child::after {
+        display: none;
+      }
+    }
+
+    &__link {
+      color: $blue;
+      font-size: $font-size-base;
+      font-weight: $font-weight-medium;
+      letter-spacing: 0.2em;
+      line-height: 1.5em;
+      padding: 0;
+
+      &:hover,
+      &:focus-visible,
+      &.active {
+        background: none;
+        color: $black;
+      }
+    }
+  }
+}

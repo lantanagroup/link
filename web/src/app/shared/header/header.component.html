@@ -1,0 +1,34 @@
+<header class="header bg-primary-subtle" id="header" role="banner" ari-label="Global header navigation">
+  <a class="screen-reader-text skip-link" href="#main">
+    Skip to content
+  </a>
+
+  <div class="header__wrapper">
+    <!-- top header -->
+    <div class="container-fluid d-flex justify-content-between align-items-center py-3">
+      <a href="/" class="header__logo text-uppercase">
+        NHSN<span class="fw-bold text-secondary">Link</span>
+      </a>
+
+      <app-navbar
+        [navItems]="secondaryNavItems"
+        navId="SecondaryNavigation"
+        ariaLabel="Secondary, Desktop Navigation"
+        navLocation="secondary"
+      />
+    </div>
+    <!-- desktop: main nav -->
+    <div class="header__subheader py-1">
+      <div class="container-fluid d-flex justify-content-end">
+        
+        <app-navbar
+          [navItems]="primaryNavItems"
+          navId="PrimaryNavigation"
+          ariaLabel="Primary, Desktop Navigation"
+          navLocation="primary"
+        />
+
+      </div>
+    </div>
+  </div>
+</header>

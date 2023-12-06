@@ -1,0 +1,25 @@
+<section
+	[ngClass]="
+		'hero'
+		+ (color ? ' hero--bg-' + color : '')
+		+ (size ? ' hero--' + size : '')
+	"
+>
+	<div class="container">
+
+		<p class="h2 text-white" *ngIf="subHeading">{{ subHeading }}</p>
+		<app-section-heading
+			*ngIf="pageTitle"
+			headingClasses="text-uppercase text-white"
+			[level]=1
+			[heading]="pageTitle"
+		>
+			<div *ngIf="cta" class="pt-4 pt-lg-0 pl-lg-4">
+				<ng-container *ngTemplateOutlet="cta" />
+			</div>
+		</app-section-heading>
+
+		<ng-content />
+
+	</div>
+</section>

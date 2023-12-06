@@ -1,0 +1,14 @@
+<div [ngClass]="'d-flex mb-2 d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between ' + class">
+  <ng-container [ngSwitch]="level">
+    <h1 *ngSwitchCase="1" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h1>
+    <h2 *ngSwitchCase="2" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h2>
+    <h3 *ngSwitchCase="3" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h3>
+    <h4 *ngSwitchCase="4" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h4>
+    <h5 *ngSwitchCase="5" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h5>
+    <h6 *ngSwitchCase="6" [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h6>
+    <h2 *ngSwitchDefault [ngClass]="'mb-4 mb-lg-0 ' + headingClasses">{{ heading }}</h2>   
+  </ng-container>
+  <div class="d-flex align-items-center justify-content-between justify-content-lg-end">
+    <ng-content />
+  </div>
+</div>

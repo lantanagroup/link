@@ -1,0 +1,22 @@
+<div table__wrapper>
+	<app-section-heading
+		[level]="4"
+		class="mb-2"
+		headingClasses="h3 text-black"
+		heading="Facility Activity"
+	>
+		<app-button
+		  variant="outline--reverse"
+		  type="button"
+		  [onClickHandler]="showAlert"
+		>
+  			<app-icon filePath="../../../assets/icons/sliders.svg" />
+		</app-button>
+	</app-section-heading>
+
+	<table [dtOptions]="dtOptions"
+		datatable
+		class="row-border hover shadow">
+	</table>
+</div>
+

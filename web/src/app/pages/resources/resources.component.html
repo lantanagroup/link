@@ -1,0 +1,14 @@
+<app-hero
+  color="green"
+  pageTitle="Resources"
+/>
+<section>
+	<div class="row container">
+		<div *ngFor="let group of resourceGroups"
+			class="resource-content-container col-6">
+			<app-card [title]="group.name">
+				<app-resource-contents [resourceSections]="group.sections" />
+			</app-card>
+		</div>
+	</div>
+</section>

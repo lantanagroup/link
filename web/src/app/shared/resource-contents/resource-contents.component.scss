@@ -1,0 +1,36 @@
+.resource-section-container {
+  padding: 24px 24px 0;
+
+  h6 {
+    color: rgba(20, 24, 31);
+  }
+
+  &:last-child {
+    padding-bottom: 50px;
+  }
+}
+
+.resource-section-title {
+  color: rgba(20, 24, 31);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.25em;
+  letter-spacing: 0.04em;
+}
+
+.resource-link {
+  text-decoration: none;
+  color: rgba(40, 113, 230, 1);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5em;
+  margin-right: 10px;
+  display: inline-flex;
+  align-items: center;
+
+  .link-icon {
+    width: 24px;
+    height: 24px;
+    margin-left: 10px;
+  }
+}

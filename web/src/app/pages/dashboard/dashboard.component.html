@@ -1,0 +1,63 @@
+<app-hero
+  pageTitle="Dashboard"
+  size="lg"
+>
+  <app-section-heading
+    [level]=2
+    class="mb-4"
+    headingClasses="h3 text-white"
+    heading="System Performance"
+  >
+    <app-button
+      variant="outline--reverse"
+      type="link"
+      [link]="{url: '/system-performance'}"
+    >
+      <app-icon filePath="../../../assets/icons/plus.svg" />
+      View All
+    </app-button>
+  </app-section-heading>
+
+  <div class="row">
+		<div class="col">
+			<app-card title="AVERAGE QUERY TIME" cardType="metric">
+				<app-metric mainValue="6.1"
+					subText="hours on average past 7 days"
+					changeValue="18%"></app-metric>
+			</app-card>
+		</div>
+		<div class="col">
+			<app-card title="PRE-QUALIFICATION ISSUES" cardType="metric">
+				<app-metric
+				mainValue="99"
+				subText="errors per 1,000 patients"
+				changeValue="2%"
+				[isValueUp]="false" />
+			</app-card>
+
+		</div>
+		<div class="col">
+			<app-card title="TOTAL PATIENTS QUERIED" cardType="metric">
+				<app-metric
+				mainValue="23K"
+				subText="patients queried past 7 days"
+				changeValue="33%" />
+			</app-card>
+		</div>
+		<div class="col">
+			<app-card title="AVERAGE VALIDATION TIME" cardType="metric">
+				<app-metric
+				mainValue="3.2"
+				subText="hours on average past 7 days"
+				changeValue="10%"
+				[isValueUp]="false" />
+			</app-card>
+		</div>
+	</div>
+</app-hero>
+
+<section>
+  <div class="container py-4">
+    <p>Dashboard coming soon...</p>
+  </div>
+</section>
