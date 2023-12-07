@@ -7,7 +7,7 @@ import { MiniChartComponent } from 'src/app/shared/mini-chart/mini-chart.compone
   standalone: true,
   imports: [CommonModule, MiniChartComponent],
   templateUrl: './metric.component.html',
-  styleUrls: ['./metric.component.css']
+  styleUrls: ['./metric.component.scss']
 })
 export class MetricComponent {
   @Input() mainValue: string = ''; // The biggest number that we see on the design
