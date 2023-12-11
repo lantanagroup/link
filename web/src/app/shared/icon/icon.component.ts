@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ElementRef, Renderer2 } from '@angular/core';
+import { Component, Input, ElementRef, Renderer2, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { catchError, map, tap } from 'rxjs/operators';
@@ -10,7 +10,8 @@ import { EMPTY, Observable } from 'rxjs';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './icon.component.html',
-  styleUrls: ['./icon.component.scss']
+  styleUrls: ['./icon.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class IconComponent {
   @Input() class?: string = '' ;
