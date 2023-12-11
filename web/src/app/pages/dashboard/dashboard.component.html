@@ -76,7 +76,6 @@
 
 <section>
   <div class="container py-4">
-    
 		<app-section-heading
 			heading="Recent Activity"
 			[level]=3
@@ -97,9 +96,10 @@
 					title="Successful Submissions"
 					status="success"
 					titleAlign="center"
-					[hasPadding]=true
 				>
-					<em>Content to come...</em>
+					<div recent_activity_table__wrapper >
+						<app-table [dtOptions]="completedDtOptions" />
+					</div>
 				</app-card>
 			</div>
 			
@@ -108,9 +108,10 @@
 					title="Failed Submissions"
 					status="failure"
 					titleAlign="center"
-					[hasPadding]=true
 				>
-					<em>Content to come...</em>
+					<div recent_activity_table__wrapper >
+						<app-table [dtOptions]="failedDtOptions" />
+					</div>
 				</app-card>
 			</div>
 
@@ -119,13 +120,13 @@
 					title="Submissions In Progress"
 					status="inProgress"
 					titleAlign="center"
-					[hasPadding]=true
 				>
-					<em>Content to come...</em>
+					<div recent_activity_table__wrapper >
+          <app-table [dtOptions]="pendingDtOptions" />
+        </div>
 				</app-card>
 			</div>
 
 		</div>
-
   </div>
 </section>
