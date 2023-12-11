@@ -74,14 +74,14 @@
     </app-button>
   </app-section-heading>
   <div class="row">
-    <div class="col-4">
+    <div class="col">
 			<app-card title="SUCCESSFUL SUBMISSIONS">
         <div recent_activity_table__wrapper >
           <app-table [dtOptions]="completedDtOptions" />
         </div>
       </app-card>
 		</div>
-		<div class="col-4">
+		<div class="col">
 			<app-card title="FAILED SUBMISSIONS">
         <div recent_activity_table__wrapper >
           <app-table [dtOptions]="failedDtOptions" />
@@ -89,7 +89,7 @@
 			</app-card>
 
 		</div>
-		<div class="col-4">
+		<div class="col">
 			<app-card title="SUBMISSIONS IN PROGRESS">
         <div recent_activity_table__wrapper >
           <app-table [dtOptions]="pendingDtOptions" />
