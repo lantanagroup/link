@@ -13,6 +13,7 @@ export class MetricComponent {
   @Input() mainValue: string = ''; // The biggest number that we see on the design
   @Input() subText: string = ''; // Context of what the main value is compared to
   @Input() changeValue: string = ''; // The rate of value changed
+  @Input() changeWindow?: string = 'month'; // the duration of value changed
   @Input() isValueUp: boolean = true; // This will change the path of image
   @ViewChild(MiniChartComponent) chartComponent!: MiniChartComponent;
 
