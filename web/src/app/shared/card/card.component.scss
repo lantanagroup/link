@@ -4,12 +4,15 @@
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
 
 .card {
+  border: none;
   box-shadow: $box-shadow-sm;
   margin: 0.625rem 0;
 
-  &--alt {
+  &--border {
     border: 1px solid $white;
+  }
 
+  &--alt {
     .card__header {
       background: $gray-200;
     }

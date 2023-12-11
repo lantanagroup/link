@@ -1,6 +1,5 @@
 <div 
-	class="card"
-	[ngClass]="variant && 'card--' + variant"
+	[ngClass]="getCardClass()"
 >
 	<div
 		class="card__header"

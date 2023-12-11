@@ -14,4 +14,21 @@ export class CardComponent {
   @Input() titleAlign?: 'left' | 'right' | 'center' = 'left';
   @Input() status?: 'success' | 'failure' | 'inProgress' | null = null;
   @Input() hasPadding?: boolean = false;
+  @Input() hasBorder?: boolean = false;
+  
+  
+  getCardClass = () => {
+    const classes = ['card']
+
+    if (this.variant) {
+      classes.push('card--' + this.variant)
+    }
+
+    if (this.hasBorder) {
+      classes.push('card--border')
+    }
+
+    return classes.join(' ')
+  }
+
 }
