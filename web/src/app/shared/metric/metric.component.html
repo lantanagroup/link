@@ -9,7 +9,15 @@
 	</div>
 	<div class="metric__footer d-flex align-items-center m-2">
 		<div class="text-center py-1 px-2 metric__footer--left">
-			<p class="h--subheading mb-0">{{ changeValue }}</p>
+			<p class="mb-0 d-flex align-items-center justify-content-center">
+				<fa-icon
+				class="text-success fa-xl"
+					[icon]="isValueUp ? iconUp : iconDown"
+				/>
+				<span class="h--subheading">
+					{{ changeValue }}
+				</span>
+			</p>
 			<p class="p--small mb-0">since last {{ changeWindow }}</p>
 		</div>
 		<div class="py-1 px-2 metric__footer--right">

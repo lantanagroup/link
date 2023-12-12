@@ -1,11 +1,14 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MiniChartComponent } from 'src/app/shared/mini-chart/mini-chart.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { faUp, faDown } from '@fortawesome/pro-solid-svg-icons';
 
 @Component({
   selector: 'app-metric',
   standalone: true,
-  imports: [CommonModule, MiniChartComponent],
+  imports: [CommonModule, MiniChartComponent, FontAwesomeModule],
   templateUrl: './metric.component.html',
   styleUrls: ['./metric.component.scss']
 })
@@ -17,8 +20,6 @@ export class MetricComponent {
   @Input() isValueUp: boolean = true; // This will change the path of image
   @ViewChild(MiniChartComponent) chartComponent!: MiniChartComponent;
 
-  get arrowIconPath(): string {
-    // Determine the icon based on whether changeValue is positive or negative
-    return this.isValueUp === true ? '/assets/icons/upArrow.svg' : '/assets/icons/downArrow.svg';
-  }
+  iconUp = faUp ? faUp : faArrowUp
+  iconDown = faDown ? faDown : faArrowDown
 }
