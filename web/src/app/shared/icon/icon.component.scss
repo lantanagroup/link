@@ -3,8 +3,26 @@
 @import '../../../scss/customize-bootstrap.scss',
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
 
-.icon {
+.icon,
+svg {
   display: block;
   height: calc(#{$spacer} * 1.5);
   width: calc(#{$spacer} * 1.5);
+
+  path {
+    .btn &,
+    .btn--outline-reverse & {
+      stroke: $blue-50;
+    }
+
+    .btn--reverse &,
+    .btn--outline & {
+      stroke: $blue-300;
+    }
+
+    .btn:hover &,
+    .btn:active & {
+      stroke: $blue-50;
+    }
+  }
 }

@@ -1,3 +1,6 @@
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
 .metric-container {
   border-radius: 0;
   padding: 0;
@@ -9,13 +12,13 @@
 }
 
 .card-header {
-  background-color: rgba(2, 27, 58);
+  background-color: $blue-700;
   border-radius: 0%;
 }
 
 .metric-title {
   text-align: center;
-  color: rgba(0, 179, 255);
+  color: $blue-200;
   font-size: 100px;
   line-height: 100px;
   font-weight: 600;
@@ -31,7 +34,7 @@
   padding: 0;
 }
 .changeValue {
-  color: rgba(2, 27, 58, 1);
+  color: $blue-700;
   font-weight: 500;
   font-size: 36px;
   line-height: 24px;

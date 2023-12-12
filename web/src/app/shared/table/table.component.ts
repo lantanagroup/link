@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataTablesModule } from 'angular-datatables';
 import { SectionHeadingComponent } from '../section-heading/section-heading.component';
@@ -10,7 +10,8 @@ import { IconComponent } from '../icon/icon.component';
   standalone: true,
   imports: [CommonModule, DataTablesModule, ButtonComponent, IconComponent, SectionHeadingComponent],
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss']
+  styleUrls: ['./table.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class TableComponent implements OnInit {
   @Input() tableTitle: string = '';
@@ -19,11 +20,5 @@ export class TableComponent implements OnInit {
   ngOnInit(): void {
 
   }
-
-  // This method will be replaced by something else
-  showAlert(): void {
-    alert('Filters coming out soon.');
-  }
-
   constructor() { };
 }

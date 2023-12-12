@@ -16,32 +16,56 @@
   padding: calc(#{$spacer} * 0.5) calc(#{$spacer} * 0.75);
   text-transform: uppercase;
 
+  svg path {
+    color: $blue-50;
+  }
+
   &--reverse {
     background: $blue-50;
     border: 2px solid $blue-50;
     color: $blue-300;
+
+    svg path {
+      color: $blue-300;
+    }
   }
 
   &--outline {
     background: transparent;
     color: $blue-300;
+
+    svg path {
+      color: $blue-300;
+    }
   }
 
   &--outline--reverse {
     background: transparent;
     border-color: $blue-50;
     color: $blue-50;
+
+    svg path {
+      color: $blue-50;
+    }
   }
 
   &:hover {
     background: $blue-500;
     border-color: $blue-500;
     color: $blue-50;
+
+    svg path {
+      color: $blue-50;
+    }
   }
 
   &:active {
     background: $blue-600;
     border-color: $blue-600;
     color: $blue-50;
+
+    svg path {
+      color: $blue-50;
+    }
   }
 }

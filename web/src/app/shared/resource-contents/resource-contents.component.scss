@@ -1,8 +1,11 @@
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
 .resource-section-container {
   padding: 24px 24px 0;
 
   h6 {
-    color: rgba(20, 24, 31);
+    color: $gray-500;
   }
 
   &:last-child {
@@ -10,17 +13,9 @@
   }
 }
 
-.resource-section-title {
-  color: rgba(20, 24, 31);
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 1.25em;
-  letter-spacing: 0.04em;
-}
-
 .resource-link {
   text-decoration: none;
-  color: rgba(40, 113, 230, 1);
+  color: $blue-300;
   font-weight: 400;
   font-size: 16px;
   line-height: 1.5em;

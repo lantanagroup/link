@@ -1,6 +1,20 @@
-<div class="card card-container text-white bg-transparent mb-3" [ngStyle]="getCardStyles()" [ngClass]="getCardClass()">
-	<div class="card-header text-uppercase text-center" [ngStyle]="getTitleStyles()">{{ title }}</div>
-	<div class="card-body">
-        <ng-content></ng-content>
+<div 
+	[ngClass]="getCardClass()"
+>
+	<div
+		class="card__header"
+		[ngClass]="status && 'card__header--' + status"
+	>
+		<h4 
+			class="card__title"
+			[ngClass]="titleAlign && 'text-' + titleAlign"
+		>{{ title }}</h4>
+	</div>
+
+	<div 
+		class="card__body"
+		[ngClass]="hasPadding ? 'p-4' : ''"
+	>
+		<ng-content />
 	</div>
 </div>

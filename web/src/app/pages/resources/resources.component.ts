@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardComponent } from 'src/app/shared/card/card.component';
 import { ResourceContentsComponent } from 'src/app/shared/resource-contents/resource-contents.component';
-import { ResourceGroup } from 'src/app/shared/models/resource-contents.model';
+import { ResourceGroup } from 'src/app/shared/interfaces/resource-contents.model';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 
 @Component({
