@@ -9,13 +9,14 @@ import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from "../../shared/table/table.component";
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { generateRandomData } from 'src/app/helpers/ReportHelper';
+import { SectionComponent } from 'src/app/shared/section/section.component';
 
 @Component({
     selector: 'app-dashboard',
     standalone: true,
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
-    imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, MetricComponent, SectionHeadingComponent, TableComponent]
+    imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, MetricComponent, SectionHeadingComponent, TableComponent, SectionComponent]
 })
 export class DashboardComponent {
   completedDtOptions: DataTables.Settings = {};
