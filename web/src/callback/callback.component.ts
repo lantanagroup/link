@@ -18,12 +18,11 @@ export class CallbackComponent implements OnInit {
   ngOnInit() {
     const code = this.route.snapshot.queryParamMap.get('code');
     console.log(code);
-    // debugger;
     if (code) {
       this.authService.handleAuth(code).subscribe({
         next: () => {
           // Navigate to the desired route after successful login
-          this.router.navigate(['/secure']);
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           console.error('Authentication error:', error);
