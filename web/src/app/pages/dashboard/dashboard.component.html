@@ -19,60 +19,20 @@
   </app-section-heading>
 	
   <div class="row">
-		<div class="col col-lg-3">
+		<div class="col col-md-6 col-lg-3" *ngFor="let card of recentActivityData">
 			<app-card 
-				title="Average Query Time"
+				[title]="card.name"
 				variant="alt"
 				titleAlign="center"
 				[hasBorder]=true
 			>
-				<app-metric mainValue="6.1"
-					subText="hours on average past 7 days"
-					changeValue="18%"></app-metric>
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card 
-				title="Pre-Qualification Issues"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="99"
-				subText="errors per 1,000 patients"
-				changeValue="2%"
-				[isValueUp]="false" />
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card
-				title="Total Patients Queried"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="23K"
-				subText="patients queried past 7 days"
-				changeValue="33%" />
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card
-				title="Average Validation Time"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="3.2"
-				subText="hours on average past 7 days"
-				changeValue="10%"
-				[isValueUp]="false" />
+				<app-metric 
+					[mainValue]="card.highlight"
+					[subText]="card.subText"
+					[changeValue]="card.changeValue"
+					[isValueUp]="card.direction === 'up' ? true : false"
+					[data]="card.series"
+				/>
 			</app-card>
 		</div>
 	</div>

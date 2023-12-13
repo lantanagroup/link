@@ -21,7 +21,21 @@
 			<p class="p--small mb-0">since last {{ changeWindow }}</p>
 		</div>
 		<div class="py-1 px-2 metric__footer--right">
-			<app-mini-chart />
+			<ngx-charts-line-chart
+				[legend]="false"
+				[animations]="false"
+				[showXAxisLabel]="false"
+				[showYAxisLabel]="false"
+				[xAxis]="false"
+				[yAxis]="false"
+				[xAxisLabel]="xAxisLabel"
+				[yAxisLabel]="yAxisLabel"
+				[timeline]="false"
+				[autoScale]="true"
+				[tooltipDisabled]="true"
+				[view]="view"
+				[results]="miniChartData"
+			/>
 		</div>
 	</div>
 </div>
