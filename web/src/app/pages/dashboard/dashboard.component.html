@@ -78,22 +78,23 @@
 	</div>
 </app-hero>
 
-<section>
-  <div class="container py-4">
+<app-section>
+	<div class="container">
+
 		<app-section-heading
 			heading="Recent Activity"
 			[level]=3
 		>
 			<app-button
-      	variant="outline"
-      	type="link"
-      	[link]="{url: '/recent-activity'}"
-    	>
+				variant="outline"
+				type="link"
+				[link]="{url: '/recent-activity'}"
+			>
 				<app-icon filePath="../../../assets/icons/plus.svg" />
 				View All
 			</app-button>
 		</app-section-heading>
-
+	
 		<div class="row">
 			<div class="col">
 				<app-card
@@ -118,7 +119,7 @@
 					</div>
 				</app-card>
 			</div>
-
+	
 			<div class="col">
 				<app-card
 					title="Submissions In Progress"
@@ -126,11 +127,11 @@
 					titleAlign="center"
 				>
 					<div recent_activity_table__wrapper >
-          <app-table [dtOptions]="pendingDtOptions" />
-        </div>
+					<app-table [dtOptions]="pendingDtOptions" />
+				</div>
 				</app-card>
 			</div>
-
+	
 		</div>
-  </div>
-</section>
+	</div>
+</app-section>

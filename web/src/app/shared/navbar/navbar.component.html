@@ -1,17 +1,17 @@
-<nav 
-  [id]="navId" 
+<nav
+  [id]="navId"
   [attr.aria-label]="ariaLabel"
   class="navbar"
   [ngClass]="navLocation && 'navbar--' + navLocation"
   >
-  <ul 
+  <ul
     class="nav"
     [ngClass]="navLocation && 'nav--' + navLocation"
   >
-    <li 
+    <li
       *ngFor="let item of navItems"
       class="nav__item"
-      [ngClass]="navLocation && 'nav--' + navLocation + '__item'"  
+      [ngClass]="navLocation && 'nav--' + navLocation + '__item'"
     >
       <a
         [routerLink]="item.url"
@@ -24,4 +24,5 @@
       </a>
     </li>
   </ul>
+  <ng-content />
 </nav>
