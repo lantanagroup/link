@@ -17,6 +17,7 @@ bootstrapApplication(AppComponent, {
       deps: [Router, AuthService]
     },
     importProvidersFrom(RouterModule.forRoot([
+      { path: '', redirectTo: '/login', pathMatch: 'full' }, //Redirects root path to login
       {
         path: 'login',
         loadComponent: () => import('./app/pages/login/login.component').then(m => m.LoginComponent),
