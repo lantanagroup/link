@@ -1,0 +1,28 @@
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
+        '../../../scss/abstracts';
+
+
+.login-bg {
+  @include background-2x('../../assets/backgrounds/bg-blue-lg', 'png', 100%, auto, center bottom, no-repeat);
+  background-size: cover;
+  color: $white;
+  padding: 2rem 0 2.5rem;
+  height: 100vh;
+}
+
+.inner-container {
+  height: 75vh;
+  max-width: 1085px;
+  margin: auto; /* Centers the box */
+  box-sizing: border-box;
+}
+
+h1, h2 {
+  color: $blue-600;
+}
+
+.btnSignIn {
+  margin-top: 200px;
+}
+

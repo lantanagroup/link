@@ -1,0 +1,25 @@
+<section class="login-bg">
+  <div class="container h-100">
+    <div class="row justify-content-center align-items-center h-100">
+      <div class="col-md-6">
+        <div class="inner-container border p-5 bg-white text-center">
+          <h1 class="text-uppercase">
+            NHSN<span class="fw-bold text-secondary">Link</span>
+          </h1>
+          <h2 class="mt-2">Sign In to NHSNLink</h2>
+          <div class="d-flex justify-content-lg-center">
+            <app-button
+            variant="solid"
+            type="link"
+
+            [link]="{url: signIn()}"
+            >
+              <app-icon filePath="../../../assets/icons/signIn.svg" />
+              Sign In
+            </app-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -17,4 +17,20 @@
     line-height: 1.3em;
   }
 }
+#SecondaryNavigation .header {
+  &__btnLogout {
+    &::before {
+      content: '|';
+      color: $black;
+      display: inline-block;
+      font-family: $font-family-heading;
+      font-size: $font-size-base;
+      font-weight: $font-weight-medium;
+      margin: 0 0.5rem;
+    }
+    .btn {
+      display: inline-block;
+    }
+  }
+}
 
