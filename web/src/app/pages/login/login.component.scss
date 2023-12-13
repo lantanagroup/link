@@ -18,7 +18,15 @@
   box-sizing: border-box;
 }
 
-h1, h2 {
+.login-logo {
+  color: $blue-400;
+  font-family: $font-family-heading;
+  font-size: 4.75rem;
+  letter-spacing: 0.025em;
+  line-height: 1.3em;
+}
+
+h2 {
   color: $blue-600;
 }
 
