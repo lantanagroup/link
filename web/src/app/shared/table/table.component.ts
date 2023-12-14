@@ -16,9 +16,9 @@ import { IconComponent } from '../icon/icon.component';
 export class TableComponent implements OnInit {
   @Input() tableTitle: string = '';
   @Input() dtOptions: DataTables.Settings = {};
+  @Input() dtColumns?: [] = [];
+  @Input() classes?: string = '';
 
-  ngOnInit(): void {
-
-  }
+  ngOnInit(): void {}
   constructor() { };
 }

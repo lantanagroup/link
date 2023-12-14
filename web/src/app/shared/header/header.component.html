@@ -6,21 +6,33 @@
   <div class="header__wrapper">
     <!-- top header -->
     <div class="container-fluid d-flex justify-content-between align-items-center py-3">
-      <a href="/" class="header__logo text-uppercase">
-        NHSN<span class="fw-bold text-secondary">Link</span>
-      </a>
-
-      <app-navbar
-        [navItems]="secondaryNavItems"
-        navId="SecondaryNavigation"
-        ariaLabel="Secondary, Desktop Navigation"
-        navLocation="secondary"
-      />
+      <div>
+        <a href="/" class="header__logo text-uppercase">
+          NHSN<span class="fw-bold text-secondary">Link</span>
+        </a>
+      </div>
+      <div>
+        <app-navbar
+          [navItems]="secondaryNavItems"
+          navId="SecondaryNavigation"
+          ariaLabel="Secondary, Desktop Navigation"
+          navLocation="secondary"
+          >
+          <app-button
+            class="header__btnLogout"
+            *ngIf="isLoggedIn"
+            [onClickHandler]="logout.bind(this)"
+            variant="outline">
+            Logout
+          </app-button>
+        </app-navbar>
+      </div>
     </div>
+
     <!-- desktop: main nav -->
     <div class="header__subheader py-1">
       <div class="container-fluid d-flex justify-content-end">
-        
+
         <app-navbar
           [navItems]="primaryNavItems"
           navId="PrimaryNavigation"

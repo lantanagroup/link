@@ -8,6 +8,7 @@ $gray-50: #f5f3f3; // custom
 $gray-100: #8b939f;
 $gray-200: #4d545e;
 $gray-250: #414750; // custom
+$gray-300: #d0d4d9;
 $gray-500: #14181f;
 
 $blue: #1759c4;
@@ -16,12 +17,13 @@ $blue-100: #c7ebff;
 $blue-200: #00b3ff;
 $blue-300: #2871e6;
 $blue-400: #0c699d;
-$blue-600: #0944a2;
+$blue-600: #555;
 $blue-650: #162f4e; // custom
-$blue-700: #021b3a;
+$blue-700: #333;
 $blue-900: #030344;
 
 $green: #58790c;
+$green-800: #497d0c;
 $green-900: #003d0d;
 
 $red: #ab2816;
@@ -51,7 +53,7 @@ $primary-bg-subtle: $blue-50;
 /****************/
 
 $font-family-sans-serif: 'Poppins', sans-serif; 
-$font-family-heading: 'Futura PT', 'Futura', 'Poppins', sans-serif; // custom
+$font-family-heading: Tahoma, Verdana, Segoe, sans-serif; // custom
 
 $h1-font-size: 3.375em;
 $h2-font-size: 1em;
