@@ -58,6 +58,9 @@ export class DashboardComponent {
         {
           targets: 0, // Details
           className: 'recent-activity--details',
+          render: function (data, type, row) {
+            return `<a href="#">${data}</a>`
+          },
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
               $(cell).addClass('cell--inProgress cell--initiated');
@@ -68,7 +71,10 @@ export class DashboardComponent {
         },
         {
           targets: 1, // Facility
-          'width': '200px'
+          'width': '200px',
+          render: function (data, type, row) {
+            return `<a href="#">${data}</a>`
+          }
         },
         {
           targets: 2, // Timestamp
