@@ -1,5 +1,38 @@
+/* metric.component.scss */ 
+
 @import '../../../scss/customize-bootstrap.scss',
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+
+.metric {
+
+  &__body {
+    background: $blue-700;
+  }
+
+  &__footer {
+    position: relative;
+
+    &--left,
+    &--right {
+      flex: 1 1 0%;
+    }
+
+    &::after {
+      background: $blue-600;
+      bottom: 0;
+      content: '';
+      display: block;
+      height: 100%;
+      left: 50%;
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      width: 0.125rem;
+    }
+  }
+}
+
 
 .metric-container {
   border-radius: 0;

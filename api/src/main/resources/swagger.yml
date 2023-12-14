@@ -610,7 +610,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/GlobalReportByStatusResponse'
+                $ref: '#/components/schemas/GlobalReportResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1796,20 +1796,20 @@ components:
           type: string
         version:
           type: string
-        patientLists:
-          type: array
-          items:
-            type: string
-        aggregates:
-          type: array
-          items:
-            type: string
+#        patientLists:
+#          type: array
+#          items:
+#            type: string
+#        aggregates:
+#          type: array
+#          items:
+#            type: string
         tenantName:
           type: string
         cdcOrgId:
           type: string
-        reportId:
-          type: string
+#        reportId:
+#          type: string
     GlobalReportByStatusResponse:
       type: object
       properties:

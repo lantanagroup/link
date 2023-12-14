@@ -2,12 +2,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-mini-chart',
+  selector: 'app-section',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './mini-chart.component.html',
-  styleUrls: ['./mini-chart.component.css']
+  templateUrl: './section.component.html',
+  styleUrls: ['./section.component.scss']
 })
-export class MiniChartComponent {
+export class SectionComponent {
 
 }

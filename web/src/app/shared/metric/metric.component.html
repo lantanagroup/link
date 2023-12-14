@@ -1,31 +1,43 @@
-<div class="metric-container text-white bg-primary mb-3">
-	<div class="metric-body">
-		<div class="card-header">
-			<h2 class="metric-title">{{ mainValue }}</h2>
-			<div class="metric-subtext">
-				<span>{{ subText }}</span>
-			</div>
+<div class="metric">
+	<div class="metric__body p-2 text-center">
+		<p class="h--display mb-1">
+			{{ mainValue }}
+		</p>
+		<p class="text-white mb-0 fw-medium">
+			{{ subText }}
+		</p>
+	</div>
+	<div class="metric__footer d-flex align-items-center m-2">
+		<div class="text-center py-1 px-2 metric__footer--left">
+			<p class="mb-0 d-flex align-items-center justify-content-center">
+				<fa-icon
+				class="text-success fa-xl"
+					[icon]="isValueUp ? iconUp : iconDown"
+				/>
+				<span class="h--subheading">
+					{{ changeValue }}
+				</span>
+			</p>
+			<p class="p--small mb-0">since last {{ changeWindow }}</p>
 		</div>
-		<div class="card-footer d-flex align-items-center">
-			<!-- First half of the footer with items icon & changeValue -->
-			<div class="changeValueContainer col-6 d-flex flex-column justify-content-center">
-				<div class="d-flex align-items-center mb-2">
-					<img [src]="arrowIconPath"
-						alt="Metric Indicator"
-						style="width: 20px; height: 24px;">
-					<span class="changeValue ms-2">{{ changeValue }}</span>
-				</div>
-				<div class="changeValueSubtext">
-					<span>since last month</span>
-				</div>
-			</div>
-			<!-- This div includes Vertical Divider -->
-			<div class="col-6"
-				style="border-left: 2px solid #0944A2; height: 57px;">
-				<div class="chart-Container">
-					<app-mini-chart></app-mini-chart>
-				</div>
-			</div>
+		<div class="py-1 px-2 metric__footer--right">
+			<ngx-charts-line-chart
+				[legend]="false"
+				[animations]="false"
+				[showXAxisLabel]="false"
+				[showYAxisLabel]="false"
+				[xAxis]="false"
+				[yAxis]="false"
+				[xAxisLabel]="xAxisLabel"
+				[yAxisLabel]="yAxisLabel"
+				[timeline]="false"
+				[autoScale]="true"
+				[tooltipDisabled]="true"
+				[view]="view"
+				[curve]="curve"
+				[scheme]="colorScheme"
+				[results]="miniChartData"
+			/>
 		</div>
 	</div>
 </div>
