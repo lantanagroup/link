@@ -1,11 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faArrowUp, faArrowDown, faThList } from '@fortawesome/free-solid-svg-icons';
-import { faUp, faDown } from '@fortawesome/pro-solid-svg-icons';
+import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { ChartDatapoint, ChartDataModel } from '../interfaces/chart.model';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
-import { ThisReceiver } from '@angular/compiler';
+import { curveBasis } from 'd3-shape';
 
 @Component({
   selector: 'app-metric',
@@ -22,8 +21,8 @@ export class MetricComponent {
   @Input() isValueUp: boolean = true; // This will change the path of image
   @Input() data: ChartDatapoint[] = [];
 
-  iconUp = faUp ? faUp : faArrowUp
-  iconDown = faDown ? faDown : faArrowDown
+  iconUp = faArrowUp
+  iconDown = faArrowDown
 
   // chart render
 
@@ -31,8 +30,11 @@ export class MetricComponent {
   view: [number, number] = [100, 60];
   xAxisLabel: string = 'X';
   yAxisLabel: string = 'Y';
-  colorScheme: {} = {
-    domain: ['#497d0c', '#497d0c']
+  curve: any = curveBasis;
+  colorScheme: any = {
+    name: 'success',
+    selectable: false,
+    domain: ['#497d0c']
   };
 
   miniChartData: ChartDataModel[] = [];
