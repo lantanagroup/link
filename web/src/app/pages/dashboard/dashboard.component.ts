@@ -58,33 +58,33 @@ export class DashboardComponent {
         {
           targets: 0, // Details
           className: 'recent-activity--details',
+          render: function (data, type, row) {
+            return `<a href="#">${data}</a>`
+          },
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('details-inprogress');
+              $(cell).addClass('cell--inProgress cell--initiated');
             } else {
-              $(cell).addClass('details-bundle');
+              $(cell).addClass('cell--complete');
             }
           }
         },
         {
           targets: 1, // Facility
-          className: 'recent-activity--facility',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('facility-regular');
+          'width': '200px',
+          render: function (data, type, row) {
+            return `<a href="#">${data}</a>`
           }
         },
         {
           targets: 2, // Timestamp
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('table-default-font-style recent-activity--timestamp text-black');
-          },
           render: function (data, type, row) {
             // Split the timestamp into date and time parts
             const dateTimeParts = data.split(' ');
             const datePart = dateTimeParts[0];
             const timePart = dateTimeParts.slice(1).join(' ');
 
-            return `<div>${datePart}</div><div>${timePart}</div>`;
+            return `${datePart}<br>${timePart}`;
           }
         }
       ],
@@ -92,17 +92,14 @@ export class DashboardComponent {
         {
           title: 'Details',
           data: 'Details',
-          width: '85px'
         },
         {
           title: 'Facility',
           data: 'Facility',
-          width: '200px'
         },
         {
           title: 'Timestamp',
           data: 'Timestamp',
-          width: '90px'
         }
       ]
     }
