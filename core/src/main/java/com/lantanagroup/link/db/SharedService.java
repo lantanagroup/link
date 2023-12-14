@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -410,7 +411,7 @@ public class SharedService {
         cs.setNString("reportId", metric.getReportId());
         cs.setNString("category", metric.getCategory());
         cs.setNString("taskName", metric.getTaskName());
-        cs.setNString("timestamp", metric.getTimestamp().toString());
+        cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
         cs.setNString("data", mapper.writeValueAsString(metric.getData()));
 
         cs.executeUpdate();
