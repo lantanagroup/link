@@ -17,7 +17,7 @@
       View All
     </app-button>
   </app-section-heading>
-	
+
   <div class="row">
 		<div class="col col-md-6 col-lg-3" *ngFor="let card of recentActivityData">
 			<app-card 
@@ -48,13 +48,13 @@
 			<app-button
 				variant="outline"
 				type="link"
-				[link]="{url: '/recent-activity'}"
+				[link]="{url: '/activities'}"
 			>
 				<app-icon filePath="../../../assets/icons/plus.svg" />
 				View All
 			</app-button>
 		</app-section-heading>
-	
+
 		<div class="row">
 			<div class="col">
 				<app-card
@@ -67,7 +67,7 @@
 					</div>
 				</app-card>
 			</div>
-			
+
 			<div class="col">
 				<app-card
 					title="Failed Submissions"
@@ -79,7 +79,7 @@
 					</div>
 				</app-card>
 			</div>
-	
+
 			<div class="col">
 				<app-card
 					title="Submissions In Progress"
@@ -91,7 +91,7 @@
 				</div>
 				</app-card>
 			</div>
-	
+
 		</div>
 	</div>
 </app-section>
