@@ -9,6 +9,7 @@ import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from "../../shared/table/table.component";
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { generateRandomData } from 'src/app/helpers/ReportHelper';
+import { recentActivityData } from 'src/app/helpers/RecentActivityHelper';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 
 @Component({
@@ -22,6 +23,8 @@ export class DashboardComponent {
   completedDtOptions: DataTables.Settings = {};
   failedDtOptions: DataTables.Settings = {};
   pendingDtOptions: DataTables.Settings = {};
+
+  recentActivityData = recentActivityData
 
   ngOnInit(): void {
     // Step 1: Generate random data
