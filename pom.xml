@@ -18,7 +18,7 @@
         <jetty.version>9.4.43.v20210629</jetty.version>
         <lombok.version>1.18.22</lombok.version>
         <mockito.version>3.12.4</mockito.version>
-        <hapi.lib.version>6.10.0</hapi.lib.version>
+        <hapi.lib.version>6.2.0</hapi.lib.version>
         <saxon.version>9.9.1-5</saxon.version>
         <junit.version>4.13.2</junit.version>
     </properties>
