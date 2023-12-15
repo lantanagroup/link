@@ -4,20 +4,35 @@
   [cta]="heroButton"
 />
 
-<section>
-  <div class="container d-flex gap-4 flex-column py-4">
-    <app-accordion title="normalizations" [isExpanded]="true">Content</app-accordion>
-    <app-accordion title="scheduling" [isExpanded]="true">Content</app-accordion>
-    <app-accordion title="native fhir query" [isExpanded]="true">Content</app-accordion>
-    <app-accordion title="census acquisition" [isExpanded]="true">Content</app-accordion>
-    <app-accordion title="query plans" [isExpanded]="true">Content</app-accordion>
+<app-section>
+  <div class="container">
+    <app-section-heading
+			heading="Recent Activity"
+			[level]=3
+		>
+			<app-button
+        variant="reverse"
+				type="button"
+			>
+				<app-icon filePath="../../../assets/icons/sliders.svg" />
+			</app-button>
+		</app-section-heading>
+
+    <app-button
+      variant="outline"
+      type="link"
+      [link]="{url: '/facilities/facility/123'}"
+    >
+      Single Facility Page
+    </app-button>
   </div>
-</section>
+</app-section>
 
 <ng-template #heroButton>
   <app-button
     variant="outline--reverse"
-    type="button"
+    type="link"
+    [link]="{url: '/facilities/add-facility'}"
   >
     <app-icon filePath="../../../assets/icons/plus.svg" />
     Add New Facility
