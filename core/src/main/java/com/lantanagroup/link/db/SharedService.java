@@ -1,6 +1,10 @@
 package com.lantanagroup.link.db;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.db.DBAppender;
+import ch.qos.logback.core.db.DriverManagerConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
@@ -9,6 +13,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.*;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -19,12 +24,15 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,21 +43,46 @@ public class SharedService {
   @Autowired
   private ApiConfig config;
 
-  public Connection getSQLConnection() {
-    try {
-      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-      Connection conn = DriverManager.getConnection(this.config.getConnectionString());
-      if (conn != null) {
-        DatabaseMetaData dm = conn.getMetaData();
-        return conn;
-      }
-    } catch (SQLException ex) {
-      logger.error("Could not establish connection to database", ex);
-    } catch (ClassNotFoundException ex) {
-      logger.error("Could not load driver for SQL server database", ex);
-    }
+  static {
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
 
-    return null;
+  private static GlobalReportResponse getGlobalReportResponse(Tenant tenantConfig, String reportId, ResultSet rs) throws SQLException, JsonProcessingException {
+    GlobalReportResponse report = new GlobalReportResponse();
+    report.setId(reportId);
+    report.setTenantId(tenantConfig.getId());
+    report.setCdcOrgId(tenantConfig.getCdcOrgId());
+    report.setTenantName(tenantConfig.getName());
+    report.setVersion(rs.getString(2));
+    report.setStatus(ReportStatuses.valueOf(rs.getString(3)));
+    report.setGeneratedTime(rs.getDate(4));
+    report.setSubmittedTime(rs.getDate(5));
+    report.setPeriodStart(rs.getString(6));
+    report.setPeriodEnd(rs.getString(7));
+    report.setMeasureIds((List<String>) new ObjectMapper().readValue(rs.getString(8), List.class));
+    return report;
+  }
+
+  public Connection getSQLConnection() {
+    return this.getSQLConnection(this.config.getConnectionString());
+  }
+
+  private void initDatabaseLogging() {
+    LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+    DriverManagerConnectionSource source = new DriverManagerConnectionSource();
+    source.setContext(logCtx);
+    source.setDriverClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+    source.setUrl(this.config.getConnectionString());
+    source.start();
+
+    DBAppender appender = new DBAppender();
+    appender.setContext(logCtx);
+    appender.setConnectionSource(source);
+    appender.setName("link-db");
+    appender.start();
+
+    logCtx.getLogger("ROOT").addAppender(appender);
   }
 
   public void initDatabase() {
@@ -75,6 +108,8 @@ public class SharedService {
           return;
         }
       }
+
+      this.initDatabaseLogging();
     } catch (SQLException | NullPointerException e) {
       logger.error("Failed to connect to shared database", e);
     } catch (IOException e) {
@@ -361,8 +396,86 @@ public class SharedService {
       assert rowsAffected <= 1;
 
       return rowsAffected;
-
     } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void saveMetrics(List<Metrics> metrics){
+    metrics.forEach(metric -> {
+      try (Connection conn = this.getSQLConnection()) {
+        assert conn != null;
+        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?) }");
+        cs.setNString("id", metric.getId().toString());
+        cs.setNString("tenantId", metric.getTenantId());
+        cs.setNString("reportId", metric.getReportId());
+        cs.setNString("category", metric.getCategory());
+        cs.setNString("taskName", metric.getTaskName());
+        cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
+        cs.setNString("data", mapper.writeValueAsString(metric.getData()));
+
+        cs.executeUpdate();
+      } catch(SQLServerException e){
+        SQLServerHelper.handleException(e);
+      } catch (SQLException | NullPointerException | JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    });
+  }
+
+  public List<Metrics> getMetrics(LocalDate start, LocalDate end, String tenantId, String reportId) {
+
+    if (start.isAfter(end)) {
+      throw new RuntimeException("Start date must be before end date");
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("SELECT * FROM [dbo].[metrics] WHERE CONVERT(datetime, timestamp) >= ? AND CONVERT(datetime, timestamp) < ?");
+
+      //filter on tenant id if supplied
+      if (!StringUtils.isEmpty(tenantId)) {
+        sql.append(" AND tenantId = ?");
+      }
+
+      //filter on report id if supplied
+      if (!StringUtils.isEmpty(reportId)) {
+        sql.append(" AND  reportId = ?");
+      }
+
+      PreparedStatement ps = conn.prepareStatement(sql.toString());
+      ps.setDate(1, java.sql.Date.valueOf(start));
+      ps.setDate(2, java.sql.Date.valueOf(end));
+      int paramIndex = 2;
+      if (!StringUtils.isEmpty(tenantId)) {
+        paramIndex++;
+        ps.setNString(paramIndex, tenantId);
+      }
+      if (!StringUtils.isEmpty(reportId)) {
+        paramIndex++;
+        ps.setNString(paramIndex, reportId);
+      }
+
+      ResultSet rs = ps.executeQuery();
+      var metrics = new ArrayList<Metrics>();
+
+      while(rs.next()) {
+        Metrics metric = new Metrics();
+        metric.setId(rs.getObject(1, UUID.class));
+        metric.setTenantId(rs.getString(2));
+        metric.setReportId(rs.getString(3));
+        metric.setCategory(rs.getString(4));
+        metric.setTaskName(rs.getString(5));
+        metric.setTimestamp(new Date(rs.getString(6)));
+        metric.setData(mapper.readValue(rs.getString(7), MetricData.class));
+
+        metrics.add(metric);
+      }
+
+      return metrics;
+    } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
@@ -498,6 +611,17 @@ public class SharedService {
     }
   }
 
+  private User createUser(ResultSet rs) throws SQLException {
+    User user = new User();
+    user.setId(rs.getObject("id", UUID.class));
+    user.setEmail(rs.getString("email"));
+    user.setName(rs.getString("name"));
+    user.setEnabled(rs.getBoolean("enabled"));
+    user.setPasswordHash(rs.getString("passwordHash"));
+    user.setPasswordSalt(rs.getBytes("passwordSalt"));
+    return user;
+  }
+
   public User getUser(UUID id) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
@@ -510,7 +634,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -526,7 +650,7 @@ public class SharedService {
       List<User> users = new ArrayList<>();
 
       while (rs.next()) {
-        User next = User.create(rs);
+        User next = createUser(rs);
         next.setPasswordSalt(null);
         next.setPasswordHash(null);
         users.add(next);
@@ -556,7 +680,7 @@ public class SharedService {
         return null;
       }
 
-      return User.create(rs);
+      return createUser(rs);
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
@@ -570,5 +694,180 @@ public class SharedService {
       databaseNames.add(tenantDatabaseName);
     }
     return databaseNames;
+  }
+
+  public List<LogMessage> findLogMessages(Date startDate, Date endDate, String[] severities, int page, String content) {
+    int countPerPage = 10;
+
+    if (severities != null) {
+      for (String s : severities) {
+        if (Arrays.stream(LogMessage.SEVERITIES).noneMatch(s::equals)) {
+          throw new IllegalArgumentException("Invalid severity, must be one of " + String.join(", ", LogMessage.SEVERITIES));
+        }
+      }
+    }
+
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      String sql = "SELECT * FROM [logging_event] WHERE event_id IS NOT NULL";
+      List<Object> params = new ArrayList<>();
+
+      if (startDate != null) {
+        sql += " AND timestmp >= ?";
+        params.add(BigDecimal.valueOf(startDate.getTime()));
+      }
+
+      if (endDate != null) {
+        sql += " AND timestmp <= ?";
+        params.add(BigDecimal.valueOf(endDate.getTime()));
+      }
+
+      if (severities != null && severities.length > 0) {
+        sql += " AND level_string IN ('";
+        sql += String.join("','", severities);
+        sql += "')";
+      }
+
+      if (content != null && !content.isEmpty()) {
+        sql += " AND formatted_message LIKE ?";
+        params.add("%" + content + "%");
+      }
+
+      sql += " ORDER BY timestmp DESC";
+
+      // paging
+      sql += " OFFSET ? ROWS FETCH NEXT " + countPerPage + " ROWS ONLY";
+      params.add((page - 1) * countPerPage);
+
+      PreparedStatement ps = conn.prepareStatement(sql);
+      for (int i = 0; i < params.size(); i++) {
+        ps.setObject(i + 1, params.get(i));
+      }
+
+      ResultSet rs = ps.executeQuery();
+      List<LogMessage> logMessages = new ArrayList<>();
+
+      while (rs.next()) {
+        LogMessage next = LogMessage.create(rs);
+        logMessages.add(next);
+      }
+
+      return logMessages;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Connection getSQLConnection(String connectionString) {
+    try {
+      Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+      Connection conn = DriverManager.getConnection(connectionString);
+      if (conn != null) {
+        DatabaseMetaData dm = conn.getMetaData();
+        return conn;
+      }
+    } catch (SQLException ex) {
+      logger.error("Could not establish connection to database", ex);
+    } catch (ClassNotFoundException ex) {
+      logger.error("Could not load driver for SQL server database", ex);
+    }
+
+    return null;
+  }
+
+  public List<GlobalReportResponse> getAllReports() {
+    List<GlobalReportResponse> reports = new ArrayList<>();
+
+    for (Tenant tenantConfig : this.getTenantConfigs()) {
+      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
+        PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd, measureIds FROM [dbo].[report]");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+          String reportId = rs.getString(1);
+          GlobalReportResponse report = getGlobalReportResponse(tenantConfig, reportId, rs);
+          reports.add(report);
+        }
+      } catch (SQLException e) {
+        logger.error("SQL exception while retrieving global reports from database", e);
+        throw new RuntimeException(e);
+      } catch (JsonProcessingException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return reports;
+  }
+
+  private static TenantSummary getTenantSummaryResponse(Tenant tenantConfig, ResultSet rs) throws SQLException {
+    TenantSummary tenantSummary = new TenantSummary();
+    tenantSummary.setId(tenantConfig.getId());
+    tenantSummary.setName(tenantConfig.getName());
+    tenantSummary.setNhsnOrgId(tenantConfig.getCdcOrgId());
+
+    String measureIds = rs.getString(2);
+    measureIds = measureIds.replaceAll("\\[", "").replaceAll("\\]", "");
+
+    List<String> measures = Arrays.asList(measureIds.split(","));
+    // get measures from measureIds string, split on comma, convert to list of TenantSummaryMeasure
+    List<TenantSummaryMeasure> list = measures.stream().map(m -> {
+      var measure = new TenantSummaryMeasure();
+      m = m.replace("\"", "");
+      measure.setId(m);
+      measure.setShortName(m);
+      measure.setLongName(m);
+      return measure;
+    }).collect(Collectors.toList());
+
+    tenantSummary.setMeasures(list);
+    tenantSummary.setLastSubmissionId(rs.getString(1));
+    //convert time stamp to date yyyy-MM-dd HH:mm:ss
+    DateTimeFormatter dateTimeFormatter = null;
+    String date = rs.getTimestamp(3).toLocalDateTime().format(dateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));     
+    tenantSummary.setLastSubmissionDate(date);
+    return tenantSummary;
+  }
+
+  private static void sortTenantSummaryList(TenantSummarySort sort, boolean sortAscend, List<TenantSummary> tenantSummaryList) {
+
+    Map<TenantSummarySort, Function<TenantSummary, String>> sortColumnMapper = new HashMap<>();
+
+    sortColumnMapper.put(TenantSummarySort.NAME, TenantSummary::getName);
+    sortColumnMapper.put(TenantSummarySort.SUBMISSION_DATE, TenantSummary::getLastSubmissionDate);
+    sortColumnMapper.put(TenantSummarySort.NHSN_ORG_ID, TenantSummary::getNhsnOrgId);
+
+    if (sortAscend) {
+      tenantSummaryList.sort(Comparator.comparing(sortColumnMapper.get(sort)));
+    } else {
+      tenantSummaryList.sort(Comparator.comparing(sortColumnMapper.get(sort)).reversed());
+    }
+  }
+
+  public List<TenantSummary> getTenantSummary(String searchCriteria, TenantSummarySort sort, boolean sortAscend) {
+
+    List<TenantSummary> tenantSummaryList = new ArrayList<>();
+    // filter the tenants
+    for (Tenant tenantConfig : this.getTenantConfigs()) {
+      // if search criteria is not empty, filter tenants by search criteria
+      if (!StringUtils.isBlank(searchCriteria)) {
+        if (!(tenantConfig.getName().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getId().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getCdcOrgId().toLowerCase().contains(searchCriteria.toLowerCase()))) {
+          continue;
+        }
+      }
+      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
+        PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+          TenantSummary tenantSummary = getTenantSummaryResponse(tenantConfig, rs);
+          tenantSummaryList.add(tenantSummary);
+        }
+      } catch (SQLException e) {
+        logger.error("SQL exception while retrieving global reports from database", e);
+        throw new RuntimeException(e);
+      }
+    }
+    // sort  by name  or nhsnOrgId or  last submission date
+    sortTenantSummaryList(sort, sortAscend, tenantSummaryList);
+    return tenantSummaryList;
   }
 }

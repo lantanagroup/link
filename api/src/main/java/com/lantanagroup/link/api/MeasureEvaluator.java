@@ -58,7 +58,7 @@ public class MeasureEvaluator {
     String end = this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."));
 
     Bundle patientBundle;
-    try (Stopwatch stopwatch = this.stopwatchManager.start("retrieve-patient-data")) {
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_RETRIEVE_PATIENT_DATA, Constants.CATEGORY_REPORT)) {
       patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
     }
 
@@ -79,7 +79,7 @@ public class MeasureEvaluator {
 
     FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("evaluate-measure")) {
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
       measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
     }
 

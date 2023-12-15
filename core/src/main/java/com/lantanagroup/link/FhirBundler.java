@@ -2,8 +2,12 @@ package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.Aggregate;
+import com.lantanagroup.link.db.model.PatientList;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -11,15 +15,14 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class FhirBundler {
   protected static final Logger logger = LoggerFactory.getLogger(FhirBundler.class);
-  private static final List<String> SUPPLEMENTAL_DATA_EXTENSION_URLS = List.of(
-          "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-supplementalData",
-          "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference");
 
   private final EventService eventService;
 
@@ -73,10 +76,50 @@ public class FhirBundler {
     return this.device;
   }
 
+  /**
+   * Creates a Library resource that contains the query plans used for the report
+   *
+   * @param measureIds The measure ids that were used for the report
+   * @return
+   */
+  private Library createQueryPlanLibrary(List<String> measureIds) {
+    Library lib = new Library();
+    lib.setId(UUID.randomUUID().toString());
+    lib.setStatus(Enumerations.PublicationStatus.ACTIVE);
+    lib.setType(new CodeableConcept().addCoding(new Coding()
+            .setSystem(Constants.LibraryTypeSystem)
+            .setCode(Constants.LibraryTypeModelDefinitionCode)));
+    lib.setName("Link Query Plan");
+
+    // Build a subset of the query plans that were used for this report
+    Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
+    measureIds.forEach(mid -> {
+      QueryPlan queryPlan = this.tenantService.getConfig().getFhirQuery().getQueryPlans().get(mid);
+
+      if (queryPlan != null) {
+        queryPlans.put(mid, queryPlan);
+      } else {
+        logger.warn("Could not find query plan for {}", mid);
+      }
+    });
+
+    Yaml yaml = new Yaml();
+    String queryPlansYaml = yaml.dump(queryPlans);
+    lib.addContent()
+            .setContentType("text/yml")
+            .setData(queryPlansYaml.getBytes(StandardCharsets.UTF_8));
+
+    return lib;
+  }
+
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
+
+    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
+      bundle.addEntry().setResource(this.createQueryPlanLibrary(report.getMeasureIds()));
+    }
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
@@ -99,6 +142,9 @@ public class FhirBundler {
     if (noProfileResources > 0) {
       logger.warn("{} resources in the bundle don't have profiles", noProfileResources);
     }
+
+    // Sort the entries so they're always in the same order
+    FhirBundlerEntrySorter.sort(bundle);
 
     return bundle;
   }
@@ -173,7 +219,7 @@ public class FhirBundler {
             .addTag(Constants.MainSystem, "report", "Report");
     bundle.getIdentifier()
             .setSystem(Constants.IdentifierSystem)
-            .setValue("urn:uuid:" + UUID.randomUUID().toString());
+            .setValue("urn:uuid:" + UUID.randomUUID());
     bundle.setType(this.getBundlingConfig().getBundleType());
     bundle.setTimestamp(new Date());
     return bundle;

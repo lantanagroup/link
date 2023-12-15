@@ -15,7 +15,10 @@ import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.validation.ValidationService;
+import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
@@ -62,6 +65,12 @@ public class ReportController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
+
+  @Autowired
+  private Validator validator;
+
+  @Autowired
+  private ValidationService validationService;
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -119,7 +128,7 @@ public class ReportController extends BaseController {
 
     Query query = new Query();
     query.setApplicationContext(this.context);
-    try (Stopwatch stopwatch = stopwatchManager.start(String.format("query-phase-%s", queryPhase))) {
+    try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_QUERY)) {
       query.execute(tenantService, criteria, context, queryPhase);
     }
   }
@@ -270,6 +279,20 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
+    Report report = new Report();
+    report.setId(masterIdentifierValue);
+    report.setPeriodStart(criteria.getPeriodStart());
+    report.setPeriodEnd(criteria.getPeriodEnd());
+    report.setMeasureIds(measureIds);
+    report.setDeviceInfo(FhirHelper.getDevice(this.config));
+
+    // Preserve the version of the already-existing report
+    if (existingReport != null) {
+      report.setVersion(existingReport.getVersion());
+    }
+
+    tenantService.saveReport(report, reportContext.getPatientLists());
+
     this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Scoop the data for the patients and store it
@@ -285,43 +308,38 @@ public class ReportController extends BaseController {
       this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
-    logger.info("Statistics after query:\n{}", this.stopwatchManager.getStatistics());
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
-    Report report = new Report();
-    report.setId(masterIdentifierValue);
-    report.setPeriodStart(criteria.getPeriodStart());
-    report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(measureIds);
-    tenantService.saveReport(report, reportContext.getPatientLists());
-
-    // Preserve the version of the already-existing report
-    if (existingReport != null) {
-      report.setVersion(existingReport.getVersion());
-    }
-
     logger.info("Beginning initial measure evaluation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL);
+    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    logger.info("Beginning supplemental query and store");
-    this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-
-    logger.info("Beginning supplemental measure evaluation and aggregation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL);
+    if (CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+      logger.info("No supplemental query plan; skipping supplemental query and store");
+      logger.info("Beginning aggregation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
+    } else {
+      logger.info("Beginning supplemental query and store");
+      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
+      logger.info("Beginning supplemental measure evaluation and aggregation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
+    }
 
     report.setGeneratedTime(new Date());
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
-    logger.info("Done generating report {}", report.getId());
+    logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-    logger.info("Statistics for entire report:\n{}", this.stopwatchManager.getStatistics());
+    this.validationService.validate(stopwatchManager, tenantService, report);
+
+    logger.info("Done validating report. Statistics are:\n{}", this.stopwatchManager.getStatistics());
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 
     return report;
   }
 
-  private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase) throws Exception {
+  private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
       if (queryPhase == QueryPhase.INITIAL) {
         measureContext.setReportId(ReportIdHelper.getMasterMeasureReportId(reportContext.getMasterIdentifierValue(), measureContext.getBundleId()));
@@ -330,13 +348,15 @@ public class ReportController extends BaseController {
       IReportAggregator reportAggregator = (IReportAggregator) context.getBean(Class.forName(this.config.getReportAggregator()));
       ReportGenerator generator = new ReportGenerator(sharedService, tenantService, this.stopwatchManager, reportContext, measureContext, criteria, this.config, reportAggregator, report);
 
-      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
+      if (!aggregateOnly) {
+        this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureEval, criteria, reportContext, measureContext);
 
-      try (Stopwatch stopwatch = stopwatchManager.start(String.format("evaluate-phase-%s", queryPhase))) {
-        generator.generate(queryPhase);
+        try (Stopwatch stopwatch = stopwatchManager.start(queryPhase.toString(), Constants.CATEGORY_EVALUATE)) {
+          generator.generate(queryPhase);
+        }
+
+        this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
       }
-
-      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureEval, criteria, reportContext, measureContext);
 
       if (queryPhase == QueryPhase.SUPPLEMENTAL) {
         generator.aggregate();
@@ -378,11 +398,15 @@ public class ReportController extends BaseController {
     }
 
     Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
-    sender.send(tenantService, submissionBundle, report, request, user);
-
+    //noinspection unused
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
+      sender.send(tenantService, submissionBundle, report, request, user);
+    }
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
+
+    stopwatchManager.storeMetrics(tenantId, reportId);
 
     tenantService.saveReport(report);
 

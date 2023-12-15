@@ -5,8 +5,12 @@ import lombok.Setter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class ReportingPeriodCalculator {
+
+  @Setter
+  private TimeZone timeZone;
   private ReportingPeriodMethods method;
   private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
@@ -17,8 +21,18 @@ public class ReportingPeriodCalculator {
     this.method = method;
   }
 
+  public ReportingPeriodCalculator(ReportingPeriodMethods method, TimeZone timeZone) {
+    this.method = method;
+    this.timeZone = timeZone;
+  }
+
   public String getStart() {
     Calendar cal = Calendar.getInstance();
+
+    if(timeZone  != null) {
+      cal.setTimeZone(timeZone);
+    }
+
     cal.setTime(this.baseDate);
 
     int startOfWeek = cal.get(Calendar.DAY_OF_WEEK) - cal.getFirstDayOfWeek();
@@ -45,12 +59,16 @@ public class ReportingPeriodCalculator {
       default:
         throw new IllegalArgumentException("method");
     }
-
     return dateFormat.format(cal.getTime());
   }
 
   public String getEnd() {
     Calendar cal = Calendar.getInstance();
+
+    if(timeZone  != null) {
+      cal.setTimeZone(timeZone);
+    }
+
     cal.setTime(this.baseDate);
 
     int startOfWeek = cal.get(Calendar.DAY_OF_WEEK) - cal.getFirstDayOfWeek();

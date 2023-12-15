@@ -18,6 +18,11 @@ public class Bundling {
   private boolean includeCensuses = true;
 
   /**
+   * Whether to include the query plans used to generate the report in the submission bundle as a Binary resource entry.
+   */
+  private boolean includesQueryPlans = true;
+
+  /**
    * Whether to merge multiple censuses into a single list.
    */
   private boolean mergeCensuses = true;

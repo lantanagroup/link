@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -120,7 +121,7 @@ public class DataController extends BaseController {
       PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
       patientScoop.setShouldPersist(false);
       patientScoop.setTenantService(tenantService);
-      patientScoop.setStopwatchManager(new StopwatchManager());
+      patientScoop.setStopwatchManager(new StopwatchManager(this.sharedService));
 
       PatientOfInterestModel poi = new PatientOfInterestModel();
       poi.setReference(patientId);
@@ -132,8 +133,8 @@ public class DataController extends BaseController {
 
       patientScoop.loadInitialPatientData(criteria, context, pois);
       patientScoop.loadSupplementalPatientData(criteria, context, pois);
-      String stats = patientScoop.getStopwatchManager().getStatistics();
-      logger.info(stats);
+      //No report to get an id from, set the reportId to the tenant to indicate this metric applies to the tenant as a whole
+      patientScoop.getStopwatchManager().storeMetrics(tenantId, tenantId);
     } catch (Exception ex) {
       testResponse.setSuccess(false);
       testResponse.setMessage(ex.getMessage());

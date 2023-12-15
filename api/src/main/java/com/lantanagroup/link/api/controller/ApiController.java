@@ -6,8 +6,9 @@ import com.google.common.base.Strings;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.config.SwaggerConfig;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.ApiInfoGroup;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.ApiInfoModel;
+import com.lantanagroup.link.model.ApiVersionModel;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,8 +42,13 @@ public class ApiController {
   }
 
   @GetMapping
-  public ApiInfoModel getVersionInfo() {
+  public ApiVersionModel getVersionInfo() {
     return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+  }
+
+  @GetMapping("/info")
+  public List<ApiInfoGroup> getInfo() {
+    return this.apiConfig.getInfoGroups();
   }
 
   private static Map<Object, Object> getYamlObj(Map<Object, Object> obj, String property) {
@@ -91,9 +97,9 @@ public class ApiController {
     }
 
     // Version
-    ApiInfoModel apiInfoModel = this.getVersionInfo();
+    ApiVersionModel apiVersionModel = this.getVersionInfo();
     Map<Object, Object> info = getYamlObj(spec, "info");
-    info.put("version", apiInfoModel != null && !Strings.isNullOrEmpty(apiInfoModel.getVersion()) ? apiInfoModel.getVersion() : "dev");
+    info.put("version", apiVersionModel != null && !Strings.isNullOrEmpty(apiVersionModel.getVersion()) ? apiVersionModel.getVersion() : "dev");
   }
 
   @GetMapping(value = "/docs", produces = "text/yaml")

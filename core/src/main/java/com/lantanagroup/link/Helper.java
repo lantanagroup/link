@@ -7,7 +7,7 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.Report;
-import com.lantanagroup.link.model.ApiInfoModel;
+import com.lantanagroup.link.model.ApiVersionModel;
 import com.microsoft.sqlserver.jdbc.SQLServerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -36,9 +36,8 @@ public class Helper {
 
   public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
-  public static final String RFC_1123_DATE_TIME_FORMAT = "EEE, d MMM yyyy HH:mm:ss Z";
 
-  public static ApiInfoModel getVersionInfo(String evaluationService) {
+  public static ApiVersionModel getVersionInfo(String evaluationService) {
     String cqfVersion = null;
 
     if (StringUtils.isNotEmpty(evaluationService)) {
@@ -63,10 +62,10 @@ public class Helper {
 
       if (buildFile == null) {
         logger.warn("No build.yml file found, returning default \"dev\" build and \"0.9.0\" version");
-        return new ApiInfoModel(cqfVersion);
+        return new ApiVersionModel(cqfVersion);
       }
 
-      ApiInfoModel apiInfo = mapper.readValue(buildFile, ApiInfoModel.class);
+      ApiVersionModel apiInfo = mapper.readValue(buildFile, ApiVersionModel.class);
 
       if (StringUtils.isNotEmpty(cqfVersion)) {
         apiInfo.setCqfVersion(cqfVersion);
@@ -75,7 +74,7 @@ public class Helper {
       return apiInfo;
     } catch (IOException ex) {
       logger.error("Error deserializing build.yml file", ex);
-      return new ApiInfoModel(cqfVersion);
+      return new ApiVersionModel(cqfVersion);
     }
   }
 
@@ -90,6 +89,10 @@ public class Helper {
   }
 
   public static Date parseFhirDate(String dateStr) throws ParseException {
+    if (StringUtils.isEmpty(dateStr)) {
+      return null;
+    }
+
     SimpleDateFormat formatterMillis = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
     SimpleDateFormat formatterSec = new SimpleDateFormat(SIMPLE_DATE_SECONDS_FORMAT);
     Date dateReturned;

@@ -1,0 +1,20 @@
+/* header.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.header {
+
+  &__subheader {
+    background: $blue-400;
+  }
+
+  &__logo {
+    color: $blue-400;
+    font-family: $font-family-heading;
+    font-size: 2.25rem;
+    letter-spacing: 0.025em;
+    line-height: 1.3em;
+  }
+}
+

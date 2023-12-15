@@ -1,0 +1,11 @@
+<div class="resource-section-container" *ngFor="let section of resourceSections">
+	<h6>{{ section.name }}</h6>
+	<div class="resource-section-links-container" *ngFor="let link of section.links">
+		<a href="{{ link.url }}"
+			class="resource-link"
+			[target]="link.target ? link.target : '_self'">
+			{{ link.title }}
+			<img src="assets/icons/externalLink.svg" alt="icon" class="link-icon">
+		</a>
+	</div>
+</div>

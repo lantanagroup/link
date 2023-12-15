@@ -30,6 +30,10 @@ public class Tenant {
   private String description;
 
   /**
+   * The Time Zone string for the Tenant
+   */
+  private String timeZoneId;
+  /**
    * The connection string to use for tenant-specific data.
    */
   private String connectionString;
@@ -75,11 +79,6 @@ public class Tenant {
    * ISO 8601 formatted duration in which to keep data for each tenant. Defaulted to 3 months.
    */
   private String retentionPeriod = "P3M";
-
-  /**
-   * Configuration for how to validate submission bundles.
-   */
-  private Validation validation = new Validation();
 
   /**
    *

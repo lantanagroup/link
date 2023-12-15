@@ -1,23 +1,29 @@
 package com.lantanagroup.link.db;
 
-import com.lantanagroup.link.Helper;
+import ca.uhn.fhir.parser.IParser;
+import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.db.model.tenant.ValidationResult;
+import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.db.repositories.*;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
-import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -27,15 +33,21 @@ public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
 
   @Getter
-  private Tenant config;
+  private final Tenant config;
 
+  private final DataSource dataSource;
   private final ConceptMapRepository conceptMaps;
   private final PatientListRepository patientLists;
   private final ReportRepository reports;
   private final PatientDataRepository patientDatas;
   private final PatientMeasureReportRepository patientMeasureReports;
   private final AggregateRepository aggregates;
-  private final DataSource dataSource;
+  private final BulkStatusRepository bulkStatuses;
+  private final BulkStatusResultRepository bulkStatusResults;
+  private final QueryRepository queries;
+  private final DataTraceRepository dataTraces;
+  private final ValidationRepository validations;
+  private final ValidationCategoryRepository validationCategories;
 
   protected TenantService(Tenant config) {
     this.config = config;
@@ -43,12 +55,19 @@ public class TenantService {
             .type(SQLServerDataSource.class)
             .url(config.getConnectionString())
             .build();
-    this.conceptMaps = new ConceptMapRepository(this.dataSource);
-    this.patientLists = new PatientListRepository(this.dataSource);
-    this.reports = new ReportRepository(this.dataSource);
-    this.patientDatas = new PatientDataRepository(this.dataSource);
-    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource);
-    this.aggregates = new AggregateRepository(this.dataSource);
+    PlatformTransactionManager txManager = new DataSourceTransactionManager(this.dataSource);
+    this.conceptMaps = new ConceptMapRepository(this.dataSource, txManager);
+    this.patientLists = new PatientListRepository(this.dataSource, txManager);
+    this.reports = new ReportRepository(this.dataSource, txManager);
+    this.patientDatas = new PatientDataRepository(this.dataSource, txManager);
+    this.patientMeasureReports = new PatientMeasureReportRepository(this.dataSource, txManager);
+    this.aggregates = new AggregateRepository(this.dataSource, txManager);
+    this.bulkStatuses = new BulkStatusRepository(this.dataSource, txManager);
+    this.bulkStatusResults = new BulkStatusResultRepository(this.dataSource, txManager);
+    this.queries = new QueryRepository(this.dataSource, txManager);
+    this.dataTraces = new DataTraceRepository(this.dataSource, txManager);
+    this.validations = new ValidationRepository(this.dataSource, txManager);
+    this.validationCategories = new ValidationCategoryRepository(this.dataSource, txManager);
   }
 
   public static TenantService create(Tenant tenant) {
@@ -60,33 +79,12 @@ public class TenantService {
   }
 
   public void initDatabase() {
-    logger.info("Initializing database for tenant {}", this.getConfig().getId());
-
-    URL resource = this.getClass().getClassLoader().getResource("tenant-db.sql");
-
-    if (resource == null) {
-      logger.warn("Could not find tenant-db.sql file in class path");
-      return;
-    }
-
-    try (Connection conn = this.dataSource.getConnection()) {
-      assert conn != null;
-
-      String sql = Helper.readInputStream(resource.openStream());
-      for (String stmtSql : sql.split("(?i)(?:^|\\R)\\s*GO\\s*(?:\\R|$)")) {
-        try {
-          Statement stmt = conn.createStatement();
-          stmt.execute(stmtSql);
-        } catch (SQLException e) {
-          logger.error("Failed to execute statement for tenant {}", this.config.getId(), e);
-        }
-      }
-    } catch (SQLServerException e) {
-      logger.error("Failed to connect to tenant {} database: {}", this.config.getId(), e.getMessage());
-    } catch (SQLException | NullPointerException e) {
-      logger.error("Failed to initialize tenant {} database", this.config.getId(), e);
-    } catch (IOException e) {
-      logger.error("Could not read tenant-db.sql file for tenant {}", this.config.getId(), e);
+    logger.info("Initializing tenant database: {}", this.getConfig().getId());
+    try (Connection connection = this.dataSource.getConnection()) {
+      SQLScriptExecutor.execute(connection, new ClassPathResource("tenant-db.sql"));
+    } catch (Exception e) {
+      logger.error("Failed to initialize tenant database", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -134,21 +132,46 @@ public class TenantService {
   }
 
   public int deletePatientDataRetrievedBefore(Date date) {
-    return this.patientDatas.deleteByRetrievedBefore(date);
+    int result = this.patientDatas.deleteByRetrievedBefore(date);
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
+    return result;
   }
 
-  public void deletePatientListById(String id) { this.patientLists.deleteById(id);}
+  public void deletePatientListById(UUID id) {
+    this.patientLists.deleteById(id);
+  }
 
   public void deleteAllPatientData(){
-    this.patientLists.deleteAllPatientData();
-    this.patientDatas.deleteAllPatientData();
+    this.patientDatas.deleteAll();
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
+    this.aggregates.deleteAll();
+    this.patientMeasureReports.deleteAll();
+    this.reports.deleteAll();
+    this.patientLists.deleteAll();
   }
 
-  public void deletePatientByListAndPatientId(String patientId, String listId) {
-    PatientList patientList = this.getPatientList(UUID.fromString(listId));
-    var filteredList = patientList.getPatients().stream().filter(x -> !x.getIdentifier().equals(patientId)).collect(Collectors.toList());
+  public void deletePatientByListAndPatientId(String patientId, UUID listId) {
+    PatientList patientList = this.getPatientList(listId);
+    if (patientList == null) {
+      return;
+    }
+    var filteredList = patientList.getPatients().stream().filter(x -> {
+      String identifier = x.getIdentifier();
+      if (identifier != null && identifier.equals(patientId)) {
+        return false;
+      }
+      String reference = x.getReference();
+      if (reference != null) {
+        String id = StringUtils.removeStartIgnoreCase(reference, "Patient/");
+        return !id.equals(patientId);
+      }
+      return true;
+    }).collect(Collectors.toList());
     patientList.setPatients(filteredList);
-    this.patientDatas.deleteByPatientId(patientId);
+    patientList.setLastUpdated(new Date());
+    this.savePatientList(patientList);
   }
 
   public void savePatientData(List<PatientData> patientData) {
@@ -157,6 +180,10 @@ public class TenantService {
 
   public Report getReport(String id) {
     return this.reports.findById(id);
+  }
+
+  public List<Report> getReportsByPatientListId(UUID id) {
+    return this.reports.findByPatientListId(id);
   }
 
   public List<Report> searchReports() {
@@ -172,9 +199,12 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
-    var report = this.reports.findById(reportId);
-    this.reports.deletePatientLists(report);
-    this.reports.deleteReport(report);
+    this.patientDatas.deleteByReportId(reportId);
+    this.dataTraces.deleteUnreferenced();
+    this.queries.deleteUnreferenced();
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
+    this.reports.deleteById(reportId);
   }
 
   public PatientMeasureReport getPatientMeasureReport(String id) {
@@ -219,5 +249,104 @@ public class TenantService {
 
   public void saveConceptMap(ConceptMap conceptMap) {
     this.conceptMaps.save(conceptMap);
+  }
+
+  public List<BulkStatus> getBulkStatuses() {
+    return this.bulkStatuses.findAll();
+  }
+
+  public BulkStatus getBulkStatusById(UUID id) {
+    return this.bulkStatuses.findById(id);
+  }
+
+  public List<BulkStatus> getBulkPendingStatusesWithPopulatedUrl() {
+    return this.bulkStatuses.findPendingWithUrl();
+  }
+
+  public void saveBulkStatus(BulkStatus bulkStatus) {
+    this.bulkStatuses.save(bulkStatus);
+  }
+
+  public List<BulkStatusResult> getBulkStatusResults() {
+    return this.bulkStatusResults.findAll();
+  }
+
+  public void saveBulkStatusResult(BulkStatusResult bulkStatusResult) {
+    this.bulkStatusResults.save(bulkStatusResult);
+  }
+
+  public void saveQuery(Query query) {
+    try {
+      this.queries.insert(query);
+    } catch (Exception e) {
+      logger.error("Failed to save query", e);
+    }
+  }
+
+  public void saveDataTraces(UUID queryId, String patientId, List<IBaseResource> resources) {
+    try {
+      IParser parser = FhirContextProvider.getFhirContext().newJsonParser();
+      List<DataTrace> models = new ArrayList<>();
+      for (IBaseResource resource : resources) {
+        UUID dataTraceId = UUID.randomUUID();
+        DataTrace.setId(resource, dataTraceId);
+        DataTrace model = new DataTrace();
+        model.setId(dataTraceId);
+        model.setQueryId(queryId);
+        model.setPatientId(patientId);
+        model.setResourceType(resource.fhirType());
+        model.setResourceId(resource.getIdElement().getIdPart());
+        model.setOriginalResource(parser.encodeResourceToString(resource));
+        models.add(model);
+      }
+      this.dataTraces.insertAll(models);
+    } catch (Exception e) {
+      logger.error("Failed to save data traces", e);
+    }
+  }
+
+  public void deleteValidationResults(String reportId) {
+    this.validations.deleteByReport(reportId);
+  }
+
+  public void insertValidationResults(String reportId, OperationOutcome outcome) {
+    List<ValidationResult> models = ValidationResultMapper.toValidationResults(outcome);
+    this.validations.insertAll(reportId, models);
+  }
+
+  public List<ValidationResult> getValidationResults(String reportId) {
+    return this.validations.findValidationResults(reportId, null, null);
+  }
+
+  public List<ValidationResult> getValidationResults(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return this.validations.findValidationResults(reportId, severity, code);
+  }
+
+  public OperationOutcome getValidationResultsOperationOutcome(String reportId, OperationOutcome.IssueSeverity severity, String code) {
+    return ValidationResultMapper.toOperationOutcome(this.getValidationResults(reportId, severity, code));
+  }
+
+  public void insertValidationResultCategories(List<ValidationResultCategory> models) {
+    this.validationCategories.insertAll(models);
+  }
+
+  public void deleteValidationCategoriesForReport(String reportId) {
+    this.validationCategories.deleteForReport(reportId);
+  }
+
+  public List<ValidationResultCategory> findValidationResultCategoriesByReport(String reportId) {
+    return this.validationCategories.findByReportId(reportId);
+  }
+
+  public List<ValidationResult> findValidationResultsByCategory(String reportId, String categoryCode) {
+    return this.validations.findByCategory(reportId, categoryCode);
+  }
+
+  public Integer countUncategorizedValidationResults(String reportId) {
+    return this.validations.countUncategorized(reportId);
+  }
+
+  public List<ValidationResult> getUncategorizedValidationResults(String reportId) {
+    return this.validations.getUncategorized(reportId);
   }
 }

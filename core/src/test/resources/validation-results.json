@@ -1,0 +1,587 @@
+[
+  {
+    "id": "fb19e5b6-c5fe-48d3-92a1-0b8897cfd7c2",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/StructureDefinition/Patient",
+    "severity": "information",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).subject",
+    "position": "2118:50"
+  },
+  {
+    "id": "6d48aec0-bc4c-4888-bf19-0c3c50d41816",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "The value provided ('text/yml') is not in the value set 'MimeType' (http://hl7.org/fhir/ValueSet/mimetypes|4.0.1), and a code is required from this value set) (error message = Failed to expand ValueSet 'http://hl7.org/fhir/ValueSet/mimetypes' (in-memory). Could not validate code null#text/yml. Error was: HAPI-0702: Unable to expand ValueSet because CodeSystem could not be found: urn:ietf:bcp:13)",
+    "severity": "error",
+    "expression": "Bundle.entry[3].resource.ofType(Library).content[0].contentType",
+    "position": "1891:35"
+  },
+  {
+    "id": "05a2fcce-282c-4992-a342-16d2c54b406f",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Unable to find a match for profile Patient/Hypo-Patient1-REQ among choices: http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "error",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).subject",
+    "position": "2118:50"
+  },
+  {
+    "id": "4c66de9f-b4ce-40e5-93ce-1a44ec8b51b3",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "URL value 'urn:ietf:bcp:47' does not resolve",
+    "severity": "warning",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).communication[0].language.coding[0].system",
+    "position": "28:37"
+  },
+  {
+    "id": "a0b81453-10a1-46be-8cea-1ca27bc4b993",
+    "reportId": "7763f694",
+    "code": "invariant",
+    "details": "Rule lib-0: 'Name should be usable as an identifier for the module by machine processing applications such as code generation' Failed",
+    "severity": "warning",
+    "expression": "Bundle.entry[3].resource.ofType(Library)",
+    "position": "1:2"
+  },
+  {
+    "id": "9b88641b-d28c-4635-8435-23cb4e6c11ff",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Canonical URL 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01' exists, but cant be loaded, so it cant be checked for validity",
+    "severity": "warning",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport).measure",
+    "position": "20:124"
+  },
+  {
+    "id": "dd9289e7-6bdc-4568-925b-24395a0831fe",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "Validation failed for 'http://www.nlm.nih.gov/research/umls/rxnorm#1161609'",
+    "severity": "error",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).medication.ofType(CodeableConcept).coding[0]",
+    "position": "14:18"
+  },
+  {
+    "id": "7dcf7d11-7d21-48d8-8c6f-24bc6da18b2e",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "MedicationRequest.requester: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest)",
+    "severity": "error",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest)",
+    "position": "2121:21"
+  },
+  {
+    "id": "83d83360-b297-4ff7-958a-279155b7410c",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'US Core Encounter Type' (http://hl7.org/fhir/us/core/ValueSet/us-core-encounter-type), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = http://snomed.info/sct#183452005)",
+    "severity": "warning",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).type[0]",
+    "position": "2071:18"
+  },
+  {
+    "id": "3f121cfa-45f1-4ad5-978b-27aba83d148d",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).period.end",
+    "position": "39:4"
+  },
+  {
+    "id": "201648e7-fdf4-4ff2-a6d6-2bd52020730f",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/StructureDefinition/Patient",
+    "severity": "information",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).subject",
+    "position": "1963:8"
+  },
+  {
+    "id": "d73caae6-0e91-4fb2-b309-302b922a5edf",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "Validation failed for 'http://snomed.info/sct#183452005'",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).type[0].coding[0]",
+    "position": "27:18"
+  },
+  {
+    "id": "923257d3-a869-4b56-9f55-30f15fe523b2",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Unable to find a match for profile #1 among choices: http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ip-measurereport-list",
+    "severity": "error",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport).group[0].population[0].subjectResults",
+    "position": "1936:12"
+  },
+  {
+    "id": "32bf9c29-7a57-46cc-a8bc-32c83b72cb36",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Bundle.entry:poi-list: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)",
+    "severity": "error",
+    "expression": "Bundle",
+    "position": "1:2"
+  },
+  {
+    "id": "2dda41c8-095b-4281-af07-3323140659bc",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for #1 matching against Profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/ip-measurereport-list",
+    "severity": "information",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport).group[0].population[0].subjectResults",
+    "position": "1936:12"
+  },
+  {
+    "id": "eb5dec51-4257-49c3-b35b-36c5c7084cf0",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Bundle.entry:subject-list: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle)",
+    "severity": "error",
+    "expression": "Bundle",
+    "position": "1:2"
+  },
+  {
+    "id": "a20345b8-ad87-4408-a789-37dee53254f4",
+    "reportId": "7763f694",
+    "code": "required",
+    "details": "The Measure 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation' could not be resolved, so no validation can be performed against the Measure",
+    "severity": "warning",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport)",
+    "position": "19:115"
+  },
+  {
+    "id": "da9c99a1-960d-473b-bd5a-38955764314f",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient",
+    "severity": "information",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).subject",
+    "position": "1963:8"
+  },
+  {
+    "id": "f59a853a-cf5c-4b2e-9eb4-3a3038f2a03f",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Unable to find a match for profile Patient/Hypo-Patient1-REQ among choices: http://hl7.org/fhir/us/qicore/StructureDefinition/qicore-patient",
+    "severity": "error",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).subject",
+    "position": "1963:8"
+  },
+  {
+    "id": "3b7cbdc9-07eb-44af-903c-3e84393d7ab1",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Example URLs are not allowed in this context (http://healthcare.example.org/identifiers/enocunter)",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).identifier[0].system",
+    "position": "17:69"
+  },
+  {
+    "id": "28209a24-bc09-4593-99f3-402a2eb27f0b",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Example URLs are not allowed in this context (http://healthcare.example.org/identifiers/enocunter)",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).identifier[0].system",
+    "position": "2062:73"
+  },
+  {
+    "id": "b0daa81b-c570-4032-b672-45064a3c85cd",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[6]",
+    "position": "2006:7"
+  },
+  {
+    "id": "bb7c939b-49ad-446e-b90c-4b2826e1bb48",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).location[0].period.end",
+    "position": "2092:10"
+  },
+  {
+    "id": "dc5760ba-d08a-44ba-b47b-4d8fb9dd65f8",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "The value provided ('text/yml') is not in the value set 'MimeType' (http://hl7.org/fhir/ValueSet/mimetypes|4.0.1), and a code is required from this value set) (error message = Failed to expand ValueSet 'http://hl7.org/fhir/ValueSet/mimetypes' (in-memory). Could not validate code null#text/yml. Error was: HAPI-0702: Unable to expand ValueSet because CodeSystem could not be found: urn:ietf:bcp:13)",
+    "severity": "error",
+    "expression": "Bundle.entry[3].resource.ofType(Library).content[0].contentType",
+    "position": "13:31"
+  },
+  {
+    "id": "cc509c79-7187-465f-948e-50bb5e00d075",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Canonical URL 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01' exists, but cant be loaded, so it cant be checked for validity",
+    "severity": "warning",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport).measure",
+    "position": "1916:128"
+  },
+  {
+    "id": "b687cb5b-4ab8-443c-9479-53a479690592",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Unable to find a match for profile Patient/Hypo-Patient1-REQ among choices: http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "error",
+    "expression": "Bundle.entry[2].resource.ofType(List).entry[0].item",
+    "position": "162:10"
+  },
+  {
+    "id": "bb2e6693-a151-489a-9766-5408cdf6f197",
+    "reportId": "7763f694",
+    "code": "invariant",
+    "details": "Rule bundle-all-measurereport-measure-contains-version: 'MeasureReport Bundle: All MeasureReport entry's measure Canonical must contain version' Failed",
+    "severity": "error",
+    "expression": "Bundle",
+    "position": "1:2"
+  },
+  {
+    "id": "9725f227-ea09-4b81-b0e2-551b61281de5",
+    "reportId": "7763f694",
+    "code": "invariant",
+    "details": "Rule lib-0: 'Name should be usable as an identifier for the module by machine processing applications such as code generation' Failed",
+    "severity": "warning",
+    "expression": "Bundle.entry[3].resource.ofType(Library)",
+    "position": "1884:16"
+  },
+  {
+    "id": "5ae60f94-b63f-4284-9a26-591ee4a14430",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).location[0].period.end",
+    "position": "47:6"
+  },
+  {
+    "id": "e2df50c6-4eea-45ef-aa51-5dc599a3bf12",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "Validation failed for 'http://www.nlm.nih.gov/research/umls/rxnorm#1161609'",
+    "severity": "error",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).medication.ofType(CodeableConcept).coding[0]",
+    "position": "2110:22"
+  },
+  {
+    "id": "3595d6fd-c83a-4a0a-a398-5f0c23fb8dab",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm",
+    "severity": "information",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).group[0].measureScore.extension[0]",
+    "position": "1990:27"
+  },
+  {
+    "id": "5dc7e655-19a3-4f8a-b843-769a7281649e",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[4]",
+    "position": "1895:7"
+  },
+  {
+    "id": "459e2e83-06ac-4a31-8580-7dd8c6d7ee42",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "information",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).subject",
+    "position": "2080:8"
+  },
+  {
+    "id": "d668d574-0c83-4419-92c9-81f9451e22c2",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm",
+    "severity": "information",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).group[0].measureScore.extension[0]",
+    "position": "49:23"
+  },
+  {
+    "id": "f73bcf8b-0753-4a16-822a-84c150172ed9",
+    "reportId": "7763f694",
+    "code": "required",
+    "details": "The Measure 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation' could not be resolved, so no validation can be performed against the Measure",
+    "severity": "warning",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport)",
+    "position": "1960:119"
+  },
+  {
+    "id": "7592045d-ffc8-4fc8-82e9-85a95699eb21",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[3]",
+    "position": "1877:7"
+  },
+  {
+    "id": "fc38307d-3521-4c39-88f5-8ebfaade4701",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Canonical URL 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation' exists, but cant be loaded, so it cant be checked for validity",
+    "severity": "warning",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).measure",
+    "position": "1960:119"
+  },
+  {
+    "id": "f30d0b8b-86bf-47b3-a575-90c8150b9126",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/StructureDefinition/Patient",
+    "severity": "information",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).subject",
+    "position": "2080:8"
+  },
+  {
+    "id": "fbf1314e-d901-4f17-a1d5-96b4481c0563",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).location[0].period.start",
+    "position": "2090:44"
+  },
+  {
+    "id": "bce31766-17f9-4feb-9059-9d5e394ad3e0",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "Validation failed for 'http://snomed.info/sct#183452005'",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).type[0].coding[0]",
+    "position": "2072:22"
+  },
+  {
+    "id": "378beb6a-9118-4ae4-8206-a3d5518cb39b",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "MedicationRequest.requester: minimum required = 1, but only found 0 (from http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest)",
+    "severity": "error",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest)",
+    "position": "1:2"
+  },
+  {
+    "id": "e7569f59-5917-4950-8f9a-a66121fbaf2b",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Encounter/Hypo-Encounter1-REQ matching against Profile http://hl7.org/fhir/StructureDefinition/Encounter",
+    "severity": "information",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).encounter",
+    "position": "2123:8"
+  },
+  {
+    "id": "3dd816d6-d042-496d-9a2a-af2f824c52e9",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).period.start",
+    "position": "37:38"
+  },
+  {
+    "id": "2fe274ca-dc2c-458b-a64c-af7eb9cf0c0b",
+    "reportId": "7763f694",
+    "code": "required",
+    "details": "The Measure 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01' could not be resolved, so no validation can be performed against the Measure",
+    "severity": "warning",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport)",
+    "position": "20:124"
+  },
+  {
+    "id": "2e541104-d332-4386-83c5-b7a167328c01",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "information",
+    "expression": "Bundle.entry[2].resource.ofType(List).entry[0].item",
+    "position": "162:10"
+  },
+  {
+    "id": "8e083fb1-bbfb-4248-8c99-b7fd3a74ecc5",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'US Core Encounter Type' (http://hl7.org/fhir/us/core/ValueSet/us-core-encounter-type), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = http://snomed.info/sct#183452005)",
+    "severity": "warning",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).type[0]",
+    "position": "26:14"
+  },
+  {
+    "id": "1535a5e1-ceb2-4a1a-b208-c297e10460ad",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[7]",
+    "position": "2044:7"
+  },
+  {
+    "id": "cf3947c8-d7eb-47e3-b455-c95162ec4059",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[9]",
+    "position": "2126:7"
+  },
+  {
+    "id": "c80fd067-89f3-4f0e-b4f8-c9d93a1c5094",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[8]",
+    "position": "2095:7"
+  },
+  {
+    "id": "3ef3aa20-91d4-4e1d-bb68-c9e5d5185c6b",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Details for Patient/Hypo-Patient1-REQ matching against Profile http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "information",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).subject",
+    "position": "2118:50"
+  },
+  {
+    "id": "99403836-36a1-4f5d-8753-cb14189bdbb6",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).period.end",
+    "position": "2084:8"
+  },
+  {
+    "id": "e2f91ba5-6f71-4032-b27d-cb6c567c01b8",
+    "reportId": "7763f694",
+    "code": "structure",
+    "details": "Unable to find a match for profile Patient/Hypo-Patient1-REQ among choices: http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).subject",
+    "position": "2080:8"
+  },
+  {
+    "id": "5ed83fff-70cc-4968-8ba9-d640d0fe0bc3",
+    "reportId": "7763f694",
+    "code": "required",
+    "details": "The Measure 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.000.01' could not be resolved, so no validation can be performed against the Measure",
+    "severity": "warning",
+    "expression": "Bundle.entry[4].resource.ofType(MeasureReport)",
+    "position": "1916:128"
+  },
+  {
+    "id": "8f97203a-6b95-4a39-b4a2-d6dcec2a1e4a",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[5]",
+    "position": "1940:7"
+  },
+  {
+    "id": "a8b41dce-06ce-4085-a86a-d6f8d5677b35",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Example URLs are not allowed in this context (http://www.acme.com/identifiers/patient)",
+    "severity": "error",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).identifier[0].system",
+    "position": "12:57"
+  },
+  {
+    "id": "033b32fb-175a-48ec-8a37-d711d1b4e23e",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Example URLs are not allowed in this context (http://www.acme.com/identifiers/patient)",
+    "severity": "error",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).identifier[0].system",
+    "position": "2019:61"
+  },
+  {
+    "id": "258172d4-c1d1-46fa-b5f8-de31b3018aa1",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "Canonical URL 'http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation' exists, but cant be loaded, so it cant be checked for validity",
+    "severity": "warning",
+    "expression": "Bundle.entry[5].resource.ofType(MeasureReport).measure",
+    "position": "19:115"
+  },
+  {
+    "id": "db3a9130-b565-4e23-8008-e202b74f0bc0",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'US Core Medication Codes (RxNorm)' (http://hl7.org/fhir/us/core/ValueSet/us-core-medication-codes), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = http://www.nlm.nih.gov/research/umls/rxnorm#1161609)",
+    "severity": "warning",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).medication.ofType(CodeableConcept)",
+    "position": "2110:20"
+  },
+  {
+    "id": "70d60bd5-2ea7-469d-86e7-e5a09d09f414",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).location[0].period.start",
+    "position": "45:40"
+  },
+  {
+    "id": "832d50a2-d428-47b6-9d1f-f2f98389822d",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'Language codes with language and optionally a region modifier' (http://hl7.org/fhir/us/core/ValueSet/simple-language), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = urn:ietf:bcp:47#nl)",
+    "severity": "warning",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).communication[0].language",
+    "position": "27:18"
+  },
+  {
+    "id": "0e1234cf-a62a-4eb8-b978-f31b0cae8194",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'Language codes with language and optionally a region modifier' (http://hl7.org/fhir/us/core/ValueSet/simple-language), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = urn:ietf:bcp:47#nl)",
+    "severity": "warning",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).communication[0].language",
+    "position": "2034:22"
+  },
+  {
+    "id": "6ace7e02-1f67-4710-9fc4-fb3f6ca673c7",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "URL value 'urn:ietf:bcp:47' does not resolve",
+    "severity": "warning",
+    "expression": "Bundle.entry[6].resource.ofType(Patient).communication[0].language.coding[0].system",
+    "position": "2035:41"
+  },
+  {
+    "id": "ec2bbec5-ee4e-43dc-9db3-fd27870ac2bc",
+    "reportId": "7763f694",
+    "code": "code-invalid",
+    "details": "None of the codings provided are in the value set 'US Core Medication Codes (RxNorm)' (http://hl7.org/fhir/us/core/ValueSet/us-core-medication-codes), and a coding should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable) (codes = http://www.nlm.nih.gov/research/umls/rxnorm#1161609)",
+    "severity": "warning",
+    "expression": "Bundle.entry[8].resource.ofType(MedicationRequest).medication.ofType(CodeableConcept)",
+    "position": "14:16"
+  },
+  {
+    "id": "37122906-cd95-4dd7-a479-fe03896b74df",
+    "reportId": "7763f694",
+    "code": "informational",
+    "details": "This element does not match any known slice defined in the profile http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle",
+    "severity": "information",
+    "expression": "Bundle.entry[2]",
+    "position": "138:7"
+  },
+  {
+    "id": "96ee9676-e4d0-4497-938a-fffd90a83214",
+    "reportId": "7763f694",
+    "code": "invalid",
+    "details": "if a date has a time, it must have a timezone",
+    "severity": "error",
+    "expression": "Bundle.entry[7].resource.ofType(Encounter).period.start",
+    "position": "2082:42"
+  }
+]

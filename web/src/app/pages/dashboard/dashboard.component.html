@@ -1,0 +1,136 @@
+<app-hero
+  pageTitle="Dashboard"
+  size="lg"
+>
+  <app-section-heading
+    [level]=2
+    class="mb-4"
+    headingClasses="h3 text-white"
+    heading="System Performance"
+  >
+    <app-button
+      variant="outline--reverse"
+      type="link"
+      [link]="{url: '/system-performance'}"
+    >
+      <app-icon filePath="../../../assets/icons/plus.svg" />
+      View All
+    </app-button>
+  </app-section-heading>
+	
+  <div class="row">
+		<div class="col col-lg-3">
+			<app-card 
+				title="Average Query Time"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric mainValue="6.1"
+					subText="hours on average past 7 days"
+					changeValue="18%"></app-metric>
+			</app-card>
+		</div>
+
+		<div class="col col-lg-3">
+			<app-card 
+				title="Pre-Qualification Issues"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric
+				mainValue="99"
+				subText="errors per 1,000 patients"
+				changeValue="2%"
+				[isValueUp]="false" />
+			</app-card>
+		</div>
+
+		<div class="col col-lg-3">
+			<app-card
+				title="Total Patients Queried"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric
+				mainValue="23K"
+				subText="patients queried past 7 days"
+				changeValue="33%" />
+			</app-card>
+		</div>
+
+		<div class="col col-lg-3">
+			<app-card
+				title="Average Validation Time"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric
+				mainValue="3.2"
+				subText="hours on average past 7 days"
+				changeValue="10%"
+				[isValueUp]="false" />
+			</app-card>
+		</div>
+	</div>
+</app-hero>
+
+<section>
+  <div class="container py-4">
+		<app-section-heading
+			heading="Recent Activity"
+			[level]=3
+		>
+			<app-button
+      	variant="outline"
+      	type="link"
+      	[link]="{url: '/recent-activity'}"
+    	>
+				<app-icon filePath="../../../assets/icons/plus.svg" />
+				View All
+			</app-button>
+		</app-section-heading>
+
+		<div class="row">
+			<div class="col">
+				<app-card
+					title="Successful Submissions"
+					status="success"
+					titleAlign="center"
+				>
+					<div recent_activity_table__wrapper >
+						<app-table [dtOptions]="completedDtOptions" />
+					</div>
+				</app-card>
+			</div>
+			
+			<div class="col">
+				<app-card
+					title="Failed Submissions"
+					status="failure"
+					titleAlign="center"
+				>
+					<div recent_activity_table__wrapper >
+						<app-table [dtOptions]="failedDtOptions" />
+					</div>
+				</app-card>
+			</div>
+
+			<div class="col">
+				<app-card
+					title="Submissions In Progress"
+					status="inProgress"
+					titleAlign="center"
+				>
+					<div recent_activity_table__wrapper >
+          <app-table [dtOptions]="pendingDtOptions" />
+        </div>
+				</app-card>
+			</div>
+
+		</div>
+  </div>
+</section>

@@ -3,6 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.DataTrace;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
@@ -20,13 +21,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
+
+import static ca.uhn.fhir.rest.api.Constants.HEADER_REQUEST_ID;
 
 @Getter
 @Setter
@@ -77,8 +77,8 @@ public class PatientScoop {
     if (patient == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
-      patientData.loadInitialData(this.tenantService, patient);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadInitialData(patient);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
@@ -91,8 +91,8 @@ public class PatientScoop {
     if (patientBundle == null) return null;
 
     try {
-      PatientData patientData = new PatientData(this.stopwatchManager, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
-      patientData.loadSupplementalData(this.tenantService, patientId, patientBundle);
+      PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
+      patientData.loadSupplementalData(patientId, patientBundle);
       return patientData;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patientId, e);
@@ -113,7 +113,8 @@ public class PatientScoop {
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("query-Patient")) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_PATIENT, Constants.CATEGORY_QUERY)) {
+          UUID queryId = UUID.randomUUID();
           if (poi.getReference() != null) {
             String id = poi.getReference();
 
@@ -125,7 +126,9 @@ public class PatientScoop {
             Patient patient = this.fhirQueryServer.read()
                     .resource(Patient.class)
                     .withId(id)
+                    .withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString())
                     .execute();
+            tenantService.saveDataTraces(queryId, id, List.of(patient));
             patient.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
             patientMap.put(poi.getReference(), patient);
             poi.setId(patient.getIdElement().getIdPart());
@@ -138,6 +141,7 @@ public class PatientScoop {
             Bundle response = this.fhirQueryServer.search()
                     .byUrl(searchUrl)
                     .returnBundle(Bundle.class)
+                    .withAdditionalHeader(HEADER_REQUEST_ID, queryId.toString())
                     .execute();
 
             if (response.getEntry().size() > 1) {
@@ -149,6 +153,7 @@ public class PatientScoop {
 
             if (response.getEntry().size() > 0) {
               Patient patient = (Patient) response.getEntryFirstRep().getResource();
+              tenantService.saveDataTraces(queryId, patient.getIdPart(), List.of(patient));
               patient.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
               patientMap.put(poi.getIdentifier(), patient);
               poi.setId(patient.getIdElement().getIdPart());
@@ -242,11 +247,11 @@ public class PatientScoop {
 
       List<com.lantanagroup.link.db.model.PatientData> dbPatientData = patientBundle.getEntry().stream().map(entry -> {
         com.lantanagroup.link.db.model.PatientData dbpd = new com.lantanagroup.link.db.model.PatientData();
+        dbpd.setDataTraceId(DataTrace.getId(entry.getResource()));
         dbpd.setPatientId(patientId);
         dbpd.setResourceType(entry.getResource().getResourceType().toString());
         dbpd.setResourceId(entry.getResource().getIdElement().getIdPart());
         dbpd.setResource(entry.getResource());
-        dbpd.setRetrieved(new Date());
         return dbpd;
       }).collect(Collectors.toList());
 
@@ -257,7 +262,7 @@ public class PatientScoop {
 
         // store data
         //noinspection unused
-        try (Stopwatch stopwatch = this.stopwatchManager.start("store-patient-data")) {
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_STORE_PATIENT_DATA, Constants.CATEGORY_QUERY)) {
           this.tenantService.savePatientData(dbPatientData);
         }
       } else {

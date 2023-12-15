@@ -1,0 +1,16 @@
+<app-hero
+  color="green"
+  pageTitle="Resources"
+/>
+<section>
+	<div class="container py-4">
+		<div class="row">
+			<div *ngFor="let group of resourceGroups"
+				class="col col-md-6">
+				<app-card [title]="group.name">
+					<app-resource-contents [resourceSections]="group.sections" />
+				</app-card>
+			</div>
+		</div>
+	</div>
+</section>

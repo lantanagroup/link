@@ -30,8 +30,8 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
       if (entry.getResource().getResourceType().equals(ResourceType.Location)) {
         Location locationResource = (Location) entry.getResource();
         //Check for ConceptMap extension indicating that the identifier move to type and ConceptMapping has already been performed on this Location
-        List<CodeableConcept> conceptMapExtensionCheck =
-                locationResource.getType().stream().filter(t ->
+        List<Coding> conceptMapExtensionCheck =
+                locationResource.getType().stream().flatMap(t -> t.getCoding().stream()).filter(t ->
                                 t.getExtension().stream().anyMatch(e -> e.getUrl().equals(Constants.ConceptMappingExtension)))
                         .collect(Collectors.toList());
         //If not already performed, continue

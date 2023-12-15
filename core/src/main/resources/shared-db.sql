@@ -81,9 +81,106 @@ BEGIN
 END
 GO
 
+-- LNK-1359: Adding metrics table to SQL database
+IF OBJECT_ID(N'dbo.metrics', N'U') IS NULL
+    BEGIN
+        CREATE TABLE dbo.[metrics]
+        (
+            id           UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            tenantId     NVARCHAR(128)    NOT NULL,
+            reportId     NVARCHAR(128)    NOT NULL,
+            category     NVARCHAR(128),
+            taskName     NVARCHAR(128),
+            timestamp    NVARCHAR(128) DEFAULT GETDATE(),
+            data         NVARCHAR(max)
+        );
+    END
+GO
+
+IF OBJECT_ID(N'dbo.SubmissionStatus') IS NULL
+  BEGIN
+      CREATE TABLE dbo.[submissionStatus]
+      (
+          id            UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
+          tenantId      NVARCHAR(128)   NOT NULL,
+          reportId      NVARCHAR(128)   NOT NULL,
+          status        NVARCHAR(50)    NOT NULL,
+          measureIds    nvarchar(1024)  NOT NULL,
+          startDate     DATETIME2       NOT NULL,
+          endDate       DATETIME2
+      );
+    END
+GO
+
 -- LNK-1150: Remove non-null constraint from dbo.audit.userId
 ALTER TABLE dbo.audit
-ALTER COLUMN userId UNIQUEIDENTIFIER;
+    ALTER COLUMN userId UNIQUEIDENTIFIER;
+GO
+
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
+END
+GO
+
+-- LOGBACK tables
+IF OBJECT_ID(N'dbo.logging_event', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event
+        (
+            timestmp          DECIMAL(20)   NOT NULL,
+            formatted_message VARCHAR(4000) NOT NULL,
+            logger_name       VARCHAR(254)  NOT NULL,
+            level_string      VARCHAR(254)  NOT NULL,
+            thread_name       VARCHAR(254),
+            reference_flag    SMALLINT,
+            arg0              VARCHAR(254),
+            arg1              VARCHAR(254),
+            arg2              VARCHAR(254),
+            arg3              VARCHAR(254),
+            caller_filename   VARCHAR(254)  NOT NULL,
+            caller_class      VARCHAR(254)  NOT NULL,
+            caller_method     VARCHAR(254)  NOT NULL,
+            caller_line       CHAR(4)       NOT NULL,
+            event_id          DECIMAL(38)   NOT NULL identity,
+            PRIMARY KEY (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_property', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_property
+        (
+            event_id     DECIMAL(38)  NOT NULL,
+            mapped_key   VARCHAR(254) NOT NULL,
+            mapped_value VARCHAR(1024),
+            PRIMARY KEY (event_id, mapped_key),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
+GO
+
+IF OBJECT_ID(N'dbo.logging_event_exception', N'U') IS NULL
+    BEGIN
+        CREATE TABLE logging_event_exception
+        (
+            event_id   DECIMAL(38)  NOT NULL,
+            i          SMALLINT     NOT NULL,
+            trace_line VARCHAR(254) NOT NULL,
+            PRIMARY KEY (event_id, i),
+            FOREIGN KEY (event_id) REFERENCES logging_event (event_id)
+        )
+    END
 GO
 
 CREATE OR ALTER PROCEDURE saveUser
@@ -183,6 +280,22 @@ BEGIN
 END
 GO
 
+-- LNK-1359
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
+END
+GO
+
 CREATE OR ALTER PROCEDURE [dbo].[saveAudit]
     @id UNIQUEIDENTIFIER,
 	@network NVARCHAR(128),
@@ -230,3 +343,78 @@ BEGIN
     END
 END
 GO
+
+/*CREATE OR ALTER PROCEDURE getTenantSummary  @Search nvarchar(128) = null, @Sort nvarchar(128), @SortAscend Bit
+AS
+BEGIN
+    CREATE TABLE #TenantSummary
+    (
+        tenantId			nvarchar(128),
+        tenantName			nvarchar(1024),
+        cdcOrgId			nvarchar(128),
+        bundlingName		nvarchar(128),
+        reportId            nvarchar(128),
+        measureIds			nvarchar(1024),
+        submittedTime		datetime2
+    )
+
+    --Figure Out Which Databases to call
+    SELECT name as DatabaseName
+    INTO #databases
+    FROM master.sys.databases d
+    WHERE name not in ('master','model','msdb','tempdb', DB_NAME()) -- don't query system DBs or the shared Db
+
+    while((select Count(*) from #databases) > 0)
+        BEGIN
+            declare @database varchar(255) = (Select top 1 DatabaseName from #databases)
+            declare @tenantConfig TABLE
+                                  (
+                                      Id nvarchar(128),
+                                      Name nvarchar(1024),
+                                      CdcOrgId nvarchar(128),
+                                      bundlingName nvarchar(128)
+                                  );
+
+            -- We can get the id, name and cdcOrgId from the shared tenantConfig table
+            delete from @tenantConfig
+            insert into @tenantConfig
+            select top 1
+                JSON_VALUE(json, '$.id') as Id,
+                JSON_VALUE(json, '$.name') as Name,
+                JSON_VALUE(json, '$.cdcOrgId') as cdcOrgId,
+                JSON_VALUE(json, '$.bundling.name') as bundlingName
+            from tenantConfig
+            where json like '%databaseName=' + @database + ';%'
+              and ( @Search is not null and (JSON_VALUE(json, '$.name') like '%'+ @Search +'%' or  JSON_VALUE(json, '$.cdcOrgId') like '%'+ @Search +'%' or JSON_VALUE(json, '$.bundling.name') like '%'+ @Search +'%') or @Search is null)
+
+            declare @Id varchar(255) =  '''' + (select top 1 Id from @tenantConfig) + ''''
+            declare @cdcOrgId varchar(255) = ''''  + (select top 1 cdcOrgId from @tenantConfig) + ''''
+            declare @name varchar(255) = ''''  + (select top 1 Name from @tenantConfig) + ''''
+            declare @bundlingName varchar(255) = ''''  + (select top 1 bundlingName from @tenantConfig) + ''''
+
+
+            -- Construct query to run on each tenant db
+            if @Id is not null
+                BEGIN
+                    declare @SQL nvarchar(max) = 'IF OBJECT_ID(''[' + @database + N'].[dbo].report'', ''U'') IS NOT NULL
+							  INSERT INTO #TenantSummary
+							  SELECT ' + @Id +  ',' +   @name +  ',' +  @cdcOrgId + ','  +   @bundlingName + ',  id, measureIds, submittedTime' +
+                                                 ' FROM [' + @database + '].dbo.Report' +
+                                                 ' WHERE submittedTime IS NOT NULL' +
+                                                 ' order by submittedTime desc'
+                    EXEC sp_executesql @SQL
+                END
+
+            delete from #databases where Databasename = @database
+        END
+
+    select * from #TenantSummary
+    order by Case when @sort = 'NAME'               AND @SortAscend = 'true'  then  tenantName    end  ASC,
+             Case when @sort = 'NAME'               AND @SortAscend = 'false' then  tenantName    end  DESC,
+             Case when @sort = 'NHSN_ORG_ID'        AND @SortAscend = 'true'  then  cdcOrgId      end  ASC,
+             Case when @sort = 'NHSN_ORG_ID'        AND @SortAscend = 'false' then  cdcOrgId      end  DESC,
+             Case when @sort = 'SUBMISSION_DATE'    AND @SortAscend = 'true'  then  submittedTime end  ASC,
+             Case when @sort = 'SUBMISSION_DATE'    AND @SortAscend = 'false' then  submittedTime end  DESC
+
+END
+GO*/

@@ -1,0 +1,19 @@
+// Importing bootstrap defaults
+@import "./scss/customize-bootstrap.scss";
+@import "../node_modules/bootstrap/scss/bootstrap.scss";
+
+
+/****************/
+// Custom Abstracts
+// - functions
+// - mixins
+/****************/
+
+@import './scss/abstracts';
+
+/****************/
+// Global Style Guide Customizations
+// - typography
+// - global classes etc.
+/****************/
+@import "./scss/base";

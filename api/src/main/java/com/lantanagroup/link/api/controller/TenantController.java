@@ -5,7 +5,7 @@ import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.SearchTenantResponse;
+import com.lantanagroup.link.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -41,6 +45,36 @@ public class TenantController extends BaseController {
     return this.sharedService.getTenantConfigs().stream()
             .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId()))
             .collect(Collectors.toList());
+  }
+
+  @GetMapping("summary")
+  public TenantSummaryResponse searchTenantSummaries(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) String sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
+    // validation
+    int itemsPerPage = 5;
+
+    if (page < 1) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page should be greater than 1");
+    }
+
+    int skip = (page - 1) * itemsPerPage;
+
+    // validate sort is one of the enum values
+    if (sort != null) {
+      try {
+        TenantSummarySort.valueOf(sort.trim());
+      } catch (IllegalArgumentException e) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort criteria. Valid values are NAME, NHSN_ORG_ID, SUBMISSION_DATE");
+      }
+    }
+    List<TenantSummary> tenants = this.sharedService.getTenantSummary(searchCriteria, TenantSummarySort.valueOf(sort.trim()), sortAscend).stream().collect(Collectors.toList());
+
+    List<TenantSummary> results = tenants.stream().skip(skip).limit(itemsPerPage).collect(Collectors.toList());
+
+    TenantSummaryResponse response = new TenantSummaryResponse();
+    response.setTotal(tenants.size());
+    response.setTenants(results);
+
+    return response;
   }
 
   @GetMapping("{tenantId}")
@@ -72,6 +106,17 @@ public class TenantController extends BaseController {
 
     if (StringUtils.isEmpty(newTenantConfig.getConnectionString())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'connectionString' is required");
+    }
+
+    if (StringUtils.isEmpty(newTenantConfig.getTimeZoneId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'timeZoneId' is required");
+    }
+
+    try {
+      TimeZone timezone = TimeZone.getTimeZone(newTenantConfig.getTimeZoneId());
+    }
+    catch(Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The provided 'timeZoneId' was not a valid Java.util.TimeZone.ID value.");
     }
 
     List<Tenant> existingTenants = this.sharedService.getTenantConfigs();

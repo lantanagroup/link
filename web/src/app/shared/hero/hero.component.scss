@@ -1,0 +1,38 @@
+/* hero.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
+        '../../../scss/abstracts';
+
+
+.hero {
+  @include background-2x('../../assets/backgrounds/bg-blue', 'png', 100%, auto, center bottom, no-repeat);
+  background-size: cover;
+  color: $white;
+  padding: 2rem 0 2.5rem;
+
+  &--bg-shade {
+    @include background-2x('../../assets/backgrounds/bg-blue-650', 'png', 100%, auto, center bottom, no-repeat);
+    background-size: cover;
+  }
+  
+  &--bg-green {
+    @include background-2x('../../assets/backgrounds/bg-green-900', 'png', 100%, auto, center bottom, no-repeat);
+    background-size: cover;
+  }
+  
+  &--bg-purple {
+    @include background-2x('../../assets/backgrounds/bg-purple-900', 'png', 100%, auto, center bottom, no-repeat);
+    background-size: cover;
+  }
+  
+  &--md {
+    @include background-2x('../../assets/backgrounds/bg-blue-md', 'png', 100%, auto, center bottom, no-repeat);
+    background-size: cover;
+  }
+  
+  &--lg {
+    @include background-2x('../../assets/backgrounds/bg-blue-lg', 'png', 100%, auto, center bottom, no-repeat);
+    background-size: cover;
+  }
+}

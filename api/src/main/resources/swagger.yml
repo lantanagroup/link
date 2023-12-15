@@ -24,13 +24,35 @@ paths:
           content:
             'application/json':
               schema:
-                type: string
+                $ref: '#/components/schemas/ApiVersionInfo'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+      security:
+        - { }
+  /api/info:
+    get:
+      tags:
+        - API Root
+        - UI
+      summary: Gets resource information about the measures supported by this installation of Link
+      operationId: getInfo
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiInfoGroup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
       security:
         - { }
   /api/$tenant-schema:
@@ -152,6 +174,31 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
   /api/user/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Get user by Id
+      operationId: getUser
+      parameters:
+        - name: userId
+          in: path
+          description: The id of the user to update
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     put:
       tags:
         - Users
@@ -250,8 +297,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
     post:
       tags:
         - Tenants
@@ -274,6 +319,51 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/tenant/summary:
+    get:
+      tags:
+        - Tenants
+        - UI
+      summary: Summary search for tenants
+      operationId: searchTenantSummaries
+      parameters:
+        - name: searchCriteria
+          in: query
+          description: Criteria that is used to filter the response. Can be name, NHSN org id, etc.
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page number of the results to return
+          schema:
+            type: number
+            default: 1
+        - name: sort
+          in: query
+          description: The field to sort the results by
+          schema:
+            type: string
+            default: NAME
+            enum:
+              - NAME
+              - NHSN_ORG_ID
+              - SUBMISSION_DATE
+        - name: sortAscend
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/TenantSummaryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
   /api/tenant/{id}:
     get:
       tags:
@@ -457,6 +547,70 @@ paths:
       responses:
         '200':
           description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/report:
+    get:
+      tags:
+        - Reports
+        - UI
+      summary: Get report information for tenants
+      description: Get report information for tenants
+      operationId: get_report
+      parameters:
+        - name: tenantId
+          in: query
+          description: The id of the tenant
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter based on the status of the report
+          required: false
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: The minimum/start date to return reports for
+          required: false
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: The maximum/end date to return reports for
+          required: false
+          schema:
+            type: string
+        - name: measureIds
+          in: query
+          description: Filter based on the ID's of the measures.
+          required: false
+          schema:
+            type: string
+        - name: count
+          in: query
+          description: The maximum report list count that is returned per status
+          required: false
+          schema:
+            type: number
+        - name: page
+          in: query
+          description: The page number of the results to return
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/GlobalReportByStatusResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -718,25 +872,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate:
+  /api/validate:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Validate a report provided in the request body
-      operationId: validateRequest
+      operationId: validate
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant, used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -757,25 +905,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/summary:
+  /api/validate/summary:
     post:
       tags:
-        - Validation
+        - Validation Testing
       summary: Provides a summary of unique messages from validation results of the request body
-      operationId: validateRequestSummary
+      operationId: validateSummary
       parameters:
-        - name: tenantId
-          in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
-          required: true
-          schema:
-            type: string
         - name: severity
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       requestBody:
         description: The FHIR Bundle to validate
         required: true
@@ -801,16 +943,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}:
-    get:
+  /api/validate/{tenantId}/{reportId}:
+    post:
       tags:
         - Validation
-      summary: Validate a generated report
+      summary: Re-validate a generated report and persist results
       operationId: validateReport
       parameters:
         - name: tenantId
           in: path
-          description: The id of the tenant in which the report resides, and used to determine validation options
+          description: The id of the tenant in which the report resides
           required: true
           schema:
             type: string
@@ -820,12 +962,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: severity
-          in: query
-          schema:
-            type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
       responses:
         '200':
           description: successful response
@@ -839,12 +975,57 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/{tenantId}/validate/{reportId}/summary:
     get:
       tags:
         - Validation
-      summary: Provides a summary of unique messages from validation results
-      operationId: validateReportSummary
+      summary: Get validation results for a given tenant and report
+      operationId: getValidation
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          description: |
+            The severity of the validation results to retrieve. If not specified, all results will be returned.
+            Severities are stacked. For example: if "ERROR", includes "WARNING" and "INFORMATION" and if "WARNING", includes "INFORMATION".
+          schema:
+            type: string
+            default: INFORMATION
+            enum: [ FATAL, ERROR, WARNING, INFORMATION ]
+        - name: code
+          in: query
+          description: The code of the validation result to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/summary:
+    get:
+      tags:
+        - Validation
+      summary: Get summary of validation results for a given tenant and report
+      operationId: getValidationSummary
       parameters:
         - name: tenantId
           in: path
@@ -862,8 +1043,8 @@ paths:
           in: query
           schema:
             type: string
-            default: ERROR
-            enum: [ ERROR, WARN, INFO ]
+            default: INFORMATION
+            enum: [ ERROR, WARNING, INFORMATION ]
       responses:
         '200':
           description: successful response
@@ -876,6 +1057,170 @@ paths:
                   * Slicing cannot be evaluated: Problem with use of resolve() - profile [CanonicalType[http://hl7.org/fhir/us/cqfmeasures/StructureDefinition/cqfm-softwaresystem]] on MeasureReport.extension:software could not be resolved (@char 1)
                   * MedicationRequest.requester: minimum required = 1, but only found 0 (from http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest)
                   * if a date has a time, it must have a timezone
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationCategories
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationCategoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Validation Testing
+      summary: Retrieves the validation categories for a report, for a custom set of categories.
+      description: This is used to test that construction of validation categorizes against a given report and see how well the
+        categories work against the validation results before committing the validation categories.
+      operationId: getValidationForCustomCategories
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of categories to retrieve validation results for
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RuleBasedValidationCategory'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ValidationCategoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category/{categoryId}:
+    get:
+      tags:
+        - Validation
+      summary: Get validation categories for a given report
+      operationId: getValidationResultsForCategory
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: categoryId
+          in: path
+          description: The id of the category to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Validation Testing
+      summary: Retrieves the validation results for a report, for a custom set of categories, for a specific category.
+      description: This is used to test that construction of validation categorizes against a given report and see how well the
+        categories work against the validation results before committing the validation categories.
+      operationId: getValidationForCustomCategory
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+        - name: categoryId
+          in: path
+          description: The id of the category to return results for
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of categories to retrieve validation results for
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RuleBasedValidationCategory'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/FHIR.OperationOutcome'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1252,6 +1597,103 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/log:
+    get:
+      tags:
+        - Auditing and Logging
+        - UI
+      summary: Searches the logs
+      operationId: getLogs
+      parameters:
+        - name: startDate
+          in: query
+          description: The minimum/start date to return logs for
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          description: The maximum/end date to return logs for
+          schema:
+            type: string
+        - name: content
+          in: query
+          description: What content to look for in the message
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: The page of logs to return
+          schema:
+            type: number
+        - name: severity
+          in: query
+          description: One or more severities to filter the results by
+          schema:
+            type: array
+            items:
+              type: string
+            enum:
+              - ERROR
+              - WARNING
+              - INFO
+              - DEBUG
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/LogSearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+  /api/metric/{period}:
+    get:
+      tags:
+        - UI
+        - Metrics
+      summary: Gets metrics for the system, tenant, or report
+      description: Returns calculated metrics based on the supplied reporting period and optional parameters. If no
+        parameters are supplied, the metrics returned are for the entire system. If a tenantId is supplied,
+        the metrics returned are for the specified tenant. If a reportId is supplied, the metrics returned are for the
+        specified report.
+      operationId: getMetric
+      parameters:
+        - name: period
+          in: path
+          description: The reporting period for the metrics
+          required: true
+          schema:
+            type: string
+            enum:
+              - lastWeek
+              - lastMonth
+              - lastQuarter
+              - lastYear
+        - name: reportId
+          in: query
+          description: Filter metrics by a specific report
+          required: false
+          schema:
+            type: string
+        - name: tenantId
+          in: query
+          description: Filter metrics by the specific tenant
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/MetricsReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
     ApiInfoModel:
@@ -1330,6 +1772,59 @@ components:
           type: array
           items:
             type: string
+    GlobalReportResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        measureId:
+          type: array
+          items:
+            type: string
+        periodStart:
+          type: string
+        periodEnd:
+          type: string
+        status:
+          type: string
+          enum:
+            - Draft
+            - Submitted
+        submittedTime:
+          type: string
+        generatedTime:
+          type: string
+        version:
+          type: string
+        patientLists:
+          type: array
+          items:
+            type: string
+        aggregates:
+          type: array
+          items:
+            type: string
+        tenantName:
+          type: string
+        cdcOrgId:
+          type: string
+        reportId:
+          type: string
+    GlobalReportByStatusResponse:
+      type: object
+      properties:
+        completedReports:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
+        failedReports:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
+        pendingReports:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobalReportResponse'
     MeasureDefinition:
       type: object
       properties:
@@ -1478,6 +1973,10 @@ components:
           type: boolean
           default: true
           description: 'Whether to include censuses in the submission bundle.'
+        includesQueryPlans:
+          type: boolean
+          default: true
+          description: 'Whether to include the query plans used to generate the report in the submission bundle as a Binary resource entry'
         mergeCensuses:
           type: boolean
           default: true
@@ -1948,6 +2447,255 @@ components:
       required:
         - code
         - message
+    TenantSummaryResponse:
+      type: object
+      properties:
+        total:
+          type: number
+        tenants:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSummary'
+    TenantSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        nhsnOrgId:
+          type: string
+        lastSubmissionId:
+          type: string
+        lastSubmissionDate:
+          type: string
+        measures:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSummaryMeasure'
+    TenantSummaryMeasure:
+      type: object
+      properties:
+        id:
+          type: string
+        shortName:
+          type: string
+        longName:
+          type: string
+    ApiInfoGroup:
+      type: object
+      properties:
+        name:
+          type: string
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiInfoGroupSection'
+    ApiInfoGroupSection:
+      type: object
+      properties:
+        name:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiInfoGroupSectionLink'
+    ApiInfoGroupSectionLink:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+    ApiVersionInfo:
+      type: object
+      properties:
+        build:
+          type: string
+        version:
+          type: string
+        commit:
+          type: string
+        cqfVersion:
+          type: string
+    LogSearchResponse:
+      type: object
+      properties:
+        total:
+          type: number
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogMessage'
+    LogMessage:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+            - DEBUG
+        message:
+          type: string
+        caller:
+          type: string
+    MetricsReportResponse:
+      type: object
+      description: Information about the metrics for the system as a whole, a tenant, or a report. The response includes the
+        average time to query for patients of interest, the average time to query for clinical data, the number of
+        patients queried, the number of patients reported, and the average time to validate and evaluate the measure. The
+        history of each metric is also included, up to a maximum of 10 entries.
+      properties:
+        queryTime:
+          $ref: '#/components/schemas/QueryTimeMetric'
+        patientsQueried:
+          $ref: '#/components/schemas/PatientsQueriedMetric'
+        patientsReported:
+          $ref: '#/components/schemas/PatientsReportedMetric'
+        validation:
+          $ref: '#/components/schemas/ValidationMetric'
+        evaluation:
+          $ref: '#/components/schemas/EvaluationMetric'
+    QueryTimeMetric:
+      type: object
+      description: The average time to query for patients of interest, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    PatientsQueriedMetric:
+      type: object
+      description: The number of patients queried, and the history of the metric.
+      properties:
+        total:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    PatientsReportedMetric:
+      type: object
+      description: The number of patients reported, and the history of the metric.
+      properties:
+        total:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    ValidationMetric:
+      type: object
+      description: The average time to validate reports, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    EvaluationMetric:
+      type: object
+      description: The average time to evaluate reports, and the history of the metric.
+      properties:
+        average:
+          type: number
+        history:
+          type: array
+          items:
+            type: number
+    ValidationCategoryResponse:
+      type: object
+      description: Information about the validation categories for a report.
+      properties:
+        id:
+          type: string
+        count:
+          type: number
+        title:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+        acceptable:
+          type: boolean
+          description: Whether the category is acceptable to submit the report
+        type:
+          type: string
+          enum:
+            - BEST_PRACTICE
+            - POTENTIAL_CONCERN
+            - CRITICAL
+            - NOT_IMPORTANT
+            - IMPORTANT
+        guidance:
+          type: string
+          description: Guidance on how to resolve the validation issues within the category
+    RuleBasedValidationCategory:
+      type: object
+      description: Information about the validation categories for a report.
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        severity:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+        acceptable:
+          type: boolean
+        type:
+          type: string
+          enum:
+            - BEST_PRACTICE
+            - POTENTIAL_CONCERN
+            - CRITICAL
+            - NOT_IMPORTANT
+            - IMPORTANT
+        guidance:
+          type: string
+        ruleSets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCategoryRuleSet'
+    ValidationCategoryRuleSet:
+      type: object
+      properties:
+        isAndOperator:
+          type: boolean
+          description: True if multiple rules in this set should be evaluated as an AND operation, false if they should be evaluated as an OR operation.
+          default: true
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCategoryRule'
+    ValidationCategoryRule:
+      type: object
+      properties:
+        field:
+          type: string
+          enum:
+            - DETAILS_TEXT
+            - EXPRESSION
+            - SEVERITY
+            - CODE
+        regex:
+          type: string
+          description: The regex to use to determine if the rule passes or fails against the given field
+          example: "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
+        isInverse:
+          type: boolean
+          description: True if the rule should be inverted (i.e. if the regex matches, the rule fails)
   securitySchemes:
     oauth:
       type: oauth2

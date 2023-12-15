@@ -1,0 +1,20 @@
+<div 
+	[ngClass]="getCardClass()"
+>
+	<div
+		class="card__header"
+		[ngClass]="status && 'card__header--' + status"
+	>
+		<h4 
+			class="card__title"
+			[ngClass]="titleAlign && 'text-' + titleAlign"
+		>{{ title }}</h4>
+	</div>
+
+	<div 
+		class="card__body"
+		[ngClass]="hasPadding ? 'p-4' : ''"
+	>
+		<ng-content />
+	</div>
+</div>

@@ -1,114 +1,63 @@
 package com.lantanagroup.link.db.repositories;
 
+import com.lantanagroup.link.db.mappers.AggregateMapper;
 import com.lantanagroup.link.db.model.Aggregate;
-import lombok.SneakyThrows;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
-public class AggregateRepository extends BaseRepository<Aggregate> {
-  private final DataSource dataSource;
+public class AggregateRepository {
+  private static final AggregateMapper mapper = new AggregateMapper();
 
-  public AggregateRepository(DataSource dataSource) {
-    this.dataSource = dataSource;
+  private final TransactionTemplate txTemplate;
+  private final NamedParameterJdbcTemplate jdbc;
+
+  public AggregateRepository(DataSource dataSource, PlatformTransactionManager txManager) {
+    txTemplate = new TransactionTemplate(txManager);
+    txTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_SERIALIZABLE);
+    jdbc = new NamedParameterJdbcTemplate(dataSource);
   }
 
-  @Override
-  protected Aggregate mapOne(ResultSet resultSet) throws SQLException {
-    Aggregate model = new Aggregate();
-    model.setId(resultSet.getNString("id"));
-    model.setReportId(resultSet.getNString("reportId"));
-    model.setMeasureId(resultSet.getNString("measureId"));
-    model.setReport(deserializeResource(MeasureReport.class, resultSet.getNString("report")));
-    return model;
-  }
-
-  @SneakyThrows(SQLException.class)
   public List<Aggregate> findByReportId(String reportId) {
-    String sql = "SELECT * FROM dbo.[aggregate] WHERE reportId = ?;";
-    try (Connection connection = dataSource.getConnection();
-         PreparedStatement statement = connection.prepareStatement(sql)) {
-      statement.setNString(1, reportId);
-      try (ResultSet resultSet = statement.executeQuery()) {
-        return mapAll(resultSet);
-      }
-    }
+    String sql = "SELECT * FROM dbo.[aggregate] WHERE reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    return jdbc.query(sql, parameters, mapper);
   }
 
-  private int insert(Aggregate aggregate, Connection connection) throws SQLException {
-    String sql = "INSERT INTO dbo.[aggregate] " +
-            "(id, reportId, measureId, report) " +
-            "VALUES " +
-            "(?, ?, ?, ?);";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(aggregate, statement);
-      parameters.addId();
-      parameters.addReportId();
-      parameters.addMeasureId();
-      parameters.addReport();
-      return statement.executeUpdate();
-    }
+  private int insert(Aggregate model) {
+    String sql = "INSERT INTO dbo.[aggregate] (id, reportId, measureId, report) " +
+            "VALUES (:id, :reportId, :measureId, :report);";
+    return jdbc.update(sql, mapper.toParameters(model));
   }
 
-  private int update(Aggregate aggregate, Connection connection) throws SQLException {
+  private int update(Aggregate model) {
     String sql = "UPDATE dbo.[aggregate] " +
-            "SET reportId = ?, measureId = ?, report = ? " +
-            "WHERE id = ?;";
-    try (PreparedStatement statement = connection.prepareStatement(sql)) {
-      Parameters parameters = new Parameters(aggregate, statement);
-      parameters.addReportId();
-      parameters.addMeasureId();
-      parameters.addReport();
-      parameters.addId();
-      return statement.executeUpdate();
-    }
+            "SET reportId = :reportId, measureId = :measureId, report = :report " +
+            "WHERE id = :id;";
+    return jdbc.update(sql, mapper.toParameters(model));
   }
 
-  @SneakyThrows(SQLException.class)
-  public void save(Aggregate aggregate) {
-    try (Connection connection = dataSource.getConnection()) {
-      connection.setAutoCommit(false);
-      try {
-        if (update(aggregate, connection) == 0) {
-          insert(aggregate, connection);
-        }
-        connection.commit();
-      } catch (Exception e) {
-        connection.rollback();
-        throw e;
+  public void save(Aggregate model) {
+    txTemplate.executeWithoutResult(tx -> {
+      if (update(model) == 0) {
+        insert(model);
       }
-    }
+    });
   }
 
-  private class Parameters {
-    private final Aggregate model;
-    private final PreparedStatement statement;
-    private int nextParameterIndex = 1;
+  public void deleteByReportId(String reportId) {
+    String sql = "DELETE FROM dbo.[aggregate] WHERE reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    jdbc.update(sql, parameters);
+  }
 
-    public Parameters(Aggregate model, PreparedStatement statement) {
-      this.model = model;
-      this.statement = statement;
-    }
-
-    public void addId() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getId());
-    }
-
-    public void addReportId() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getReportId());
-    }
-
-    public void addMeasureId() throws SQLException {
-      statement.setNString(nextParameterIndex++, model.getMeasureId());
-    }
-
-    public void addReport() throws SQLException {
-      statement.setNString(nextParameterIndex++, serializeResource(model.getReport()));
-    }
+  public void deleteAll() {
+    String sql = "DELETE FROM dbo.[aggregate];";
+    jdbc.update(sql, Map.of());
   }
 }

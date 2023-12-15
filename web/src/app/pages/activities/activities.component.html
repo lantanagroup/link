@@ -1,0 +1,27 @@
+<app-hero pageTitle="Activities"
+	size="md">
+	<em>Cards to come...</em>
+</app-hero>
+<section>
+	  <div class="container">
+      <app-section-heading
+  		[level]="4"
+  		class="mb-2"
+  		headingClasses="h3 text-black"
+  		heading="Facility Activity"
+  	>
+  		<app-button
+  		  variant="outline--reverse"
+  		  type="button"
+  		  [onClickHandler]="showAlert"
+		  >
+  		  <app-icon filePath="../../../assets/icons/sliders.svg" />
+		  </app-button>
+	  </app-section-heading>
+    <div table__wrapper>
+      <app-table [dtOptions]="dtOptions"
+  	    tableTitle="Facility Activity"
+      />
+    </div>
+	</div>
+</section>

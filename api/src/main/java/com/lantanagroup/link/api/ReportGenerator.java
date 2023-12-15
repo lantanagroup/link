@@ -1,11 +1,12 @@
 package com.lantanagroup.link.api;
 
-import com.lantanagroup.link.*;
+import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.IReportAggregator;
+import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
-import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.PatientOfInterestModel;
@@ -16,7 +17,6 @@ import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.hl7.fhir.r4.model.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +102,7 @@ public class ReportGenerator {
 
     logger.info(String.format("Persisting patient %s measure report with id %s", patient, measureReportId));
     //noinspection unused
-    try (Stopwatch stopwatch = this.stopwatchManager.start("store-measure-report")) {
+    try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_STORE_MEASURE_REPORT, Constants.CATEGORY_REPORT)) {
       this.tenantService.savePatientMeasureReport(patientMeasureReport);
     }
 
@@ -111,7 +111,6 @@ public class ReportGenerator {
 
   public void aggregate() throws ParseException {
     MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
-    setVersions(masterMeasureReport);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
     Aggregate aggregateReport = new Aggregate();
@@ -120,17 +119,5 @@ public class ReportGenerator {
     aggregateReport.setMeasureId(this.measureContext.getBundleId());
     aggregateReport.setReport(masterMeasureReport);
     this.tenantService.saveAggregate(aggregateReport);
-  }
-
-  private void setVersions(MeasureReport measureReport) {
-    try {
-      String linkVersion = Helper.getVersionInfo(null).getVersion();
-      MeasureDefinition measureDefinition = sharedService.getMeasureDefinition(measureContext.getBundleId());
-      String measureVersion = FhirHelper.getMainLibraries(measureDefinition.getBundle()).get(0).getVersion();
-      measureReport.addExtension(Constants.LINK_VERSION_URL, new StringType(linkVersion));
-      measureReport.addExtension(Constants.MEASURE_VERSION_URL, new StringType(measureVersion));
-    } catch (Exception e) {
-      logger.error("Error setting versions on measure report", e);
-    }
   }
 }

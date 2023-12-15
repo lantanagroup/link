@@ -10,11 +10,13 @@ public class Stopwatch implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(Stopwatch.class);
 
   protected final String task;
+  protected final String category;
   private final Instant startTime;
   private Instant stopTime;
 
-  public Stopwatch(String task) {
+  public Stopwatch(String task, String category) {
     this.task = task;
+    this.category = category;
     this.startTime = Instant.now();
   }
 

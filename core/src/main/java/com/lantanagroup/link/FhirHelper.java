@@ -3,19 +3,17 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
-import com.google.gson.JsonElement;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.ConceptMap;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Address;
-import com.lantanagroup.link.model.ApiInfoModel;
+import com.lantanagroup.link.model.ApiVersionModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
-import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,10 +181,7 @@ public class FhirHelper {
         if (item1.hasReference() && StringUtils.equals(item1.getReference(), item2.getReference())) {
           return true;
         }
-        if (item1.hasIdentifier() && item1.getIdentifier().equalsShallow(item2.getIdentifier())) {
-          return true;
-        }
-        return false;
+        return item1.hasIdentifier() && item1.getIdentifier().equalsShallow(item2.getIdentifier());
       });
       if (!exists) {
         list1.addEntry(entry2.copy());
@@ -246,37 +241,37 @@ public class FhirHelper {
   }
 
   public static Device getDevice(ApiConfig apiConfig) {
-    ApiInfoModel apiInfoModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
+    ApiVersionModel apiVersionModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
     Device device = new Device();
     device.addDeviceName().setName(apiConfig.getName());
     device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getVersion())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getVersion())) {
       device.addVersion()
               .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getVersion());
+              .setValue(apiVersionModel.getVersion());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getBuild())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getBuild())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("build")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("build").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getBuild());
+              .setValue(apiVersionModel.getBuild());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getCommit())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getCommit())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
-              .setValue(apiInfoModel.getCommit());
+              .setValue(apiVersionModel.getCommit());
     }
 
-    if (StringUtils.isNotEmpty(apiInfoModel.getCqfVersion())) {
+    if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
       device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version")))
+              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiInfoModel.getCqfVersion());
+              .setValue(apiVersionModel.getCqfVersion());
     }
 
     return device;
@@ -309,7 +304,7 @@ public class FhirHelper {
 
     if (!conceptMaps.isEmpty()) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map")));
+      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map").setSystem(Constants.LinkDevicePropertiesCodeSystem)));
 
       for (ConceptMap conceptMap : tenantService.getAllConceptMaps()) {
         property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
@@ -326,30 +321,10 @@ public class FhirHelper {
 
     for (String event : events) {
       Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event");
+      property.getType().addCoding().setCode("event").setSystem(Constants.LinkDevicePropertiesCodeSystem);
 
       String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
-      property.addValueCode().addCoding().setCode(category + "-" + theEvent);
+      property.addValueCode().setText(category + "-" + theEvent);
     }
-  }
-
-  public static ImplementationGuide getImplementationGuide(NpmPackage npmPackage) {
-    ImplementationGuide ig = new ImplementationGuide()
-            .setUrl(npmPackage.canonical())
-            .setVersion(npmPackage.version())
-            .setName(npmPackage.name())
-            .setTitle(npmPackage.title())
-            .setStatus(Enumerations.PublicationStatus.UNKNOWN)
-            .setDate(npmPackage.dateAsDate())
-            .setPackageId(npmPackage.id());
-    if (npmPackage.getNpm().has("fhirVersions")) {
-      JsonElement fhirVersions = npmPackage.getNpm().get("fhirVersions");
-      if (fhirVersions.isJsonArray()) {
-        for (JsonElement fhirVersion : fhirVersions.getAsJsonArray()) {
-          ig.addFhirVersion(Enumerations.FHIRVersion.fromCode(fhirVersion.getAsString()));
-        }
-      }
-    }
-    return ig;
   }
 }

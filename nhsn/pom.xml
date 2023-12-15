@@ -5,7 +5,7 @@
     <parent>
         <artifactId>link</artifactId>
         <groupId>com.lantanagroup.link</groupId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,14 +20,14 @@
             <groupId>com.lantanagroup.link</groupId>
             <artifactId>core</artifactId>
             <scope>compile</scope>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.lantanagroup.link</groupId>
             <artifactId>query</artifactId>
             <scope>compile</scope>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
