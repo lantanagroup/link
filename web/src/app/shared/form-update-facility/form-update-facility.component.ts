@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormArray, FormBuilder, Validators, Form } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { SectionHeadingComponent } from '../section-heading/section-heading.component';
 import { AccordionComponent } from '../accordion/accordion.component';
@@ -15,6 +15,8 @@ import { IconComponent } from '../icon/icon.component';
   styleUrls: ['./form-update-facility.component.scss']
 })
 export class FormUpdateFacilityComponent {
+
+  constructor(private fb: FormBuilder) {}
 
   facilitiesForm = new FormGroup({
     profile: new FormGroup({
@@ -36,11 +38,11 @@ export class FormUpdateFacilityComponent {
       fixResourceIds: new FormControl(0),
       patientDataResource: new FormControl(0)
     }),
-    conceptMaps: new FormGroup({
-
-    }),
+    conceptMaps: this.fb.array([]),
     scheduling: new FormGroup({
-
+      queryPatientList: new FormControl(''),
+      dataRetentionCheck: new FormControl(''),
+      schedules: this.fb.array([],[Validators.required])
     }),
     nativeFHIRQuery: new FormGroup({
       nativeFHIREndpoint: new FormControl(''),
@@ -58,14 +60,102 @@ export class FormUpdateFacilityComponent {
       progressHeaderName: new FormControl(''),
       progressCompleteHeaderValue: new FormControl('')
     }),
-    queryPlans: new FormGroup({
-
-    })
+    queryPlans: this.fb.array([])
   });
+
+  // Concept Maps Dynamic Fields
+  get conceptMaps(): FormArray {
+    return this.facilitiesForm.get('conceptMaps') as FormArray;
+  }
+
+  createConceptMap(): FormGroup {
+    return this.fb.group({
+      id: new FormControl(''),
+      name: new FormControl(''),
+      contexts: new FormControl(''),
+      map: new FormControl('')
+    });
+  }
+
+  addConceptMap() {
+    this.conceptMaps.push(this.createConceptMap());
+  }
+
+  getAddConceptMapHandler(): () => void {
+    return () => this.addConceptMap()
+  }
+
+  removeConceptMap(index: number) {
+    this.conceptMaps.removeAt(index);
+  }
+
+  getRemoveConceptMapHandler(index: number): () => void {
+    return () => this.removeConceptMap(index)
+  }
+
+  // Schedules Dynamic Fields
+  get schedules(): FormArray {
+    return this.facilitiesForm.get('scheduling.schedules') as FormArray;
+  }
+
+  createSchedule(): FormGroup {
+    return this.fb.group({
+      measureIds: new FormControl(''),
+      reportingPeriod: new FormControl('Last Month'),
+      schedule: new FormControl(''),
+      regenerate: new FormControl(1)
+    });
+  }
+
+  addSchedule() {
+    this.schedules.push(this.createSchedule());
+  }
+
+  getAddScheduleHandler(): () => void {
+    return () => this.addSchedule()
+  }
+
+  removeSchedule(index: number) {
+    this.schedules.removeAt(index);
+  }
+
+  getRemoveScheduleHandler(index: number): () => void {
+    return () => this.removeSchedule(index)
+  }
+
+  // Query Plan Dynamic Fields
+  get queryPlans(): FormArray {
+    return this.facilitiesForm.get('queryPlans') as FormArray;
+  }
+
+  createQueryPlan(): FormGroup {
+    return this.fb.group({
+      measureId: new FormControl(''),
+      plan: new FormControl('')
+    });
+  }
+
+  addQueryPlan() {
+    this.queryPlans.push(this.createQueryPlan());
+  }
+
+  getAddQueryPlanHandler(): () => void {
+    return () => this.addQueryPlan()
+  }
+
+  removeQueryPlan(index: number) {
+    this.queryPlans.removeAt(index);
+  }
+
+  getRemoveQueryPlanHandler(index: number): () => void {
+    return () => this.removeQueryPlan(index)
+  }
+
+  // handle submit
 
   onSubmit() {
     if (this.facilitiesForm.valid) {
-      console.log(this.facilitiesForm.value)
+      alert(this.facilitiesForm.value)
     } else {
       this.facilitiesForm.markAllAsTouched()
     }

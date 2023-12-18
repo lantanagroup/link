@@ -11,6 +11,18 @@
 
 .form {
 
+  &__group {
+    margin-bottom: 1rem;
+    
+    &::after {
+      border-bottom: 2px solid $black;
+      content: '';
+      display: block;
+      margin: 0 auto;
+      width: calc(100% - 1.25rem);
+    }
+  }
+
   &__field {
     margin: 1rem 0;
   }
@@ -36,6 +48,10 @@ label {
     font-weight: $font-weight-normal;
     text-transform: none;
     width: 100%;
+  }
+
+  &__lg {
+    font-size: 1rem;
   }
 }
 
@@ -78,7 +94,12 @@ select {
 }
 
 textarea {
+  background: url('../../assets/icons/edit.svg') no-repeat 99.75% 96%;
+  background-size: 1rem auto;
   min-height: 6rem;
+  overflow-y: scroll;
+  position: relative;
+  resize: none !important;
 }
 
 input[type='radio'] {

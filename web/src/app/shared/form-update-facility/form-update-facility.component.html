@@ -54,8 +54,7 @@
         <textarea
           id="description" 
           formControlName="description"
-        >
-        </textarea>
+        ></textarea>
       </div>
 
       <div class="col col-md-6 form__field">
@@ -313,8 +312,61 @@
     title="Concept Maps"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="conceptMaps">
+    <div formArrayName="conceptMaps">
+      <fieldset 
+        *ngFor="let conceptMap of conceptMaps.controls; let i = index" 
+        class="row form__group"
+        [formGroupName]="i"
+      >
+        <div class="col col-md-3 form__field">
+          <label for="id">ID</label>
+          <input 
+            type="text" 
+            id="id" 
+            placeholder="Must be unique"
+          />
+        </div>
 
+        <div class="col col-md-3 form__field">
+          <label for="name">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+          />
+        </div>
+
+        <div class="col-12 form__field">
+          <label for="contexts">Contexts</label>
+          <textarea
+            id="contexts" 
+            placeholder="One FHIRPath per line"
+          ></textarea>
+        </div>
+
+        <div class="col-12 form__field">
+          <label for="map">Map</label>
+          <textarea
+            id="map"
+            placeholder="FHIR ConceptMap Json"
+          ></textarea>
+        </div>
+        
+        <app-button
+          variant="text"
+          classes="text-warning"
+          [onClickHandler]="getRemoveConceptMapHandler(i)"
+        >
+          Delete Map
+        </app-button>
+      </fieldset>
+
+      <app-button
+        type="button"
+        [onClickHandler]="getAddConceptMapHandler()"
+      >
+        <app-icon filePath="../../../assets/icons/plus.svg" />
+        Add Concept Map
+      </app-button>
     </div>
   </app-accordion>
 
@@ -323,6 +375,94 @@
     [isExpanded]="false"
   >
     <div class="row" formGroupName="scheduling">
+      <div class="col col-md-6 form__field">
+        <label for="queryPatientList">Query Patient List</label>
+        <input 
+          type="text" 
+          id="queryPatientList" 
+          formControlName="queryPatientList"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionCheck">Data Retention Check</label>
+        <input 
+          type="text" 
+          id="dataRetentionCheck" 
+          formControlName="dataRetentionCheck"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div formArrayName="schedules">
+        <label class="label__lg d-block mb-4">Generate and Submit<span class="text-warning">*</span></label>
+
+        <fieldset 
+          *ngFor="let schedule of schedules.controls; let i = index" 
+          class="row form__group"
+          [formGroupName]="i"
+        >
+          <div class="col col-md-6 form__field">
+            <label for="measureIds">Measure IDs (one/line)</label>
+            <textarea
+              id="measureIds" 
+              formControlName="measureIds"
+            ></textarea>
+          </div>
+
+          <div class="col col-md-6 form__field">
+            <label for="reportingPeriod">Reporting Period</label>
+            <select 
+              id="reportingPeriod" 
+              formControlName="reportingPeriod"
+            >
+              <option value="Last Month">Last Month</option>
+              <option value="Last Week">Last Week</option>
+              <option value="Current Month">Current Month</option>
+              <option value="Current Week">Current Week</option>
+            </select>
+          </div>
+
+          <div class="col col-md-6 form__field">
+            <label for="schedule">Schedule (CRON)</label>
+            <input 
+              type="text" 
+              id="schedule" 
+              formControlName="schedule"
+            />
+          </div>
+
+          <div class="col col-md-6 form__field">
+            <label for="regenerate">Regenerate</label>
+            <select 
+              id="regenerate" 
+              formControlName="regenerate"
+            >
+              <option [value]="1">Yes</option>
+              <option [value]="0">No</option>
+            </select>
+          </div>
+
+          <app-button
+            variant="text"
+            classes="text-warning"
+            [onClickHandler]="getRemoveScheduleHandler(i)"
+          >
+            Delete Schedule
+          </app-button>
+
+        </fieldset>
+
+        <app-button
+          type="button"
+          [onClickHandler]="getAddScheduleHandler()"
+        >
+          <app-icon filePath="../../../assets/icons/plus.svg" />
+          Add Schedule
+        </app-button>
+
+      </div>
 
     </div>
   </app-accordion>
@@ -342,11 +482,11 @@
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="parellelPatients">Parallel Patients</label>
+        <label for="parallelPatients">Parallel Patients</label>
         <input 
           type="number" 
-          id="parellelPatients" 
-          formControlName="parellelPatients"
+          id="parallelPatients" 
+          formControlName="parallelPatients"
           placeholder="e.g., 23"
         />
       </div>
@@ -452,8 +592,46 @@
     title="Query Plans"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="queryPlans">
+    <div formArrayName="queryPlans">
+      <fieldset 
+        *ngFor="let queryPlan of queryPlans.controls; let i = index" 
+        class="row form__group"
+        [formGroupName]="i"
+      >
+        <div class="col col-md-4 form__field">
+          <label for="measureId">Measure ID</label>
+          <input 
+            type="text" 
+            id="measureId" 
+          />
+        </div>
 
+        <div class="col col-md-6 form__field">
+          <label for="plan">Query Plan</label>
+          <textarea 
+            id="plan"
+            placeholder="Enter YAML Here"
+          ></textarea>
+        </div>
+        
+        <div class="col col-md-2 form__field pt-4">
+          <app-button
+            variant="text"
+            classes="text-warning"
+            [onClickHandler]="getRemoveQueryPlanHandler(i)"
+          >
+            Delete Plan
+          </app-button>
+        </div>
+      </fieldset>
+
+      <app-button
+        type="button"
+        [onClickHandler]="getAddQueryPlanHandler()"
+      >
+        <app-icon filePath="../../../assets/icons/plus.svg" />
+        Add Query Plan
+      </app-button>
     </div>
   </app-accordion>
 </form>
