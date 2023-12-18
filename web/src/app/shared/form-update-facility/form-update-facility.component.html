@@ -30,7 +30,7 @@
     [isExpanded]="true"
   >
     <div class="row" formGroupName="profile">
-      <div class="col col-md-6">
+      <div class="col col-md-6 form__field">
         <label for="name">Facility Name<span class="text-warning">*</span></label>
         <input 
           type="text" 
@@ -40,8 +40,8 @@
         />
       </div>
 
-      <div class="col col-md-6">
-        <label for="tenantId">Tenant ID<sup class="text-warning">*</sup></label>
+      <div class="col col-md-6 form__field">
+        <label for="tenantId">Tenant ID<span class="text-warning">*</span></label>
         <input 
           type="text" 
           id="tenantId" 
@@ -49,28 +49,261 @@
         />
       </div>
 
+      <div class="col-12 form__field">
+        <label for="description">Description/Notes</label>
+        <textarea
+          id="description" 
+          formControlName="description"
+        >
+        </textarea>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="bundleName">Name for Bundling<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="bundleName" 
+          formControlName="bundleName"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="cdcOrgId">CDC Org ID</label>
+        <input 
+          type="text"
+          id="cdcOrgId"
+          formControlName="cdcOrgId"
+        />
+        <p class="form__description">Provided by facility or NHSN directly</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="database">Database</label>
+        <input 
+          type="text"
+          id="database"
+          formControlName="database"
+          placeholder="MSSQL Server Connection String"
+        />
+        <p class="form__description">Where all tenant-specific data is stored</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="database">Vendor</label>
+        <select name="vendor" id="vendor">
+          <option value="">Please Select</option>
+          <option value="Epic">Epic</option>
+          <option value="Cerner">Cerner</option>
+          <option value="AllScripts">AllScripts</option>
+        </select>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionPeriod">Data Retention Period</label>
+        <input 
+          type="text"
+          id="dataRetentionPeriod"
+          formControlName="dataRetentionPeriod"
+        />
+        <p class="form__description">ISO 8601 formatted string</p>
+      </div>
+
     </div>
   </app-accordion>
 
   <app-accordion
     title="Normalizations"
-    [isExpanded]="false"
+    [isExpanded]="true"
   >
     <div class="row" formGroupName="normalizations">
-      <div class="col col-md-3">
-        <label for="codeSystemCleanup">Code System Cleanup</label>
-        <input 
-          type="radio" 
-          id="codeSystemCleanup" 
-          formControlName="codeSystemCleanup"
-          [value]="false"
-        />
-        <input 
-          type="radio" 
-          id="codeSystemCleanup" 
-          formControlName="codeSystemCleanup"
-          [value]="true"
-        />
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Code System Cleanup</label>
+        <label for="codeSystemCleanupFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="codeSystemCleanupFalse"
+            name="codeSystemCleanup" 
+            formControlName="codeSystemCleanup"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="codeSystemCleanupTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="codeSystemCleanupTrue" 
+            name="codeSystemCleanup"
+            formControlName="codeSystemCleanup"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Contained Resource Cleanup</label>
+        <label for="containedResourceCleanupFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="containedResourceCleanupFalse"
+            name="containedResourceCleanup" 
+            formControlName="containedResourceCleanup"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="containedResourceCleanupTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="containedResourceCleanupTrue" 
+            name="containedResourceCleanup"
+            formControlName="containedResourceCleanup"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
+        <label for="copyLocationFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="copyLocationFalse"
+            name="copyLocation" 
+            formControlName="copyLocation"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="copyLocationTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="copyLocationTrue" 
+            name="copyLocation"
+            formControlName="copyLocation"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Encounter Status Transformer</label>
+        <label for="encounterStatusFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="encounterStatusFalse"
+            name="encounterStatus" 
+            formControlName="encounterStatus"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="encounterStatusTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="encounterStatusTrue" 
+            name="encounterStatus"
+            formControlName="encounterStatus"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Fix Period Dates</label>
+        <label for="fixPeriodDatesFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixPeriodDatesFalse"
+            name="fixPeriodDates" 
+            formControlName="fixPeriodDates"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="fixPeriodDatesTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixPeriodDatesTrue" 
+            name="fixPeriodDates"
+            formControlName="fixPeriodDates"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Fix Resource IDs</label>
+        <label for="fixResourceIdsFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixResourceIdsFalse"
+            name="fixResourceIds" 
+            formControlName="fixResourceIds"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="fixResourceIdsTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixResourceIdsTrue" 
+            name="fixResourceIds"
+            formControlName="fixResourceIds"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
+        <label for="patientDataResourceFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="patientDataResourceFalse"
+            name="patientDataResource" 
+            formControlName="patientDataResource"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="patientDataResourceTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="patientDataResourceTrue" 
+            name="patientDataResource"
+            formControlName="patientDataResource"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
       </div>
 
     </div>

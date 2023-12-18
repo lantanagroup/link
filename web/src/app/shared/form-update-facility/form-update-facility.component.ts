@@ -29,12 +29,12 @@ export class FormUpdateFacilityComponent {
     }),
     normalizations: new FormGroup({
       codeSystemCleanup: new FormControl(0),
-      containedResourceCleanup: new FormControl(false),
-      copyLocation: new FormControl(false),
-      encounterStatus: new FormControl(false),
-      fixPeriodDates: new FormControl(false),
-      fixResourceIds: new FormControl(false),
-      patientDataResource: new FormControl(false)
+      containedResourceCleanup: new FormControl(0),
+      copyLocation: new FormControl(0),
+      encounterStatus: new FormControl(0),
+      fixPeriodDates: new FormControl(0),
+      fixResourceIds: new FormControl(0),
+      patientDataResource: new FormControl(0)
     })
   });
 

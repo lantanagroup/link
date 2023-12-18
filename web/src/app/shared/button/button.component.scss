@@ -18,6 +18,7 @@
 
   svg path {
     color: $blue-50;
+    transition: $transition-base;
   }
 
   &--reverse {
