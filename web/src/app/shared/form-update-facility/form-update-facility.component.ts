@@ -35,6 +35,31 @@ export class FormUpdateFacilityComponent {
       fixPeriodDates: new FormControl(0),
       fixResourceIds: new FormControl(0),
       patientDataResource: new FormControl(0)
+    }),
+    conceptMaps: new FormGroup({
+
+    }),
+    scheduling: new FormGroup({
+
+    }),
+    nativeFHIRQuery: new FormGroup({
+      nativeFHIREndpoint: new FormControl(''),
+      parallelPatients: new FormControl(),
+      authenticationMethod: new FormControl('None')
+    }),
+    censusAcquisition: new FormGroup({
+      method: new FormControl('')
+    }),
+    bulkFHIR: new FormGroup({
+      bulkFHIREndpoint: new FormControl(''),
+      waitInterval: new FormControl(),
+      groupID: new FormControl(''),
+      initialResponseURLHeader: new FormControl(''),
+      progressHeaderName: new FormControl(''),
+      progressCompleteHeaderValue: new FormControl('')
+    }),
+    queryPlans: new FormGroup({
+
     })
   });
 

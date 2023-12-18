@@ -308,4 +308,152 @@
 
     </div>
   </app-accordion>
+
+  <app-accordion
+    title="Concept Maps"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="conceptMaps">
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Scheduling"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="scheduling">
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Native FHIR Query"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="nativeFHIRQuery">
+      <div class="col col-md-6 form__field">
+        <label for="nativeFHIREndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="nativeFHIREndpoint" 
+          formControlName="nativeFHIREndpoint"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="parellelPatients">Parallel Patients</label>
+        <input 
+          type="number" 
+          id="parellelPatients" 
+          formControlName="parellelPatients"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="authenticationMethod">Authentication Method</label>
+        <select name="authenticationMethod" id="authenticationMethod">
+          <option value="None">None</option>
+          <option value="Epic OAuth">Epic OAuth</option>
+          <option value="Cerner OAuth">Cerner OAuth</option>
+          <option value="Basic">Basic</option>
+          <option value="Basic + API Key">Basic + API Key</option>
+        </select>
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Census Acquisition"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="censusAcquisition">
+      <div class="col col-md-6 form__field">
+        <label for="method">Method</label>
+        <select name="method" id="method">
+          <option value="">Please Select</option>
+          <option value="STU3 Patient List">STU3 Patient List</option>
+          <option value="Bulk FHIR">Bulk FHIR</option>
+        </select>
+      </div>
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Bulk FHIR"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="bulkFHIR">
+
+      <div class="col col-md-6 form__field">
+        <label for="bulkFHIREndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="bulkFHIREndpoint" 
+          formControlName="bulkFHIREndpoint"
+        />
+        <p class="form__description">Endpoint is relative to "Native FHIR Query" FHIR Endpoint</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="waitInterval">Wait Interval</label>
+        <input 
+          type="number" 
+          id="waitInterval" 
+          formControlName="waitInterval"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="groupID">Group ID</label>
+        <input 
+          type="text" 
+          id="groupID" 
+          formControlName="groupID"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="initialResponseURLHeader">Initial Response URL Header</label>
+        <input 
+          type="text" 
+          id="initialResponseURLHeader" 
+          formControlName="initialResponseURLHeader"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressHeaderName">Progress Header Name</label>
+        <input 
+          type="text" 
+          id="progressHeaderName" 
+          formControlName="progressHeaderName"
+          placeholder="X-Progress"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressCompleteHeaderValue">Progress Complete Header Value</label>
+        <input 
+          type="text" 
+          id="progressCompleteHeaderValue" 
+          formControlName="progressCompleteHeaderValue"
+          placeholder="complete"
+        />
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Query Plans"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="queryPlans">
+
+    </div>
+  </app-accordion>
 </form>
