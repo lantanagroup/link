@@ -16,6 +16,8 @@ import { IconComponent } from '../icon/icon.component';
 })
 export class FormUpdateFacilityComponent {
 
+  @Input() facilityID?: string | null = null;
+
   constructor(private fb: FormBuilder) {}
 
   facilitiesForm = new FormGroup({
@@ -155,7 +157,7 @@ export class FormUpdateFacilityComponent {
 
   onSubmit() {
     if (this.facilitiesForm.valid) {
-      alert(this.facilitiesForm.value)
+      alert(JSON.stringify(this.facilitiesForm.value))
     } else {
       this.facilitiesForm.markAllAsTouched()
     }

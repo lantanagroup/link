@@ -18,6 +18,7 @@
       border-bottom: 2px solid $black;
       content: '';
       display: block;
+      order: 99;
       margin: 0 auto;
       width: calc(100% - 1.25rem);
     }
@@ -44,6 +45,7 @@ label {
   &__radio {
     align-items: center;
     color: $gray-800;
+    cursor: pointer;
     display: flex;
     font-weight: $font-weight-normal;
     text-transform: none;
@@ -90,11 +92,15 @@ select {
 }
 
 select {
+  appearance: none;
+  -moz-appearance: none;
+  background: url('../../assets/icons/chevron-down.svg') no-repeat calc(100% - 0.5rem) calc(100% - 0.5rem);
+  background-size: 1rem auto;
   height: 2.25rem;
 }
 
 textarea {
-  background: url('../../assets/icons/edit.svg') no-repeat 99.75% 96%;
+  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.125rem) calc(100% - 0.25rem);
   background-size: 1rem auto;
   min-height: 6rem;
   overflow-y: scroll;

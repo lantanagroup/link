@@ -112,7 +112,7 @@
 
   <app-accordion
     title="Normalizations"
-    [isExpanded]="true"
+    [isExpanded]="false"
   >
     <div class="row" formGroupName="normalizations">
 
@@ -318,7 +318,7 @@
         class="row form__group"
         [formGroupName]="i"
       >
-        <div class="col col-md-3 form__field">
+        <div class="col col-md-3 form__field order-0">
           <label for="id">ID</label>
           <input 
             type="text" 
@@ -327,7 +327,7 @@
           />
         </div>
 
-        <div class="col col-md-3 form__field">
+        <div class="col col-md-3 form__field order-0">
           <label for="name">Name</label>
           <input 
             type="text" 
@@ -335,7 +335,7 @@
           />
         </div>
 
-        <div class="col-12 form__field">
+        <div class="col-12 form__field order-2">
           <label for="contexts">Contexts</label>
           <textarea
             id="contexts" 
@@ -343,7 +343,7 @@
           ></textarea>
         </div>
 
-        <div class="col-12 form__field">
+        <div class="col-12 form__field order-2">
           <label for="map">Map</label>
           <textarea
             id="map"
@@ -351,13 +351,15 @@
           ></textarea>
         </div>
         
-        <app-button
-          variant="text"
-          classes="text-warning"
-          [onClickHandler]="getRemoveConceptMapHandler(i)"
-        >
-          Delete Map
-        </app-button>
+        <div class="col-12 col-md-6 order-md-1 order-3 mt-4 pt-1">
+          <app-button
+            variant="text"
+            classes="text-warning ml-auto"
+            [onClickHandler]="getRemoveConceptMapHandler(i)"
+          >
+            Delete Map
+          </app-button>
+        </div>
       </fieldset>
 
       <app-button
@@ -411,8 +413,16 @@
             ></textarea>
           </div>
 
-          <div class="col col-md-6 form__field">
-            <label for="reportingPeriod">Reporting Period</label>
+          <div class="col col-md-6 form__field mt-4 pt-1">
+            <app-button
+              variant="text"
+              classes="text-warning ml-auto d-none d-md-block"
+              [onClickHandler]="getRemoveScheduleHandler(i)"
+            >
+              Delete Schedule
+            </app-button>
+
+            <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
             <select 
               id="reportingPeriod" 
               formControlName="reportingPeriod"
@@ -446,12 +456,11 @@
 
           <app-button
             variant="text"
-            classes="text-warning"
+            classes="text-warning d-md-none"
             [onClickHandler]="getRemoveScheduleHandler(i)"
           >
             Delete Schedule
           </app-button>
-
         </fieldset>
 
         <app-button
