@@ -3,10 +3,11 @@ import { AppComponent } from './app/app.component';
 import { Router, RouterModule } from '@angular/router';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
-import { CallbackComponent } from 'src/callback/callback.component';
+
 import { AuthInterceptor } from './services/auth.interceptor';
 import { authGuard } from './services/auth.guard';
 import { AuthService } from './services/auth.service';
+import { CallbackComponent } from './callback/callback.component';
 
 bootstrapApplication(AppComponent, {
   providers: [

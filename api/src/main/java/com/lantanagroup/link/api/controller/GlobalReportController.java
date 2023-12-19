@@ -66,17 +66,18 @@ public class GlobalReportController extends BaseController {
       reports = reports.stream().filter(x -> x.getStatus().equals(ReportStatuses.valueOf(status))).collect(Collectors.toList());
     }
 
-    String[] ids = measureIds.split(",");
-    if(ids.length > 0) {
-        reports = reports.stream().filter(x -> {
-            HashSet<String> measureIdsSet = new HashSet<>(x.getMeasureIds());
-            for(String measureId : ids) {
-              if(measureIdsSet.contains(measureId)) {
-                  return true;
-              }
-            }
-            return false;
-        }).collect(Collectors.toList());
+    if(measureIds.length() > 0)
+    {
+      String[] ids = measureIds.split(",");
+      reports = reports.stream().filter(x -> {
+        HashSet<String> measureIdsSet = new HashSet<>(x.getMeasureIds());
+        for(String measureId : ids) {
+          if(measureIdsSet.contains(measureId)) {
+            return true;
+          }
+        }
+        return false;
+      }).collect(Collectors.toList());
     }
 
     reports = reports.stream().skip((long) (page -1) * count).limit(count).collect(Collectors.toList());
