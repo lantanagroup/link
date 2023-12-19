@@ -4,7 +4,7 @@
 >
   <app-section-heading
   [level]="3"
-  heading="Add New Facility"
+  [heading]="facilityId ? 'Edit ' + facilityId : 'Add New Facility'"
   >
     <app-button
       type="submit"
