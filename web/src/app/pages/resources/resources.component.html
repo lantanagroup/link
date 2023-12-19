@@ -5,7 +5,7 @@
 <section>
 	<div class="container py-4">
 		<div class="row">
-			<div *ngFor="let group of resourceGroups"
+			<div *ngFor="let group of ResourceContentsData"
 				class="col col-md-6">
 				<app-card [title]="group.name">
 					<app-resource-contents [resourceSections]="group.sections" />

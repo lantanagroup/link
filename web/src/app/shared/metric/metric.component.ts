@@ -5,11 +5,12 @@ import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { ChartDatapoint, ChartDataModel } from '../interfaces/chart.model';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { curveBasis } from 'd3-shape';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-metric',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, NgxChartsModule],
+  imports: [CommonModule, FontAwesomeModule, NgxChartsModule, IconComponent],
   templateUrl: './metric.component.html',
   styleUrls: ['./metric.component.scss']
 })
