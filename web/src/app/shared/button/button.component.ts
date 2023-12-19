@@ -17,4 +17,19 @@ export class ButtonComponent {
   @Input() disabled?: boolean = false;
   @Input() onClickHandler?: () => void = () => {};
   @Input() link?: LinkInterface; 
+  @Input() classes?: string = '';
+
+  getButtonClass = () => {
+    const buttonClasses = ['btn']
+
+    if(this.variant) {
+      buttonClasses.push('btn--' + this.variant)
+    }
+
+    if(this.classes) {
+      buttonClasses.push(this.classes)
+    }
+
+    return buttonClasses.join(' ')
+  }
 }

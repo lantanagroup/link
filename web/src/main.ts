@@ -40,6 +40,21 @@ bootstrapApplication(AppComponent, {
         canActivate: ['AuthGuard']
       },
       {
+        path: 'facilities/add-facility',
+        loadComponent: () => import('./app/pages/facilities/add-facility/add-facility.component').then(m => m.AddFacilityComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
+        path: 'facilities/facility/:id',
+        loadComponent: () => import('./app/pages/facilities/facility/facility.component').then(m => m.FacilityComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
+        path: 'facilities/edit-facility/:id',
+        loadComponent: () => import('./app/pages/facilities/edit-facility/edit-facility.component').then(m => m.EditFacilityComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
         path: 'resources',
         loadComponent: () => import('./app/pages/resources/resources.component').then(m => m.ResourcesComponent),
         canActivate: ['AuthGuard']

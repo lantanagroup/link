@@ -1,0 +1,23 @@
+<app-hero 
+  subHeading="Facility Detail"
+  pageTitle="Name to come --> ID: {{ facilityId }}"
+  color="purple"
+  [cta]="heroButton"
+/>
+
+<app-section>
+  <div class="container-md">
+    <em>Content to come ...</em>
+  </div>
+</app-section>
+
+<ng-template #heroButton>
+  <app-button
+    variant="outline--reverse"
+    type="link"
+    [link]="generateEditLink()"
+  >
+    <app-icon filePath="../../../assets/icons/edit.svg" />
+    Edit Facility
+  </app-button>
+</ng-template>

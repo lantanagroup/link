@@ -1,6 +1,6 @@
 <ng-container *ngIf="type === 'link'; else buttonTemplate">
   <a
-    [ngClass]="'btn btn--' + variant"
+    [ngClass]="getButtonClass()"
     [attr.disabled]="disabled && true"
     [target]="link?.target || '_self'"
     [href]="link?.url || '#'"
@@ -11,7 +11,7 @@
 
 <ng-template #buttonTemplate>
   <button
-    [ngClass]="'btn btn--' + variant"
+    [ngClass]="getButtonClass()"
     (click)="onClickHandler?.()"
     [disabled]="disabled && true"
     [type]="type"

@@ -1,0 +1,33 @@
+<app-hero 
+  subHeading="Facility Detail"
+  pageTitle="Add A Facility"
+  color="purple"
+/>
+
+<app-section>
+  <div class="container-md">
+    <app-section-heading
+      [level]="3"
+      heading="Add New Facility"
+    >
+      <app-button
+        type="submit"
+        classes="mr-4"
+      >
+        <app-icon filePath="../../../../assets/icons/save.svg" />
+        Save Facility
+      </app-button>
+
+      <app-button
+        variant="outline"
+        type="link"
+        [link]="{url: '/facilities'}"
+      >
+        <app-icon filePath="../../../../assets/icons/cancel.svg" />
+        Cancel
+      </app-button>
+
+
+    </app-section-heading>
+  </div>
+</app-section>
