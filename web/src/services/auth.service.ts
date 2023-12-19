@@ -14,7 +14,7 @@ interface TokenResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private tokenEndpoint = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/token';
+  private AUTH_ENDPOINT = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect';
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -33,7 +33,7 @@ export class AuthService {
   // Login method that would return the auth url.
   login() {
     // Redirect to Keycloak login page
-    return `https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/auth?client_id=nhsnlink-app&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
+    return `${this.AUTH_ENDPOINT}/auth?client_id=nhsnlink-app&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
   }
 
   // Using the code from redirect url, below method will get a valid token.
@@ -45,7 +45,7 @@ export class AuthService {
     payload.set('redirect_uri', this.getBaseURL() + '/callback');
     payload.set('grant_type', 'authorization_code');
 
-    return this.http.post<TokenResponse>(this.tokenEndpoint, payload.toString(), {
+    return this.http.post<TokenResponse>(`${this.AUTH_ENDPOINT}/token`, payload.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
   }
@@ -63,7 +63,7 @@ export class AuthService {
     payload.set('refresh_token', refreshToken);
     payload.set('grant_type', 'refresh_token');
 
-    return this.http.post<TokenResponse>(this.tokenEndpoint, payload.toString(), {
+    return this.http.post<TokenResponse>(`${this.AUTH_ENDPOINT}/token`, payload.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap(response => {
@@ -110,7 +110,7 @@ export class AuthService {
     sessionStorage.removeItem('id_token');
     sessionStorage.removeItem('refresh_token');
 
-    // Optional: Redirect to login after logout
-    this.router.navigate(['/login']);
+    const logoutUrl = `${this.AUTH_ENDPOINT}/logout?redirect_uri=${this.getBaseURL()}`;
+    window.location.href = logoutUrl;
   }
 }
