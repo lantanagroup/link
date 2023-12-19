@@ -199,7 +199,7 @@ public class Validator {
 
       outcome.addIssue()
               .setSeverity(messageSeverity)
-              .setCode(issueCode != null ? issueCode : OperationOutcome.IssueType.UNKNOWN)
+              .setCode(issueCode)
               .setDetails(new CodeableConcept().setText(message.getMessage()))
               .setExpression(List.of(
                       new StringType(message.getLocationString()),
