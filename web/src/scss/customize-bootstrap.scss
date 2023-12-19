@@ -20,7 +20,8 @@ $blue-400: #0c699d;
 $blue-600: #555;
 $blue-650: #162f4e; // custom
 $blue-700: #333;
-$blue-900: #030344;
+// $blue-900: #030344;
+$blue-900: #005eaa;
 
 $green: #58790c;
 $green-800: #497d0c;
@@ -51,6 +52,8 @@ $primary-bg-subtle: $blue-50;
 /****************/
 // Text
 /****************/
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 $font-family-sans-serif: 'Poppins', sans-serif; 
 $font-family-heading: Tahoma, Verdana, Segoe, sans-serif; // custom
