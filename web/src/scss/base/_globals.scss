@@ -15,6 +15,7 @@ body {
   background: $blue-50 !important;
 }
 
+// this is to make the footer always at the bottom regardless of page height
 .content {
   display: flex;
   flex-direction: column;
