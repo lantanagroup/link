@@ -59,7 +59,7 @@
     
     &--inProgress {
       &::after {
-        background: $gray-100;
+        background: $in-progress;
       }
     }
   }
