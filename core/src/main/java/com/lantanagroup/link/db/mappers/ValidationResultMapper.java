@@ -38,7 +38,12 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
   private static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
     ValidationResult result = new ValidationResult();
 
-    result.setCode(model.getCode().toCode());
+    if (model.getCode() == OperationOutcome.IssueType.NULL) {
+      result.setCode("NULL");
+    } else {
+      result.setCode(model.getCode().toCode());
+    }
+
     result.setDetails(model.getDetails().getText());
     result.setSeverity(model.getSeverity().toCode());
     result.setExpression(getExpression(model));

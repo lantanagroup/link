@@ -330,9 +330,15 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-    this.validationService.validate(stopwatchManager, tenantService, report);
+    try {
+      this.validationService.validate(stopwatchManager, tenantService, report);
+      logger.info("Done validating report");
+    } catch (Exception ex) {
+      logger.error("Error validating report {}", report.getId(), ex);
+    }
 
-    logger.info("Done validating report. Statistics are:\n{}", this.stopwatchManager.getStatistics());
+    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
+
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 
