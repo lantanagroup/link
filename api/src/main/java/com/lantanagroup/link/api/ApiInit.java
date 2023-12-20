@@ -135,7 +135,6 @@ public class ApiInit {
 
     if (!this.config.isApplySchemas()) {
       logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
-      return;
     } else {
       this.initDatabases(tenants);
     }
