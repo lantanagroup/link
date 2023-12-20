@@ -1,0 +1,146 @@
+/* base/_form.scss */
+
+@import 
+  '../../../node_modules/bootstrap/scss/functions',
+  '../../../node_modules/bootstrap/scss/variables',
+  '../../../node_modules/bootstrap/scss/mixins',
+  '../../../node_modules/bootstrap/scss/utilities';
+
+
+// Layout/groups
+
+.form {
+
+  &__group {
+    margin-bottom: 1rem;
+    
+    &::after {
+      border-bottom: 2px solid $black;
+      content: '';
+      display: block;
+      order: 99;
+      margin: 0 auto;
+      width: calc(100% - 1.25rem);
+    }
+  }
+
+  &__field {
+    margin: 1rem 0;
+  }
+
+}
+
+// Labels
+label {
+  font-family: $font-family-heading;
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: -0.01em;
+  line-height: 1.8em;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.label {
+  &__radio {
+    align-items: center;
+    color: $gray-800;
+    cursor: pointer;
+    display: flex;
+    font-weight: $font-weight-normal;
+    text-transform: none;
+    width: 100%;
+  }
+
+  &__lg {
+    font-size: 1rem;
+  }
+}
+
+// Helper text
+.form {
+  &__description {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: $gray-600;
+  }
+}
+
+// Inputs
+
+input[type='text'],
+input[type='email'],
+input[type='number'],
+input[type='password'],
+input[type='url'],
+input[type='tel'],
+input[type='search'],
+textarea,
+select {
+  border: 2px solid $gray-400;
+  border-radius: 2px;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+
+  &:focus-visible,
+  &:active {
+    outline: solid;
+    outline-color: $blue-300;
+    outline-width: 2px;
+    outline-offset: 2px;
+  }
+}
+
+select {
+  appearance: none;
+  -moz-appearance: none;
+  background: url('../../assets/icons/chevron-down.svg') no-repeat calc(100% - 0.5rem) calc(100% - 0.5rem);
+  background-size: 1rem auto;
+  height: 2.25rem;
+}
+
+textarea {
+  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.125rem) calc(100% - 0.25rem);
+  background-size: 1rem auto;
+  min-height: 6rem;
+  overflow-y: scroll;
+  position: relative;
+  resize: none !important;
+}
+
+input[type='radio'] {
+  display: none;
+
+  + span {
+    background: $gray-400;
+    border-radius: 50%;
+    display: block;
+    height: 1rem;
+    margin-right: 0.75rem;
+    position: relative;
+    transition: $transition-base;
+    width: 1rem;
+
+    &::after {
+      background: $white;
+      border-radius: 50%;
+      content: '';
+      height: 1rem;
+      left: 0;
+      position: absolute;
+      top: 0;
+      transform: scale(0.875);
+      transform-origin: center center;
+      transition: $transition-base;
+      width: 1rem;
+    }
+  }
+
+  &:checked + span {
+    background: $blue-300;
+
+    &::after {
+      transform: scale(0.625);
+    }
+  }
+}

@@ -1,0 +1,646 @@
+<form 
+  [formGroup]="facilitiesForm"
+  (ngSubmit)="onSubmit()"
+>
+  <app-section-heading
+  [level]="3"
+  [heading]="facilityId ? 'Edit ' + facilityId : 'Add New Facility'"
+  >
+    <app-button
+      type="submit"
+      classes="mr-4"
+      [disabled]="!facilitiesForm.valid"
+    >
+      <app-icon filePath="../../../assets/icons/save.svg" />
+      Save Facility
+    </app-button>
+
+    <app-button
+      variant="outline"
+      type="link"
+      [link]="{url: '/facilities'}"
+    >
+      <app-icon filePath="../../../assets/icons/cancel.svg" />
+      Cancel
+    </app-button>
+  </app-section-heading>
+
+  <app-accordion
+    title="Profile"
+    [isExpanded]="true"
+  >
+    <div class="row" formGroupName="profile">
+      <div class="col col-md-6 form__field">
+        <label for="name">Facility Name<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name"
+          placeholder="Facility Name"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="tenantId">Tenant ID<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="tenantId" 
+          formControlName="tenantId"
+        />
+      </div>
+
+      <div class="col-12 form__field">
+        <label for="description">Description/Notes</label>
+        <textarea
+          id="description" 
+          formControlName="description"
+        ></textarea>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="bundleName">Name for Bundling<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="bundleName" 
+          formControlName="bundleName"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="cdcOrgId">CDC Org ID</label>
+        <input 
+          type="text"
+          id="cdcOrgId"
+          formControlName="cdcOrgId"
+        />
+        <p class="form__description">Provided by facility or NHSN directly</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="database">Database</label>
+        <input 
+          type="text"
+          id="database"
+          formControlName="database"
+          placeholder="MSSQL Server Connection String"
+        />
+        <p class="form__description">Where all tenant-specific data is stored</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="database">Vendor</label>
+        <select name="vendor" id="vendor">
+          <option value="">Please Select</option>
+          <option value="Epic">Epic</option>
+          <option value="Cerner">Cerner</option>
+          <option value="AllScripts">AllScripts</option>
+        </select>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionPeriod">Data Retention Period</label>
+        <input 
+          type="text"
+          id="dataRetentionPeriod"
+          formControlName="dataRetentionPeriod"
+        />
+        <p class="form__description">ISO 8601 formatted string</p>
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Normalizations"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="normalizations">
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Code System Cleanup</label>
+        <label for="codeSystemCleanupFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="codeSystemCleanupFalse"
+            name="codeSystemCleanup" 
+            formControlName="codeSystemCleanup"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="codeSystemCleanupTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="codeSystemCleanupTrue" 
+            name="codeSystemCleanup"
+            formControlName="codeSystemCleanup"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Contained Resource Cleanup</label>
+        <label for="containedResourceCleanupFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="containedResourceCleanupFalse"
+            name="containedResourceCleanup" 
+            formControlName="containedResourceCleanup"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="containedResourceCleanupTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="containedResourceCleanupTrue" 
+            name="containedResourceCleanup"
+            formControlName="containedResourceCleanup"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
+        <label for="copyLocationFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="copyLocationFalse"
+            name="copyLocation" 
+            formControlName="copyLocation"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="copyLocationTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="copyLocationTrue" 
+            name="copyLocation"
+            formControlName="copyLocation"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Encounter Status Transformer</label>
+        <label for="encounterStatusFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="encounterStatusFalse"
+            name="encounterStatus" 
+            formControlName="encounterStatus"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="encounterStatusTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="encounterStatusTrue" 
+            name="encounterStatus"
+            formControlName="encounterStatus"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Fix Period Dates</label>
+        <label for="fixPeriodDatesFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixPeriodDatesFalse"
+            name="fixPeriodDates" 
+            formControlName="fixPeriodDates"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="fixPeriodDatesTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixPeriodDatesTrue" 
+            name="fixPeriodDates"
+            formControlName="fixPeriodDates"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Fix Resource IDs</label>
+        <label for="fixResourceIdsFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixResourceIdsFalse"
+            name="fixResourceIds" 
+            formControlName="fixResourceIds"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="fixResourceIdsTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="fixResourceIdsTrue" 
+            name="fixResourceIds"
+            formControlName="fixResourceIds"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+      <div class="col col-md-3 form__field">
+        <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
+        <label for="patientDataResourceFalse" class="label__radio">
+          <input 
+            type="radio" 
+            id="patientDataResourceFalse"
+            name="patientDataResource" 
+            formControlName="patientDataResource"
+            [value]=0
+          />
+          <span></span>
+          No
+        </label>
+
+        <label for="patientDataResourceTrue" class="label__radio">
+          <input 
+            type="radio" 
+            id="patientDataResourceTrue" 
+            name="patientDataResource"
+            formControlName="patientDataResource"
+            [value]=1
+          />
+          <span></span>
+          Yes
+        </label>
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Concept Maps"
+    [isExpanded]="false"
+  >
+    <div formArrayName="conceptMaps">
+      <fieldset 
+        *ngFor="let conceptMap of conceptMaps.controls; let i = index" 
+        class="row form__group"
+        [formGroupName]="i"
+      >
+        <div class="col col-md-3 form__field order-0">
+          <label for="id">ID</label>
+          <input 
+            type="text" 
+            id="id" 
+            placeholder="Must be unique"
+          />
+        </div>
+
+        <div class="col col-md-3 form__field order-0">
+          <label for="name">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+          />
+        </div>
+
+        <div class="col-12 form__field order-2">
+          <label for="contexts">Contexts</label>
+          <textarea
+            id="contexts" 
+            placeholder="One FHIRPath per line"
+          ></textarea>
+        </div>
+
+        <div class="col-12 form__field order-2">
+          <label for="map">Map</label>
+          <textarea
+            id="map"
+            placeholder="FHIR ConceptMap Json"
+          ></textarea>
+        </div>
+        
+        <div class="col-12 col-md-6 order-md-1 order-3 mt-4 pt-1">
+          <app-button
+            variant="text"
+            classes="text-warning ml-auto"
+            [onClickHandler]="getRemoveConceptMapHandler(i)"
+          >
+            Delete Map
+          </app-button>
+        </div>
+      </fieldset>
+
+      <app-button
+        type="button"
+        [onClickHandler]="getAddConceptMapHandler()"
+      >
+        <app-icon filePath="../../../assets/icons/plus.svg" />
+        Add Concept Map
+      </app-button>
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Scheduling"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="scheduling">
+      <div class="col col-md-6 form__field">
+        <label for="queryPatientList">Query Patient List</label>
+        <input 
+          type="text" 
+          id="queryPatientList" 
+          formControlName="queryPatientList"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionCheck">Data Retention Check</label>
+        <input 
+          type="text" 
+          id="dataRetentionCheck" 
+          formControlName="dataRetentionCheck"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div formArrayName="schedules">
+        <label class="label__lg d-block mb-4">Generate and Submit<span class="text-warning">*</span></label>
+
+        <fieldset 
+          *ngFor="let schedule of schedules.controls; let i = index" 
+          class="row form__group"
+          [formGroupName]="i"
+        >
+          <div class="col col-md-6 form__field">
+            <label for="measureIds">Measure IDs (one/line)</label>
+            <textarea
+              id="measureIds" 
+              formControlName="measureIds"
+            ></textarea>
+          </div>
+
+          <div class="col col-md-6 form__field mt-4 pt-1">
+            <app-button
+              variant="text"
+              classes="text-warning ml-auto d-none d-md-block"
+              [onClickHandler]="getRemoveScheduleHandler(i)"
+            >
+              Delete Schedule
+            </app-button>
+
+            <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
+            <select 
+              id="reportingPeriod" 
+              formControlName="reportingPeriod"
+            >
+              <option value="Last Month">Last Month</option>
+              <option value="Last Week">Last Week</option>
+              <option value="Current Month">Current Month</option>
+              <option value="Current Week">Current Week</option>
+            </select>
+          </div>
+
+          <div class="col col-md-6 form__field">
+            <label for="schedule">Schedule (CRON)</label>
+            <input 
+              type="text" 
+              id="schedule" 
+              formControlName="schedule"
+            />
+          </div>
+
+          <div class="col col-md-6 form__field">
+            <label for="regenerate">Regenerate</label>
+            <select 
+              id="regenerate" 
+              formControlName="regenerate"
+            >
+              <option [value]="1">Yes</option>
+              <option [value]="0">No</option>
+            </select>
+          </div>
+
+          <app-button
+            variant="text"
+            classes="text-warning d-md-none"
+            [onClickHandler]="getRemoveScheduleHandler(i)"
+          >
+            Delete Schedule
+          </app-button>
+        </fieldset>
+
+        <app-button
+          type="button"
+          [onClickHandler]="getAddScheduleHandler()"
+        >
+          <app-icon filePath="../../../assets/icons/plus.svg" />
+          Add Schedule
+        </app-button>
+
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Native FHIR Query"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="nativeFHIRQuery">
+      <div class="col col-md-6 form__field">
+        <label for="nativeFHIREndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="nativeFHIREndpoint" 
+          formControlName="nativeFHIREndpoint"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="parallelPatients">Parallel Patients</label>
+        <input 
+          type="number" 
+          id="parallelPatients" 
+          formControlName="parallelPatients"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="authenticationMethod">Authentication Method</label>
+        <select name="authenticationMethod" id="authenticationMethod">
+          <option value="None">None</option>
+          <option value="Epic OAuth">Epic OAuth</option>
+          <option value="Cerner OAuth">Cerner OAuth</option>
+          <option value="Basic">Basic</option>
+          <option value="Basic + API Key">Basic + API Key</option>
+        </select>
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Census Acquisition"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="censusAcquisition">
+      <div class="col col-md-6 form__field">
+        <label for="method">Method</label>
+        <select name="method" id="method">
+          <option value="">Please Select</option>
+          <option value="STU3 Patient List">STU3 Patient List</option>
+          <option value="Bulk FHIR">Bulk FHIR</option>
+        </select>
+      </div>
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Bulk FHIR"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="bulkFHIR">
+
+      <div class="col col-md-6 form__field">
+        <label for="bulkFHIREndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="bulkFHIREndpoint" 
+          formControlName="bulkFHIREndpoint"
+        />
+        <p class="form__description">Endpoint is relative to "Native FHIR Query" FHIR Endpoint</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="waitInterval">Wait Interval</label>
+        <input 
+          type="number" 
+          id="waitInterval" 
+          formControlName="waitInterval"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="groupID">Group ID</label>
+        <input 
+          type="text" 
+          id="groupID" 
+          formControlName="groupID"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="initialResponseURLHeader">Initial Response URL Header</label>
+        <input 
+          type="text" 
+          id="initialResponseURLHeader" 
+          formControlName="initialResponseURLHeader"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressHeaderName">Progress Header Name</label>
+        <input 
+          type="text" 
+          id="progressHeaderName" 
+          formControlName="progressHeaderName"
+          placeholder="X-Progress"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressCompleteHeaderValue">Progress Complete Header Value</label>
+        <input 
+          type="text" 
+          id="progressCompleteHeaderValue" 
+          formControlName="progressCompleteHeaderValue"
+          placeholder="complete"
+        />
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Query Plans"
+    [isExpanded]="false"
+  >
+    <div formArrayName="queryPlans">
+      <fieldset 
+        *ngFor="let queryPlan of queryPlans.controls; let i = index" 
+        class="row form__group"
+        [formGroupName]="i"
+      >
+        <div class="col col-md-4 form__field">
+          <label for="measureId">Measure ID</label>
+          <input 
+            type="text" 
+            id="measureId" 
+          />
+        </div>
+
+        <div class="col col-md-6 form__field">
+          <label for="plan">Query Plan</label>
+          <textarea 
+            id="plan"
+            placeholder="Enter YAML Here"
+          ></textarea>
+        </div>
+        
+        <div class="col col-md-2 form__field pt-4">
+          <app-button
+            variant="text"
+            classes="text-warning"
+            [onClickHandler]="getRemoveQueryPlanHandler(i)"
+          >
+            Delete Plan
+          </app-button>
+        </div>
+      </fieldset>
+
+      <app-button
+        type="button"
+        [onClickHandler]="getAddQueryPlanHandler()"
+      >
+        <app-icon filePath="../../../assets/icons/plus.svg" />
+        Add Query Plan
+      </app-button>
+    </div>
+  </app-accordion>
+</form>
