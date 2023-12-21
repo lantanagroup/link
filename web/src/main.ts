@@ -4,9 +4,9 @@ import { Router, RouterModule } from '@angular/router';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
 
-import { AuthInterceptor } from './services/auth.interceptor';
-import { authGuard } from './services/auth.guard';
-import { AuthService } from './services/auth.service';
+import { AuthInterceptor } from './services/auth/auth.interceptor';
+import { authGuard } from './services/auth/auth.guard';
+import { AuthService } from './services/auth/auth.service';
 import { CallbackComponent } from './callback/callback.component';
 
 bootstrapApplication(AppComponent, {

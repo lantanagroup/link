@@ -82,6 +82,7 @@ export class AuthService {
 
   // This method will call the getToken and cache the response values.
   handleAuth(code: string) {
+    debugger;
     return this.getToken(code).pipe(
       tap(response => {
         // Store tokens in a secure storage
@@ -89,6 +90,7 @@ export class AuthService {
         sessionStorage.setItem('refresh_token', response.refresh_token);
         sessionStorage.setItem('expires_in', JSON.stringify(new Date().getTime() + (Number(response.expires_in) * 1000)));
         sessionStorage.setItem('id_token', response.id_token);
+
       })
     );
   }
@@ -112,5 +114,15 @@ export class AuthService {
 
     const logoutUrl = `${this.AUTH_ENDPOINT}/logout?redirect_uri=${this.getBaseURL()}`;
     window.location.href = logoutUrl;
+  }
+
+  // Checks if the token is expiring
+  isTokenExpiring(): boolean {
+    const expiresIn = sessionStorage.getItem('expires_in');
+    const bufferTime = 300000; // 5 minute buffer
+    if (!expiresIn) {
+      return false;
+    }
+    return new Date().getTime() > JSON.parse(expiresIn) - bufferTime;
   }
 }

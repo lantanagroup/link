@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth/auth.service';
 
 @Component({
   selector: 'app-callback',
@@ -22,6 +22,8 @@ export class CallbackComponent implements OnInit {
       this.authService.handleAuth(code).subscribe({
         next: () => {
           // Navigate to the desired route after successful login
+          // TODO: Handle browser cookies code here:
+          // Research on HTTP only browser cookies.
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {

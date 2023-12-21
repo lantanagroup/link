@@ -1,5 +1,5 @@
 import { ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { AuthService } from 'src/services/auth.service';
+import { AuthService } from 'src/services/auth/auth.service';
 
 export function authGuard(router: Router, authService: AuthService): (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => boolean {
   return (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
