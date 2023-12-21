@@ -4,7 +4,7 @@ import { CardComponent } from 'src/app/shared/card/card.component';
 import { ResourceContentsComponent } from 'src/app/shared/resource-contents/resource-contents.component';
 import { ResourceGroup } from 'src/app/shared/interfaces/resource-contents.model';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { DataService } from 'src/services/data.service';
+import { DataService } from 'src/services/api/data.service';
 
 @Component({
   selector: 'app-resources',
