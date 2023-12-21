@@ -1,0 +1,17 @@
+/* link.component.scss */
+
+// @import '../../../scss/customize-bootstrap.scss',
+//         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.link {
+  align-items: center;
+  display: flex;
+  letter-spacing: 0.02em;
+  line-height: 1.5em;
+
+  app-icon,
+  svg,
+  .icon {
+    margin-left: 1rem;
+  }
+}

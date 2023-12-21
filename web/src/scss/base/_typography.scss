@@ -10,6 +10,18 @@
 
 a {
   transition: $transition-base;
+
+  &:hover {
+    color: $blue-800;
+
+    app-icon,
+    svg,
+    icon {
+      path {
+        stroke: $blue-800;
+      }
+    }
+  }
 }
 
 .skip-link {
@@ -64,7 +76,8 @@ h5, .h5 {
 }
 h6, .h6 {
   font-family: $font-family-sans-serif;
-  letter-spacing: 0.04em;
+  font-weight: $font-weight-bold !important;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
