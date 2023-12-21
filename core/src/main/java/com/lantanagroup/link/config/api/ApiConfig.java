@@ -32,6 +32,11 @@ public class ApiConfig {
   private String connectionString;
 
   /**
+   * <strong>api.apply-schemas</strong><br>Whether to apply schemas to the databases or not
+   */
+  private boolean applySchemas = false;
+
+  /**
    * <strong>api.validate-fhir-server</strong><br>Boolean for whether to check for metadata before request or not
    */
   @Getter
