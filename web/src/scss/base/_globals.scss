@@ -1,0 +1,27 @@
+/* base/_globals.scss */
+
+@import 
+  '../../../node_modules/bootstrap/scss/functions',
+  '../../../node_modules/bootstrap/scss/variables',
+  '../../../node_modules/bootstrap/scss/mixins',
+  '../../../node_modules/bootstrap/scss/utilities';
+
+body,
+html {
+  height: 100%;
+}
+
+body {
+  background: $blue-50 !important;
+}
+
+// this is to make the footer always at the bottom regardless of page height
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  > *:last-child {
+    margin-top: auto;
+  }
+}

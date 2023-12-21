@@ -1,7 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { ChartDatapoint, ChartDataModel } from '../interfaces/chart.model';
 import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { curveBasis } from 'd3-shape';
@@ -10,7 +8,7 @@ import { IconComponent } from '../icon/icon.component';
 @Component({
   selector: 'app-metric',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, NgxChartsModule, IconComponent],
+  imports: [CommonModule, NgxChartsModule, IconComponent],
   templateUrl: './metric.component.html',
   styleUrls: ['./metric.component.scss']
 })
@@ -21,9 +19,17 @@ export class MetricComponent {
   @Input() changeWindow?: string = 'month'; // the duration of value changed
   @Input() isValueUp: boolean = true; // This will change the path of image
   @Input() data: ChartDatapoint[] = [];
+  @Input() isGood?: boolean = true; // this is temporary
 
-  iconUp = faArrowUp
-  iconDown = faArrowDown
+  getArrowIconPath(): string {
+    let iconPath = '../../../assets/icons/';
+    if(this.isGood) {
+      iconPath += 'arrow-up-fat-green.svg';
+    } else {
+      iconPath += 'arrow-up-fat-red.svg';
+    }
+    return iconPath;
+  }
 
   // chart render
 
