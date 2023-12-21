@@ -2,7 +2,7 @@ package com.lantanagroup.link.db;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.db.DBAppender;
-import ch.qos.logback.core.db.DriverManagerConnectionSource;
+import ch.qos.logback.core.db.DataSourceConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -82,10 +82,9 @@ public class SharedService {
   private void initDatabaseLogging() {
     LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-    DriverManagerConnectionSource source = new DriverManagerConnectionSource();
+    DataSourceConnectionSource source = new DataSourceConnectionSource();
+    source.setDataSource(dataSource);
     source.setContext(logCtx);
-    source.setDriverClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    source.setUrl(this.config.getConnectionString());
     source.start();
 
     DBAppender appender = new DBAppender();
