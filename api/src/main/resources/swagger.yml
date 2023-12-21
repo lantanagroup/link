@@ -610,7 +610,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/GlobalReportByStatusResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/GlobalReportResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1740,91 +1742,58 @@ components:
           type: string
         periodEnd:
           type: string
+    ReportBase:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 412334d5
+        measureIds:
+          type: array
+          items:
+            type: string
+            example: NHSNGlycemicControlHypoglycemicInitialPopulation
+        periodStart:
+          type: string
+          example: 2023-05-01T00:00:00.000Z
+        periodEnd:
+          type: string
+          example: 2023-05-31T23:59:59.000Z
+        deviceInfo:
+          $ref: '#/components/schemas/FHIR.Device'
     Report:
-      type: object
-      properties:
-        id:
-          type: string
-        measureId:
-          type: array
-          items:
-            type: string
-        periodStart:
-          type: string
-        periodEnd:
-          type: string
-        status:
-          type: string
-          enum:
-            - Draft
-            - Submitted
-        submittedTime:
-          type: string
-        generatedTime:
-          type: string
-        version:
-          type: string
-        patientLists:
-          type: array
-          items:
-            type: string
-        aggregates:
-          type: array
-          items:
-            type: string
+      allOf: # Combines the BasicErrorModel and the inline model
+        - $ref: '#/components/schemas/ReportBase'
+        - type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - Draft
+                - Submitted
+            submittedTime:
+              type: string
+              example: 2023-06-02T03:43:23.000Z
+            generatedTime:
+              type: string
+              example: 2023-06-02T03:41:23.000Z
+            version:
+              type: string
+              example: "0.5"
     GlobalReportResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        measureId:
-          type: array
-          items:
-            type: string
-        periodStart:
-          type: string
-        periodEnd:
-          type: string
-        status:
-          type: string
-          enum:
-            - Draft
-            - Submitted
-        submittedTime:
-          type: string
-        generatedTime:
-          type: string
-        version:
-          type: string
-        patientLists:
-          type: array
-          items:
-            type: string
-        aggregates:
-          type: array
-          items:
-            type: string
-        tenantName:
-          type: string
-        cdcOrgId:
-          type: string
-        reportId:
-          type: string
-    GlobalReportByStatusResponse:
-      type: object
-      properties:
-        completedReports:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalReportResponse'
-        failedReports:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalReportResponse'
-        pendingReports:
-          type: array
-          items:
-            $ref: '#/components/schemas/GlobalReportResponse'
+      allOf: # Combines the BasicErrorModel and the inline model
+        - $ref: '#/components/schemas/Report'
+        - type: object
+          properties:
+            tenantId:
+              type: string
+              example: "SomeTenant"
+            tenantName:
+              type: string
+              example: "Some Tenant Name"
+            cdcOrgId:
+              type: string
+              example: "43984"
     MeasureDefinition:
       type: object
       properties:
@@ -2380,6 +2349,8 @@ components:
           type: string
         enabled:
           type: boolean
+    FHIR.Device:
+      type: object
     FHIR.ConceptMap:
       type: object
     FHIR.MeasureReport:
