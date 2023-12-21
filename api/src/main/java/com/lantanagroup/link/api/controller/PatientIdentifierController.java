@@ -91,6 +91,30 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
+  @PostMapping("/list")
+  public void savePatientList(@RequestBody String patientList,
+                              @PathVariable String tenantId,
+                              @RequestParam String measureId,
+                              @RequestParam String periodStart,
+                              @RequestParam String periodEnd) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    List<String> patientIds = Arrays.asList(patientList.replace("\r", "").split("\n"));
+    PatientList list = new PatientList();
+    list.setMeasureId(measureId);
+    list.setPeriodStart(periodStart);
+    list.setPeriodEnd(periodEnd);
+    list.setLastUpdated(new Date());
+    list.setPatients(patientIds.stream().map(PatientId::createFromReference).collect(Collectors.toList()));
+
+    try {
+      assert tenantService != null;
+      this.storePatientList(tenantService, list);
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving patient list", e);
+    }
+  }
+
+
   private IGenericClient createClient(TenantService tenantService) throws ClassNotFoundException {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
@@ -130,7 +154,7 @@ public class PatientIdentifierController extends BaseController {
     for (ListResource source : sources) {
       logger.info("Converting List: {}", source.getIdElement().getIdPart());
       for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-        PatientId patientId = this.convertListItem(tenantService, sourceEntry, baseUrl);
+        PatientId patientId = this.convertListItem(sourceEntry, baseUrl);
 
         if (patientId != null && !patientList.getPatients().contains(patientId)) {
           patientList.getPatients().add(patientId);
@@ -141,7 +165,7 @@ public class PatientIdentifierController extends BaseController {
     return patientList;
   }
 
-  private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
+  private PatientId convertListItem(ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
     if (listEntry.getItem().hasReference()) {
       URI referenceUrl = new URI(listEntry.getItem().getReference());
       String reference;
@@ -296,7 +320,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(value);
 
     for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
-      PatientId patientId = this.convertListItem(tenantService, sourceEntry, null);
+      PatientId patientId = this.convertListItem(sourceEntry, null);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);

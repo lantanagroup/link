@@ -500,6 +500,52 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/poi/list:
+    post:
+      tags:
+        - Patient Identification
+      summary: Submit a plain text list of patients to be included in report generation
+      description: Assumes the list is a plain text list of FHIR patient references separated by line breaks
+      operationId: savePatientList
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: measureId
+          in: query
+          description: The id of the measure to use for the patient list
+          required: true
+          schema:
+            type: string
+        - name: periodStart
+          in: query
+          description: The start date of the reporting period, formatted as a FHIR datetime
+          required: true
+          schema:
+            type: string
+        - name: periodEnd
+          in: query
+          description: The end date of the reporting period, formatted as a FHIR datetime
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: successful response
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/poi/fhir/List:
     post:
       tags:
