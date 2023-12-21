@@ -9,16 +9,17 @@
 // links
 
 a {
+  color: $blue-300;
   transition: $transition-base;
 
   &:hover {
-    color: $blue-800;
+    color: $blue;
 
     app-icon,
     svg,
     icon {
       path {
-        stroke: $blue-800;
+        stroke: $blue;
       }
     }
   }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DataService } from 'src/services/data.service';
+import { DataService } from 'src/services/api/data.service';
 
 @Component({
   selector: 'app-tenant-reports',

@@ -12,7 +12,7 @@
   padding: 2rem 0 2.5rem;
 
   &--bg-shade {
-    @include background-2x('../../assets/backgrounds/bg-blue-650', 'png', 100%, auto, center bottom, no-repeat);
+    @include background-2x('../../assets/backgrounds/bg-blue-800', 'png', 100%, auto, center bottom, no-repeat);
     background-size: cover;
   }
   

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CardComponent } from 'src/app/shared/card/card.component';
 import { ResourceGroup } from 'src/app/shared/interfaces/resource-contents.model';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { DataService } from 'src/services/data.service';
+import { DataService } from 'src/services/api/data.service';
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 
