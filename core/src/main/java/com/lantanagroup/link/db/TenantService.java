@@ -8,14 +8,13 @@ import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.db.repositories.*;
-import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -51,10 +50,9 @@ public class TenantService {
 
   protected TenantService(Tenant config) {
     this.config = config;
-    this.dataSource = DataSourceBuilder.create()
-            .type(SQLServerDataSource.class)
-            .url(config.getConnectionString())
-            .build();
+    ComboPooledDataSource dataSource = new ComboPooledDataSource();
+    dataSource.setJdbcUrl(config.getConnectionString());
+    this.dataSource = dataSource;
     PlatformTransactionManager txManager = new DataSourceTransactionManager(this.dataSource);
     this.conceptMaps = new ConceptMapRepository(this.dataSource, txManager);
     this.patientLists = new PatientListRepository(this.dataSource, txManager);
