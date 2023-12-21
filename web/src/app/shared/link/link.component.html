@@ -1,0 +1,18 @@
+<a 
+  [href]="link.url"
+  [target]="link.target"
+  class="link"
+  [ngClass]="class"
+>
+  <ng-container *ngIf="hasContent; else noContent">
+    <ng-content />
+  </ng-container>
+
+  <ng-template #noContent>
+    {{ link.title }}
+  </ng-template>
+  
+  <ng-container *ngIf="isExternal">
+    <app-icon filePath="../../../assets/icons/external-link.svg" />
+  </ng-container>
+</a>
