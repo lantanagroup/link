@@ -104,7 +104,10 @@ public class PatientIdentifierController extends BaseController {
     list.setPeriodStart(periodStart);
     list.setPeriodEnd(periodEnd);
     list.setLastUpdated(new Date());
-    list.setPatients(patientIds.stream().map(PatientId::createFromReference).collect(Collectors.toList()));
+    list.setPatients(patientIds.stream()
+            .filter(StringUtils::isNotEmpty)
+            .map(PatientId::createFromReference)
+            .collect(Collectors.toList()));
 
     try {
       assert tenantService != null;
