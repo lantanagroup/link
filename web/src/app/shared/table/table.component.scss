@@ -1,6 +1,12 @@
 @import '../../../scss/customize-bootstrap.scss',
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
 
+// hide default search bar
+.dataTables_filter {
+  display: none !important;
+}
+
+// custom styles
 table.dataTable {
   border-collapse: collapse !important;
   margin: 0 !important;
