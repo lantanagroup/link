@@ -109,7 +109,7 @@ public class TenantController extends BaseController {
     }
 
     if (StringUtils.isEmpty(newTenantConfig.getTimeZoneId())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'timeZoneId' is required");
+      newTenantConfig.setTimeZoneId("UTC");
     }
 
     try {
