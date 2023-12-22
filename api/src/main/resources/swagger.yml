@@ -689,6 +689,12 @@ paths:
           required: true
           schema:
             type: boolean
+        - name: validate
+          in: query
+          description: Whether to validate the report at the end of generation
+          default: true
+          schema:
+            type: boolean
       responses:
         '200':
           description: successful response
@@ -1734,6 +1740,9 @@ components:
       properties:
         regenerate:
           type: boolean
+        validate:
+          type: boolean
+          default: true
         bundleIds:
           type: array
           items:
