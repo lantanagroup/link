@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -28,5 +29,11 @@ public class PatientList {
         this.patients.add(sourcePatientId);
       }
     }
+  }
+
+  public void deduplicate() {
+    patients = patients.stream()
+            .distinct()
+            .collect(Collectors.toList());
   }
 }

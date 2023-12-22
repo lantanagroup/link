@@ -263,6 +263,7 @@ public class PatientIdentifierController extends BaseController {
       logger.info("Merged list contains {} entries", found.getPatients().size());
     } else {
       logger.info("No pre-existing patient list found");
+      patientList.deduplicate();
       found = patientList;
     }
 
