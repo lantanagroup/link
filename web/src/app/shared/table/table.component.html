@@ -1,6 +1,32 @@
+<ng-container *ngIf="hasSearch">
+	<div class="mb-4">
+		<h4 *ngIf="hasSearch.title">{{ hasSearch.title }}</h4>
+		<input #customSearch type="text" class="form-control input--lg shadow-sm" [placeholder]="hasSearch.placeholder">
+	</div>
+</ng-container>
+
+<ng-container *ngIf="tableTitle || filters">
+	<app-section-heading
+		[heading]="tableTitle"
+		[level]=3
+	>
+		<ng-container *ngIf="filters">
+			<app-button
+        variant="reverse"
+				type="button"
+				[onClickHandler]="toggleFilters"
+			>
+				<app-icon filePath="../../../assets/icons/sliders.svg" />
+			</app-button>
+		</ng-container>
+
+	</app-section-heading>
+</ng-container>
+
 <table 
 	[dtOptions]="dtOptions"
 	datatable
 	[ngClass]="classes"
+	#datatableElement
 >
 </table>
