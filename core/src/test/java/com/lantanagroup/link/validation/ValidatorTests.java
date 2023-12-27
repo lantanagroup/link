@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 @Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
-  private static FhirContext ctx = FhirContext.forR4();
+  private static final FhirContext ctx = FhirContext.forR4();
   private static Validator validator;
 
   /**
@@ -42,6 +42,7 @@ public class ValidatorTests {
 
     if (validator == null) {
       validator = new Validator(sharedService);
+      validator.init();
 
       // Perform a single validation to pre-load all the packages and profiles
       validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
@@ -60,10 +61,10 @@ public class ValidatorTests {
     Bundle bundle = this.getBundle("large-submission-example.json");
     OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
 
-    logger.info("Issues:");
-    oo.getIssue().forEach(i -> {
+    logger.info("Issues: {}", oo.getIssue().size());
+    /*oo.getIssue().forEach(i -> {
       logger.info("{} - {} - {}", i.getSeverity(), i.getLocation(), i.getDiagnostics());
-    });
+    });*/
   }
 
   @Test

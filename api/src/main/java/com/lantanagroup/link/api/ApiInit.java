@@ -110,7 +110,12 @@ public class ApiInit {
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
 
-    this.sharedService.initDatabase();
+    if (!this.config.isApplySchemas()) {
+      logger.warn("Not configured to apply schemas to database. Skipping shared database schema init.");
+    } else {
+      this.sharedService.initDatabase();
+    }
+
     this.validator.init();
     List<Tenant> tenants = this.sharedService.getTenantConfigs();
 
@@ -128,7 +133,11 @@ public class ApiInit {
       return;
     }
 
-    this.initDatabases(tenants);
+    if (!this.config.isApplySchemas()) {
+      logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
+    } else {
+      this.initDatabases(tenants);
+    }
 
     if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
       FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);

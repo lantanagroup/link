@@ -151,12 +151,12 @@ public class ReportController extends BaseController {
           @RequestBody GenerateRequest input)
           throws Exception {
 
-    if (input.getBundleIds().size() < 1) {
+    if (input.getBundleIds().isEmpty()) {
       throw new IllegalStateException("At least one bundleId should be specified.");
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate());
   }
 
   /**
@@ -173,7 +173,8 @@ public class ReportController extends BaseController {
           @RequestParam String periodStart,
           @RequestParam String periodEnd,
           @PathVariable String tenantId,
-          @RequestParam boolean regenerate)
+          @RequestParam boolean regenerate,
+          @RequestParam(defaultValue = "true") boolean validate)
           throws Exception {
     List<String> singleMeasureBundleIds;
 
@@ -194,7 +195,7 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
@@ -232,7 +233,7 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate) throws Exception {
     this.checkReportingPlan(tenantService, periodStart, measureIds);
 
     ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
@@ -330,9 +331,19 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
     logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-    this.validationService.validate(stopwatchManager, tenantService, report);
+    if (validate) {
+      try {
+        this.validationService.validate(stopwatchManager, tenantService, report);
+        logger.info("Done validating report");
+      } catch (Exception ex) {
+        logger.error("Error validating report {}", report.getId(), ex);
+      }
+    } else {
+      logger.info("Skipping validation for report {}", report.getId());
+    }
 
-    logger.info("Done validating report. Statistics are:\n{}", this.stopwatchManager.getStatistics());
+    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
+
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     this.stopwatchManager.reset();
 

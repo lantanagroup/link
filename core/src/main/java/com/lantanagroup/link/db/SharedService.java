@@ -2,7 +2,7 @@ package com.lantanagroup.link.db;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.db.DBAppender;
-import ch.qos.logback.core.db.DriverManagerConnectionSource;
+import ch.qos.logback.core.db.DataSourceConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -14,6 +14,7 @@ import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.*;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -22,7 +23,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -43,8 +46,17 @@ public class SharedService {
   @Autowired
   private ApiConfig config;
 
+  private DataSource dataSource;
+
   static {
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
+  @PostConstruct
+  private void postConstruct() {
+    ComboPooledDataSource dataSource = new ComboPooledDataSource();
+    dataSource.setJdbcUrl(this.config.getConnectionString());
+    this.dataSource = dataSource;
   }
 
   private static GlobalReportResponse getGlobalReportResponse(Tenant tenantConfig, String reportId, ResultSet rs) throws SQLException, JsonProcessingException {
@@ -63,17 +75,16 @@ public class SharedService {
     return report;
   }
 
-  public Connection getSQLConnection() {
-    return this.getSQLConnection(this.config.getConnectionString());
+  public Connection getSQLConnection() throws SQLException {
+    return dataSource.getConnection();
   }
 
   private void initDatabaseLogging() {
     LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
 
-    DriverManagerConnectionSource source = new DriverManagerConnectionSource();
+    DataSourceConnectionSource source = new DataSourceConnectionSource();
+    source.setDataSource(dataSource);
     source.setContext(logCtx);
-    source.setDriverClass("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-    source.setUrl(this.config.getConnectionString());
     source.start();
 
     DBAppender appender = new DBAppender();
@@ -759,6 +770,7 @@ public class SharedService {
     }
   }
 
+  @Deprecated
   public Connection getSQLConnection(String connectionString) {
     try {
       Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
@@ -780,6 +792,7 @@ public class SharedService {
     List<GlobalReportResponse> reports = new ArrayList<>();
 
     for (Tenant tenantConfig : this.getTenantConfigs()) {
+      // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
         PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd, measureIds FROM [dbo].[report]");
         ResultSet rs = ps.executeQuery();
@@ -854,6 +867,7 @@ public class SharedService {
           continue;
         }
       }
+      // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
         PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
         ResultSet rs = ps.executeQuery();
