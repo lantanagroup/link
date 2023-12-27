@@ -22,6 +22,7 @@ export class TableComponent implements OnInit {
   @Input() classes?: string = '';
   @Input() hasSearch?: SearchBar | false = false;
   @Input() filters?: TableFilter[] | null = null;
+  @Input() variant?: 'simple' | 'standard' = 'standard';
 
   // adding custom search
   @ViewChild('customSearch') customSearchInput!: ElementRef
@@ -50,6 +51,10 @@ export class TableComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.dtOptions = {
+      ...this.dtOptions
+    }
+
     if(this.hasSearch) {
       this.dtOptions.searching = true
     }

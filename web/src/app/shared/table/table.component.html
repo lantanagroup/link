@@ -23,10 +23,15 @@
 	</app-section-heading>
 </ng-container>
 
-<table 
-	[dtOptions]="dtOptions"
-	datatable
-	[ngClass]="classes"
-	#datatableElement
+<div 
+	class="table__container"
+	[ngClass]="variant === 'standard' ? 'shadow-sm rounded table--standard' : 'table--simple'"
 >
-</table>
+	<table 
+		[dtOptions]="dtOptions"
+		datatable
+		[ngClass]="classes"
+		#datatableElement
+	>
+	</table>
+</div>
