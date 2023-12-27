@@ -5,21 +5,43 @@ import { CardComponent } from 'src/app/shared/card/card.component';
 import { MetricComponent } from 'src/app/shared/metric/metric.component';
 import { DataTablesModule } from 'angular-datatables';
 import { TableComponent } from 'src/app/shared/table/table.component';
-import { IconComponent } from "../../shared/icon/icon.component";
-import { ButtonComponent } from "../../shared/button/button.component";
-import { SectionHeadingComponent } from "../../shared/section-heading/section-heading.component";
+import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { calculatePeriodLength, generateRandomData } from 'src/app/helpers/ReportHelper';
+import { SearchBar, TableFilter } from 'src/app/shared/interfaces/table.model';
 
 @Component({
   selector: 'app-activities',
   standalone: true,
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.scss'],
-  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, IconComponent, ButtonComponent, SectionHeadingComponent]
+  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, SectionComponent]
 })
 export class ActivitiesComponent implements OnInit {
   dtOptions: DataTables.Settings = {};
+  dtFilters: TableFilter[] = [
+    {
+      name: 'Sort:',
+      options: [
+        {
+          label: 'ASC',
+          value: true
+        },
+        {
+          label: 'DESC',
+          value: false
+        },
+        {
+          label: 'Newest First',
+          value: true
+        },
+        {
+          label: 'Oldest First',
+          value: false
+        }
+      ]
+    }
+  ];
 
   ngOnInit(): void {
     // Step 1: Generate random data
@@ -32,11 +54,6 @@ export class ActivitiesComponent implements OnInit {
     this.dtOptions = this.calculateDtOptions(transformedData);
   }
 
-  // This method will be replaced by something else
-  showAlert(): void {
-    alert('Filters coming out soon.');
-  }
-
 
   calculateDtOptions(data: any): DataTables.Settings {
     // DataTable configuration
@@ -46,6 +63,8 @@ export class ActivitiesComponent implements OnInit {
       lengthChange: false,
       info: false,
       searching: false,
+      scrollX: true,
+      stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
       columnDefs: [
         {
           targets: 0, // Timestamp
@@ -59,7 +78,7 @@ export class ActivitiesComponent implements OnInit {
             const datePart = dateTimeParts[0];
             const timePart = dateTimeParts.slice(1).join(' ');
 
-            return `<div>${datePart}</div><div>${timePart}</div>`;
+            return `${datePart}<br>${timePart}`;
           }
         },
         {

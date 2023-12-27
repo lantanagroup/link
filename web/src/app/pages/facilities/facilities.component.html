@@ -4,20 +4,16 @@
   [cta]="heroButton"
 />
 
-<section>
+<app-section>
   <div class="container">
-    <app-section-heading
-    [level]="4"
-    class="mb-2"
-    headingClasses="h3 text-black"
-    heading="Active Facilities"
-  >
-  </app-section-heading>
-  <div table__wrapper>
-    <app-table *ngIf="tableOptionsLoaded" [dtOptions]="dtOptions" />
-  </div>
-</div>
-</section>
+    <app-table 
+      *ngIf="tableOptionsLoaded" 
+      [dtOptions]="dtOptions"
+      tableTitle="Active Facilities"
+      [filters]="dtFilters"
+      [hasSearch]="dtSearchBar"
+    />
+
     <app-button
       variant="outline"
       type="link"
@@ -25,6 +21,9 @@
     >
       Single Facility Page
     </app-button>
+  </div>
+</app-section>
+
 <ng-template #heroButton>
   <app-button
     variant="outline--reverse"

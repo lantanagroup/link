@@ -1,14 +1,117 @@
 @import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
+        '../../../scss/abstracts';
+
+// hide default search bar
+.dataTables_filter {
+  display: none !important;
+}
+
+// pagination
+.dataTables_wrapper {
+  .pagination {
+    margin: 1rem 1.5rem !important;
+    justify-content: center;
+
+    .paginate_button {
+      a {
+        background: transparent;
+        border: none;
+        border-radius: 0.125rem;
+        color: $blue-700;
+        font-size: 0.75rem;
+        line-height: 1.5rem;
+        padding: 0 0.125rem;
+        text-align: center;
+        min-width: 1.5rem;
+
+        &:hover {
+          background: $blue-100;
+        }
+      }
+      &.active {
+        a {
+          background: $blue;
+          color: $blue-50;
+        }
+      }
+
+      &.previous,
+      &.next {
+        a {
+          margin: 0 0.5rem;
+          font-size: 1px;
+          position: relative;
+          text-indent: -10000px;
+
+          &:focus,
+          &:focus-within {
+            box-shadow: none;
+          }
+
+          &::after {
+            background: url('../../../assets/icons/chevron-down.svg') no-repeat center center;
+            background-size: 100% auto;
+            content: '';
+            display: block;
+            height: 1.5rem;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 1.5rem;
+          }
+        }
+
+        &.disabled {
+          a::after {
+            opacity: 0.2;
+          }
+        }
+      }
+
+      &.previous a::after {
+        transform: rotate(90deg);
+      }
+      &.next a {
+        transform: rotate(-90deg);
+      }
+    }
+  }
+}
+
+// custom table styles
+.table__container {
+  background: $white;
+}
+
+div.dataTables_scrollBody > table.dataTable > thead > tr > * {
+  &::before,
+  &::after {
+    display: none !important;
+  }
+}
 
 table.dataTable {
+  background: $white;
   border-collapse: collapse !important;
   margin: 0 !important;
-  width: 100% !important;
+  min-width: 100% !important;
+
+  // Rows
 
   tr {
     border-bottom: 1px solid $gray-300;
+
+    &.zebra {
+      border-color: $blue-50;
+      &--odd {
+        background: $gray-30;
+      }
+    }
+
   }
+
+  // Cells
 
   td,
   .cell {
@@ -16,14 +119,14 @@ table.dataTable {
     font-size: 0.875rem;
     letter-spacing: -0.01em;
     line-height: 1.4em;
-    padding: 0.5rem 0.25rem;
+    padding: 0.5rem 0.75rem;
 
     &:first-child {
-      padding-left: 0.75rem;
+      padding-left: 1.5rem;
     }
 
     &:last-child {
-      padding-right: 0.75rem;
+      padding-right: 1.5rem;
     }
 
     &--lg {
@@ -40,6 +143,129 @@ table.dataTable {
 
     &--complete {
       font-weight: $font-weight-bold;
+    }
+  }
+
+  // Header
+  thead {
+    background: $blue-100;
+    tr {
+      border-color: $gray-400;
+    }
+  }
+
+  th {
+    font-family: $font-family-heading;
+    font-size: 1rem;
+    font-weight: $font-weight-medium;
+    letter-spacing: 0.04em;
+    line-height: 1.25em;
+    padding: 1rem 1rem 1rem 1.75rem;
+    text-transform: uppercase;
+
+    &:first-child {
+      padding-left: 2.5rem;
+    }
+
+    // sorting
+    &.sorting {
+      position: relative;
+      
+      &::before,
+      &::after {
+        content: '' !important;
+        display: block !important;
+        top: 50%;
+      }
+      
+      &::before {
+        background: url('../../../assets/icons/chevron-down.svg') no-repeat center bottom;
+        background-size: 100% auto;
+        height: 1.625rem;
+        margin-right: 0.5rem;
+        left: 0.5rem;
+        opacity: 1 !important;
+        transform: translateY(-50%);
+        transform-origin: center center;
+        width: 1.25rem;
+      }
+
+      &::after {
+        opacity: 0 !important;
+        background-color: $blue;
+        border-radius: 50%;
+        height: 0.25rem;
+        left: 1.125rem;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 0.25rem;
+      }
+
+      &:first-child {
+        &::before {
+          left: 1.125rem;
+        }
+        &::after {
+          left: 1.75rem;
+        }
+      }
+
+      &_asc,
+      &_desc {
+        &::after {
+          opacity: 1 !important;
+        }
+      }
+
+      &_desc {
+        &::before {
+          transform: scaleY(-1) translateY(50%);
+        }
+      }
+    }
+  }
+
+  .table--simple & {
+    td,
+    .cell {
+      padding: 0.5rem 0.25rem;
+
+      &:first-child {
+        padding-left: 0.75rem;
+      }
+
+      &:last-child {
+        padding-right: 0.75rem;
+      }
+    }
+
+    thead {
+      th {
+        padding: 1rem 0.5rem 1rem 1.25rem;
+    
+        &:first-child {
+          padding-left: 1.75rem;
+        }
+
+        .sorting {
+          &::before {
+            left: 0;
+          }
+
+          &::after {
+            left: 0.625rem;
+          }
+
+          &:first-child {
+            &::before {
+              left: 0.625rem;
+            }
+            &::after {
+              left: 1.25rem;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -109,10 +335,6 @@ table.dataTable {
 //         left: 30px;
 //       }
 //     }
-//   }
-//   // Alternate row coloring
-//   table tr:nth-child(even) {
-//     background-color: $gray-50;
 //   }
 
 //   // Table's data specific stylings

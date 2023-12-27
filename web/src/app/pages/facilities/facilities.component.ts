@@ -8,6 +8,7 @@ import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-
 import { TableComponent } from 'src/app/shared/table/table.component';
 import { DataService } from 'src/services/api/data.service';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
+import { TableFilter, SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 
 @Component({
@@ -20,6 +21,33 @@ import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api
 export class FacilitiesComponent implements OnInit {
   constructor(private dataService: DataService, private facilitiesApiService: FacilitiesApiService) { }
   dtOptions: DataTables.Settings = {};
+  dtFilters: TableFilter[] = [
+    {
+      name: 'Sort:',
+      options: [
+        {
+          label: 'ASC',
+          value: true
+        },
+        {
+          label: 'DESC',
+          value: false
+        },
+        {
+          label: 'Newest First',
+          value: true
+        },
+        {
+          label: 'Oldest First',
+          value: false
+        }
+      ]
+    }
+  ];
+  dtSearchBar: SearchBar = {
+    title: 'Search Facilities',
+    placeholder: 'Enter facility name, CDC ID, etc.'
+  };
   tableOptionsLoaded = false;
 
   // This method will be replaced by something else
@@ -50,6 +78,8 @@ export class FacilitiesComponent implements OnInit {
       lengthChange: false,
       info: false,
       searching: false,
+      scrollX: true,
+      stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
       columnDefs: [
         {
           targets: 0, // Facility
