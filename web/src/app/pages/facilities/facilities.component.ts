@@ -83,26 +83,28 @@ export class FacilitiesComponent implements OnInit {
       columnDefs: [
         {
           targets: 0, // Facility
-          width: '172px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('facility-regular');
-          }
+          width: '172px'
         },
         {
           targets: [1, 3], // Org Id, LastSubmission
-          width: '144px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('table-default-font-style');
-          }
+          width: '144px'
         },
         {
           targets: 2, // Details
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('details-inprogress');
+              $(cell).addClass('cell--initiated');
             } else {
-              $(cell).addClass('details-bundle');
+              $(cell).addClass('cell--complete');
             }
+          },
+          render: function (data, type, row) {
+            // Split the timestamp into date and time parts
+            if (!data.toLowerCase().includes('progress')) {
+              const dataParts = data.split(' ').join('<br>');
+              return dataParts
+            }
+            return data
           }
         },
       ],
@@ -131,11 +133,10 @@ export class FacilitiesComponent implements OnInit {
             debugger;
             // Check if data is an array
             if (Array.isArray(data)) {
-              // Map each measure to a span and join them
-              return `<div class="measures-container">${data.map(measure => `<span class="measure-span">${measure}</span>`).join(" ")}</div>`;
+              // Map each measure to a chip and join them
+              return `<div class="chips">${data.map(measure => `<div class="chip">${measure}</div>`).join(" ")}</div>`;
             }
             return '';
-            // return `<div class="measures-container">${data}</div>`;
           }
         }
       ]

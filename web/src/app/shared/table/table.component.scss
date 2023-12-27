@@ -116,6 +116,7 @@ table.dataTable {
   td,
   .cell {
     font-family: $font-family-sans-serif;
+    color: $blue-700;
     font-size: 0.875rem;
     letter-spacing: -0.01em;
     line-height: 1.4em;
@@ -143,6 +144,10 @@ table.dataTable {
 
     &--complete {
       font-weight: $font-weight-bold;
+    }
+
+    &.timestamp {
+      font-family: $font-family-heading;
     }
   }
 
