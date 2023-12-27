@@ -6,21 +6,13 @@
 
 <app-section>
   <div class="container">
-    <app-table 
-      *ngIf="tableOptionsLoaded" 
+    <app-table
+      *ngIf="tableOptionsLoaded"
       [dtOptions]="dtOptions"
       tableTitle="Active Facilities"
       [filters]="dtFilters"
       [hasSearch]="dtSearchBar"
     />
-
-    <app-button
-      variant="outline"
-      type="link"
-      [link]="{url: '/facilities/facility/123'}"
-    >
-      Single Facility Page
-    </app-button>
   </div>
 </app-section>
 
