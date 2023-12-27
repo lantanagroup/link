@@ -24,5 +24,20 @@ export class FacilitiesApiService {
     }
   }
 
+  // Fetches all the facilities data
+  async fetchFacilityById(id: string): Promise<any> {
+    try {
+      const response = await firstValueFrom(this.dataService.getData<any>(`tenant/${id}`));
+      if (response) {
+        console.log(response, 'tenants');
+        return response;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching tenant summary data', error);
+      throw error;
+    }
+  }
+
   // ... other methods http methods coming soon ...
 }

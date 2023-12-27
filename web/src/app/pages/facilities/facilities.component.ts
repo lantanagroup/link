@@ -19,7 +19,7 @@ import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api
   styleUrls: ['./facilities.component.scss']
 })
 export class FacilitiesComponent implements OnInit {
-  constructor(private dataService: DataService, private facilitiesApiService: FacilitiesApiService) { }
+  constructor(private facilitiesApiService: FacilitiesApiService) { }
   dtOptions: DataTables.Settings = {};
   dtFilters: TableFilter[] = [
     {
@@ -61,6 +61,7 @@ export class FacilitiesComponent implements OnInit {
 
   async LoadFacilitiesTableData() {
     try {
+      const individualTenant = await this.facilitiesApiService.fetchFacilityById('ehr-test');
       const tenants = await this.facilitiesApiService.fetchAllFacilities();
       const transformedData = this.processDataForTable(tenants);
       this.dtOptions = this.calculateDtOptions(transformedData);
@@ -108,7 +109,11 @@ export class FacilitiesComponent implements OnInit {
       columns: [
         {
           title: 'Facility Name',
-          data: 'FacilityName'
+          data: 'FacilityName',
+          render: function (data, type, row) {
+
+            return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
+          }
         },
         {
           title: 'NHSN Org Id',
@@ -126,7 +131,6 @@ export class FacilitiesComponent implements OnInit {
           title: 'Current Measures',
           data: 'Measures',
           render: function (data, type, row) {
-            debugger;
             // Check if data is an array
             if (Array.isArray(data)) {
               // Map each measure to a span and join them
@@ -144,6 +148,7 @@ export class FacilitiesComponent implements OnInit {
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
   processDataForTable(tenantsData: Tenant[]) {
     return tenantsData.map(td => {
+      const facilityId = td.id;
       const lastSubmission = td.lastSubmissionDate;
       const facilityName = td.name;
       const nhsnOrgId = td.nhsnOrgId;
@@ -151,6 +156,7 @@ export class FacilitiesComponent implements OnInit {
       const measuresData = td.measures.map(m => m.shortName.slice(0, 4));
 
       return {
+        FacilityId : facilityId,
         FacilityName: facilityName,
         NHSNOrgId: nhsnOrgId,
         LastSubmissionId: lastSubmissionId,
