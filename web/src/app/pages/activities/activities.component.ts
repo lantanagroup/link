@@ -104,17 +104,11 @@ export class ActivitiesComponent implements OnInit {
         },
         {
           targets: 3, // Facility
-          width: '172px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('facility-regular');
-          }
+          width: '172px'
         },
         {
           targets: [4, 7], // Org Id, Total Census
-          width: '144px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('table-default-font-style');
-          }
+          width: '144px'
         },
         {
           targets: 5, // Reporting Period
@@ -153,7 +147,10 @@ export class ActivitiesComponent implements OnInit {
       },
       {
         title: 'Facility',
-        data: 'Facility'
+        data: 'Facility',
+        render: function (data, type, row) {
+          return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
+        }
       },
       {
         title: 'NHSN Org Id',

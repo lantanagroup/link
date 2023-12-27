@@ -5,6 +5,7 @@ export interface TenantMeasure {
 }
 
 export interface Tenant {
+  id: string;
   name: string;
   nhsnOrgId: string;
   lastSubmissionId: string;
