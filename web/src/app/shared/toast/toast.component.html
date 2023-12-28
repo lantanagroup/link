@@ -1,0 +1,21 @@
+<div class="toast-container position-absolute top-0 end-0 p-3">
+  <div 
+    *ngIf="show"
+    class="toast show" 
+    role="alert" 
+    aria-live="assertive" 
+    aria-atomic="true"
+  >
+    <div class="toast-header">
+      <div 
+        class="dot"
+        [ngClass]="'dot--'+status"
+      ></div>
+      <h6 class="me-auto mb-0">{{ title }}</h6>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" (click)="handleClose()"></button>
+    </div>
+    <div class="toast-body">
+      {{ copy }}
+    </div>
+  </div>
+</div>
