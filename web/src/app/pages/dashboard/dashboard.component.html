@@ -56,38 +56,47 @@
 		</app-section-heading>
 
 		<div class="row">
-			<div class="col">
+			<div class="col col-md-6 col-lg-4">
 				<app-card
 					title="Successful Submissions"
 					status="success"
 					titleAlign="center"
 				>
 					<div recent_activity_table__wrapper >
-						<app-table [dtOptions]="completedDtOptions" />
+						<app-table 
+							[dtOptions]="completedDtOptions" 
+							variant="simple"
+						/>
 					</div>
 				</app-card>
 			</div>
 
-			<div class="col">
+			<div class="col col-md-6 col-lg-4">
 				<app-card
 					title="Failed Submissions"
 					status="failure"
 					titleAlign="center"
 				>
 					<div recent_activity_table__wrapper >
-						<app-table [dtOptions]="failedDtOptions" />
+						<app-table 
+							[dtOptions]="failedDtOptions" 
+							variant="simple"
+						/>
 					</div>
 				</app-card>
 			</div>
 
-			<div class="col">
+			<div class="col col-md-6 col-lg-4">
 				<app-card
 					title="Submissions In Progress"
 					status="inProgress"
 					titleAlign="center"
 				>
 					<div recent_activity_table__wrapper >
-					<app-table [dtOptions]="pendingDtOptions" />
+					<app-table 
+						[dtOptions]="pendingDtOptions" 
+						variant="simple"
+					/>
 				</div>
 				</app-card>
 			</div>

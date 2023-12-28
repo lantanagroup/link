@@ -1,13 +1,107 @@
-<app-hero 
+<app-hero
   subHeading="Facility Detail"
-  pageTitle="Name to come --> ID: {{ facilityId }}"
+  pageTitle="{{ facilityDetails?.name }}"
   color="purple"
   [cta]="heroButton"
 />
 
 <app-section>
   <div class="container-md">
-    <em>Content to come ...</em>
+    <div class="row">
+      <div class="col">
+        <app-card
+          title="Facility Details"
+          variant="alt"
+          titleAlign="center"
+        >
+          <div>
+            <h4>Facility Name</h4>
+            <p>{{ facilityDetails?.name }}</p>
+          </div>
+          <div>
+            <h4>NHSN Org Id</h4>
+            <p>{{ facilityDetails?.cdcOrgId }}</p>
+          </div>
+          <div>
+            <h4>NHSNLINK URL</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+              test.com
+            <p>{{ facilityDetails?.reportingPlan?.url }}</p>
+          </div>
+          <div>
+            <h4>NHSNLINK VERSION</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>5.16</p>
+          </div>
+          <div>
+            <h4>EHR VENDOR</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>EPIC</p>
+          </div>
+          <div>
+            <h4>FHIR API URL</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>See Postman</p>
+          </div>
+          <div>
+            <h4>MEASURE DEF SERVER</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>https://asdf.link.org</p>
+          </div>
+        </app-card>
+      </div>
+      <div class="col">
+        <app-card
+          title="Facility Concept Maps"
+          variant="alt"
+          titleAlign="center"
+        >
+          <div>
+            <h4>Facility Name</h4>
+            <p>{{ facilityDetails?.name }}</p>
+          </div>
+          <div>
+            <h4>NHSN ORG ID</h4>
+            <p>{{ facilityDetails?.cdcOrgId }}</p>
+          </div>
+          <div>
+            <h4>NHSNLINK URL</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            test.com
+            <p>{{ facilityDetails?.reportingPlan?.url }}</p>
+          </div>
+          <div>
+            <h4>NHSNLINK VERSION</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>5.16</p>
+          </div>
+          <div>
+            <h4>EHR VENDOR</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>EPIC</p>
+          </div>
+          <div>
+            <h4>FHIR API URL</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>See Postman</p>
+          </div>
+          <div>
+            <h4>MEASURE DEF SERVER</h4>
+            <!-- TODO: API - THIS IS MISSING IN THE API -->
+            <p>https://asdf.link.org</p>
+          </div>
+        </app-card>
+      </div>
+      <div class="col">
+        <app-card
+          title="Facility Measures"
+          variant="alt"
+          titleAlign="center"
+        >
+          <p>hello</p>
+        </app-card>
+      </div>
+    </div>
   </div>
 </app-section>
 

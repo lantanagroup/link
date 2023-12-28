@@ -25,3 +25,45 @@ body {
     margin-top: auto;
   }
 }
+
+// Global chip element
+.chips {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chip {
+  background: $blue-300;
+  border-radius: 0.25rem;
+  color: $blue-50;
+  display: inline-block;
+  font-family: $font-family-sans-serif;
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.5rem;
+  min-width: 2.5rem;
+  padding: 0.5rem 0.375rem;
+  text-align: center;
+}
+
+// Global dots
+.dot {
+  border-radius: 50%;
+  display: block;
+  height: 0.75rem;
+  margin-right: 0.25rem;
+  min-width: 0.75rem;
+  width: 0.75rem;
+
+  &--neutral {
+    background: $gray-100;
+  }
+
+  &--success {
+    background: $green;
+  }
+
+  &--failed {
+    background: $red;
+  }
+}

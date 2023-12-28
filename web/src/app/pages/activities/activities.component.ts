@@ -5,21 +5,43 @@ import { CardComponent } from 'src/app/shared/card/card.component';
 import { MetricComponent } from 'src/app/shared/metric/metric.component';
 import { DataTablesModule } from 'angular-datatables';
 import { TableComponent } from 'src/app/shared/table/table.component';
-import { IconComponent } from "../../shared/icon/icon.component";
-import { ButtonComponent } from "../../shared/button/button.component";
-import { SectionHeadingComponent } from "../../shared/section-heading/section-heading.component";
+import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { calculatePeriodLength, generateRandomData } from 'src/app/helpers/ReportHelper';
+import { SearchBar, TableFilter } from 'src/app/shared/interfaces/table.model';
 
 @Component({
   selector: 'app-activities',
   standalone: true,
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.scss'],
-  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, IconComponent, ButtonComponent, SectionHeadingComponent]
+  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, SectionComponent]
 })
 export class ActivitiesComponent implements OnInit {
   dtOptions: DataTables.Settings = {};
+  dtFilters: TableFilter[] = [
+    {
+      name: 'Sort:',
+      options: [
+        {
+          label: 'ASC',
+          value: true
+        },
+        {
+          label: 'DESC',
+          value: false
+        },
+        {
+          label: 'Newest First',
+          value: true
+        },
+        {
+          label: 'Oldest First',
+          value: false
+        }
+      ]
+    }
+  ];
 
   ngOnInit(): void {
     // Step 1: Generate random data
@@ -32,11 +54,6 @@ export class ActivitiesComponent implements OnInit {
     this.dtOptions = this.calculateDtOptions(transformedData);
   }
 
-  // This method will be replaced by something else
-  showAlert(): void {
-    alert('Filters coming out soon.');
-  }
-
 
   calculateDtOptions(data: any): DataTables.Settings {
     // DataTable configuration
@@ -46,12 +63,14 @@ export class ActivitiesComponent implements OnInit {
       lengthChange: false,
       info: false,
       searching: false,
+      scrollX: true,
+      stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
       columnDefs: [
         {
           targets: 0, // Timestamp
           width: '147px',
           createdCell: (cell, cellData) => {
-            $(cell).addClass('table-default-font-style timestamp-padding');
+            $(cell).addClass('timestamp');
           },
           render: function (data, type, row) {
             // Split the timestamp into date and time parts
@@ -59,7 +78,7 @@ export class ActivitiesComponent implements OnInit {
             const datePart = dateTimeParts[0];
             const timePart = dateTimeParts.slice(1).join(' ');
 
-            return `<div>${datePart}</div><div>${timePart}</div>`;
+            return `${datePart}<br>${timePart}`;
           }
         },
         {
@@ -67,9 +86,9 @@ export class ActivitiesComponent implements OnInit {
           width: '75px',
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('initiated')) {
-              $(cell).addClass('activity-initiated');
+              $(cell).addClass('cell--initiated');
             } else {
-              $(cell).addClass('activity-success-failed');
+              $(cell).addClass('cell--complete');
             }
           }
         },
@@ -77,34 +96,26 @@ export class ActivitiesComponent implements OnInit {
           targets: 2, // Details
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('details-inprogress');
+              $(cell).addClass('cell--initiated');
             } else {
-              $(cell).addClass('details-bundle');
+              $(cell).addClass('cell--complete');
             }
           }
         },
         {
           targets: 3, // Facility
-          width: '172px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('facility-regular');
-          }
+          width: '172px'
         },
         {
           targets: [4, 7], // Org Id, Total Census
-          width: '144px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('table-default-font-style');
-          }
+          width: '144px'
         },
         {
           targets: 5, // Reporting Period
           width: '196px',
           createdCell: (cell, cellData) => {
             if (cellData.toString().toLowerCase() === 'pending') {
-              $(cell).addClass('reportingPeriod-pending');
-            } else if (cellData.toString().toLowerCase() === 'n/a') {
-              $(cell).addClass('table-default-font-style');
+              $(cell).addClass('cell--initiated');
             }
           }
         },
@@ -118,15 +129,15 @@ export class ActivitiesComponent implements OnInit {
         title: 'Activity',
         data: 'Activity',
         render: function (data, type, row) {
-          let dotClass = 'dot dot--neutral';
+          let dotClass = 'neutral';
           if (data.toString().toLowerCase().includes('successful')) {
-            dotClass = 'dot dot--success';
+            dotClass = 'success';
           } else if (data.toString().toLowerCase().includes('failed')) {
-            dotClass = 'dot dot--failed'
+            dotClass = 'failed'
           }
-          return `<div class="activity-container">
-                  <div class="${dotClass}"></div>
-                  <div class="activity-text">${data}</div>
+          return `<div class="d-flex align-items-center">
+                  <span class="dot dot--${dotClass}"></span>
+                  <span>${data}</span>
                 </div>`;
         }
       },
@@ -136,7 +147,10 @@ export class ActivitiesComponent implements OnInit {
       },
       {
         title: 'Facility',
-        data: 'Facility'
+        data: 'Facility',
+        render: function (data, type, row) {
+          return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
+        }
       },
       {
         title: 'NHSN Org Id',
@@ -148,7 +162,7 @@ export class ActivitiesComponent implements OnInit {
         data: 'ReportingPeriod',
         render: function (data, type, row) {
           if (Array.isArray(data)) {
-            return `<div class="table-default-font-style">${data[1]}</div><div class="table-default-font-style">${data[0]}</div>`;
+            return `${data[1]}<br>${data[0]}`;
           }
           return data; // 'pending' or 'n/a'
         }
@@ -160,14 +174,12 @@ export class ActivitiesComponent implements OnInit {
           // Check if data is an array
           if (Array.isArray(data)) {
             // Map each measure to a span and join them
-            return `<div class="measures-container">${data.map(measure => `<span class="measure-span">${measure}</span>`).join(" ")}</div>`;
+            return `<div class="chips">${data.map(measure => `<div class="chip">${measure}</div>`).join(" ")}</div>`;
           }
           // Applying different classes based on the value ('Pending' or 'n/a')
           let className = '';
           if (data.toString().toLowerCase() === 'pending') {
-            className = 'reportingPeriod-pending';
-          } else if (data.toString().toLowerCase() === 'n/a') {
-            className = 'table-default-font-style';
+            className = 'cell--initiated';
           }
           return `<div class="${className}">${data}</div>`;
         }
