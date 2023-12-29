@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService } from 'src/app/services/toast.service';
+import { ToastData } from '../interfaces/toast.model';
 
 @Component({
   selector: 'app-toast',
@@ -10,23 +11,17 @@ import { ToastService } from 'src/app/services/toast.service';
   styleUrls: ['./toast.component.scss']
 })
 export class ToastComponent implements OnInit {
-  @Input() title: string = '';
-  @Input() copy: string = '';
-  @Input() status: 'success' | 'failed' | 'inProgress' = 'inProgress';
-  @Input() show: boolean = false;
+  toasts: ToastData[] = []
 
   constructor(private toastService: ToastService) {}
 
-  handleClose(): void {
-    this.toastService.hideToast()
+  closeToast(index: number): void {
+    this.toastService.removeToast(index)
   }
 
   ngOnInit(): void {
-    this.toastService.toastData$.subscribe(data => {
-      this.title = data.title;
-      this.copy = data.copy;
-      this.status = data.status;
-      this.show = data.show;
-    })
+    this.toastService.toasts$.subscribe(toasts => {
+      this.toasts = toasts;
+    });
   }
 }

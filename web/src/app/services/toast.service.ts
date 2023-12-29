@@ -1,42 +1,29 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
-interface ToastData {
-  title: string;
-  copy: string;
-  status: 'success' | 'failed' | 'inProgress';
-  show: boolean;
-}
+import { ToastData } from '../shared/interfaces/toast.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ToastService {
-  private toastDataSubject = new BehaviorSubject<ToastData>(
-    {
-      title: '',
-      copy: '',
-      status: 'inProgress',
-      show: false
-    }
-  )
-  toastData$ = this.toastDataSubject.asObservable()
+  private toastsSubject = new BehaviorSubject<ToastData[]>([])
+  toasts$ = this.toastsSubject.asObservable()
 
   constructor() { }
 
   showToast(title: string, copy: string, status: 'success' | 'failed' | 'inProgress') {
-    this.toastDataSubject.next({
+    const newToast: ToastData = {
       title,
       copy,
-      status,
-      show: true
-    })
+      status
+    } 
+    this.toastsSubject.next([newToast, ...this.toastsSubject.value])
     // hide notification after a certain period
     // setTimeout(() => this.hideToast(), 5000); 
   }
 
-  hideToast() {
-    const currentData = this.toastDataSubject.value
-    this.toastDataSubject.next({...currentData, show: false})
+  removeToast(index: number) {
+    const toasts = this.toastsSubject.value.filter((_, i) => i !== index)
+    this.toastsSubject.next(toasts)
   }
 }
