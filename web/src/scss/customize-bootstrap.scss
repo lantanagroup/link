@@ -76,6 +76,14 @@ $link-hover-color: $blue;
 $grid-gutter-width: 1.25rem;
 $container-padding-x: calc(3 * #{$grid-gutter-width});
 
+$container-max-widths: (
+  sm: 500px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+  xxl: 1440px
+);
+
 /****************/
 // Border Radius
 /****************/

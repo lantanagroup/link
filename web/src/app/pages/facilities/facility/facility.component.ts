@@ -8,13 +8,17 @@ import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 import { CardComponent } from "../../../shared/card/card.component";
+import { TabComponent } from 'src/app/shared/tab/tab.component';
+import { TabContainerComponent } from 'src/app/shared/tab-container/tab-container.component';
+import { LinkComponent } from 'src/app/shared/link/link.component';
+import { AccordionComponent } from 'src/app/shared/accordion/accordion.component';
 
 @Component({
     selector: 'app-facility',
     standalone: true,
     templateUrl: './facility.component.html',
     styleUrls: ['./facility.component.scss'],
-    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent]
+    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent]
 })
 export class FacilityComponent {
   facilityId: string | null = null

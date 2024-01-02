@@ -1,0 +1,44 @@
+/* tab-container.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.tab {
+
+  &-content {
+    .tab-pane {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+  }
+
+  &__btn {
+    background: none;
+    border: none;
+    color: $blue-300;
+    display: block;
+    font-family: $font-family-heading;
+    font-size: 1rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.145em;
+    line-height: 1.2em;
+    margin: 0.625rem 0 2.25rem;
+    outline: none;
+    padding: 0;
+    text-align: left;
+    text-transform: uppercase;
+    transition: $transition-base;
+
+    &:hover {
+      color: $blue-500;
+    }
+
+    &:active,
+    &.active {
+      color: $blue-700;
+    }
+  }
+}
