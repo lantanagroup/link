@@ -1,9 +1,8 @@
 <div 
   class="tab-pane fade" 
   [ngClass]="isActive ? 'show active' : ''"
-  [id]="tabTitle" 
+  [id]="tabTitle | idFromTitle" 
   role="tabpanel" 
-  aria-labelledby="v-pills-home-tab"
 >
   <ng-content />
 </div>

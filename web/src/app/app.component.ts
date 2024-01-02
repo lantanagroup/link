@@ -8,6 +8,7 @@ import { HeaderComponent } from './shared/header/header.component';
 import { FooterComponent } from './shared/footer/footer.component';
 import { filter } from 'rxjs';
 import { LoginComponent } from './pages/login/login.component';
+import { ToastComponent } from './shared/toast/toast.component';
 
 
 @Component({
@@ -15,7 +16,7 @@ import { LoginComponent } from './pages/login/login.component';
     standalone: true,
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.css'],
-    imports: [CommonModule, HttpClientModule, LoginComponent, HeaderComponent, FooterComponent, RouterOutlet]
+    imports: [CommonModule, HttpClientModule, LoginComponent, HeaderComponent, FooterComponent, RouterOutlet, ToastComponent]
 })
 export class AppComponent {
   title = 'web';

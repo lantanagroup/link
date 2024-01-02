@@ -4,6 +4,17 @@
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
 
 .tab {
+
+  &-content {
+    .tab-pane {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+  }
+
   &__btn {
     background: none;
     border: none;
@@ -13,11 +24,13 @@
     font-size: 1rem;
     font-weight: $font-weight-bold;
     letter-spacing: 0.145em;
-    margin: 0.5rem 0;
+    line-height: 1.2em;
+    margin: 0.625rem 0 2.25rem;
     outline: none;
+    padding: 0;
     text-align: left;
     text-transform: uppercase;
-    transform: $transform-base;
+    transition: $transition-base;
 
     &:hover {
       color: $blue-500;

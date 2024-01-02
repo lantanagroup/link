@@ -1,14 +1,15 @@
-import { AfterContentInit, Component, ContentChildren, QueryList } from '@angular/core';
+import { AfterContentInit, Component, ContentChildren, QueryList, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '../button/button.component';
 import { TabComponent } from '../tab/tab.component';
+import { IdFromTitlePipe } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-tab-container',
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, IdFromTitlePipe],
   templateUrl: './tab-container.component.html',
-  styleUrls: ['./tab-container.component.scss']
+  styleUrls: ['./tab-container.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class TabContainerComponent implements AfterContentInit {
   @ContentChildren(TabComponent) tabs!: QueryList<TabComponent>;
