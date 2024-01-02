@@ -55,7 +55,8 @@ body {
   min-width: 0.75rem;
   width: 0.75rem;
 
-  &--neutral {
+  &--neutral,
+  &--inProgress {
     background: $gray-100;
   }
 
