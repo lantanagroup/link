@@ -11,6 +11,7 @@ com.lantanagroup.link.config.auth
 com.lantanagroup.link.config.query
 com.lantanagroup.link.config.sender
 com.lantanagroup.link.db
+com.lantanagroup.link.db.mappers
 com.lantanagroup.link.db.model
 com.lantanagroup.link.db.model.tenant
 com.lantanagroup.link.db.model.tenant.auth
