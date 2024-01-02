@@ -6,102 +6,166 @@
 />
 
 <app-section>
-  <div class="container-md">
-    <div class="row">
-      <div class="col">
-        <app-card
-          title="Facility Details"
-          variant="alt"
-          titleAlign="center"
+  <div class="container">
+
+    <app-tab-container>
+      <app-tab tabTitle="Facility Profile">
+        <div class="row">
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Details"
+              [hasPadding]=true
+              variant="alt"
+              titleAlign="center"
+            >
+              <h6>Facility Name</h6>
+              <p>{{ facilityDetails?.name }}</p>
+  
+              <h6>NHSN Org Id</h6>
+              <p>{{ facilityDetails?.cdcOrgId }}</p>
+              
+              <h6>NHSNLink URL</h6>
+              <p>
+                <app-link [link]="{url: facilityDetails?.reportingPlan?.url}">{{ facilityDetails?.reportingPlan?.url }}</app-link>
+              </p>
+              
+              <h6>NHSNLink Version</h6>
+              <!-- TODO: API - THIS IS MISSING IN THE API -->
+              <p>5.16</p>
+              
+              <h6>EHR Vendor</h6>
+              <!-- TODO: API - THIS IS MISSING IN THE API -->
+              <p>EPIC</p>
+              
+              <h6>FHIR API URL</h6>
+              <!-- TODO: API - THIS IS MISSING IN THE API -->
+              <p>See Postman</p>
+              
+              <h6>Measure Def Server</h6>
+              <!-- TODO: API - THIS IS MISSING IN THE API -->
+              <p>
+                <app-link [link]="{url: 'https://asdf.link.org'}">https://asdf.link.org</app-link>
+              </p>
+            </app-card>
+          </div>
+  
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Concept Maps"
+              [hasPadding]=true
+              variant="alt"
+              titleAlign="center"
+            >
+              <div class="mb-2">
+                <h6>Concept Map 1</h6>
+                <p><strong>ID:</strong> 923123124</p>
+                <p><strong>Contexts:</strong> FHIRPath</p>
+                <p><strong>Path:</strong> 921837271</p>
+                <p><strong>Map:</strong> FHIR Concept Map</p>
+              </div>
+  
+              <div class="mb-2">
+                <h6>Concept Map 2</h6>
+                <p><strong>ID:</strong> 923123124</p>
+                <p><strong>Contexts:</strong> FHIRPath</p>
+                <p><strong>Path:</strong> 921837271</p>
+                <p><strong>Map:</strong> FHIR Concept Map</p>
+              </div>
+  
+              <div class="mb-2">
+                <h6>Concept Map 3</h6>
+                <p><strong>ID:</strong> 923123124</p>
+                <p><strong>Contexts:</strong> FHIRPath</p>
+                <p><strong>Path:</strong> 921837271</p>
+                <p><strong>Map:</strong> FHIR Concept Map</p>
+              </div>
+  
+            </app-card>
+          </div>
+  
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Measures"
+              [hasPadding]=true
+              variant="alt"
+              titleAlign="center"
+            >
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip mr-1">CDI</div>
+                <p><strong>C. difficile infection</strong></p>
+              </div>
+  
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip">HOB</div>
+                <p><strong>Hospital-onset bactermia</strong></p>
+              </div>
+  
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip">HYPO</div>
+                <p><strong>Medical-related hypoglycemia</strong></p>
+              </div>
+  
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip">HYPR</div>
+                <p><strong>Inpatient hypoglycemia</strong></p>
+              </div>
+  
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip">RPS</div>
+                <p><strong>Respitory pathogen surveillance</strong></p>
+              </div>
+  
+              <div class="d-flex align-items-start mb-2">
+                <div class="chip">VTE</div>
+                <p><strong>Hospital-associated venous thromboembolism</strong></p>
+              </div>
+            </app-card>
+          </div>
+        </div>
+      </app-tab>
+  
+      <app-tab tabTitle="Activity">
+        <p><em>Table to come...</em></p>
+      </app-tab>
+  
+      <app-tab tabTitle="Technical Details">
+        <app-accordion
+          title="Normalizations"
+          [isExpanded]="false"
         >
-          <div>
-            <h4>Facility Name</h4>
-            <p>{{ facilityDetails?.name }}</p>
-          </div>
-          <div>
-            <h4>NHSN Org Id</h4>
-            <p>{{ facilityDetails?.cdcOrgId }}</p>
-          </div>
-          <div>
-            <h4>NHSNLINK URL</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-              test.com
-            <p>{{ facilityDetails?.reportingPlan?.url }}</p>
-          </div>
-          <div>
-            <h4>NHSNLINK VERSION</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>5.16</p>
-          </div>
-          <div>
-            <h4>EHR VENDOR</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>EPIC</p>
-          </div>
-          <div>
-            <h4>FHIR API URL</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>See Postman</p>
-          </div>
-          <div>
-            <h4>MEASURE DEF SERVER</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>https://asdf.link.org</p>
-          </div>
-        </app-card>
-      </div>
-      <div class="col">
-        <app-card
-          title="Facility Concept Maps"
-          variant="alt"
-          titleAlign="center"
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Scheduling"
+          [isExpanded]="false"
         >
-          <div>
-            <h4>Facility Name</h4>
-            <p>{{ facilityDetails?.name }}</p>
-          </div>
-          <div>
-            <h4>NHSN ORG ID</h4>
-            <p>{{ facilityDetails?.cdcOrgId }}</p>
-          </div>
-          <div>
-            <h4>NHSNLINK URL</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            test.com
-            <p>{{ facilityDetails?.reportingPlan?.url }}</p>
-          </div>
-          <div>
-            <h4>NHSNLINK VERSION</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>5.16</p>
-          </div>
-          <div>
-            <h4>EHR VENDOR</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>EPIC</p>
-          </div>
-          <div>
-            <h4>FHIR API URL</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>See Postman</p>
-          </div>
-          <div>
-            <h4>MEASURE DEF SERVER</h4>
-            <!-- TODO: API - THIS IS MISSING IN THE API -->
-            <p>https://asdf.link.org</p>
-          </div>
-        </app-card>
-      </div>
-      <div class="col">
-        <app-card
-          title="Facility Measures"
-          variant="alt"
-          titleAlign="center"
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Native FHIR Query"
+          [isExpanded]="false"
         >
-          <p>hello</p>
-        </app-card>
-      </div>
-    </div>
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Census Acquisition"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Query Plans"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+      </app-tab>
+    </app-tab-container>
   </div>
 </app-section>
 

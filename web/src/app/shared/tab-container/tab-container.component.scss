@@ -1,0 +1,31 @@
+/* tab-container.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+
+.tab {
+  &__btn {
+    background: none;
+    border: none;
+    color: $blue-300;
+    display: block;
+    font-family: $font-family-heading;
+    font-size: 1rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.145em;
+    margin: 0.5rem 0;
+    outline: none;
+    text-align: left;
+    text-transform: uppercase;
+    transform: $transform-base;
+
+    &:hover {
+      color: $blue-500;
+    }
+
+    &:active,
+    &.active {
+      color: $blue-700;
+    }
+  }
+}
