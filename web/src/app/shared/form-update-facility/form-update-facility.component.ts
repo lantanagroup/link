@@ -9,6 +9,7 @@ import { IconComponent } from '../icon/icon.component';
 import { ToastComponent } from '../toast/toast.component';
 import { ToastService } from 'src/app/services/toast.service';
 import { Router } from '@angular/router';
+import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 
 @Component({
   selector: 'app-form-update-facility',
@@ -21,7 +22,19 @@ export class FormUpdateFacilityComponent {
 
   @Input() facilityId?: string | null = null;
 
-  constructor(private fb: FormBuilder, private toastService: ToastService, private router: Router) {}
+  constructor(private fb: FormBuilder, private facilitiesApiService: FacilitiesApiService, private toastService: ToastService, private router: Router) { }
+  facilityDetails: any = null;
+  isDataLoaded: boolean = false;
+
+  async GetFacilityDetails(id: string) {
+    try {
+      const tenantDetail = await this.facilitiesApiService.fetchFacilityById(id);
+      this.facilityDetails = tenantDetail;
+      this.isDataLoaded = true;
+    } catch (error) {
+      console.error('Error Loading table data.', error);
+    }
+  }
 
   facilitiesForm = new FormGroup({
     profile: new FormGroup({
@@ -47,7 +60,7 @@ export class FormUpdateFacilityComponent {
     scheduling: new FormGroup({
       queryPatientList: new FormControl(''),
       dataRetentionCheck: new FormControl(''),
-      schedules: this.fb.array([],[Validators.required])
+      schedules: this.fb.array([], [Validators.required])
     }),
     nativeFHIRQuery: new FormGroup({
       nativeFHIREndpoint: new FormControl(''),
@@ -158,74 +171,181 @@ export class FormUpdateFacilityComponent {
 
   // update with initial form values
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (this.facilityId) {
-      this.setInitialValues();
+      await this.setInitialValues(this.facilityId);
+    } else {
+      this.isDataLoaded = true;
     }
   }
 
-  private setInitialValues(): void {
 
-    // todo : create API call to get the data we need for now this will be placeholder
-    const schedules = [
-      {
-        measureIds: 'measureID 1',
-        reportingPeriod: 'Current Week',
-        schedule: 'Nightly CRON',
-        regenerate: 1
-      },
-      {
-        measureIds: 'measureID 2',
-        reportingPeriod: 'Last Week',
-        schedule: 'Bi-Weekly CRON',
-        regenerate: 0
+  private async setInitialValues(facilityId: string) {
+    const tenantDetail = await this.facilitiesApiService.fetchFacilityById(facilityId);
+
+    // Schedules
+    if (tenantDetail?.scheduling?.generateAndSubmitReports) {
+      for (let i = 0; i < tenantDetail.scheduling.generateAndSubmitReports.length; i++) {
+        this.addSchedule();
       }
-    ]
+    }
 
-    for (let i = 0; i < schedules.length; i++) {
-      this.addSchedule()
+    // Concept Maps
+    if (tenantDetail?.conceptMaps) {
+      for (const cm of tenantDetail.conceptMaps) {
+        this.addConceptMap();
+      }
+    }
+
+    // Query Plans
+    if (tenantDetail?.queryPlans) {
+      for (const qp of tenantDetail.queryPlans) {
+        this.addQueryPlan();
+      }
     }
 
     this.facilitiesForm.patchValue({
+
       profile: {
         tenantId: this.facilityId,
-        name: 'Existing Facility Name',
-        description: 'This is placeholder content that we assign because there is an ID passed into this form',
-        bundleName: 'testbundle1'
+        name: tenantDetail?.name,
+        description: 'This is placeholder content that we assign because there is an ID passed into this form', // TODO:CheckClient
+        bundleName: tenantDetail?.bundling?.name,
+        cdcOrgId: tenantDetail?.cdcOrgId,
+        database: tenantDetail?.connectionString,
+        vendor: tenantDetail?.vendor, // TODO:CheckClient
+        dataRetentionPeriod: tenantDetail?.retentionPeriod,
       },
-      scheduling: {
-        schedules: schedules
-      }
+      normalizations: {
+        codeSystemCleanup: tenantDetail?.normalizations?.codeSystemCleanup,
+        containedResourceCleanup: tenantDetail?.normalizations?.containedResourceCleanup,
+        copyLocation: tenantDetail?.normalizations?.copyLocation,
+        encounterStatus: tenantDetail?.normalizations?.encounterStatus,
+        fixPeriodDates: tenantDetail?.normalizations?.fixPeriodDates,
+        fixResourceIds: tenantDetail?.normalizations?.fixResourceIds,
+        patientDataResource: tenantDetail?.normalizations?.patientDataResource
+      },
+      conceptMaps: tenantDetail?.conceptMaps || [],
+      scheduling: this.mapSchedulingApiDataToFormData(tenantDetail?.scheduling),
+      nativeFHIRQuery: {
+        // nativeFHIREndpoint: tenantDetail.fhirQuery.fhirServerBase, // TODO:
+        // parallelPatients: tenantDetail.fhirQuery.parallelPatients, // TODO:
+        // authenticationMethod: tenantDetail.fhirQuery.authClass // TODO:
+      },
+      censusAcquisition: {
+        method: tenantDetail?.censusAcquisition?.method
+      },
+      bulkFHIR: {
+        bulkFHIREndpoint: tenantDetail?.bulkFHIR?.bulkFHIREndpoint,
+        waitInterval: tenantDetail?.bulkFHIR?.waitInterval,
+        groupID: tenantDetail?.bulkFHIR?.groupID,
+        initialResponseURLHeader: tenantDetail?.bulkFHIR?.initialResponseURLHeader,
+        progressHeaderName: tenantDetail?.bulkFHIR?.progressHeaderName,
+        progressCompleteHeaderValue: tenantDetail?.bulkFHIR?.progressCompleteHeaderValue
+      },
+      queryPlans: tenantDetail?.queryPlans || []
     })
+
+    this.isDataLoaded = true;
   }
 
   // handle submit
 
-  onSubmit() {
-    if (this.facilitiesForm.valid) {
+  async onSubmit() {
+    const formData = this.facilitiesForm.value;
+    const submissionData = {
+      id: formData.profile?.tenantId,
+      name: formData.profile?.name,
+      retentionPeriod: formData.profile?.dataRetentionPeriod,
+      connectionString: formData.profile?.database,
+      cdcOrgId: formData.profile?.cdcOrgId,
 
-      if(this.facilityId) {
-        // todo : PUT request
-
-        this.toastService.showToast(
-          'Facility Updated', 
-          `${this.facilitiesForm.value.profile?.name} has been successfully updated.`,
-          'success'  
-        )
-        this.router.navigate(['/facilities/facility', this.facilityId])
-      } else {
-        // todo : POST request
-        this.toastService.showToast(
-          'Facility Created', 
-          `${this.facilitiesForm.value.profile?.name} has been successfully created.`,
-          'success'  
-        )
-        this.router.navigate(['/facilities/'])
+      bundling: {
+        name: formData?.profile?.bundleName
       }
+      // calculate other elements as well for the request
+    };
+    if (this.facilitiesForm.valid) {
+      try {
+        let response;
+        if (this.facilityId) {
+          // Update existing facility
+          response = await this.facilitiesApiService.updateFacility(this.facilityId, submissionData);
+          // response = await this.facilitiesApiService.updateFacility(this.facilityId, this.facilitiesForm.value);
 
+          this.toastService.showToast(
+            'Facility Updated',
+            `${this.facilitiesForm.value.profile?.name} has been successfully updated.`,
+            'success'
+          )
+          this.router.navigate(['/facilities/facility', this.facilityId])
+        } else {
+          // Create new facility
+          response = await this.facilitiesApiService.createFacility(submissionData);
+          // response = await this.facilitiesApiService.createFacility(this.facilitiesForm.value);
+
+          this.toastService.showToast(
+            'Facility Created',
+            `${this.facilitiesForm.value.profile?.name} has been successfully created.`,
+            'success'
+          )
+          this.router.navigate(['/facilities/'])
+        }
+      } catch (error) {
+        console.error('Error submitting facility data', error);
+        this.toastService.showToast(
+          'Facility Error',
+          `Error while adding/updating ${this.facilitiesForm.value.profile?.name}.`,
+          'failed'
+        )
+      }
       // alert(JSON.stringify(this.facilitiesForm.value))
     } else {
       this.facilitiesForm.markAllAsTouched()
     }
+  }
+
+
+  /// MAPPING FUNCTIONS
+
+  // Map Scheduling Data
+  mapSchedulingApiDataToFormData(schedulingData: any) {
+    if (!schedulingData) {
+      return {
+        queryPatientList: null,
+        dataRetentionCheck: null,
+        schedules: []
+      };
+    }
+
+    const { queryPatientListCron, dataRetentionCheckCron, generateAndSubmitReports } = schedulingData as {
+      queryPatientListCron: string,
+      dataRetentionCheckCron: string,
+      generateAndSubmitReports: {
+        cron: string,
+        measureIds: string[],
+        reportingPeriodMethod: string,
+        regenerateIfExists: boolean
+      }[]
+    };
+
+    // Transforming generateAndSubmitReports to match the form's schedule structure
+    const schedules = generateAndSubmitReports.map(report => {
+      return {
+        measureIds: report.measureIds.join(', '),
+        reportingPeriod: report.reportingPeriodMethod,
+        schedule: report.cron,
+        regenerate: report.regenerateIfExists ? 1 : 0
+      };
+    });
+
+    // Creating the transformed scheduling object for the form
+    const formSchedulingData = {
+      queryPatientList: queryPatientListCron,
+      dataRetentionCheck: dataRetentionCheckCron,
+      schedules: schedules
+    };
+
+    return formSchedulingData;
   }
 }

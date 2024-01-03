@@ -109,7 +109,6 @@ export class DashboardComponent {
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
   // This might need some more fixes depending on how the final data looks like.
   transformData(reports: Report[]): any[] {
-    console.log("inside transformData()", reports);
     return reports.map(report => {
       const reportId = report.reportId;
       const timestamp = report.status === "completed" ? report.generatedTime : report.submittedTime;
