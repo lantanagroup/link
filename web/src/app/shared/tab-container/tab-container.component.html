@@ -1,0 +1,15 @@
+<div class="row">
+  <aside class="col-4 col-lg-2">
+    <button
+      *ngFor="let tab of tabs"
+      class="tab__btn"
+      [ngClass]="tab.isActive === true ? 'active' : ''"
+      type="button"
+      (click)="selectTab(tab)"
+    >{{ tab.tabTitle }}</button>
+  </aside>
+
+  <div class="col-8 col-lg-10 tab-content" id="tabContent">
+    <ng-content />
+  </div>
+</div>

@@ -11,3 +11,13 @@
 .u-rotate270 {
   transform: rotate(270deg);
 }
+
+// Gaps
+
+.u-gap {
+  @for $i from 1 through 4 {
+    &#{$i} {
+      gap: calc(0.25rem * #{$i});
+    }
+  }
+}
