@@ -3,6 +3,7 @@ package com.lantanagroup.link.db.model.tenant;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -23,7 +24,7 @@ public class Schedule {
   /**
    * Configuration for when to automatically generate and submit reports.
    */
-  private List<GenerateReport> generateAndSubmitReports;
+  private List<GenerateReport> generateAndSubmitReports = new ArrayList<>();
 
   private String bulkDataCron;
 

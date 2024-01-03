@@ -176,5 +176,13 @@ public class ApiConfig {
    */
   private boolean allowQaEndpoints = false;
 
+  /**
+   * <strong>api.info-groups</strong><br>Configuration of information (groups, sections, urls) that should be returned in from the /info endpoint.
+   */
   private List<ApiInfoGroup> infoGroups = new ArrayList<>();
+
+  /**
+   * <strong>api.dataverse</strong><br>Configuration for the Dataverse API integration for tenant management
+   */
+  private DataverseConfig dataverse;
 }

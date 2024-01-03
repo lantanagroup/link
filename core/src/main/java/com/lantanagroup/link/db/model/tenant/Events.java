@@ -3,6 +3,7 @@ package com.lantanagroup.link.db.model.tenant;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,37 +12,37 @@ import java.util.List;
 @Getter
 @Setter
 public class Events {
-  List<String> BeforeMeasureResolution;
+  List<String> BeforeMeasureResolution = new ArrayList<>();
+  
+  List<String> AfterMeasureResolution = new ArrayList<>();
 
-  List<String> AfterMeasureResolution;
+  List<String> OnRegeneration = new ArrayList<>();
 
-  List<String> OnRegeneration;
+  List<String> BeforePatientOfInterestLookup = new ArrayList<>();
 
-  List<String> BeforePatientOfInterestLookup;
+  List<String> AfterPatientOfInterestLookup = new ArrayList<>();
 
-  List<String> AfterPatientOfInterestLookup;
+  List<String> BeforePatientDataQuery = new ArrayList<>();
 
-  List<String> BeforePatientDataQuery;
+  List<String> AfterPatientResourceQuery = new ArrayList<>();
 
-  List<String> AfterPatientResourceQuery;
+  List<String> AfterPatientDataQuery = new ArrayList<>();
 
-  List<String> AfterPatientDataQuery;
+  List<String> AfterApplyConceptMaps = new ArrayList<>();
 
-  List<String> AfterApplyConceptMaps;
+  List<String> BeforePatientDataStore = new ArrayList<>();
 
-  List<String> BeforePatientDataStore;
+  List<String> AfterPatientDataStore = new ArrayList<>();
 
-  List<String> AfterPatientDataStore;
+  List<String> BeforeMeasureEval = new ArrayList<>();
 
-  List<String> BeforeMeasureEval;
+  List<String> AfterMeasureEval = new ArrayList<>();
 
-  List<String> AfterMeasureEval;
+  List<String> BeforeReportStore = new ArrayList<>();
 
-  List<String> BeforeReportStore;
+  List<String> AfterReportStore = new ArrayList<>();
 
-  List<String> AfterReportStore;
+  List<String> BeforeBundling = new ArrayList<>();
 
-  List<String> BeforeBundling;
-
-  List<String> AfterBundling;
+  List<String> AfterBundling = new ArrayList<>();
 }

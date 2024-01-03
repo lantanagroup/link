@@ -1,14 +1,12 @@
 package com.lantanagroup.link.api.controller;
 
+import com.lantanagroup.link.DataverseService;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.SearchTenantResponse;
-import com.lantanagroup.link.model.TenantSummary;
-import com.lantanagroup.link.model.TenantSummaryResponse;
-import com.lantanagroup.link.model.TenantSummarySort;
+import com.lantanagroup.link.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -256,5 +254,49 @@ public class TenantController extends BaseController {
 
     // Update the scheduling system to remove the tenant's schedules
     this.scheduler.reset(tenantId);
+  }
+
+  /**
+   * Create or update a tenant's config based on the configuration specified in the configured Dataverse powerapp/instance.
+   * @param tenantId The id of the tenant to create or update within the Link installation
+   * @param dataverseTenantId The id of the tenant within the Dataverse powerapp/instance
+   * @param keyOrSecret Required if a new tenant is being created. The key or secret to use for the tenant's FHIR server authentication.
+   */
+  @PostMapping("/{tenantId}/$dataverse")
+  public Tenant createOrUpdateFromDataverse(@PathVariable String tenantId, @RequestParam(required = true) String dataverseTenantId, @RequestParam(required = false) String keyOrSecret, @RequestParam(required = false) String connectionString) {
+    Tenant tenant = this.sharedService.getTenantConfig(tenantId);
+    Boolean isNew = tenant == null;
+
+    if (isNew) {
+      if (StringUtils.isEmpty(keyOrSecret)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'keyOrSecret' is required for new tenants");
+      } else if (StringUtils.isEmpty(connectionString)) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'connectionString' is required for new tenants");
+      }
+    }
+
+    DataverseService dataverseService = new DataverseService(this.config, dataverseTenantId);
+    Tenant updatedTenant = dataverseService.getTenant();
+    updatedTenant.setId(tenantId);
+
+    if (isNew) {
+      updatedTenant.setConnectionString(connectionString);
+
+      if (updatedTenant.getFhirQuery() != null && updatedTenant.getFhirQuery().getEpicAuth() != null) {
+        updatedTenant.getFhirQuery().getEpicAuth().setKey(keyOrSecret);
+      } else if (updatedTenant.getFhirQuery() != null && updatedTenant.getFhirQuery().getCernerAuth() != null) {
+        updatedTenant.getFhirQuery().getCernerAuth().setSecret(keyOrSecret);
+      } else if (updatedTenant.getFhirQuery() != null && updatedTenant.getFhirQuery().getBasicAuth() != null) {
+        updatedTenant.getFhirQuery().getBasicAuth().setPassword(keyOrSecret);
+      } else if (updatedTenant.getFhirQuery() != null && updatedTenant.getFhirQuery().getTokenAuth() != null) {
+        updatedTenant.getFhirQuery().getTokenAuth().setToken(keyOrSecret);
+      } else {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find a valid FHIR auth method for the tenant");
+      }
+    }
+
+    // TODO: Don't return the tenant config (return void instead) and uncomment the line below
+    //this.sharedService.saveTenantConfig(updatedTenant);
+    return updatedTenant;
   }
 }

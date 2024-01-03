@@ -50,12 +50,12 @@ public class Tenant {
    * See https://productresources.collibra.com/docs/collibra/latest/Content/Cron/co_spring-cron.htm for more info.
    * See https://crontab.guru/ for more info (note: seconds aren't accounted for in this tool).
    */
-  private Schedule scheduling;
+  private Schedule scheduling = new Schedule();
 
   /**
    * Custom classes/functionality that can be turned on at various points during the report generation pipeline.
    */
-  private Events events;
+  private Events events = new Events();
 
   /**
    * Configuration that should be used for /api/{tenantId}/poi/$query-list to query the EHR's FHIR List
@@ -67,7 +67,7 @@ public class Tenant {
    * Configuration to use when querying patients of interest for their clinical data, such as Encounter, Condition, etc.
    * Includes authentication strategy that is needed to successfully query the EHR's FHIR API.
    */
-  private FhirQuery fhirQuery;
+  private FhirQuery fhirQuery = new FhirQuery();
 
   /**
    * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
