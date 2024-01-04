@@ -6,22 +6,20 @@
 // color system
 $white: #fff;
 
-$gray-30: #f5f3f3; // custom
 $gray-50: #f2f6ff; // custom
-$gray-100: #bdbdbd;
-$gray-200: #555;
-$gray-300: #d0d4d9;
-$gray-500: #000;
+$gray-100: #f5f3f3;
+$gray-400: #bdbdbd;
+$gray-700: #555;
+$gray-800: #333;
+$gray-900: #000;
 
-$blue: #26418f;
-$blue-50: #f5f5f5; // custom
-$blue-100: #edf9ff;
+$blue: #005eaa;
+$blue-50: #edf9ff; // custom
+$blue-100: #f5f5f5;
 $blue-200: #c0e9ff;
-$blue-300: #005eaa;
 $blue-400: $blue;
-$blue-600: #555;
-$blue-650: #162f4e; // custom
-$blue-700: #333;
+$blue-500: $blue;
+$blue-700: #26418f;
 $blue-800: #29434e;
 
 $green: #497d0c;
@@ -30,7 +28,7 @@ $red: #af4448;
 
 $orange: #f7931e;
 
-$purple-900: #712177;
+$purple: #712177;
 
 $black: #000;
 
@@ -44,7 +42,7 @@ $warning: $red;
 $danger: $red;
 $light: $blue-50;
 // $dark: todo;
-$in-progress: $gray-200;
+$in-progress: $gray-700;
 
 // backgrounds
 $primary-bg-subtle: $blue-50;
@@ -53,21 +51,111 @@ $primary-bg-subtle: $blue-50;
 // Text
 /****************/
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+$font-family-sans-serif: Arial, sans-serif; 
+$font-family-heading: Tahoma, Arial, sans-serif; // custom
 
-$font-family-sans-serif: 'Poppins', sans-serif; 
-$font-family-heading: Arial, sans-serif; // custom
+$headings-font-weight: inherit;
 
 $h1-font-size: 3.375em;
-$h2-font-size: 1em;
+$h2-font-size: 2.5em;
 $h3-font-size: 2em;
-$h4-font-size: 1.5em;
-$h5-font-size: 2.125em;
+$h4-font-size: 1.375em;
+$h5-font-size: 1.25em;
 $h6-font-size: 1em;
 
-$link-color: $blue-300;
+$link-color: $blue-500;
 $link-decoration: none;
-$link-hover-color: $blue;
+$link-hover-color: $blue-700;
+
+// * Mixins //
+@mixin body-font() {
+  font-family: $font-family-sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-xs() {
+  @include body-font();
+  font-size: 0.75em;
+  letter-spacing: -0.01em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-sm() {
+  @include body-font();
+  font-size: 0.875em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-lg() {
+  @include body-font();
+  font-size: 1.125em;
+  line-height: 1.5em;
+}
+
+@mixin heading() {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.04em;
+  line-height: 1.5em;
+}
+
+@mixin heading-01() {
+  @include heading();
+  font-size: $h1-font-size;
+  letter-spacing: 0.06em;
+}
+
+@mixin heading-02() {
+  @include heading();
+  font-size: $h2-font-size;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.05em;
+}
+
+@mixin subheading-01() {
+  @include heading();
+  font-size: $h3-font-size;
+  line-height: 1em;
+}
+
+@mixin subheading-02() {
+  @include heading();
+  font-size: $h4-font-size;
+}
+
+@mixin subheading-03() {
+  @include heading();
+  font-size: $h5-font-size;
+  letter-spacing: 0.1em;
+  line-height: 1.3em;
+  text-transform: uppercase;
+}
+
+@mixin subheading-04() {
+  @include heading();
+  font-family: $font-family-sans-serif;
+  font-size: $h6-font-size;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.02em;
+  line-height: 1.25em;
+  text-transform: uppercase;
+}
+
+@mixin nav() {
+  font-family: $font-family-heading;
+  font-size: 1rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.225em;
+  text-transform: uppercase;
+}
+
+@mixin nav-secondary() {
+  @include nav();
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.17em;
+}
 
 /****************/
 // Layout

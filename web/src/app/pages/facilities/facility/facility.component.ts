@@ -12,13 +12,14 @@ import { TabComponent } from 'src/app/shared/tab/tab.component';
 import { TabContainerComponent } from 'src/app/shared/tab-container/tab-container.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { AccordionComponent } from 'src/app/shared/accordion/accordion.component';
+import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
 
 @Component({
     selector: 'app-facility',
     standalone: true,
     templateUrl: './facility.component.html',
     styleUrls: ['./facility.component.scss'],
-    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent]
+    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, MiniContentComponent]
 })
 export class FacilityComponent {
   facilityId: string | null = null

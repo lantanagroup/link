@@ -32,36 +32,33 @@
 
 // Labels
 label {
-  font-family: $font-family-heading;
-  font-size: 0.75rem;
+  @include body-font-xs();
   font-weight: $font-weight-bold;
-  letter-spacing: -0.01em;
-  line-height: 1.8em;
   margin-bottom: 0.25rem;
   text-transform: uppercase;
 }
 
 .label {
   &__radio {
+    @include body-font-xs();
     align-items: center;
     color: $gray-800;
     cursor: pointer;
     display: flex;
-    font-weight: $font-weight-normal;
     text-transform: none;
     width: 100%;
   }
 
   &__lg {
-    font-size: 1rem;
+    @include body-font;
   }
 }
 
 // Helper text
 .form {
   &__description {
+    @include body-font-xs();
     margin: 0.25rem 0 0;
-    font-size: 0.75rem;
     color: $gray-600;
   }
 }
@@ -90,7 +87,7 @@ select {
   &:focus-visible,
   &:active {
     outline: solid;
-    outline-color: $blue-300;
+    outline-color: $blue;
     outline-width: 2px;
     outline-offset: 2px;
   }
@@ -142,7 +139,7 @@ input[type='radio'] {
   }
 
   &:checked + span {
-    background: $blue-300;
+    background: $blue;
 
     &::after {
       transform: scale(0.625);
