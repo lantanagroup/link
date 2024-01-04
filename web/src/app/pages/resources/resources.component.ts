@@ -6,11 +6,12 @@ import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { DataService } from 'src/services/api/data.service';
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
+import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
 
 @Component({
   selector: 'app-resources',
   standalone: true,
-  imports: [CommonModule, HeroComponent, CardComponent, LinkComponent, SectionComponent],
+  imports: [CommonModule, HeroComponent, CardComponent, LinkComponent, SectionComponent, MiniContentComponent],
   templateUrl: './resources.component.html',
   styleUrls: ['./resources.component.scss']
 })
