@@ -100,12 +100,12 @@ table.dataTable {
   // Rows
 
   tr {
-    border-bottom: 1px solid $gray-300;
+    border-bottom: 1px solid $gray-400;
 
     &.zebra {
       border-color: $blue-50;
       &--odd {
-        background: $gray-30;
+        background: $gray-100;
       }
     }
 
@@ -115,11 +115,8 @@ table.dataTable {
 
   td,
   .cell {
-    font-family: $font-family-sans-serif;
-    color: $blue-700;
-    font-size: 0.875rem;
-    letter-spacing: -0.01em;
-    line-height: 1.4em;
+    @include body-font-sm();
+    color: $gray-800;
     padding: 0.5rem 0.75rem;
 
     &:first-child {
@@ -131,7 +128,7 @@ table.dataTable {
     }
 
     &--lg {
-      font-size: 1rem;
+      @include body-font-lg();
     }
 
     &--initiated {
@@ -139,34 +136,29 @@ table.dataTable {
     }
 
     &--inProgress {
-      font-weight: $font-weight-semibold;
+      font-weight: $font-weight-bold;
     }
 
     &--complete {
       font-weight: $font-weight-bold;
     }
-
-    &.timestamp {
-      font-family: $font-family-heading;
-    }
   }
 
   // Header
   thead {
-    background: $blue-100;
+    background: $blue-50;
     tr {
       border-color: $gray-400;
+
+      .dataTables_scrollHead & {
+        border: none;
+      }
     }
   }
 
   th {
-    font-family: $font-family-heading;
-    font-size: 1rem;
-    font-weight: $font-weight-medium;
-    letter-spacing: 0.04em;
-    line-height: 1.25em;
+    @include subheading-04();
     padding: 1rem 1rem 1rem 1.75rem;
-    text-transform: uppercase;
 
     &:first-child {
       padding-left: 2.5rem;
@@ -197,7 +189,7 @@ table.dataTable {
 
       &::after {
         opacity: 0 !important;
-        background-color: $blue;
+        background-color: $black;
         border-radius: 50%;
         height: 0.25rem;
         left: 1.125rem;

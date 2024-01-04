@@ -1,6 +1,7 @@
 /* base/_globals.scss */
 
 @import 
+  '../customize-bootstrap',
   '../../../node_modules/bootstrap/scss/functions',
   '../../../node_modules/bootstrap/scss/variables',
   '../../../node_modules/bootstrap/scss/mixins',
@@ -12,7 +13,7 @@ html {
 }
 
 body {
-  background: $blue-50 !important;
+  background: $gray-50 !important;
 }
 
 // this is to make the footer always at the bottom regardless of page height
@@ -33,7 +34,7 @@ body {
 }
 
 .chip {
-  background: $blue-300;
+  background: $blue;
   border-radius: 0.25rem;
   color: $blue-50;
   display: inline-block;
@@ -59,7 +60,7 @@ body {
 
   &--neutral,
   &--inProgress {
-    background: $gray-100;
+    background: $gray-400;
   }
 
   &--success {

@@ -9,14 +9,9 @@
 				class="col col-md-6">
 
 				<app-card [title]="group.name" [hasPadding]="true">
-					<div class="mb-4">
-						<ng-container *ngFor="let section of group.sections">
-							<h6 class="mb-2">{{ section.name }}</h6>
-							<ng-container *ngFor="let link of section.links">
-								<app-link [link]="link" class="mb-3" />
-							</ng-container>
-						</ng-container>
-					</div>
+					<app-mini-content *ngFor="let section of group.sections" [title]="section.name">
+						<app-link *ngFor="let link of section.links" [link]="link" class="mb-3" />
+					</app-mini-content>
 				</app-card>
 
 			</div>
