@@ -18,7 +18,7 @@
     <app-button
       variant="outline"
       type="link"
-      [link]="{url: '/facilities'}"
+      [link]="{url: facilityId ? '/facilities/facility/' + facilityId : '/facilities'}"
     >
       <app-icon filePath="../../../assets/icons/cancel.svg" />
       Cancel
