@@ -1,9 +1,9 @@
 <div class="metric" [ngClass]="isValueUp ? 'metric--up': 'metric--down'">
 	<div class="metric__body p-2 text-center">
-		<p class="h--display mb-1">
+		<p class="metric__kpi mb-1">
 			{{ mainValue }}
 		</p>
-		<p class="text-white mb-0 fw-medium">
+		<p class="text-white mb-0 p--large">
 			{{ subText }}
 		</p>
 	</div>
@@ -11,11 +11,11 @@
 		<div class="text-center py-1 px-2 metric__footer--left">
 			<p class="mb-0 d-flex align-items-center justify-content-center">
 				<app-icon [filePath]="getArrowIconPath()" />
-				<span class="h--subheading">
+				<span class="metric__trend-number">
 					{{ changeValue }}
 				</span>
 			</p>
-			<p class="p--small mb-0">since last {{ changeWindow }}</p>
+			<p class="p--xs mb-0">since last {{ changeWindow }}</p>
 		</div>
 		<div class="py-1 px-2 metric__footer--right">
 			<ngx-charts-line-chart

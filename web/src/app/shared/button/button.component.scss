@@ -4,101 +4,98 @@
         '../../../../node_modules/bootstrap/scss/bootstrap.scss';
 
 .btn {
+  @include nav();
   align-items: center;
-  background: $blue-300;
-  border: 2px solid $blue-300;
+  background: $blue;
+  border: 2px solid $blue;
   border-radius: 0;
-  color: $blue-50;
+  color: $blue-100;
   display: flex;
-  font-family: $font-family-heading;
   gap: 0.5rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   padding: calc(#{$spacer} * 0.5) calc(#{$spacer} * 0.75);
-  text-transform: uppercase;
   width: auto;
 
   svg path {
-    color: $blue-50;
+    color: $blue-100;
     transition: $transition-base;
   }
 
   &:disabled {
-    background: $blue-300;
-    border-color: $blue-300;
-    color: $blue-50;
+    background: $blue;
+    border-color: $blue;
+    color: $blue-100;
     cursor: not-allowed !important;
     opacity: 0.6;
   }
 
   &--reverse {
-    background: $blue-50;
-    border: 2px solid $blue-50;
-    color: $blue-300;
+    background: $blue-100;
+    border: 2px solid $blue-100;
+    color: $blue-500;
 
     svg path {
-      color: $blue-300;
+      color: $blue-500;
     }
   }
 
   &--outline {
     background: transparent;
-    color: $blue-300;
+    color: $blue-500;
 
     svg path {
-      color: $blue-300;
+      color: $blue-500;
     }
   }
 
   &--outline--reverse {
     background: transparent;
-    border-color: $blue-50;
-    color: $blue-50;
+    border-color: $blue-100;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
   }
 
   &:hover {
-    background: $blue-500;
-    border-color: $blue-500;
-    color: $blue-50;
+    background: $blue-700;
+    border-color: $blue-700;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
   }
 
   &:active {
-    background: $blue-600;
-    border-color: $blue-600;
-    color: $blue-50;
+    background: $gray-700;
+    border-color: $gray-700;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
   }
 
   &--text {
+    @include nav-secondary();
     border: none;
     background: transparent;
-    color: $blue-300;
-    font-family: $font-family-heading;
-    letter-spacing: 0;
+    color: $blue;
     padding: 0.25rem;
-    text-transform: none;
 
     svg path {
-      color: $blue-300;
+      color: $blue;
     }
 
     &:hover,
     &:active {
       background: transparent;
-      color: $blue-500;
+      color: $blue-700;
 
       svg path {
-        color: $blue-500;
+        color: $blue-700;
       }
     }
   }
