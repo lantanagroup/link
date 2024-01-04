@@ -143,7 +143,14 @@ export class ActivitiesComponent implements OnInit {
       },
       {
         title: 'Details',
-        data: 'Details'
+        data: 'Details',
+        render: function (data, type, row) {
+          let bundleId = data.split('#')[1]
+          if(bundleId) {
+            return `<a href="/activities/bundle/${bundleId}">${data}</a>`
+          }
+          return data
+        }
       },
       {
         title: 'Facility',

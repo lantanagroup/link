@@ -29,24 +29,28 @@ body {
 
 // Global chip element
 .chips {
-  display: flex;
-  gap: 0.5rem;
+  display: inline-grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .chip {
+  @include body-font-xs();
   background: $blue;
   border-radius: 0.25rem;
-  color: $blue-50;
-  display: inline-block;
-  font-family: $font-family-sans-serif;
-  font-size: 0.75rem;
+  color: $blue-100;
+  display: block;
   font-weight: $font-weight-bold;
-  line-height: 1.5rem;
   min-width: 3rem;
-  padding: 0.5rem 0.375rem;
+  padding: 0.75rem 0.375rem;
   text-align: center;
   white-space: nowrap;
   width: auto;
+
+  &--grid {
+    min-width: none;
+    width: max-content;
+  }
 }
 
 // Global dots

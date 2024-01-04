@@ -138,7 +138,7 @@ export class FacilitiesComponent implements OnInit {
             // Check if data is an array
             if (Array.isArray(data)) {
               // Map each measure to a chip and join them
-              return `<div class="chips">${data.map(measure => `<div class="chip">${measure}</div>`).join(" ")}</div>`;
+              return `<div class="chips chips--grid">${data.map(measure => `<div class="chip chip--grid">${measure}</div>`).join(" ")}</div>`;
             }
             return '';
           }

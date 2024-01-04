@@ -13,7 +13,16 @@ export class HeroComponent {
 
   @Input() subHeading?: string;
   @Input() pageTitle!: string;
+  @Input() isSubPage: boolean = false;
   @Input() color?: 'blue' | 'green' | 'purple' | 'shade';
   @Input() cta?: TemplateRef<any>;
   @Input() size?: 'sm' | 'md' | 'lg' = 'sm';
+
+  headingClasses = 'text-uppercase text-white';
+
+  ngOnInit(): void {
+    if(this.isSubPage) {
+      this.headingClasses += ' h2 fw-bold'
+    }
+  }
 }
