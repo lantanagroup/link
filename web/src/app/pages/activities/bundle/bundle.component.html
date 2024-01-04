@@ -17,7 +17,7 @@
               titleAlign="center"
             >
               <app-mini-content title="Facility Name">
-                <p>{{ bundleDetails?.facility?.name }}</p>
+                <app-link [link]="{url: '/facilities/facility/' + tenantId, title: bundleDetails?.facility?.name}"></app-link>
               </app-mini-content>
 
               <app-mini-content title="Submitted On">
