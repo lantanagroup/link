@@ -13,7 +13,6 @@ export class AppApiService {
   async fetchAppData(): Promise<AppData> {
     try {
       const response = await firstValueFrom(this.dataService.getData<any>(''))
-      console.log('apiData', response)
       return response
     } catch (error) {
       console.error('Error fetching API data', error)
