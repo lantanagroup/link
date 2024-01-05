@@ -8,9 +8,14 @@
   padding: 1.5rem 0;
 
   &__logo {
-    font-family: $font-family-heading;
-    font-size: 2.25rem;
-    letter-spacing: 0.025em;
-    line-height: 1.3em;
+    display: block;
+    margin-left: auto;
+    max-width: 11rem;
+    width: 100%;
+  
+    img {
+      height: auto;
+      width: 100%;
+    }
   }
 }
