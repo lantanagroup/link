@@ -1,6 +1,7 @@
 <app-hero
   subHeading="Facility Detail"
-  pageTitle="{{ facilityDetails?.name }}"
+  [pageTitle]="facilityDetails?.name"
+  [isSubPage]="true"
   color="purple"
   [cta]="heroButton"
 />
@@ -17,34 +18,30 @@
               [hasPadding]=true
               titleAlign="center"
             >
-              <h6>Facility Name</h6>
-              <p>{{ facilityDetails?.name }}</p>
-  
-              <h6>NHSN Org Id</h6>
-              <p>{{ facilityDetails?.cdcOrgId }}</p>
+              <app-mini-content title="Facility Name">
+                <p>{{ facilityDetails?.name }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="NHSN Org Id">
+                <p>{{ facilityDetails?.cdcOrgId }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="EHR Vendor">
+                <!-- TODO: API - THIS IS MISSING IN THE API -->
+                <p><em>Todo:</em> EPIC</p>
+              </app-mini-content>
+
+              <app-mini-content title="FHIR API URL">
+                <p><em>Todo:</em> See Postman</p>
+                <!-- TODO: API - THIS IS MISSING IN THE API -->
+                <p></p>
+              </app-mini-content>
               
-              <h6>NHSNLink URL</h6>
-              <p>
-                <app-link [link]="{url: facilityDetails?.reportingPlan?.url}">{{ facilityDetails?.reportingPlan?.url }}</app-link>
-              </p>
-              
-              <h6>NHSNLink Version</h6>
-              <!-- TODO: API - THIS IS MISSING IN THE API -->
-              <p>5.16</p>
-              
-              <h6>EHR Vendor</h6>
-              <!-- TODO: API - THIS IS MISSING IN THE API -->
-              <p>EPIC</p>
-              
-              <h6>FHIR API URL</h6>
-              <!-- TODO: API - THIS IS MISSING IN THE API -->
-              <p>See Postman</p>
-              
-              <h6>Measure Def Server</h6>
-              <!-- TODO: API - THIS IS MISSING IN THE API -->
-              <p>
-                <app-link [link]="{url: 'https://asdf.link.org'}">https://asdf.link.org</app-link>
-              </p>
+              <app-mini-content title="Measure Def Server">
+                <!-- TODO: API - THIS IS MISSING IN THE API -->
+                <app-link [link]="{url: 'https://asdf.link.org', title: 'https://asdf.link.org'}"></app-link>
+              </app-mini-content>
+
             </app-card>
           </div>
   
@@ -54,29 +51,13 @@
               [hasPadding]=true
               titleAlign="center"
             >
-              <div class="mb-2">
-                <h6>Concept Map 1</h6>
-                <p><strong>ID:</strong> 923123124</p>
-                <p><strong>Contexts:</strong> FHIRPath</p>
-                <p><strong>Path:</strong> 921837271</p>
-                <p><strong>Map:</strong> FHIR Concept Map</p>
-              </div>
-  
-              <div class="mb-2">
-                <h6>Concept Map 2</h6>
-                <p><strong>ID:</strong> 923123124</p>
-                <p><strong>Contexts:</strong> FHIRPath</p>
-                <p><strong>Path:</strong> 921837271</p>
-                <p><strong>Map:</strong> FHIR Concept Map</p>
-              </div>
-  
-              <div class="mb-2">
-                <h6>Concept Map 3</h6>
-                <p><strong>ID:</strong> 923123124</p>
-                <p><strong>Contexts:</strong> FHIRPath</p>
-                <p><strong>Path:</strong> 921837271</p>
-                <p><strong>Map:</strong> FHIR Concept Map</p>
-              </div>
+
+              <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
+                <strong>ID:</strong> 923123124<br>
+                <strong>Contexts:</strong> FHIRPath<br>
+                <strong>Path:</strong> 921837271<br>
+                <strong>Map:</strong> FHIR Concept Map
+              </app-mini-content>
   
             </app-card>
           </div>

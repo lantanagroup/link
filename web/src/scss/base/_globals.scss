@@ -1,6 +1,7 @@
 /* base/_globals.scss */
 
 @import 
+  '../customize-bootstrap',
   '../../../node_modules/bootstrap/scss/functions',
   '../../../node_modules/bootstrap/scss/variables',
   '../../../node_modules/bootstrap/scss/mixins',
@@ -12,7 +13,7 @@ html {
 }
 
 body {
-  background: $blue-50 !important;
+  background: $gray-50 !important;
 }
 
 // this is to make the footer always at the bottom regardless of page height
@@ -28,24 +29,28 @@ body {
 
 // Global chip element
 .chips {
-  display: flex;
-  gap: 0.5rem;
+  display: inline-grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .chip {
-  background: $blue-300;
+  @include body-font-xs();
+  background: $blue;
   border-radius: 0.25rem;
-  color: $blue-50;
-  display: inline-block;
-  font-family: $font-family-sans-serif;
-  font-size: 0.75rem;
+  color: $blue-100;
+  display: block;
   font-weight: $font-weight-bold;
-  line-height: 1.5rem;
   min-width: 3rem;
-  padding: 0.5rem 0.375rem;
+  padding: 0.75rem 0.375rem;
   text-align: center;
   white-space: nowrap;
   width: auto;
+
+  &--grid {
+    min-width: none;
+    width: max-content;
+  }
 }
 
 // Global dots
@@ -59,7 +64,7 @@ body {
 
   &--neutral,
   &--inProgress {
-    background: $gray-100;
+    background: $gray-400;
   }
 
   &--success {

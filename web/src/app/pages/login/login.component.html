@@ -3,15 +3,14 @@
     <div class="row justify-content-center align-items-center h-100">
       <div class="col-md-6">
         <div class="inner-container border p-5 bg-white text-center">
-          <h1 class="login-logo text-uppercase">
-            NHSN<span class="fw-bold text-secondary">Link</span>
-          </h1>
-          <h2 class="mt-2">Sign In to NHSNLink</h2>
+          <div class="login__logo">
+            <img src="../../../assets/nhsn-logo-color.svg" alt="NHSNLink Logo" />
+          </div>
+          <h1 class="mt-2 text-primary h2">Sign In to NHSNLink</h1>
           <div class="d-flex justify-content-lg-center mt-5">
             <app-button
             variant="solid"
             type="link"
-
             [link]="{url: signIn()}"
             >
               <app-icon filePath="../../../assets/icons/sign-in.svg" />

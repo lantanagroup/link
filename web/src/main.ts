@@ -35,6 +35,11 @@ bootstrapApplication(AppComponent, {
         canActivate: ['AuthGuard']
       },
       {
+        path: 'activities/bundle/:tenantId/:bundleId',
+        loadComponent: () => import('./app/pages/activities/bundle/bundle.component').then(m => m.BundleComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
         path: 'facilities',
         loadComponent: () => import('./app/pages/facilities/facilities.component').then(m => m.FacilitiesComponent),
         canActivate: ['AuthGuard']

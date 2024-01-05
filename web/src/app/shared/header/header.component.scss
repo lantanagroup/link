@@ -10,11 +10,11 @@
   }
 
   &__logo {
-    color: $blue;
-    font-family: $font-family-heading;
-    font-size: 2.25rem;
-    letter-spacing: 0.025em;
-    line-height: 1.3em;
+    img {
+      height: auto;
+      max-width: 11rem;
+      width: 100%;
+    }
   }
 }
 #SecondaryNavigation .header {
