@@ -8,14 +8,10 @@
   padding: 1.5rem 0;
 
   &__logo {
-    display: block;
-    margin-left: auto;
-    max-width: 11rem;
-    width: 100%;
-  
     img {
       height: auto;
       width: 100%;
+      max-width: 11rem;
     }
   }
 }
