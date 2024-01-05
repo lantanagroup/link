@@ -8,7 +8,7 @@ import { TableComponent } from 'src/app/shared/table/table.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { calculatePeriodLength, generateRandomData } from 'src/app/helpers/ReportHelper';
-import { SearchBar, TableFilter } from 'src/app/shared/interfaces/table.model';
+import { TableFilter } from 'src/app/shared/interfaces/table.model';
 
 @Component({
   selector: 'app-activities',
@@ -44,6 +44,7 @@ export class ActivitiesComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    //TODO: Remove hardcoded data and hook the data from the api.
     // Step 1: Generate random data
     const randomData = generateRandomData(50);
 
@@ -57,9 +58,6 @@ export class ActivitiesComponent implements OnInit {
 
   calculateDtOptions(data: any): DataTables.Settings {
     // DataTable configuration
-
-    console.log('data:', data)
-
     return {
       data: data,
       pageLength: 15,
@@ -205,27 +203,25 @@ export class ActivitiesComponent implements OnInit {
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
   // This might need some more fixes depending on how the final data looks like.
   transformData(reports: Report[]) {
-    console.log("inside transformData()", reports);
     return reports.map(report => {
-      const reportId = report.reportId;
-      const timestamp = report.status === "completed" ? report.generatedTime : report.submittedTime;
+      const timestamp = report.status === 'submitted' ? report.generatedTime : report.submittedTime;
       const activity = report.activity;
       const status = report.status;
       const facility = report.tenantName;
       const nhsnOrgId = report.nhsnOrgId;
       const periodLength = calculatePeriodLength(report.periodStart, report.periodEnd);
       const reportPeriod = `${report.periodStart} - ${report.periodEnd}`;
-      const totalInCensus = (status === "completed") ? report.aggregates.reduce((sum, value) => sum + parseFloat(value.replace(/,/g, '')), 0).toLocaleString() : "--";
+      const totalInCensus = (status === 'submitted') ? report.aggregates.reduce((sum, value) => sum + parseFloat(value.replace(/,/g, '')), 0).toLocaleString() : "--";
 
 
       let periodData;
-      if (status === "completed") {
+      if (status === 'submitted') {
         periodData = [reportPeriod, periodLength.toString() + ' Days'];
       } else {
         periodData = status === "failed" ? "n/a" : "Pending";
       }
 
-      const details = status === "completed" ? `Bundle #${report.details}` : (status === "pending" ? "In Progress" : "Error report");
+      const details = status === 'submitted' ? `Bundle #${report.id}` : (status === "pending" ? "In Progress" : "Error report");
 
       let measuresData;
       if (status === "pending") {
@@ -233,11 +229,11 @@ export class ActivitiesComponent implements OnInit {
       } else if (status === "failed") {
         measuresData = "n/a";
       } else {
-        measuresData = report.measureId;
+        measuresData = report.measureIds;
       }
 
       return {
-        ReportId: reportId,
+        Id: report.id,
         Status: status,
         Timestamp: timestamp,
         Activity: activity,
