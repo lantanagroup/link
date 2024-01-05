@@ -57,6 +57,9 @@ export class ActivitiesComponent implements OnInit {
 
   calculateDtOptions(data: any): DataTables.Settings {
     // DataTable configuration
+
+    console.log('data:', data)
+
     return {
       data: data,
       pageLength: 15,
@@ -143,7 +146,14 @@ export class ActivitiesComponent implements OnInit {
       },
       {
         title: 'Details',
-        data: 'Details'
+        data: 'Details',
+        render: function (data, type, row) {
+          let bundleId = data.split('#')[1]
+          if(bundleId) {
+            return `<a href="/activities/bundle/ehr-test/${bundleId}">${data}</a>`
+          }
+          return data
+        }
       },
       {
         title: 'Facility',
