@@ -7,7 +7,10 @@
 >
 	<div class="container">
 
-		<p class="h4 text-white text-uppercase pt-4" *ngIf="subHeading">{{ subHeading }}</p>
+		<p class="h4 text-white text-uppercase mt-4" *ngIf="subHeading && !isTemplateRef(subHeading)">{{ subHeading }}</p>
+
+		<ng-container [ngTemplateOutlet]="subHeading" *ngIf="subHeading && isTemplateRef(subHeading)" />
+
 		<app-section-heading
 			*ngIf="pageTitle"
 			[headingClasses]="headingClasses"

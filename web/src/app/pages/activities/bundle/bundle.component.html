@@ -1,5 +1,5 @@
 <app-hero
-  [subHeading]="'Submission Detail: Bundle ' + bundleId"
+  [subHeading]="subHeading"
   [pageTitle]="bundleDetails?.facility?.name"
   [isSubPage]="true"
   [cta]="heroButton"
@@ -124,4 +124,8 @@
     <app-icon filePath="../../../assets/icons/view.svg" />
     View Facility
   </app-button>
+</ng-template>
+
+<ng-template #subHeading>
+  <p class="h4 text-black py-1 px-3 bg-primary-subtle text-uppercase mt-3 d-inline-block">Submission Detail: <strong>Bundle {{ bundleId }}</strong></p>
 </ng-template>
