@@ -21,29 +21,30 @@ import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api
 export class FacilitiesComponent implements OnInit {
   constructor(private facilitiesApiService: FacilitiesApiService) { }
   dtOptions: DataTables.Settings = {};
-  dtFilters: TableFilter[] = [
-    {
-      name: 'Sort:',
-      options: [
-        {
-          label: 'ASC',
-          value: true
-        },
-        {
-          label: 'DESC',
-          value: false
-        },
-        {
-          label: 'Newest First',
-          value: true
-        },
-        {
-          label: 'Oldest First',
-          value: false
-        }
-      ]
-    }
-  ];
+  // ! Removing - may come back in V2
+  // dtFilters: TableFilter[] = [
+  //   {
+  //     name: 'Sort:',
+  //     options: [
+  //       {
+  //         label: 'ASC',
+  //         value: true
+  //       },
+  //       {
+  //         label: 'DESC',
+  //         value: false
+  //       },
+  //       {
+  //         label: 'Newest First',
+  //         value: true
+  //       },
+  //       {
+  //         label: 'Oldest First',
+  //         value: false
+  //       }
+  //     ]
+  //   }
+  // ];
   dtSearchBar: SearchBar = {
     title: 'Search Facilities',
     placeholder: 'Enter facility name, CDC ID, etc.'
@@ -100,12 +101,7 @@ export class FacilitiesComponent implements OnInit {
             }
           },
           render: function (data, type, row) {
-            // Split the timestamp into date and time parts
-            if (!data.toLowerCase().includes('progress')) {
-              const dataParts = data.split(' ').join('<br>');
-              return dataParts
-            }
-            return data
+            return `<a href="/activities/bundle/${row.FacilityId}/${row.LastSubmissionId}">Bundle<br>#${data}</a>`
           }
         },
       ],
@@ -155,7 +151,7 @@ export class FacilitiesComponent implements OnInit {
       const lastSubmission = td.lastSubmissionDate;
       const facilityName = td.name;
       const nhsnOrgId = td.nhsnOrgId;
-      const lastSubmissionId = `Bundle #${td.lastSubmissionId}`;
+      const lastSubmissionId = td.lastSubmissionId;
       const measuresData = td.measures.map(m => m.shortName.slice(0, 4));
 
       return {

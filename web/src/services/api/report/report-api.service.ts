@@ -16,7 +16,7 @@ export class ReportApiService {
       // Building the query string from the filters object
       const queryParams = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined) {
+        if (value !== undefined && value !== null) {
           queryParams.append(key, value.toString());
         }
       });
@@ -26,6 +26,7 @@ export class ReportApiService {
 
       // Fetch the data
       const response = await firstValueFrom(this.dataService.getData<any>(url));
+      console.log('response', response)
       if (response) {
         return response;
       }
