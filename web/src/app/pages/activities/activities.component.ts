@@ -8,7 +8,7 @@ import { TableComponent } from 'src/app/shared/table/table.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { calculatePeriodLength, generateRandomData } from 'src/app/helpers/ReportHelper';
-import { TableFilter } from 'src/app/shared/interfaces/table.model';
+import { activitiesData } from 'src/app/helpers/RecentActivityHelper';
 
 @Component({
   selector: 'app-activities',
@@ -19,29 +19,7 @@ import { TableFilter } from 'src/app/shared/interfaces/table.model';
 })
 export class ActivitiesComponent implements OnInit {
   dtOptions: DataTables.Settings = {};
-  dtFilters: TableFilter[] = [
-    {
-      name: 'Sort:',
-      options: [
-        {
-          label: 'ASC',
-          value: true
-        },
-        {
-          label: 'DESC',
-          value: false
-        },
-        {
-          label: 'Newest First',
-          value: true
-        },
-        {
-          label: 'Oldest First',
-          value: false
-        }
-      ]
-    }
-  ];
+  activitiesData = activitiesData
 
   ngOnInit(): void {
     //TODO: Remove hardcoded data and hook the data from the api.
