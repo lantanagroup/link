@@ -6,16 +6,7 @@ import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { CardComponent } from 'src/app/shared/card/card.component';
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
-
-interface userData {
-  name: string
-  userId: string
-  email: string
-  role?: string
-  organization?: string
-  department?: string
-  phone?: string
-}
+import { UserModel, FjorgeUser } from 'src/app/shared/interfaces/user.model';
 
 @Component({
   selector: 'app-profile',
@@ -26,21 +17,13 @@ interface userData {
 })
 export class ProfileComponent {
 
-  userData: userData = {
+  userData: UserModel = {
     name: '',
     userId: '',
     email: ''
   }
 
   ngOnInit() {
-    this.userData = {
-      name: 'Fjorge Developers',
-      userId: 'ef0a782d-1e0f-4846-9c67-24f63d855a7e',
-      email: 'developers@fjorgedigital.com',
-      role: 'to come',
-      organization: 'fjorge',
-      department: 'tech',
-      phone: '123-456-7890'
-    }
+    this.userData = FjorgeUser
   }
 }

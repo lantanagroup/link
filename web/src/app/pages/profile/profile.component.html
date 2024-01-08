@@ -8,6 +8,8 @@
     </div>
     <app-button
       variant="outline--reverse"
+      type="link"
+      [link]="{url: '/profile/edit-profile'}"
     >
       <app-icon filePath="../../../assets/icons/view.svg" />
       Edit Profile
@@ -52,7 +54,8 @@
           </app-mini-content>
 
           <app-button
-            type="button"
+            type="link"
+            [link]="{url: '/profile/update-password'}"
           >
             <app-icon filePath="../../../assets/icons/edit.svg" />
             Update Password
