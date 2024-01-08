@@ -31,7 +31,7 @@ export class DashboardComponent {
     const randomData = generateRandomData(50);
 
     // Step 3: Transform the data
-    const completedData = this.transformData(randomData.filter(x => x.status === "completed").slice(0, 5));
+    const completedData = this.transformData(randomData.filter(x => x.status === 'submitted').slice(0, 5));
     const pendingData = this.transformData(randomData.filter(x => x.status === "pending").slice(0, 5));
     const failedData = this.transformData(randomData.filter(x => x.status === "failed").slice(0, 5));
 
@@ -112,10 +112,10 @@ export class DashboardComponent {
     console.log("inside transformData()", reports);
     return reports.map(report => {
       const reportId = report.reportId;
-      const timestamp = report.status === "completed" ? report.generatedTime : report.submittedTime;
+      const timestamp = report.status === 'submitted' ? report.generatedTime : report.submittedTime;
       const status = report.status;
       const facility = report.tenantName;
-      const details = status === "completed" ? `Bundle #${report.details}` : (status === "pending" ? "In Progress" : "Report (12 Errors)");
+      const details = status === 'submitted' ? `Bundle #${report.details}` : (status === "pending" ? "In Progress" : "Report (12 Errors)");
 
       return {
         ReportId: reportId,

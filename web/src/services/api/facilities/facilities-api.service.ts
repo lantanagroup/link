@@ -29,7 +29,6 @@ export class FacilitiesApiService {
     try {
       const response = await firstValueFrom(this.dataService.getData<any>(`tenant/${id}`));
       if (response) {
-        console.log(response, 'tenants');
         return response;
       }
       return [];
