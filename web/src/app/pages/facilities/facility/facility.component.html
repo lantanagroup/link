@@ -27,24 +27,16 @@
               </app-mini-content>
 
               <app-mini-content title="EHR Vendor">
-                <!-- TODO: API - THIS IS MISSING IN THE API -->
-                <p><em>Todo:</em> EPIC</p>
+                <p><em>Todo:</em> Will be filled out once LNK-1854 is complete.</p>
               </app-mini-content>
 
               <app-mini-content title="FHIR API URL">
-                <p><em>Todo:</em> See Postman</p>
-                <!-- TODO: API - THIS IS MISSING IN THE API -->
+                <p>{{ facilityDetails?.fhirQuery?.fhirServerBase ? facilityDetails?.fhirQuery?.fhirServerBase : 'n/a' }}</p>
                 <p></p>
               </app-mini-content>
-              
-              <app-mini-content title="Measure Def Server">
-                <!-- TODO: API - THIS IS MISSING IN THE API -->
-                <app-link [link]="{url: 'https://asdf.link.org', title: 'https://asdf.link.org'}"></app-link>
-              </app-mini-content>
-
             </app-card>
           </div>
-  
+
           <div class="col col-md-6 col-lg-4">
             <app-card
               title="Facility Concept Maps"
@@ -52,16 +44,17 @@
               titleAlign="center"
             >
 
+            <!-- TODO: Get the values for concept maps from the api -->
+            <!-- https://dev.nhsnlink.org/api/ehr-test/conceptMap -->
               <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
                 <strong>ID:</strong> 923123124<br>
                 <strong>Contexts:</strong> FHIRPath<br>
                 <strong>Path:</strong> 921837271<br>
-                <strong>Map:</strong> FHIR Concept Map
               </app-mini-content>
-  
+
             </app-card>
           </div>
-  
+
           <div class="col col-md-6 col-lg-4">
             <app-card
               title="Facility Measures"
@@ -72,27 +65,27 @@
                 <div class="chip mr-1">CDI</div>
                 <strong>C. difficile infection</strong>
               </div>
-  
+
               <div class="d-flex align-items-start mb-2 u-gap2">
                 <div class="chip">HOB</div>
                 <strong>Hospital-onset bactermia</strong>
               </div>
-  
+
               <div class="d-flex align-items-start mb-2 u-gap2">
                 <div class="chip">HYPO</div>
                 <strong>Medical-related hypoglycemia</strong>
               </div>
-  
+
               <div class="d-flex align-items-start mb-2 u-gap2">
                 <div class="chip">HYPR</div>
                 <strong>Inpatient hypoglycemia</strong>
               </div>
-  
+
               <div class="d-flex align-items-start mb-2 u-gap2">
                 <div class="chip">RPS</div>
                 <strong>Respitory pathogen surveillance</strong>
               </div>
-  
+
               <div class="d-flex align-items-start mb-2 u-gap2">
                 <div class="chip">VTE</div>
                 <strong>Hospital-associated venous thromboembolism</strong>
@@ -101,11 +94,16 @@
           </div>
         </div>
       </app-tab>
-  
+
       <app-tab tabTitle="Activity">
-        <p><em>Table to come...</em></p>
+        <app-table
+          *ngIf="isFacilityActivityTableLoaded"
+          [dtOptions]="dtOptions"
+          tableTitle="Facility Activity"
+          [filters]="dtFilters"
+        />
       </app-tab>
-  
+
       <app-tab tabTitle="Technical Details">
         <app-accordion
           title="Normalizations"
