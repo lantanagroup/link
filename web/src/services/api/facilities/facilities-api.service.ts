@@ -28,7 +28,6 @@ export class FacilitiesApiService {
   async fetchFacilityById(id: string): Promise<any> {
     try {
       const response = await firstValueFrom(this.dataService.getData<any>(`tenant/${id}`));
-      console.log('facility data:', response)
       if (response) {
         return response;
       }

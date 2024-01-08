@@ -26,7 +26,6 @@ export class ReportApiService {
 
       // Fetch the data
       const response = await firstValueFrom(this.dataService.getData<any>(url));
-      console.log('response', response)
       if (response) {
         return response;
       }
