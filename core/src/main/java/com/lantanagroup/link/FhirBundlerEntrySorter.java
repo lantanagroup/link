@@ -79,24 +79,29 @@ public class FhirBundlerEntrySorter {
 
     // Link Organization is first
     if (organization != null) {
+      logger.info("Adding organization");
       newEntriesList.add(organization);
     }
 
     // Link Device are next
     if (device != null) {
+      logger.info("Adding device");
       newEntriesList.add(device);
     }
 
     // Link Census List is next
     if (censusList != null) {
+      logger.info("Adding census");
       newEntriesList.add(censusList);
     }
 
     // Link DocumentReference is next
     if (queryPlanLibrary != null) {
+      logger.info("Adding query plan");
       newEntriesList.add(queryPlanLibrary);
     }
 
+    logger.info("Adding aggregate measure reports");
     List<Bundle.BundleEntryComponent> aggregateMeasureReports = bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST))
             .sorted(new ResourceComparator())
@@ -106,7 +111,7 @@ public class FhirBundlerEntrySorter {
     // Loop through each patient and add the patients resources in the following order:
     // MeasureReport, Patient, All other resources sorted by resourceType/id
     for (String patientId : patientIds) {
-      logger.debug("Adding entries for patient: {}", patientId);
+      logger.debug("Adding patient resources: {}", patientId);
       List<Bundle.BundleEntryComponent> relatedPatientResources = getRelatedPatientResources(bundle, patientId);
       Bundle.BundleEntryComponent indMeasureReport = relatedPatientResources.stream()
               .filter(r -> r.getResource().getResourceType().equals(ResourceType.MeasureReport))
@@ -137,6 +142,7 @@ public class FhirBundlerEntrySorter {
     }
 
     // Get all resources not already in the bundle
+    logger.info("Adding remaining resources");
     List<Bundle.BundleEntryComponent> otherNonPatientResources = bundle.getEntry().stream()
             .filter(r -> !newEntriesList.contains(r))
             .sorted(new ResourceComparator())
@@ -144,8 +150,11 @@ public class FhirBundlerEntrySorter {
     newEntriesList.addAll(otherNonPatientResources);
 
     // Clear the bundle entries and add the sorted entries
+    logger.info("Replacing entries");
     bundle.getEntry().clear();
     bundle.getEntry().addAll(newEntriesList);
+
+    logger.info("Done sorting bundle");
   }
 
   private static boolean isReferenceToPatient(Reference reference, String patientId) {
