@@ -9,6 +9,7 @@ import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { calculatePeriodLength, generateRandomData } from 'src/app/helpers/ReportHelper';
 import { activitiesData } from 'src/app/helpers/RecentActivityHelper';
+import { SearchBar } from 'src/app/shared/interfaces/table.model';
 
 @Component({
   selector: 'app-activities',
@@ -20,6 +21,10 @@ import { activitiesData } from 'src/app/helpers/RecentActivityHelper';
 export class ActivitiesComponent implements OnInit {
   dtOptions: DataTables.Settings = {};
   activitiesData = activitiesData
+  dtSearchBar: SearchBar = {
+    title: 'Search Activities',
+    placeholder: 'Enter facility name, Bundle ID, Status, etc.'
+  };
 
   ngOnInit(): void {
     //TODO: Remove hardcoded data and hook the data from the api.
