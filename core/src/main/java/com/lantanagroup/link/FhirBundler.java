@@ -410,21 +410,17 @@ public class FhirBundler {
       return;
     }
 
-    // Get all individual measure reports in the DB for the report and filter them
-    // based on the aggregate
-    List<PatientMeasureReport> allIndMeasureReports =
-            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
-    List<PatientMeasureReport> indMeasureReports = allIndMeasureReports
-            .stream().filter(imr -> {
-              String imrId = imr.getMeasureReport().getIdElement().getIdPart();
-              return subjectList.getEntry().stream().anyMatch(e ->
-                      e.getItem() != null &&
-                              e.getItem().getReference() != null &&
-                              e.getItem().getReference().equalsIgnoreCase("MeasureReport/" + imrId));
-            })
-            .collect(Collectors.toList());
-
-    for (PatientMeasureReport patientMeasureReport : indMeasureReports) {
+    for (ListResource.ListEntryComponent subject : subjectList.getEntry()) {
+      String patientMeasureReportId = subject.getItem().getReferenceElement().getIdPart();
+      if (patientMeasureReportId == null) {
+        logger.warn("Found null ID in subject list");
+        continue;
+      }
+      PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(patientMeasureReportId);
+      if (patientMeasureReport == null) {
+        logger.warn("Patient measure report not found in database: {}", patientMeasureReportId);
+        continue;
+      }
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
