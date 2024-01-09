@@ -473,7 +473,7 @@ public class FhirBundler {
           }
         }
 
-        String oldReference = contained.getIdPart();
+        String oldReference = "#" + getIdPart(contained);
         String newReference = lineLevelResourceId;
         references.stream()
                 .filter(r -> r.getReference() != null && r.getReference().equals(oldReference))
