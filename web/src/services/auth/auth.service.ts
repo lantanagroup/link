@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap, catchError, throwError } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
 
 interface TokenResponse {
   access_token: string;
@@ -91,6 +92,14 @@ export class AuthService {
         sessionStorage.setItem('expires_in', JSON.stringify(new Date().getTime() + (Number(response.expires_in) * 1000)));
         sessionStorage.setItem('id_token', response.id_token);
 
+        // Decode the access token
+        const decodedToken: any = jwtDecode(response.access_token)
+
+        // Extract the email and save it to the session storage
+        const email = decodedToken?.email
+        if (email) {
+          sessionStorage.setItem('user_email', email)
+        }
       })
     );
   }

@@ -1,9 +1,10 @@
 /* user data model */
 
-export interface UserModel {
+export interface ProfileModel {
   name: string
-  userId: string
+  id: string
   email: string
+  enabled: boolean
   role?: string
   organization?: string
   department?: string
@@ -11,10 +12,11 @@ export interface UserModel {
 }
 
 // demo data
-export const FjorgeUser: UserModel = {
+export const FjorgeUser: ProfileModel = {
   name: 'Fjorge Developers',
-  userId: 'ef0a782d-1e0f-4846-9c67-24f63d855a7e',
+  id: 'ef0a782d-1e0f-4846-9c67-24f63d855a7e',
   email: 'developers@fjorgedigital.com',
+  enabled: true,
   role: 'to come',
   organization: 'fjorge',
   department: 'tech',

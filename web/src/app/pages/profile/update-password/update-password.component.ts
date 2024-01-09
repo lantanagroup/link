@@ -7,7 +7,7 @@ import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { CardComponent } from 'src/app/shared/card/card.component';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { FjorgeUser, UserModel } from 'src/app/shared/interfaces/user.model';
+import { FjorgeUser, ProfileModel } from 'src/app/shared/interfaces/profile.model';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ToastComponent } from 'src/app/shared/toast/toast.component';
 import { ToastService } from 'src/app/services/toast.service';
@@ -21,10 +21,11 @@ import { ToastService } from 'src/app/services/toast.service';
 })
 export class UpdatePasswordComponent {
 
-  userData: UserModel = {
+  userData: ProfileModel = {
     name: '',
-    userId: '',
-    email: ''
+    id: '',
+    email: '',
+    enabled: true
   }
 
   ngOnInit() {
