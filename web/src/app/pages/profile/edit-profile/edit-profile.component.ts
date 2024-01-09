@@ -10,7 +10,8 @@ import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ToastComponent } from 'src/app/shared/toast/toast.component';
 import { ToastService } from 'src/services/toasts/toast.service';
-import { FjorgeUser, UserModel } from 'src/app/shared/interfaces/user.model';
+import { ProfileModel } from 'src/app/shared/interfaces/profile.model';
+import { ProfileApiService } from 'src/services/api/profile/profile-api.service';
 
 @Component({
   selector: 'app-edit-profile',
@@ -21,21 +22,32 @@ import { FjorgeUser, UserModel } from 'src/app/shared/interfaces/user.model';
 })
 export class EditProfileComponent {
 
-  userData: UserModel = {
+  currentUserEmail: string | null = null
+  userData: ProfileModel = {
     name: '',
-    userId: '',
-    email: ''
+    id: '',
+    email: '',
+    enabled: true
   }
 
-  ngOnInit() {
-    this.userData = FjorgeUser
+  async ngOnInit() {
+    // get current email from session storage
+    this.currentUserEmail = sessionStorage.getItem('user_email')
 
-    if(this.userData) {
-      this.setInitialValues()
+    if(this.currentUserEmail) {
+      // make api call
+      try {
+        this.userData = await this.profileApiService.fetchProfileData(this.currentUserEmail)
+
+        this.setInitialValues()
+      } catch (error) {
+        console.error('Error loading profile data:', error)
+      }
     }
   }
 
   constructor(
+    private profileApiService: ProfileApiService,
     private fb: FormBuilder,
     private toastService: ToastService, 
     private router: Router
