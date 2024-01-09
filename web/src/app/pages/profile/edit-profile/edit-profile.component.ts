@@ -9,7 +9,7 @@ import { CardComponent } from 'src/app/shared/card/card.component';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ToastComponent } from 'src/app/shared/toast/toast.component';
-import { ToastService } from 'src/app/services/toast.service';
+import { ToastService } from 'src/services/toasts/toast.service';
 import { FjorgeUser, UserModel } from 'src/app/shared/interfaces/user.model';
 
 @Component({
