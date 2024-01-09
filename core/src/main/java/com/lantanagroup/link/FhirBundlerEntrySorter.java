@@ -68,6 +68,7 @@ public class FhirBundlerEntrySorter {
   }
 
   public static void sort(Bundle bundle) {
+    logger.info("Sorting bundle");
     List<Bundle.BundleEntryComponent> newEntriesList = new ArrayList<>();
 
     List<String> patientIds = getPatientIds(bundle);
@@ -105,6 +106,7 @@ public class FhirBundlerEntrySorter {
     // Loop through each patient and add the patients resources in the following order:
     // MeasureReport, Patient, All other resources sorted by resourceType/id
     for (String patientId : patientIds) {
+      logger.debug("Adding entries for patient: {}", patientId);
       List<Bundle.BundleEntryComponent> relatedPatientResources = getRelatedPatientResources(bundle, patientId);
       Bundle.BundleEntryComponent indMeasureReport = relatedPatientResources.stream()
               .filter(r -> r.getResource().getResourceType().equals(ResourceType.MeasureReport))
