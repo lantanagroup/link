@@ -1,3 +1,7 @@
+// ****************************************************************************
+// ! This is here potentially for V2, currently this is handled within Keycloak
+// ****************************************************************************
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
