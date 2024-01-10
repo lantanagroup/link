@@ -6,11 +6,14 @@ import { SectionHeadingComponent } from '../section-heading/section-heading.comp
 import { AccordionComponent } from '../accordion/accordion.component';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
+import { ToastComponent } from '../toast/toast.component';
+import { ToastService } from 'src/app/services/toast.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-form-update-facility',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent, ToastComponent],
   templateUrl: './form-update-facility.component.html',
   styleUrls: ['./form-update-facility.component.scss']
 })
@@ -18,7 +21,7 @@ export class FormUpdateFacilityComponent {
 
   @Input() facilityId?: string | null = null;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private toastService: ToastService, private router: Router) {}
 
   facilitiesForm = new FormGroup({
     profile: new FormGroup({
@@ -203,10 +206,24 @@ export class FormUpdateFacilityComponent {
 
       if(this.facilityId) {
         // todo : PUT request
+
+        this.toastService.showToast(
+          'Facility Updated', 
+          `${this.facilitiesForm.value.profile?.name} has been successfully updated.`,
+          'success'  
+        )
+        this.router.navigate(['/facilities/facility', this.facilityId])
       } else {
         // todo : POST request
+        this.toastService.showToast(
+          'Facility Created', 
+          `${this.facilitiesForm.value.profile?.name} has been successfully created.`,
+          'success'  
+        )
+        this.router.navigate(['/facilities/'])
       }
-      alert(JSON.stringify(this.facilitiesForm.value))
+
+      // alert(JSON.stringify(this.facilitiesForm.value))
     } else {
       this.facilitiesForm.markAllAsTouched()
     }

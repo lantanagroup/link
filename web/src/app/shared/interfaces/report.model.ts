@@ -1,6 +1,6 @@
 export interface Report {
   id: string;
-  measureId: string[];
+  measureIds: string[];
   periodStart: string;
   periodEnd: string;
   status: string;
@@ -15,3 +15,13 @@ export interface Report {
   activity: string;
   details: string;
 };
+
+export interface ReportFilter {
+  tenantId?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  measureIds?: string;
+  count?: number;
+  page?: number;
+}

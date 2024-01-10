@@ -3,6 +3,17 @@
         '../../../scss/abstracts';
 
 
+.login__logo {
+  margin: 0 auto;
+  max-width: 29rem;
+  width: 90%;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}
+
 .login-bg {
   @include background-2x('../../assets/backgrounds/bg-blue-lg', 'png', 100%, auto, center bottom, no-repeat);
   background-size: cover;
@@ -19,7 +30,7 @@
 }
 
 .login-logo {
-  color: $blue-400;
+  color: $blue;
   font-family: $font-family-heading;
   font-size: 4.75rem;
   letter-spacing: 0.025em;

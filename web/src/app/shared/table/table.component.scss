@@ -1,33 +1,134 @@
 @import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
+        '../../../scss/abstracts';
+
+// hide default search bar
+.dataTables_filter {
+  display: none !important;
+}
+
+// pagination
+.dataTables_wrapper {
+  .pagination {
+    margin: 1rem 1.5rem !important;
+    justify-content: center;
+
+    .paginate_button {
+      a {
+        background: transparent;
+        border: none;
+        border-radius: 0.125rem;
+        color: $blue-700;
+        font-size: 0.75rem;
+        line-height: 1.5rem;
+        padding: 0 0.125rem;
+        text-align: center;
+        min-width: 1.5rem;
+
+        &:hover {
+          background: $blue-100;
+        }
+      }
+      &.active {
+        a {
+          background: $blue;
+          color: $blue-50;
+        }
+      }
+
+      &.previous,
+      &.next {
+        a {
+          margin: 0 0.5rem;
+          font-size: 1px;
+          position: relative;
+          text-indent: -10000px;
+
+          &:focus,
+          &:focus-within {
+            box-shadow: none;
+          }
+
+          &::after {
+            background: url('../../../assets/icons/chevron-down.svg') no-repeat center center;
+            background-size: 100% auto;
+            content: '';
+            display: block;
+            height: 1.5rem;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 1.5rem;
+          }
+        }
+
+        &.disabled {
+          a::after {
+            opacity: 0.2;
+          }
+        }
+      }
+
+      &.previous a::after {
+        transform: rotate(90deg);
+      }
+      &.next a {
+        transform: rotate(-90deg);
+      }
+    }
+  }
+}
+
+// custom table styles
+.table__container {
+  background: $white;
+}
+
+div.dataTables_scrollBody > table.dataTable > thead > tr > * {
+  &::before,
+  &::after {
+    display: none !important;
+  }
+}
 
 table.dataTable {
+  background: $white;
   border-collapse: collapse !important;
   margin: 0 !important;
-  width: 100% !important;
+  min-width: 100% !important;
+
+  // Rows
 
   tr {
-    border-bottom: 1px solid $gray-300;
+    border-bottom: 1px solid $gray-400;
+
+    &.zebra {
+      border-color: $blue-50;
+      &--odd {
+        background: $gray-100;
+      }
+    }
+
   }
+
+  // Cells
 
   td,
   .cell {
-    font-family: $font-family-sans-serif;
-    font-size: 0.875rem;
-    letter-spacing: -0.01em;
-    line-height: 1.4em;
-    padding: 0.5rem 0.25rem;
+    @include body-font-sm();
+    color: $gray-800;
+    padding: 0.5rem 0.75rem;
 
     &:first-child {
-      padding-left: 0.75rem;
+      padding-left: 1.5rem;
     }
 
     &:last-child {
-      padding-right: 0.75rem;
+      padding-right: 1.5rem;
     }
 
     &--lg {
-      font-size: 1rem;
+      @include body-font-lg();
     }
 
     &--initiated {
@@ -35,7 +136,7 @@ table.dataTable {
     }
 
     &--inProgress {
-      font-weight: $font-weight-semibold;
+      font-weight: $font-weight-bold;
     }
 
     &--complete {
@@ -43,248 +144,126 @@ table.dataTable {
     }
   }
 
+  // Header
+  thead {
+    background: $blue-50;
+    tr {
+      border-color: $gray-400;
+
+      .dataTables_scrollHead & {
+        border: none;
+      }
+    }
+  }
+
+  th {
+    @include subheading-04();
+    padding: 1rem 1rem 1rem 1.75rem;
+
+    &:first-child {
+      padding-left: 2.5rem;
+    }
+
+    // sorting
+    &.sorting {
+      position: relative;
+      
+      &::before,
+      &::after {
+        content: '' !important;
+        display: block !important;
+        top: 50%;
+      }
+      
+      &::before {
+        background: url('../../../assets/icons/chevron-down.svg') no-repeat center bottom;
+        background-size: 100% auto;
+        height: 1.625rem;
+        margin-right: 0.5rem;
+        left: 0.5rem;
+        opacity: 1 !important;
+        transform: translateY(-50%);
+        transform-origin: center center;
+        width: 1.25rem;
+      }
+
+      &::after {
+        opacity: 0 !important;
+        background-color: $black;
+        border-radius: 50%;
+        height: 0.25rem;
+        left: 1.125rem;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 0.25rem;
+      }
+
+      &:first-child {
+        &::before {
+          left: 1.125rem;
+        }
+        &::after {
+          left: 1.75rem;
+        }
+      }
+
+      &_asc,
+      &_desc {
+        &::after {
+          opacity: 1 !important;
+        }
+      }
+
+      &_desc {
+        &::before {
+          transform: scaleY(-1) translateY(50%);
+        }
+      }
+    }
+  }
+
+  .table--simple & {
+    td,
+    .cell {
+      padding: 0.5rem 0.25rem;
+
+      &:first-child {
+        padding-left: 0.75rem;
+      }
+
+      &:last-child {
+        padding-right: 0.75rem;
+      }
+    }
+
+    thead {
+      th {
+        padding: 1rem 0.5rem 1rem 1.25rem;
+    
+        &:first-child {
+          padding-left: 1.75rem;
+        }
+
+        .sorting {
+          &::before {
+            left: 0;
+          }
+
+          &::after {
+            left: 0.625rem;
+          }
+
+          &:first-child {
+            &::before {
+              left: 0.625rem;
+            }
+            &::after {
+              left: 1.25rem;
+            }
+          }
+        }
+      }
+    }
+  }
+
 }
-
-// // General table styles
-// [table__wrapper] {
-//   table.dataTable {
-//     width: 100% !important;
-//   }
-//   // 1st Column of header
-//   table.dataTable thead > tr > th:first-child {
-//     padding-left: 48px;
-//   }
-//   table.dataTable thead > tr > th {
-//     // styles for table header
-//     font-family: "Futura PT", "Futura", sans-serif;
-//     font-size: 16px;
-//     font-weight: 500;
-//     line-height: 20px;
-//     text-transform: uppercase;
-//     padding-left: 15px;
-//     border-bottom: 1px solid $gray-100;
-//     background-color: $blue-100;
-//     height: 54px;
-
-//     // Sorting icons
-//     &.sorting:before,
-//     &.sorting_asc:before,
-//     &.sorting_desc:before,
-//     &.sorting:after,
-//     &.sorting_asc:after,
-//     &.sorting_desc:after {
-//       content: "";
-//       display: inline-block;
-//       width: 16px;
-//       height: 16px;
-//       background-size: contain;
-//       background-repeat: no-repeat;
-//       vertical-align: middle;
-//       position: absolute;
-//       left: 0;
-//       top: 50%;
-//       transform: translateY(-50%);
-//     }
-
-//     &.sorting_asc:before,
-//     &.sorting_asc:after {
-//       background-image: url("/assets/icons/chevron-down.svg");
-//       transform: translateY(-50%) rotate(180deg);
-//     }
-
-//     &.sorting_desc:after,
-//     &.sorting_desc:after {
-//       background-image: url("/assets/icons/chevron-down.svg");
-//       transform: translateY(-50%);
-//     }
-
-//     // Adding some space before the chevron icon on first column.
-//     &:first-child {
-//       &.sorting:before,
-//       &.sorting_asc:before,
-//       &.sorting_desc:before,
-//       &.sorting:after,
-//       &.sorting_asc:after,
-//       &.sorting_desc:after {
-//         left: 30px;
-//       }
-//     }
-//   }
-//   // Alternate row coloring
-//   table tr:nth-child(even) {
-//     background-color: $gray-50;
-//   }
-
-//   // Table's data specific stylings
-//   .table-default-font-style,
-//   .activity-initiated,
-//   .activity-success-failed,
-//   .details-inprogress,
-//   .details-bundle,
-//   .reportingPeriod-pending,
-//   .facility-regular {
-//     font-family: "Poppins";
-//     font-weight: 400;
-//     font-size: 14px;
-//     line-height: 20px;
-//     letter-spacing: -0.14px;
-//   }
-
-//   //Timestamp Column
-//   .timestamp-padding {
-//     padding-left: 24px;
-//   }
-
-//   // Activity Column
-//   .activity-container {
-//     display: flex;
-//     align-items: center;
-//   }
-//   .activity-text {
-//     margin-left: 5px;
-//   }
-//   .activity-initiated {
-//     font-style: italic;
-//   }
-//   .activity-success-failed {
-//     font-weight: 600;
-//   }
-
-//   // Details Column
-//   .details-inprogress {
-//     font-style: italic;
-//     font-weight: 600;
-//     color: $gray-250;
-//   }
-//   .details-bundle {
-//     font-weight: 600;
-//     color: $blue-300;
-//   }
-
-//   // Facility Column
-//   .facility-regular {
-//     color: $blue-300;
-//   }
-
-//   // Reporting Period Column
-//   .reportingPeriod-pending {
-//     font-style: italic;
-//   }
-
-//   // Measures Column
-//   .measures-container {
-//     display: flex;
-//     flex-direction: row;
-//     flex-wrap: wrap;
-//     gap: 5px;
-//     min-width: 180px;
-//     padding-top: 10px;
-//     padding-bottom: 10px;
-//   }
-//   .measure-span {
-//     color: var(--primary-main-50, #f3f8ff);
-//     font-family: Poppins;
-//     font-size: 12px;
-//     font-style: normal;
-//     font-weight: 700;
-//     line-height: 24px;
-
-//     display: flex;
-//     width: 40px;
-//     height: 40px;
-//     padding: 8px 24px;
-//     justify-content: center;
-//     align-items: center;
-
-//     border-radius: 3px;
-//     background: #2871e6;
-//   }
-
-//   .recent-activity--details {
-//     width: 85px;
-//     padding-left: 12px;
-//   }
-
-//   // Dot styles
-//   .dot {
-//     height: 10px;
-//     width: 12px;
-//     border-radius: 50%;
-//     display: inline-block;
-
-//     &--success {
-//       background-color: green;
-//     }
-
-//     &--neutral {
-//       background-color: grey;
-//     }
-
-//     &--failed {
-//       background-color: red;
-//     }
-//   }
-
-//   // Pagination styles
-//   .dataTables_wrapper {
-//     .col-md-7 {
-//       display: flex;
-//       justify-content: center;
-//       align-items: center;
-//     }
-
-//     .dataTables_paginate {
-//       float: none;
-//       text-align: center;
-//     }
-//   }
-// }
-
-// // Recent activity table wrapper
-// // Recent activity table wrapper
-// [recent_activity_table__wrapper] {
-//   table.dataTable {
-//     width: 100% !important;
-//   }
-//   table.dataTable tbody tr {
-//     height: 54px;
-//   }
-
-//   // Table's data specific stylings
-//   .table-default-font-style,
-//   .details-inprogress,
-//   .details-bundle,
-//   .facility-regular {
-//     font-family: "Poppins";
-//     font-weight: 400;
-//     font-size: 14px;
-//     line-height: 20px;
-//     letter-spacing: -0.14px;
-//   }
-
-//   // Details Column
-//   .details-inprogress {
-//     font-style: italic;
-//     font-weight: 600;
-//     color: $gray-250;
-//   }
-//   .details-bundle {
-//     font-weight: 600;
-//     color: $blue-300;
-//   }
-
-//   // Facility Column
-//   .facility-regular {
-//     color: $blue-300;
-//   }
-
-//   // Recent Activity
-//   .recent-activity--details {
-//     width: 85px;
-//     padding-left: 12px;
-//   }
-//   .recent-activity--timestamp {
-//     min-width: 84px;
-//     padding-right: 15px;
-//   }
-// }

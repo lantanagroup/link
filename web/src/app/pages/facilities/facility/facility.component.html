@@ -1,13 +1,147 @@
-<app-hero 
+<app-hero
   subHeading="Facility Detail"
-  pageTitle="Name to come --> ID: {{ facilityId }}"
+  [pageTitle]="facilityDetails?.name"
+  [isSubPage]="true"
   color="purple"
   [cta]="heroButton"
 />
 
 <app-section>
-  <div class="container-md">
-    <em>Content to come ...</em>
+  <div class="container">
+
+    <app-tab-container>
+      <app-tab tabTitle="Facility Profile">
+        <div class="row">
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Details"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <app-mini-content title="Facility Name">
+                <p>{{ facilityDetails?.name }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="NHSN Org Id">
+                <p>{{ facilityDetails?.cdcOrgId }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="EHR Vendor">
+                <p><em>Todo:</em> Will be filled out once LNK-1854 is complete.</p>
+              </app-mini-content>
+
+              <app-mini-content title="FHIR API URL">
+                <p>{{ facilityDetails?.fhirQuery?.fhirServerBase ? facilityDetails?.fhirQuery?.fhirServerBase : 'n/a' }}</p>
+                <p></p>
+              </app-mini-content>
+            </app-card>
+          </div>
+
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Concept Maps"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+
+            <!-- TODO: Get the values for concept maps from the api -->
+            <!-- https://dev.nhsnlink.org/api/ehr-test/conceptMap -->
+              <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
+                <strong>ID:</strong> 923123124<br>
+                <strong>Contexts:</strong> FHIRPath<br>
+                <strong>Path:</strong> 921837271<br>
+              </app-mini-content>
+
+            </app-card>
+          </div>
+
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Measures"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip mr-1">CDI</div>
+                <strong>C. difficile infection</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HOB</div>
+                <strong>Hospital-onset bactermia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HYPO</div>
+                <strong>Medical-related hypoglycemia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HYPR</div>
+                <strong>Inpatient hypoglycemia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">RPS</div>
+                <strong>Respitory pathogen surveillance</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">VTE</div>
+                <strong>Hospital-associated venous thromboembolism</strong>
+              </div>
+            </app-card>
+          </div>
+        </div>
+      </app-tab>
+
+      <app-tab tabTitle="Activity">
+        <app-table
+          *ngIf="isFacilityActivityTableLoaded"
+          [dtOptions]="dtOptions"
+          tableTitle="Facility Activity"
+          [filters]="dtFilters"
+        />
+      </app-tab>
+
+      <app-tab tabTitle="Technical Details">
+        <app-accordion
+          title="Normalizations"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Scheduling"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Native FHIR Query"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Census Acquisition"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+        <app-accordion
+          title="Query Plans"
+          [isExpanded]="false"
+        >
+          <p><em>Content to come...</em></p>
+        </app-accordion>
+
+      </app-tab>
+    </app-tab-container>
   </div>
 </app-section>
 

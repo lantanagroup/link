@@ -13,12 +13,12 @@
 
     <properties>
         <spring.boot.core>5.3.7</spring.boot.core>
-        <spring.boot.version>5.3.9.RELEASE</spring.boot.version>
+        <spring.boot.version>5.5.7</spring.boot.version>
         <spring.boot.starter.version>2.5.4</spring.boot.starter.version>
         <jetty.version>9.4.43.v20210629</jetty.version>
         <lombok.version>1.18.22</lombok.version>
         <mockito.version>3.12.4</mockito.version>
-        <hapi.lib.version>6.2.0</hapi.lib.version>
+        <hapi.lib.version>6.6.2</hapi.lib.version>
         <saxon.version>9.9.1-5</saxon.version>
         <junit.version>4.13.2</junit.version>
     </properties>

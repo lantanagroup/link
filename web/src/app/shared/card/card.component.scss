@@ -14,19 +14,19 @@
 
   &--alt {
     .card__header {
-      background: $gray-200;
+      background: $gray-700;
     }
 
     .card__title {
-      font-size: 1rem !important;
-      font-weight: $font-weight-medium;
-      letter-spacing: 0.04em;
+      font-size: 0.875rem !important;
+      font-weight: $font-weight-bold;
+      letter-spacing: 0.06em;
       line-height: 1.625em;
     }
   }
 
   &__header {
-    background: $blue-700;
+    background: $gray-800;
     > * {
       padding: 0.5rem 1.5rem;
     }
@@ -59,7 +59,7 @@
     
     &--inProgress {
       &::after {
-        background: $in-progress;
+        background: $gray-400;
       }
     }
   }
@@ -70,9 +70,6 @@
 
   &__title {
     color: $white;
-    font-size: 1.25rem !important;
-    font-weight: $font-weight-normal;
-    letter-spacing: 0.13em;
     margin: 0;
   }
 }
