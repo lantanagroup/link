@@ -82,6 +82,10 @@ public class FhirBundlerTests {
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);
 
     List<PatientMeasureReport> pmrs = List.of(this.getPatientMeasureReport(0), this.getPatientMeasureReport(1), this.getPatientMeasureReport(2));
+    for (PatientMeasureReport pmr : pmrs) {
+      MeasureReport mr = pmr.getMeasureReport();
+      when(tenantService.getPatientMeasureReport(mr.getIdPart())).thenReturn(pmr);
+    }
     when(tenantService.getPatientMeasureReports(any())).thenReturn(pmrs);
     when(tenantService.getPatientMeasureReports(any(), any())).thenReturn(pmrs);
 
