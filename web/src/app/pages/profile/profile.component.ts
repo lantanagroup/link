@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { jwtDecode } from 'jwt-decode';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ButtonComponent } from 'src/app/shared/button/button.component';
@@ -18,7 +19,8 @@ import { ProfileApiService } from 'src/services/api/profile/profile-api.service'
 })
 export class ProfileComponent {
 
-  currentUserEmail: string | null = null
+  accessToken: string | null = null
+  apiUserData: ProfileModel | null = null
 
   userData: ProfileModel = {
     name: '',
@@ -33,14 +35,21 @@ export class ProfileComponent {
 
   async ngOnInit() {
     // get current email from session storage
-    this.currentUserEmail = sessionStorage.getItem('user_email')
+    this.accessToken = sessionStorage.getItem('access_token')
 
-    if(this.currentUserEmail) {
-      // make api call
+    if(this.accessToken) {
+      // Decode the access token
+      const decodedToken: any = jwtDecode(this.accessToken)
+  
+      // Extract the email and save it to the session storage
+      this.userData.email = decodedToken?.email
+      this.userData.name = decodedToken?.name
+      
       try {
-        this.userData = await this.profileApiService.fetchProfileData(this.currentUserEmail)
+        this.apiUserData = await this.profileApiService.fetchProfileData(this.userData?.email)
+        this.userData.id = this.apiUserData.id
       } catch (error) {
-        console.error('Error loading profile data:', error)
+        console.error('Error fetching API user data:', error)
       }
     }
   }

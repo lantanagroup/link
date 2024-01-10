@@ -36,7 +36,6 @@ export class UpdatePasswordComponent {
   constructor(private fb: FormBuilder, private toastService: ToastService, private router: Router) {}
 
   updatePasswordForm = new FormGroup({
-    currentPassword: new FormControl('', [Validators.required]),
     newPassword: new FormControl('', [Validators.required]),
     confirmPassword: new FormControl('', [Validators.required])
   })
