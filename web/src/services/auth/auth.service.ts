@@ -90,7 +90,6 @@ export class AuthService {
         sessionStorage.setItem('refresh_token', response.refresh_token);
         sessionStorage.setItem('expires_in', JSON.stringify(new Date().getTime() + (Number(response.expires_in) * 1000)));
         sessionStorage.setItem('id_token', response.id_token);
-
       })
     );
   }

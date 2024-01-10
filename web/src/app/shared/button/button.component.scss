@@ -5,16 +5,19 @@
 
 .btn {
   @include nav();
-  align-items: center;
   background: $blue;
   border: 2px solid $blue;
   border-radius: 0;
   color: $blue-100;
-  display: flex;
-  gap: 0.5rem;
   letter-spacing: 0.16em;
   padding: calc(#{$spacer} * 0.5) calc(#{$spacer} * 0.75);
   width: auto;
+
+  &__inner {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
 
   svg path {
     color: $blue-100;
