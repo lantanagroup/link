@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import static org.mockito.Mockito.*;
 
 public class FhirBundlerTests {
+
   private int patientMeasureReportCount = 0;
 
   private <T extends Resource> T deserializeResource(String resourcePath, Class<T> clazz) {

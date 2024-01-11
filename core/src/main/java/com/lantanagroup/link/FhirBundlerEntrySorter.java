@@ -4,19 +4,19 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class FhirBundlerEntrySorter {
   private static final Logger logger = LoggerFactory.getLogger(FhirBundlerEntrySorter.class);
 
   private static List<String> getPatientIds(Bundle bundle) {
-    return bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.Patient))
-            .map(e -> e.getResource().getIdElement().getIdPart())
-            .collect(Collectors.toList());
+    List<String> patientIds = new ArrayList<>();
+    for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
+      if (e.getResource().getResourceType().equals(ResourceType.Patient)) {
+        patientIds.add(e.getResource().getIdElement().getIdPart());
+      }
+    }
+    return patientIds;
   }
 
   private static Bundle.BundleEntryComponent getLinkOrganization(Bundle bundle) {
@@ -61,15 +61,21 @@ public class FhirBundlerEntrySorter {
             .orElse(null);
   }
 
-  private static List<Bundle.BundleEntryComponent> getRelatedPatientResources(Bundle bundle, String patientId) {
-    return bundle.getEntry().stream()
-            .filter(e -> isResourceRelatedToPatient(e.getResource(), patientId))
-            .collect(Collectors.toList());
-  }
-
   public static void sort(Bundle bundle) {
     logger.info("Sorting bundle");
     List<Bundle.BundleEntryComponent> newEntriesList = new ArrayList<>();
+    HashMap<String, List<Bundle.BundleEntryComponent>> patientResources = new HashMap<>();
+
+    for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
+      String patientReference = getPatientReference(e.getResource());
+      if (patientReference != null) {
+        String patientId = patientReference.replace("Patient/", "");
+        if (!patientResources.containsKey(patientId)) {
+          patientResources.put(patientId, new ArrayList<>());
+        }
+        patientResources.get(patientId).add(e);
+      }
+    }
 
     List<String> patientIds = getPatientIds(bundle);
     Bundle.BundleEntryComponent organization = getLinkOrganization(bundle);
@@ -102,17 +108,16 @@ public class FhirBundlerEntrySorter {
     }
 
     logger.info("Adding aggregate measure reports");
-    List<Bundle.BundleEntryComponent> aggregateMeasureReports = bundle.getEntry().stream()
+    bundle.getEntry().stream()
             .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST))
             .sorted(new ResourceComparator())
-            .collect(Collectors.toList());
-    newEntriesList.addAll(aggregateMeasureReports);
+            .forEach(newEntriesList::add);
 
     // Loop through each patient and add the patients resources in the following order:
     // MeasureReport, Patient, All other resources sorted by resourceType/id
     for (String patientId : patientIds) {
       logger.debug("Adding patient resources: {}", patientId);
-      List<Bundle.BundleEntryComponent> relatedPatientResources = getRelatedPatientResources(bundle, patientId);
+      List<Bundle.BundleEntryComponent> relatedPatientResources = patientResources.get(patientId);
       Bundle.BundleEntryComponent indMeasureReport = relatedPatientResources.stream()
               .filter(r -> r.getResource().getResourceType().equals(ResourceType.MeasureReport))
               .findFirst()
@@ -134,20 +139,23 @@ public class FhirBundlerEntrySorter {
       newEntriesList.add(patient);
 
       // All other resources are next, sorted by resourceType/id
-      List<Bundle.BundleEntryComponent> otherPatientResources = relatedPatientResources.stream()
+      relatedPatientResources.stream()
               .filter(r -> !r.getResource().getResourceType().equals(ResourceType.MeasureReport) && !r.getResource().getResourceType().equals(ResourceType.Patient))
               .sorted(new ResourceComparator())
-              .collect(Collectors.toList());
-      newEntriesList.addAll(otherPatientResources);
+              .forEach(newEntriesList::add);
     }
 
     // Get all resources not already in the bundle
     logger.info("Adding remaining resources");
-    List<Bundle.BundleEntryComponent> otherNonPatientResources = bundle.getEntry().stream()
-            .filter(r -> !newEntriesList.contains(r))
+    HashSet<String> newEntryReferences = new HashSet<>();
+    for (Bundle.BundleEntryComponent e : newEntriesList) {
+      newEntryReferences.add(e.getResource().getResourceType().toString() + "/" + e.getResource().getIdElement().getIdPart());
+    }
+
+    bundle.getEntry().stream()
+            .filter(r -> !newEntryReferences.contains(r.getResource().getResourceType().toString() + "/" + r.getResource().getIdElement().getIdPart()))
             .sorted(new ResourceComparator())
-            .collect(Collectors.toList());
-    newEntriesList.addAll(otherNonPatientResources);
+            .forEach(newEntriesList::add);
 
     // Clear the bundle entries and add the sorted entries
     logger.info("Replacing entries");
@@ -158,7 +166,7 @@ public class FhirBundlerEntrySorter {
   }
 
   private static boolean isReferenceToPatient(Reference reference, String patientId) {
-    return reference.hasReference() && reference.getReference().equals("Patient/" + patientId);
+    return reference.getReference() != null && reference.getReference().equals("Patient/" + patientId);
   }
 
   /**
@@ -169,105 +177,116 @@ public class FhirBundlerEntrySorter {
    * @return True if the resource is related to the patient
    */
   private static boolean isResourceRelatedToPatient(Resource resource, String patientId) {
+    String patientReference = getPatientReference(resource);
+    return patientReference != null && patientReference.equals("Patient/" + patientId);
+  }
+
+  /**
+   * Returns patient's reference of the related resource
+   *
+   * @param resource The resource to check
+   * @return The patient's reference of the related resource, or null if resource or subject is not related to a patient or is null
+   */
+  private static String getPatientReference(Resource resource) {
     switch (resource.getResourceType()) {
       case Patient:
-        return resource.getIdElement().getIdPart().equals(patientId);
+        return resource.getIdElement().getIdPart();
       case Encounter:
         Encounter encounter = (Encounter) resource;
-        return isReferenceToPatient(encounter.getSubject(), patientId);
+        return (encounter.getSubject() != null) ? encounter.getSubject().getReference() : null;
       case Observation:
         Observation observation = (Observation) resource;
-        return isReferenceToPatient(observation.getSubject(), patientId);
+        return (observation.getSubject() != null) ? observation.getSubject().getReference() : null;
       case MedicationRequest:
         MedicationRequest medicationRequest = (MedicationRequest) resource;
-        return isReferenceToPatient(medicationRequest.getSubject(), patientId);
+        return (medicationRequest.getSubject() != null) ? medicationRequest.getSubject().getReference() : null;
       case MedicationAdministration:
         MedicationAdministration medicationAdministration = (MedicationAdministration) resource;
-        return isReferenceToPatient(medicationAdministration.getSubject(), patientId);
+        return (medicationAdministration.getSubject() != null) ? medicationAdministration.getSubject().getReference() : null;
       case MedicationDispense:
         MedicationDispense medicationDispense = (MedicationDispense) resource;
-        return isReferenceToPatient(medicationDispense.getSubject(), patientId);
+        return (medicationDispense.getSubject() != null) ? medicationDispense.getSubject().getReference() : null;
       case MedicationStatement:
         MedicationStatement medicationStatement = (MedicationStatement) resource;
-        return isReferenceToPatient(medicationStatement.getSubject(), patientId);
+        return (medicationStatement.getSubject() != null) ? medicationStatement.getSubject().getReference() : null;
       case Condition:
         Condition condition = (Condition) resource;
-        return isReferenceToPatient(condition.getSubject(), patientId);
+        return (condition.getSubject() != null) ? condition.getSubject().getReference() : null;
       case Procedure:
         Procedure procedure = (Procedure) resource;
-        return isReferenceToPatient(procedure.getSubject(), patientId);
+        return (procedure.getSubject() != null) ? procedure.getSubject().getReference() : null;
       case Immunization:
         Immunization immunization = (Immunization) resource;
-        return isReferenceToPatient(immunization.getPatient(), patientId);
+        return (immunization.getPatient() != null) ? immunization.getPatient().getReference() : null;
       case DiagnosticReport:
         DiagnosticReport diagnosticReport = (DiagnosticReport) resource;
-        return isReferenceToPatient(diagnosticReport.getSubject(), patientId);
+        return (diagnosticReport.getSubject() != null) ? diagnosticReport.getSubject().getReference() : null;
       case DocumentReference:
         DocumentReference documentReference = (DocumentReference) resource;
-        return isReferenceToPatient(documentReference.getSubject(), patientId);
+        return (documentReference.getSubject() != null) ? documentReference.getSubject().getReference() : null;
       case List:
         ListResource listResource = (ListResource) resource;
-        return isReferenceToPatient(listResource.getSubject(), patientId);
+        return (listResource.getSubject() != null) ? listResource.getSubject().getReference() : null;
       case MeasureReport:
         MeasureReport measureReport = (MeasureReport) resource;
-        return isReferenceToPatient(measureReport.getSubject(), patientId);
+        return (measureReport.getSubject() != null) ? measureReport.getSubject().getReference() : null;
       case RiskAssessment:
         RiskAssessment riskAssessment = (RiskAssessment) resource;
-        return isReferenceToPatient(riskAssessment.getSubject(), patientId);
+        return (riskAssessment.getSubject() != null) ? riskAssessment.getSubject().getReference() : null;
       case CarePlan:
         CarePlan carePlan = (CarePlan) resource;
-        return isReferenceToPatient(carePlan.getSubject(), patientId);
+        return (carePlan.getSubject() != null) ? carePlan.getSubject().getReference() : null;
       case Goal:
         Goal goal = (Goal) resource;
-        return isReferenceToPatient(goal.getSubject(), patientId);
+        return (goal.getSubject() != null) ? goal.getSubject().getReference() : null;
       case ServiceRequest:
         ServiceRequest serviceRequest = (ServiceRequest) resource;
-        return isReferenceToPatient(serviceRequest.getSubject(), patientId);
+        return (serviceRequest.getSubject() != null) ? serviceRequest.getSubject().getReference() : null;
       case Communication:
         Communication communication = (Communication) resource;
-        return isReferenceToPatient(communication.getSubject(), patientId);
+        return (communication.getSubject() != null) ? communication.getSubject().getReference() : null;
       case CommunicationRequest:
         CommunicationRequest communicationRequest = (CommunicationRequest) resource;
-        return isReferenceToPatient(communicationRequest.getSubject(), patientId);
+        return (communicationRequest.getSubject() != null) ? communicationRequest.getSubject().getReference() : null;
       case DeviceRequest:
         DeviceRequest deviceRequest = (DeviceRequest) resource;
-        return isReferenceToPatient(deviceRequest.getSubject(), patientId);
+        return (deviceRequest.getSubject() != null) ? deviceRequest.getSubject().getReference() : null;
       case DeviceUseStatement:
         DeviceUseStatement deviceUseStatement = (DeviceUseStatement) resource;
-        return isReferenceToPatient(deviceUseStatement.getSubject(), patientId);
+        return (deviceUseStatement.getSubject() != null) ? deviceUseStatement.getSubject().getReference() : null;
       case Flag:
         Flag flag = (Flag) resource;
-        return isReferenceToPatient(flag.getSubject(), patientId);
+        return (flag.getSubject() != null) ? flag.getSubject().getReference() : null;
       case FamilyMemberHistory:
         FamilyMemberHistory familyMemberHistory = (FamilyMemberHistory) resource;
-        return isReferenceToPatient(familyMemberHistory.getPatient(), patientId);
+        return (familyMemberHistory.getPatient() != null) ? familyMemberHistory.getPatient().getReference() : null;
       case ClinicalImpression:
         ClinicalImpression clinicalImpression = (ClinicalImpression) resource;
-        return isReferenceToPatient(clinicalImpression.getSubject(), patientId);
+        return (clinicalImpression.getSubject() != null) ? clinicalImpression.getSubject().getReference() : null;
       case Consent:
         Consent consent = (Consent) resource;
-        return isReferenceToPatient(consent.getPatient(), patientId);
+        return (consent.getPatient() != null) ? consent.getPatient().getReference() : null;
       case DetectedIssue:
         DetectedIssue detectedIssue = (DetectedIssue) resource;
-        return isReferenceToPatient(detectedIssue.getPatient(), patientId);
+        return (detectedIssue.getPatient() != null) ? detectedIssue.getPatient().getReference() : null;
       case NutritionOrder:
         NutritionOrder nutritionOrder = (NutritionOrder) resource;
-        return isReferenceToPatient(nutritionOrder.getPatient(), patientId);
+        return (nutritionOrder.getPatient() != null) ? nutritionOrder.getPatient().getReference() : null;
       case Specimen:
         Specimen specimen = (Specimen) resource;
-        return isReferenceToPatient(specimen.getSubject(), patientId);
+        return (specimen.getSubject() != null) ? specimen.getSubject().getReference() : null;
       case BodyStructure:
         BodyStructure bodyStructure = (BodyStructure) resource;
-        return isReferenceToPatient(bodyStructure.getPatient(), patientId);
+        return (bodyStructure.getPatient() != null) ? bodyStructure.getPatient().getReference() : null;
       case ImagingStudy:
         ImagingStudy imagingStudy = (ImagingStudy) resource;
-        return isReferenceToPatient(imagingStudy.getSubject(), patientId);
+        return (imagingStudy.getSubject() != null) ? imagingStudy.getSubject().getReference() : null;
       case Media:
         Media media = (Media) resource;
-        return isReferenceToPatient(media.getSubject(), patientId);
+        return (media.getSubject() != null) ? media.getSubject().getReference() : null;
     }
 
-    return false;
+    return null;
   }
 
   static class ResourceComparator implements Comparator<Bundle.BundleEntryComponent> {
