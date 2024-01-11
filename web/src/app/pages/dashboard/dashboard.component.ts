@@ -39,6 +39,9 @@ export class DashboardComponent {
     this.completedDtOptions = this.calculateDtOptions(completedData);
     this.failedDtOptions = this.calculateDtOptions(failedData);
     this.pendingDtOptions = this.calculateDtOptions(pendingData);
+
+
+    console.log('sampledata', this.completedDtOptions)
   }
 
   // This method accepts data and calculates the dataTable options

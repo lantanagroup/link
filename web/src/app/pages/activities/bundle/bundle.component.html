@@ -95,17 +95,20 @@
           [hasPadding]="true"
         >
           <div class="row">
-            <div class="col col-6 col-md-4" *ngFor="let normalization of bundleDetails?.normalizations">
-              <app-mini-content [title]="normalization.name">
-                <p>{{ normalization.value }}</p>
+            <div class="col col-6 col-md-4" *ngFor="let methods of bundleDetails?.normalizations?.methods">
+              <app-mini-content [title]="methods.name">
+                <p>{{ methods.value }}</p>
               </app-mini-content>
             </div>
           </div>
         </app-card>
 
-        <app-table
-          tableTitle="Normalizations: Details"
-        />
+        <div class="mt-4">
+          <app-table
+            tableTitle="Normalizations: Details"
+            [dtOptions]="dtOptions"
+          />
+        </div>
       </app-tab>
 
       <app-tab tabTitle="Bundle Data">

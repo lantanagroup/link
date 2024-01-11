@@ -6,7 +6,6 @@ import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { CardComponent } from 'src/app/shared/card/card.component';
 import { ChartDatapoint, ChartDataModel } from 'src/app/shared/interfaces/chart.model';
-import { TimestampToSeconds, SecondsToTimestamp } from 'src/app/helpers/GlobalPipes.pipe';
 // placeholder data
 import { errorHistory, reportGenerationCurrent, reportGenerationHistory, activeTenantCurrent, activeTenantHistory } from 'src/app/helpers/SystemPerformanceHelper';
 
@@ -88,22 +87,6 @@ export class SystemPerformanceComponent {
   }
 
   secondsToTimestamp(value: any): string {
-
-    const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
-
-    const hours = Math.floor(actualValue / 3600),
-          minutes = Math.floor((actualValue % 3600) / 60),
-          seconds = actualValue % 60
-
-    const paddedHours = String(hours).padStart(2, '0'),
-          paddedMinutes = String(minutes).padStart(2, '0'),
-          paddedSeconds = String(seconds).padStart(2, '0')
-
-    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
-  }
-
-  specificSecondsToTimestamp(value: any): string {
-    console.log('value', value)
 
     const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
 

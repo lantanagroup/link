@@ -163,6 +163,10 @@ table.dataTable {
       padding-left: 2.5rem;
     }
 
+    &.sorting_disabled {
+      padding-left: 0.75rem;
+    }
+
     // sorting
     &.sorting {
       position: relative;
