@@ -18,50 +18,33 @@ import { calculatePeriodLength, generateRandomData, getPeriodData, getSubmission
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
+import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+
+interface Normalization {
+  name: string,
+  value: string
+}
 
 @Component({
     selector: 'app-facility',
     standalone: true,
     templateUrl: './facility.component.html',
     styleUrls: ['./facility.component.scss'],
-    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent]
+    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent, PascalCaseToSpace]
 })
 export class FacilityComponent {
   facilityId: string | null = null
   facilityDetails: any = null;
   isFacilityActivityTableLoaded = false;
+  facilityNormalizations: Normalization[] = []
 
   dtOptions: DataTables.Settings = {};
-  // ! Removing - may come back in V2
-  // dtFilters: TableFilter[] = [
-  //   {
-  //     name: 'Sort:',
-  //     options: [
-  //       {
-  //         label: 'ASC',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'DESC',
-  //         value: false
-  //       },
-  //       {
-  //         label: 'Newest First',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'Oldest First',
-  //         value: false
-  //       }
-  //     ]
-  //   }
-  // ];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private facilitiesApiService: FacilitiesApiService,
-    private reportApiService: ReportApiService,
+    private reportApiService: ReportApiService
   ) { }
 
   async ngOnInit() {
@@ -81,6 +64,8 @@ export class FacilityComponent {
     try {
       const tenantDetail = await this.facilitiesApiService.fetchFacilityById(id);
       this.facilityDetails = tenantDetail;
+      this.facilityNormalizations = this.generateNormalizations(tenantDetail.events.afterPatientDataQuery)
+      console.log('facility details:', this.facilityDetails)
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
@@ -105,6 +90,25 @@ export class FacilityComponent {
       : '/facilities/add-facility';
 
     return { url: url };
+  }
+
+  generateNormalizations(data: string[]): Normalization[] {
+    const displayKeys = [
+      'CodeSystemCleanup',
+      'ContainedResouceCleanup',
+      'CopyLocationToIdentifierType',
+      'EncounterStatusTransformer',
+      'FixPeriodDates',
+      'FixResourceId',
+      'PatientDataResourceFilter'
+    ]
+
+    const normalizations = displayKeys.map(key => {
+      const found = data.some(item => item.includes(key))
+      return { name: key, value: found ? 'Yes' : 'No'}
+    })
+
+    return normalizations
   }
 
   calculateDtOptions(data: any): DataTables.Settings {

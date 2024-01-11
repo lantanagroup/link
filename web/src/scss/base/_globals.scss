@@ -70,3 +70,13 @@ body {
     background: $red;
   }
 }
+
+// Repeated blocks
+.repeater {
+  border-bottom: 2px solid $gray-900;
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

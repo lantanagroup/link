@@ -11,6 +11,21 @@ export class IdFromTitlePipe implements PipeTransform {
   }
 }
 
+// PascalCase to not 
+@Pipe({
+  name: 'pascalCaseToSpace',
+  standalone: true
+})
+export class PascalCaseToSpace implements PipeTransform {
+  transform(value: string): string {
+    if (!value) {
+      return value;
+    }
+
+    return value.replace(/([a-z])([A-Z][a-z])/g, '$1 $2').replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+  }
+}
+
 // Timestamp to Seconds
 @Pipe({
   name: 'timestampToSeconds',
