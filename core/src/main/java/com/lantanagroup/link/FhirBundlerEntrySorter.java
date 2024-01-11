@@ -51,14 +51,14 @@ public class FhirBundlerEntrySorter {
             .orElse(null);
   }
 
-  private static Bundle.BundleEntryComponent getLinkCensusList(Bundle bundle) {
+  private static List<Bundle.BundleEntryComponent> getLinkCensusList(Bundle bundle) {
     return bundle.getEntry().stream()
             .filter(e ->
                     e.getResource().getResourceType().equals(ResourceType.List) &&
                             e.getResource().getMeta().getProfile().stream()
                                     .anyMatch(p -> p.getValue().equals(Constants.CensusProfileUrl)))
-            .findFirst()
-            .orElse(null);
+            .sorted(new ResourceComparator())
+            .collect(Collectors.toList());
   }
 
   public static void sort(Bundle bundle) {
@@ -80,7 +80,7 @@ public class FhirBundlerEntrySorter {
     List<String> patientIds = getPatientIds(bundle);
     Bundle.BundleEntryComponent organization = getLinkOrganization(bundle);
     Bundle.BundleEntryComponent device = getLinkDevice(bundle);
-    Bundle.BundleEntryComponent censusList = getLinkCensusList(bundle);
+    List<Bundle.BundleEntryComponent> censusLists = getLinkCensusList(bundle);
     Bundle.BundleEntryComponent queryPlanLibrary = getLinkQueryPlanLibrary(bundle);
 
     // Link Organization is first
@@ -96,9 +96,9 @@ public class FhirBundlerEntrySorter {
     }
 
     // Link Census List is next
-    if (censusList != null) {
+    if (!censusLists.isEmpty()) {
       logger.info("Adding census");
-      newEntriesList.add(censusList);
+      newEntriesList.addAll(censusLists);
     }
 
     // Link DocumentReference is next
