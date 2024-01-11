@@ -102,4 +102,20 @@ export class SystemPerformanceComponent {
     return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
   }
 
+  specificSecondsToTimestamp(value: any): string {
+    console.log('value', value)
+
+    const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
+
+    const hours = Math.floor(actualValue / 3600),
+          minutes = Math.floor((actualValue % 3600) / 60),
+          seconds = actualValue % 60
+
+    const paddedHours = String(hours).padStart(2, '0'),
+          paddedMinutes = String(minutes).padStart(2, '0'),
+          paddedSeconds = String(seconds).padStart(2, '0')
+
+    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
+  }
+
 }
