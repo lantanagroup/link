@@ -1,7 +1,6 @@
 /* button.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .btn {
   @include nav();
@@ -10,7 +9,7 @@
   border-radius: 0;
   color: $blue-100;
   letter-spacing: 0.16em;
-  padding: calc(#{$spacer} * 0.5) calc(#{$spacer} * 0.75);
+  padding: 0.5rem 0.75rem;
   width: auto;
 
   &__inner {

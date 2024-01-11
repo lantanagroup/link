@@ -1,7 +1,6 @@
 /* metric.component.scss */ 
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 
 .metric {
@@ -30,6 +29,7 @@
   }
 
   &__footer {
+    color: $gray-800;
     position: relative;
 
     &--left,
@@ -44,14 +44,14 @@
     }
 
     &::after {
-      background: $gray-500;
+      background: $gray-700;
       bottom: 0;
       content: '';
       display: block;
-      height: 100%;
+      height: calc(100% - 1rem);
       left: 50%;
       position: absolute;
-      top: 0;
+      top: 0.5rem;
       transform: translateX(-50%);
       width: 0.125rem;
     }

@@ -67,6 +67,14 @@ $link-color: $blue-500;
 $link-decoration: none;
 $link-hover-color: $blue-700;
 
+$font-weight-lighter:         200;
+$font-weight-light:           300;
+$font-weight-normal:          400;
+$font-weight-medium:          500;
+$font-weight-semibold:        600;
+$font-weight-bold:            700;
+$font-weight-bolder:          800;
+
 // * Mixins //
 @mixin body-font() {
   font-family: $font-family-sans-serif;
@@ -161,6 +169,8 @@ $link-hover-color: $blue-700;
 // Layout
 /****************/
 
+$spacer: 1rem;
+
 $grid-gutter-width: 1.25rem;
 $container-padding-x: calc(3 * #{$grid-gutter-width});
 
@@ -201,3 +211,9 @@ $toast-box-shadow: $box-shadow-sm;
 $toast-header-color: $black;
 $toast-header-border-color: $white;
 $toast-header-border-color: $gray-100;
+
+/****************/
+// Other
+/****************/
+
+$transition-base: 0.3s ease-in-out all;

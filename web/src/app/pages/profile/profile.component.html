@@ -24,7 +24,11 @@
       [hasPadding]="true"
     >
       <div class="row">
-        <div class="col col-sm-6 col-md-4" *ngIf="userData.organization || userData.role || userData.department">
+        <div class="col col-sm-6 col-md-4">
+          <app-mini-content title="Name" *ngIf="userData.name">
+            <p>{{ userData.name }}</p>
+          </app-mini-content>
+
           <app-mini-content title="Organization" *ngIf="userData.organization">
             <p>{{ userData.organization }}</p>
           </app-mini-content>

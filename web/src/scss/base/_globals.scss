@@ -1,11 +1,6 @@
 /* base/_globals.scss */
 
-@import 
-  '../customize-bootstrap',
-  '../../../node_modules/bootstrap/scss/functions',
-  '../../../node_modules/bootstrap/scss/variables',
-  '../../../node_modules/bootstrap/scss/mixins',
-  '../../../node_modules/bootstrap/scss/utilities';
+@import '../customize-bootstrap';
 
 body,
 html {
