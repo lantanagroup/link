@@ -18,12 +18,12 @@ export class MetricComponent {
   @Input() changeValue: string = ''; // The rate of value changed
   @Input() changeWindow?: string = 'month'; // the duration of value changed
   @Input() isValueUp: boolean = true; // This will change the path of image
+  @Input() isUpGood: boolean = true;
   @Input() data: ChartDatapoint[] = [];
-  @Input() isGood?: boolean = true; // this is temporary
 
   getArrowIconPath(): string {
     let iconPath = '../../../assets/icons/';
-    if(this.isGood) {
+    if(this.isUpGood === this.isValueUp) {
       iconPath += 'arrow-up-fat-green.svg';
     } else {
       iconPath += 'arrow-up-fat-red.svg';
@@ -32,6 +32,7 @@ export class MetricComponent {
   }
 
   // chart render
+  graphColor = this.isUpGood === this.isValueUp ? '#497d0c' : '#af4448';
 
   // options
   view: [number, number] = [100, 60];
@@ -41,12 +42,14 @@ export class MetricComponent {
   colorScheme: any = {
     name: 'success',
     selectable: false,
-    domain: ['#497d0c']
+    domain: [this.graphColor]
   };
 
   miniChartData: ChartDataModel[] = [];
 
   ngOnInit() {
+    this.colorScheme.domain = this.isUpGood === this.isValueUp ? ['#497d0c'] : ['#af4448'];
+
     this.miniChartData = this.setUpChartData()
   }
 

@@ -32,29 +32,30 @@ export class FacilityComponent {
   isFacilityActivityTableLoaded = false;
 
   dtOptions: DataTables.Settings = {};
-  dtFilters: TableFilter[] = [
-    {
-      name: 'Sort:',
-      options: [
-        {
-          label: 'ASC',
-          value: true
-        },
-        {
-          label: 'DESC',
-          value: false
-        },
-        {
-          label: 'Newest First',
-          value: true
-        },
-        {
-          label: 'Oldest First',
-          value: false
-        }
-      ]
-    }
-  ];
+  // ! Removing - may come back in V2
+  // dtFilters: TableFilter[] = [
+  //   {
+  //     name: 'Sort:',
+  //     options: [
+  //       {
+  //         label: 'ASC',
+  //         value: true
+  //       },
+  //       {
+  //         label: 'DESC',
+  //         value: false
+  //       },
+  //       {
+  //         label: 'Newest First',
+  //         value: true
+  //       },
+  //       {
+  //         label: 'Oldest First',
+  //         value: false
+  //       }
+  //     ]
+  //   }
+  // ];
 
   constructor(
     private route: ActivatedRoute,
@@ -194,7 +195,13 @@ export class FacilityComponent {
       },
       {
         title: 'Details',
-        data: 'Details'
+        data: 'Details',
+        render: function (data, type, row) {
+          if(row.Status === 'submitted') {
+            return `<a href="/activities/bundle/${row.FacilityId}/${row.Id}">${data}</a>`;
+          }
+          return data;
+        }
       },
       {
         title: 'Facility',

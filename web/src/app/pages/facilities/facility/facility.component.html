@@ -23,7 +23,7 @@
               </app-mini-content>
 
               <app-mini-content title="NHSN Org Id">
-                <p>{{ facilityDetails?.cdcOrgId }}</p>
+                <p *ngIf="facilityDetails.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
               </app-mini-content>
 
               <app-mini-content title="EHR Vendor">
@@ -31,8 +31,7 @@
               </app-mini-content>
 
               <app-mini-content title="FHIR API URL">
-                <p>{{ facilityDetails?.fhirQuery?.fhirServerBase ? facilityDetails?.fhirQuery?.fhirServerBase : 'n/a' }}</p>
-                <p></p>
+                <app-link *ngIf="facilityDetails?.fhirQuery?.fhirServerBase; else noData" [link]="{url: facilityDetails.fhirQuery.fhirServerBase, title: facilityDetails.fhirQuery.fhirServerBase}" />
               </app-mini-content>
             </app-card>
           </div>
@@ -100,7 +99,6 @@
           *ngIf="isFacilityActivityTableLoaded"
           [dtOptions]="dtOptions"
           tableTitle="Facility Activity"
-          [filters]="dtFilters"
         />
       </app-tab>
 
@@ -154,4 +152,8 @@
     <app-icon filePath="../../../assets/icons/edit.svg" />
     Edit Facility
   </app-button>
+</ng-template>
+
+<ng-template #noData>
+  <p>n/a</p>
 </ng-template>

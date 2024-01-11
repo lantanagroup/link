@@ -1,6 +1,25 @@
 <app-hero pageTitle="Activities"
 	size="md">
-	<em>Cards to come...</em>
+
+	<div class="row">
+		<div class="col col-md-6 col-lg-3" *ngFor="let card of activitiesData">
+			<app-card 
+				[title]="card.name"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric 
+					[mainValue]="card.highlight"
+					[subText]="card.subText"
+					[changeValue]="card.changeValue"
+					[isValueUp]="card.direction === 'up' ? true : false"
+					[isUpGood]="card.upGood"
+					[data]="card.series"
+				/>
+			</app-card>
+		</div>
+	</div>
 </app-hero>
 
 <app-section>
@@ -8,7 +27,7 @@
 			<app-table 
 				[dtOptions]="dtOptions"
 				tableTitle="Facility Activity"
-				[filters]="dtFilters"
+				[hasSearch]="dtSearchBar"
 			/>
 	</div>
 </app-section>

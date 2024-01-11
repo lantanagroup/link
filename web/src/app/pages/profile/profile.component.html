@@ -4,10 +4,12 @@
   <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between pt-4">
     <div>
       <h1 class="h2 text-white text-uppercase fw-bold">{{ userData.name }}</h1>
-      <h4 class="text-uppercase text-white mb-0">User ID: <strong>{{ userData.userId }}</strong></h4>
+      <h4 class="text-uppercase text-white mb-0">User ID: <strong>{{ userData.id }}</strong></h4>
     </div>
     <app-button
       variant="outline--reverse"
+      type="link"
+      [link]="{url: '/profile/'}"
     >
       <app-icon filePath="../../../assets/icons/view.svg" />
       Edit Profile
@@ -22,7 +24,7 @@
       [hasPadding]="true"
     >
       <div class="row">
-        <div class="col col-sm-6 col-md-4">
+        <div class="col col-sm-6 col-md-4" *ngIf="userData.organization || userData.role || userData.department">
           <app-mini-content title="Organization" *ngIf="userData.organization">
             <p>{{ userData.organization }}</p>
           </app-mini-content>
@@ -52,7 +54,8 @@
           </app-mini-content>
 
           <app-button
-            type="button"
+            type="link"
+            [link]="{url: '/profile/'}"
           >
             <app-icon filePath="../../../assets/icons/edit.svg" />
             Update Password
