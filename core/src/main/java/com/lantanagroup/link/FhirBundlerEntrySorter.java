@@ -71,10 +71,7 @@ public class FhirBundlerEntrySorter {
       String patientReference = getPatientReference(e.getResource());
       if (patientReference != null) {
         String patientId = patientReference.replace("Patient/", "");
-        if (!patientResources.containsKey(patientId)) {
-          patientResources.put(patientId, new ArrayList<>());
-        }
-        patientResources.get(patientId).add(e);
+        patientResources.computeIfAbsent(patientId, key -> new ArrayList<>()).add(e);
       }
     }
 
