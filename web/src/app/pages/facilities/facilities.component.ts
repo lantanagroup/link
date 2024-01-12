@@ -85,28 +85,13 @@ export class FacilitiesComponent implements OnInit {
       searching: false,
       scrollX: true,
       stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
-      columnDefs: [
-        {
-          targets: 2, // Details
-          createdCell: (cell, cellData) => {
-            if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('cell--initiated');
-            } else {
-              $(cell).addClass('cell--complete');
-            }
-          },
-          render: function (data, type, row) {
-            return `<a href="/activities/bundle/${row.FacilityId}/${row.LastSubmissionId}">Bundle<br>#${data}</a>`
-          }
-        },
-      ],
       columns: [
         {
           title: 'Facility Name',
           data: columnIdMap[0],
           orderable: true,
           render: function (data, type, row) {
-            return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
+            return `<a href="/facilities/facility/${row.FACILITY_ID}">${data}</a>`;
           }
         },
         {
@@ -117,7 +102,17 @@ export class FacilitiesComponent implements OnInit {
         {
           title: 'Details',
           data: columnIdMap[2],
-          orderable: false
+          orderable: false,
+          createdCell: (cell, cellData) => {
+            if (cellData.toLowerCase().includes('progress')) {
+              $(cell).addClass('cell--initiated');
+            } else {
+              $(cell).addClass('cell--complete');
+            }
+          },
+          render: function (data, type, row) {
+            return `<a href="/activities/bundle/${row.FACILITY_ID}/${row.DETAILS}">Bundle<br>#${data}</a>`
+          }
         },
         {
           title: 'Last Submission',
@@ -149,6 +144,7 @@ export class FacilitiesComponent implements OnInit {
 
     return tenantsData.map(td => {
       return {
+        FACILITY_ID: td.id,
         NAME: td.name,
         NHSN_ORG_ID: td.nhsnOrgId,
         DETAILS: td.lastSubmissionId,
