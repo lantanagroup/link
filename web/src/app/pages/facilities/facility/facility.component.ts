@@ -7,6 +7,7 @@ import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-
 import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
+import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
 import { CardComponent } from "../../../shared/card/card.component";
 import { TabComponent } from 'src/app/shared/tab/tab.component';
 import { TabContainerComponent } from 'src/app/shared/tab-container/tab-container.component';
@@ -18,50 +19,36 @@ import { calculatePeriodLength, generateRandomData, getPeriodData, getSubmission
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
+import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
+import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+
+interface Normalization {
+  name: string,
+  value: string
+}
 
 @Component({
     selector: 'app-facility',
     standalone: true,
     templateUrl: './facility.component.html',
     styleUrls: ['./facility.component.scss'],
-    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent]
+    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent, PascalCaseToSpace]
 })
 export class FacilityComponent {
   facilityId: string | null = null
   facilityDetails: any = null;
   isFacilityActivityTableLoaded = false;
+  facilityNormalizations: Normalization[] = []
+  facilityConceptMaps: TenantConceptMap[] = []
 
   dtOptions: DataTables.Settings = {};
-  // ! Removing - may come back in V2
-  // dtFilters: TableFilter[] = [
-  //   {
-  //     name: 'Sort:',
-  //     options: [
-  //       {
-  //         label: 'ASC',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'DESC',
-  //         value: false
-  //       },
-  //       {
-  //         label: 'Newest First',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'Oldest First',
-  //         value: false
-  //       }
-  //     ]
-  //   }
-  // ];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private facilitiesApiService: FacilitiesApiService,
-    private reportApiService: ReportApiService,
+    private globalApiService: GlobalApiService,
+    private reportApiService: ReportApiService
   ) { }
 
   async ngOnInit() {
@@ -71,16 +58,28 @@ export class FacilityComponent {
       if (this.facilityId) {
         this.GetFacilityDetails(this.facilityId);
         this.fetchDataForFacilityActivityTable(this.facilityId);
+        this.GetConceptMaps(this.facilityId)
       } else {
         this.router.navigate(['/facilities'])
       }
     })
   }
 
+  async GetConceptMaps(id: string) {
+    try {
+      const conceptMaps = await this.globalApiService.getContent(`${id}/conceptMap`)
+      this.facilityConceptMaps = conceptMaps
+    } catch (error) {
+      console.error('Error loading concept maps:', error)
+    }
+  }
+
   async GetFacilityDetails(id: string) {
     try {
       const tenantDetail = await this.facilitiesApiService.fetchFacilityById(id);
       this.facilityDetails = tenantDetail;
+      this.facilityNormalizations = this.generateNormalizations(tenantDetail.events.afterPatientDataQuery)
+      console.log('facility details:', this.facilityDetails)
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
@@ -105,6 +104,25 @@ export class FacilityComponent {
       : '/facilities/add-facility';
 
     return { url: url };
+  }
+
+  generateNormalizations(data: string[]): Normalization[] {
+    const displayKeys = [
+      'CodeSystemCleanup',
+      'ContainedResouceCleanup',
+      'CopyLocationToIdentifierType',
+      'EncounterStatusTransformer',
+      'FixPeriodDates',
+      'FixResourceId',
+      'PatientDataResourceFilter'
+    ]
+
+    const normalizations = displayKeys.map(key => {
+      const found = data.some(item => item.includes(key))
+      return { name: key, value: found ? 'Yes' : 'No'}
+    })
+
+    return normalizations
   }
 
   calculateDtOptions(data: any): DataTables.Settings {

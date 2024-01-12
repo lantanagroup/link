@@ -1,11 +1,6 @@
 /* base/_globals.scss */
 
-@import 
-  '../customize-bootstrap',
-  '../../../node_modules/bootstrap/scss/functions',
-  '../../../node_modules/bootstrap/scss/variables',
-  '../../../node_modules/bootstrap/scss/mixins',
-  '../../../node_modules/bootstrap/scss/utilities';
+@import '../customize-bootstrap';
 
 body,
 html {
@@ -73,5 +68,15 @@ body {
 
   &--failed {
     background: $red;
+  }
+}
+
+// Repeated blocks
+.repeater {
+  border-bottom: 2px solid $gray-900;
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
   }
 }

@@ -11,6 +11,8 @@ import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.c
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from 'src/app/shared/table/table.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
+/* dummy data */
+import { normalizationData } from 'src/app/helpers/ReportHelper';
 
 @Component({
   selector: 'app-bundle',
@@ -22,6 +24,7 @@ import { LinkComponent } from 'src/app/shared/link/link.component';
 export class BundleComponent {
   bundleId: string | null = '362574'
   tenantId: string | null = 'ehr-test'
+  dtOptions: DataTables.Settings = {}
 
   // purely placeholder
   bundleDetails: any = {
@@ -32,36 +35,39 @@ export class BundleComponent {
       facilityId: this.tenantId,
       cdcOrgId: '1234'
     },
-    normalizations: [
-      {
-        name: 'Code System Cleanup',
-        value: 'No'
-      },
-      {
-        name: 'Contained Resource Cleanup',
-        value: 'No'
-      },
-      {
-        name: 'Copy Location to Identifier Type',
-        value: 'No'
-      },
-      {
-        name: 'Encounter Status Transformer',
-        value: 'No'
-      },
-      {
-        name: 'Fixed Period Dates',
-        value: 'No'
-      },
-      {
-        name: 'Fix Resource Ids',
-        value: 'No'
-      },
-      {
-        name: 'Patient Data Resource Filter',
-        value: 'No'
-      }
-    ]
+    normalizations: {
+      methods: [
+        {
+          name: 'Code System Cleanup',
+          value: 'No'
+        },
+        {
+          name: 'Contained Resource Cleanup',
+          value: 'No'
+        },
+        {
+          name: 'Copy Location to Identifier Type',
+          value: 'No'
+        },
+        {
+          name: 'Encounter Status Transformer',
+          value: 'No'
+        },
+        {
+          name: 'Fixed Period Dates',
+          value: 'No'
+        },
+        {
+          name: 'Fix Resource Ids',
+          value: 'No'
+        },
+        {
+          name: 'Patient Data Resource Filter',
+          value: 'No'
+        }
+      ],
+      details: normalizationData
+    }
   }
 
   constructor(
@@ -73,6 +79,8 @@ export class BundleComponent {
     this.route.paramMap.subscribe(params => {
       this.bundleId = params.get('bundleId')
       this.tenantId = params.get('tenantId')
+
+      this.dtOptions = this.calculateDtOptions(this.bundleDetails.normalizations.details)
 
       if(this.bundleId && this.tenantId) {
         // todo : make API call
@@ -88,5 +96,64 @@ export class BundleComponent {
       : '/facilities/';
 
     return { url: url };
+  }
+
+  calculateDtOptions(data: any): DataTables.Settings {
+    // DataTable configuration
+    return {
+      data: data,
+      pageLength: 15,
+      lengthChange: false,
+      info: false,
+      searching: false,
+      stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
+      columnDefs: [
+        {
+          targets: 0, // Timestamp
+        },
+        {
+          targets: 1, // Column 2
+        },
+        {
+          targets: 2, // Column 3
+          createdCell: (cell, cellData) => {
+            $(cell).addClass('cell--complete');
+          },
+          orderable: false
+        },
+        {
+          targets: 3, // Column 4
+          render: function (data, type, row) {
+            return `<a href="#">${data}</a>`
+          }
+        },
+        {
+          targets: 4, // Column 5
+        }
+      ],
+      orderMulti: true,
+      columns: [
+        {
+          title: 'Timestamp',
+          data: 'Timestamp',
+        },
+        {
+          title: 'Column 2',
+          data: 'Column2',
+        },
+        {
+          title: 'Column 3',
+          data: 'Column3',
+        },
+        {
+          title: 'Column 4',
+          data: 'Column4',
+        },
+        {
+          title: 'Column 5',
+          data: 'Column5',
+        }
+      ]
+    }
   }
 }

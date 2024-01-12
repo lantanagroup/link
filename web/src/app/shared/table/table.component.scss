@@ -1,5 +1,4 @@
 @import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
         '../../../scss/abstracts';
 
 // hide default search bar
@@ -162,6 +161,10 @@ table.dataTable {
 
     &:first-child {
       padding-left: 2.5rem;
+    }
+
+    &.sorting_disabled {
+      padding-left: 0.75rem;
     }
 
     // sorting
