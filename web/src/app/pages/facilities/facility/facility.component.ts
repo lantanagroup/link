@@ -14,9 +14,7 @@ import { TabContainerComponent } from 'src/app/shared/tab-container/tab-containe
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { AccordionComponent } from 'src/app/shared/accordion/accordion.component';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
-import { TableFilter } from 'src/app/shared/interfaces/table.model';
-import { calculatePeriodLength, generateRandomData, getPeriodData, getSubmissionStatus, processMeasuresData } from 'src/app/helpers/ReportHelper';
-import { Report } from 'src/app/shared/interfaces/report.model';
+import { getPeriodData, getSubmissionStatus, processMeasuresData } from 'src/app/helpers/ReportHelper';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
 import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
