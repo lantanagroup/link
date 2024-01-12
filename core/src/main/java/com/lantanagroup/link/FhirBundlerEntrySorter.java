@@ -101,7 +101,7 @@ public class FhirBundlerEntrySorter {
               .forEachOrdered(newEntriesList::add);
     }
 
-    // Link DocumentReference is next
+    // Link Query Plan is next
     if (queryPlanLibrary != null) {
       logger.info("Adding query plan");
       newEntriesList.add(queryPlanLibrary);
