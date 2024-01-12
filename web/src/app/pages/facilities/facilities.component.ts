@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { from } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ButtonComponent } from 'src/app/shared/button/button.component';
@@ -11,6 +12,7 @@ import { Tenant } from 'src/app/shared/interfaces/tenant.model';
 import { TableFilter, SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+import { HttpParams } from '@angular/common/http';
 
 @Component({
   selector: 'app-facilities',
@@ -43,35 +45,47 @@ export class FacilitiesComponent implements OnInit {
 
   async LoadFacilitiesTableData() {
     try {
-      // const individualTenant = await this.facilitiesApiService.fetchFacilityById('ehr-test');
-      const tenants = await this.facilitiesApiService.fetchAllFacilities();
-      const transformedData = this.processDataForTable(tenants);
-      this.dtOptions = this.calculateDtOptions(transformedData);
+      this.dtOptions = this.calculateDtOptions();
       this.tableOptionsLoaded = true;
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
   }
 
-  calculateDtOptions(data: any): DataTables.Settings {
+  calculateDtOptions(data?: any): DataTables.Settings {
     // DataTable configuration
+    const columnIdMap = ['NAME', 'NHSN_ORG_ID', 'DETAILS', 'SUBMISSION_DATE', 'MEASURES'],
+          pageLength = 15
+
     return {
-      data: data,
-      pageLength: 15,
+      serverSide: true,
+      processing: true,
+      ajax: (dataTablesParameters: any, callback) => {
+        const page = Math.ceil(dataTablesParameters.start / pageLength) + 1
+
+        let order = dataTablesParameters.order[0],
+            orderBy = columnIdMap[order.column],
+            sortAscend = order.dir === 'asc'
+
+        let searchValue = dataTablesParameters.search.value
+
+        from(this.facilitiesApiService.ajaxFetchAllFacilities(page, orderBy, sortAscend, searchValue))
+          .subscribe(response => {
+            callback({
+              recordsTotal: response?.total,
+              recordsFiltered: response?.tenants.length,
+              data: this.processDataForTable(response?.tenants)
+            })
+          })
+      },
+      pageLength: pageLength,
       lengthChange: false,
       info: false,
+      orderMulti: true,
       searching: false,
       scrollX: true,
       stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
       columnDefs: [
-        {
-          targets: 0, // Facility
-          width: '172px'
-        },
-        {
-          targets: [1, 3], // Org Id, LastSubmission
-          width: '144px'
-        },
         {
           targets: 2, // Details
           createdCell: (cell, cellData) => {
@@ -86,31 +100,34 @@ export class FacilitiesComponent implements OnInit {
           }
         },
       ],
-      orderMulti: true,
       columns: [
         {
           title: 'Facility Name',
-          data: 'FacilityName',
+          data: columnIdMap[0],
+          orderable: true,
           render: function (data, type, row) {
-
             return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
           }
         },
         {
           title: 'NHSN Org Id',
-          data: 'NHSNOrgId',
+          data: columnIdMap[1],
+          orderable: true
         },
         {
           title: 'Details',
-          data: 'LastSubmissionId'
+          data: columnIdMap[2],
+          orderable: false
         },
         {
           title: 'Last Submission',
-          data: 'LastSubmission'
+          data: columnIdMap[3],
+          orderable: true
         },
         {
           title: 'Current Measures',
-          data: 'Measures',
+          data: columnIdMap[4],
+          orderable: false,
           render: function (data, type, row) {
             // Check if data is an array
             if (Array.isArray(data)) {
@@ -126,25 +143,20 @@ export class FacilitiesComponent implements OnInit {
   }
 
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
-  processDataForTable(tenantsData: Tenant[]) {
-    return tenantsData.map(td => {
-      const facilityId = td.id;
-      const lastSubmission = td.lastSubmissionDate;
-      const facilityName = td.name;
-      const nhsnOrgId = td.nhsnOrgId;
-      const lastSubmissionId = td.lastSubmissionId;
-      const measuresData = td.measures.map(m => {
-        const measure = this.pascalCaseToSpace.transform(m.shortName)
-        return measure.split(' ')[0]
-      });
+  processDataForTable(tenantsData: Tenant[] | undefined) {
+    if(!tenantsData) 
+      return
 
+    return tenantsData.map(td => {
       return {
-        FacilityId : facilityId,
-        FacilityName: facilityName,
-        NHSNOrgId: nhsnOrgId,
-        LastSubmissionId: lastSubmissionId,
-        LastSubmission: lastSubmission,
-        Measures: measuresData,
+        NAME: td.name,
+        NHSN_ORG_ID: td.nhsnOrgId,
+        DETAILS: td.lastSubmissionId,
+        SUBMISSION_DATE: td.lastSubmissionDate,
+        MEASURES: td.measures.map(m => {
+          const measure = this.pascalCaseToSpace.transform(m.shortName)
+          return measure.split(' ')[0]
+        })
       };
     });
   }
