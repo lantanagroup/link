@@ -50,7 +50,7 @@ export class FacilitiesComponent implements OnInit {
     }
   }
 
-  calculateDtOptions(data?: any): DataTables.Settings {
+  calculateDtOptions(): DataTables.Settings {
     // DataTable configuration
     const columnIdMap = ['NAME', 'NHSN_ORG_ID', 'DETAILS', 'SUBMISSION_DATE', 'MEASURES'],
           pageLength = 15

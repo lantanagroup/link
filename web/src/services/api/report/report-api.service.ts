@@ -11,7 +11,7 @@ export class ReportApiService {
   constructor(private dataService: DataService) { }
 
   // Fetches all the facilities data
-  async fetchAllReport(filters: ReportFilter = {}): Promise<any> {
+  async fetchAllReports(filters: ReportFilter = {}): Promise<any> {
     try {
       // Building the query string from the filters object
       const queryParams = new URLSearchParams();
