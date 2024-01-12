@@ -86,7 +86,7 @@ export class FacilityComponent {
   }
 
   async fetchDataForFacilityActivityTable(facilityId: string): Promise<void> {
-    this.reportApiService.fetchAllReport({ tenantId: facilityId })
+    this.reportApiService.fetchAllReports({ tenantId: facilityId })
       .then(reports => {
         const transformedData = this.transformData(reports);
         this.dtOptions = this.calculateDtOptions(transformedData);

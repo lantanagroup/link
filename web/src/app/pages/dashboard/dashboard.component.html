@@ -40,7 +40,7 @@
 </app-hero>
 
 <app-section>
-	<div class="container">
+	<div class="container dashboard-tables">
 
 		<app-section-heading
 			heading="Recent Activity"
@@ -57,48 +57,29 @@
 		</app-section-heading>
 
 		<div class="row">
-			<div class="col col-md-6 col-lg-4">
+			<div class="col col-md-6">
 				<app-card
 					title="Successful Submissions"
 					status="success"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-						<app-table 
-							[dtOptions]="completedDtOptions" 
-							variant="simple"
-						/>
-					</div>
+					<app-table 
+						[dtOptions]="completedDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
 
-			<div class="col col-md-6 col-lg-4">
-				<app-card
-					title="Failed Submissions"
-					status="failure"
-					titleAlign="center"
-				>
-					<div recent_activity_table__wrapper >
-						<app-table 
-							[dtOptions]="failedDtOptions" 
-							variant="simple"
-						/>
-					</div>
-				</app-card>
-			</div>
-
-			<div class="col col-md-6 col-lg-4">
+			<div class="col col-md-6">
 				<app-card
 					title="Submissions In Progress"
 					status="inProgress"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
 					<app-table 
 						[dtOptions]="pendingDtOptions" 
 						variant="simple"
 					/>
-				</div>
 				</app-card>
 			</div>
 
