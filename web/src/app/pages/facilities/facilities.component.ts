@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { from } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
 import { TableComponent } from 'src/app/shared/table/table.component';
-import { DataService } from 'src/services/api/data.service';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
-import { TableFilter, SearchBar } from 'src/app/shared/interfaces/table.model';
+import { SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
+import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-facilities',
@@ -19,32 +20,12 @@ import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api
   styleUrls: ['./facilities.component.scss']
 })
 export class FacilitiesComponent implements OnInit {
-  constructor(private facilitiesApiService: FacilitiesApiService) { }
+  constructor(
+    private facilitiesApiService: FacilitiesApiService
+  ) { }
+  private pascalCaseToSpace = new PascalCaseToSpace
   dtOptions: DataTables.Settings = {};
-  // ! Removing - may come back in V2
-  // dtFilters: TableFilter[] = [
-  //   {
-  //     name: 'Sort:',
-  //     options: [
-  //       {
-  //         label: 'ASC',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'DESC',
-  //         value: false
-  //       },
-  //       {
-  //         label: 'Newest First',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'Oldest First',
-  //         value: false
-  //       }
-  //     ]
-  //   }
-  // ];
+  
   dtSearchBar: SearchBar = {
     title: 'Search Facilities',
     placeholder: 'Enter facility name, CDC ID, etc.'
@@ -62,37 +43,64 @@ export class FacilitiesComponent implements OnInit {
 
   async LoadFacilitiesTableData() {
     try {
-      // const individualTenant = await this.facilitiesApiService.fetchFacilityById('ehr-test');
-      const tenants = await this.facilitiesApiService.fetchAllFacilities();
-      const transformedData = this.processDataForTable(tenants);
-      this.dtOptions = this.calculateDtOptions(transformedData);
+      this.dtOptions = this.calculateDtOptions();
       this.tableOptionsLoaded = true;
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
   }
 
-  calculateDtOptions(data: any): DataTables.Settings {
+  calculateDtOptions(data?: any): DataTables.Settings {
     // DataTable configuration
+    const columnIdMap = ['NAME', 'NHSN_ORG_ID', 'DETAILS', 'SUBMISSION_DATE', 'MEASURES'],
+          pageLength = 15
+
     return {
-      data: data,
-      pageLength: 15,
+      serverSide: true,
+      processing: true,
+      ajax: (dataTablesParameters: any, callback) => {
+        const page = Math.ceil(dataTablesParameters.start / pageLength) + 1
+
+        let order = dataTablesParameters.order[0],
+            orderBy = columnIdMap[order.column],
+            sortAscend = order.dir === 'asc'
+
+        let searchValue = dataTablesParameters.search.value
+
+        from(this.facilitiesApiService.fetchAllFacilities(page, orderBy, sortAscend, searchValue))
+          .subscribe(response => {
+            callback({
+              recordsTotal: response?.total,
+              recordsFiltered: response?.tenants.length,
+              data: this.processDataForTable(response?.tenants)
+            })
+          })
+      },
+      pageLength: pageLength,
       lengthChange: false,
       info: false,
+      orderMulti: true,
       searching: false,
       scrollX: true,
       stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
-      columnDefs: [
+      columns: [
         {
-          targets: 0, // Facility
-          width: '172px'
+          title: 'Facility Name',
+          data: columnIdMap[0],
+          orderable: true,
+          render: function (data, type, row) {
+            return `<a href="/facilities/facility/${row.FACILITY_ID}">${data}</a>`;
+          }
         },
         {
-          targets: [1, 3], // Org Id, LastSubmission
-          width: '144px'
+          title: 'NHSN Org Id',
+          data: columnIdMap[1],
+          orderable: true
         },
         {
-          targets: 2, // Details
+          title: 'Details',
+          data: columnIdMap[2],
+          orderable: false,
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
               $(cell).addClass('cell--initiated');
@@ -101,35 +109,18 @@ export class FacilitiesComponent implements OnInit {
             }
           },
           render: function (data, type, row) {
-            return `<a href="/activities/bundle/${row.FacilityId}/${row.LastSubmissionId}">Bundle<br>#${data}</a>`
+            return `<a href="/activities/bundle/${row.FACILITY_ID}/${row.DETAILS}">Bundle<br>#${data}</a>`
           }
-        },
-      ],
-      orderMulti: true,
-      columns: [
-        {
-          title: 'Facility Name',
-          data: 'FacilityName',
-          render: function (data, type, row) {
-
-            return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
-          }
-        },
-        {
-          title: 'NHSN Org Id',
-          data: 'NHSNOrgId',
-        },
-        {
-          title: 'Details',
-          data: 'LastSubmissionId'
         },
         {
           title: 'Last Submission',
-          data: 'LastSubmission'
+          data: columnIdMap[3],
+          orderable: true
         },
         {
           title: 'Current Measures',
-          data: 'Measures',
+          data: columnIdMap[4],
+          orderable: false,
           render: function (data, type, row) {
             // Check if data is an array
             if (Array.isArray(data)) {
@@ -145,22 +136,21 @@ export class FacilitiesComponent implements OnInit {
   }
 
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
-  processDataForTable(tenantsData: Tenant[]) {
-    return tenantsData.map(td => {
-      const facilityId = td.id;
-      const lastSubmission = td.lastSubmissionDate;
-      const facilityName = td.name;
-      const nhsnOrgId = td.nhsnOrgId;
-      const lastSubmissionId = td.lastSubmissionId;
-      const measuresData = td.measures.map(m => m.shortName.slice(0, 4));
+  processDataForTable(tenantsData: Tenant[] | undefined) {
+    if(!tenantsData) 
+      return
 
+    return tenantsData.map(td => {
       return {
-        FacilityId : facilityId,
-        FacilityName: facilityName,
-        NHSNOrgId: nhsnOrgId,
-        LastSubmissionId: lastSubmissionId,
-        LastSubmission: lastSubmission,
-        Measures: measuresData,
+        FACILITY_ID: td.id,
+        NAME: td.name,
+        NHSN_ORG_ID: td.nhsnOrgId,
+        DETAILS: td.lastSubmissionId,
+        SUBMISSION_DATE: td.lastSubmissionDate,
+        MEASURES: td.measures.map(m => {
+          const measure = this.pascalCaseToSpace.transform(m.shortName)
+          return measure.split(' ')[0]
+        })
       };
     });
   }

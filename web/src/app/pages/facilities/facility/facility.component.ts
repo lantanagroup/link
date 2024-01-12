@@ -14,9 +14,7 @@ import { TabContainerComponent } from 'src/app/shared/tab-container/tab-containe
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { AccordionComponent } from 'src/app/shared/accordion/accordion.component';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
-import { TableFilter } from 'src/app/shared/interfaces/table.model';
-import { calculatePeriodLength, generateRandomData, getPeriodData, getSubmissionStatus, processMeasuresData } from 'src/app/helpers/ReportHelper';
-import { Report } from 'src/app/shared/interfaces/report.model';
+import { getPeriodData, getSubmissionStatus, processMeasuresData } from 'src/app/helpers/ReportHelper';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
 import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
@@ -40,6 +38,8 @@ export class FacilityComponent {
   isFacilityActivityTableLoaded = false;
   facilityNormalizations: Normalization[] = []
   facilityConceptMaps: TenantConceptMap[] = []
+
+  private pascalCaseToSpace = new PascalCaseToSpace
 
   dtOptions: DataTables.Settings = {};
 
@@ -104,6 +104,16 @@ export class FacilityComponent {
       : '/facilities/add-facility';
 
     return { url: url };
+  }
+
+  generateMeasureChip(measure: string): string {
+    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+    return prettyMeasure.split(' ')[0]
+  }
+
+  generateMeasureName(measure: string): string {
+    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+    return prettyMeasure.split(' ').slice(1).join(' ')
   }
 
   generateNormalizations(data: string[]): Normalization[] {

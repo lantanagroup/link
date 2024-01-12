@@ -11,13 +11,18 @@ export class FacilitiesApiService {
   constructor(private dataService: DataService) { }
 
   // Fetches all the facilities data
-  async fetchAllFacilities(): Promise<Tenant[]> {
+  async fetchAllFacilities(page: number, orderBy: string, sortAscend: boolean, searchValue?: string): Promise<TenantSummary | null> {
+    let params = ''
+    params += page ? 'page=' + page : ''
+    params += orderBy ? '&sort=' + orderBy : ''
+    params += '&sortAscend=' + sortAscend
+    params += searchValue ? '&searchCriteria=' + searchValue : ''
     try {
-      const response = await firstValueFrom(this.dataService.getData<TenantSummary>('tenant/summary'));
+      const response = await firstValueFrom(this.dataService.getData<any>(`tenant/summary?${params}`));
       if (response) {
-        return response.tenants;
+        return response;
       }
-      return [];
+      return null
     } catch (error) {
       console.error('Error fetching tenant summary data', error);
       throw error;
