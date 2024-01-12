@@ -96,7 +96,9 @@ public class FhirBundlerEntrySorter {
     // Link Census List is next
     if (!censusLists.isEmpty()) {
       logger.info("Adding census");
-      newEntriesList.addAll(censusLists);
+      censusLists.stream()
+              .sorted(Comparator.comparing(e -> Objects.requireNonNullElse(getMeasureName(e), "")))
+              .forEachOrdered(newEntriesList::add);
     }
 
     // Link DocumentReference is next
@@ -285,6 +287,18 @@ public class FhirBundlerEntrySorter {
     }
 
     return null;
+  }
+
+  private static String getMeasureName(Bundle.BundleEntryComponent censusList) {
+    Resource resource = censusList.getResource();
+    if (!(resource instanceof ListResource)) {
+      return null;
+    }
+    ListResource list = (ListResource) resource;
+    if (!list.hasIdentifier()) {
+      return null;
+    }
+    return list.getIdentifierFirstRep().getValue();
   }
 
   static class ResourceComparator implements Comparator<Bundle.BundleEntryComponent> {
