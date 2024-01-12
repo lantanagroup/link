@@ -196,12 +196,8 @@
             </div>
             <div class="col col-md-6">
               <app-mini-content title="Authentication Method">
-                <ng-container *ngIf="facilityDetails.fhirQuery.azureAuth || facilityDetails.fhirQuery.basicAuth || facilityDetails.fhirQuery.basicAuthAndApiKey || facilityDetails.fhirQuery.cernerAuth || facilityDetails.fhirQuery.epicAuth; else noAuth">
-                  <p *ngIf="facilityDetails.fhirQuery.azureAuth">Azure OAuth</p>
-                  <p *ngIf="facilityDetails.fhirQuery.basicAuth">Basic</p>
-                  <p *ngIf="facilityDetails.fhirQuery.basicAuthAndApiKey">Basic + API Key</p>
-                  <p *ngIf="facilityDetails.fhirQuery.cernerAuth">Cerner OAuth</p>
-                  <p *ngIf="facilityDetails.fhirQuery.epicAuth">Epic OAuth</p>
+                <ng-container *ngIf="facilityDetails.fhirQuery.authClass; else noAuth">
+                  <p>{{ facilityDetails.fhirQuery.authClass.split('.').pop() | pascalCaseToSpace }}</p>
                 </ng-container>
               </app-mini-content>
             </div>

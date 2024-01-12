@@ -69,7 +69,6 @@ export class FacilityComponent {
     try {
       const conceptMaps = await this.globalApiService.getContent(`${id}/conceptMap`)
       this.facilityConceptMaps = conceptMaps
-      console.log('concept maps', this.facilityConceptMaps)
     } catch (error) {
       console.error('Error loading concept maps:', error)
     }
