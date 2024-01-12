@@ -7,6 +7,7 @@ import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-
 import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
+import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
 import { CardComponent } from "../../../shared/card/card.component";
 import { TabComponent } from 'src/app/shared/tab/tab.component';
 import { TabContainerComponent } from 'src/app/shared/tab-container/tab-container.component';
@@ -18,6 +19,7 @@ import { calculatePeriodLength, generateRandomData, getPeriodData, getSubmission
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
+import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
 interface Normalization {
@@ -37,6 +39,7 @@ export class FacilityComponent {
   facilityDetails: any = null;
   isFacilityActivityTableLoaded = false;
   facilityNormalizations: Normalization[] = []
+  facilityConceptMaps: TenantConceptMap[] = []
 
   dtOptions: DataTables.Settings = {};
 
@@ -44,6 +47,7 @@ export class FacilityComponent {
     private route: ActivatedRoute,
     private router: Router,
     private facilitiesApiService: FacilitiesApiService,
+    private globalApiService: GlobalApiService,
     private reportApiService: ReportApiService
   ) { }
 
@@ -54,10 +58,21 @@ export class FacilityComponent {
       if (this.facilityId) {
         this.GetFacilityDetails(this.facilityId);
         this.fetchDataForFacilityActivityTable(this.facilityId);
+        this.GetConceptMaps(this.facilityId)
       } else {
         this.router.navigate(['/facilities'])
       }
     })
+  }
+
+  async GetConceptMaps(id: string) {
+    try {
+      const conceptMaps = await this.globalApiService.getContent(`${id}/conceptMap`)
+      this.facilityConceptMaps = conceptMaps
+      console.log('concept maps', this.facilityConceptMaps)
+    } catch (error) {
+      console.error('Error loading concept maps:', error)
+    }
   }
 
   async GetFacilityDetails(id: string) {

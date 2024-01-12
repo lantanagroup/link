@@ -2,9 +2,17 @@
 
 @import '../../../scss/customize-bootstrap.scss';
 
+app-card,
 .card {
+  height: calc(100% - 1.25rem);
+}
+
+.card {
+  background: $white;
   border: none;
   box-shadow: $box-shadow-sm;
+  display: flex;
+  flex-direction: column;
   margin: 0.625rem 0;
 
   &--border {
@@ -64,7 +72,8 @@
   }
 
   &__body {
-    background: $white;
+    // background: $white;
+    flex: 1 0 auto;
   }
 
   &__title {

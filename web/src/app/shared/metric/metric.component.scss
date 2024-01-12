@@ -3,7 +3,14 @@
 @import '../../../scss/customize-bootstrap.scss';
 
 
+app-metric,
 .metric {
+  height: 100%;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
 
   &__kpi {
     color: $blue-200;
@@ -25,7 +32,12 @@
   }
 
   &__body {
+    align-items: center;
     background: $gray-800;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    justify-content: center;
   }
 
   &__footer {
