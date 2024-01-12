@@ -11,7 +11,7 @@ export class FacilitiesApiService {
   constructor(private dataService: DataService) { }
 
   // Fetches all the facilities data
-  async ajaxFetchAllFacilities(page: number, orderBy: string, sortAscend: boolean, searchValue?: string): Promise<TenantSummary | null> {
+  async fetchAllFacilities(page: number, orderBy: string, sortAscend: boolean, searchValue?: string): Promise<TenantSummary | null> {
     let params = ''
     params += page ? 'page=' + page : ''
     params += orderBy ? '&sort=' + orderBy : ''

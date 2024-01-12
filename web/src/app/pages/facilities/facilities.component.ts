@@ -7,12 +7,10 @@ import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
 import { TableComponent } from 'src/app/shared/table/table.component';
-import { DataService } from 'src/services/api/data.service';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
-import { TableFilter, SearchBar } from 'src/app/shared/interfaces/table.model';
+import { SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
-import { HttpParams } from '@angular/common/http';
 
 @Component({
   selector: 'app-facilities',
@@ -69,7 +67,7 @@ export class FacilitiesComponent implements OnInit {
 
         let searchValue = dataTablesParameters.search.value
 
-        from(this.facilitiesApiService.ajaxFetchAllFacilities(page, orderBy, sortAscend, searchValue))
+        from(this.facilitiesApiService.fetchAllFacilities(page, orderBy, sortAscend, searchValue))
           .subscribe(response => {
             callback({
               recordsTotal: response?.total,
