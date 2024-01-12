@@ -10,6 +10,7 @@ import { DataService } from 'src/services/api/data.service';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
 import { TableFilter, SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
+import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-facilities',
@@ -19,32 +20,12 @@ import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api
   styleUrls: ['./facilities.component.scss']
 })
 export class FacilitiesComponent implements OnInit {
-  constructor(private facilitiesApiService: FacilitiesApiService) { }
+  constructor(
+    private facilitiesApiService: FacilitiesApiService
+  ) { }
+  private pascalCaseToSpace = new PascalCaseToSpace
   dtOptions: DataTables.Settings = {};
-  // ! Removing - may come back in V2
-  // dtFilters: TableFilter[] = [
-  //   {
-  //     name: 'Sort:',
-  //     options: [
-  //       {
-  //         label: 'ASC',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'DESC',
-  //         value: false
-  //       },
-  //       {
-  //         label: 'Newest First',
-  //         value: true
-  //       },
-  //       {
-  //         label: 'Oldest First',
-  //         value: false
-  //       }
-  //     ]
-  //   }
-  // ];
+  
   dtSearchBar: SearchBar = {
     title: 'Search Facilities',
     placeholder: 'Enter facility name, CDC ID, etc.'
@@ -152,7 +133,10 @@ export class FacilitiesComponent implements OnInit {
       const facilityName = td.name;
       const nhsnOrgId = td.nhsnOrgId;
       const lastSubmissionId = td.lastSubmissionId;
-      const measuresData = td.measures.map(m => m.shortName.slice(0, 4));
+      const measuresData = td.measures.map(m => {
+        const measure = this.pascalCaseToSpace.transform(m.shortName)
+        return measure.split(' ')[0]
+      });
 
       return {
         FacilityId : facilityId,

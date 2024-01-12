@@ -41,6 +41,8 @@ export class FacilityComponent {
   facilityNormalizations: Normalization[] = []
   facilityConceptMaps: TenantConceptMap[] = []
 
+  private pascalCaseToSpace = new PascalCaseToSpace
+
   dtOptions: DataTables.Settings = {};
 
   constructor(
@@ -104,6 +106,16 @@ export class FacilityComponent {
       : '/facilities/add-facility';
 
     return { url: url };
+  }
+
+  generateMeasureChip(measure: string): string {
+    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+    return prettyMeasure.split(' ')[0]
+  }
+
+  generateMeasureName(measure: string): string {
+    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+    return prettyMeasure.split(' ').slice(1).join(' ')
   }
 
   generateNormalizations(data: string[]): Normalization[] {
