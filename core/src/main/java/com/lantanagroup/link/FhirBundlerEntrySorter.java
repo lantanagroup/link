@@ -165,22 +165,6 @@ public class FhirBundlerEntrySorter {
     logger.info("Done sorting bundle");
   }
 
-  private static boolean isReferenceToPatient(Reference reference, String patientId) {
-    return reference.getReference() != null && reference.getReference().equals("Patient/" + patientId);
-  }
-
-  /**
-   * Returns true if the resource is related to the patient
-   *
-   * @param resource  The resource to check
-   * @param patientId The patient id
-   * @return True if the resource is related to the patient
-   */
-  private static boolean isResourceRelatedToPatient(Resource resource, String patientId) {
-    String patientReference = getPatientReference(resource);
-    return patientReference != null && patientReference.equals("Patient/" + patientId);
-  }
-
   /**
    * Returns patient's reference of the related resource
    *
