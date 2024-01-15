@@ -10,6 +10,8 @@ import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { SearchBar } from 'src/app/shared/interfaces/table.model';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
+import { MetricApiService } from 'src/services/api/metric/metric-api.service';
+import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
 import { activitiesData } from 'src/app/helpers/RecentActivityHelper';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
@@ -23,6 +25,7 @@ import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
   imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, SectionComponent]
 })
 export class ActivitiesComponent implements OnInit {
+  metricCards: MetricCard[] = [];
   dtOptions: DataTables.Settings = {};
   activitiesData = activitiesData
   dtSearchBar: SearchBar = {
@@ -32,11 +35,61 @@ export class ActivitiesComponent implements OnInit {
   private pascalCaseToSpace = new PascalCaseToSpace
 
   constructor(
-    private reportsApiService: ReportApiService
+    private reportsApiService: ReportApiService,
+    private metricApiService: MetricApiService
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
+    this.generateMetricCards()
     this.dtOptions = this.calculateDtOptions();
+  }
+
+  // ************** Recent activity cards ************ //
+
+  async generateMetricCards() {
+    // fetch all the metric data
+    try {
+      const metricData = await this.metricApiService.fetchMetrics(TimePeriod.LastWeek)
+      // loop through and assign cards' data: 'queryTime', 'patientsQueried', 'validation'
+      const cards = [
+        {
+          name: 'Total Patients Reported',
+          subText: 'patients reported past 7 days',
+          changeWindow: 'week',
+          upGood: true,
+          toTimestamp: false,
+          metricData: metricData?.patientsReported
+        },
+        {
+          name: 'Average Evaluations',
+          subText: 'evaluations on average past 7 days',
+          changeWindow: 'week',
+          upGood: true,
+          toTimestamp: false,
+          metricData: metricData?.evaluation
+        },
+        {
+          name: 'Average Query Time',
+          subText: 'hours on average past 7 days',
+          changeWindow: 'week',
+          upGood: false,
+          toTimestamp: true,
+          metricData: metricData?.queryTime
+        },
+        {
+          name: 'Average Validation Time',
+          subText: 'hours on average past 7 days',
+          changeWindow: 'week',
+          upGood: false,
+          toTimestamp: true,
+          metricData: metricData?.validation
+        }
+      ]
+
+      this.metricCards = cards
+    } catch (error) {
+      console.error('Error loading metric card data:', error)
+    }
   }
 
 
@@ -157,8 +210,6 @@ export class ActivitiesComponent implements OnInit {
         orderable: false,
         width: '196px',
         createdCell: (cell, cellData) => {
-          console.log('cell:', cell)
-          console.log('cellData:', cellData)
           if (cellData.toString().toLowerCase() === 'pending') {
             $(cell).addClass('cell--initiated');
           }
