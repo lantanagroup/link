@@ -23,7 +23,7 @@
               </app-mini-content>
 
               <app-mini-content title="NHSN Org Id">
-                <p *ngIf="facilityDetails.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
+                <p *ngIf="facilityDetails?.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
               </app-mini-content>
 
               <app-mini-content title="EHR Vendor">
@@ -96,7 +96,6 @@
 
       <app-tab tabTitle="Activity">
         <app-table
-          *ngIf="isFacilityActivityTableLoaded"
           [dtOptions]="dtOptions"
           tableTitle="Facility Activity"
         />
@@ -124,54 +123,54 @@
           <div class="row">
             <div class="col col-md-6">
               <app-mini-content title="Query Patient List (Cron)">
-                <p *ngIf="facilityDetails.scheduling.queryPatientListCron; else noData">{{ facilityDetails.scheduling.queryPatientListCron }}</p>
+                <p *ngIf="facilityDetails.scheduling?.queryPatientListCron; else noData">{{ facilityDetails.scheduling.queryPatientListCron }}</p>
               </app-mini-content>
             </div>
 
             <div class="col col-md-6">
               <app-mini-content title="Data Retention Check (Cron)">
-                <p *ngIf="facilityDetails.scheduling.dataRetentionCheckCron; else noData">{{ facilityDetails.scheduling.dataRetentionCheckCron }}</p>
+                <p *ngIf="facilityDetails.scheduling?.dataRetentionCheckCron; else noData">{{ facilityDetails.scheduling.dataRetentionCheckCron }}</p>
               </app-mini-content>
             </div>
 
             <div class="col col-md-6">
               <app-mini-content title="Bulk Data (Cron)">
-                <p *ngIf="facilityDetails.scheduling.bulkDataCron; else noData">{{ facilityDetails.scheduling.bulkDataCron }}</p>
+                <p *ngIf="facilityDetails.scheduling?.bulkDataCron; else noData">{{ facilityDetails.scheduling.bulkDataCron }}</p>
               </app-mini-content>
             </div>
 
             <div class="col col-md-6">
               <app-mini-content title="Bulk Data Follow Up (Cron)">
-                <p *ngIf="facilityDetails.scheduling.bulkDataFollowUpCron; else noData">{{ facilityDetails.scheduling.bulkDataFollowUpCron }}</p>
+                <p *ngIf="facilityDetails.scheduling?.bulkDataFollowUpCron; else noData">{{ facilityDetails.scheduling.bulkDataFollowUpCron }}</p>
               </app-mini-content>
             </div>
           </div>
 
           <h4 class="text-uppercase fw-bold mb-4">Generate and Submit</h4>
 
-          <div class="repeater" *ngFor="let schedule of facilityDetails.scheduling.generateAndSubmitReports">
+          <div class="repeater" *ngFor="let schedule of facilityDetails.scheduling?.generateAndSubmitReports">
             <div class="row">
               <div class="col col-md-6">
                 <app-mini-content title="Measures IDs">
-                  <p class="mb-1" *ngFor="let measure of schedule.measureIds">{{ measure | pascalCaseToSpace }}</p>
+                  <p class="mb-1" *ngFor="let measure of schedule?.measureIds">{{ measure | pascalCaseToSpace }}</p>
                 </app-mini-content>
               </div>
   
               <div class="col col-md-6">
                 <app-mini-content title="Reporting Period">
-                  <p *ngIf="schedule.reportingPeriodMethod; else noData">{{ schedule.reportingPeriodMethod | pascalCaseToSpace }}</p>
+                  <p *ngIf="schedule?.reportingPeriodMethod; else noData">{{ schedule.reportingPeriodMethod | pascalCaseToSpace }}</p>
                 </app-mini-content>
               </div>
               
               <div class="col col-md-6">
                 <app-mini-content title="Schedule (Cron)">
-                  <p *ngIf="schedule.cron; else noData">{{ schedule.cron }}</p>
+                  <p *ngIf="schedule?.cron; else noData">{{ schedule.cron }}</p>
                 </app-mini-content>
               </div>
               
               <div class="col col-md-6">
                 <app-mini-content title="Regenerate">
-                  <p *ngIf="schedule.regenerateIfExists; else noData">{{ schedule.regenerateIfExists }}</p>
+                  <p *ngIf="schedule?.regenerateIfExists; else noData">{{ schedule.regenerateIfExists }}</p>
                 </app-mini-content>
               </div>
             </div>
@@ -186,17 +185,17 @@
           <div class="row">
             <div class="col col-md-6">
               <app-mini-content title="FHIR Endpoint">
-                <p *ngIf="facilityDetails.fhirQuery.fhirServerBase; else noData">{{ facilityDetails.fhirQuery.fhirServerBase }}</p>
+                <p *ngIf="facilityDetails?.fhirQuery?.fhirServerBase; else noData">{{ facilityDetails.fhirQuery.fhirServerBase }}</p>
               </app-mini-content>
             </div>
             <div class="col col-md-6">
               <app-mini-content title="Parallel Patients">
-                <p *ngIf="facilityDetails.fhirQuery.parallelPatients; else noData">{{ facilityDetails.fhirQuery.parallelPatients }}</p>
+                <p *ngIf="facilityDetails?.fhirQuery?.parallelPatients; else noData">{{ facilityDetails.fhirQuery.parallelPatients }}</p>
               </app-mini-content>
             </div>
             <div class="col col-md-6">
               <app-mini-content title="Authentication Method">
-                <ng-container *ngIf="facilityDetails.fhirQuery.authClass; else noAuth">
+                <ng-container *ngIf="facilityDetails?.fhirQuery?.authClass; else noAuth">
                   <p>{{ facilityDetails.fhirQuery.authClass.split('.').pop() | pascalCaseToSpace }}</p>
                 </ng-container>
               </app-mini-content>
@@ -217,11 +216,11 @@
           title="Query Plans"
           [isExpanded]="false"
         >
-          <div class="repeater" *ngFor="let queryList of facilityDetails.queryList.lists">
+          <div class="repeater" *ngFor="let queryList of facilityDetails?.queryList?.lists">
             <div class="row">
               <div class="col col-md-6">
                 <app-mini-content title="Measure ID">
-                  <div *ngFor="let measureId of queryList.measureId" class="d-flex align-items-center mb-2 u-gap2">
+                  <div *ngFor="let measureId of queryList?.measureId" class="d-flex align-items-center mb-2 u-gap2">
                     <div class="chip">{{ generateMeasureChip(measureId) }}</div>
                     <span>{{ generateMeasureName(measureId) }}</span>
                   </div>
@@ -230,7 +229,7 @@
 
               <div class="col col-md-6">
                 <app-mini-content title="Query Plan">
-                  <p *ngFor="let listId of queryList.listId">{{ listId }}</p>
+                  <p *ngFor="let listId of queryList?.listId">{{ listId }}</p>
                 </app-mini-content>
               </div>
             </div>

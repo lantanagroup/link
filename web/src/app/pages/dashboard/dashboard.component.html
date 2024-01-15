@@ -57,7 +57,7 @@
 		</app-section-heading>
 
 		<div class="row">
-			<div class="col col-md-6">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="completedDtOptions">
 				<app-card
 					title="Successful Submissions"
 					status="success"
@@ -70,7 +70,20 @@
 				</app-card>
 			</div>
 
-			<div class="col col-md-6">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="failedDtOptions">
+				<app-card
+					title="Failed Submissions"
+					status="failure"
+					titleAlign="center"
+				>
+					<app-table 
+						[dtOptions]="failedDtOptions" 
+						variant="simple"
+					/>
+				</app-card>
+			</div>
+
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="pendingDtOptions">
 				<app-card
 					title="Submissions In Progress"
 					status="inProgress"

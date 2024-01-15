@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { from } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
@@ -13,10 +14,11 @@ import { TabComponent } from 'src/app/shared/tab/tab.component';
 import { TabContainerComponent } from 'src/app/shared/tab-container/tab-container.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { AccordionComponent } from 'src/app/shared/accordion/accordion.component';
-import { ReportApiService } from 'src/services/api/report/report-api.service';
-import { getPeriodData, getSubmissionStatus, processMeasuresData } from 'src/app/helpers/ReportHelper';
 import { TableComponent } from "../../../shared/table/table.component";
 import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
+import { Report } from 'src/app/shared/interfaces/report.model';
+import { ReportApiService } from 'src/services/api/report/report-api.service';
+import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
 import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
@@ -35,20 +37,19 @@ interface Normalization {
 export class FacilityComponent {
   facilityId: string | null = null
   facilityDetails: any = null;
-  isFacilityActivityTableLoaded = false;
   facilityNormalizations: Normalization[] = []
   facilityConceptMaps: TenantConceptMap[] = []
+  dtOptions: DataTables.Settings = {};
 
   private pascalCaseToSpace = new PascalCaseToSpace
 
-  dtOptions: DataTables.Settings = {};
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private facilitiesApiService: FacilitiesApiService,
     private globalApiService: GlobalApiService,
-    private reportApiService: ReportApiService
+    private reportsApiService: ReportApiService
   ) { }
 
   async ngOnInit() {
@@ -57,7 +58,7 @@ export class FacilityComponent {
 
       if (this.facilityId) {
         this.GetFacilityDetails(this.facilityId);
-        this.fetchDataForFacilityActivityTable(this.facilityId);
+        this.dtOptions = this.calculateDtOptions(this.facilityId);
         this.GetConceptMaps(this.facilityId)
       } else {
         this.router.navigate(['/facilities'])
@@ -83,19 +84,6 @@ export class FacilityComponent {
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
-  }
-
-  async fetchDataForFacilityActivityTable(facilityId: string): Promise<void> {
-    this.reportApiService.fetchAllReports({ tenantId: facilityId })
-      .then(reports => {
-        const transformedData = this.transformData(reports);
-        this.dtOptions = this.calculateDtOptions(transformedData);
-
-        this.isFacilityActivityTableLoaded = true;
-      })
-      .catch(error => {
-        console.error('Error fetching reports:', error);
-      });
   }
 
   generateEditLink(): { url: string } {
@@ -135,86 +123,78 @@ export class FacilityComponent {
     return normalizations
   }
 
-  calculateDtOptions(data: any): DataTables.Settings {
+  calculateDtOptions(facilityId: string): DataTables.Settings {
     // DataTable configuration
+    // ! for column ordering, will change
+    const columnIdMap = ['TIMESTAMP', 'ACTIVITY', 'DETAILS', 'FACILITY', 'NHSN_ORG_ID', 'REPORTING_PERIOD', 'MEASURES'],
+          pageLength = 15
+
     return {
-      data: data,
-      pageLength: 15,
+      serverSide: true,
+      processing: true,
+      ajax: (dataTablesParameters: any, callback) => {
+        const page = Math.ceil(dataTablesParameters.start / pageLength) + 1
+
+        let order = dataTablesParameters.order[0],
+            orderBy = columnIdMap[order.column],
+            sortAscend = order.dir === 'asc'
+
+        let searchValue = dataTablesParameters.search.value
+
+        const apiFilters = {
+          tenantId: facilityId,
+          page: page,
+          count: pageLength
+        }
+        // todo : fill in rest of query when built
+
+        from(this.reportsApiService.fetchAllReports(apiFilters))
+          .subscribe(response => {
+            callback({
+              recordsTotal: response?.length,
+              recordsFiltered: pageLength,
+              data: this.processDataForTable(response)
+            })
+          })
+      },
       lengthChange: false,
       info: false,
       searching: false,
       scrollX: true,
       stripeClasses: ['zebra zebra--even', 'zebra zebra--odd'],
-      columnDefs: [
-        {
-          targets: 0, // Timestamp
-          width: '147px',
-          createdCell: (cell, cellData) => {
-            $(cell).addClass('timestamp');
-          },
-          render: function (data, type, row) {
-            // Split the timestamp into date and time parts
-            const dateTimeParts = data.split(' ');
-            const datePart = dateTimeParts[0];
-            const timePart = dateTimeParts.slice(1).join(' ');
-
-            return `${datePart}<br>${timePart}`;
-          }
-        },
-        {
-          targets: 1, // Activity
-          width: '75px',
-          createdCell: (cell, cellData) => {
-            if (cellData.toLowerCase().includes('initiated')) {
-              $(cell).addClass('cell--initiated');
-            } else {
-              $(cell).addClass('cell--complete');
-            }
-          }
-        },
-        {
-          targets: 2, // Details
-          createdCell: (cell, cellData) => {
-            if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('cell--initiated');
-            } else {
-              $(cell).addClass('cell--complete');
-            }
-          }
-        },
-        {
-          targets: 3, // Facility
-          width: '172px'
-        },
-        {
-          targets: [4, 7], // Org Id, Total Census
-          width: '144px'
-        },
-        {
-          targets: 5, // Reporting Period
-          width: '196px',
-          createdCell: (cell, cellData) => {
-            if (cellData.toString().toLowerCase() === 'pending') {
-              $(cell).addClass('cell--initiated');
-            }
-          }
-        },
-      ],
-      orderMulti: true,
       columns: [{
         title: 'Timestamp',
-        data: 'Timestamp'
+        data: columnIdMap[0],
+        orderable: true,
+        createdCell: (cell, cellData) => {
+          $(cell).addClass('timestamp');
+        }
       },
       {
         title: 'Activity',
-        data: 'Activity',
-        render: function (data, type, row) {
-          let dotClass = 'neutral';
-          if (data.toString().toLowerCase().includes('successful')) {
-            dotClass = 'success';
-          } else if (data.toString().toLowerCase().includes('failed')) {
-            dotClass = 'failed'
+        data: columnIdMap[1],
+        orderable: false,
+        width: '75px',
+        createdCell: (cell, cellData) => {
+          if (cellData.toLowerCase().includes('initiated')) {
+            $(cell).addClass('cell--initiated');
+          } else {
+            $(cell).addClass('cell--complete');
           }
+        },
+        render: function (data, type, row) {
+          let dotClass;
+          switch (row.STATUS) {
+            case 'Submitted': 
+              dotClass = 'success'
+              break
+            case 'Draft':
+              dotClass = 'neutral'
+              break
+            default:
+              dotClass = 'failed'
+          }
+          
           return `<div class="d-flex align-items-center">
                   <span class="dot dot--${dotClass}"></span>
                   <span>${data}</span>
@@ -223,29 +203,47 @@ export class FacilityComponent {
       },
       {
         title: 'Details',
-        data: 'Details',
-        render: function (data, type, row) {
-          if(row.Status === 'submitted') {
-            return `<a href="/activities/bundle/${row.FacilityId}/${row.Id}">${data}</a>`;
+        data: columnIdMap[2],
+        orderable: false,
+        createdCell: (cell, cellData) => {
+          if (cellData.toLowerCase().includes('progress')) {
+            $(cell).addClass('cell--initiated');
+          } else {
+            $(cell).addClass('cell--complete');
           }
-          return data;
+        },
+        render: function (data, type, row) {
+          if(row.STATUS === 'Submitted') {
+            return `<a href="/activities/bundle/${row.FACILITY.id}/${row.ID}">${data}</a>`
+          }
+          return data
         }
       },
       {
         title: 'Facility',
-        data: 'Facility',
+        data: columnIdMap[3],
+        orderable: false,
+        width: '175px',
         render: function (data, type, row) {
-          return `<a href="/facilities/facility/${row.FacilityId}">${data}</a>`;
+          return `<a href="/facilities/facility/${data.id}">${data.name}</a>`;
         }
       },
       {
         title: 'NHSN Org Id',
-        data: 'NHSNOrgId',
+        data: columnIdMap[4],
+        orderable: false,
         width: '144px'
       },
       {
         title: 'Reporting Period',
-        data: 'ReportingPeriod',
+        data: columnIdMap[5],
+        orderable: false,
+        width: '196px',
+        createdCell: (cell, cellData) => {
+          if (cellData.toString().toLowerCase() === 'pending') {
+            $(cell).addClass('cell--initiated');
+          }
+        },
         render: function (data, type, row) {
           if (Array.isArray(data)) {
             return `${data[1]}<br>${data[0]}`;
@@ -255,24 +253,16 @@ export class FacilityComponent {
       },
       {
         title: 'Measures',
-        data: 'Measures',
+        data: columnIdMap[6],
+        orderable: false,
         render: function (data, type, row) {
           // Check if data is an array
           if (Array.isArray(data)) {
-            // Map each measure to a span and join them
-            return `<div class="chips">${data.map(measure => `<div class="chip">${measure}</div>`).join(" ")}</div>`;
+            // Map each measure to a chip and join them
+            return `<div class="chips chips--grid">${data.map(measure => `<div class="chip chip--grid">${measure}</div>`).join(" ")}</div>`;
           }
-          // Applying different classes based on the value ('Pending' or 'n/a')
-          let className = '';
-          if (data.toString().toLowerCase() === 'pending') {
-            className = 'cell--initiated';
-          }
-          return `<div class="${className}">${data}</div>`;
+          return '';
         }
-      },
-      {
-        title: 'Total In Census',
-        data: 'TotalInCensus'
       }]
     }
 
@@ -280,29 +270,63 @@ export class FacilityComponent {
 
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
   // This might need some more fixes depending on how the final data looks like.
-  transformData(reports: any[]) {
+  processDataForTable(reports: Report[]) {
     return reports.map(report => {
-      const status = report?.status.toLowerCase();
 
-      const timestamp = status === "submitted" ? report.submittedTime : report?.periodStart;
-      const activity = getSubmissionStatus(status);
-      const bundleDetail = status === 'submitted' ? `Bundle #${report.id}` : (status === "failed" ? "Error report" : "In Progress");
-      const periodData = getPeriodData(status, report.periodStart, report.periodEnd);
-      const totalInCensus = status === 'submitted' ? '123451' : "--";
-      const measuresData = processMeasuresData(status, report.measureIds)
+      // basic vars
+      const status = report.status,
+            periodLength = calculatePeriodLength(report.periodStart, report.periodEnd),
+            reportPeriod = formatDate(report.periodStart) + ' - ' + formatDate(report.periodEnd)
+
+      // period data
+      let periodData;
+      if (status === 'Submitted') {
+        periodData = [reportPeriod, periodLength.toString() + ' Days'];
+      } else {
+        periodData = status === "failed" ? "n/a" : "Pending";
+      }
+
+      // timestamp
+      let timestamp
+      if (report.generatedTime && status === 'submitted') {
+        timestamp = report.generatedTime
+      } else if (report.submittedTime) {
+        timestamp = report.submittedTime
+      } else {
+        timestamp = 'n/a'
+      }
+
+
+      // details
+      const details = status === 'Submitted' ? `Bundle #${report.id}` : (status === "Draft" ? "In Progress" : "Error report");
+
+      // measures and activity
+      let measuresData,
+          activity
+      if (status === "Draft") {
+        measuresData = "Pending"
+        activity = 'Submission Initiated'
+      } else if (status === "Failed") {
+        measuresData = "n/a";
+        activity = 'Failed Submission'
+      } else {
+        measuresData = report.measureIds;
+        activity = 'Successful Submission'
+      }
 
       return {
-        Id: report.id,
-        Status: status,
-        Timestamp: timestamp,
-        Activity: activity,
-        Details: bundleDetail,
-        Facility: report.tenantName,
-        FacilityId: report.tenantId,
-        NHSNOrgId: report.cdcOrgId,
-        ReportingPeriod: periodData,
-        Measures: measuresData,
-        TotalInCensus: totalInCensus
+        ID: report.id,
+        STATUS: status,
+        TIMESTAMP: timestamp,
+        ACTIVITY: activity,
+        DETAILS: details,
+        FACILITY: {name: report.tenantName, id: report.tenantId},
+        NHSN_ORG_ID: report.cdcOrgId,
+        REPORTING_PERIOD: periodData,
+        MEASURES: report.measureIds.map(m => {
+          const measure = this.pascalCaseToSpace.transform(m)
+          return measure.split(' ')[0]
+        })
       };
     });
   }

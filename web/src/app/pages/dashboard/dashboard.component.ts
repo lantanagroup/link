@@ -10,7 +10,6 @@ import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from "../../shared/table/table.component";
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
-import { generateRandomData } from 'src/app/helpers/ReportHelper';
 import { recentActivityData } from 'src/app/helpers/RecentActivityHelper';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 
@@ -22,9 +21,11 @@ import { ReportApiService } from 'src/services/api/report/report-api.service';
     imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, MetricComponent, SectionHeadingComponent, TableComponent, SectionComponent]
 })
 export class DashboardComponent {
-  completedDtOptions: DataTables.Settings = {};
-  failedDtOptions: DataTables.Settings = {};
-  pendingDtOptions: DataTables.Settings = {};
+  completedDtOptions: DataTables.Settings | null = null;
+  failedDtOptions: DataTables.Settings | null = null;
+  pendingDtOptions: DataTables.Settings | null = null;
+  cardCount: number = 3;
+  columnSpan: number = 4;
 
   recentActivityData = recentActivityData
 
@@ -35,7 +36,11 @@ export class DashboardComponent {
   ngOnInit(): void {
     this.completedDtOptions = this.calculateDtOptions('Submitted')
     this.pendingDtOptions = this.calculateDtOptions('Draft')
-    // this.failedDtOptions = this.calculateDtOptions(failedData);
+    // this.failedDtOptions = this.calculateDtOptions('Failed')
+
+    // count the number of tables we want to render
+    this.cardCount = 2
+    this.columnSpan = 12 / this.cardCount
   }
 
   // This method accepts data and calculates the dataTable options

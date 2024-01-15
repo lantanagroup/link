@@ -67,7 +67,7 @@ export class FacilitiesComponent implements OnInit {
 
         let searchValue = dataTablesParameters.search.value
 
-        from(this.facilitiesApiService.fetchAllFacilities(page, orderBy, sortAscend, searchValue))
+        from(this.facilitiesApiService.fetchAllFacilities({page: page, sort: orderBy, sortAscend: sortAscend, searchCriteria: searchValue}))
           .subscribe(response => {
             callback({
               recordsTotal: response?.total,
