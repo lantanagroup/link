@@ -59,3 +59,34 @@ export class SecondsToTimestamp implements PipeTransform {
     return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
   }
 }
+
+// Truncated, seconds to Hours
+@Pipe({
+  name: 'secondsToHours',
+  standalone: true
+})
+export class SecondsToHours implements PipeTransform {
+  transform(value: number): string {
+    const hours = Math.round(value / 3600)
+
+    return hours.toString()
+  }
+}
+
+@Pipe({
+  name: 'roundToThousand',
+  standalone: true
+})
+export class RoundToThousand implements PipeTransform {
+  transform(value: number): string {
+    if (value > 999999) {
+      const rounded = Math.round(value / 1000000)
+      return `${rounded}m`
+    } else if (value > 999) {
+      const rounded = Math.round(value / 1000)
+      return `${rounded}k`
+    } else {
+      return value.toString()
+    }
+  }
+}

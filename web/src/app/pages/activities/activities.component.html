@@ -2,7 +2,7 @@
 	size="md">
 
 	<div class="row">
-		<div class="col col-md-6 col-lg-3" *ngFor="let card of activitiesData">
+		<div class="col col-md-6 col-lg-3" *ngFor="let card of metricCards">
 			<app-card 
 				[title]="card.name"
 				variant="alt"
@@ -10,12 +10,11 @@
 				[hasBorder]=true
 			>
 				<app-metric 
-					[mainValue]="card.highlight"
 					[subText]="card.subText"
-					[changeValue]="card.changeValue"
-					[isValueUp]="card.direction === 'up' ? true : false"
 					[isUpGood]="card.upGood"
-					[data]="card.series"
+					[changeWindow]="card.changeWindow"
+					[toTimestamp]="card.toTimestamp"
+					[metricData]="card.metricData"
 				/>
 			</app-card>
 		</div>

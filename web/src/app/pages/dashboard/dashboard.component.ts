@@ -11,7 +11,10 @@ import { TableComponent } from "../../shared/table/table.component";
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { recentActivityData } from 'src/app/helpers/RecentActivityHelper';
+
 import { ReportApiService } from 'src/services/api/report/report-api.service';
+import { MetricApiService } from 'src/services/api/metric/metric-api.service';
+import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
 @Component({
     selector: 'app-dashboard',
@@ -21,6 +24,7 @@ import { ReportApiService } from 'src/services/api/report/report-api.service';
     imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, MetricComponent, SectionHeadingComponent, TableComponent, SectionComponent]
 })
 export class DashboardComponent {
+  metricCards: MetricCard[] = [];
   completedDtOptions: DataTables.Settings | null = null;
   failedDtOptions: DataTables.Settings | null = null;
   pendingDtOptions: DataTables.Settings | null = null;
@@ -30,19 +34,65 @@ export class DashboardComponent {
   recentActivityData = recentActivityData
 
   constructor(
-    private reportsApiService: ReportApiService
+    private reportsApiService: ReportApiService,
+    private metricApiService: MetricApiService
   ) {}
 
   ngOnInit(): void {
+    // recent activity cards
+    this.generateMetricCards()
+
+
+    // tables
     this.completedDtOptions = this.calculateDtOptions('Submitted')
     this.pendingDtOptions = this.calculateDtOptions('Draft')
     // this.failedDtOptions = this.calculateDtOptions('Failed')
-
     // count the number of tables we want to render
     this.cardCount = 2
     this.columnSpan = 12 / this.cardCount
   }
+  // ************** Recent activity cards ************ //
 
+  async generateMetricCards() {
+    // fetch all the metric data
+    try {
+      const metricData = await this.metricApiService.fetchMetrics(TimePeriod.LastWeek)
+      // loop through and assign cards' data: 'queryTime', 'patientsQueried', 'validation'
+      const cards = [
+        {
+          name: 'Average Query Time',
+          subText: 'hours on average past 7 days',
+          changeWindow: 'week',
+          upGood: false,
+          toTimestamp: true,
+          metricData: metricData?.queryTime
+        },
+        {
+          name: 'Total Patients Queried',
+          subText: 'patients queried past 7 days',
+          changeWindow: 'week',
+          upGood: true,
+          toTimestamp: false,
+          metricData: metricData?.patientsQueried
+        },
+        {
+          name: 'Average Validation Time',
+          subText: 'hours on average past 7 days',
+          changeWindow: 'week',
+          upGood: false,
+          toTimestamp: true,
+          metricData: metricData?.validation
+        }
+      ]
+
+      this.metricCards = cards
+    } catch (error) {
+      console.error('Error loading metric card data:', error)
+    }
+  }
+
+
+  // ************** Tables ************ //
   // This method accepts data and calculates the dataTable options
   calculateDtOptions(status: 'Draft' | 'Submitted' | 'Failed'): DataTables.Settings {
     // DataTable configuration
