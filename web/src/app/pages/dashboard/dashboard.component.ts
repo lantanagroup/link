@@ -10,7 +10,6 @@ import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from "../../shared/table/table.component";
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { Report } from 'src/app/shared/interfaces/report.model';
-import { recentActivityData } from 'src/app/helpers/RecentActivityHelper';
 
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { MetricApiService } from 'src/services/api/metric/metric-api.service';
@@ -30,8 +29,6 @@ export class DashboardComponent {
   pendingDtOptions: DataTables.Settings | null = null;
   cardCount: number = 3;
   columnSpan: number = 4;
-
-  recentActivityData = recentActivityData
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -95,7 +92,6 @@ export class DashboardComponent {
   // ************** Tables ************ //
   // This method accepts data and calculates the dataTable options
   calculateDtOptions(status: 'Draft' | 'Submitted' | 'Failed'): DataTables.Settings {
-    // DataTable configuration
     // DataTable configuration
     const columnIdMap = ['DETAILS', 'FACILITY', 'TIMESTAMP'],
           pageLength = 5

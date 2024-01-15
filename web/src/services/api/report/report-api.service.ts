@@ -36,4 +36,22 @@ export class ReportApiService {
     }
   }
   // ... other methods http methods coming soon ...
+
+  async fetchReportById(id: string): Promise<any> {
+    if(id) {
+      try {
+
+        const response = await firstValueFrom(this.dataService.getData<any>(`report/${id}`))
+        if (response) {
+          return response
+        }
+        return []
+      } catch (error) {
+        console.error('Error fetching bundle details:', error)
+        throw error
+      }
+    } else {
+      console.warn('Please specify a bundle ID')
+    }
+  }
 }

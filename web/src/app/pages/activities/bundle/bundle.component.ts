@@ -11,6 +11,8 @@ import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.c
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from 'src/app/shared/table/table.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
+import { ReportApiService } from 'src/services/api/report/report-api.service';
+
 /* dummy data */
 import { normalizationData } from 'src/app/helpers/ReportHelper';
 
@@ -25,9 +27,10 @@ export class BundleComponent {
   bundleId: string | null = '362574'
   tenantId: string | null = 'ehr-test'
   dtOptions: DataTables.Settings = {}
+  bundleDetails: any = {}
 
   // purely placeholder
-  bundleDetails: any = {
+  mockBundleDetails: any = {
     submittedOn: '04.01.23 16:29:00 PM EST',
     reportingPeriod: '03.23.23-03.30.23',
     facility: {
@@ -72,7 +75,8 @@ export class BundleComponent {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private reportsApiService: ReportApiService
   ) {}
 
   async ngOnInit() {
@@ -80,15 +84,25 @@ export class BundleComponent {
       this.bundleId = params.get('bundleId')
       this.tenantId = params.get('tenantId')
 
-      this.dtOptions = this.calculateDtOptions(this.bundleDetails.normalizations.details)
+      this.dtOptions = this.calculateDtOptions(this.mockBundleDetails.normalizations.details)
 
-      if(this.bundleId && this.tenantId) {
-        // todo : make API call
+      if(this.bundleId) {
+        this.GetBundleDetails(this.bundleId)
       } else {
         this.router.navigate(['/activities'])
       }
     })
   }
+
+  async GetBundleDetails(id: string) {
+    try {
+      this.bundleDetails = await this.reportsApiService.fetchReportById(id)
+      console.log('Bundle Details:', this.bundleDetails)
+    } catch (error) {
+      console.error('Error loading the bundle detail:', error)
+    }
+  }
+
 
   generateFacilityLink(): { url: string } {
     const url = this.tenantId
