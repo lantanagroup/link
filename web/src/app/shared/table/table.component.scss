@@ -170,7 +170,20 @@ table.dataTable {
     }
 
     &.sorting_disabled {
+      cursor: default !important;
       padding-left: 0.75rem;
+
+      &.sorting_asc,
+      &.sorting_desc {
+        &::before,
+        &::after {
+          display: none;
+        }
+      }
+
+      &:first-child {
+        padding-left: 1.25rem;
+      }
     }
 
     // sorting

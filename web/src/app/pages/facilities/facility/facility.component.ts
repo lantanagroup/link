@@ -165,7 +165,7 @@ export class FacilityComponent {
       columns: [{
         title: 'Timestamp',
         data: columnIdMap[0],
-        orderable: true,
+        orderable: false,
         createdCell: (cell, cellData) => {
           $(cell).addClass('timestamp');
         }

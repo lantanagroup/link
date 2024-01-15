@@ -13,7 +13,6 @@ import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { MetricApiService } from 'src/services/api/metric/metric-api.service';
 import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
-import { activitiesData } from 'src/app/helpers/RecentActivityHelper';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
@@ -27,7 +26,6 @@ import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 export class ActivitiesComponent implements OnInit {
   metricCards: MetricCard[] = [];
   dtOptions: DataTables.Settings = {};
-  activitiesData = activitiesData
   dtSearchBar: SearchBar = {
     title: 'Search Activities',
     placeholder: 'Enter facility name, Bundle ID, Status, etc.'
@@ -135,7 +133,7 @@ export class ActivitiesComponent implements OnInit {
       columns: [{
         title: 'Timestamp',
         data: columnIdMap[0],
-        orderable: true,
+        orderable: false,
         createdCell: (cell, cellData) => {
           $(cell).addClass('timestamp');
         }

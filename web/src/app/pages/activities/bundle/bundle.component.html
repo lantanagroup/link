@@ -1,6 +1,6 @@
 <app-hero
   [subHeading]="subHeading"
-  [pageTitle]="bundleDetails?.facility?.name"
+  [pageTitle]="mockBundleDetails?.facility?.name"
   [isSubPage]="true"
   [cta]="heroButton"
 />
@@ -17,19 +17,19 @@
               titleAlign="center"
             >
               <app-mini-content title="Facility Name">
-                <app-link [link]="{url: '/facilities/facility/' + tenantId, title: bundleDetails?.facility?.name}"></app-link>
+                <app-link [link]="{url: '/facilities/facility/' + tenantId, title: mockBundleDetails?.facility?.name}"></app-link>
               </app-mini-content>
 
               <app-mini-content title="Submitted On">
-                <p><em>{{ bundleDetails?.submittedOn }}</em></p>
+                <p><em>{{ mockBundleDetails?.submittedOn }}</em></p>
               </app-mini-content>
 
               <app-mini-content title="Reporting Period">
-                <p><em>7 days<br>{{ bundleDetails?.reportingPeriod }}</em></p>
+                <p><em>7 days<br>{{ mockBundleDetails?.reportingPeriod }}</em></p>
               </app-mini-content>
 
               <app-mini-content title="NHSN Org Id">
-                <p>{{ bundleDetails?.facility?.cdcOrgId }}</p>
+                <p>{{ mockBundleDetails?.facility?.cdcOrgId }}</p>
               </app-mini-content>
 
               <app-mini-content title="EHR Vendor">
@@ -95,7 +95,7 @@
           [hasPadding]="true"
         >
           <div class="row">
-            <div class="col col-6 col-md-4" *ngFor="let methods of bundleDetails?.normalizations?.methods">
+            <div class="col col-6 col-md-4" *ngFor="let methods of mockBundleDetails?.normalizations?.methods">
               <app-mini-content [title]="methods.name">
                 <p>{{ methods.value }}</p>
               </app-mini-content>
@@ -111,9 +111,6 @@
         </div>
       </app-tab>
 
-      <app-tab tabTitle="Bundle Data">
-        <em>Content to come...</em>
-      </app-tab>
     </app-tab-container>
   </div>
 </app-section>
