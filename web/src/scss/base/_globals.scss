@@ -81,3 +81,15 @@ body {
     margin-bottom: 0;
   }
 }
+
+// NGX Charts
+
+.chart-legend {
+  ul.legend-labels {
+    background: $blue-100;
+  }
+  
+  li.legend-label {
+    color: $gray-800;
+  }
+}

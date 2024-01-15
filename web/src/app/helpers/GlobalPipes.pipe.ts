@@ -47,10 +47,13 @@ export class TimestampToSeconds implements PipeTransform {
   standalone: true
 })
 export class SecondsToTimestamp implements PipeTransform {
-  transform(value: number): string {
-    const hours = Math.floor(value / 3600);
-    const minutes = Math.floor((value % 3600) / 60);
-    const seconds = value % 60;
+  transform(value: any): string {
+
+    const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
+
+    const hours = Math.floor(actualValue / 3600);
+    const minutes = Math.floor((actualValue % 3600) / 60);
+    const seconds = actualValue % 60;
 
     const paddedHours = String(hours).padStart(2, '0');
     const paddedMinutes = String(minutes).padStart(2, '0');
