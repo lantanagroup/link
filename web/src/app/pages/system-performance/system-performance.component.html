@@ -25,6 +25,7 @@
               [referenceLines]="totalErrorRefs"
               [showRefLines]="true"
               [wrapTicks]="true"
+              [legend]="true"
             />
           </div>
         </app-card>
@@ -41,7 +42,7 @@
             [bandColor]="cardColors.band"
             [textColor]="cardColors.text"
             [innerPadding]="0"
-            [valueFormatting]="secondsToTimestamp"
+            [valueFormatting]="secondsToTimestamp.transform"
           />
         </app-card>
       </div>
@@ -61,7 +62,7 @@
               [yAxis]="true"
               xAxisLabel="Date"
               yAxisLabel="Avg. Generation Time/Day"
-              [yAxisTickFormatting]="secondsToTimestamp"
+              [yAxisTickFormatting]="secondsToTimestamp.transform"
               [referenceLines]="reportGenerationRefs"
               [showRefLines]="true"
               [wrapTicks]="true"
@@ -69,12 +70,12 @@
               <ng-template #tooltipTemplate let-model="model">
                 <div class="py-1 px-2">
                   {{ model.series }} &bull; {{ model.name }}<br>
-                  <span class="p--large"><strong>{{ secondsToTimestamp(model.value) }}</strong></span>
+                  <span class="p--large"><strong>{{ model.value | secondsToTimestamp }}</strong></span>
                 </div>
               </ng-template>
 
               <ng-template #seriesTooltipTemplate let-model="model">
-                <span>{{ model[0].series }}: {{ secondsToTimestamp(model[0].value) }}</span>
+                <span>{{ model[0].series }}: {{ model[0].value | secondsToTimestamp }}</span>
               </ng-template>
             </ngx-charts-line-chart>
           </div>
