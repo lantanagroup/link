@@ -651,7 +651,7 @@ public class SharedService {
     }
   }
 
-  public List<User> searchUsers(boolean includeDisabled) {
+  public List<User> searchUsers(boolean includeDisabled, String email) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
 
@@ -669,10 +669,11 @@ public class SharedService {
 
       return users.stream()
               .filter(u -> {
-                if (includeDisabled) {
-                  return true;
+                boolean ret = includeDisabled || u.getEnabled();
+                if (StringUtils.isNotEmpty(email) && !u.getEmail().equalsIgnoreCase(email)) {
+                  ret = false;
                 }
-                return u.getEnabled();
+                return ret;
               }).collect(Collectors.toList());
     } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
@@ -836,7 +837,7 @@ public class SharedService {
     tenantSummary.setLastSubmissionId(rs.getString(1));
     //convert time stamp to date yyyy-MM-dd HH:mm:ss
     DateTimeFormatter dateTimeFormatter = null;
-    String date = rs.getTimestamp(3).toLocalDateTime().format(dateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));     
+    String date = rs.getTimestamp(3).toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     tenantSummary.setLastSubmissionDate(date);
     return tenantSummary;
   }

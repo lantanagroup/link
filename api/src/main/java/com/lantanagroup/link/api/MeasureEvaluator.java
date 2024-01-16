@@ -88,6 +88,14 @@ public class MeasureEvaluator {
     // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
 
     if (null != measureReport) {
+      // Explicitly set the measure URL, appending the version if available
+      Measure measure = this.measureContext.getMeasure();
+      String measureUrl = measure.getUrl();
+      if (measure.hasVersion()) {
+        measureUrl += "|" + measure.getVersion();
+      }
+      measureReport.setMeasure(measureUrl);
+
       // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
       for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
         if (!evaluatedResource.hasReference()) continue;

@@ -35,8 +35,8 @@ public class UserController extends BaseController {
   }
 
   @GetMapping
-  public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled) {
-    return this.sharedService.searchUsers(includeDisabled);
+  public List<User> searchUsers(@RequestParam(defaultValue = "false") boolean includeDisabled, @RequestParam String email) {
+    return this.sharedService.searchUsers(includeDisabled, email);
   }
 
   private void saveUser(User user) {

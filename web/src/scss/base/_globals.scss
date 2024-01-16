@@ -85,6 +85,8 @@ body {
 // NGX Charts
 
 .chart-legend {
+  float: right;
+
   ul.legend-labels {
     background: $blue-100;
   }

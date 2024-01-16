@@ -109,6 +109,11 @@ paths:
           description: Whether or not to include disabled users
           schema:
             type: boolean
+        - name: email
+          in: query
+          description: The email address of the user to search for
+          schema:
+            type: string
       responses:
         '200':
           description: successful response
@@ -738,9 +743,9 @@ paths:
         - name: validate
           in: query
           description: Whether to validate the report at the end of generation
-          default: true
           schema:
             type: boolean
+            default: true
       responses:
         '200':
           description: successful response
@@ -1554,14 +1559,14 @@ paths:
         - name: periodStart
           in: query
           description: The ISO formatted (FHIR) date for the reporting period's start
-          example: 2022-01-01T00:00:00.000Z
+          example: '2022-01-01T00:00:00.000Z'
           required: true
           schema:
             type: string
         - name: periodEnd
           in: query
           description: The ISO formatted (FHIR) date for the reporting period's end
-          example: 2022-01-31T23:59:59.000Z
+          example: '2022-01-31T23:59:59.000Z'
           required: true
           schema:
             type: string
@@ -1810,10 +1815,10 @@ components:
             example: NHSNGlycemicControlHypoglycemicInitialPopulation
         periodStart:
           type: string
-          example: 2023-05-01T00:00:00.000Z
+          example: '2023-05-01T00:00:00.000Z'
         periodEnd:
           type: string
-          example: 2023-05-31T23:59:59.000Z
+          example: '2023-05-31T23:59:59.000Z'
         deviceInfo:
           $ref: '#/components/schemas/FHIR.Device'
     Report:
@@ -1828,10 +1833,10 @@ components:
                 - Submitted
             submittedTime:
               type: string
-              example: 2023-06-02T03:43:23.000Z
+              example: '2023-06-02T03:43:23.000Z'
             generatedTime:
               type: string
-              example: 2023-06-02T03:41:23.000Z
+              example: '2023-06-02T03:41:23.000Z'
             version:
               type: string
               example: "0.5"
@@ -2401,6 +2406,8 @@ components:
         id:
           type: string
         name:
+          type: string
+        email:
           type: string
         enabled:
           type: boolean
