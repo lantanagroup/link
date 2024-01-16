@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap, catchError, throwError } from 'rxjs';
+import { tap, catchError, throwError, BehaviorSubject } from 'rxjs';
 
 interface TokenResponse {
   access_token: string;
@@ -15,6 +15,8 @@ interface TokenResponse {
 })
 export class AuthService {
   private AUTH_ENDPOINT = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect';
+
+  private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn())
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -90,6 +92,7 @@ export class AuthService {
         sessionStorage.setItem('refresh_token', response.refresh_token);
         sessionStorage.setItem('expires_in', JSON.stringify(new Date().getTime() + (Number(response.expires_in) * 1000)));
         sessionStorage.setItem('id_token', response.id_token);
+        this.updateAuthStatus(true)
       })
     );
   }
@@ -102,6 +105,14 @@ export class AuthService {
       return false;
     }
     return new Date().getTime() < JSON.parse(expiresIn);
+  }
+
+  get isLoggedIn$() {
+    return this.authStatus.asObservable()
+  }
+
+  updateAuthStatus(isLoggedIn: boolean) {
+    this.authStatus.next(isLoggedIn)
   }
 
   // Logs out the user by clearing the access_token
