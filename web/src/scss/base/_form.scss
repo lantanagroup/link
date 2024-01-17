@@ -97,7 +97,10 @@ select {
 }
 
 textarea {
-  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.125rem) calc(100% - 0.25rem);
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.5rem) calc(100% - 0.5rem);
   background-size: 1rem auto;
   min-height: 6rem;
   overflow-y: scroll;
