@@ -97,12 +97,15 @@ select {
 }
 
 textarea {
-  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.125rem) calc(100% - 0.25rem);
+  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.25rem) calc(100% - 0.25rem);
   background-size: 1rem auto;
   min-height: 6rem;
   overflow-y: scroll;
   position: relative;
   resize: none !important;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 input[type='radio'] {

@@ -81,6 +81,7 @@
 // custom table styles
 .table__container {
   background: $white;
+  overflow: hidden;
 }
 
 div.dataTables_scrollBody > table.dataTable > thead > tr > * {
