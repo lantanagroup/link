@@ -208,15 +208,11 @@
           [isExpanded]="false"
         >
           <app-mini-content title="Method">
-            <em>Bulk FHIR</em>
+            <p *ngIf="facilityDetails?.queryList; else noData">FHIR List</p>
           </app-mini-content>
-        </app-accordion>
 
-        <app-accordion
-          title="Query Plans"
-          [isExpanded]="false"
-        >
           <div class="repeater" *ngFor="let queryList of facilityDetails?.queryList?.lists">
+            <h4 class="text-uppercase fw-bold mb-4">FHIR Lists</h4>
             <div class="row">
               <div class="col col-md-6">
                 <app-mini-content title="Measure ID">
@@ -228,12 +224,80 @@
               </div>
 
               <div class="col col-md-6">
-                <app-mini-content title="Query Plan">
+                <app-mini-content title="List ID">
                   <p *ngFor="let listId of queryList?.listId">{{ listId }}</p>
                 </app-mini-content>
               </div>
             </div>
           </div>
+
+        </app-accordion>
+
+        <app-accordion
+          title="Query Plans"
+          [isExpanded]="false"
+        >
+          <ng-container *ngIf="facilityQueryPlans">
+            <div class="repeater" *ngFor="let queryPlan of facilityQueryPlans">
+              <div class="row">
+                <div class="col col-md-4">
+                  <app-mini-content title="Measure ID">
+                    <div *ngIf="queryPlan?.measureId" class="d-flex align-items-center mb-2 u-gap2">
+                      <div class="chip">{{ generateMeasureChip(queryPlan?.measureId) }}</div>
+                      <span>{{ generateMeasureName(queryPlan?.measureId) }}</span>
+                    </div>
+                  </app-mini-content>
+                </div>
+  
+                <div class="col col-md-4">
+                  <app-mini-content title="Initial">
+                    <ng-container *ngIf="queryPlan?.initial; else noData">
+                      <div *ngFor="let plan of queryPlan?.initial" class="mb-4">
+                        <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
+                        <strong>Parameters:</strong>
+                        <ng-container *ngIf="plan?.parameters; else noDataInline">
+                          <div class="mb-1" *ngFor="let parameter of plan?.parameters">
+                            <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
+                            <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
+                            <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
+                          </div>
+                        </ng-container>
+                        <strong>References:</strong> 
+                        <ng-container *ngIf="plan?.references; else noDataInline">
+                          <br>
+                          Operation Type - {{ plan?.references?.operationType }}<br>
+                          Paged - {{ plan?.references?.paged }}<br>
+                        </ng-container>
+                        <strong>Early Exit:</strong> {{ plan?.earlyExit }}<br>
+                      </div>
+                    </ng-container>
+                  </app-mini-content>
+                </div>
+  
+                <div class="col col-md-4">
+                  <app-mini-content title="Supplemental">
+                    <ng-container *ngIf="queryPlan?.supplemental; else noData">
+                      <div *ngFor="let plan of queryPlan?.supplemental" class="mb-4">
+                        <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
+                        <strong>Parameters:</strong>
+                        <ng-container *ngIf="plan?.parameters; else noDataInline">
+                          <div class="mb-1" *ngFor="let parameter of plan?.parameters">
+                            <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
+                            <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
+                            <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
+                          </div>
+                        </ng-container>
+                        <strong>References:</strong><br>
+                          Operation Type - {{ plan?.references?.operationType }}<br>
+                          Paged - {{ plan?.references?.paged }}<br>
+                        <strong>Early Exit:</strong> {{ plan?.earlyExit }}<br>
+                      </div>
+                    </ng-container>
+                  </app-mini-content>
+                </div>
+              </div>
+            </div>
+          </ng-container>
         </app-accordion>
 
       </app-tab>
@@ -254,6 +318,10 @@
 
 <ng-template #noData>
   <p>n/a</p>
+</ng-template>
+
+<ng-template #noDataInline>
+  n/a<br>
 </ng-template>
 
 <ng-template #noAuth>

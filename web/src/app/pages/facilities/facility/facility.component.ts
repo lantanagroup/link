@@ -23,8 +23,40 @@ import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
 interface Normalization {
-  name: string,
+  name: string
   value: string
+}
+
+interface ReferencesConfig {
+  operationType: string
+  paged: number
+}
+
+interface ParametersConfig {
+  format: string | null,
+  ids: string | null,
+  literal: string | null,
+  name: string | null,
+  paged: number,
+  variable: string | null
+}
+
+interface TypedQueryPlan {
+  resourceType: string
+  parameters: ParametersConfig[]
+  references: ReferencesConfig
+  earlyExit: boolean
+}
+
+interface QueryPlan {
+  measureId?: string
+  lookback: string
+  initial: TypedQueryPlan[]
+  supplemental: TypedQueryPlan[]
+}
+
+interface QueryPlans {
+  [key: string]: QueryPlan
 }
 
 @Component({
@@ -38,7 +70,19 @@ export class FacilityComponent {
   facilityId: string | null = null
   facilityDetails: any = null;
   facilityNormalizations: Normalization[] = []
+  dataQueryKeys: string[] = [
+    'CodeSystemCleanup',
+    'ContainedResouceCleanup',
+    'CopyLocationToIdentifierType',
+    'EncounterStatusTransformer',
+    'FixPeriodDates',
+    'FixResourceId'
+  ]
+  resourceQueryKeys: string[] = [
+    'PatientDataResourceFilter'
+  ]
   facilityConceptMaps: TenantConceptMap[] = []
+  facilityQueryPlans: QueryPlan[] = []
   dtOptions: DataTables.Settings = {};
 
   private pascalCaseToSpace = new PascalCaseToSpace
@@ -60,6 +104,7 @@ export class FacilityComponent {
         this.GetFacilityDetails(this.facilityId);
         this.dtOptions = this.calculateDtOptions(this.facilityId);
         this.GetConceptMaps(this.facilityId)
+        
       } else {
         this.router.navigate(['/facilities'])
       }
@@ -79,8 +124,16 @@ export class FacilityComponent {
     try {
       const tenantDetail = await this.facilitiesApiService.fetchFacilityById(id);
       this.facilityDetails = tenantDetail;
-      this.facilityNormalizations = this.generateNormalizations(tenantDetail.events.afterPatientDataQuery)
-      console.log('facility details:', this.facilityDetails)
+
+      // get normalizations
+      this.facilityNormalizations = [
+        ...this.generateNormalizations(tenantDetail.events.afterPatientDataQuery, this.dataQueryKeys),
+        ...this.generateNormalizations(tenantDetail.events.afterPatientResourceQuery, this.resourceQueryKeys)
+      ]
+
+      // get query plans
+      this.facilityQueryPlans = this.generateQueryPlans(tenantDetail.fhirQuery?.queryPlans)
+
     } catch (error) {
       console.error('Error Loading table data.', error);
     }
@@ -94,34 +147,43 @@ export class FacilityComponent {
     return { url: url };
   }
 
-  generateMeasureChip(measure: string): string {
-    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
-    return prettyMeasure.split(' ')[0]
+  generateMeasureChip(measure: string | undefined): string {
+    if(measure) {
+      const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+      return prettyMeasure.split(' ')[0]
+    }
+    return ''
   }
 
-  generateMeasureName(measure: string): string {
-    const prettyMeasure = this.pascalCaseToSpace.transform(measure)
-    return prettyMeasure.split(' ').slice(1).join(' ')
+  generateMeasureName(measure: string | undefined): string {
+    if(measure) {
+      const prettyMeasure = this.pascalCaseToSpace.transform(measure)
+      return prettyMeasure.split(' ').slice(1).join(' ')
+    }
+    return ''
   }
 
-  generateNormalizations(data: string[]): Normalization[] {
-    const displayKeys = [
-      'CodeSystemCleanup',
-      'ContainedResouceCleanup',
-      'CopyLocationToIdentifierType',
-      'EncounterStatusTransformer',
-      'FixPeriodDates',
-      'FixResourceId',
-      'PatientDataResourceFilter'
-    ]
-
-    const normalizations = displayKeys.map(key => {
-      const found = data.some(item => item.includes(key))
+  generateNormalizations(data: string[], keys: string[]): Normalization[] {
+    const normalizations = keys.map(key => {
+      const found = data !== null ? data.some(item => item.includes(key)) : false
       return { name: key, value: found ? 'Yes' : 'No'}
     })
 
     return normalizations
   }
+
+  generateQueryPlans(data: QueryPlans): QueryPlan[] {
+    let templateQueryPlans: QueryPlan[] = []
+    console.log('data:', data)
+    for (const key of Object.keys(data)) {
+      templateQueryPlans = [...templateQueryPlans, {
+        ...data[key],
+        measureId: key
+      }]
+    }
+
+    return templateQueryPlans
+  } 
 
   calculateDtOptions(facilityId: string): DataTables.Settings {
     // DataTable configuration
