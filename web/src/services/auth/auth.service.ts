@@ -122,6 +122,8 @@ export class AuthService {
     sessionStorage.removeItem('id_token');
     sessionStorage.removeItem('refresh_token');
 
+    this.updateAuthStatus(false)
+
     const logoutUrl = `${this.AUTH_ENDPOINT}/logout?redirect_uri=${this.getBaseURL()}`;
     window.location.href = logoutUrl;
   }
