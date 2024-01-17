@@ -47,6 +47,11 @@ export class SystemPerformanceComponent {
 
     this.activeTenantHistoryRefs = this.getReferenceLines(this.activeTenantHistory[0])
   }
+  
+  ngAfterViewInit() {
+    // trigger a resize to fix safari rendering bug
+    window.dispatchEvent(new Event('resize'));
+  }
 
   getReferenceLines = (data: ChartDataModel, displayFunc: Function | void) => {
     let values = data.series.map(item => item.value)
