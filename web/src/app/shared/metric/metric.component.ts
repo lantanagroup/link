@@ -21,7 +21,7 @@ interface rateOfChange {
 })
 export class MetricComponent {
   @Input() subText: string = ''; // Context of what the main value is compared to
-  @Input() changeWindow?: string = 'month'; // the duration of value changed
+  @Input() changeWindow?: string = 'last month'; // the duration of value changed
   @Input() isUpGood: boolean = true;
   @Input() metricData!: MetricData;
   @Input() toTimestamp?: boolean = false; // converts seconds to timestamp

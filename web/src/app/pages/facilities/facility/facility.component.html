@@ -256,7 +256,7 @@
                         <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
                         <strong>Parameters:</strong>
                         <ng-container *ngIf="plan?.parameters; else noDataInline">
-                          <div class="mb-1" *ngFor="let parameter of plan?.parameters">
+                          <div class="repeater repeater--mini" *ngFor="let parameter of plan?.parameters">
                             <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
                             <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
                             <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
@@ -281,7 +281,7 @@
                         <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
                         <strong>Parameters:</strong>
                         <ng-container *ngIf="plan?.parameters; else noDataInline">
-                          <div class="mb-1" *ngFor="let parameter of plan?.parameters">
+                          <div class="repeater repeater--mini" *ngFor="let parameter of plan?.parameters">
                             <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
                             <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
                             <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
