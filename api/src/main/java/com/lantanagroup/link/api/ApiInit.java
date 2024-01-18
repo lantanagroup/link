@@ -109,6 +109,10 @@ public class ApiInit {
 
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+    if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
+      FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+      logger.info("Setting client to never query for metadata");
+    }
 
     if (!this.config.isApplySchemas()) {
       logger.warn("Not configured to apply schemas to database. Skipping shared database schema init.");
@@ -128,20 +132,15 @@ public class ApiInit {
       }
     }
 
-    if (this.config.getSkipInit()) {
-      logger.info("Skipping API initialization processes to load report defs and search parameters");
-      return;
-    }
-
     if (!this.config.isApplySchemas()) {
       logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
     } else {
       this.initDatabases(tenants);
     }
 
-    if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
-      FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-      logger.info("Setting client to never query for metadata");
+    if (this.config.getSkipInit()) {
+      logger.info("Skipping API initialization processes");
+      return;
     }
 
     // check that prerequisite services are available
