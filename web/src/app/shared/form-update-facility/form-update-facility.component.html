@@ -354,7 +354,7 @@
         <div class="col-12 col-md-6 order-md-1 order-3 mt-4 pt-1">
           <app-button
             variant="text"
-            classes="text-warning ml-auto"
+            classes="text-warning ml-auto d-block"
             [onClickHandler]="getRemoveConceptMapHandler(i)"
           >
             Delete Map
@@ -523,8 +523,9 @@
         <label for="method">Method</label>
         <select name="method" id="method">
           <option value="">Please Select</option>
-          <option value="STU3 Patient List">STU3 Patient List</option>
-          <option value="Bulk FHIR">Bulk FHIR</option>
+          <option value="FHIRList">FHIR List</option>
+          <option value="BulkFHIR">Bulk FHIR</option>
+          <option value="CSVViaSFTP">CSV via SFTP</option>
         </select>
       </div>
     </div>

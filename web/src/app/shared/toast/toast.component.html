@@ -1,4 +1,4 @@
-<div class="toast-container position-absolute top-0 end-0 p-3">
+<div class="toast-container position-fixed top-0 end-0 p-3">
   <div 
     *ngFor="let toast of toasts; let i = index"
     class="toast show" 
@@ -15,7 +15,9 @@
       <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" (click)="closeToast(i)"></button>
     </div>
     <div class="toast-body">
-      {{ toast.copy }}
+      <p class="p--small mb-0">
+        {{ toast.copy }}
+      </p>
     </div>
   </div>
 </div>

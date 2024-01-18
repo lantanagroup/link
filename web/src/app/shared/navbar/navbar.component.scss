@@ -1,13 +1,10 @@
 /* navbar.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .navbar {
   &--primary {
-    @media (min-width: map-get($grid-breakpoints, 'md')) {
-      margin-right: -1.125rem; // accounts for padding on nav links
-    }
+    margin-right: -1.125rem; // accounts for padding on nav links
   }
 }
 

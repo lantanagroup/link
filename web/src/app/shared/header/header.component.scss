@@ -1,7 +1,6 @@
 /* header.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .header {
 
@@ -10,11 +9,11 @@
   }
 
   &__logo {
-    color: $blue;
-    font-family: $font-family-heading;
-    font-size: 2.25rem;
-    letter-spacing: 0.025em;
-    line-height: 1.3em;
+    img {
+      height: auto;
+      max-width: 11rem;
+      width: 100%;
+    }
   }
 }
 #SecondaryNavigation .header {
@@ -24,8 +23,8 @@
       color: $black;
       display: inline-block;
       font-family: $font-family-heading;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
+      font-size: 1rem;
+      font-weight: $font-weight-normal;
       margin: 0 0.5rem;
     }
     .btn {

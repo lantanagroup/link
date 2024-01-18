@@ -35,6 +35,11 @@ bootstrapApplication(AppComponent, {
         canActivate: ['AuthGuard']
       },
       {
+        path: 'activities/bundle/:tenantId/:bundleId',
+        loadComponent: () => import('./app/pages/activities/bundle/bundle.component').then(m => m.BundleComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
         path: 'facilities',
         loadComponent: () => import('./app/pages/facilities/facilities.component').then(m => m.FacilitiesComponent),
         canActivate: ['AuthGuard']
@@ -62,6 +67,16 @@ bootstrapApplication(AppComponent, {
       {
         path: 'profile',
         loadComponent: () => import('./app/pages/profile/profile.component').then(m => m.ProfileComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
+        path: 'profile/update-password',
+        loadComponent: () => import('./app/pages/profile/update-password/update-password.component').then(m => m.UpdatePasswordComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
+        path: 'profile/edit-profile',
+        loadComponent: () => import('./app/pages/profile/edit-profile/edit-profile.component').then(m => m.EditProfileComponent),
         canActivate: ['AuthGuard']
       },
       {

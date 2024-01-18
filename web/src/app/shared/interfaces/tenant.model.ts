@@ -14,6 +14,12 @@ export interface Tenant {
 }
 
 export interface TenantSummary {
-  total: number;
-  tenants: Tenant[];
+  total: number
+  tenants: Tenant[]
+}
+
+export interface TenantConceptMap {
+  id: string
+  name: string
+  contexts: string[] 
 }

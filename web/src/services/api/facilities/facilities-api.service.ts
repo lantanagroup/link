@@ -3,6 +3,13 @@ import { Tenant, TenantSummary } from 'src/app/shared/interfaces/tenant.model';
 import { DataService } from 'src/services/api/data.service';
 import { firstValueFrom } from 'rxjs';
 
+interface FacilityQuery {
+  page?: number
+  sort?: string
+  sortAscend?: boolean
+  searchCriteria?: string
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -11,25 +18,33 @@ export class FacilitiesApiService {
   constructor(private dataService: DataService) { }
 
   // Fetches all the facilities data
-  async fetchAllFacilities(): Promise<Tenant[]> {
+  async fetchAllFacilities(filters: FacilityQuery = {page: 1}): Promise<TenantSummary | null> {
     try {
-      const response = await firstValueFrom(this.dataService.getData<TenantSummary>('tenant/summary'));
+      const queryParams = new URLSearchParams()
+      Object.entries(filters).forEach(([key, value]) => {
+        if(value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value)
+        }
+      })
+
+      const url = queryParams.toString() ? `tenant/summary?${queryParams}` : 'tenant/summary'
+      
+      const response = await firstValueFrom(this.dataService.getData<any>(url));
       if (response) {
-        return response.tenants;
+        return response;
       }
-      return [];
+      return null
     } catch (error) {
       console.error('Error fetching tenant summary data', error);
       throw error;
     }
   }
 
-  // Fetches all the facilities data
+  // Fetches all single facility data
   async fetchFacilityById(id: string): Promise<any> {
     try {
       const response = await firstValueFrom(this.dataService.getData<any>(`tenant/${id}`));
       if (response) {
-        console.log(response, 'tenant by id');
         return response;
       }
       return [];

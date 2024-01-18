@@ -7,7 +7,7 @@ import { AccordionComponent } from '../accordion/accordion.component';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { ToastComponent } from '../toast/toast.component';
-import { ToastService } from 'src/app/services/toast.service';
+import { ToastService } from 'src/services/toasts/toast.service';
 import { Router } from '@angular/router';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 

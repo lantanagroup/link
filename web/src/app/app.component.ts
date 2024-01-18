@@ -15,12 +15,12 @@ import { ToastComponent } from './shared/toast/toast.component';
     selector: 'app-root',
     standalone: true,
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.css'],
+    styleUrls: ['./app.component.scss'],
     imports: [CommonModule, HttpClientModule, LoginComponent, HeaderComponent, FooterComponent, RouterOutlet, ToastComponent]
 })
 export class AppComponent {
   title = 'web';
-  showHeaderAndFooter = true;
+  showHeaderAndFooter = false;
 
   /**
   * Based on the navigated route, the constructor decides whether to show or hide the header and footer.
