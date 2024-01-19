@@ -91,8 +91,14 @@ public class PatientDataRepository {
   }
 
   public void deleteAll() {
-    String sql = "DELETE FROM dbo.patientData;";
-    jdbc.update(sql, Map.of());
+    {
+      String sql = "DELETE FROM dbo.reportPatientData;";
+      jdbc.update(sql, Map.of());
+    }
+    {
+      String sql = "DELETE FROM dbo.patientData;";
+      jdbc.update(sql, Map.of());
+    }
   }
 
   public void deleteByPatientId(String patientId) {
@@ -102,12 +108,19 @@ public class PatientDataRepository {
   }
 
   public void deleteByReportId(String reportId) {
-    String sql = "DELETE FROM dbo.patientData WHERE dataTraceId IN " +
-            "(SELECT dataTraceId FROM dbo.dataTrace AS DT " +
-            "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
-            "WHERE Q.reportId = :reportId);";
-    Map<String, ?> parameters = Map.of("reportId", reportId);
-    jdbc.update(sql, parameters);
+    {
+      String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
+      Map<String, ?> parameters = Map.of("reportId", reportId);
+      jdbc.update(sql, parameters);
+    }
+    {
+      String sql = "DELETE FROM dbo.patientData WHERE dataTraceId IN " +
+              "(SELECT dataTraceId FROM dbo.dataTrace AS DT " +
+              "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+              "WHERE Q.reportId = :reportId);";
+      Map<String, ?> parameters = Map.of("reportId", reportId);
+      jdbc.update(sql, parameters);
+    }
   }
 
   public int deleteByRetrievedBefore(Date date) {
