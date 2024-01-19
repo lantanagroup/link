@@ -149,11 +149,16 @@ public class TenantService {
   }
 
   public void deleteAllPatientData(){
-    this.patientDatas.deleteAll();
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.validationCategories.deleteAll();
+    this.validations.deleteAll();
+
     this.aggregates.deleteAll();
     this.patientMeasureReports.deleteAll();
+
+    this.patientDatas.deleteAll();
+    this.dataTraces.deleteAll();
+    this.queries.deleteAll();
+
     this.reports.deleteAll();
     this.patientLists.deleteAll();
   }
@@ -205,11 +210,16 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
+    this.validationCategories.deleteForReport(reportId);
+    this.validations.deleteByReport(reportId);
+
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.patientDatas.deleteByReportId(reportId);
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
-    this.aggregates.deleteByReportId(reportId);
-    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.reports.deleteById(reportId);
   }
 
