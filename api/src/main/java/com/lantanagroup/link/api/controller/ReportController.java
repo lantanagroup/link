@@ -306,6 +306,7 @@ public class ReportController extends BaseController {
       }
     } else {
       logger.info("Beginning initial query and store");
+      tenantService.beginReport(masterIdentifierValue);
       this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
