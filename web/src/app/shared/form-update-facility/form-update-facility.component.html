@@ -320,13 +320,14 @@
       <div class="col col-md-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
         <label 
             class="label__checkbox" 
-            [for]="this.measureDefs[i].measureId"
+            [for]="this.formMeasureDefs[i].measureId"
           >
           <input 
             type="checkbox"
-            [id]="this.measureDefs[i].measureId"
-            [name]="this.measureDefs[i].measureId"
-            [value]="0"
+            [id]="this.formMeasureDefs[i].measureId"
+            [name]="this.formMeasureDefs[i].measureId"
+            [value]="this.formMeasureDefs[i].measureId"
+            [checked]="this.formMeasureDefs[i].checked"
             [formControlName]="i"
           />
           <span></span>

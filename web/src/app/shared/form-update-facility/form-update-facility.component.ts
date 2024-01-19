@@ -30,6 +30,12 @@ interface FormConceptMap {
   map?: any // todo: not sure what this looks like 
 }
 
+interface FormMeasureDef {
+  id: string
+  measureId: string
+  checked: boolean
+}
+
 @Component({
   selector: 'app-form-update-facility',
   standalone: true,
@@ -42,6 +48,7 @@ export class FormUpdateFacilityComponent {
   @Input() facilityId?: string | null = null;
   facilityDetails: TenantDetails | null = null;
   measureDefs: MeasureDef[] = [];
+  formMeasureDefs: FormMeasureDef[] = [];
   measureDefsLoading: boolean = true;
   isDataLoaded: boolean = false;
 
@@ -105,7 +112,7 @@ export class FormUpdateFacilityComponent {
   })
 
   // Measures, checkbox fields
-  get measures() {
+  get measures(): FormArray {
     return this.facilitiesForm.get('measures') as FormArray;
   }
 
@@ -224,8 +231,17 @@ export class FormUpdateFacilityComponent {
 
     if(this.measureDefs) {
       for(const measure of this.measureDefs) {
+        this.formMeasureDefs = [
+          ...this.formMeasureDefs,
+          {
+            id: measure.id,
+            measureId: measure.measureId,
+            checked: false
+          }
+        ]
         this.addMeasure()
       }
+      console.log('for form:', this.formMeasureDefs)
       this.measureDefsLoading = false;
     }
   }
