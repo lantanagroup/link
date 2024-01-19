@@ -29,7 +29,7 @@
     title="Profile"
     [isExpanded]="true"
   >
-    <div class="row" formGroupName="profile">
+    <div class="row">
       <div class="col col-md-6 form__field">
         <label for="name">Facility Name<span class="text-warning">*</span></label>
         <input 
@@ -45,7 +45,7 @@
         <input 
           type="text" 
           id="tenantId" 
-          formControlName="tenantId"
+          formControlName="id"
         />
       </div>
 
@@ -57,12 +57,12 @@
         ></textarea>
       </div>
 
-      <div class="col col-md-6 form__field">
+      <div class="col col-md-6 form__field" formGroupName="bundling">
         <label for="bundleName">Name for Bundling<span class="text-warning">*</span></label>
         <input 
           type="text" 
           id="bundleName" 
-          formControlName="bundleName"
+          formControlName="name"
         />
       </div>
 
@@ -81,15 +81,15 @@
         <input 
           type="text"
           id="database"
-          formControlName="database"
+          formControlName="connectionString"
           placeholder="MSSQL Server Connection String"
         />
         <p class="form__description">Where all tenant-specific data is stored</p>
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="database">Vendor</label>
-        <select name="vendor" id="vendor">
+        <label for="vendor">Vendor</label>
+        <select name="vendor" id="vendor" formControlName="vendor">
           <option value="">Please Select</option>
           <option value="Epic">Epic</option>
           <option value="Cerner">Cerner</option>
@@ -102,7 +102,7 @@
         <input 
           type="text"
           id="dataRetentionPeriod"
-          formControlName="dataRetentionPeriod"
+          formControlName="retentionPeriod"
         />
         <p class="form__description">ISO 8601 formatted string</p>
       </div>
@@ -114,197 +114,226 @@
     title="Normalizations"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="normalizations">
+    <div class="row" formGroupName="events">
+      <ng-container formGroupName="afterPatientDataQuery">
 
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Code System Cleanup</label>
-        <label for="codeSystemCleanupFalse" class="label__radio">
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Code System Cleanup</label>
+          <label for="codeSystemCleanupFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="codeSystemCleanupFalse"
+              name="codeSystemCleanup" 
+              formControlName="codeSystemCleanup"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="codeSystemCleanupTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="codeSystemCleanupTrue" 
+              name="codeSystemCleanup"
+              formControlName="codeSystemCleanup"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Contained Resource Cleanup</label>
+          <label for="containedResourceCleanupFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="containedResourceCleanupFalse"
+              name="containedResourceCleanup" 
+              formControlName="containedResourceCleanup"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="containedResourceCleanupTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="containedResourceCleanupTrue" 
+              name="containedResourceCleanup"
+              formControlName="containedResourceCleanup"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
+          <label for="copyLocationFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="copyLocationFalse"
+              name="copyLocation" 
+              formControlName="copyLocation"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="copyLocationTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="copyLocationTrue" 
+              name="copyLocation"
+              formControlName="copyLocation"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Encounter Status Transformer</label>
+          <label for="encounterStatusFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="encounterStatusFalse"
+              name="encounterStatus" 
+              formControlName="encounterStatus"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="encounterStatusTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="encounterStatusTrue" 
+              name="encounterStatus"
+              formControlName="encounterStatus"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Fix Period Dates</label>
+          <label for="fixPeriodDatesFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixPeriodDatesFalse"
+              name="fixPeriodDates" 
+              formControlName="fixPeriodDates"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="fixPeriodDatesTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixPeriodDatesTrue" 
+              name="fixPeriodDates"
+              formControlName="fixPeriodDates"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Fix Resource IDs</label>
+          <label for="fixResourceIdsFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixResourceIdsFalse"
+              name="fixResourceIds" 
+              formControlName="fixResourceIds"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="fixResourceIdsTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixResourceIdsTrue" 
+              name="fixResourceIds"
+              formControlName="fixResourceIds"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+      </ng-container>
+
+      <ng-container formGroupName="afterPatientResourceQuery">
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
+          <label for="patientDataResourceFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="patientDataResourceFalse"
+              name="patientDataResource" 
+              formControlName="patientDataResource"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="patientDataResourceTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="patientDataResourceTrue" 
+              name="patientDataResource"
+              formControlName="patientDataResource"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+      </ng-container>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Measures"
+    [isExpanded]="false"
+  >
+    <div class="row" formArrayName="measures" *ngIf="!this.measureDefsLoading; else isLoading">
+      <div class="col col-md-6 col-lg-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
+        <label 
+            class="label__checkbox" 
+            [for]="this.formMeasureDefs[i].measureId"
+          >
           <input 
-            type="radio" 
-            id="codeSystemCleanupFalse"
-            name="codeSystemCleanup" 
-            formControlName="codeSystemCleanup"
-            [value]=0
+            type="checkbox"
+            [id]="this.formMeasureDefs[i].measureId"
+            [name]="this.formMeasureDefs[i].measureId"
+            [value]="this.formMeasureDefs[i].measureId"
+            [checked]="this.formMeasureDefs[i].checked"
+            [formControlName]="i"
           />
           <span></span>
-          No
-        </label>
-
-        <label for="codeSystemCleanupTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="codeSystemCleanupTrue" 
-            name="codeSystemCleanup"
-            formControlName="codeSystemCleanup"
-            [value]=1
-          />
-          <span></span>
-          Yes
+          {{ this.measureDefs[i].measureId | pascalCaseToSpace }}
         </label>
       </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Contained Resource Cleanup</label>
-        <label for="containedResourceCleanupFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="containedResourceCleanupFalse"
-            name="containedResourceCleanup" 
-            formControlName="containedResourceCleanup"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="containedResourceCleanupTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="containedResourceCleanupTrue" 
-            name="containedResourceCleanup"
-            formControlName="containedResourceCleanup"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
-        <label for="copyLocationFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="copyLocationFalse"
-            name="copyLocation" 
-            formControlName="copyLocation"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="copyLocationTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="copyLocationTrue" 
-            name="copyLocation"
-            formControlName="copyLocation"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Encounter Status Transformer</label>
-        <label for="encounterStatusFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="encounterStatusFalse"
-            name="encounterStatus" 
-            formControlName="encounterStatus"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="encounterStatusTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="encounterStatusTrue" 
-            name="encounterStatus"
-            formControlName="encounterStatus"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Fix Period Dates</label>
-        <label for="fixPeriodDatesFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="fixPeriodDatesFalse"
-            name="fixPeriodDates" 
-            formControlName="fixPeriodDates"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="fixPeriodDatesTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="fixPeriodDatesTrue" 
-            name="fixPeriodDates"
-            formControlName="fixPeriodDates"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Fix Resource IDs</label>
-        <label for="fixResourceIdsFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="fixResourceIdsFalse"
-            name="fixResourceIds" 
-            formControlName="fixResourceIds"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="fixResourceIdsTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="fixResourceIdsTrue" 
-            name="fixResourceIds"
-            formControlName="fixResourceIds"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
-      <div class="col col-md-3 form__field">
-        <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
-        <label for="patientDataResourceFalse" class="label__radio">
-          <input 
-            type="radio" 
-            id="patientDataResourceFalse"
-            name="patientDataResource" 
-            formControlName="patientDataResource"
-            [value]=0
-          />
-          <span></span>
-          No
-        </label>
-
-        <label for="patientDataResourceTrue" class="label__radio">
-          <input 
-            type="radio" 
-            id="patientDataResourceTrue" 
-            name="patientDataResource"
-            formControlName="patientDataResource"
-            [value]=1
-          />
-          <span></span>
-          Yes
-        </label>
-      </div>
-
     </div>
   </app-accordion>
 
@@ -324,6 +353,7 @@
             type="text" 
             id="id" 
             placeholder="Must be unique"
+            formControlName="id"
           />
         </div>
 
@@ -332,6 +362,7 @@
           <input 
             type="text" 
             id="name" 
+            formControlName="name"
           />
         </div>
 
@@ -340,6 +371,7 @@
           <textarea
             id="contexts" 
             placeholder="One FHIRPath per line"
+            formControlName="contexts"
           ></textarea>
         </div>
 
@@ -348,6 +380,7 @@
           <textarea
             id="map"
             placeholder="FHIR ConceptMap Json"
+            formControlName="map"
           ></textarea>
         </div>
         
@@ -378,26 +411,26 @@
   >
     <div class="row" formGroupName="scheduling">
       <div class="col col-md-6 form__field">
-        <label for="queryPatientList">Query Patient List</label>
+        <label for="queryPatientListCron">Query Patient List</label>
         <input 
           type="text" 
-          id="queryPatientList" 
-          formControlName="queryPatientList"
+          id="queryPatientListCron" 
+          formControlName="queryPatientListCron"
         />
         <p class="form__description">CRON Expression</p>
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="dataRetentionCheck">Data Retention Check</label>
+        <label for="dataRetentionCheckCron">Data Retention Check</label>
         <input 
           type="text" 
-          id="dataRetentionCheck" 
-          formControlName="dataRetentionCheck"
+          id="dataRetentionCheckCron" 
+          formControlName="dataRetentionCheckCron"
         />
         <p class="form__description">CRON Expression</p>
       </div>
 
-      <div formArrayName="schedules">
+      <div formArrayName="generateAndSubmitReports">
         <label class="label__lg d-block mb-4">Generate and Submit<span class="text-warning">*</span></label>
 
         <fieldset 
@@ -425,12 +458,12 @@
             <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
             <select 
               id="reportingPeriod" 
-              formControlName="reportingPeriod"
+              formControlName="reportingPeriodMethod"
             >
-              <option value="Last Month">Last Month</option>
-              <option value="Last Week">Last Week</option>
-              <option value="Current Month">Current Month</option>
-              <option value="Current Week">Current Week</option>
+              <option value="LastMonth">Last Month</option>
+              <option value="LastWeek">Last Week</option>
+              <option value="CurrentMonth">Current Month</option>
+              <option value="CurrentWeek">Current Week</option>
             </select>
           </div>
 
@@ -439,7 +472,7 @@
             <input 
               type="text" 
               id="schedule" 
-              formControlName="schedule"
+              formControlName="cron"
             />
           </div>
 
@@ -447,7 +480,7 @@
             <label for="regenerate">Regenerate</label>
             <select 
               id="regenerate" 
-              formControlName="regenerate"
+              formControlName="regenerateIfExists"
             >
               <option [value]="1">Yes</option>
               <option [value]="0">No</option>
@@ -480,13 +513,13 @@
     title="Native FHIR Query"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="nativeFHIRQuery">
+    <div class="row" formGroupName="fhirQuery">
       <div class="col col-md-6 form__field">
-        <label for="nativeFHIREndpoint">FHIR Endpoint</label>
+        <label for="fhirServerBase">FHIR Endpoint</label>
         <input 
           type="text" 
-          id="nativeFHIREndpoint" 
-          formControlName="nativeFHIREndpoint"
+          id="fhirServerBase" 
+          formControlName="fhirServerBase"
         />
       </div>
 
@@ -501,13 +534,15 @@
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="authenticationMethod">Authentication Method</label>
-        <select name="authenticationMethod" id="authenticationMethod">
-          <option value="None">None</option>
-          <option value="Epic OAuth">Epic OAuth</option>
-          <option value="Cerner OAuth">Cerner OAuth</option>
-          <option value="Basic">Basic</option>
-          <option value="Basic + API Key">Basic + API Key</option>
+        <label for="authClass">Authentication Method</label>
+        <select name="authClass" id="authClass" formControlName="authClass">
+          <option value="">None</option>
+          <option value="BasicAuth">Basic</option>
+          <option value="BasicAuthAndApiKey">Basic + API Key</option>
+          <option value="AzureAuth">Azure OAuth</option>
+          <option value="EpicAuth">Epic OAuth</option>
+          <option value="CernerAuth">Cerner OAuth</option>
+          <option value="TokenAuth">Token OAuth</option>
         </select>
       </div>
 
@@ -518,10 +553,10 @@
     title="Census Acquisition"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="censusAcquisition">
+    <div class="row">
       <div class="col col-md-6 form__field">
-        <label for="method">Method</label>
-        <select name="method" id="method">
+        <label for="censusAcquisitionMethod">Method</label>
+        <select name="censusAcquisitionMethod" id="censusAcquisitionMethod" formControlName="censusAcquisitionMethod">
           <option value="">Please Select</option>
           <option value="FHIRList">FHIR List</option>
           <option value="BulkFHIR">Bulk FHIR</option>
@@ -535,14 +570,13 @@
     title="Bulk FHIR"
     [isExpanded]="false"
   >
-    <div class="row" formGroupName="bulkFHIR">
+    <div class="row">
 
       <div class="col col-md-6 form__field">
         <label for="bulkFHIREndpoint">FHIR Endpoint</label>
         <input 
           type="text" 
           id="bulkFHIREndpoint" 
-          formControlName="bulkFHIREndpoint"
         />
         <p class="form__description">Endpoint is relative to "Native FHIR Query" FHIR Endpoint</p>
       </div>
@@ -552,7 +586,7 @@
         <input 
           type="number" 
           id="waitInterval" 
-          formControlName="waitInterval"
+          formControlName="bulkWaitTimeInMilliseconds"
           placeholder="e.g., 23"
         />
       </div>
@@ -562,7 +596,6 @@
         <input 
           type="text" 
           id="groupID" 
-          formControlName="groupID"
         />
       </div>
 
@@ -571,7 +604,6 @@
         <input 
           type="text" 
           id="initialResponseURLHeader" 
-          formControlName="initialResponseURLHeader"
         />
       </div>
 
@@ -580,7 +612,6 @@
         <input 
           type="text" 
           id="progressHeaderName" 
-          formControlName="progressHeaderName"
           placeholder="X-Progress"
         />
       </div>
@@ -590,7 +621,6 @@
         <input 
           type="text" 
           id="progressCompleteHeaderValue" 
-          formControlName="progressCompleteHeaderValue"
           placeholder="complete"
         />
       </div>
@@ -602,46 +632,54 @@
     title="Query Plans"
     [isExpanded]="false"
   >
-    <div formArrayName="queryPlans">
-      <fieldset 
-        *ngFor="let queryPlan of queryPlans.controls; let i = index" 
-        class="row form__group"
-        [formGroupName]="i"
-      >
-        <div class="col col-md-4 form__field">
-          <label for="measureId">Measure ID</label>
-          <input 
-            type="text" 
-            id="measureId" 
-          />
-        </div>
-
-        <div class="col col-md-6 form__field">
-          <label for="plan">Query Plan</label>
-          <textarea 
-            id="plan"
-            placeholder="Enter YAML Here"
-          ></textarea>
-        </div>
-        
-        <div class="col col-md-2 form__field pt-4">
-          <app-button
-            variant="text"
-            classes="text-warning"
-            [onClickHandler]="getRemoveQueryPlanHandler(i)"
-          >
-            Delete Plan
-          </app-button>
-        </div>
-      </fieldset>
-
-      <app-button
-        type="button"
-        [onClickHandler]="getAddQueryPlanHandler()"
-      >
-        <app-icon filePath="../../../assets/icons/plus.svg" />
-        Add Query Plan
-      </app-button>
-    </div>
+    <ng-container formGroupName="fhirQuery">
+      <div formArrayName="queryPlans">
+        <fieldset 
+          *ngFor="let queryPlan of queryPlans.controls; let i = index" 
+          class="row form__group"
+          [formGroupName]="i"
+        >
+          <div class="col col-md-4 form__field">
+            <label for="measureId">Measure ID</label>
+            <input 
+              type="text" 
+              id="measureId" 
+              formControlName="measureId"
+            />
+          </div>
+  
+          <div class="col col-md-6 form__field">
+            <label for="plan">Query Plan</label>
+            <textarea 
+              id="plan"
+              placeholder="Enter YAML Here"
+              formControlName="plan"
+            ></textarea>
+          </div>
+          
+          <div class="col col-md-2 form__field pt-4">
+            <app-button
+              variant="text"
+              classes="text-warning"
+              [onClickHandler]="getRemoveQueryPlanHandler(i)"
+            >
+              Delete Plan
+            </app-button>
+          </div>
+        </fieldset>
+  
+        <app-button
+          type="button"
+          [onClickHandler]="getAddQueryPlanHandler()"
+        >
+          <app-icon filePath="../../../assets/icons/plus.svg" />
+          Add Query Plan
+        </app-button>
+      </div>
+    </ng-container>
   </app-accordion>
 </form>
+
+<ng-template #isLoading>
+  <p><em>Loading fields...</em></p>
+</ng-template>

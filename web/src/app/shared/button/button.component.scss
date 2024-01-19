@@ -81,11 +81,13 @@
   }
 
   &--text {
-    @include nav-secondary();
+    @include body-font();
     border: none;
     background: transparent;
     color: $blue;
+    font-weight: $font-weight-normal;
     padding: 0.25rem;
+    text-transform: none;
 
     svg path {
       color: $blue;
