@@ -1,5 +1,7 @@
 /* base/_custom-utilities.scss */
 
+@import '../customize-bootstrap.scss';
+
 // transforms
 
 .u-rotate90 {
@@ -20,4 +22,9 @@
       gap: calc(0.25rem * #{$i});
     }
   }
+}
+
+// Theme Colors
+.u-text-offwhite {
+  color: $blue-100;
 }

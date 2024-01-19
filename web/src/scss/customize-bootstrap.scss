@@ -98,7 +98,8 @@ $font-weight-bolder:          800;
 
 @mixin body-font-lg() {
   @include body-font();
-  font-size: 1.125em;
+  font-size: 1.0625em;
+  letter-spacing: 0.04em;
   line-height: 1.5em;
 }
 
@@ -120,6 +121,7 @@ $font-weight-bolder:          800;
   font-size: $h2-font-size;
   font-weight: $font-weight-bold;
   letter-spacing: 0.05em;
+  line-height: 1.4em;
 }
 
 @mixin subheading-01() {
