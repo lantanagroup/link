@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -12,6 +13,7 @@ import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -146,6 +148,22 @@ public class ApiInit {
     // check that prerequisite services are available
     if (!this.checkPrerequisites()) {
       throw new IllegalStateException("Prerequisite services check failed. Cannot continue API initialization.");
+    }
+
+    ensureSupplementalDataSearchParameter();
+  }
+
+  private void ensureSupplementalDataSearchParameter() {
+    logger.info("Requesting evaluation of nonexistent measure to ensure supplemental-data search parameter exists");
+    try {
+      FhirContextProvider.getFhirContext().newRestfulGenericClient(this.config.getEvaluationService())
+              .operation()
+              .onInstance("Measure/nonexistent-measure")
+              .named("$evaluate-measure")
+              .withNoParameters(Parameters.class)
+              .execute();
+    } catch (ResourceNotFoundException e) {
+      logger.info("Caught 404 as expected");
     }
   }
 }
