@@ -40,7 +40,7 @@ public abstract class BaseMapper<T> implements RowMapper<T> {
     }
   }
 
-  protected abstract SqlParameterSource doToParameters(T model) throws JsonProcessingException;
+  protected abstract Parameters doToParameters(T model) throws JsonProcessingException;
 
   @Override
   public T mapRow(@Nonnull ResultSet rs, int rowNum) throws SQLException {

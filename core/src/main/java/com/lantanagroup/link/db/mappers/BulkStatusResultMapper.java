@@ -3,7 +3,6 @@ package com.lantanagroup.link.db.mappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.BulkStatusResult;
 import com.lantanagroup.link.model.BulkResponse;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +19,7 @@ public class BulkStatusResultMapper extends BaseMapper<BulkStatusResult> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(BulkStatusResult model) throws JsonProcessingException {
+  protected Parameters doToParameters(BulkStatusResult model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addUUID("statusId", model.getStatusId());
