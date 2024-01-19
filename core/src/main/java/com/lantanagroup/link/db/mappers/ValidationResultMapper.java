@@ -6,7 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StringType;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -155,7 +154,7 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(ValidationResult model) throws JsonProcessingException {
+  protected Parameters doToParameters(ValidationResult model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
 
     parameters.addUUID("id", model.getId());

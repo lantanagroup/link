@@ -1,7 +1,6 @@
 package com.lantanagroup.link.db.mappers;
 
 import com.lantanagroup.link.db.model.BulkStatus;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +18,7 @@ public class BulkStatusMapper extends BaseMapper<BulkStatus> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(BulkStatus model) {
+  protected Parameters doToParameters(BulkStatus model) {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addString("statusUrl", model.getStatusUrl());
