@@ -13,6 +13,8 @@ import { Router } from '@angular/router';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
 import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
 import { Events, NormalizationClass, QueryPlans, TenantConceptMap, TenantDetails, Schedule } from '../interfaces/tenant.model';
+import { MeasureDef } from '../interfaces/measures.model';
+import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
 
 interface FormSchedule {
   cron: string
@@ -31,13 +33,17 @@ interface FormConceptMap {
 @Component({
   selector: 'app-form-update-facility',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent, ToastComponent],
+  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent, ToastComponent, PascalCaseToSpace],
   templateUrl: './form-update-facility.component.html',
   styleUrls: ['./form-update-facility.component.scss']
 })
 export class FormUpdateFacilityComponent {
 
   @Input() facilityId?: string | null = null;
+  facilityDetails: TenantDetails | null = null;
+  measureDefs: MeasureDef[] = [];
+  measureDefsLoading: boolean = true;
+  isDataLoaded: boolean = false;
 
   constructor(
     private fb: FormBuilder, 
@@ -46,8 +52,6 @@ export class FormUpdateFacilityComponent {
     private toastService: ToastService, 
     private router: Router
   ) { }
-  facilityDetails: TenantDetails | null = null;
-  isDataLoaded: boolean = false;
 
   async GetFacilityDetails(id: string) {
     try {
@@ -83,6 +87,7 @@ export class FormUpdateFacilityComponent {
         patientDataResource: new FormControl(0)
       })
     }),
+    measures: this.fb.array([]),
     conceptMaps: this.fb.array([]),
     scheduling: new FormGroup({
       queryPatientListCron: new FormControl(''),
@@ -98,6 +103,19 @@ export class FormUpdateFacilityComponent {
     censusAcquisitionMethod: new FormControl(''),
     bulkWaitTimeInMilliseconds: new FormControl('')
   })
+
+  // Measures, checkbox fields
+  get measures() {
+    return this.facilitiesForm.get('measures') as FormArray;
+  }
+
+  createMeasure(): FormControl {
+    return new FormControl('')
+  }
+
+  addMeasure() {
+    this.measures.push(this.createMeasure())
+  }
 
   // Concept Maps Dynamic Fields
   get conceptMaps(): FormArray {
@@ -190,11 +208,25 @@ export class FormUpdateFacilityComponent {
   // update with initial form values
 
   async ngOnInit(): Promise<void> {
+
+    this.setMeasureDefs()
+
     if (this.facilityId) {
       await this.GetFacilityDetails(this.facilityId)
       await this.setInitialValues(this.facilityId)
     } else {
       this.isDataLoaded = true;
+    }
+  }
+
+  private async setMeasureDefs() {
+    this.measureDefs = await this.globalApiService.getContent('measureDef')
+
+    if(this.measureDefs) {
+      for(const measure of this.measureDefs) {
+        this.addMeasure()
+      }
+      this.measureDefsLoading = false;
     }
   }
 

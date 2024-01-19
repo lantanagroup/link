@@ -313,6 +313,30 @@
   </app-accordion>
 
   <app-accordion
+    title="Measures"
+    [isExpanded]="false"
+  >
+    <div class="row" formArrayName="measures" *ngIf="!this.measureDefsLoading; else isLoading">
+      <div class="col col-md-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
+        <label 
+            class="label__checkbox" 
+            [for]="this.measureDefs[i].measureId"
+          >
+          <input 
+            type="checkbox"
+            [id]="this.measureDefs[i].measureId"
+            [name]="this.measureDefs[i].measureId"
+            [value]="0"
+            [formControlName]="i"
+          />
+          <span></span>
+          {{ this.measureDefs[i].measureId | pascalCaseToSpace }}
+        </label>
+      </div>
+    </div>
+  </app-accordion>
+
+  <app-accordion
     title="Concept Maps"
     [isExpanded]="false"
   >
@@ -654,3 +678,7 @@
     </ng-container>
   </app-accordion>
 </form>
+
+<ng-template #isLoading>
+  <p><em>Loading fields...</em></p>
+</ng-template>

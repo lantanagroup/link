@@ -34,14 +34,23 @@ label {
 }
 
 .label {
-  &__radio {
-    @include body-font-xs();
+  &__radio,
+  &__checkbox {
     align-items: center;
     color: $gray-800;
     cursor: pointer;
     display: flex;
     text-transform: none;
     width: 100%;
+  }
+
+  &__radio {
+    @include body-font-xs();
+  }
+
+  &__checkbox {
+    @include body-font-sm();
+    font-weight: $font-weight-normal;
   }
 
   &__lg {
@@ -143,6 +152,43 @@ input[type='radio'] {
 
     &::after {
       transform: scale(0.625);
+    }
+  }
+}
+
+input[type='checkbox'] {
+  display: none;
+
+  + span {
+    background: transparent;
+    border: 0.125rem solid $blue;
+    border-radius: 0.125rem;
+    display: block;
+    height: 1.5rem;
+    margin-right: 1rem;
+    min-width: 1.5rem;
+    position: relative;
+    transition: $transition-base;
+    width: 1.5rem;
+
+    &::after {
+      background: url('../../assets/icons/check.svg') no-repeat center center;
+      content: '';
+      display: none;
+      height: 1.5rem;
+      left: -0.125rem;
+      position: absolute;
+      top: -0.125rem;
+      transform-origin: center center;
+      width: 1.5rem;
+    }
+  }
+
+  &:checked + span {
+    background: $blue-500;
+
+    &::after {
+      display: block;
     }
   }
 }
