@@ -1,6 +1,7 @@
 package com.lantanagroup.link.db.mappers;
 
 import com.lantanagroup.link.db.model.PatientData;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +19,12 @@ public class PatientDataMapper extends BaseMapper<PatientData> {
     model.setResource(row.getResource("resource"));
     model.setRetrieved(row.getDate("retrieved"));
     return model;
+  }
+
+  public SqlParameterSource toParameters(String reportId, PatientData model) {
+    Parameters parameters = doToParameters(model);
+    parameters.addString("reportId", reportId);
+    return parameters;
   }
 
   @Override
