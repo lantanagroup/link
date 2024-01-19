@@ -85,6 +85,11 @@ public class PatientDataRepository {
     }
   }
 
+  public void beginReport(String reportId) {
+    String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
+    jdbc.update(sql, Map.of("reportId", reportId));
+  }
+
   public void deleteAll() {
     String sql = "DELETE FROM dbo.patientData;";
     jdbc.update(sql, Map.of());

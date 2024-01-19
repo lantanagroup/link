@@ -125,6 +125,10 @@ public class TenantService {
     this.patientLists.save(patientList);
   }
 
+  public void beginReport(String reportId) {
+    this.patientDatas.beginReport(reportId);
+  }
+
   public List<PatientData> findPatientData(String patientId) {
     return this.patientDatas.findByPatientId(patientId);
   }
