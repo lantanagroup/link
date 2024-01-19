@@ -317,7 +317,7 @@
     [isExpanded]="false"
   >
     <div class="row" formArrayName="measures" *ngIf="!this.measureDefsLoading; else isLoading">
-      <div class="col col-md-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
+      <div class="col col-md-6 col-lg-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
         <label 
             class="label__checkbox" 
             [for]="this.formMeasureDefs[i].measureId"
