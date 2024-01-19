@@ -129,6 +129,10 @@ public class TenantService {
     return this.patientDatas.findByPatientId(patientId);
   }
 
+  public List<PatientData> findPatientData(String reportId, String patientId) {
+    return this.patientDatas.findByReportIdAndPatientId(reportId, patientId);
+  }
+
   public int deletePatientDataRetrievedBefore(Date date) {
     int result = this.patientDatas.deleteByRetrievedBefore(date);
     this.dataTraces.deleteUnreferenced();
@@ -172,8 +176,8 @@ public class TenantService {
     this.savePatientList(patientList);
   }
 
-  public void savePatientData(List<PatientData> patientData) {
-    this.patientDatas.saveAll(patientData);
+  public void savePatientData(String reportId, List<PatientData> patientData) {
+    this.patientDatas.saveAll(reportId, patientData);
   }
 
   public Report getReport(String id) {

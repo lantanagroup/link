@@ -137,6 +137,25 @@ GO
 IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'reportPatientData')
+    BEGIN
+        CREATE TABLE dbo.reportPatientData
+        (
+            id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            reportId     nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            patientId    nvarchar(64)     NOT NULL,
+            resourceType nvarchar(64)     NOT NULL,
+            resourceId   nvarchar(64)     NOT NULL,
+            UNIQUE (reportId, patientId, resourceType, resourceId),
+            INDEX ix_reportPatientData_reportId_patientId (reportId, patientId)
+        );
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
                  AND TABLE_NAME = 'patientMeasureReport')
     BEGIN
         CREATE TABLE dbo.patientMeasureReport
@@ -241,7 +260,7 @@ IF NOT EXISTS (SELECT *
             details    nvarchar(max)    NOT NULL,
             severity   nvarchar(128)    NOT NULL,
             expression nvarchar(max)    NULL,
-            position nvarchar(32) NULL
+            position   nvarchar(32)     NULL
         );
     END
 GO

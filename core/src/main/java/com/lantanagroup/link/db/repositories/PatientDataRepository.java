@@ -35,17 +35,34 @@ public class PatientDataRepository {
     return jdbc.query(sql, parameters, mapper);
   }
 
-  public void saveAll(List<PatientData> models) {
+  public List<PatientData> findByReportIdAndPatientId(String reportId, String patientId) {
+    String sql = "SELECT PD.* " +
+            "FROM dbo.patientData AS PD " +
+            "INNER JOIN dbo.reportPatientData AS RPD ON PD.patientId = RPD.patientId AND PD.resourceType = RPD.resourceType AND PD.resourceId = RPD.resourceId " +
+            "WHERE RPD.reportId = :reportId AND RPD.patientId = :patientId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId, "patientId", patientId);
+    return jdbc.query(sql, parameters, mapper);
+  }
+
+  public void saveAll(String reportId, List<PatientData> models) {
     String sql = "INSERT INTO dbo.patientData (id, dataTraceId, patientId, resourceType, resourceId, resource, retrieved) " +
             "SELECT :id, :dataTraceId, :patientId, :resourceType, :resourceId, :resource, :retrieved " +
             "WHERE NOT EXISTS (" +
             "    SELECT * FROM dbo.patientData " +
             "    WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId" +
             "); " +
+            /* If the INSERT failed, this resource already exists for this patient; UPDATE instead */
             "IF @@ROWCOUNT = 0 " +
             "UPDATE dbo.patientData " +
             "SET dataTraceId = ISNULL(:dataTraceId, dataTraceId), resource = :resource, retrieved = :retrieved " +
-            "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId;";
+            "WHERE patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId; " +
+            /* Track this resource's association with the current report and patient */
+            "INSERT INTO dbo.reportPatientData (reportId, patientId, resourceType, resourceId) " +
+            "SELECT :reportId, :patientId, :resourceType, :resourceId " +
+            "WHERE NOT EXISTS (" +
+            "    SELECT * FROM dbo.reportPatientData " +
+            "    WHERE reportId = :reportId AND patientId = :patientId AND resourceType = :resourceType AND resourceId = :resourceId" +
+            ");";
     int batchSize = 100;
     for (int batchIndex = 0; ; batchIndex++) {
       SqlParameterSource[] parameters = models.stream()
@@ -59,7 +76,7 @@ public class PatientDataRepository {
                   model.setRetrieved(new Date());
                 }
               })
-              .map(mapper::toParameters)
+              .map(model -> mapper.toParameters(reportId, model))
               .toArray(SqlParameterSource[]::new);
       if (parameters.length == 0) {
         break;
