@@ -53,7 +53,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Total Patients Reported',
           subText: 'patients reported past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.patientsReported
@@ -61,7 +61,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Evaluations',
           subText: 'evaluations on average past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.evaluation
@@ -69,7 +69,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Query Time',
           subText: 'hours on average past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.queryTime
@@ -77,7 +77,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Validation Time',
           subText: 'hours on average past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.validation

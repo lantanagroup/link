@@ -20,10 +20,11 @@
 }
 
 // fixing the issue that dangles on this text are getting cut off
-ngx-charts-number-card g.cell {
-
-  .trimmed-label p {
-    @include body-font();
-    overflow: visible;
+ngx-charts-number-card {
+  g.cell {
+    .trimmed-label p {
+      @include body-font();
+      overflow: visible;
+    }
   }
 }

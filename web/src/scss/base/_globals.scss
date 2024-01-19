@@ -76,6 +76,12 @@ body {
   border-bottom: 2px solid $gray-900;
   margin-bottom: 2rem;
 
+  &--mini {
+    border-bottom: 1px solid $gray-300;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
   &:last-child {
     border-bottom: none;
     margin-bottom: 0;

@@ -59,7 +59,7 @@ export class DashboardComponent {
         {
           name: 'Average Query Time',
           subText: 'hours on average past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.queryTime
@@ -67,7 +67,7 @@ export class DashboardComponent {
         {
           name: 'Total Patients Queried',
           subText: 'patients queried past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.patientsQueried
@@ -75,7 +75,7 @@ export class DashboardComponent {
         {
           name: 'Average Validation Time',
           subText: 'hours on average past 7 days',
-          changeWindow: 'week',
+          changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.validation
