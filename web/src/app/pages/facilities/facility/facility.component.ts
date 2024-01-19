@@ -19,45 +19,8 @@ import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.c
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
-import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
+import { TenantConceptMap, Normalization, QueryPlan, QueryPlans } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
-
-interface Normalization {
-  name: string
-  value: string
-}
-
-interface ReferencesConfig {
-  operationType: string
-  paged: number
-}
-
-interface ParametersConfig {
-  format: string | null,
-  ids: string | null,
-  literal: string | null,
-  name: string | null,
-  paged: number,
-  variable: string | null
-}
-
-interface TypedQueryPlan {
-  resourceType: string
-  parameters: ParametersConfig[]
-  references: ReferencesConfig
-  earlyExit: boolean
-}
-
-interface QueryPlan {
-  measureId?: string
-  lookback: string
-  initial: TypedQueryPlan[]
-  supplemental: TypedQueryPlan[]
-}
-
-interface QueryPlans {
-  [key: string]: QueryPlan
-}
 
 @Component({
     selector: 'app-facility',

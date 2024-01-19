@@ -17,14 +17,19 @@
   &__link {
     @include nav();
     background: transparent;
-    color: $white;
+    color: $blue-100;
     display: block;
     padding: 0.25rem 0.5rem;
   
     &:hover,
-    &:focus-visible,
-    &.active {
-      background: $blue-100;
+    &:focus-visible {
+      background: $blue-50;
+      color: $blue-500;
+    }
+
+    &.active,
+    &:active {
+      background: $blue-50;
       color: $gray-800;
     }
   }
@@ -50,11 +55,15 @@
 
     &__link {
       @include nav-secondary();
-      color: $blue;
+      color: $blue-500;
       padding: 0;
 
       &:hover,
-      &:focus-visible,
+      &:focus-visible {
+        color: $blue-700;
+      }
+
+      &:active,
       &.active {
         background: none;
         color: $black;

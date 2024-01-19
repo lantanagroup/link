@@ -3,13 +3,13 @@
 >
   <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between pt-4">
     <div>
-      <h1 class="h2 text-white text-uppercase fw-bold">{{ userData.name }}</h1>
-      <h4 class="text-uppercase text-white mb-0">User ID: <strong>{{ userData.id }}</strong></h4>
+      <h1 class="h2 u-text-offwhite text-uppercase fw-bold">{{ userData.name }}</h1>
+      <h4 class="text-uppercase u-text-offwhite mb-0">User ID: <strong>{{ userData.id }}</strong></h4>
     </div>
     <app-button
       variant="outline--reverse"
       type="link"
-      [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account'}"
+      [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account', target: '_blank'}"
     >
       <app-icon filePath="../../../assets/icons/view.svg" />
       Edit Profile
@@ -59,7 +59,7 @@
 
           <app-button
             type="link"
-            [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account/#/security/signingin'}"
+            [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account/#/security/signingin', target: '_blank'}"
           >
             <app-icon filePath="../../../assets/icons/edit.svg" />
             Update Password
