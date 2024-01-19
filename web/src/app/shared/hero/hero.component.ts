@@ -18,7 +18,7 @@ export class HeroComponent {
   @Input() cta?: TemplateRef<any>;
   @Input() size?: 'sm' | 'md' | 'lg' = 'sm';
 
-  headingClasses = 'text-uppercase text-white';
+  headingClasses = 'text-uppercase u-text-offwhite';
 
   isTemplateRef(value: any): value is TemplateRef<any> {
     return value instanceof TemplateRef

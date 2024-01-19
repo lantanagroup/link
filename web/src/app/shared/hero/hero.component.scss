@@ -7,7 +7,7 @@
 .hero {
   @include background-2x('../../assets/backgrounds/bg-blue', 'png', 100%, auto, center bottom, no-repeat);
   background-size: cover;
-  color: $white;
+  color: $blue-100;
   padding: 2rem 0 2.5rem;
 
   &--bg-shade {

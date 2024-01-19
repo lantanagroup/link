@@ -1,6 +1,6 @@
 <ng-container *ngIf="hasSearch">
 	<div class="mb-4">
-		<h4 *ngIf="hasSearch.title">{{ hasSearch.title }}</h4>
+		<h4 *ngIf="hasSearch.title" class="text-uppercase">{{ hasSearch.title }}</h4>
 		<input #customSearch type="text" class="form-control input--lg shadow-sm" [placeholder]="hasSearch.placeholder">
 	</div>
 </ng-container>
@@ -9,6 +9,7 @@
 	<app-section-heading
 		[heading]="tableTitle"
 		[level]=3
+		class="mb-3"
 	>
 		<ng-container *ngIf="filters">
 			<app-button
