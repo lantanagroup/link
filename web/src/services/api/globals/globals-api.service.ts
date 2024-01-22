@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { DataService } from 'src/services/api/data.service';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -19,5 +19,15 @@ export class GlobalApiService {
       console.error('Error fetching data:', error)
       throw error
     }
+  }
+
+  getContentObservable<T>(endpoint: string): Observable<T> {
+    return this.dataService.getData<T>(endpoint).pipe(
+      catchError((error) => {
+        console.error('Error fetching data:', error)
+
+        return throwError(() => new Error('Error fetching data from ' + endpoint))
+      })
+    )
   }
 }

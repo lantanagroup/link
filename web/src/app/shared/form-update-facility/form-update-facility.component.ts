@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, FormArray, FormBuilder, Validators, Form } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import * as yaml from 'js-yaml'
 import { SectionHeadingComponent } from '../section-heading/section-heading.component';
 import { AccordionComponent } from '../accordion/accordion.component';
@@ -15,13 +16,7 @@ import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
 import { Events, NormalizationClass, QueryPlans, TenantConceptMap, TenantDetails, Schedule } from '../interfaces/tenant.model';
 import { MeasureDef } from '../interfaces/measures.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
-
-interface FormSchedule {
-  cron: string
-  measureIds: string
-  regenerateIfExists: number
-  reportingPeriodMethod: "LastMonth" | "LastWeek" | "CurrentMonth" | "CurrentWeek"
-}
+import { LoaderComponent } from '../loader/loader.component';
 
 interface FormConceptMap {
   id: string
@@ -30,45 +25,26 @@ interface FormConceptMap {
   map?: any // todo: not sure what this looks like 
 }
 
-interface FormMeasureDef {
-  id: string
-  measureId: string
-  checked: boolean
-}
-
 @Component({
   selector: 'app-form-update-facility',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent, ToastComponent, PascalCaseToSpace],
+  imports: [CommonModule, ReactiveFormsModule, SectionHeadingComponent, AccordionComponent, ButtonComponent, IconComponent, ToastComponent, LoaderComponent, PascalCaseToSpace],
   templateUrl: './form-update-facility.component.html',
   styleUrls: ['./form-update-facility.component.scss']
 })
 export class FormUpdateFacilityComponent {
 
   @Input() facilityId?: string | null = null;
-  facilityDetails: TenantDetails | null = null;
   measureDefs: MeasureDef[] = [];
-  formMeasureDefs: FormMeasureDef[] = [];
-  measureDefsLoading: boolean = true;
+  isMeasureDefsLoaded: boolean = false;
   isDataLoaded: boolean = false;
 
   constructor(
     private fb: FormBuilder, 
-    private facilitiesApiService: FacilitiesApiService, 
     private globalApiService: GlobalApiService,
     private toastService: ToastService, 
     private router: Router
   ) { }
-
-  async GetFacilityDetails(id: string) {
-    try {
-      const tenantDetail = await this.facilitiesApiService.fetchFacilityById(id);
-      this.facilityDetails = tenantDetail;
-      this.isDataLoaded = true;
-    } catch (error) {
-      console.error('Error Loading table data.', error);
-    }
-  }
 
   facilitiesForm = new FormGroup ({
     id: new FormControl('', [Validators.required]),
@@ -94,7 +70,6 @@ export class FormUpdateFacilityComponent {
         patientDataResource: new FormControl(0)
       })
     }),
-    measures: this.fb.array([]),
     conceptMaps: this.fb.array([]),
     scheduling: new FormGroup({
       queryPatientListCron: new FormControl(''),
@@ -110,19 +85,6 @@ export class FormUpdateFacilityComponent {
     censusAcquisitionMethod: new FormControl(''),
     bulkWaitTimeInMilliseconds: new FormControl('')
   })
-
-  // Measures, checkbox fields
-  get measures(): FormArray {
-    return this.facilitiesForm.get('measures') as FormArray;
-  }
-
-  createMeasure(): FormControl {
-    return new FormControl('')
-  }
-
-  addMeasure() {
-    this.measures.push(this.createMeasure())
-  }
 
   // Concept Maps Dynamic Fields
   get conceptMaps(): FormArray {
@@ -161,7 +123,7 @@ export class FormUpdateFacilityComponent {
 
   createSchedule(): FormGroup {
     return this.fb.group({
-      measureIds: new FormControl(''),
+      measureIds: this.fb.array([]),
       reportingPeriodMethod: new FormControl('LastMonth'),
       cron: new FormControl(''),
       regenerateIfExists: new FormControl(1)
@@ -169,7 +131,18 @@ export class FormUpdateFacilityComponent {
   }
 
   addSchedule() {
-    this.schedules.push(this.createSchedule());
+    this.schedules.push(this.createSchedule())
+    this.addMeasureIdControls(this.schedules.length - 1)
+  }
+
+  addMeasureIdControls(scheduleIndex: number) {
+    const measureIdsArray = (this.schedules.at(scheduleIndex) as FormGroup).get('measureIds') as FormArray
+    this.measureDefs.forEach(() => measureIdsArray.push(new FormControl(false)))
+  }
+
+  getMeasureIds(index: number): FormArray {
+    const scheduleFormGroup = this.schedules.at(index) as FormGroup
+    return scheduleFormGroup.get('measureIds') as FormArray
   }
 
   getAddScheduleHandler(): () => void {
@@ -182,6 +155,24 @@ export class FormUpdateFacilityComponent {
 
   getRemoveScheduleHandler(index: number): () => void {
     return () => this.removeSchedule(index)
+  }
+
+  // to correctly create checkboxes when facility data is present
+  initializeCheckboxStates(data: string[]) {
+    return this.measureDefs.map(def => data.includes(def.measureId))
+  }
+
+  loadScheduleDataFromApi(data: Schedule) {
+    const checkboxStates = this.initializeCheckboxStates(data.measureIds)
+    this.setCheckboxStatesForSchedule(checkboxStates, 0)
+  }
+
+  setCheckboxStatesForSchedule(checkboxStates: boolean[], index: number) {
+    const measureIdsArray = (this.schedules.at(index) as FormGroup).get('measureIds') as FormArray
+
+    measureIdsArray.clear()
+
+    checkboxStates.forEach(state => measureIdsArray.push(new FormControl(state)))
   }
 
   // Query Plan Dynamic Fields
@@ -216,46 +207,45 @@ export class FormUpdateFacilityComponent {
 
   async ngOnInit(): Promise<void> {
 
-    this.setMeasureDefs()
-
     if (this.facilityId) {
-      await this.GetFacilityDetails(this.facilityId)
-      await this.setInitialValues(this.facilityId)
+      forkJoin({
+        measureDefs: this.globalApiService.getContentObservable<MeasureDef[]>('measureDef'),
+        facilityDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
+        conceptMaps: this.globalApiService.getContentObservable(`${this.facilityId}/conceptMap`)
+      }).subscribe(({ measureDefs, facilityDetails, conceptMaps }) => {
+        this.measureDefs = measureDefs
+        
+        if(this.facilityId) 
+          this.setInitialValues(facilityDetails, conceptMaps)
+
+        this.isMeasureDefsLoaded = true
+        this.isDataLoaded = true
+      })
     } else {
-      this.isDataLoaded = true;
+      this.isDataLoaded = true
+      this.globalApiService.getContentObservable<MeasureDef[]>('measureDef').subscribe({
+        next: (measureDefs) => {
+          this.measureDefs = measureDefs
+        },
+        error: (error) => {
+          console.error('Error fetching measureDefs:', error)
+        },
+        complete: () => {
+          this.isMeasureDefsLoaded = true
+        }
+      })
     }
   }
 
-  private async setMeasureDefs() {
-    this.measureDefs = await this.globalApiService.getContent('measureDef')
+  private async setInitialValues(facilityDetails: TenantDetails, conceptMaps: any) {
 
-    if(this.measureDefs) {
-      for(const measure of this.measureDefs) {
-        this.formMeasureDefs = [
-          ...this.formMeasureDefs,
-          {
-            id: measure.id,
-            measureId: measure.measureId,
-            checked: false
-          }
-        ]
-        this.addMeasure()
-      }
-      console.log('for form:', this.formMeasureDefs)
-      this.measureDefsLoading = false;
-    }
-  }
-
-
-  private async setInitialValues(facilityId: string) {
-    const conceptMaps = await this.globalApiService.getContent(`${facilityId}/conceptMap`)
-
-    console.log('facility details:', this.facilityDetails)
+    console.log('facility details:', facilityDetails)
     console.log('Concept Maps:', conceptMaps)
+    console.log('Measure Defs', this.measureDefs)
 
     // Schedules
-    if (this.facilityDetails?.scheduling?.generateAndSubmitReports) {
-      for (const schedule of this.facilityDetails.scheduling.generateAndSubmitReports) {
+    if (facilityDetails?.scheduling?.generateAndSubmitReports) {
+      for (const schedule of facilityDetails.scheduling.generateAndSubmitReports) {
         this.addSchedule();
       }
     }
@@ -268,8 +258,8 @@ export class FormUpdateFacilityComponent {
     }
 
     // Query Plans
-    if (this.facilityDetails?.fhirQuery?.queryPlans) {
-      const queryPlans = this.facilityDetails.fhirQuery.queryPlans
+    if (facilityDetails?.fhirQuery?.queryPlans) {
+      const queryPlans = facilityDetails.fhirQuery.queryPlans
       let count = 0;
       if(typeof queryPlans === 'object' && queryPlans !== null && !Array.isArray(queryPlans)) {
         count = Object.keys(queryPlans).length
@@ -284,30 +274,30 @@ export class FormUpdateFacilityComponent {
     this.facilitiesForm.patchValue({
 
       id: this.facilityId,
-      name: this.facilityDetails?.name,
+      name: facilityDetails?.name,
       description: null, // todo : doesn't exist in endpoint
       bundling: {
-        name: this.facilityDetails?.bundling?.name
+        name: facilityDetails?.bundling?.name
       },
-      cdcOrgId: this.facilityDetails?.cdcOrgId,
-      connectionString: this.facilityDetails?.connectionString,
+      cdcOrgId: facilityDetails?.cdcOrgId,
+      connectionString: facilityDetails?.connectionString,
       vendor: null, // todo : doesn't exist in endpoint
-      retentionPeriod: this.facilityDetails?.retentionPeriod,
-      events: this.mapNormalizationsToFormData(this.facilityDetails?.events),
+      retentionPeriod: facilityDetails?.retentionPeriod,
+      events: this.mapNormalizationsToFormData(facilityDetails?.events),
       conceptMaps: this.mapConceptMapData(conceptMaps),
       scheduling: {
-        queryPatientListCron: this.facilityDetails?.scheduling?.queryPatientListCron,
-        dataRetentionCheckCron: this.facilityDetails?.scheduling?.dataRetentionCheckCron,
-        generateAndSubmitReports: this.mapSchedulingData(this.facilityDetails?.scheduling?.generateAndSubmitReports)
+        queryPatientListCron: facilityDetails?.scheduling?.queryPatientListCron,
+        dataRetentionCheckCron: facilityDetails?.scheduling?.dataRetentionCheckCron,
+        generateAndSubmitReports: this.mapSchedulingData(facilityDetails?.scheduling?.generateAndSubmitReports)
       },
       fhirQuery: {
-        fhirServerBase: this.facilityDetails?.fhirQuery?.fhirServerBase,
-        parallelPatients: this.facilityDetails?.fhirQuery?.parallelPatients.toString(),
-        authClass: this.facilityDetails?.fhirQuery?.authClass,
-        queryPlans: this.mapQueryPlansApiDataToFormData(this.facilityDetails?.fhirQuery?.queryPlans)
+        fhirServerBase: facilityDetails?.fhirQuery?.fhirServerBase,
+        parallelPatients: facilityDetails?.fhirQuery?.parallelPatients.toString(),
+        authClass: facilityDetails?.fhirQuery?.authClass,
+        queryPlans: this.mapQueryPlansApiDataToFormData(facilityDetails?.fhirQuery?.queryPlans)
       },
       censusAcquisitionMethod: '', // todo : doesn't exist in endpoint
-      bulkWaitTimeInMilliseconds: this.facilityDetails?.bulkWaitTimeInMilliseconds
+      bulkWaitTimeInMilliseconds: facilityDetails?.bulkWaitTimeInMilliseconds
     })
 
     this.isDataLoaded = true;
@@ -319,20 +309,17 @@ export class FormUpdateFacilityComponent {
 
   // * Map Scheduling Data
 
-  mapSchedulingData(data: Schedule[] | FormSchedule[] | undefined) {
-    if (!data) {
+  mapSchedulingData(data: Schedule[] | undefined) {
+    if (!data || !this.measureDefs) {
       return []
     }
 
-    const generateAndSubmitReports = data.map((schedule: Schedule | FormSchedule) => {
+    const generateAndSubmitReports = data.map((schedule: Schedule) => {
       return {
-        cron: schedule.cron,
-        measureIds: this.convertLineBreaks(schedule.measureIds),
-        regenerateIfExists: schedule.regenerateIfExists ? 1 : 0,
-        reportingPeriodMethod: schedule.reportingPeriodMethod
+        ...schedule,
+        measureIds: this.loadScheduleDataFromApi(schedule)
       }
     })
-
     return generateAndSubmitReports;
   }
 
