@@ -125,8 +125,16 @@ public class TenantService {
     this.patientLists.save(patientList);
   }
 
+  public void beginReport(String reportId) {
+    this.patientDatas.beginReport(reportId);
+  }
+
   public List<PatientData> findPatientData(String patientId) {
     return this.patientDatas.findByPatientId(patientId);
+  }
+
+  public List<PatientData> findPatientData(String reportId, String patientId) {
+    return this.patientDatas.findByReportIdAndPatientId(reportId, patientId);
   }
 
   public int deletePatientDataRetrievedBefore(Date date) {
@@ -141,11 +149,16 @@ public class TenantService {
   }
 
   public void deleteAllPatientData(){
-    this.patientDatas.deleteAll();
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.validationCategories.deleteAll();
+    this.validations.deleteAll();
+
     this.aggregates.deleteAll();
     this.patientMeasureReports.deleteAll();
+
+    this.patientDatas.deleteAll();
+    this.dataTraces.deleteAll();
+    this.queries.deleteAll();
+
     this.reports.deleteAll();
     this.patientLists.deleteAll();
   }
@@ -172,8 +185,8 @@ public class TenantService {
     this.savePatientList(patientList);
   }
 
-  public void savePatientData(List<PatientData> patientData) {
-    this.patientDatas.saveAll(patientData);
+  public void savePatientData(String reportId, List<PatientData> patientData) {
+    this.patientDatas.saveAll(reportId, patientData);
   }
 
   public Report getReport(String id) {
@@ -197,11 +210,16 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
+    this.validationCategories.deleteForReport(reportId);
+    this.validations.deleteByReport(reportId);
+
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.patientDatas.deleteByReportId(reportId);
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
-    this.aggregates.deleteByReportId(reportId);
-    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.reports.deleteById(reportId);
   }
 

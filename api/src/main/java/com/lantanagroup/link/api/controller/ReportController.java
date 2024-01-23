@@ -298,7 +298,7 @@ public class ReportController extends BaseController {
 
     // Scoop the data for the patients and store it
     if (config.isSkipQuery()) {
-      logger.info("Skipping query and store");
+      logger.info("Skipping initial query and store");
       for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
         if (patient.getReference() != null) {
           patient.setId(patient.getReference().replaceAll("^Patient/", ""));
@@ -306,6 +306,7 @@ public class ReportController extends BaseController {
       }
     } else {
       logger.info("Beginning initial query and store");
+      tenantService.beginReport(masterIdentifierValue);
       this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
     }
 
@@ -314,8 +315,8 @@ public class ReportController extends BaseController {
     logger.info("Beginning initial measure evaluation");
     this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    if (CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
-      logger.info("No supplemental query plan; skipping supplemental query and store");
+    if (config.isSkipQuery() || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+      logger.info("Skipping supplemental query and store");
       logger.info("Beginning aggregation");
       this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
     } else {
