@@ -75,7 +75,7 @@ public class FhirBundlerEntrySorter {
       }
     }
 
-    List<String> patientIds = getPatientIds(bundle);
+    List<String> patientIds = getPatientIds(bundle).stream().distinct().collect(Collectors.toList());
     Bundle.BundleEntryComponent organization = getLinkOrganization(bundle);
     Bundle.BundleEntryComponent device = getLinkDevice(bundle);
     List<Bundle.BundleEntryComponent> censusLists = getLinkCensusList(bundle);
