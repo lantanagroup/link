@@ -448,6 +448,18 @@
       "display": "mil"
     },
     {
+      "code": "mg",
+      "display": "milligram"
+    },
+    {
+      "code": "{tbl}",
+      "display": "tablets"
+    },
+    {
+      "code": "mL",
+      "display": "milliliter"
+    },
+    {
       "code": "[cml_i]",
       "display": "circular mil"
     },

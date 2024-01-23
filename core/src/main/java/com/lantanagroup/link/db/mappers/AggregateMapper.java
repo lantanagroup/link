@@ -2,7 +2,6 @@ package com.lantanagroup.link.db.mappers;
 
 import com.lantanagroup.link.db.model.Aggregate;
 import org.hl7.fhir.r4.model.MeasureReport;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,7 +19,7 @@ public class AggregateMapper extends BaseMapper<Aggregate> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(Aggregate model) {
+  protected Parameters doToParameters(Aggregate model) {
     Parameters parameters = new Parameters();
     parameters.addString("id", model.getId());
     parameters.addString("reportId", model.getReportId());

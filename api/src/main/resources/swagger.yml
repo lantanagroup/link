@@ -1549,27 +1549,6 @@ paths:
           example: http://some-system|321
           schema:
             type: string
-        - name: measureId
-          in: query
-          description: The ID of the measure that should be used to determine the query method for the integration test
-          example: NHSNGlycemicControlHypoglycemicInitialPopulation
-          required: true
-          schema:
-            type: string
-        - name: periodStart
-          in: query
-          description: The ISO formatted (FHIR) date for the reporting period's start
-          example: '2022-01-01T00:00:00.000Z'
-          required: true
-          schema:
-            type: string
-        - name: periodEnd
-          in: query
-          description: The ISO formatted (FHIR) date for the reporting period's end
-          example: '2022-01-31T23:59:59.000Z'
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: successful response
