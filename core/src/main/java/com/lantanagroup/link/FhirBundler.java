@@ -112,7 +112,7 @@ public class FhirBundler {
     return lib;
   }
 
-  public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
+  public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) throws Exception {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
@@ -127,7 +127,13 @@ public class FhirBundler {
       this.addCensuses(bundle, report);
     }
 
-    for (Aggregate aggregate : aggregates) {
+
+    for (Aggregate aggregate : aggregates)
+    {
+      if(aggregates.stream().anyMatch(a -> a.getReport() == aggregate.getReport() && a != aggregate)) {
+        throw new Exception(String.format("FhirBundler.generateBundle(): Duplicate Measure Report in aggregates collection: %s", aggregate.getReport().toString()));
+      }
+
       this.addMeasureReports(bundle, aggregate);
     }
 

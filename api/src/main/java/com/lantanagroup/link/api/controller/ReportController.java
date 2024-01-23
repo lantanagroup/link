@@ -35,7 +35,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Date;
@@ -133,12 +132,20 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+  private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws Exception {
     List<PatientOfInterestModel> patientOfInterestModelList;
 
     Class<?> patientIdResolverClass = Class.forName(this.config.getPatientIdResolver());
     IPatientIdProvider provider = (IPatientIdProvider) this.context.getBean(patientIdResolverClass);
     patientOfInterestModelList = provider.getPatientsOfInterest(tenantService, criteria, context);
+
+    for(PatientOfInterestModel pi : patientOfInterestModelList)
+    {
+      if(patientOfInterestModelList.stream().anyMatch(pi2 -> pi != pi2 && pi.getIdentifier() == pi2.getIdentifier() )) {
+        var ex = String.format("ReportController.getPatientIdentifiers(): Duplicate Patient Identifier In List: %s", pi.getIdentifier().toString());
+        throw new Exception(ex);
+      }
+    }
 
     return patientOfInterestModelList;
   }
