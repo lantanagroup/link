@@ -7,12 +7,13 @@
 />
 
 <app-section>
+  <app-loader *ngIf="!isDataLoaded" />
   <div class="container">
 
     <app-tab-container>
       <app-tab tabTitle="Facility Profile">
         <div class="row">
-          <div class="col col-md-6 col-lg-4">
+          <div class="col col-md-6">
             <app-card
               title="Facility Details"
               [hasPadding]=true
@@ -36,7 +37,7 @@
             </app-card>
           </div>
 
-          <div class="col col-md-6 col-lg-4">
+          <div class="col col-md-6">
             <app-card
               title="Facility Concept Maps"
               [hasPadding]=true
@@ -54,7 +55,7 @@
             </app-card>
           </div>
 
-          <div class="col col-md-6 col-lg-4">
+          <!-- <div class="col col-md-6 col-lg-4">
             <app-card
               title="Facility Measures"
               [hasPadding]=true
@@ -90,7 +91,7 @@
                 <strong>Hospital-associated venous thromboembolism</strong>
               </div>
             </app-card>
-          </div>
+          </div> -->
         </div>
       </app-tab>
 

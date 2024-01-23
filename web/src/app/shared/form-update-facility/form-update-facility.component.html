@@ -1,3 +1,5 @@
+<app-loader *ngIf="!isDataLoaded"/>
+
 <form 
   [formGroup]="facilitiesForm"
   (ngSubmit)="onSubmit()"
@@ -27,7 +29,7 @@
 
   <app-accordion
     title="Profile"
-    [isExpanded]="true"
+    [isExpanded]="isDataLoaded"
   >
     <div class="row">
       <div class="col col-md-6 form__field">
@@ -173,24 +175,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
-          <label for="copyLocationFalse" class="label__radio">
+          <label for="copyLocationIdentifierToTypeFalse" class="label__radio">
             <input 
               type="radio" 
-              id="copyLocationFalse"
-              name="copyLocation" 
-              formControlName="copyLocation"
+              id="copyLocationIdentifierToTypeFalse"
+              name="copyLocationIdentifierToType" 
+              formControlName="copyLocationIdentifierToType"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="copyLocationTrue" class="label__radio">
+          <label for="copyLocationIdentifierToTypeTrue" class="label__radio">
             <input 
               type="radio" 
-              id="copyLocationTrue" 
-              name="copyLocation"
-              formControlName="copyLocation"
+              id="copyLocationIdentifierToTypeTrue" 
+              name="copyLocationIdentifierToType"
+              formControlName="copyLocationIdentifierToType"
               [value]=1
             />
             <span></span>
@@ -200,24 +202,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Encounter Status Transformer</label>
-          <label for="encounterStatusFalse" class="label__radio">
+          <label for="encounterStatusTransformerFalse" class="label__radio">
             <input 
               type="radio" 
-              id="encounterStatusFalse"
-              name="encounterStatus" 
-              formControlName="encounterStatus"
+              id="encounterStatusTransformerFalse"
+              name="encounterStatusTransformer" 
+              formControlName="encounterStatusTransformer"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="encounterStatusTrue" class="label__radio">
+          <label for="encounterStatusTransformerTrue" class="label__radio">
             <input 
               type="radio" 
-              id="encounterStatusTrue" 
-              name="encounterStatus"
-              formControlName="encounterStatus"
+              id="encounterStatusTransformerTrue" 
+              name="encounterStatusTransformer"
+              formControlName="encounterStatusTransformer"
               [value]=1
             />
             <span></span>
@@ -254,24 +256,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Fix Resource IDs</label>
-          <label for="fixResourceIdsFalse" class="label__radio">
+          <label for="fixResourceIdFalse" class="label__radio">
             <input 
               type="radio" 
-              id="fixResourceIdsFalse"
-              name="fixResourceIds" 
-              formControlName="fixResourceIds"
+              id="fixResourceIdFalse"
+              name="fixResourceId" 
+              formControlName="fixResourceId"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="fixResourceIdsTrue" class="label__radio">
+          <label for="fixResourceIdTrue" class="label__radio">
             <input 
               type="radio" 
-              id="fixResourceIdsTrue" 
-              name="fixResourceIds"
-              formControlName="fixResourceIds"
+              id="fixResourceIdTrue" 
+              name="fixResourceId"
+              formControlName="fixResourceId"
               [value]=1
             />
             <span></span>
@@ -283,24 +285,24 @@
       <ng-container formGroupName="afterPatientResourceQuery">
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
-          <label for="patientDataResourceFalse" class="label__radio">
+          <label for="patientDataResourceFilterFalse" class="label__radio">
             <input 
               type="radio" 
-              id="patientDataResourceFalse"
-              name="patientDataResource" 
-              formControlName="patientDataResource"
+              id="patientDataResourceFilterFalse"
+              name="patientDataResourceFilter" 
+              formControlName="patientDataResourceFilter"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="patientDataResourceTrue" class="label__radio">
+          <label for="patientDataResourceFilterTrue" class="label__radio">
             <input 
               type="radio" 
-              id="patientDataResourceTrue" 
-              name="patientDataResource"
-              formControlName="patientDataResource"
+              id="patientDataResourceFilterTrue" 
+              name="patientDataResourceFilter"
+              formControlName="patientDataResourceFilter"
               [value]=1
             />
             <span></span>
@@ -309,31 +311,6 @@
         </div>
       </ng-container>
 
-    </div>
-  </app-accordion>
-
-  <app-accordion
-    title="Measures"
-    [isExpanded]="false"
-  >
-    <div class="row" formArrayName="measures" *ngIf="!this.measureDefsLoading; else isLoading">
-      <div class="col col-md-6 col-lg-5 form__field" *ngFor="let measure of measures.controls; let i = index" >
-        <label 
-            class="label__checkbox" 
-            [for]="this.formMeasureDefs[i].measureId"
-          >
-          <input 
-            type="checkbox"
-            [id]="this.formMeasureDefs[i].measureId"
-            [name]="this.formMeasureDefs[i].measureId"
-            [value]="this.formMeasureDefs[i].measureId"
-            [checked]="this.formMeasureDefs[i].checked"
-            [formControlName]="i"
-          />
-          <span></span>
-          {{ this.measureDefs[i].measureId | pascalCaseToSpace }}
-        </label>
-      </div>
     </div>
   </app-accordion>
 
@@ -438,67 +415,81 @@
           class="row form__group"
           [formGroupName]="i"
         >
-          <div class="col col-md-6 form__field">
-            <label for="measureIds">Measure IDs (one/line)</label>
-            <textarea
-              id="measureIds" 
-              formControlName="measureIds"
-            ></textarea>
-          </div>
-
-          <div class="col col-md-6 form__field mt-4 pt-1">
+          <ng-container *ngIf="isMeasureDefsLoaded; else isLoading">
+            <div class="col col-md-6" formArrayName="measureIds">
+              <label for="measureIds">Measure IDs</label>
+              <div class="form__field" *ngFor="let measure of getMeasureIds(i).controls; let j = index" >
+                <label 
+                    class="label__checkbox" 
+                    [for]="measureDefs[j].measureId"
+                  >
+                  <input 
+                    type="checkbox"
+                    [id]="measureDefs[j].measureId"
+                    [name]="measureDefs[j].measureId"
+                    [checked]="measure.value"
+                  />
+                  <span></span>
+                  {{ measureDefs[j].measureId | pascalCaseToSpace }}
+                </label>
+              </div>
+            </div>
+  
+            <div class="col col-md-6 form__field mt-4 pt-1">
+              <app-button
+                variant="text"
+                classes="text-warning ml-auto d-none d-md-block"
+                [onClickHandler]="getRemoveScheduleHandler(i)"
+              >
+                Delete Schedule
+              </app-button>
+  
+              <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
+              <select 
+                id="reportingPeriod" 
+                formControlName="reportingPeriodMethod"
+              >
+                <option value="LastMonth">Last Month</option>
+                <option value="LastWeek">Last Week</option>
+                <option value="CurrentMonth">Current Month</option>
+                <option value="CurrentWeek">Current Week</option>
+              </select>
+            </div>
+  
+            <div class="col col-md-6 form__field">
+              <label for="schedule">Schedule (CRON)</label>
+              <input 
+                type="text" 
+                id="schedule" 
+                formControlName="cron"
+              />
+            </div>
+  
+            <div class="col col-md-6 form__field">
+              <label for="regenerate">Regenerate</label>
+              <select 
+                id="regenerate" 
+                formControlName="regenerateIfExists"
+              >
+                <option [value]="1">Yes</option>
+                <option [value]="0">No</option>
+              </select>
+            </div>
+  
             <app-button
               variant="text"
-              classes="text-warning ml-auto d-none d-md-block"
+              classes="text-warning d-md-none"
               [onClickHandler]="getRemoveScheduleHandler(i)"
             >
               Delete Schedule
             </app-button>
-
-            <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
-            <select 
-              id="reportingPeriod" 
-              formControlName="reportingPeriodMethod"
-            >
-              <option value="LastMonth">Last Month</option>
-              <option value="LastWeek">Last Week</option>
-              <option value="CurrentMonth">Current Month</option>
-              <option value="CurrentWeek">Current Week</option>
-            </select>
-          </div>
-
-          <div class="col col-md-6 form__field">
-            <label for="schedule">Schedule (CRON)</label>
-            <input 
-              type="text" 
-              id="schedule" 
-              formControlName="cron"
-            />
-          </div>
-
-          <div class="col col-md-6 form__field">
-            <label for="regenerate">Regenerate</label>
-            <select 
-              id="regenerate" 
-              formControlName="regenerateIfExists"
-            >
-              <option [value]="1">Yes</option>
-              <option [value]="0">No</option>
-            </select>
-          </div>
-
-          <app-button
-            variant="text"
-            classes="text-warning d-md-none"
-            [onClickHandler]="getRemoveScheduleHandler(i)"
-          >
-            Delete Schedule
-          </app-button>
+          </ng-container>
         </fieldset>
 
         <app-button
           type="button"
           [onClickHandler]="getAddScheduleHandler()"
+          *ngIf="isMeasureDefsLoaded; else loadingBtn"
         >
           <app-icon filePath="../../../assets/icons/plus.svg" />
           Add Schedule
@@ -641,11 +632,17 @@
         >
           <div class="col col-md-4 form__field">
             <label for="measureId">Measure ID</label>
-            <input 
-              type="text" 
-              id="measureId" 
+            <select
+              id="measureId"
+              name="measureId"
               formControlName="measureId"
-            />
+            >
+              <option value="">Please Select</option>
+              <option 
+                *ngFor="let measure of measureDefs"
+                [value]="measure.measureId"
+              >{{ measure.measureId | pascalCaseToSpace }}</option>
+            </select>
           </div>
   
           <div class="col col-md-6 form__field">
@@ -671,6 +668,7 @@
         <app-button
           type="button"
           [onClickHandler]="getAddQueryPlanHandler()"
+          *ngIf="isMeasureDefsLoaded; else loadingBtn"
         >
           <app-icon filePath="../../../assets/icons/plus.svg" />
           Add Query Plan
@@ -681,5 +679,14 @@
 </form>
 
 <ng-template #isLoading>
-  <p><em>Loading fields...</em></p>
+  <app-loader />
+</ng-template>
+
+<ng-template #loadingBtn>
+  <app-button
+    type="button"
+    [disabled]="true"
+  >
+    Loading data...
+  </app-button>
 </ng-template>

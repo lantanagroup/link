@@ -96,6 +96,10 @@ select {
     outline-width: 2px;
     outline-offset: 2px;
   }
+
+  &::placeholder {
+    color: $gray-400;
+  }
 }
 
 select {
@@ -104,6 +108,7 @@ select {
   background: url('../../assets/icons/chevron-down.svg') no-repeat calc(100% - 0.5rem) calc(100% - 0.5rem);
   background-size: 1rem auto;
   height: 2.25rem;
+  padding-right: 2rem;
 }
 
 textarea {

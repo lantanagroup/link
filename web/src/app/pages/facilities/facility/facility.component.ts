@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { from } from 'rxjs';
+import { forkJoin, from } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
@@ -19,15 +19,16 @@ import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.c
 import { Report } from 'src/app/shared/interfaces/report.model';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
-import { TenantConceptMap, Normalization, QueryPlan, QueryPlans } from 'src/app/shared/interfaces/tenant.model';
+import { TenantConceptMap, Normalization, QueryPlan, QueryPlans, TenantDetails } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 
 @Component({
     selector: 'app-facility',
     standalone: true,
     templateUrl: './facility.component.html',
     styleUrls: ['./facility.component.scss'],
-    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent, PascalCaseToSpace]
+    imports: [CommonModule, HeroComponent, SectionComponent, SectionHeadingComponent, ButtonComponent, IconComponent, CardComponent, TabComponent, TabContainerComponent, LinkComponent, AccordionComponent, TableComponent, MiniContentComponent, LoaderComponent, PascalCaseToSpace]
 })
 export class FacilityComponent {
   facilityId: string | null = null
@@ -47,6 +48,7 @@ export class FacilityComponent {
   facilityConceptMaps: TenantConceptMap[] = []
   facilityQueryPlans: QueryPlan[] = []
   dtOptions: DataTables.Settings = {};
+  isDataLoaded: boolean = false;
 
   private pascalCaseToSpace = new PascalCaseToSpace
 
@@ -64,10 +66,26 @@ export class FacilityComponent {
       this.facilityId = params.get('id')
 
       if (this.facilityId) {
-        this.GetFacilityDetails(this.facilityId);
-        this.dtOptions = this.calculateDtOptions(this.facilityId);
-        this.GetConceptMaps(this.facilityId)
-        
+        this.dtOptions = this.calculateDtOptions(this.facilityId)
+
+        forkJoin({
+          tenantDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
+          conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.facilityId}/conceptMap`)
+        }).subscribe(({ tenantDetails, conceptMaps }) => {
+          this.facilityDetails = tenantDetails
+          this.facilityConceptMaps = conceptMaps
+
+          // get normalizations
+          this.facilityNormalizations = [
+            ...this.generateNormalizations(this.facilityDetails.events.afterPatientDataQuery, this.dataQueryKeys),
+            ...this.generateNormalizations(this.facilityDetails.events.afterPatientResourceQuery, this.resourceQueryKeys)
+          ]
+
+          // get query plans
+          this.facilityQueryPlans = this.generateQueryPlans(this.facilityDetails.fhirQuery?.queryPlans)
+
+          this.isDataLoaded = true
+        })
       } else {
         this.router.navigate(['/facilities'])
       }
@@ -89,6 +107,7 @@ export class FacilityComponent {
       this.facilityDetails = tenantDetail;
 
       // get normalizations
+      // todo - fix
       this.facilityNormalizations = [
         ...this.generateNormalizations(tenantDetail.events.afterPatientDataQuery, this.dataQueryKeys),
         ...this.generateNormalizations(tenantDetail.events.afterPatientResourceQuery, this.resourceQueryKeys)
@@ -323,7 +342,7 @@ export class FacilityComponent {
 
 
       // details
-      const details = status === 'Submitted' ? `Bundle #${report.id}` : (status === "Draft" ? "In Progress" : "Error report");
+      const details = status === 'Submitted' ? `Bundle<br>#${report.id}` : (status === "Draft" ? "In Progress" : "Error report");
 
       // measures and activity
       let measuresData,
