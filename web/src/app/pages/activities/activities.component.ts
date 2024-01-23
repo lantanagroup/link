@@ -69,7 +69,7 @@ export class ActivitiesComponent implements OnInit {
         },
         {
           name: 'Average Query Time',
-          subText: 'hours on average past 7 days',
+          subText: 'on average past 7 days',
           changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,
@@ -77,7 +77,7 @@ export class ActivitiesComponent implements OnInit {
         },
         {
           name: 'Average Validation Time',
-          subText: 'hours on average past 7 days',
+          subText: 'on average past 7 days',
           changeWindow: 'yesterday',
           upGood: false,
           toTimestamp: true,

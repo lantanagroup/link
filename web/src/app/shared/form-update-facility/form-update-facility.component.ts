@@ -522,7 +522,9 @@ export class FormUpdateFacilityComponent {
     // convert Yaml to Json for query plans, and set measureIds as keys
     if(formData.fhirQuery?.queryPlans && Object.entries(formData.fhirQuery.queryPlans).length > 0) {
       formData.fhirQuery.queryPlans = this.mapQueryPlansFormDataToApi(formData.fhirQuery.queryPlans)
-    }    
+    } else {
+      delete formData.fhirQuery?.queryPlans
+    }
 
     // ! deleting certain data points for now
     delete formData.censusAcquisitionMethod
