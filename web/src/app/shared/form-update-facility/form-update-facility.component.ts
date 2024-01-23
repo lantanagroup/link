@@ -34,6 +34,7 @@ interface FormConceptMap {
 export class FormUpdateFacilityComponent {
 
   @Input() facilityId?: string | null = null;
+  facilityDetails: TenantDetails | null = null;
   measureDefs: MeasureDef[] = [];
   isMeasureDefsLoaded: boolean = false;
   isDataLoaded: boolean = false;
@@ -210,9 +211,10 @@ export class FormUpdateFacilityComponent {
       forkJoin({
         measureDefs: this.globalApiService.getContentObservable<MeasureDef[]>('measureDef'),
         facilityDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
-        conceptMaps: this.globalApiService.getContentObservable(`${this.facilityId}/conceptMap`)
+        conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.facilityId}/conceptMap`)
       }).subscribe(({ measureDefs, facilityDetails, conceptMaps }) => {
         this.measureDefs = measureDefs
+        this.facilityDetails = facilityDetails
         
         if(this.facilityId) 
           this.setInitialValues(facilityDetails, conceptMaps)
@@ -237,8 +239,6 @@ export class FormUpdateFacilityComponent {
   }
 
   private async setInitialValues(facilityDetails: TenantDetails, conceptMaps: any) {
-
-    console.log('facility details:', facilityDetails)
 
     // Schedules
     if (facilityDetails?.scheduling?.generateAndSubmitReports) {
@@ -296,6 +296,9 @@ export class FormUpdateFacilityComponent {
       censusAcquisitionMethod: '', // todo : doesn't exist in endpoint
       bulkWaitTimeInMilliseconds: facilityDetails?.bulkWaitTimeInMilliseconds
     })
+
+    // disable Tenant ID field
+    this.facilitiesForm.get('id')?.disable()
 
     this.isDataLoaded = true;
   }
@@ -378,14 +381,21 @@ export class FormUpdateFacilityComponent {
     if(!data) {
       return []
     }
-    console.log('raw:', data)
-    let queryPlans: any = data.reduce((obj: any, item: any) => {
-      // obj[item.measureId] = this.convertYamlToJson(item.plan)
-      obj[item.measureId] = JSON.parse(item.plan)
-      return obj
+    const queryPlansArray: any = data.map((obj: any) => {
+      const formattedPlan = {
+        // [obj.measureId]: this.convertYamlToJson(obj.plan)
+        [obj.measureId]: JSON.parse(obj.plan)
+      }
+      return formattedPlan
     })
-    console.log('formatted:', queryPlans)
-    return queryPlans
+
+    const queryPlansObject = queryPlansArray.reduce((acc: any, obj: any) => {
+      const key = Object.keys(obj)[0] // we only have 1 key
+      acc[key] = obj[key]
+      return acc
+    }, {})
+
+    return queryPlansObject
   }
 
 
@@ -490,7 +500,10 @@ export class FormUpdateFacilityComponent {
   async onSubmit() {
     const formData = this.facilitiesForm.value;
     console.log('formData:', formData)
-    
+
+    // ! add facility id back in
+    if(this.facilityId)
+      formData.id = this.facilityId
 
     // grab the concept map submission data and remove
     const conceptMaps: TenantConceptMap[] | null = formData.conceptMaps ? this.mapConceptMapData(formData.conceptMaps) : null;
@@ -507,54 +520,60 @@ export class FormUpdateFacilityComponent {
     }
     
     // convert Yaml to Json for query plans, and set measureIds as keys
-    if(formData.fhirQuery?.queryPlans) {
-      const formattedQueryPlans = this.mapQueryPlansFormDataToApi(formData.fhirQuery.queryPlans)
-      formData.fhirQuery.queryPlans = formattedQueryPlans
+    if(formData.fhirQuery?.queryPlans && Object.entries(formData.fhirQuery.queryPlans).length > 0) {
+      formData.fhirQuery.queryPlans = this.mapQueryPlansFormDataToApi(formData.fhirQuery.queryPlans)
     }    
 
-
-    console.log('transformedData:', formData)
-
-
-    const tenantData = {
-
-    };
+    // ! deleting certain data points for now
+    delete formData.censusAcquisitionMethod
+    delete formData.description
+    delete formData.vendor
+    // ! remove when these are built/clarified
 
     if (this.facilitiesForm.valid) {
       try {
         let response;
+        this.isDataLoaded = false;
         if (this.facilityId) {
           // Update existing facility
-          // response = await this.facilitiesApiService.updateFacility(this.facilityId, submissionData);
-          // response = await this.facilitiesApiService.updateFacility(this.facilityId, this.facilitiesForm.value);
-
-          this.toastService.showToast(
-            'Facility Updated',
-            `${this.facilitiesForm.value.name} has been successfully updated.`,
-            'success'
-          )
-          this.router.navigate(['/facilities/facility', this.facilityId])
+          forkJoin({
+            updateTenantResponse: this.globalApiService.putContentObservable(`tenant/${this.facilityId}`, formData),
+            // todo : update concept maps
+            // updateConceptMapResponse: this.globalApiService.putContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
+          }).subscribe(({ updateTenantResponse }) => {
+            this.isDataLoaded = true;
+            this.toastService.showToast(
+              'Facility Updated',
+              `${formData.name} has been successfully updated.`,
+              'success'
+            )
+            this.router.navigate(['/facilities/facility', this.facilityId])
+          })
         } else {
           // Create new facility
-          // response = await this.facilitiesApiService.createFacility(submissionData);
-          // response = await this.facilitiesApiService.createFacility(this.facilitiesForm.value);
-
-          this.toastService.showToast(
-            'Facility Created',
-            `${this.facilitiesForm.value.name} has been successfully created.`,
-            'success'
-          )
-          this.router.navigate(['/facilities/'])
+          forkJoin({
+            createTenantResponse: this.globalApiService.postContentObservable('tenant', formData),
+            // todo : create concept maps
+            // createConceptMapResponse: this.globalApiService.postContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
+          }).subscribe(({ createTenantResponse }) => {
+            this.isDataLoaded = true
+            this.toastService.showToast(
+              'New Tenant Created',
+              `${this.facilitiesForm.value.name} has been successfully created.`,
+              'success'
+            )
+            this.router.navigate(['/facilities/'])
+          })
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error submitting facility data', error);
+        this.isDataLoaded = true;
         this.toastService.showToast(
-          'Facility Error',
-          `Error while adding/updating ${this.facilitiesForm.value.name}.`,
+          `Facility Error: ${error.error.status}`,
+          `Error while adding/updating ${this.facilitiesForm.value.name}: ${error.error.message}`,
           'failed'
         )
       }
-      // alert(JSON.stringify(this.facilitiesForm.value))
     } else {
       this.facilitiesForm.markAllAsTouched()
     }
