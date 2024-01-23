@@ -70,35 +70,35 @@ export interface QueryPlans {
 
 interface Bundle {
   address?: string
-  bundleType: string
+  bundleType?: string
   email?: string
-  includeCensuses: boolean
-  includesQueryPlans: boolean
-  mergeCensuses: boolean
+  includeCensuses?: boolean
+  includesQueryPlans?: boolean
+  mergeCensuses?: boolean
   name: string
   npi?: string
   phone?: string
-  promoteLineLevelResources: boolean
+  promoteLineLevelResources?: boolean
 }
 
 export interface Events {
-  beforeMeasureResolution: string[]
-  afterMeasureResolution: string[]
-  onRegeneration: string[]
-  beforePatientOfInterestLookup: string[]
-  afterPatientOfInterestLookup: string[]
-  beforePatientDataQuery: string[]
-  afterPatientResourceQuery: string[]
-  afterPatientDataQuery: string[],
-  afterApplyConceptMaps: string[]
-  beforePatientDataStore: string[]
-  afterPatientDataStore: string[]
-  beforeMeasureEval: string[]
-  afterMeasureEval: string[]
-  beforeReportStore: string[]
-  afterReportStore: string[]
-  beforeBundling: string[]
-  afterBundling: string[]
+  beforeMeasureResolution?: string[] | null
+  afterMeasureResolution?: string[] | null
+  onRegeneration?: string[] | null
+  beforePatientOfInterestLookup?: string[] | null
+  afterPatientOfInterestLookup?: string[] | null
+  beforePatientDataQuery?: string[] | null
+  afterPatientResourceQuery?: string[] | null
+  afterPatientDataQuery?: string[] | null
+  afterApplyConceptMaps?: string[] | null
+  beforePatientDataStore?: string[] | null
+  afterPatientDataStore?: string[] | null
+  beforeMeasureEval?: string[] | null
+  afterMeasureEval?: string[] | null
+  beforeReportStore?: string[] | null
+  afterReportStore?: string[] | null
+  beforeBundling?: string[] | null
+  afterBundling?: string[] | null
 }
 
 interface Auth {
@@ -125,13 +125,13 @@ export enum AuthClass {
 }
 
 export enum NormalizationClass {
-  CodeSystemCleanup = 'com.lantanagroup.link.events.CodeSystemCleanup',
-  ContainedResourceCleanup = 'com.lantanagroup.link.events.ContainedResourceCleanup',
-  CopyLocationIdentifierToType = 'com.lantanagroup.link.events.CopyLocationIdentifierToType',
-  EncounterStatusTransformer = 'com.lantanagroup.link.events.EncounterStatusTransformer',
-  FixPeriodDates = 'com.lantanagroup.link.events.FixPeriodDates',
-  FixResourceId = 'com.lantanagroup.link.events.FixResourceId',
-  PatientDataResourceFilter = 'com.lantanagroup.link.events.PatientDataResourceFilter'
+  codeSystemCleanup = 'com.lantanagroup.link.events.CodeSystemCleanup',
+  containedResourceCleanup = 'com.lantanagroup.link.events.ContainedResourceCleanup',
+  copyLocationIdentifierToType = 'com.lantanagroup.link.events.CopyLocationIdentifierToType',
+  encounterStatusTransformer = 'com.lantanagroup.link.events.EncounterStatusTransformer',
+  fixPeriodDates = 'com.lantanagroup.link.events.FixPeriodDates',
+  fixResourceId = 'com.lantanagroup.link.events.FixResourceId',
+  patientDataResourceFilter = 'com.lantanagroup.link.events.PatientDataResourceFilter'
 }
 
 interface FHIRQuery {
@@ -173,10 +173,11 @@ interface Scheduling {
 }
 
 export interface TenantDetails {
-  bulkWaitTimeInMilliseconds?: string
-  bundling: Bundle
+  bulkWaitTimeInMilliseconds?: string | null
+  bundling?: Bundle
   cdcOrgId: string
   connectionString?: string
+  description?: string | null
   events?: Events
   fhirQuery?: FHIRQuery
   id?: string

@@ -175,24 +175,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
-          <label for="copyLocationFalse" class="label__radio">
+          <label for="copyLocationIdentifierToTypeFalse" class="label__radio">
             <input 
               type="radio" 
-              id="copyLocationFalse"
-              name="copyLocation" 
-              formControlName="copyLocation"
+              id="copyLocationIdentifierToTypeFalse"
+              name="copyLocationIdentifierToType" 
+              formControlName="copyLocationIdentifierToType"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="copyLocationTrue" class="label__radio">
+          <label for="copyLocationIdentifierToTypeTrue" class="label__radio">
             <input 
               type="radio" 
-              id="copyLocationTrue" 
-              name="copyLocation"
-              formControlName="copyLocation"
+              id="copyLocationIdentifierToTypeTrue" 
+              name="copyLocationIdentifierToType"
+              formControlName="copyLocationIdentifierToType"
               [value]=1
             />
             <span></span>
@@ -202,24 +202,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Encounter Status Transformer</label>
-          <label for="encounterStatusFalse" class="label__radio">
+          <label for="encounterStatusTransformerFalse" class="label__radio">
             <input 
               type="radio" 
-              id="encounterStatusFalse"
-              name="encounterStatus" 
-              formControlName="encounterStatus"
+              id="encounterStatusTransformerFalse"
+              name="encounterStatusTransformer" 
+              formControlName="encounterStatusTransformer"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="encounterStatusTrue" class="label__radio">
+          <label for="encounterStatusTransformerTrue" class="label__radio">
             <input 
               type="radio" 
-              id="encounterStatusTrue" 
-              name="encounterStatus"
-              formControlName="encounterStatus"
+              id="encounterStatusTransformerTrue" 
+              name="encounterStatusTransformer"
+              formControlName="encounterStatusTransformer"
               [value]=1
             />
             <span></span>
@@ -256,24 +256,24 @@
   
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Fix Resource IDs</label>
-          <label for="fixResourceIdsFalse" class="label__radio">
+          <label for="fixResourceIdFalse" class="label__radio">
             <input 
               type="radio" 
-              id="fixResourceIdsFalse"
-              name="fixResourceIds" 
-              formControlName="fixResourceIds"
+              id="fixResourceIdFalse"
+              name="fixResourceId" 
+              formControlName="fixResourceId"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="fixResourceIdsTrue" class="label__radio">
+          <label for="fixResourceIdTrue" class="label__radio">
             <input 
               type="radio" 
-              id="fixResourceIdsTrue" 
-              name="fixResourceIds"
-              formControlName="fixResourceIds"
+              id="fixResourceIdTrue" 
+              name="fixResourceId"
+              formControlName="fixResourceId"
               [value]=1
             />
             <span></span>
@@ -285,24 +285,24 @@
       <ng-container formGroupName="afterPatientResourceQuery">
         <div class="col col-md-3 form__field">
           <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
-          <label for="patientDataResourceFalse" class="label__radio">
+          <label for="patientDataResourceFilterFalse" class="label__radio">
             <input 
               type="radio" 
-              id="patientDataResourceFalse"
-              name="patientDataResource" 
-              formControlName="patientDataResource"
+              id="patientDataResourceFilterFalse"
+              name="patientDataResourceFilter" 
+              formControlName="patientDataResourceFilter"
               [value]=0
             />
             <span></span>
             No
           </label>
   
-          <label for="patientDataResourceTrue" class="label__radio">
+          <label for="patientDataResourceFilterTrue" class="label__radio">
             <input 
               type="radio" 
-              id="patientDataResourceTrue" 
-              name="patientDataResource"
-              formControlName="patientDataResource"
+              id="patientDataResourceFilterTrue" 
+              name="patientDataResourceFilter"
+              formControlName="patientDataResourceFilter"
               [value]=1
             />
             <span></span>
@@ -632,11 +632,17 @@
         >
           <div class="col col-md-4 form__field">
             <label for="measureId">Measure ID</label>
-            <input 
-              type="text" 
-              id="measureId" 
+            <select
+              id="measureId"
+              name="measureId"
               formControlName="measureId"
-            />
+            >
+              <option value="">Please Select</option>
+              <option 
+                *ngFor="let measure of measureDefs"
+                [value]="measure.measureId"
+              >{{ measure.measureId | pascalCaseToSpace }}</option>
+            </select>
           </div>
   
           <div class="col col-md-6 form__field">
@@ -662,6 +668,7 @@
         <app-button
           type="button"
           [onClickHandler]="getAddQueryPlanHandler()"
+          *ngIf="isMeasureDefsLoaded; else loadingBtn"
         >
           <app-icon filePath="../../../assets/icons/plus.svg" />
           Add Query Plan
