@@ -266,7 +266,7 @@ export class ActivitiesComponent implements OnInit {
 
 
       // details
-      const details = status === 'Submitted' ? `Bundle #${report.id}` : (status === "Draft" ? "In Progress" : "Error report");
+      const details = status === 'Submitted' ? `Bundle<br>#${report.id}` : (status === "Draft" ? "In Progress" : "Error report");
 
       // measures and activity
       let measuresData,
