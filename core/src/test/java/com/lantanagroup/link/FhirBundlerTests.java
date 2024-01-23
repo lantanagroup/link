@@ -55,7 +55,7 @@ public class FhirBundlerTests {
   }
 
   @Test
-  public void testBundle() {
+  public void testBundle() throws Exception {
     // Use legacy behavior of reifying/promoting line-level resources
     Bundling bundlingConfig = new Bundling();
     bundlingConfig.setIncludeCensuses(true);

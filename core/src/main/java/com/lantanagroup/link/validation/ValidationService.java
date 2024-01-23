@@ -33,7 +33,7 @@ public class ValidationService {
   @Autowired
   private ApiConfig config;
 
-  public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
+  public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) throws Exception {
     OperationOutcome outcome;
 
     Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);

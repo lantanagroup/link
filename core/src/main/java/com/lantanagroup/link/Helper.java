@@ -192,7 +192,7 @@ public class Helper {
     return text;
   }
 
-  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) {
+  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) throws Exception {
     FhirBundler bundler = new FhirBundler(eventService, tenantService, config);
     logger.info("Building Bundle for MeasureReport to send...");
     List<Aggregate> aggregates = tenantService.getAggregates(report.getId());

@@ -305,7 +305,7 @@ public class ValidationController extends BaseController {
    * @throws IOException
    */
   @PostMapping("/{tenantId}/{reportId}")
-  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId) {
+  public OperationOutcome validate(@PathVariable String tenantId, @PathVariable String reportId) throws Exception {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
