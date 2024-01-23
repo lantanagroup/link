@@ -40,12 +40,22 @@ body {
   min-width: 2.5rem;
   padding: 0.75rem 0.375rem;
   text-align: center;
+  transition: $transition-base;
   white-space: nowrap;
   width: auto;
 
   &--grid {
     min-width: none;
     width: max-content;
+  }
+
+  &:hover {
+    background: $blue-700;
+    cursor: pointer;
+  }
+
+  &:active {
+    background: $gray-700;
   }
 }
 

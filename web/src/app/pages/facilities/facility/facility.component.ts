@@ -20,7 +20,7 @@ import { Report } from 'src/app/shared/interfaces/report.model';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
 import { TenantConceptMap, Normalization, QueryPlan, QueryPlans, TenantDetails } from 'src/app/shared/interfaces/tenant.model';
-import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
 import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 
 @Component({
@@ -51,7 +51,7 @@ export class FacilityComponent {
   isDataLoaded: boolean = false;
 
   private pascalCaseToSpace = new PascalCaseToSpace
-
+  private convertDateString = new ConvertDateString
 
   constructor(
     private route: ActivatedRoute,
@@ -251,7 +251,7 @@ export class FacilityComponent {
         orderable: false,
         createdCell: (cell, cellData) => {
           if (cellData.toLowerCase().includes('progress')) {
-            $(cell).addClass('cell--initiated');
+            $(cell).addClass('cell--initiated cell--inProgress');
           } else {
             $(cell).addClass('cell--complete');
           }
@@ -320,7 +320,7 @@ export class FacilityComponent {
       // basic vars
       const status = report.status,
             periodLength = calculatePeriodLength(report.periodStart, report.periodEnd),
-            reportPeriod = formatDate(report.periodStart) + ' - ' + formatDate(report.periodEnd)
+            reportPeriod = this.convertDateString.transform(formatDate(report.periodStart)) + ' - ' + this.convertDateString.transform(formatDate(report.periodEnd))
 
       // period data
       let periodData;
@@ -333,9 +333,9 @@ export class FacilityComponent {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = report.generatedTime
+        timestamp = this.convertDateString.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = report.submittedTime
+        timestamp = this.convertDateString.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }

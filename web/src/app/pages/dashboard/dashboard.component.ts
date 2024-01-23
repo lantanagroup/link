@@ -15,6 +15,8 @@ import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { MetricApiService } from 'src/services/api/metric/metric-api.service';
 import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
+import { ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+
 @Component({
     selector: 'app-dashboard',
     standalone: true,
@@ -29,6 +31,8 @@ export class DashboardComponent {
   pendingDtOptions: DataTables.Settings | null = null;
   cardCount: number = 3;
   columnSpan: number = 4;
+
+  private convertDateString = new ConvertDateString
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -123,7 +127,7 @@ export class DashboardComponent {
           data: columnIdMap[0],
           createdCell: (cell, cellData) => {
             if (cellData.toLowerCase().includes('progress')) {
-              $(cell).addClass('cell--initiated');
+              $(cell).addClass('cell--initiated cell--inProgress');
             } else {
               $(cell).addClass('cell--complete');
             }
@@ -168,9 +172,9 @@ export class DashboardComponent {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = report.generatedTime
+        timestamp = this.convertDateString.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = report.submittedTime
+        timestamp = this.convertDateString.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }

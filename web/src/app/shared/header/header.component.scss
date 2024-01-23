@@ -18,15 +18,7 @@
 }
 #SecondaryNavigation .header {
   &__btnLogout {
-    &::before {
-      content: '|';
-      color: $black;
-      display: inline-block;
-      font-family: $font-family-heading;
-      font-size: 1rem;
-      font-weight: $font-weight-normal;
-      margin: 0 0.5rem;
-    }
+    margin-left: 2.25rem;
     .btn {
       display: inline-block;
     }

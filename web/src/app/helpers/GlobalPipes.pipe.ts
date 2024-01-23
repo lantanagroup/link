@@ -93,3 +93,15 @@ export class RoundToThousand implements PipeTransform {
     }
   }
 }
+
+// Convert YYYY-MM-DD to MM.DD.YYYY
+@Pipe({
+  name: 'convertDateString',
+  standalone: true
+})
+export class ConvertDateString implements PipeTransform {
+  transform(date: string): string {
+    const parts = date.split('-')
+    return `${parts[1]}.${parts[2]}.${parts[0]}`
+  }
+}

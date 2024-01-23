@@ -14,7 +14,7 @@ import { MetricApiService } from 'src/services/api/metric/metric-api.service';
 import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
-import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-activities',
@@ -31,6 +31,7 @@ export class ActivitiesComponent implements OnInit {
     placeholder: 'Enter facility name, Bundle ID, Status, etc.'
   };
   private pascalCaseToSpace = new PascalCaseToSpace
+  private convertDateString = new ConvertDateString
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -175,7 +176,7 @@ export class ActivitiesComponent implements OnInit {
         orderable: false,
         createdCell: (cell, cellData) => {
           if (cellData.toLowerCase().includes('progress')) {
-            $(cell).addClass('cell--initiated');
+            $(cell).addClass('cell--initiated cell--inProgress');
           } else {
             $(cell).addClass('cell--complete');
           }
@@ -257,9 +258,9 @@ export class ActivitiesComponent implements OnInit {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = report.generatedTime
+        timestamp = this.convertDateString.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = report.submittedTime
+        timestamp = this.convertDateString.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }
