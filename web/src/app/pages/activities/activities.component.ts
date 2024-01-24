@@ -248,7 +248,7 @@ export class ActivitiesComponent implements OnInit {
       // basic vars
       const status = report.status,
             periodLength = calculatePeriodLength(report.periodStart, report.periodEnd),
-            reportPeriod = formatDate(report.periodStart) + ' - ' + formatDate(report.periodEnd)
+            reportPeriod = this.convertDateString.transform(formatDate(report.periodStart)) + ' - ' + this.convertDateString.transform(formatDate(report.periodEnd))
 
       // period data
       let periodData;
