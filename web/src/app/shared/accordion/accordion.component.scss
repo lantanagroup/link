@@ -1,7 +1,6 @@
 /* accordion.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .accordion {
   background: $white;
@@ -23,6 +22,7 @@
       color: $blue;
       font-family: $font-family-sans-serif;
       letter-spacing: 0;
+      line-height: 1.4em;
       margin: 0;
     }
 

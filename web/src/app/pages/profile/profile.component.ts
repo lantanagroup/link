@@ -15,7 +15,7 @@ import { ProfileApiService } from 'src/services/api/profile/profile-api.service'
   standalone: true,
   imports: [CommonModule, HeroComponent, IconComponent, ButtonComponent, SectionComponent, CardComponent, MiniContentComponent],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css']
+  styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent {
 

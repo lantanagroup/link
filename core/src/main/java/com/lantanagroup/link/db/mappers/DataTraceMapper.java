@@ -1,7 +1,6 @@
 package com.lantanagroup.link.db.mappers;
 
 import com.lantanagroup.link.db.model.DataTrace;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +20,7 @@ public class DataTraceMapper extends BaseMapper<DataTrace> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(DataTrace model) {
+  protected Parameters doToParameters(DataTrace model) {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addUUID("queryId", model.getQueryId());

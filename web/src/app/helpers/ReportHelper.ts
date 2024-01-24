@@ -18,7 +18,6 @@ export function generateRandomData(numEntries: number): Report[] {
 
   for (let i = 0; i < numEntries; i++) {
     const status: StatusType = statusOptions[Math.floor(Math.random() * statusOptions.length)];
-    const activity = activitiesMap[status];
     const measures = status === 'submitted' ? getRandomSubarray(measuresArray, Math.ceil(Math.random() * measuresArray.length)) : (status === 'pending' ? ['Pending'] : ['n/a']);
     const aggregates = status === 'submitted' ? generateRandomNumbersAsStrings(5) : ['--'];
     const { periodStart, periodEnd } = generateRandomPeriod()
@@ -28,10 +27,10 @@ export function generateRandomData(numEntries: number): Report[] {
       reportId: createGUID(),
       submittedTime: generateRandomDateTime(),
       generatedTime: generateRandomDateTime(),
-      activity: activity,
       details: (Math.floor(Math.random() * (9999999 - 1000000 + 1)) + 1000000).toString(),
       tenantName: facilities[Math.floor(Math.random() * facilities.length)],
-      nhsnOrgId: (Math.floor(Math.random() * (9999999 - 1000000 + 1)) + 1000000).toString(),
+      tenantId: '#',
+      cdcOrgId: (Math.floor(Math.random() * (9999999 - 1000000 + 1)) + 1000000).toString(),
       periodStart: periodStart,
       periodEnd: periodEnd,
       measureIds: measures,
@@ -153,11 +152,11 @@ export function getPeriodData(status: string, periodStart: string, periodEnd: st
  * and then formats it to a string in the 'MM.DD.YYYY' format.
  *
  * @param {string} dateStr - The ISO 8601 date string to be formatted.
- * @returns {string} A string representing the formatted date in 'MM.DD.YYYY' format.
+ * @returns {string} A string representing the formatted date in 'YYYY-MM-DD' format.
  */
-const formatDate = (dateStr: string) => {
+export const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
-  return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}.${String(date.getFullYear())}`;
+  return `${String(date.getFullYear())}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 };
 
 /**
@@ -232,3 +231,151 @@ export function getSubmissionStatus(status: string): string {
       return 'Submission Initiated';
   }
 }
+
+
+/******************/
+/* placeholder normalization detail data */
+/******************/
+
+export const normalizationData: any = [
+  {
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  },
+  {
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
+    "Column2": "############",
+    "Column3": "############",
+    "Column4": "############",
+    "Column5": "############"
+  }
+]

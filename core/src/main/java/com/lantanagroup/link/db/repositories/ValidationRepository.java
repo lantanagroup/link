@@ -69,6 +69,11 @@ public class ValidationRepository {
     return Arrays.stream(jdbc.batchUpdate(sql, parameters)).sum();
   }
 
+  public int deleteAll() {
+    String sql = "DELETE FROM dbo.validationResult;";
+    return jdbc.update(sql, Map.of());
+  }
+
   public int deleteByReport(String reportId) {
     String sql = "DELETE FROM dbo.validationResultCategory WHERE validationResultId IN (SELECT id FROM dbo.validationResult WHERE reportId = :reportId); " +
             "DELETE FROM dbo.validationResult WHERE reportId = :reportId;";

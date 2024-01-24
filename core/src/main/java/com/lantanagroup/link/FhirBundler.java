@@ -33,6 +33,8 @@ public class FhirBundler {
 
   private Device device;
 
+  private Map<String, Resource> lineLevelResources;
+
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.supplementalDataElement.reference",
@@ -116,6 +118,7 @@ public class FhirBundler {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     bundle.addEntry().setResource(this.getDevice());
+    this.lineLevelResources = new HashMap<>();
 
     if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
       bundle.addEntry().setResource(this.createQueryPlanLibrary(report.getMeasureIds()));
@@ -401,7 +404,6 @@ public class FhirBundler {
       return;
     }
 
-    Map<String, Resource> lineLevelResources = new HashMap<>();
     for (ListResource.ListEntryComponent subject : subjectList.getEntry()) {
       String patientMeasureReportId = subject.getItem().getReferenceElement().getIdPart();
       if (patientMeasureReportId == null) {
@@ -415,7 +417,7 @@ public class FhirBundler {
       }
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
-      this.addIndividualMeasureReport(bundle, lineLevelResources, individualMeasureReport);
+      this.addIndividualMeasureReport(bundle, individualMeasureReport);
     }
   }
 
@@ -430,7 +432,7 @@ public class FhirBundler {
     bundle.addEntry().setResource(aggregateMeasureReport);
   }
 
-  private void addIndividualMeasureReport(Bundle bundle, Map<String, Resource> lineLevelResources, MeasureReport individualMeasureReport) {
+  private void addIndividualMeasureReport(Bundle bundle, MeasureReport individualMeasureReport) {
     logger.debug("Adding individual measure report: {}", individualMeasureReport.getId());
 
     this.cleanupResource(individualMeasureReport);
@@ -460,16 +462,23 @@ public class FhirBundler {
       for (int i = 0; i < individualMeasureReport.getContained().size(); i++) {
         Resource contained = individualMeasureReport.getContained().get(i);
         String lineLevelResourceId = getNonLocalId(contained);
-        Resource found = lineLevelResources.get(lineLevelResourceId);
+        Resource found = this.lineLevelResources.get(lineLevelResourceId);
 
         if (found == null) {
           bundle.addEntry().setResource(contained);
-          lineLevelResources.put(lineLevelResourceId, contained);
+          this.lineLevelResources.put(lineLevelResourceId, contained);
         } else {
-          if (!found.equalsDeep(contained)) {
-            logger.error("Need to change the id of {}/{} because another resource has already been promoted with the same ID that is not the same", contained.getResourceType(), contained.getIdElement().getIdPart());
-          } else {
-            logger.debug("Resource {}/{} already has a copy that has been promoted. Not promoting/replacing.", contained.getResourceType(), contained.getIdElement().getIdPart());
+          Resource foundClone = found.copy().setMeta(null);
+          Resource containedClone = contained.copy().setMeta(null);
+          if (!foundClone.equalsDeep(containedClone)) {
+            logger.warn("Previously promoted resource {} is not equivalent", lineLevelResourceId);
+          }
+          for (CanonicalType profile : contained.getMeta().getProfile()) {
+            String value = profile.getValue();
+            if (!found.getMeta().hasProfile(value)) {
+              logger.debug("Adding profile {} to previously promoted resource {}", value, lineLevelResourceId);
+              found.getMeta().addProfile(value);
+            }
           }
         }
 

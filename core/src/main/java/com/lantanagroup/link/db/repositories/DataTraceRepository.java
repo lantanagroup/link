@@ -37,6 +37,11 @@ public class DataTraceRepository {
     return Arrays.stream(jdbc.batchUpdate(sql, parameters)).sum();
   }
 
+  public int deleteAll() {
+    String sql = "DELETE FROM dbo.dataTrace;";
+    return jdbc.update(sql, Map.of());
+  }
+
   public int deleteUnreferenced() {
     String sql = "DELETE FROM dbo.dataTrace WHERE id NOT IN " +
             "(SELECT dataTraceId FROM dbo.patientData WHERE dataTraceId IS NOT NULL);";

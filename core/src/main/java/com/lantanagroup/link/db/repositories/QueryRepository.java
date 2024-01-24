@@ -32,6 +32,11 @@ public class QueryRepository {
     return jdbc.update(sql, mapper.toParameters(model));
   }
 
+  public int deleteAll() {
+    String sql = "DELETE FROM dbo.query;";
+    return jdbc.update(sql, Map.of());
+  }
+
   public int deleteUnreferenced() {
     String sql = "DELETE FROM dbo.query WHERE id NOT IN " +
             "(SELECT queryId FROM dbo.dataTrace WHERE queryId IS NOT NULL);";

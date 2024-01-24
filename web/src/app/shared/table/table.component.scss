@@ -1,5 +1,4 @@
 @import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
         '../../../scss/abstracts';
 
 // hide default search bar
@@ -82,6 +81,7 @@
 // custom table styles
 .table__container {
   background: $white;
+  overflow: hidden;
 }
 
 div.dataTables_scrollBody > table.dataTable > thead > tr > * {
@@ -95,7 +95,13 @@ table.dataTable {
   background: $white;
   border-collapse: collapse !important;
   margin: 0 !important;
+  min-height: 4rem; // for ajax loading
   min-width: 100% !important;
+
+  // specific tables {
+    &.dataTables_scrollHead {
+      min-height: 0;
+    }
 
   // Rows
 
@@ -162,6 +168,23 @@ table.dataTable {
 
     &:first-child {
       padding-left: 2.5rem;
+    }
+
+    &.sorting_disabled {
+      cursor: default !important;
+      padding-left: 0.75rem;
+
+      &.sorting_asc,
+      &.sorting_desc {
+        &::before,
+        &::after {
+          display: none;
+        }
+      }
+
+      &:first-child {
+        padding-left: 1.25rem;
+      }
     }
 
     // sorting
@@ -234,9 +257,17 @@ table.dataTable {
       &:last-child {
         padding-right: 0.75rem;
       }
+
+      .dashboard-tables & {
+        height: 2.75rem;
+      }
     }
 
     thead {
+      .dashboard-tables & {
+        display: none !important;
+      }
+
       th {
         padding: 1rem 0.5rem 1rem 1.25rem;
     
