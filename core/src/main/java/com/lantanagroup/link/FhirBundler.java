@@ -468,10 +468,10 @@ public class FhirBundler {
           bundle.addEntry().setResource(contained);
           this.lineLevelResources.put(lineLevelResourceId, contained);
         } else {
-          if (!found.equalsDeep(contained)) {
-            logger.error("Need to change the id of {}/{} because another resource has already been promoted with the same ID that is not the same", contained.getResourceType(), contained.getIdElement().getIdPart());
-          } else {
-            logger.debug("Resource {}/{} already has a copy that has been promoted. Not promoting/replacing.", contained.getResourceType(), contained.getIdElement().getIdPart());
+          Resource foundClone = found.copy().setMeta(null);
+          Resource containedClone = contained.copy().setMeta(null);
+          if (!foundClone.equalsDeep(containedClone)) {
+            logger.warn("Previously promoted resource {} is not equivalent", lineLevelResourceId);
           }
         }
 
