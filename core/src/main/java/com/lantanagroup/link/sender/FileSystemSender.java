@@ -95,8 +95,6 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
   private void saveToFile(byte[] content, String path) throws Exception {
     if (StringUtils.isNotEmpty(this.config.getEncryptSecret())) {
-      logger.debug("Encrypting the contents of the file-based submission");
-
       try (OutputStream os = new FileOutputStream(path)) {
         byte[] salt = new byte[8];
         this.random.nextBytes(salt);// Create key
@@ -136,11 +134,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       parser.setPrettyPrint(true);
     }
 
-    logger.info("Encoding submission bundle to {}", format);
-
     if (StringUtils.isNotEmpty(this.config.getEncryptSecret())) {
-      logger.debug("Encrypting the contents of the file-based submission");
-
       try (OutputStream os = new FileOutputStream(path)) {
         byte[] salt = new byte[8];
         this.random.nextBytes(salt);// Create key
@@ -232,6 +226,11 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       logger.info("Not configured to send to file system");
       return;
     }
+
+    logger.info(
+            "Encoding submission bundle to {} {} encryption",
+            this.config.getFormat(),
+            StringUtils.isEmpty(this.config.getEncryptSecret()) ? "without" : "with");
 
     String path = this.getFilePath().toString();
 
