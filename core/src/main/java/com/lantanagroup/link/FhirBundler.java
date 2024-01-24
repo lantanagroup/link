@@ -473,6 +473,13 @@ public class FhirBundler {
           if (!foundClone.equalsDeep(containedClone)) {
             logger.warn("Previously promoted resource {} is not equivalent", lineLevelResourceId);
           }
+          for (CanonicalType profile : contained.getMeta().getProfile()) {
+            String value = profile.getValue();
+            if (!found.getMeta().hasProfile(value)) {
+              logger.debug("Adding profile {} to previously promoted resource {}", value, lineLevelResourceId);
+              found.getMeta().addProfile(value);
+            }
+          }
         }
 
         String oldReference = "#" + getIdPart(contained);
