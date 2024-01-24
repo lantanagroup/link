@@ -212,7 +212,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.debug("Saving other resources");
     Bundle otherResourcesBundle = new Bundle();
     otherResourcesBundle.setType(Bundle.BundleType.COLLECTION);
-    otherResourcesBundle.getEntry().addAll(fhirBundleProcessor.getOtherResources().collect(Collectors.toList()));
+    otherResourcesBundle.getEntry().addAll(fhirBundleProcessor.getOtherResources());
 
     if (otherResourcesBundle.hasEntry()) {
       this.saveToFile(otherResourcesBundle, Paths.get(path, "other-resources.json").toString());

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class FhirBundleProcessor {
   private final Bundle bundle;
@@ -25,10 +24,13 @@ public class FhirBundleProcessor {
   private final List<Bundle.BundleEntryComponent> linkCensusLists;
 
   @Getter
+  private final List<Bundle.BundleEntryComponent> aggregateMeasureReports;
+
+  @Getter
   private final HashMap<String, List<Bundle.BundleEntryComponent>> patientResources = new HashMap<>();
 
   @Getter
-  private final List<Bundle.BundleEntryComponent> aggregateMeasureReports;
+  private final List<Bundle.BundleEntryComponent> otherResources = new ArrayList<>();
 
   public FhirBundleProcessor(Bundle bundle) {
     this.bundle = bundle;
@@ -67,6 +69,11 @@ public class FhirBundleProcessor {
             .sorted(new FhirBundlerEntrySorter.ResourceComparator())
             .collect(Collectors.toList());
 
+    this.aggregateMeasureReports = this.bundle.getEntry().stream()
+            .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST))
+            .sorted(new FhirBundlerEntrySorter.ResourceComparator())
+            .collect(Collectors.toList());
+
     for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
       String patientReference = FhirHelper.getPatientReference(e.getResource());
       if (patientReference != null) {
@@ -75,13 +82,10 @@ public class FhirBundleProcessor {
           this.patientResources.put(patientId, new ArrayList<>());
         }
         this.patientResources.get(patientId).add(e);
+      } else if (isOtherResource(e)) {
+        this.otherResources.add(e);
       }
     }
-
-    this.aggregateMeasureReports = this.bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.MeasureReport) && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST))
-            .sorted(new FhirBundlerEntrySorter.ResourceComparator())
-            .collect(Collectors.toList());
   }
 
   private static boolean isSameResource(Resource r1, Resource r2) {
@@ -96,21 +100,15 @@ public class FhirBundleProcessor {
             .sorted().collect(Collectors.toList());
   }
 
-  public Stream<Bundle.BundleEntryComponent> getOtherResources() {
-    return bundle.getEntry().stream()
-            .filter(r -> {
-              if (isSameResource(r.getResource(), this.linkOrganization.getResource())) {
-                return false;
-              } else if (isSameResource(r.getResource(), this.linkDevice.getResource())) {
-                return false;
-              } else if (this.linkQueryPlanLibrary == null || isSameResource(r.getResource(), this.linkQueryPlanLibrary.getResource())) {
-                return false;
-              } else if (this.linkCensusLists.stream().anyMatch(l -> isSameResource(r.getResource(), l.getResource()))) {
-                return false;
-              } else if (this.patientResources.values().stream().anyMatch(l -> l.stream().anyMatch(p -> isSameResource(r.getResource(), p.getResource())))) {
-                return false;
-              } else return this.aggregateMeasureReports.stream().noneMatch(l -> isSameResource(r.getResource(), l.getResource()));
-            })
-            .sorted(new FhirBundlerEntrySorter.ResourceComparator());
+  private boolean isOtherResource(Bundle.BundleEntryComponent r) {
+    if (isSameResource(r.getResource(), this.linkOrganization.getResource())) {
+      return false;
+    } else if (isSameResource(r.getResource(), this.linkDevice.getResource())) {
+      return false;
+    } else if (this.linkQueryPlanLibrary == null || isSameResource(r.getResource(), this.linkQueryPlanLibrary.getResource())) {
+      return false;
+    } else if (this.linkCensusLists.stream().anyMatch(l -> isSameResource(r.getResource(), l.getResource()))) {
+      return false;
+    } else return this.aggregateMeasureReports.stream().noneMatch(l -> isSameResource(r.getResource(), l.getResource()));
   }
 }

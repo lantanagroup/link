@@ -85,7 +85,7 @@ public class FhirBundlerEntrySorter {
 
     // Get all resources not already in the bundle
     logger.info("Adding remaining resources");
-    fhirBundleProcessor.getOtherResources().forEach(newEntriesList::add);
+    newEntriesList.addAll(fhirBundleProcessor.getOtherResources());
 
     // Clear the bundle entries and add the sorted entries
     logger.info("Replacing entries");
