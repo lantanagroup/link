@@ -17,7 +17,7 @@ public class FhirBundlerEntrySorter {
         patientIds.add(e.getResource().getIdElement().getIdPart());
       }
     }
-    return patientIds;
+    return patientIds.stream().distinct().collect(Collectors.toList());
   }
 
   private static Bundle.BundleEntryComponent getLinkOrganization(Bundle bundle) {
