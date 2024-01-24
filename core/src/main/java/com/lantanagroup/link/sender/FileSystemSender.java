@@ -93,7 +93,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     return cipher;
   }
 
-  private void saveToFile(String content, String path) throws Exception {
+  private void saveToFile(byte[] content, String path) throws Exception {
     if (StringUtils.isNotEmpty(this.config.getEncryptSecret())) {
       logger.debug("Encrypting the contents of the file-based submission");
 
@@ -102,14 +102,13 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.random.nextBytes(salt);// Create key
         Cipher cipher = getCipher(this.config.getEncryptSecret(), salt);
         CipherOutputStream cipherOut = new CipherOutputStream(os, cipher);
-        Writer writer = new OutputStreamWriter(cipherOut, StandardCharsets.UTF_8);
         os.write("Salted__".getBytes(StandardCharsets.US_ASCII));
         os.write(salt);
-        writer.append(content);
+        cipherOut.write(content);
       }
     } else {
-      try (Writer writer = new FileWriter(path, StandardCharsets.UTF_8)) {
-        writer.append(content);
+      try (OutputStream os = new FileOutputStream(path)) {
+        os.write(content);
       }
     }
   }
@@ -183,11 +182,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     if (fhirBundleProcessor.getLinkQueryPlanLibrary() != null) {
       Library library = (Library) fhirBundleProcessor.getLinkQueryPlanLibrary().getResource();
-
-      if (library.getContentFirstRep() != null && library.getContentFirstRep().getContentType().equals("text/yaml")) {
-        String queryPlan = new String(library.getContentFirstRep().getData());
-        this.saveToFile(queryPlan, Paths.get(path, "query-plan.yaml").toString());
-      }
+      this.saveToFile(library.getContentFirstRep().getData(), Paths.get(path, "query-plan.yml").toString());
     }
 
     // Save aggregate measure reports
