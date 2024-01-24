@@ -22,12 +22,12 @@
     padding: 0.25rem 0.5rem;
   
     &:hover,
-    &:focus-visible {
+    &:focus-visible,
+    &.active {
       background: $blue-50;
       color: $blue-500;
     }
 
-    &.active,
     &:active {
       background: $blue-50;
       color: $gray-800;
