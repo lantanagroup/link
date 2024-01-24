@@ -51,15 +51,15 @@ export class SecondsToTimestamp implements PipeTransform {
 
     const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
 
-    const hours = Math.floor(actualValue / 3600);
-    const minutes = Math.floor((actualValue % 3600) / 60);
-    const seconds = actualValue % 60;
+    const hours = Math.floor(actualValue / 3600),
+          minutes = Math.floor((actualValue % 3600) / 60),
+          seconds = actualValue % 60
 
-    const paddedHours = String(hours).padStart(2, '0');
-    const paddedMinutes = String(minutes).padStart(2, '0');
-    const paddedSeconds = String(seconds).padStart(2, '0');
+    const paddedHours = String(hours).padStart(2, '0'),
+          paddedMinutes = String(minutes).padStart(2, '0'),
+          paddedSeconds = String(seconds).padStart(2, '0')
 
-    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
   }
 }
 
@@ -76,6 +76,50 @@ export class SecondsToHours implements PipeTransform {
   }
 }
 
+// Milliseconds to Timestamp
+@Pipe({
+  name: 'millisecondsToTimestamp',
+  standalone: true
+})
+export class MillisecondsToTimestamp implements PipeTransform {
+  transform(value: any): string {
+
+    const actualValue = (typeof value === 'object' && value !== null && 'value' in value) ? value.value : value
+
+    const hours = Math.floor((actualValue / (1000 * 60 * 60)) % 24),
+          minutes = Math.floor((actualValue / (1000 * 60)) % 60),
+          seconds = Math.floor((actualValue / 1000) % 60)
+
+    const paddedHours = String(hours).padStart(2, '0'),
+          paddedMinutes = String(minutes).padStart(2, '0'),
+          paddedSeconds = String(seconds).padStart(2, '0')
+
+    return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`
+  }
+}
+
+// Truncated, milliseconds to Hours
+@Pipe({
+  name: 'millisecondsToDisplay',
+  standalone: true
+})
+export class MillisecondsToDisplay implements PipeTransform {
+  transform(actualValue: number) {
+    const hours = Math.floor((actualValue / (1000 * 60 * 60)) % 24),
+          minutes = Math.floor((actualValue / (1000 * 60)) % 60),
+          seconds = Math.floor((actualValue / 1000) % 60)
+
+    if(hours > 0) {
+      return {value: hours.toString(), unit: 'hours'}
+    } else if (minutes > 0) {
+      return {value: minutes.toString(), unit: 'minutes'}
+    } else {
+      return {value: seconds.toString(), unit: 'seconds'}
+    }
+  }
+}
+
+// Round to thousand (but also million)
 @Pipe({
   name: 'roundToThousand',
   standalone: true
@@ -91,5 +135,17 @@ export class RoundToThousand implements PipeTransform {
     } else {
       return value.toString()
     }
+  }
+}
+
+// Convert YYYY-MM-DD to MM.DD.YYYY
+@Pipe({
+  name: 'convertDateString',
+  standalone: true
+})
+export class ConvertDateString implements PipeTransform {
+  transform(date: string): string {
+    const parts = date.split('-')
+    return `${parts[1]}.${parts[2]}.${parts[0]}`
   }
 }

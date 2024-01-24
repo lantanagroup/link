@@ -10,7 +10,7 @@ import { TableComponent } from 'src/app/shared/table/table.component';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
 import { SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
-import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-facilities',
@@ -24,6 +24,8 @@ export class FacilitiesComponent implements OnInit {
     private facilitiesApiService: FacilitiesApiService
   ) { }
   private pascalCaseToSpace = new PascalCaseToSpace
+  private convertDateString = new ConvertDateString
+
   dtOptions: DataTables.Settings = {};
   
   dtSearchBar: SearchBar = {
@@ -141,12 +143,22 @@ export class FacilitiesComponent implements OnInit {
       return
 
     return tenantsData.map(td => {
+
+      let submissionDate = td.lastSubmissionDate
+
+      if(submissionDate) {
+        const [datePart, timePart] = td.lastSubmissionDate.split(' '),
+              transformedDate = this.convertDateString.transform(datePart)
+
+        submissionDate = `${transformedDate} ${timePart}`
+      }
+
       return {
         FACILITY_ID: td.id,
         NAME: td.name,
         NHSN_ORG_ID: td.nhsnOrgId,
         DETAILS: td.lastSubmissionId,
-        SUBMISSION_DATE: td.lastSubmissionDate,
+        SUBMISSION_DATE: submissionDate,
         MEASURES: td.measures.map(m => {
           const measure = this.pascalCaseToSpace.transform(m.shortName)
           return measure.split(' ')[0]

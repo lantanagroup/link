@@ -5,7 +5,7 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { curveBasis } from 'd3-shape';
 import { IconComponent } from '../icon/icon.component';
 import { MetricData } from '../interfaces/metrics.model';
-import { SecondsToHours, RoundToThousand } from 'src/app/helpers/GlobalPipes.pipe';
+import { SecondsToHours, RoundToThousand, MillisecondsToDisplay } from 'src/app/helpers/GlobalPipes.pipe';
 
 interface rateOfChange {
   value: string
@@ -28,7 +28,7 @@ export class MetricComponent {
   change: rateOfChange | undefined = undefined
   currentValue: number | string | undefined = undefined;
   
-  private secondsToHours = new SecondsToHours
+  private millisecondsToDisplay = new MillisecondsToDisplay
   private roundToThousand = new RoundToThousand
 
   @Input() data: ChartDatapoint[] = []; // will come from api
@@ -70,7 +70,9 @@ export class MetricComponent {
       this.miniChartData = this.setUpChartData(this.currentValue)
       
       if(this.toTimestamp) {
-        this.currentValue = this.secondsToHours.transform(this.currentValue)
+        let displayTime = this.millisecondsToDisplay.transform(this.currentValue)
+        this.currentValue = displayTime.value
+        this.subText = `${displayTime.unit} ${this.subText}`
       } else {
         this.currentValue = this.roundToThousand.transform(this.currentValue)
       }
