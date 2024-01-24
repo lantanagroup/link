@@ -9,11 +9,12 @@ import { ChartDatapoint, ChartDataModel } from 'src/app/shared/interfaces/chart.
 import { SecondsToTimestamp } from 'src/app/helpers/GlobalPipes.pipe';
 // placeholder data
 import { errorHistory, reportGenerationCurrent, reportGenerationHistory, activeTenantCurrent, activeTenantHistory } from 'src/app/helpers/SystemPerformanceHelper';
+import { SectionComponent } from 'src/app/shared/section/section.component';
 
 @Component({
   selector: 'app-system-performance',
   standalone: true,
-  imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, NgxChartsModule, SecondsToTimestamp],
+  imports: [CommonModule, HeroComponent, ButtonComponent, IconComponent, CardComponent, SectionComponent, NgxChartsModule, SecondsToTimestamp],
   templateUrl: './system-performance.component.html',
   styleUrls: ['./system-performance.component.scss']
 })
