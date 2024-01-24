@@ -15,13 +15,14 @@ import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model'
 
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
 import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 
 @Component({
   selector: 'app-activities',
   standalone: true,
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.scss'],
-  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, SectionComponent]
+  imports: [CommonModule, DataTablesModule, HeroComponent, CardComponent, MetricComponent, TableComponent, SectionComponent, LoaderComponent]
 })
 export class ActivitiesComponent implements OnInit {
   metricCards: MetricCard[] = [];
@@ -30,6 +31,7 @@ export class ActivitiesComponent implements OnInit {
     title: 'Search Activities',
     placeholder: 'Enter facility name, Bundle ID, Status, etc.'
   };
+  isDataLoaded: boolean = false;
   private pascalCaseToSpace = new PascalCaseToSpace
   private convertDateString = new ConvertDateString
 
@@ -86,6 +88,7 @@ export class ActivitiesComponent implements OnInit {
       ]
 
       this.metricCards = cards
+      this.isDataLoaded = true
     } catch (error) {
       console.error('Error loading metric card data:', error)
     }
