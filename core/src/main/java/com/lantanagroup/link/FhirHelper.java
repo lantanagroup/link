@@ -431,6 +431,9 @@ public class FhirHelper {
       case Media:
         Media media = (Media) resource;
         return (media.getSubject() != null) ? media.getSubject().getReference() : null;
+      case Coverage:
+        Coverage coverage = (Coverage) resource;
+        return (coverage.getBeneficiary() != null) ? coverage.getBeneficiary().getReference() : null;
     }
 
     return null;
