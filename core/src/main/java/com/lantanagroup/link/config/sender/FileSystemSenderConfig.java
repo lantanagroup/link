@@ -18,6 +18,7 @@ public class FileSystemSenderConfig {
   private Formats format = Formats.JSON;
   private Boolean pretty = false;
   private String encryptSecret;
+  private Boolean isBundle = true;
 
   public enum Formats {
     JSON,
