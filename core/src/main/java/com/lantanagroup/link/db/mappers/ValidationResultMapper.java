@@ -35,7 +35,7 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
    * Convert an operation outcome issue to a persistable validation result. The validation libraries return an
    * OperationOutcome, and this method is used to convert the OO to a persistable model.
    */
-  private static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
+  public static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
     ValidationResult result = new ValidationResult();
 
     if (model.getCode() == OperationOutcome.IssueType.NULL) {
