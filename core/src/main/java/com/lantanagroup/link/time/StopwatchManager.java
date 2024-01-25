@@ -13,6 +13,7 @@ import java.util.*;
 public class StopwatchManager {
   private static final int COUNT_WIDTH = 6;
   private static final int DURATION_WIDTH = 11;
+  private static final int CATEGORY_WIDTH_MIN = 15;
   private SharedService sharedService;
 
   private final Map<String, List<Duration>> durationsByTask = new LinkedHashMap<>();
@@ -38,8 +39,8 @@ public class StopwatchManager {
     var maxCategory = durationsByTask.entrySet().stream().max((s,e) -> s.getKey().substring(s.getKey().indexOf(":") + 1).length()).get();
     var categoryWidth = maxCategory.getKey().substring(maxCategory.getKey().indexOf(":") + 1).length() + 5;
 
-    if(categoryWidth < 15){
-      categoryWidth = 15;
+    if(categoryWidth < CATEGORY_WIDTH_MIN){
+      categoryWidth = CATEGORY_WIDTH_MIN;
     }
 
     Formatter formatter = new Formatter(categoryWidth, taskWidth, COUNT_WIDTH, DURATION_WIDTH);
