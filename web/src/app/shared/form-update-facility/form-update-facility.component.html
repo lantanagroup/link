@@ -506,10 +506,10 @@
   >
     <div class="row" formGroupName="fhirQuery">
       <div class="col col-md-6 form__field">
-        <label for="fhirServerBase">FHIR Endpoint</label>
+        <label for="fhirEndpoint">FHIR Endpoint</label>
         <input 
           type="text" 
-          id="fhirServerBase" 
+          id="fhirEndpoint" 
           formControlName="fhirServerBase"
         />
       </div>
@@ -754,25 +754,89 @@
         </select>
       </div>
     </div>
-    <div class="row">
-      <div class="col col-12 form__field" *ngIf="conditionals['censusAcquisitionMethod'] === 'BulkFHIR' || conditionals['censusAcquisitionMethod'] === 'CSVViaSFTP'">
-        <em>Functionality still under development...</em>
-      </div>
+    <div class="row" formGroupName="queryList">
+      <ng-container [ngSwitch]="conditionals['censusAcquisitionMethod']">
 
-      <ng-container *ngIf="conditionals['censusAcquisitionMethod'] === 'FHIRList'">
-        <div class="col col-md-6 form__field">
-          <label for="measureId">Measure ID</label>
-          <select
-            id="measureId"
-            name="measureId"
-          >
-            <option value="">Please Select</option>
-            <option 
-              *ngFor="let measure of measureDefs"
-              [value]="measure.measureId"
-            >{{ measure.measureId | pascalCaseToSpace }}</option>
-          </select>
-        </div>
+        <ng-container *ngSwitchCase="'BulkFHIR'">
+          <label class="label__lg d-block mt-4 mb-0">Bulk FHIR</label>
+          <div class="col-12 form__field">
+            <em>Functionality still under development...</em>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'CSVViaSFTP'">
+          <label class="label__lg d-block mt-4 mb-0">CSV Via SFTP</label>
+          <div class="col-12 form__field">
+            <em>Functionality still under development...</em>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'FHIRList'">
+          <label class="label__lg d-block mt-4 mb-0">FHIR List</label>
+          <div class="col col-md-6 form__field">
+            <label for="fhirServerBase">FHIR Server Base</label>
+            <input
+              type="text"
+              id="fhirServerBase"
+              name="fhirServerBase"
+              formControlName="fhirServerBase"
+            />
+          </div>
+
+          <div formArrayName="lists">
+            <fieldset 
+              *ngFor="let list of lists.controls; let i = index" 
+              class="row form__group"
+              [formGroupName]="i"
+            >
+              <div class="col col-md-4 form__field">
+                <label for="measureId">Measure ID</label>
+                <select
+                  id="measureId"
+                  name="measureId"
+                  formControlName="measureId"
+                >
+                  <option value="">Please Select</option>
+                  <option 
+                    *ngFor="let measure of measureDefs"
+                    [value]="measure.measureId"
+                  >{{ measure.measureId | pascalCaseToSpace }}</option>
+                </select>
+              </div>
+      
+              <div class="col col-md-6 form__field">
+                <label for="listId">List ID</label>
+                <input
+                  type="text"
+                  id="listId"
+                  name="listId"
+                  formControlName="listId"
+                >
+              </div>
+              
+              <div class="col col-md-2 form__field pt-4">
+                <app-button
+                  variant="text"
+                  classes="text-warning"
+                  [onClickHandler]="getRemoveListHandler(i)"
+                >
+                  Delete List
+                </app-button>
+              </div>
+            </fieldset>
+      
+            <app-button
+              type="button"
+              [onClickHandler]="getAddListHandler()"
+              *ngIf="isMeasureDefsLoaded; else loadingBtn"
+            >
+              <app-icon filePath="../../../assets/icons/plus.svg" />
+              Add List
+            </app-button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault></ng-container>
       </ng-container>
     </div>
   </app-accordion>

@@ -62,10 +62,10 @@ export class FormUpdateFacilityComponent {
     bundling: new FormGroup ({
       name: new FormControl('', [Validators.required])
     }),
-    cdcOrgId: new FormControl(''),
-    connectionString: new FormControl(''),
+    cdcOrgId: new FormControl(''), // todo : validation for 5 char min?
+    connectionString: new FormControl(''), // todo : add regex shared from sean
     vendor: new FormControl(''),
-    retentionPeriod: new FormControl(''),
+    retentionPeriod: new FormControl(''), // todo : see if we can validate the ISO string
     events: new FormGroup ({
       afterPatientDataQuery: new FormGroup({
         codeSystemCleanup: new FormControl(0),
@@ -79,6 +79,10 @@ export class FormUpdateFacilityComponent {
         patientDataResourceFilter: new FormControl(0)
       })
     }),
+    queryList: new FormGroup ({
+      fhirServerBase: new FormControl(''), // todo : validate url
+      lists: this.fb.array([])
+    }),
     conceptMaps: this.fb.array([]),
     scheduling: new FormGroup({
       queryPatientListCron: new FormControl(''),
@@ -86,8 +90,8 @@ export class FormUpdateFacilityComponent {
       generateAndSubmitReports: this.fb.array([])
     }),
     fhirQuery: new FormGroup({
-      fhirServerBase: new FormControl(''),
-      parallelPatients: new FormControl(''),
+      fhirServerBase: new FormControl(''), // todo : validate as url?
+      parallelPatients: new FormControl(''), // todo : validate as number
       authClass: new FormControl(''),
       queryPlans: this.fb.array([]),
       basicAuth: new FormGroup({
@@ -212,6 +216,34 @@ export class FormUpdateFacilityComponent {
     measureIdsArray.clear()
 
     checkboxStates.forEach(state => measureIdsArray.push(new FormControl(state)))
+  }
+
+  // Query List Dynamic Fields
+  get lists(): FormArray {
+    return this.facilitiesForm.get('queryList.lists') as FormArray
+  }
+
+  createList(): FormGroup {
+    return this.fb.group({
+      measureId: new FormControl(''),
+      listId: new FormControl('')
+    })
+  }
+
+  addList() {
+    this.lists.push(this.createList())
+  }
+
+  getAddListHandler(): () => void {
+    return () => this.addList()
+  }
+
+  removeList(index: number) {
+    this.lists.removeAt(index)
+  }
+
+  getRemoveListHandler(index: number): () => void {
+    return () => this.removeList(index)
   }
 
   // Query Plan Dynamic Fields
@@ -339,6 +371,13 @@ export class FormUpdateFacilityComponent {
       }
     }
 
+    // Query Lists
+    if (facilityDetails?.queryList?.lists) {
+      for (const list of facilityDetails.queryList.lists) {
+        this.addList();
+      }
+    }
+
     // Query Plans
     if (facilityDetails?.fhirQuery?.queryPlans) {
       const queryPlans = facilityDetails.fhirQuery.queryPlans
@@ -371,6 +410,10 @@ export class FormUpdateFacilityComponent {
         queryPatientListCron: facilityDetails?.scheduling?.queryPatientListCron,
         dataRetentionCheckCron: facilityDetails?.scheduling?.dataRetentionCheckCron,
         generateAndSubmitReports: this.mapSchedulingApiDataToForm(facilityDetails?.scheduling?.generateAndSubmitReports)
+      },
+      queryList: {
+        fhirServerBase: facilityDetails?.queryList?.fhirServerBase,
+        lists: facilityDetails?.queryList?.lists
       },
       fhirQuery: {
         fhirServerBase: facilityDetails?.fhirQuery?.fhirServerBase,
@@ -592,6 +635,9 @@ export class FormUpdateFacilityComponent {
     const formData = this.facilitiesForm.value;
     console.log('formData:', formData)
 
+    // ! Delete the censusAcquisitionMethod because it's only there to monitor a conditional, this value doesn't get sent to API
+    delete formData.censusAcquisitionMethod
+
     // ! add facility id back in
     if(this.facilityId)
       formData.id = this.facilityId
@@ -623,7 +669,6 @@ export class FormUpdateFacilityComponent {
     }
 
     // ! deleting certain data points for now
-    delete formData.censusAcquisitionMethod
     delete formData.description
     delete formData.vendor
     // ! remove when these are built/clarified
