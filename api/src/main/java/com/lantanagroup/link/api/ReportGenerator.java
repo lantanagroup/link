@@ -21,8 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * This class creates a master measure report based on every individual report generated for each patient included in the "census" list..
@@ -30,15 +30,15 @@ import java.util.concurrent.ForkJoinPool;
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
 
-  private ReportContext reportContext;
-  private ReportContext.MeasureContext measureContext;
-  private ReportCriteria criteria;
-  private ApiConfig config;
-  private IReportAggregator reportAggregator;
-  private StopwatchManager stopwatchManager;
-  private SharedService sharedService;
-  private TenantService tenantService;
-  private Report report;
+  private final ReportContext reportContext;
+  private final ReportContext.MeasureContext measureContext;
+  private final ReportCriteria criteria;
+  private final ApiConfig config;
+  private final IReportAggregator reportAggregator;
+  private final StopwatchManager stopwatchManager;
+  private final SharedService sharedService;
+  private final TenantService tenantService;
+  private final Report report;
 
   public ReportGenerator(SharedService sharedService, TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
     this.sharedService = sharedService;
@@ -63,8 +63,11 @@ public class ReportGenerator {
     ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
+    List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
+    CountDownLatch latch = new CountDownLatch(pois.size());
+
     try {
-      forkJoinPool.submit(() -> measureContext.getPatientsOfInterest(queryPhase).parallelStream().forEach(patient -> {
+      forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
                   return;
@@ -76,9 +79,22 @@ public class ReportGenerator {
                   }
                 } catch (Exception e) {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
+                } finally {
+                  latch.countDown();
                 }
-              }))
-              .get();
+      }));
+
+      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+      scheduler.scheduleAtFixedRate(() -> {
+        long remainingTasks = latch.getCount();
+        long totalTasks = pois.size();
+        double completionPercentage = ((totalTasks - remainingTasks) / (double) totalTasks) * 100;
+
+        logger.info("Progress of measure evaluation for report {} count: {}, Completion: {}%", report.getId(), remainingTasks, completionPercentage);
+      }, 0, 5, TimeUnit.SECONDS);
+
+      latch.await();
+      scheduler.shutdown();
     } finally {
       if (forkJoinPool != null) {
         forkJoinPool.shutdown();
