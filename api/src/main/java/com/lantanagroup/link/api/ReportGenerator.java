@@ -84,7 +84,7 @@ public class ReportGenerator {
                 } finally {
                   int completed = progress.incrementAndGet();
                   double percent = Math.round((completed * 100.0) / pois.size());
-                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), progress.get(), pois.size());
+                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
                 }
               }))
               .get();
