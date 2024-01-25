@@ -48,9 +48,9 @@ public class ValidationService {
 
       // Re-get the results that now have a result id associated to each entry
       List<ValidationResult> results = tenantService.getValidationResults(report.getId());
-      ValidationCategorizer categorizer = new ValidationCategorizer(results);
+      ValidationCategorizer categorizer = new ValidationCategorizer();
       categorizer.loadFromResources();
-      List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+      List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
 
       tenantService.deleteValidationCategoriesForReport(report.getId());
       tenantService.insertValidationResultCategories(categorizedResults);
