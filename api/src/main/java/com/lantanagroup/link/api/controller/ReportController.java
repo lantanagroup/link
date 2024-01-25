@@ -156,7 +156,7 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
   }
 
   /**
@@ -174,7 +174,8 @@ public class ReportController extends BaseController {
           @RequestParam String periodEnd,
           @PathVariable String tenantId,
           @RequestParam boolean regenerate,
-          @RequestParam(defaultValue = "true") boolean validate)
+          @RequestParam(defaultValue = "true") boolean validate,
+          @RequestParam(defaultValue = "false") boolean skipQuery)
           throws Exception {
     List<String> singleMeasureBundleIds;
 
@@ -195,7 +196,7 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
@@ -233,7 +234,7 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery) throws Exception {
     this.checkReportingPlan(tenantService, periodStart, measureIds);
 
     ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
@@ -297,7 +298,7 @@ public class ReportController extends BaseController {
     this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
     // Scoop the data for the patients and store it
-    if (config.isSkipQuery()) {
+    if (config.isSkipQuery() || skipQuery) {
       logger.info("Skipping initial query and store");
       for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
         if (patient.getReference() != null) {
@@ -315,7 +316,7 @@ public class ReportController extends BaseController {
     logger.info("Beginning initial measure evaluation");
     this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    if (config.isSkipQuery() || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+    if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
       logger.info("Skipping supplemental query and store");
       logger.info("Beginning aggregation");
       this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
