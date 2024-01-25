@@ -97,7 +97,8 @@ select {
     outline-offset: 2px;
   }
 
-  &::placeholder {
+  &::placeholder,
+  &:disabled {
     color: $gray-400;
   }
 }

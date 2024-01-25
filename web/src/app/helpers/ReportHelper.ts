@@ -239,140 +239,140 @@ export function getSubmissionStatus(status: string): string {
 
 export const normalizationData: any = [
   {
-    "Timestamp": "03.14.2023 10:12 AM EST",
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 PM EST",
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 2:35 PM EST",
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 22:13 AM EST",
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 12:48 AM EST",
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 AM EST",
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 PM EST",
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 2:35 PM EST",
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 22:13 AM EST",
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 12:48 AM EST",
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 AM EST",
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 PM EST",
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 2:35 PM EST",
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 22:13 AM EST",
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 12:48 AM EST",
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 AM EST",
+    "Timestamp": "03.14.2023<br>10:12 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 10:12 PM EST",
+    "Timestamp": "03.14.2023<br>10:12 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 2:35 PM EST",
+    "Timestamp": "03.14.2023<br>2:35 PM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 22:13 AM EST",
+    "Timestamp": "03.14.2023<br>22:13 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
     "Column5": "############"
   },
   {
-    "Timestamp": "03.14.2023 12:48 AM EST",
+    "Timestamp": "03.14.2023<br>12:48 AM EST",
     "Column2": "############",
     "Column3": "############",
     "Column4": "############",
