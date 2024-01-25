@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class creates a master measure report based on every individual report generated for each patient included in the "census" list..
@@ -63,8 +65,8 @@ public class ReportGenerator {
     ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
+    AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
-    CountDownLatch latch = new CountDownLatch(pois.size());
 
     try {
       forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
@@ -80,21 +82,12 @@ public class ReportGenerator {
                 } catch (Exception e) {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
                 } finally {
-                  latch.countDown();
+                  int completed = progress.incrementAndGet();
+                  double percent = Math.round((completed * 100.0) / measureContext.getPatientsOfInterest(queryPhase).size());
+                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), progress.get(), measureContext.getPatientsOfInterest(queryPhase).size());
                 }
-      }));
-
-      ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-      scheduler.scheduleAtFixedRate(() -> {
-        long remainingTasks = latch.getCount();
-        long totalTasks = pois.size();
-        double completionPercentage = ((totalTasks - remainingTasks) / (double) totalTasks) * 100;
-
-        logger.info("Progress of measure evaluation for report {} count: {}, Completion: {}%", report.getId(), remainingTasks, completionPercentage);
-      }, 0, 5, TimeUnit.SECONDS);
-
-      latch.await();
-      scheduler.shutdown();
+              }))
+              .get();
     } finally {
       if (forkJoinPool != null) {
         forkJoinPool.shutdown();
