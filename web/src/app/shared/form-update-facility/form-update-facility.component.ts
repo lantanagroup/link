@@ -24,6 +24,10 @@ interface FormConceptMap {
   map?: any // todo: not sure what this looks like 
 }
 
+interface FormConditionals {
+  [key: string]: string | null | boolean
+}
+
 @Component({
   selector: 'app-form-update-facility',
   standalone: true,
@@ -38,6 +42,11 @@ export class FormUpdateFacilityComponent {
   measureDefs: MeasureDef[] = [];
   isMeasureDefsLoaded: boolean = false;
   isDataLoaded: boolean = false;
+
+  conditionals: FormConditionals = {
+    censusAcquisition: null,
+    authClass: null
+  }
 
   constructor(
     private fb: FormBuilder, 
@@ -74,13 +83,43 @@ export class FormUpdateFacilityComponent {
     scheduling: new FormGroup({
       queryPatientListCron: new FormControl(''),
       dataRetentionCheckCron: new FormControl(''),
-      generateAndSubmitReports: this.fb.array([], [Validators.required])
+      generateAndSubmitReports: this.fb.array([])
     }),
     fhirQuery: new FormGroup({
       fhirServerBase: new FormControl(''),
       parallelPatients: new FormControl(''),
       authClass: new FormControl(''),
-      queryPlans: this.fb.array([])
+      queryPlans: this.fb.array([]),
+      basicAuth: new FormGroup({
+        username: new FormControl(''),
+        password: new FormControl('')
+      }),
+      basicAuthAndApiKey: new FormGroup({
+        username: new FormControl(''),
+        password: new FormControl(''),
+        apiKey: new FormControl('')
+      }),
+      tokenAuth: new FormGroup({
+        token: new FormControl('')
+      }),
+      azureAuth: new FormGroup({
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        secret: new FormControl(''),
+        resource: new FormControl('')
+      }),
+      epicAuth: new FormGroup({
+        key: new FormControl(''),
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        audience: new FormControl('')
+      }),
+      cernerAuth: new FormGroup({
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        secret: new FormControl(''),
+        scopes: new FormControl('')
+      })
     }),
     censusAcquisitionMethod: new FormControl(''),
     bulkWaitTimeInMilliseconds: new FormControl('')
@@ -203,10 +242,56 @@ export class FormUpdateFacilityComponent {
     return () => this.removeQueryPlan(index)
   }
 
+  /*************
+   * Handling Conditionals
+   *************/
+
+  authClassFormDataToApi(data: any): any {
+    // get the value of the authClass
+    const authValue = data.authClass
+    
+    let allAuthTypes = [
+      'basicAuth',
+      'basicAuthAndApiKey',
+      'tokenAuth',
+      'azureAuth',
+      'epicAuth',
+      'cernerAuth'
+    ]
+
+    if(authValue) {
+      // take the value and remove it from the allAuthTypes array
+      allAuthTypes = allAuthTypes.filter(item => item !== authValue.charAt(0).toLowerCase() + authValue.slice(1))
+
+      // set the value of the authClass to the enum
+      data.authClass = AuthClass[authValue as keyof typeof AuthClass]
+    }
+    
+    // loop through the array and set all the values to null
+    allAuthTypes.forEach(authType => {
+      data[authType] = null
+    })
+    
+    // return the data group
+    return data
+  }
+
   // update with initial form values
 
   async ngOnInit(): Promise<void> {
 
+    // set up keys to watch conditionals
+    this.facilitiesForm.get('fhirQuery.authClass')?.valueChanges.subscribe(value => {
+      this.conditionals['authClass'] = value
+    })
+
+    this.facilitiesForm.get('censusAcquisitionMethod')?.valueChanges.subscribe(value => {
+      this.conditionals['censusAcquisitionMethod'] = value
+    })
+
+    
+
+    // load up the facility data if passed into the url
     if (this.facilityId) {
       forkJoin({
         measureDefs: this.globalApiService.getContentObservable<MeasureDef[]>('measureDef'),
@@ -290,8 +375,14 @@ export class FormUpdateFacilityComponent {
       fhirQuery: {
         fhirServerBase: facilityDetails?.fhirQuery?.fhirServerBase,
         parallelPatients: facilityDetails?.fhirQuery?.parallelPatients.toString(),
-        authClass: facilityDetails?.fhirQuery?.authClass,
-        queryPlans: this.mapQueryPlansApiDataToForm(facilityDetails?.fhirQuery?.queryPlans)
+        authClass: facilityDetails?.fhirQuery?.authClass ? facilityDetails.fhirQuery.authClass.split('.').pop() : null,
+        queryPlans: this.mapQueryPlansApiDataToForm(facilityDetails?.fhirQuery?.queryPlans),
+        basicAuth: facilityDetails?.fhirQuery?.basicAuth,
+        basicAuthAndApiKey: facilityDetails?.fhirQuery?.basicAuthAndApiKey,
+        tokenAuth: facilityDetails?.fhirQuery?.tokenAuth,
+        azureAuth: facilityDetails?.fhirQuery?.azureAuth,
+        epicAuth: facilityDetails?.fhirQuery?.epicAuth,
+        cernerAuth: facilityDetails?.fhirQuery?.cernerAuth
       },
       censusAcquisitionMethod: '', // todo : doesn't exist in endpoint
       bulkWaitTimeInMilliseconds: facilityDetails?.bulkWaitTimeInMilliseconds
@@ -518,6 +609,11 @@ export class FormUpdateFacilityComponent {
     if(formData.events) {
       formData.events = this.mapNormalizationsFormDataToApi(formData.events)
     }
+
+    // set the authClass to the correct enum and null out the specific auth keys
+    if(formData.fhirQuery) {
+      formData.fhirQuery = this.authClassFormDataToApi(formData.fhirQuery)
+    }
     
     // convert Yaml to Json for query plans, and set measureIds as keys
     if(formData.fhirQuery?.queryPlans && Object.entries(formData.fhirQuery.queryPlans).length > 0) {
@@ -532,32 +628,53 @@ export class FormUpdateFacilityComponent {
     delete formData.vendor
     // ! remove when these are built/clarified
 
+    console.log('transformed data:', formData)
+
     if (this.facilitiesForm.valid) {
+
+      let allObservables = []
+
+      if(conceptMaps) {
+        conceptMaps.forEach(conceptMap => {
+          conceptMap.map = conceptMap.map ? conceptMap.map : {}
+          allObservables.push(this.globalApiService.putContentObservable(`${this.facilityId}/conceptMap`, conceptMap))
+        })
+      }
+
       try {
-        let response;
         this.isDataLoaded = false;
         if (this.facilityId) {
           // Update existing facility
-          forkJoin({
-            updateTenantResponse: this.globalApiService.putContentObservable(`tenant/${this.facilityId}`, formData),
-            // todo : update concept maps
-            // updateConceptMapResponse: this.globalApiService.putContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
-          }).subscribe(({ updateTenantResponse }) => {
-            this.isDataLoaded = true;
-            this.toastService.showToast(
-              'Facility Updated',
-              `${formData.name} has been successfully updated.`,
-              'success'
-            )
-            this.router.navigate(['/facilities/facility', this.facilityId])
+          allObservables.unshift(this.globalApiService.putContentObservable(`tenant/${this.facilityId}`, formData))
+
+          forkJoin(allObservables).subscribe({
+            next: (responses) => {
+              let tenantResponse = responses[0],
+                  conceptMapResponses = responses.slice(1)
+
+              console.log('update responses:', responses)
+            },
+            error: (error) => {
+              this.isDataLoaded = true;
+              console.error('Error fetching measureDefs:', error)
+            },
+            complete: () => {
+              this.isDataLoaded = true;
+              this.toastService.showToast(
+                'Facility Updated',
+                `${formData.name} has been successfully updated.`,
+                'success'
+              )
+              this.router.navigate(['/facilities/facility', this.facilityId])
+            }
           })
         } else {
           // Create new facility
-          forkJoin({
-            createTenantResponse: this.globalApiService.postContentObservable('tenant', formData),
-            // todo : create concept maps
-            // createConceptMapResponse: this.globalApiService.postContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
-          }).subscribe(({ createTenantResponse }) => {
+          allObservables.unshift(this.globalApiService.postContentObservable('tenant', formData))
+          forkJoin(allObservables).subscribe(responses => {
+            let tenantResponse = responses[0],
+                conceptMapResponses = responses.slice(1)
+
             this.isDataLoaded = true
             this.toastService.showToast(
               'New Tenant Created',

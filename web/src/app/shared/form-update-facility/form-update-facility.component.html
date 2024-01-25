@@ -408,7 +408,7 @@
       </div>
 
       <div formArrayName="generateAndSubmitReports">
-        <label class="label__lg d-block mb-4">Generate and Submit<span class="text-warning">*</span></label>
+        <label class="label__lg d-block mb-4">Generate and Submit</label>
 
         <fieldset 
           *ngFor="let schedule of schedules.controls; let i = index" 
@@ -527,7 +527,7 @@
       <div class="col col-md-6 form__field">
         <label for="authClass">Authentication Method</label>
         <select name="authClass" id="authClass" formControlName="authClass">
-          <option value="">None</option>
+          <option [value]="null">None</option>
           <option value="BasicAuth">Basic</option>
           <option value="BasicAuthAndApiKey">Basic + API Key</option>
           <option value="AzureAuth">Azure OAuth</option>
@@ -536,6 +536,205 @@
           <option value="TokenAuth">Token OAuth</option>
         </select>
       </div>
+
+      <ng-container [ngSwitch]="conditionals['authClass']">
+        <ng-container *ngSwitchCase="'BasicAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Basic Auth</label>
+          <div class="row" formGroupName="basicAuth">
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthUsername">Username</label>
+              <input 
+                type="text" 
+                id="basicAuthUsername" 
+                formControlName="username"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthPassword">Password</label>
+              <input 
+                type="password" 
+                id="basicAuthPassword" 
+                formControlName="password"
+              />
+            </div>
+          </div>
+        </ng-container>
+      
+        <ng-container *ngSwitchCase="'BasicAuthAndApiKey'">
+          <label class="label__lg d-block mt-4 mb-0">Basic Auth + API Key</label>
+          <div class="row" formGroupName="basicAuthAndApiKey">
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyUsername">Username</label>
+              <input 
+                type="text" 
+                id="basicAuthAndApiKeyUsername" 
+                formControlName="username"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyPassword">Password</label>
+              <input 
+                type="password" 
+                id="basicAuthAndApiKeyPassword" 
+                formControlName="password"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyApiKey">API Key</label>
+              <input 
+                type="text" 
+                id="basicAuthAndApiKeyApiKey" 
+                formControlName="apiKey"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'AzureAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Azure OAuth</label>
+          <div class="row" formGroupName="azureAuth">
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="azureAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="azureAuthClientID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthSecret">Secret Key</label>
+              <input 
+                type="text" 
+                id="azureAuthSecret" 
+                formControlName="secret"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthResource">Resource</label>
+              <input 
+                type="text" 
+                id="azureAuthResource" 
+                formControlName="resource"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'EpicAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Epic OAuth</label>
+          <div class="row" formGroupName="epicAuth">
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthKey">Key</label>
+              <input 
+                type="text" 
+                id="epicAuthKey" 
+                formControlName="key"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="epicAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="epicAuthID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthAudience">Audience</label>
+              <input 
+                type="text" 
+                id="epicAuthAudience" 
+                formControlName="audience"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'CernerAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Cerner OAuth</label>
+          <div class="row" formGroupName="cernerAuth">
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="cernerAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="cernerAuthID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthSecret">Secret Key</label>
+              <input 
+                type="text" 
+                id="cernerAuthSecret" 
+                formControlName="secret"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthScopes">Scopes</label>
+              <input 
+                type="text" 
+                id="cernerAuthScopes" 
+                formControlName="scopes"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'TokenAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Token OAuth</label>
+          <div class="row" formGroupName="tokenAuth">
+
+            <div class="col col-md-6 form__field">
+              <label for="tokenAuthToken">Token</label>
+              <input 
+                type="text" 
+                id="tokenAuthToken" 
+                formControlName="token"
+              />
+            </div>
+
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault></ng-container>
+      </ng-container>
 
     </div>
   </app-accordion>
@@ -554,6 +753,27 @@
           <option value="CSVViaSFTP">CSV via SFTP</option>
         </select>
       </div>
+    </div>
+    <div class="row">
+      <div class="col col-12 form__field" *ngIf="conditionals['censusAcquisitionMethod'] === 'BulkFHIR' || conditionals['censusAcquisitionMethod'] === 'CSVViaSFTP'">
+        <em>Functionality still under development...</em>
+      </div>
+
+      <ng-container *ngIf="conditionals['censusAcquisitionMethod'] === 'FHIRList'">
+        <div class="col col-md-6 form__field">
+          <label for="measureId">Measure ID</label>
+          <select
+            id="measureId"
+            name="measureId"
+          >
+            <option value="">Please Select</option>
+            <option 
+              *ngFor="let measure of measureDefs"
+              [value]="measure.measureId"
+            >{{ measure.measureId | pascalCaseToSpace }}</option>
+          </select>
+        </div>
+      </ng-container>
     </div>
   </app-accordion>
 

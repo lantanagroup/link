@@ -124,6 +124,14 @@ export enum AuthClass {
   CernerAuth = 'com.lantana.group.link.query.auth.CernerAuth',
 }
 
+export type AuthType =
+  'BasicAuth' | 
+  'BasicAuthAndApiKey' | 
+  'AzureAuth' | 
+  'EpicAuth' | 
+  'CernerAuth' | 
+  'TokenAuth';
+
 export enum NormalizationClass {
   codeSystemCleanup = 'com.lantanagroup.link.events.CodeSystemCleanup',
   containedResourceCleanup = 'com.lantanagroup.link.events.ContainedResourceCleanup',

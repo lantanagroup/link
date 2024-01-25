@@ -109,14 +109,11 @@ export class MillisecondsToDisplay implements PipeTransform {
           minutes = Math.floor((actualValue / (1000 * 60)) % 60),
           seconds = Math.floor((actualValue / 1000) % 60)
 
-
-    console.log(`hours:minutes:seconds - ${hours}:${minutes}:${seconds}`)
-
     if(hours > 0) {
-      const remainder = minutes / 60 * 100
+      const remainder = (minutes / 60 * 100).toFixed(0)
       return {value: `${hours.toString()}.${remainder.toString()}`, unit: 'hours'}
     } else {
-      const remainder = seconds / 60 * 100
+      const remainder = (seconds / 60 * 100).toFixed(0)
       return {value: `${minutes.toString()}.${remainder.toString()}`, unit: 'minutes'}
     }
   }
