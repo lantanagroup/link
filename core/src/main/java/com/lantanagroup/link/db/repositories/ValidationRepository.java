@@ -58,8 +58,8 @@ public class ValidationRepository {
 
   public int insertAll(String reportId, List<ValidationResult> models) {
     ValidationResultMapper mapperWithReportId = new ValidationResultMapper(reportId);
-    String sql = "INSERT INTO dbo.validationResult (reportId, code, details, severity, expression, position) " +
-            "VALUES (:reportId, :code, :details, :severity, :expression, :position);";
+    String sql = "INSERT INTO dbo.validationResult (id, reportId, code, details, severity, expression, position) " +
+            "VALUES (:id, :reportId, :code, :details, :severity, :expression, :position);";
     SqlParameterSource[] parameters = models.stream()
             .map(mapperWithReportId::toParameters)
             .toArray(SqlParameterSource[]::new);

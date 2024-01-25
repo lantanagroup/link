@@ -325,8 +325,7 @@ public class TenantService {
     this.validations.deleteByReport(reportId);
   }
 
-  public void insertValidationResults(String reportId, OperationOutcome outcome) {
-    List<ValidationResult> models = ValidationResultMapper.toValidationResults(outcome);
+  public void insertValidationResults(String reportId, List<ValidationResult> models) {
     this.validations.insertAll(reportId, models);
   }
 
