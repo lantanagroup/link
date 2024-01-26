@@ -98,7 +98,7 @@ export class MillisecondsToTimestamp implements PipeTransform {
   }
 }
 
-// Truncated, milliseconds to Hours
+// Truncated, milliseconds to Minutes
 @Pipe({
   name: 'millisecondsToDisplay',
   standalone: true
@@ -110,11 +110,11 @@ export class MillisecondsToDisplay implements PipeTransform {
           seconds = Math.floor((actualValue / 1000) % 60)
 
     if(hours > 0) {
-      return {value: hours.toString(), unit: 'hours'}
-    } else if (minutes > 0) {
-      return {value: minutes.toString(), unit: 'minutes'}
+      const remainder = (minutes / 60 * 100).toFixed(0)
+      return {value: `${hours.toString()}.${remainder.toString()}`, unit: 'hours'}
     } else {
-      return {value: seconds.toString(), unit: 'seconds'}
+      const remainder = (seconds / 60 * 100).toFixed(0)
+      return {value: `${minutes.toString()}.${remainder.toString()}`, unit: 'minutes'}
     }
   }
 }
