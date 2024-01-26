@@ -74,6 +74,7 @@ app-card,
   &__body {
     // background: $white;
     flex: 1 0 auto;
+    position: relative;
   }
 
   &__title {

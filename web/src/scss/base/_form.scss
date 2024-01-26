@@ -89,6 +89,10 @@ select {
     padding: 0.9375rem 0.5rem;
   }
 
+  &.ng-invalid.ng-touched {
+    border-color: $red;
+  }
+
   &:focus-visible,
   &:active {
     outline: solid;

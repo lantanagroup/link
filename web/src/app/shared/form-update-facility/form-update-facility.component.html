@@ -40,6 +40,7 @@
           formControlName="name"
           placeholder="Facility Name"
         />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.name.touched && facilitiesForm.controls.name.errors">Facility Name is required.</p>
       </div>
 
       <div class="col col-md-6 form__field">
@@ -49,6 +50,7 @@
           id="tenantId" 
           formControlName="id"
         />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.id.touched && facilitiesForm.controls.id.errors">Please enter a unique tenant ID.</p>
       </div>
 
       <div class="col-12 form__field">
@@ -66,6 +68,7 @@
           id="bundleName" 
           formControlName="name"
         />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.bundling.controls.name.touched && facilitiesForm.controls.bundling.controls.name.errors">Bundle name is required.</p>
       </div>
 
       <div class="col col-md-6 form__field">
@@ -87,6 +90,7 @@
           placeholder="MSSQL Server Connection String"
         />
         <p class="form__description">Where all tenant-specific data is stored</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.connectionString.touched && facilitiesForm.controls.connectionString.errors?.['invalidDb']">Connection string must start with jdbc:sqlserver://</p>
       </div>
 
       <div class="col col-md-6 form__field">
@@ -107,6 +111,7 @@
           formControlName="retentionPeriod"
         />
         <p class="form__description">ISO 8601 formatted string</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.retentionPeriod.touched && facilitiesForm.controls.retentionPeriod.errors?.['invalidIso']">Invalid ISO duration, should be formatted like P[n]Y[n]M[n]D.</p>
       </div>
 
     </div>
@@ -357,7 +362,7 @@
           <textarea
             id="map"
             placeholder="FHIR ConceptMap Json"
-            formControlName="map"
+            formControlName="conceptMap"
           ></textarea>
         </div>
         
@@ -512,6 +517,7 @@
           id="fhirEndpoint" 
           formControlName="fhirServerBase"
         />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.fhirQuery.controls.fhirServerBase.touched && facilitiesForm.controls.fhirQuery.controls.fhirServerBase.errors?.['invalidUrl']">Invalid URL</p>
       </div>
 
       <div class="col col-md-6 form__field">
@@ -781,6 +787,7 @@
               name="fhirServerBase"
               formControlName="fhirServerBase"
             />
+            <p class="form__description text-warning" *ngIf="facilitiesForm.controls.queryList.controls.fhirServerBase.touched && facilitiesForm.controls.queryList.controls.fhirServerBase.errors?.['invalidUrl']">Invalid URL</p>
           </div>
 
           <div formArrayName="lists">
@@ -933,7 +940,7 @@
             <label for="plan">Query Plan</label>
             <textarea 
               id="plan"
-              placeholder="Enter YAML Here"
+              placeholder="Enter JSON Here"
               formControlName="plan"
             ></textarea>
           </div>

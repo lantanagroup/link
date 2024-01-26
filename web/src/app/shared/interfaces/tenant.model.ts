@@ -22,7 +22,7 @@ export interface TenantConceptMap {
   id: string
   name?: string
   contexts: string[]
-  map?: any // todo: not sure what this looks like 
+  conceptMap?: any // todo: it's a json object
 }
 
 
