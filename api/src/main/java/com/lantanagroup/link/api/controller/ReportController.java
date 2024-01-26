@@ -6,6 +6,8 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -280,6 +282,13 @@ public class ReportController extends BaseController {
     }
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+
+    FhirQuery fhirQuery = tenantService.getConfig().getFhirQuery();
+    QueryPlan queryPlan = fhirQuery == null ? null : fhirQuery.getQueryPlans().get(criteria.getQueryPlanId());
+    if (queryPlan == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
+    }
+    reportContext.setQueryPlan(queryPlan);
 
     Report report = new Report();
     report.setId(masterIdentifierValue);
