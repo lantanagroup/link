@@ -159,10 +159,12 @@ export class FacilitiesComponent implements OnInit {
         NHSN_ORG_ID: td.nhsnOrgId,
         DETAILS: td.lastSubmissionId,
         SUBMISSION_DATE: submissionDate,
-        MEASURES: td.measures.map(m => {
-          const measure = this.pascalCaseToSpace.transform(m.shortName)
-          return measure.split(' ')[0]
-        })
+        MEASURES: td.measures
+          .filter(m => m && m.shortName)
+          .map(m => {
+            const measure = this.pascalCaseToSpace.transform(m.shortName)
+            return measure.split(' ')[0]
+          })
       };
     });
   }
