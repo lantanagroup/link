@@ -1738,6 +1738,104 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deletePatientListById/{id}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a patient list by id
+        operationId: deletePatientListById
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+          - name: id
+            in: path
+            description: The id of the patient list to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deleteAllPatientData:
+      delete:
+        tags:
+          - QA
+        summary: Deletes all patient data for a tenant
+        operationId: deleteAllPatientData
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deletePatientFromList/{patientListId}/{patientId}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a patient from a patient list
+        operationId: deletePatientFromList
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+          - name: patientListId
+            in: path
+            description: The id of the patient list
+            required: true
+            schema:
+              type: string
+          - name: patientId
+            in: path
+            description: The id of the patient to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa//$deleteReportById/{reportId}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a report by id
+        operationId: deleteReportById
+        parameters:
+          - name: reportId
+            in: path
+            description: The id of the report to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
     ApiInfoModel:
