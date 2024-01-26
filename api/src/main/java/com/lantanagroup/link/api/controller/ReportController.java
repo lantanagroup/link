@@ -421,7 +421,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
+    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService);
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
       sender.send(tenantService, submissionBundle, report, request, user);
