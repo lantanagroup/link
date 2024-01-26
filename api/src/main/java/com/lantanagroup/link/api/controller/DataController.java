@@ -1,17 +1,20 @@
 package com.lantanagroup.link.api.controller;
 
-import com.lantanagroup.link.Constants;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
+import ca.uhn.fhir.rest.server.exceptions.ResourceGoneException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.AuditTypes;
-import com.lantanagroup.link.model.PatientOfInterestModel;
-import com.lantanagroup.link.model.ReportContext;
-import com.lantanagroup.link.model.ReportCriteria;
 import com.lantanagroup.link.model.TestResponse;
-import com.lantanagroup.link.query.uscore.PatientScoop;
-import com.lantanagroup.link.time.StopwatchManager;
+import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,7 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/data")
@@ -88,7 +92,7 @@ public class DataController extends BaseController {
    * @return
    */
   @GetMapping("/$test-fhir")
-  public TestResponse test(@PathVariable String tenantId, @RequestParam String patientId, @RequestParam String patientIdentifier, @RequestParam String measureId, @RequestParam String periodStart, @RequestParam String periodEnd) {
+  public TestResponse test(@PathVariable String tenantId, @RequestParam(required = false) String patientId, @RequestParam(required = false) String patientIdentifier) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     assert tenantService != null : "Tenant not instantiated";
 
@@ -100,41 +104,41 @@ public class DataController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either patientId or patientIdentifier are required");
     }
 
-    if (StringUtils.isEmpty(measureId)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "measureId is required");
-    }
-
-    if (StringUtils.isEmpty(periodStart)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "periodStart is required");
-    }
-
-    if (StringUtils.isEmpty(periodEnd)) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "periodEnd is required");
-    }
-
     TestResponse testResponse = new TestResponse();
 
     try {
-      // Get the data
-      logger.info("Testing querying/scooping data for the patient {}", patientId);
+      IGenericClient client = FhirContextProvider.getFhirContext()
+              .newRestfulGenericClient(tenantService.getConfig().getFhirQuery().getFhirServerBase());
+      client.registerInterceptor(new LoggingInterceptor());
+      client.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
 
-      PatientScoop patientScoop = this.applicationContext.getBean(PatientScoop.class);
-      patientScoop.setShouldPersist(false);
-      patientScoop.setTenantService(tenantService);
-      patientScoop.setStopwatchManager(new StopwatchManager(this.sharedService));
-
-      PatientOfInterestModel poi = new PatientOfInterestModel();
-      poi.setReference(patientId);
-      poi.setIdentifier(patientIdentifier);
-
-      ReportCriteria criteria = new ReportCriteria(measureId, periodStart, periodEnd);
-      ReportContext context = new ReportContext();
-      List<PatientOfInterestModel> pois = List.of(poi);
-
-      patientScoop.loadInitialPatientData(criteria, context, pois);
-      patientScoop.loadSupplementalPatientData(criteria, context, pois);
-      //No report to get an id from, set the reportId to the tenant to indicate this metric applies to the tenant as a whole
-      patientScoop.getStopwatchManager().storeMetrics(tenantId, tenantId);
+      if (StringUtils.isEmpty(patientId)) {
+        Bundle bundle = client.search()
+                .forResource(Patient.class)
+                .where(Patient.IDENTIFIER.exactly().code(patientIdentifier))
+                .returnBundle(Bundle.class)
+                .execute();
+        List<String> patientIds = bundle.getEntry().stream()
+                .map(Bundle.BundleEntryComponent::getResource)
+                .filter(resource -> resource instanceof Patient)
+                .map(Resource::getIdPart)
+                .collect(Collectors.toList());
+        if (patientIds.isEmpty()) {
+          testResponse.setMessage("Patients not found");
+        } else {
+          testResponse.setMessage("Patients found: " + String.join(", ", patientIds));
+        }
+      } else {
+        try {
+          client.read()
+                  .resource(Patient.class)
+                  .withId(StringUtils.removeStart(patientId, "Patient/"))
+                  .execute();
+          testResponse.setMessage("Patient found");
+        } catch (ResourceNotFoundException | ResourceGoneException e) {
+          testResponse.setMessage("Patient not found or gone");
+        }
+      }
     } catch (Exception ex) {
       testResponse.setSuccess(false);
       testResponse.setMessage(ex.getMessage());

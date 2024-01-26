@@ -160,9 +160,9 @@ public class ValidationController extends BaseController {
     }
 
     List<ValidationResult> results = tenantService.getValidationResults(reportId);
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.setCategories(categories);
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
       return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
     }).collect(Collectors.toList());
@@ -207,9 +207,9 @@ public class ValidationController extends BaseController {
     }
 
     List<ValidationResult> results = tenantService.getValidationResults(reportId);
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.setCategories(categories);
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
       return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
     }).collect(Collectors.toList());

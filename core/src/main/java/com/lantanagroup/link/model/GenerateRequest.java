@@ -15,4 +15,5 @@ public class GenerateRequest {
   private String periodStart;
   private String periodEnd;
   boolean validate = true;
+  boolean skipQuery = false;
 }

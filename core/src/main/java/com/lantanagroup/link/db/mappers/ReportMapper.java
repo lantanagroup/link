@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.ReportStatuses;
 import org.hl7.fhir.r4.model.Device;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,7 +27,7 @@ public class ReportMapper extends BaseMapper<Report> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(Report model) throws JsonProcessingException {
+  protected Parameters doToParameters(Report model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addString("id", model.getId());
     parameters.addJsonList("measureIds", model.getMeasureIds());
