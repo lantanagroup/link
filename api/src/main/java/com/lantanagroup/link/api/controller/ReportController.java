@@ -296,7 +296,7 @@ public class ReportController extends BaseController {
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
-    report.setDeviceInfo(FhirHelper.getDevice(this.config));
+    report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
     report.setQueryPlan(new Yaml().dump(queryPlan));
 
     // Preserve the version of the already-existing report
