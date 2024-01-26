@@ -74,10 +74,6 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
       response.sendError(exception.getStatusCode(), exception.getReasonPhrase());
       return true;
     }
-    if(throwable instanceof DataFormatException) {
-      response.sendError(400, throwable.getMessage());
-      return true;
-    }
     return false;
   }
 

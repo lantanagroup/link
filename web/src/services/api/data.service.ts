@@ -4,7 +4,7 @@ import { AuthService } from 'src/services/auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
-  private API_BASE_URL: string = 'http://localhost:8082/api'; // Set the base URL
+  private API_BASE_URL: string = 'https://dev.nhsnlink.org/api'; // Set the base URL
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

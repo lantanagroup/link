@@ -21,15 +21,29 @@
         <module name="query" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="cli" target="11" />
+      <module name="consumer" target="11" />
+      <module name="datastore" target="11" />
+      <module name="measureeval" target="11" />
+      <module name="mhl" target="11" />
+      <module name="thsa" target="11" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api" options="-parameters" />
+      <module name="cli" options="-parameters" />
+      <module name="consumer" options="-parameters" />
       <module name="core" options="-parameters" />
+      <module name="datastore" options="-parameters" />
       <module name="link" options="-parameters" />
+      <module name="measureeval" options="-parameters" />
+      <module name="mhl" options="-parameters" />
       <module name="nhsn" options="-parameters" />
       <module name="query" options="-parameters" />
+      <module name="thsa" options="-parameters" />
+      <module name="web" options="-parameters" />
     </option>
   </component>
 </project>
