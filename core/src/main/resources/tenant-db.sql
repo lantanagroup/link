@@ -64,6 +64,17 @@ IF NOT EXISTS (SELECT *
 GO
 
 IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'report'
+                 AND COLUMN_NAME = 'queryPlan')
+    BEGIN
+        ALTER TABLE dbo.report
+            ADD queryPlan NVARCHAR(MAX) NULL;
+    END
+GO
+
+IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'
                  AND TABLE_NAME = 'reportPatientList')

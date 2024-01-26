@@ -34,6 +34,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -296,6 +297,7 @@ public class ReportController extends BaseController {
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
     report.setDeviceInfo(FhirHelper.getDevice(this.config));
+    report.setQueryPlan(new Yaml().dump(queryPlan));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
