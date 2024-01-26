@@ -1,6 +1,5 @@
 package com.lantanagroup.link.spring;
 
-import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
