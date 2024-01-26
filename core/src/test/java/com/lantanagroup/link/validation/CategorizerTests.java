@@ -39,9 +39,9 @@ public class CategorizerTests {
   @Test
   public void categoriesTest() throws IOException, URISyntaxException {
     List<ValidationResult> results = this.getResults();
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     Assert.assertNotEquals(0, categorizedResults.size());
 
     List<ValidationResult> notMatched = results.stream()
@@ -61,7 +61,7 @@ public class CategorizerTests {
                     "Bundle.entry[3].resource.ofType(Library).content[0].contentType"
             )
     );
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     ValidationCategorizer.loadAndRetrieveCategories().clear();
     categorizer.addCategory("Invalid Code in required ValueSet", ValidationCategorySeverities.ERROR, false, ValidationCategoryTypes.CRITICAL,
                     "The code is not part of the required ValueSet. This may cause issues with measure calculation.")
@@ -69,14 +69,14 @@ public class CategorizerTests {
             .addRule(ValidationCategoryRule.Field.SEVERITY, "^error$")
             .addRule(ValidationCategoryRule.Field.CODE, "^code-invalid$")
             .addRule(ValidationCategoryRule.Field.DETAILS_TEXT, "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set");
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     Assert.assertEquals(1, categorizedResults.size());
   }
 
   @Test
   @Ignore
   public void serializeCategories() throws JsonProcessingException {
-    ValidationCategorizer categorizer = new ValidationCategorizer(null);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     ValidationCategorizer.loadAndRetrieveCategories().clear();
 
     categorizer.addCategory("Can't validate code", ValidationCategorySeverities.WARNING, true, ValidationCategoryTypes.POTENTIAL_CONCERN, "There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.")
