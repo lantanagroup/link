@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -8,6 +9,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.QueryPlan;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -34,12 +36,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.yaml.snakeyaml.Yaml;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -284,8 +286,7 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    FhirQuery fhirQuery = tenantService.getConfig().getFhirQuery();
-    QueryPlan queryPlan = fhirQuery == null ? null : fhirQuery.getQueryPlans().get(criteria.getQueryPlanId());
+    QueryPlan queryPlan = this.getQueryPlan(tenantService.getConfig(), criteria.getQueryPlanId());
     if (queryPlan == null) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
     }
@@ -297,7 +298,7 @@ public class ReportController extends BaseController {
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
     report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
-    report.setQueryPlan(new Yaml().dump(queryPlan));
+    report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
@@ -361,6 +362,22 @@ public class ReportController extends BaseController {
     this.stopwatchManager.reset();
 
     return report;
+  }
+
+  private QueryPlan getQueryPlan(Tenant tenant, String queryPlanId) {
+    FhirQuery fhirQuery = tenant.getFhirQuery();
+    if (fhirQuery == null) {
+      return null;
+    }
+    String queryPlanUrl = fhirQuery.getQueryPlanUrls().get(queryPlanId);
+    if (queryPlanUrl != null) {
+      try {
+        return new YAMLMapper().readValue(new URL(queryPlanUrl), QueryPlan.class);
+      } catch (Exception e) {
+        logger.error("Failed to retrieve query plan from {}", queryPlanUrl, e);
+      }
+    }
+    return fhirQuery.getQueryPlans().get(queryPlanId);
   }
 
   private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {
