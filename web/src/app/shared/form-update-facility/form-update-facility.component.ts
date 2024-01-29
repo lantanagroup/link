@@ -1,27 +1,70 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormArray, FormBuilder, Validators, Form } from '@angular/forms';
+import { Router } from '@angular/router';
+import { FormControl, FormGroup, FormArray, FormBuilder, Validators, Form, AbstractControl } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, from, switchMap, map } from 'rxjs';
 import * as yaml from 'js-yaml'
 import { SectionHeadingComponent } from '../section-heading/section-heading.component';
 import { AccordionComponent } from '../accordion/accordion.component';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { ToastComponent } from '../toast/toast.component';
+import { LoaderComponent } from '../loader/loader.component';
 import { ToastService } from 'src/services/toasts/toast.service';
-import { Router } from '@angular/router';
 import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
 import { Events, NormalizationClass, QueryPlans, TenantConceptMap, TenantDetails, Schedule, AuthClass } from '../interfaces/tenant.model';
 import { MeasureDef } from '../interfaces/measures.model';
 import { PascalCaseToSpace } from 'src/app/helpers/GlobalPipes.pipe';
-import { LoaderComponent } from '../loader/loader.component';
+import { urlValidator, iso8601Validator, databaseValidator } from 'src/app/helpers/FormValidators';
+
+/// ********************* ///
+/// * TABLE OF CONTENTS * ///
+/// ********************* ///
+// 1. Interfaces
+// 2. Component variables and constructors
+// 3. Define the form
+// 4. Functions to handle dynamic fields (ie. repeaters)
+//    a. Concept Maps
+//    b. Schedules
+//    c. Query Lists
+//    d. Query Plans
+// 5. Mapping Functions/Middleware
+//    a. Concept Maps
+//    b. Schedules
+//    c. Query Plans
+//    d. Normalizations
+//    e. Auth Classes
+// 6. Helper Functions
+//    a. Convert line breaks to array and back
+//    b. Convert JSON to YAML and back
+// 7. View Initialization
+//    a. ngOnInit()
+//        1. Conditionals
+//        2. API calls
+//    a. Set Initial Values (if Edit)
+//        1. Generate repeater fields
+//        2. Populate form values
+// 8. Form Submit
+//    a. Transform form data for API requests
+//    b. Send API data
+//        1. Update existing facility
+//        2. Create new facility
+
+
+/// ***************** ///
+/// * 1. Interfaces * ///
+/// ***************** ///
 
 interface FormConceptMap {
   id: string
   name?: string
   contexts: string
-  map?: any // todo: not sure what this looks like 
+  conceptMap?: string // convert from JSON
+}
+
+interface FormConditionals {
+  [key: string]: string | null | boolean
 }
 
 @Component({
@@ -32,12 +75,20 @@ interface FormConceptMap {
   styleUrls: ['./form-update-facility.component.scss']
 })
 export class FormUpdateFacilityComponent {
+  /// ******************************************* ///
+  /// * 2. Component variables and constructors * ///
+  /// ******************************************* ///
 
   @Input() facilityId?: string | null = null;
   facilityDetails: TenantDetails | null = null;
   measureDefs: MeasureDef[] = [];
   isMeasureDefsLoaded: boolean = false;
   isDataLoaded: boolean = false;
+
+  conditionals: FormConditionals = {
+    censusAcquisition: null,
+    authClass: null
+  }
 
   constructor(
     private fb: FormBuilder, 
@@ -46,6 +97,10 @@ export class FormUpdateFacilityComponent {
     private router: Router
   ) { }
 
+  /// ********************** ///
+  /// * 3. Define the Form * ///
+  /// ********************** ///
+
   facilitiesForm = new FormGroup ({
     id: new FormControl('', [Validators.required]),
     name: new FormControl('', [Validators.required]),
@@ -53,10 +108,10 @@ export class FormUpdateFacilityComponent {
     bundling: new FormGroup ({
       name: new FormControl('', [Validators.required])
     }),
-    cdcOrgId: new FormControl(''),
-    connectionString: new FormControl(''),
+    cdcOrgId: new FormControl(''), // todo : validation for 5 char min?
+    connectionString: new FormControl('', [databaseValidator()]),
     vendor: new FormControl(''),
-    retentionPeriod: new FormControl(''),
+    retentionPeriod: new FormControl('', [iso8601Validator()]), // todo : confirm this is the correct regex
     events: new FormGroup ({
       afterPatientDataQuery: new FormGroup({
         codeSystemCleanup: new FormControl(0),
@@ -70,23 +125,61 @@ export class FormUpdateFacilityComponent {
         patientDataResourceFilter: new FormControl(0)
       })
     }),
+    queryList: new FormGroup ({
+      fhirServerBase: new FormControl('', [urlValidator()]),
+      lists: this.fb.array([])
+    }),
     conceptMaps: this.fb.array([]),
     scheduling: new FormGroup({
       queryPatientListCron: new FormControl(''),
       dataRetentionCheckCron: new FormControl(''),
-      generateAndSubmitReports: this.fb.array([], [Validators.required])
+      generateAndSubmitReports: this.fb.array([])
     }),
     fhirQuery: new FormGroup({
-      fhirServerBase: new FormControl(''),
+      fhirServerBase: new FormControl('', [urlValidator()]),
       parallelPatients: new FormControl(''),
       authClass: new FormControl(''),
-      queryPlans: this.fb.array([])
+      queryPlans: this.fb.array([]),
+      basicAuth: new FormGroup({
+        username: new FormControl(''),
+        password: new FormControl('')
+      }),
+      basicAuthAndApiKey: new FormGroup({
+        username: new FormControl(''),
+        password: new FormControl(''),
+        apiKey: new FormControl('')
+      }),
+      tokenAuth: new FormGroup({
+        token: new FormControl('')
+      }),
+      azureAuth: new FormGroup({
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        secret: new FormControl(''),
+        resource: new FormControl('')
+      }),
+      epicAuth: new FormGroup({
+        key: new FormControl(''),
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        audience: new FormControl('')
+      }),
+      cernerAuth: new FormGroup({
+        tokenUrl: new FormControl(''),
+        clientId: new FormControl(''),
+        secret: new FormControl(''),
+        scopes: new FormControl('')
+      })
     }),
     censusAcquisitionMethod: new FormControl(''),
     bulkWaitTimeInMilliseconds: new FormControl('')
   })
 
-  // Concept Maps Dynamic Fields
+  /// ******************************************************** ///
+  /// * 4. Functions to handle dynamic fiels (ie. repeaters) * ///
+  /// ******************************************************** ///
+
+  // a. Concept Maps
   get conceptMaps(): FormArray {
     return this.facilitiesForm.get('conceptMaps') as FormArray;
   }
@@ -96,7 +189,7 @@ export class FormUpdateFacilityComponent {
       id: new FormControl(''),
       name: new FormControl(''),
       contexts: new FormControl(''),
-      map: new FormControl('')
+      conceptMap: new FormControl('')
     });
   }
 
@@ -116,7 +209,7 @@ export class FormUpdateFacilityComponent {
     return () => this.removeConceptMap(index)
   }
 
-  // Schedules Dynamic Fields
+  // b. Schedules
   get schedules(): FormArray {
     return this.facilitiesForm.get('scheduling.generateAndSubmitReports') as FormArray;
   }
@@ -175,7 +268,35 @@ export class FormUpdateFacilityComponent {
     checkboxStates.forEach(state => measureIdsArray.push(new FormControl(state)))
   }
 
-  // Query Plan Dynamic Fields
+  // c. Query Lists
+  get lists(): FormArray {
+    return this.facilitiesForm.get('queryList.lists') as FormArray
+  }
+
+  createList(): FormGroup {
+    return this.fb.group({
+      measureId: new FormControl(''),
+      listId: new FormControl('')
+    })
+  }
+
+  addList() {
+    this.lists.push(this.createList())
+  }
+
+  getAddListHandler(): () => void {
+    return () => this.addList()
+  }
+
+  removeList(index: number) {
+    this.lists.removeAt(index)
+  }
+
+  getRemoveListHandler(index: number): () => void {
+    return () => this.removeList(index)
+  }
+
+  // d. Query Plans
   get queryPlans(): FormArray {
     return this.facilitiesForm.get('fhirQuery.queryPlans') as FormArray;
   }
@@ -203,112 +324,33 @@ export class FormUpdateFacilityComponent {
     return () => this.removeQueryPlan(index)
   }
 
-  // update with initial form values
+  /// *********************************** ///
+  /// * 5. Mapping Functions/Middleware * ///
+  /// *********************************** ///
 
-  async ngOnInit(): Promise<void> {
-
-    if (this.facilityId) {
-      forkJoin({
-        measureDefs: this.globalApiService.getContentObservable<MeasureDef[]>('measureDef'),
-        facilityDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
-        conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.facilityId}/conceptMap`)
-      }).subscribe(({ measureDefs, facilityDetails, conceptMaps }) => {
-        this.measureDefs = measureDefs
-        this.facilityDetails = facilityDetails
-        
-        if(this.facilityId) 
-          this.setInitialValues(facilityDetails, conceptMaps)
-
-        this.isMeasureDefsLoaded = true
-        this.isDataLoaded = true
-      })
-    } else {
-      this.isDataLoaded = true
-      this.globalApiService.getContentObservable<MeasureDef[]>('measureDef').subscribe({
-        next: (measureDefs) => {
-          this.measureDefs = measureDefs
-        },
-        error: (error) => {
-          console.error('Error fetching measureDefs:', error)
-        },
-        complete: () => {
-          this.isMeasureDefsLoaded = true
-        }
-      })
+  // a. Concept Maps 
+  mapConceptMapData(data: TenantConceptMap[] | FormConceptMap[] | any) {
+    if(!data) {
+      return []
     }
-  }
-
-  private async setInitialValues(facilityDetails: TenantDetails, conceptMaps: any) {
-
-    // Schedules
-    if (facilityDetails?.scheduling?.generateAndSubmitReports) {
-      for (const schedule of facilityDetails.scheduling.generateAndSubmitReports) {
-        this.addSchedule();
+    const conceptMaps = data.map((cm: TenantConceptMap | FormConceptMap) => {
+      // if conceptMap is object, convert to string for form, otherwise parse JSON back to object for api submission
+      let conceptMapData = null
+      if(cm?.conceptMap) {
+        conceptMapData = typeof cm.conceptMap === 'object' ? JSON.stringify(cm.conceptMap) : JSON.parse(cm.conceptMap)
       }
-    }
 
-    // Concept Maps
-    if (conceptMaps) {
-      for (const cm of conceptMaps) {
-        this.addConceptMap();
+      return {
+        id: cm?.id,
+        name: cm?.name,
+        contexts: this.convertLineBreaks(cm?.contexts),
+        conceptMap: conceptMapData
       }
-    }
-
-    // Query Plans
-    if (facilityDetails?.fhirQuery?.queryPlans) {
-      const queryPlans = facilityDetails.fhirQuery.queryPlans
-      let count = 0;
-      if(typeof queryPlans === 'object' && queryPlans !== null && !Array.isArray(queryPlans)) {
-        count = Object.keys(queryPlans).length
-      } else {
-        count = queryPlans.length
-      }
-      for (let i = 0; i < count; i++) {
-        this.addQueryPlan();
-      }
-    }
-
-    this.facilitiesForm.patchValue({
-
-      id: this.facilityId,
-      name: facilityDetails?.name,
-      description: null, // todo : doesn't exist in endpoint
-      bundling: {
-        name: facilityDetails?.bundling?.name
-      },
-      cdcOrgId: facilityDetails?.cdcOrgId,
-      connectionString: facilityDetails?.connectionString,
-      vendor: null, // todo : doesn't exist in endpoint
-      retentionPeriod: facilityDetails?.retentionPeriod,
-      events: this.mapNormalizationsApiDataToForm(facilityDetails?.events),
-      conceptMaps: this.mapConceptMapData(conceptMaps),
-      scheduling: {
-        queryPatientListCron: facilityDetails?.scheduling?.queryPatientListCron,
-        dataRetentionCheckCron: facilityDetails?.scheduling?.dataRetentionCheckCron,
-        generateAndSubmitReports: this.mapSchedulingApiDataToForm(facilityDetails?.scheduling?.generateAndSubmitReports)
-      },
-      fhirQuery: {
-        fhirServerBase: facilityDetails?.fhirQuery?.fhirServerBase,
-        parallelPatients: facilityDetails?.fhirQuery?.parallelPatients.toString(),
-        authClass: facilityDetails?.fhirQuery?.authClass,
-        queryPlans: this.mapQueryPlansApiDataToForm(facilityDetails?.fhirQuery?.queryPlans)
-      },
-      censusAcquisitionMethod: '', // todo : doesn't exist in endpoint
-      bulkWaitTimeInMilliseconds: facilityDetails?.bulkWaitTimeInMilliseconds
     })
-
-    // disable Tenant ID field
-    this.facilitiesForm.get('id')?.disable()
-
-    this.isDataLoaded = true;
+    return conceptMaps
   }
 
-  /// ********************* ///
-  /// * MAPPING FUNCTIONS * ///
-  /// ********************* ///
-
-  // * Map Scheduling Data
-
+  // b. Schedules
   mapSchedulingApiDataToForm(data: Schedule[] | undefined) {
     if (!data || !this.measureDefs) {
       return []
@@ -339,26 +381,7 @@ export class FormUpdateFacilityComponent {
     return transformedData
   }
 
-
-  // * Map Concept Maps 
-
-  mapConceptMapData(data: TenantConceptMap[] | FormConceptMap[] | any) {
-    if(!data) {
-      return []
-    }
-    const conceptMaps = data.map((cm: TenantConceptMap | FormConceptMap) => {
-      return {
-        id: cm?.id,
-        name: cm?.name,
-        contexts: this.convertLineBreaks(cm?.contexts),
-        map: cm?.map
-      }
-    })
-    return conceptMaps
-  }
-
-  // * Map Query Plans
-
+  // c. Query Plans
   mapQueryPlansApiDataToForm(data: QueryPlans | undefined) { 
     if(!data) {
       return []
@@ -398,8 +421,38 @@ export class FormUpdateFacilityComponent {
     return queryPlansObject
   }
 
+  // d. Auth Classes
+  authClassFormDataToApi(data: any): any {
+    // get the value of the authClass
+    const authValue = data.authClass
+    
+    let allAuthTypes = [
+      'basicAuth',
+      'basicAuthAndApiKey',
+      'tokenAuth',
+      'azureAuth',
+      'epicAuth',
+      'cernerAuth'
+    ]
 
-  // Map Normalizations
+    if(authValue) {
+      // take the value and remove it from the allAuthTypes array
+      allAuthTypes = allAuthTypes.filter(item => item !== authValue.charAt(0).toLowerCase() + authValue.slice(1))
+
+      // set the value of the authClass to the enum
+      data.authClass = AuthClass[authValue as keyof typeof AuthClass]
+    }
+    
+    // loop through the array and set all the values to null
+    allAuthTypes.forEach(authType => {
+      data[authType] = null
+    })
+    
+    // return the data group
+    return data
+  }
+
+  // e. Normalizations
   mapNormalizationsApiDataToForm(data: Events | undefined) {
 
     if(!data) {
@@ -459,11 +512,11 @@ export class FormUpdateFacilityComponent {
     return transformedData
   }
 
-  /// ******************** ///
-  /// * Helper Functions * ///
-  /// ******************** ///
+  /// *********************** ///
+  /// * 6. Helper Functions * ///
+  /// *********************** ///
 
-  // Function to convert line breaks to array and back
+  // a. Convert line breaks to array and back
   convertLineBreaks(data: string | string[]) {
     if( typeof data === 'string' )
       return data.split('\n')
@@ -472,7 +525,7 @@ export class FormUpdateFacilityComponent {
     }
   }
 
-  // Functions to convert JSON to YAML and back
+  // b. Convert JSON to YAML and back
   convertJsonToYaml(jsonData: any): string {
     try {
       return yaml.dump(jsonData)
@@ -492,14 +545,175 @@ export class FormUpdateFacilityComponent {
     }
   }
 
+  /// ************************** ///
+  /// * 7. View Initialization * ///
+  /// ************************** ///
 
-  /// *************** ///
-  /// * Form Submit * ///
-  /// *************** ///
+  // a. ngOnInit()
+  async ngOnInit(): Promise<void> {
+
+
+    // 1. Conditionals
+    this.facilitiesForm.get('fhirQuery.authClass')?.valueChanges.subscribe(value => {
+      this.conditionals['authClass'] = value
+    })
+
+    this.facilitiesForm.get('censusAcquisitionMethod')?.valueChanges.subscribe(value => {
+      this.conditionals['censusAcquisitionMethod'] = value
+    })
+
+    
+    // 2. API Calls
+    // load up the facility data if passed into the url
+    if (this.facilityId) {
+      forkJoin({ // call initial endpoints for measureDefs, tenant Details and concept maps
+        measureDefs: this.globalApiService.getContentObservable<MeasureDef[]>('measureDef'),
+        facilityDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
+        conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.facilityId}/conceptMap`)
+      }).pipe(
+        // conceptMap endpoint doesn't actually return the conceptMap part
+        switchMap(({ measureDefs, facilityDetails, conceptMaps }) => {
+          // Process conceptMaps
+          const conceptMapRequests = conceptMaps.map(conceptMap =>
+            this.globalApiService.getContentObservable(`${this.facilityId}/conceptMap/${conceptMap.id}`)
+              .pipe(
+                map(conceptMapDetails => {
+                  // Since this includes the id, name and contexts, we can replace it with this
+                  return conceptMapDetails
+                })
+              )
+            )
+      
+          // Wait for all additional conceptMap details requests to complete
+          return forkJoin(conceptMapRequests).pipe(
+            map(updatedConceptMaps => ({
+              measureDefs,
+              facilityDetails,
+              conceptMaps: updatedConceptMaps
+            }))
+          )
+        })
+      ).subscribe(({ measureDefs, facilityDetails, conceptMaps }) => {
+        this.measureDefs = measureDefs
+        this.facilityDetails = facilityDetails
+        
+        if(this.facilityId) 
+          this.setInitialValues(facilityDetails, conceptMaps)
+
+        this.isMeasureDefsLoaded = true
+        this.isDataLoaded = true
+      })
+    } else {
+      this.isDataLoaded = true
+      this.globalApiService.getContentObservable<MeasureDef[]>('measureDef').subscribe({
+        next: (measureDefs) => {
+          this.measureDefs = measureDefs
+        },
+        error: (error) => {
+          console.error('Error fetching measureDefs:', error)
+        },
+        complete: () => {
+          this.isMeasureDefsLoaded = true
+        }
+      })
+    }
+  }
+
+  // b. Set Initial Values (if Edit)
+  private async setInitialValues(facilityDetails: TenantDetails, conceptMaps: any) {
+
+    // 1. Generate repeater fields
+    // Schedules
+    if (facilityDetails?.scheduling?.generateAndSubmitReports) {
+      for (const schedule of facilityDetails.scheduling.generateAndSubmitReports) {
+        this.addSchedule();
+      }
+    }
+
+    // Concept Maps
+    if (conceptMaps) {
+      for (const cm of conceptMaps) {
+        this.addConceptMap();
+      }
+    }
+
+    // Query Lists
+    if (facilityDetails?.queryList?.lists) {
+      for (const list of facilityDetails.queryList.lists) {
+        this.addList();
+      }
+    }
+
+    // Query Plans
+    if (facilityDetails?.fhirQuery?.queryPlans) {
+      const queryPlans = facilityDetails.fhirQuery.queryPlans
+      let count = 0;
+      if(typeof queryPlans === 'object' && queryPlans !== null && !Array.isArray(queryPlans)) {
+        count = Object.keys(queryPlans).length
+      } else {
+        count = queryPlans.length
+      }
+      for (let i = 0; i < count; i++) {
+        this.addQueryPlan();
+      }
+    }
+
+    // 2. Populate form values
+    this.facilitiesForm.patchValue({
+
+      id: this.facilityId,
+      name: facilityDetails?.name,
+      description: null, // todo : doesn't exist in endpoint
+      bundling: {
+        name: facilityDetails?.bundling?.name
+      },
+      cdcOrgId: facilityDetails?.cdcOrgId,
+      connectionString: facilityDetails?.connectionString,
+      vendor: null, // todo : doesn't exist in endpoint
+      retentionPeriod: facilityDetails?.retentionPeriod,
+      events: this.mapNormalizationsApiDataToForm(facilityDetails?.events),
+      conceptMaps: this.mapConceptMapData(conceptMaps),
+      scheduling: {
+        queryPatientListCron: facilityDetails?.scheduling?.queryPatientListCron,
+        dataRetentionCheckCron: facilityDetails?.scheduling?.dataRetentionCheckCron,
+        generateAndSubmitReports: this.mapSchedulingApiDataToForm(facilityDetails?.scheduling?.generateAndSubmitReports)
+      },
+      queryList: {
+        fhirServerBase: facilityDetails?.queryList?.fhirServerBase,
+        lists: facilityDetails?.queryList?.lists
+      },
+      fhirQuery: {
+        fhirServerBase: facilityDetails?.fhirQuery?.fhirServerBase,
+        parallelPatients: facilityDetails?.fhirQuery?.parallelPatients.toString(),
+        authClass: facilityDetails?.fhirQuery?.authClass ? facilityDetails.fhirQuery.authClass.split('.').pop() : null,
+        queryPlans: this.mapQueryPlansApiDataToForm(facilityDetails?.fhirQuery?.queryPlans),
+        basicAuth: facilityDetails?.fhirQuery?.basicAuth,
+        basicAuthAndApiKey: facilityDetails?.fhirQuery?.basicAuthAndApiKey,
+        tokenAuth: facilityDetails?.fhirQuery?.tokenAuth,
+        azureAuth: facilityDetails?.fhirQuery?.azureAuth,
+        epicAuth: facilityDetails?.fhirQuery?.epicAuth,
+        cernerAuth: facilityDetails?.fhirQuery?.cernerAuth
+      },
+      censusAcquisitionMethod: '', // todo : doesn't exist in endpoint
+      bulkWaitTimeInMilliseconds: facilityDetails?.bulkWaitTimeInMilliseconds
+    })
+
+    // disable Tenant ID field
+    this.facilitiesForm.get('id')?.disable()
+
+    this.isDataLoaded = true;
+  }
+
+  /// ****************** ///
+  /// * 8. Form Submit * ///
+  /// ****************** ///
 
   async onSubmit() {
     const formData = this.facilitiesForm.value;
-    console.log('formData:', formData)
+
+    // a. Transform form data for API requests
+    // ! Delete the censusAcquisitionMethod because it's only there to monitor a conditional, this value doesn't get sent to API
+    delete formData.censusAcquisitionMethod
 
     // ! add facility id back in
     if(this.facilityId)
@@ -518,6 +732,11 @@ export class FormUpdateFacilityComponent {
     if(formData.events) {
       formData.events = this.mapNormalizationsFormDataToApi(formData.events)
     }
+
+    // set the authClass to the correct enum and null out the specific auth keys
+    if(formData.fhirQuery) {
+      formData.fhirQuery = this.authClassFormDataToApi(formData.fhirQuery)
+    }
     
     // convert Yaml to Json for query plans, and set measureIds as keys
     if(formData.fhirQuery?.queryPlans && Object.entries(formData.fhirQuery.queryPlans).length > 0) {
@@ -527,37 +746,55 @@ export class FormUpdateFacilityComponent {
     }
 
     // ! deleting certain data points for now
-    delete formData.censusAcquisitionMethod
     delete formData.description
     delete formData.vendor
     // ! remove when these are built/clarified
 
+    // b. Send API data
     if (this.facilitiesForm.valid) {
+
+      let allObservables = []
+
+      if(conceptMaps) {
+        conceptMaps.forEach(conceptMap => {
+          allObservables.push(this.globalApiService.putContentObservable(`${this.facilityId}/conceptMap`, conceptMap))
+        })
+      }
+
       try {
-        let response;
         this.isDataLoaded = false;
         if (this.facilityId) {
-          // Update existing facility
-          forkJoin({
-            updateTenantResponse: this.globalApiService.putContentObservable(`tenant/${this.facilityId}`, formData),
-            // todo : update concept maps
-            // updateConceptMapResponse: this.globalApiService.putContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
-          }).subscribe(({ updateTenantResponse }) => {
-            this.isDataLoaded = true;
-            this.toastService.showToast(
-              'Facility Updated',
-              `${formData.name} has been successfully updated.`,
-              'success'
-            )
-            this.router.navigate(['/facilities/facility', this.facilityId])
+          // 1. Update existing facility
+          allObservables.unshift(this.globalApiService.putContentObservable(`tenant/${this.facilityId}`, formData))
+
+          forkJoin(allObservables).subscribe({
+            next: (responses) => {
+              let tenantResponse = responses[0],
+                  conceptMapResponses = responses.slice(1)
+              console.log(responses.length + '/' + allObservables.length, 'complete')
+            },
+            error: (error) => {
+              this.isDataLoaded = true;
+              console.error('Error fetching measureDefs:', error)
+            },
+            complete: () => {
+              this.isDataLoaded = true;
+              this.toastService.showToast(
+                'Facility Updated',
+                `${formData.name} has been successfully updated.`,
+                'success'
+              )
+
+              this.router.navigate(['/facilities/facility', this.facilityId])
+            }
           })
         } else {
-          // Create new facility
-          forkJoin({
-            createTenantResponse: this.globalApiService.postContentObservable('tenant', formData),
-            // todo : create concept maps
-            // createConceptMapResponse: this.globalApiService.postContentObservable(`${this.facilityId}/conceptMap`, conceptMaps)
-          }).subscribe(({ createTenantResponse }) => {
+          // 2. Create new facility
+          allObservables.unshift(this.globalApiService.postContentObservable('tenant', formData))
+          forkJoin(allObservables).subscribe(responses => {
+            let tenantResponse = responses[0],
+                conceptMapResponses = responses.slice(1)
+
             this.isDataLoaded = true
             this.toastService.showToast(
               'New Tenant Created',

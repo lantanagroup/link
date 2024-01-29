@@ -37,13 +37,10 @@ public class ValidationService {
   @Autowired
   private EventService eventService;
 
-  @Autowired
-  private ApiConfig config;
-
   public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
     OperationOutcome outcome;
 
-    Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
+    Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService);
 
     ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();

@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import lombok.Getter;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
 
 import java.util.ArrayList;
@@ -88,10 +89,16 @@ public class FhirBundleProcessor {
     }
   }
 
-  private static boolean isSameResource(Resource r1, Resource r2) {
-    if (r1 != null && r2 != null) {
-      return r1.getResourceType().equals(r2.getResourceType()) && r1.getIdElement().getIdPart().equals(r2.getIdElement().getIdPart());
-    } else return r1 == null && r2 == null;
+  private static boolean isSameResource(Bundle.BundleEntryComponent e1, Bundle.BundleEntryComponent e2) {
+    if (e1 == null || e2 == null) {
+      return e1 == null && e2 == null;
+    }
+    Resource r1 = e1.getResource();
+    Resource r2 = e2.getResource();
+    if (r1 == null || r2 == null) {
+      return r1 == null && r2 == null;
+    }
+    return r1.getResourceType() == r2.getResourceType() && StringUtils.equals(r1.getIdPart(), r2.getIdPart());
   }
 
   public List<String> getPatientIds() {
@@ -101,14 +108,14 @@ public class FhirBundleProcessor {
   }
 
   private boolean isOtherResource(Bundle.BundleEntryComponent r) {
-    if (isSameResource(r.getResource(), this.linkOrganization.getResource())) {
+    if (isSameResource(r, this.linkOrganization)) {
       return false;
-    } else if (isSameResource(r.getResource(), this.linkDevice.getResource())) {
+    } else if (isSameResource(r, this.linkDevice)) {
       return false;
-    } else if (this.linkQueryPlanLibrary == null || isSameResource(r.getResource(), this.linkQueryPlanLibrary.getResource())) {
+    } else if (this.linkQueryPlanLibrary == null || isSameResource(r, this.linkQueryPlanLibrary)) {
       return false;
-    } else if (this.linkCensusLists.stream().anyMatch(l -> isSameResource(r.getResource(), l.getResource()))) {
+    } else if (this.linkCensusLists.stream().anyMatch(l -> isSameResource(r, l))) {
       return false;
-    } else return this.aggregateMeasureReports.stream().noneMatch(l -> isSameResource(r.getResource(), l.getResource()));
+    } else return this.aggregateMeasureReports.stream().noneMatch(l -> isSameResource(r, l));
   }
 }

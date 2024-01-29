@@ -7,7 +7,6 @@
 />
 
 <app-section>
-  <app-loader *ngIf="!isDataLoaded" />
   <div class="container">
 
     <app-tab-container>
@@ -19,6 +18,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content title="Facility Name">
                 <p>{{ facilityDetails?.name }}</p>
               </app-mini-content>
@@ -43,6 +43,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content *ngFor="let conceptMap of facilityConceptMaps; index as i" title='Concept Map {{ i + 1 }}'>
                 <strong>ID:</strong> {{ conceptMap.id }}<br>
                 <strong>Contexts:</strong>
@@ -121,6 +122,7 @@
           title="Scheduling"
           [isExpanded]="false"
         >
+          <app-loader *ngIf="!isDataLoaded" />
           <div class="row">
             <div class="col col-md-6">
               <app-mini-content title="Query Patient List (Cron)">
@@ -183,6 +185,7 @@
           title="Native FHIR Query"
           [isExpanded]="false"
         >
+          <app-loader *ngIf="!isDataLoaded" />
           <div class="row">
             <div class="col col-md-6">
               <app-mini-content title="FHIR Endpoint">
@@ -208,6 +211,7 @@
           title="Census Acquisition"
           [isExpanded]="false"
         >
+          <app-loader *ngIf="!isDataLoaded" />
           <app-mini-content title="Method">
             <p *ngIf="facilityDetails?.queryList; else noData">FHIR List</p>
           </app-mini-content>

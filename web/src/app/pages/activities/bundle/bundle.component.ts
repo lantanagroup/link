@@ -31,8 +31,8 @@ export class BundleComponent {
 
   // purely placeholder
   mockBundleDetails: any = {
-    submittedOn: '04.01.23 16:29:00 PM EST',
-    reportingPeriod: '03.23.23-03.30.23',
+    submittedOn: '01.04.24',
+    reportingPeriod: '03.23.23 - 03.30.23',
     facility: {
       name: 'EHR Test On Prem',
       facilityId: this.tenantId,

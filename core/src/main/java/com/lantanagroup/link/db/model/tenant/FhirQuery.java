@@ -55,5 +55,6 @@ public class FhirQuery {
    */
   private CernerAuth cernerAuth;
 
+  private Map<String, String> queryPlanUrls = Collections.emptyMap();
   private Map<String, QueryPlan> queryPlans = Collections.emptyMap();
 }

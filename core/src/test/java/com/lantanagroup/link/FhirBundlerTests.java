@@ -70,9 +70,10 @@ public class FhirBundlerTests {
     Aggregate aggregate = new Aggregate();
     aggregate.setReport(masterMeasureReport);
 
-    FhirBundler bundler = new FhirBundler(null, tenantService, new ApiConfig());
+    FhirBundler bundler = new FhirBundler(null, tenantService);
 
     Report report = new Report();
+    report.setDeviceInfo(new Device());
 
     List<PatientList> patientLists = new ArrayList<>();
     PatientList patientList = new PatientList();

@@ -22,7 +22,7 @@ export interface TenantConceptMap {
   id: string
   name?: string
   contexts: string[]
-  map?: any // todo: not sure what this looks like 
+  conceptMap?: any // todo: it's a json object
 }
 
 
@@ -123,6 +123,14 @@ export enum AuthClass {
   TokenAuth = 'com.lantana.group.link.query.auth.TokenAuth',
   CernerAuth = 'com.lantana.group.link.query.auth.CernerAuth',
 }
+
+export type AuthType =
+  'BasicAuth' | 
+  'BasicAuthAndApiKey' | 
+  'AzureAuth' | 
+  'EpicAuth' | 
+  'CernerAuth' | 
+  'TokenAuth';
 
 export enum NormalizationClass {
   codeSystemCleanup = 'com.lantanagroup.link.events.CodeSystemCleanup',
