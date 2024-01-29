@@ -14,6 +14,7 @@ public class StopwatchManager {
   private static final int COUNT_WIDTH = 6;
   private static final int DURATION_WIDTH = 11;
   private static final int CATEGORY_WIDTH_MIN = 15;
+  private static final int TASK_WIDTH_MIN = 11;
   private SharedService sharedService;
 
   private final Map<String, List<Duration>> durationsByTask = new LinkedHashMap<>();
@@ -34,14 +35,17 @@ public class StopwatchManager {
     int taskWidth = durationsByTask.keySet().stream()
             .mapToInt(String::length)
             .max()
-            .orElse(DURATION_WIDTH);
+            .orElse(0);
 
-    var maxCategory = durationsByTask.entrySet().stream().max((s,e) -> s.getKey().substring(s.getKey().indexOf(":") + 1).length()).get();
-    var categoryWidth = maxCategory.getKey().substring(maxCategory.getKey().indexOf(":") + 1).length() + 5;
+    taskWidth = Integer.max(taskWidth, TASK_WIDTH_MIN);
 
-    if(categoryWidth < CATEGORY_WIDTH_MIN){
-      categoryWidth = CATEGORY_WIDTH_MIN;
-    }
+    var categoryWidth = durationsByTask.entrySet()
+            .stream()
+            .mapToInt(s -> s.getKey().substring(s.getKey().indexOf(":") + 1).length())
+            .max()
+            .orElse(0);
+
+    categoryWidth = Integer.max(categoryWidth, CATEGORY_WIDTH_MIN);
 
     Formatter formatter = new Formatter(categoryWidth, taskWidth, COUNT_WIDTH, DURATION_WIDTH);
     StringBuilder statistics = new StringBuilder();
