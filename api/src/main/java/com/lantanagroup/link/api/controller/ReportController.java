@@ -1,5 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.EncodingEnum;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
@@ -23,8 +25,10 @@ import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Library;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -42,6 +46,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -369,14 +374,48 @@ public class ReportController extends BaseController {
     if (fhirQuery == null) {
       return null;
     }
-    String queryPlanUrl = fhirQuery.getQueryPlanUrls().get(queryPlanId);
-    if (queryPlanUrl != null) {
+
+    // Attempt to retrieve from URL
+    String url = fhirQuery.getQueryPlanUrls().get(queryPlanId);
+    String content = null;
+    if (url != null) {
+      logger.info("Retrieving query plan: {}", url);
       try {
-        return new YAMLMapper().readValue(new URL(queryPlanUrl), QueryPlan.class);
-      } catch (Exception e) {
-        logger.error("Failed to retrieve query plan from {}", queryPlanUrl, e);
+        content = IOUtils.toString(new URL(url), StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        logger.error("Failed to retrieve query plan", e);
       }
     }
+
+    if (content != null) {
+      YAMLMapper mapper = new YAMLMapper();
+
+      // Attempt to parse as FHIR Library
+      try {
+        EncodingEnum encoding = EncodingEnum.detectEncoding(content);
+        IParser parser = encoding.newParser(FhirContextProvider.getFhirContext());
+        Library library = parser.parseResource(Library.class, content);
+        for (int index = 0; index < library.getContent().size(); index++) {
+          byte[] data = library.getContent().get(index).getData();
+          try {
+            return mapper.readValue(data, QueryPlan.class);
+          } catch (Exception e) {
+            logger.warn("Failed to parse content at index {}", index);
+          }
+        }
+      } catch (Exception e) {
+        logger.warn("Failed to parse as FHIR Library");
+      }
+
+      // Attempt to parse as raw YAML
+      try {
+        return mapper.readValue(content, QueryPlan.class);
+      } catch (Exception e) {
+        logger.warn("Failed to parse as raw YAML");
+      }
+    }
+
+    // Fall back to explicitly provided query plan
     return fhirQuery.getQueryPlans().get(queryPlanId);
   }
 
