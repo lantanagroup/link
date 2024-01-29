@@ -1,11 +1,17 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.EncodingEnum;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -19,8 +25,10 @@ import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Library;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -37,6 +45,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -281,12 +291,19 @@ public class ReportController extends BaseController {
 
     this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
+    QueryPlan queryPlan = this.getQueryPlan(tenantService.getConfig(), criteria.getQueryPlanId());
+    if (queryPlan == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
+    }
+    reportContext.setQueryPlan(queryPlan);
+
     Report report = new Report();
     report.setId(masterIdentifierValue);
     report.setPeriodStart(criteria.getPeriodStart());
     report.setPeriodEnd(criteria.getPeriodEnd());
     report.setMeasureIds(measureIds);
-    report.setDeviceInfo(FhirHelper.getDevice(this.config));
+    report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
+    report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
     // Preserve the version of the already-existing report
     if (existingReport != null) {
@@ -352,6 +369,56 @@ public class ReportController extends BaseController {
     return report;
   }
 
+  private QueryPlan getQueryPlan(Tenant tenant, String queryPlanId) {
+    FhirQuery fhirQuery = tenant.getFhirQuery();
+    if (fhirQuery == null) {
+      return null;
+    }
+
+    // Attempt to retrieve from URL
+    String url = fhirQuery.getQueryPlanUrls().get(queryPlanId);
+    String content = null;
+    if (url != null) {
+      logger.info("Retrieving query plan: {}", url);
+      try {
+        content = IOUtils.toString(new URL(url), StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        logger.error("Failed to retrieve query plan", e);
+      }
+    }
+
+    if (content != null) {
+      YAMLMapper mapper = new YAMLMapper();
+
+      // Attempt to parse as FHIR Library
+      try {
+        EncodingEnum encoding = EncodingEnum.detectEncoding(content);
+        IParser parser = encoding.newParser(FhirContextProvider.getFhirContext());
+        Library library = parser.parseResource(Library.class, content);
+        for (int index = 0; index < library.getContent().size(); index++) {
+          byte[] data = library.getContent().get(index).getData();
+          try {
+            return mapper.readValue(data, QueryPlan.class);
+          } catch (Exception e) {
+            logger.warn("Failed to parse content at index {}", index);
+          }
+        }
+      } catch (Exception e) {
+        logger.warn("Failed to parse as FHIR Library");
+      }
+
+      // Attempt to parse as raw YAML
+      try {
+        return mapper.readValue(content, QueryPlan.class);
+      } catch (Exception e) {
+        logger.warn("Failed to parse as raw YAML");
+      }
+    }
+
+    // Fall back to explicitly provided query plan
+    return fhirQuery.getQueryPlans().get(queryPlanId);
+  }
+
   private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {
     for (ReportContext.MeasureContext measureContext : reportContext.getMeasureContexts()) {
       if (queryPhase == QueryPhase.INITIAL) {
@@ -410,7 +477,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
+    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService);
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
       sender.send(tenantService, submissionBundle, report, request, user);

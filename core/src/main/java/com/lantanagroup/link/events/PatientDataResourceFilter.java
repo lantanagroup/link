@@ -128,22 +128,12 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
       return;
     }
 
-    if (tenantService.getConfig().getFhirQuery() == null) {
-      logger.error("Tenant not configured for FHIR queries");
+    QueryPlan queryPlan = context.getQueryPlan();
+    if (queryPlan == null) {
+      logger.error("Query plan not found in report context");
       return;
     }
 
-    if (tenantService.getConfig().getFhirQuery().getQueryPlans() == null) {
-      logger.error("Tenant not configured for Query Plans");
-      return;
-    }
-
-    if (!tenantService.getConfig().getFhirQuery().getQueryPlans().containsKey(criteria.getQueryPlanId())) {
-      logger.error("Tenant not configured with Query Plan for {}", criteria.getQueryPlanId());
-      return;
-    }
-
-    QueryPlan queryPlan = tenantService.getConfig().getFhirQuery().getQueryPlans().get(criteria.getQueryPlanId());
     java.time.Duration lookback = java.time.Duration.parse(queryPlan.getLookback());
 
     String patientResourceId = this.getPatientResourceIdFromBundle(bundle);

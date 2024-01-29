@@ -192,8 +192,8 @@ public class Helper {
     return text;
   }
 
-  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService, ApiConfig config) {
-    FhirBundler bundler = new FhirBundler(eventService, tenantService, config);
+  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService) {
+    FhirBundler bundler = new FhirBundler(eventService, tenantService);
     logger.info("Building Bundle for MeasureReport to send...");
     List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
     Bundle bundle = bundler.generateBundle(aggregates, report);

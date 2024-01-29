@@ -22,8 +22,6 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Period;
 import java.util.*;
@@ -52,12 +50,6 @@ public class PatientData {
     this.fhirQueryServer = fhirQueryServer;
     this.criteria = criteria;
     this.context = context;
-    String planId = criteria.getQueryPlanId();
-    QueryPlan plan = fhirQuery.getQueryPlans().get(planId);
-    if (plan == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + planId);
-    }
-    context.setQueryPlan(plan);
   }
 
   public void loadInitialData(Patient patient) {

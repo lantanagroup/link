@@ -22,6 +22,7 @@ public class ReportMapper extends BaseMapper<Report> {
     model.setGeneratedTime(row.getDate("generatedTime"));
     model.setSubmittedTime(row.getDate("submittedTime"));
     model.setDeviceInfo(row.getResource("deviceInfo", Device.class));
+    model.setQueryPlan(row.getString("queryPlan"));
 
     return model;
   }
@@ -38,6 +39,7 @@ public class ReportMapper extends BaseMapper<Report> {
     parameters.addDate("generatedTime", model.getGeneratedTime());
     parameters.addDate("submittedTime", model.getSubmittedTime());
     parameters.addResource("deviceInfo", model.getDeviceInfo());
+    parameters.addString("queryPlan", model.getQueryPlan());
 
     return parameters;
   }

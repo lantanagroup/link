@@ -1,13 +1,11 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
-import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -15,7 +13,6 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -27,11 +24,8 @@ public class FhirBundler {
   private final EventService eventService;
 
   private final TenantService tenantService;
-  private final ApiConfig apiConfig;
 
   private Organization org;
-
-  private Device device;
 
   private Map<String, Resource> lineLevelResources;
 
@@ -48,10 +42,9 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(EventService eventService, TenantService tenantService, ApiConfig apiConfig) {
+  public FhirBundler(EventService eventService, TenantService tenantService) {
     this.eventService = eventService;
     this.tenantService = tenantService;
-    this.apiConfig = apiConfig;
   }
 
   private Bundling getBundlingConfig() {
@@ -68,23 +61,30 @@ public class FhirBundler {
     return this.org;
   }
 
-  private Device getDevice() {
-    if (this.device == null) {
-      this.device = FhirHelper.getDevice(apiConfig, tenantService);
-      this.device.setId(UUID.randomUUID().toString());
-      this.device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
+  private Device createDevice(Report report) {
+    if (report.getDeviceInfo() == null) {
+      return null;
     }
 
-    return this.device;
+    Device device = report.getDeviceInfo().copy();
+    device.setId(UUID.randomUUID().toString());
+    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
+
+    return device;
   }
 
   /**
-   * Creates a Library resource that contains the query plans used for the report
+   * Creates a Library resource that contains the query plan used for the report
    *
-   * @param measureIds The measure ids that were used for the report
+   * @param report The report
    * @return
    */
-  private Library createQueryPlanLibrary(List<String> measureIds) {
+  private Library createQueryPlanLibrary(Report report) {
+    String queryPlan = report.getQueryPlan();
+    if (StringUtils.isEmpty(queryPlan)) {
+      return null;
+    }
+
     Library lib = new Library();
     lib.setId(UUID.randomUUID().toString());
     lib.setStatus(Enumerations.PublicationStatus.ACTIVE);
@@ -92,24 +92,9 @@ public class FhirBundler {
             .setSystem(Constants.LibraryTypeSystem)
             .setCode(Constants.LibraryTypeModelDefinitionCode)));
     lib.setName("Link Query Plan");
-
-    // Build a subset of the query plans that were used for this report
-    Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
-    measureIds.forEach(mid -> {
-      QueryPlan queryPlan = this.tenantService.getConfig().getFhirQuery().getQueryPlans().get(mid);
-
-      if (queryPlan != null) {
-        queryPlans.put(mid, queryPlan);
-      } else {
-        logger.warn("Could not find query plan for {}", mid);
-      }
-    });
-
-    Yaml yaml = new Yaml();
-    String queryPlansYaml = yaml.dump(queryPlans);
     lib.addContent()
             .setContentType("text/yml")
-            .setData(queryPlansYaml.getBytes(StandardCharsets.UTF_8));
+            .setData(queryPlan.getBytes(StandardCharsets.UTF_8));
 
     return lib;
   }
@@ -117,12 +102,15 @@ public class FhirBundler {
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
-    bundle.addEntry().setResource(this.getDevice());
-    this.lineLevelResources = new HashMap<>();
-
-    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
-      bundle.addEntry().setResource(this.createQueryPlanLibrary(report.getMeasureIds()));
+    Device device = this.createDevice(report);
+    if (device != null) {
+      bundle.addEntry().setResource(device);
     }
+    Library library = this.createQueryPlanLibrary(report);
+    if (library != null) {
+      bundle.addEntry().setResource(library);
+    }
+    this.lineLevelResources = new HashMap<>();
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
