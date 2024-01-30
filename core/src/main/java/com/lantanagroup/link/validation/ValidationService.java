@@ -4,10 +4,11 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ValidationCategorizer;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.mappers.ValidationResultMapper;
+import com.lantanagroup.link.db.model.MetricData;
+import com.lantanagroup.link.db.model.Metrics;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -75,6 +78,24 @@ public class ValidationService {
         tenantService.insertValidationResultCategories(categorizedResults);
       }
     }
+
+    //log validation issue metrics
+    List<Metrics> metrics = new ArrayList<>();
+    Metrics metric = new Metrics();
+    metrics.add(metric);
+    String task = Constants.VALIDATION_ISSUE_TASK;
+    String category = Constants.VALIDATION_ISSUE_CATEGORY;
+    metric.setTenantId(tenantService.getConfig().getId());
+    metric.setReportId(report.getId());
+    metric.setTaskName(task);
+    metric.setCategory(category);
+    metric.setTimestamp(new Date());
+
+    MetricData data = new MetricData();
+    data.count = outcome.getIssue().size();
+    metric.setData(data);
+
+    this.sharedService.saveMetrics(metrics);
 
     return outcome;
   }
