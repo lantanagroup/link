@@ -94,14 +94,14 @@ public class MetricController extends BaseController {
 
     //calculate metrics based on period, we can assume that all categories have already been
     //filtered down based on tenant and/or report if those parameters were provided
-    MetricsReportResponse report = this.calculatePeriodMetrics(period, endDate, metrics);
+    MetricsReportResponse report = this.calculatePeriodMetrics(period, endDate, metrics, tenantId);
 
     return report;
   }
 
   //TODO: This functionality probably should be broken out into a service
 
-  private MetricsReportResponse calculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics) {
+  private MetricsReportResponse calculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics, String tenantId) {
     MetricsReportResponse report = new MetricsReportResponse();
 
     //get current period metrics
@@ -151,12 +151,18 @@ public class MetricController extends BaseController {
     EvaluationMetric evaluationTimeMetric = new EvaluationMetric();
     evaluationTimeMetric.setAverage(currentEvaluationTimeAvg);
 
+    //calculate current Validation Issues metrics
+    double currentValidationIssueAvg = calculateValidationIssueAvg(periodMetrics);
+    ValidationMetric validationIssueMetric = new ValidationMetric();
+    validationIssueMetric.setAverage(currentValidationIssueAvg);
+
     //loop back through the historical data to produce previous 10 totals/averages
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
     long[] patientsReportedHistory = new long[10];
     double[] validationTimeHistory = new double[10];
     double[] evaluationTimeHistory = new double[10];
+    double[] validationIssueHistory = new double[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
       LocalDate historicalStart;
@@ -191,6 +197,7 @@ public class MetricController extends BaseController {
       patientsReportedHistory[i-1] = calculatePatientsReported(historicalMetrics);
       validationTimeHistory[i-1] = calculateValidationTimeAvg(historicalMetrics, reportIds);
       evaluationTimeHistory[i-1] = calculateEvaluationTimeAvg(historicalMetrics, reportIds);
+      validationIssueHistory[i-1] = calculateValidationIssueAvg(historicalMetrics);
     }
 
     //add historical averages for query time
@@ -212,6 +219,10 @@ public class MetricController extends BaseController {
     //add historical averages for evaluation time
     evaluationTimeMetric.setHistory(evaluationTimeHistory);
     report.setEvaluation(evaluationTimeMetric);
+
+    //add historical averages for validation issues
+    validationIssueMetric.setHistory(validationIssueHistory);
+    report.setValidationIssues(validationIssueMetric);
 
     return report;
   }
@@ -318,6 +329,24 @@ public class MetricController extends BaseController {
     double currentEvaluationTimeAvg = (totalEvaluationTimeSpent / reportIds.size());
 
     return currentEvaluationTimeAvg;
+  }
+  private double calculateValidationIssueAvg(List<Metrics> periodMetrics) {
+    //get total patients queried in the metric period
+    double totalValidationIssues = 0;
+
+    //if no period metrics exist, return 0
+    if(!(periodMetrics.size() > 0)) {
+      return totalValidationIssues;
+    }
+
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.VALIDATION_ISSUE_CATEGORY, Constants.VALIDATION_ISSUE_TASK, periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalValidationIssues += data.count;
+    }
+
+    double validationIssueAvg = (totalValidationIssues / Integer.max(1, periodQueryMetrics.size()));
+
+    return validationIssueAvg;
   }
 
   private List<String> getUniqueReportIds(List<Metrics> metrics) {

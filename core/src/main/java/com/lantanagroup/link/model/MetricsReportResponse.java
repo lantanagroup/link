@@ -10,6 +10,7 @@ public class MetricsReportResponse {
   private PatientsQueriedMetric patientsQueried;
   private PatientsReportedMetric patientsReported;
   private ValidationMetric validation;
+  private ValidationMetric validationIssues;
   private EvaluationMetric evaluation;
 }
 
