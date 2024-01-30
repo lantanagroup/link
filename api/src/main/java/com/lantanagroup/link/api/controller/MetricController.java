@@ -250,7 +250,7 @@ public class MetricController extends BaseController {
 
     //determine query time averages
     //List<String> reportIds = GetUniqueReportIds(periodMetrics);
-    double currentQueryTimeAvg = (totalQueryTimeSpent / reportIds.size());
+    double currentQueryTimeAvg = (totalQueryTimeSpent / Integer.max(1, periodQueryMetrics.size()));
 
     return currentQueryTimeAvg;
   }
@@ -305,7 +305,7 @@ public class MetricController extends BaseController {
 
     //determine query time averages
     //List<String> reportIds = GetUniqueReportIds(periodMetrics);
-    double currentValidationTimeAvg = (totalValidationTimeSpent / reportIds.size());
+    double currentValidationTimeAvg = (totalValidationTimeSpent / Integer.max(1, periodQueryMetrics.size()));
 
     return currentValidationTimeAvg;
   }
@@ -326,10 +326,11 @@ public class MetricController extends BaseController {
 
     //determine query time averages
     //List<String> reportIds = GetUniqueReportIds(periodMetrics);
-    double currentEvaluationTimeAvg = (totalEvaluationTimeSpent / reportIds.size());
+    double currentEvaluationTimeAvg = (totalEvaluationTimeSpent / Integer.max(1, periodQueryMetrics.size()));
 
     return currentEvaluationTimeAvg;
   }
+
   private double calculateValidationIssueAvg(List<Metrics> periodMetrics) {
     //get total patients queried in the metric period
     double totalValidationIssues = 0;
