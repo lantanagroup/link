@@ -22,14 +22,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
+  private static final Map<String, ComboPooledDataSource> dataSourcesByJdbcUrl = new ConcurrentHashMap<>();
 
   @Getter
   private final Tenant config;
@@ -48,10 +47,8 @@ public class TenantService {
   private final ValidationRepository validations;
   private final ValidationCategoryRepository validationCategories;
 
-  protected TenantService(Tenant config) {
+  protected TenantService(Tenant config, ComboPooledDataSource dataSource) {
     this.config = config;
-    ComboPooledDataSource dataSource = new ComboPooledDataSource();
-    dataSource.setJdbcUrl(config.getConnectionString());
     this.dataSource = dataSource;
     PlatformTransactionManager txManager = new DataSourceTransactionManager(this.dataSource);
     this.conceptMaps = new ConceptMapRepository(this.dataSource, txManager);
@@ -69,7 +66,11 @@ public class TenantService {
   }
 
   public static TenantService create(Tenant tenant) {
-    return new TenantService(tenant);
+    return new TenantService(tenant, dataSourcesByJdbcUrl.computeIfAbsent(tenant.getConnectionString(), jdbcUrl -> {
+      ComboPooledDataSource dataSource = new ComboPooledDataSource();
+      dataSource.setJdbcUrl(jdbcUrl);
+      return dataSource;
+    }));
   }
 
   public void testConnection() throws SQLException {
@@ -98,7 +99,7 @@ public class TenantService {
       return null;
     }
 
-    return new TenantService(tenant);
+    return TenantService.create(tenant);
   }
 
   public List<PatientList> getPatientLists(String reportId) {
