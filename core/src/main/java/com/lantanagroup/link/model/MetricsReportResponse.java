@@ -12,5 +12,6 @@ public class MetricsReportResponse {
   private ValidationMetric validation;
   private ValidationMetric validationIssues;
   private EvaluationMetric evaluation;
+  private EvaluationMetric reportGeneration;
 }
 

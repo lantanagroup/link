@@ -60,4 +60,5 @@ public class Constants {
 
   public static final String VALIDATION_ISSUE_TASK = "Validation";
   public static final String VALIDATION_ISSUE_CATEGORY = "Validation Issues";
+  public static final String REPORT_GENERATION_TASK = "Report Generation";
 }

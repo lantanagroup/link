@@ -245,125 +245,127 @@ public class ReportController extends BaseController {
    * generates a response with one or multiple reports
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery) throws Exception {
-    this.checkReportingPlan(tenantService, periodStart, measureIds);
+    Report report = null;
+    try(var stopwatch = stopwatchManager.start(Constants.REPORT_GENERATION_TASK, Constants.CATEGORY_REPORT)) {
+      this.checkReportingPlan(tenantService, periodStart, measureIds);
 
-    ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
-    ReportContext reportContext = new ReportContext(request, user);
+      ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
+      ReportContext reportContext = new ReportContext(request, user);
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
-    // Get the latest measure def and update it on the FHIR storage server
-    this.resolveMeasures(criteria, reportContext);
+      // Get the latest measure def and update it on the FHIR storage server
+      this.resolveMeasures(criteria, reportContext);
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureResolution, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureResolution, criteria, reportContext);
 
-    String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
-    Report existingReport = tenantService.getReport(masterIdentifierValue);
+      String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
+      Report existingReport = tenantService.getReport(masterIdentifierValue);
 
-    // Search the reference document by measure criteria and reporting period
-    if (existingReport != null && !regenerate) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
-    }
+      // Search the reference document by measure criteria and reporting period
+      if (existingReport != null && !regenerate) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
+      }
 
-    if (existingReport != null) {
-      incrementMinorVersion(existingReport);
-    }
+      if (existingReport != null) {
+        incrementMinorVersion(existingReport);
+      }
 
-    // Generate the master report id
-    if (!regenerate || existingReport == null) {
-      // generate master report id based on the report date range and the bundles used in the report generation
-      reportContext.setMasterIdentifierValue(masterIdentifierValue);
-    } else {
-      reportContext.setMasterIdentifierValue(existingReport.getId());
-      this.eventService.triggerEvent(tenantService, EventTypes.OnRegeneration, criteria, reportContext);
-    }
+      // Generate the master report id
+      if (!regenerate || existingReport == null) {
+        // generate master report id based on the report date range and the bundles used in the report generation
+        reportContext.setMasterIdentifierValue(masterIdentifierValue);
+      } else {
+        reportContext.setMasterIdentifierValue(existingReport.getId());
+        this.eventService.triggerEvent(tenantService, EventTypes.OnRegeneration, criteria, reportContext);
+      }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
-    // Get the patient identifiers for the given date
-    this.getPatientIdentifiers(tenantService, criteria, reportContext);
+      // Get the patient identifiers for the given date
+      this.getPatientIdentifiers(tenantService, criteria, reportContext);
 
-    if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
-      String msg = "A census for the specified criteria was not found.";
-      logger.error(msg);
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
-    }
+      if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
+        String msg = "A census for the specified criteria was not found.";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
+      }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    QueryPlan queryPlan = this.getQueryPlan(tenantService.getConfig(), criteria.getQueryPlanId());
-    if (queryPlan == null) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
-    }
-    reportContext.setQueryPlan(queryPlan);
+      QueryPlan queryPlan = this.getQueryPlan(tenantService.getConfig(), criteria.getQueryPlanId());
+      if (queryPlan == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
+      }
+      reportContext.setQueryPlan(queryPlan);
 
-    Report report = new Report();
-    report.setId(masterIdentifierValue);
-    report.setPeriodStart(criteria.getPeriodStart());
-    report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(measureIds);
-    report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
-    report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
+      report = new Report();
+      report.setId(masterIdentifierValue);
+      report.setPeriodStart(criteria.getPeriodStart());
+      report.setPeriodEnd(criteria.getPeriodEnd());
+      report.setMeasureIds(measureIds);
+      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
+      report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
-    // Preserve the version of the already-existing report
-    if (existingReport != null) {
-      report.setVersion(existingReport.getVersion());
-    }
+      // Preserve the version of the already-existing report
+      if (existingReport != null) {
+        report.setVersion(existingReport.getVersion());
+      }
 
-    tenantService.saveReport(report, reportContext.getPatientLists());
+      tenantService.saveReport(report, reportContext.getPatientLists());
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
 
-    // Scoop the data for the patients and store it
-    if (config.isSkipQuery() || skipQuery) {
-      logger.info("Skipping initial query and store");
-      for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
-        if (patient.getReference() != null) {
-          patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+      // Scoop the data for the patients and store it
+      if (config.isSkipQuery() || skipQuery) {
+        logger.info("Skipping initial query and store");
+        for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
+          if (patient.getReference() != null) {
+            patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+          }
         }
+      } else {
+        logger.info("Beginning initial query and store");
+        tenantService.beginReport(masterIdentifierValue);
+        this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
       }
-    } else {
-      logger.info("Beginning initial query and store");
-      tenantService.beginReport(masterIdentifierValue);
-      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
-    }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
-    logger.info("Beginning initial measure evaluation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
+      logger.info("Beginning initial measure evaluation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
-      logger.info("Skipping supplemental query and store");
-      logger.info("Beginning aggregation");
-      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
-    } else {
-      logger.info("Beginning supplemental query and store");
-      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-      logger.info("Beginning supplemental measure evaluation and aggregation");
-      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
-    }
-
-    report.setGeneratedTime(new Date());
-    tenantService.saveReport(report);
-
-    this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
-    logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
-
-    if (validate) {
-      try {
-        this.validationService.validate(stopwatchManager, tenantService, report);
-        logger.info("Done validating report");
-      } catch (Exception ex) {
-        logger.error("Error validating report {}", report.getId(), ex);
+      if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+        logger.info("Skipping supplemental query and store");
+        logger.info("Beginning aggregation");
+        this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
+      } else {
+        logger.info("Beginning supplemental query and store");
+        this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
+        logger.info("Beginning supplemental measure evaluation and aggregation");
+        this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
       }
-    } else {
-      logger.info("Skipping validation for report {}", report.getId());
-    }
 
-    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
+      report.setGeneratedTime(new Date());
+      tenantService.saveReport(report);
+
+      this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+      logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
+
+      if (validate) {
+        try {
+          this.validationService.validate(stopwatchManager, tenantService, report);
+          logger.info("Done validating report");
+        } catch (Exception ex) {
+          logger.error("Error validating report {}", report.getId(), ex);
+        }
+      } else {
+        logger.info("Skipping validation for report {}", report.getId());
+      }
+    }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
     return report;

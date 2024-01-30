@@ -127,7 +127,7 @@ public class MetricController extends BaseController {
     List<String> reportIds = getUniqueReportIds(periodMetrics);
 
     // calculate current query time metrics, category = query
-    double currentQueryTimeAvg = calculateQueryTimeAvg(periodMetrics, reportIds);
+    double currentQueryTimeAvg = calculateQueryTimeAvg(periodMetrics);
     QueryTimeMetric queryTimeMetric = new QueryTimeMetric();
     queryTimeMetric.setAverage(currentQueryTimeAvg);
 
@@ -142,12 +142,12 @@ public class MetricController extends BaseController {
     patientsReportedMetric.setTotal(currentTotalPatientsReported);
 
     // calculate current validation metrics
-    double currentValidationTimeAvg = calculateValidationTimeAvg(periodMetrics, reportIds);
+    double currentValidationTimeAvg = calculateValidationTimeAvg(periodMetrics);
     ValidationMetric validationTimeMetric = new ValidationMetric();
     validationTimeMetric.setAverage(currentValidationTimeAvg);
 
     // calculate current evaluation metrics
-    double currentEvaluationTimeAvg = calculateEvaluationTimeAvg(periodMetrics, reportIds);
+    double currentEvaluationTimeAvg = calculateEvaluationTimeAvg(periodMetrics);
     EvaluationMetric evaluationTimeMetric = new EvaluationMetric();
     evaluationTimeMetric.setAverage(currentEvaluationTimeAvg);
 
@@ -156,6 +156,11 @@ public class MetricController extends BaseController {
     ValidationMetric validationIssueMetric = new ValidationMetric();
     validationIssueMetric.setAverage(currentValidationIssueAvg);
 
+    // calculate current report generation metrics
+    double currentReportTimeAvg = calculateReportGenerationTimeAvg(periodMetrics);
+    EvaluationMetric reportGenMetric = new EvaluationMetric();
+    reportGenMetric.setAverage(currentReportTimeAvg);
+
     //loop back through the historical data to produce previous 10 totals/averages
     double[] queryTimeHistory = new double[10];
     long[] patientsQueriedHistory = new long[10];
@@ -163,6 +168,7 @@ public class MetricController extends BaseController {
     double[] validationTimeHistory = new double[10];
     double[] evaluationTimeHistory = new double[10];
     double[] validationIssueHistory = new double[10];
+    double[] reportGenerationHistory = new double[10];
     for (int i = 1; i <= 10; i++) {
       //get historical period
       LocalDate historicalStart;
@@ -189,15 +195,15 @@ public class MetricController extends BaseController {
           throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid report period for metrics report.");
       }
       List<Metrics> historicalMetrics = getPeriodMetrics(historicalStart, historicalEnd, metrics);
-      reportIds = getUniqueReportIds(historicalMetrics);
 
       //Calculate historical metrics
-      queryTimeHistory[i-1] = calculateQueryTimeAvg(historicalMetrics, reportIds);
+      queryTimeHistory[i-1] = calculateQueryTimeAvg(historicalMetrics);
       patientsQueriedHistory[i-1] = calculatePatientsQueried(historicalMetrics);
       patientsReportedHistory[i-1] = calculatePatientsReported(historicalMetrics);
-      validationTimeHistory[i-1] = calculateValidationTimeAvg(historicalMetrics, reportIds);
-      evaluationTimeHistory[i-1] = calculateEvaluationTimeAvg(historicalMetrics, reportIds);
+      validationTimeHistory[i-1] = calculateValidationTimeAvg(historicalMetrics);
+      evaluationTimeHistory[i-1] = calculateEvaluationTimeAvg(historicalMetrics);
       validationIssueHistory[i-1] = calculateValidationIssueAvg(historicalMetrics);
+      reportGenerationHistory[i-1] = calculateReportGenerationTimeAvg(historicalMetrics);
     }
 
     //add historical averages for query time
@@ -224,6 +230,10 @@ public class MetricController extends BaseController {
     validationIssueMetric.setHistory(validationIssueHistory);
     report.setValidationIssues(validationIssueMetric);
 
+    //add historical averages for validation issues
+    reportGenMetric.setHistory(reportGenerationHistory);
+    report.setReportGeneration(reportGenMetric);
+
     return report;
   }
 
@@ -234,7 +244,7 @@ public class MetricController extends BaseController {
             .collect(Collectors.toList());
   }
 
-  private double calculateQueryTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateQueryTimeAvg(List<Metrics> periodMetrics) {
     //get total query time spent in the metric period
     double totalQueryTimeSpent = 0;
 
@@ -289,7 +299,7 @@ public class MetricController extends BaseController {
     return totalPatientsReported;
   }
 
-  private double calculateValidationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateValidationTimeAvg(List<Metrics> periodMetrics) {
     //get total patients queried in the metric period
     double totalValidationTimeSpent = 0;
 
@@ -310,7 +320,7 @@ public class MetricController extends BaseController {
     return currentValidationTimeAvg;
   }
 
-  private double calculateEvaluationTimeAvg(List<Metrics> periodMetrics, List<String> reportIds) {
+  private double calculateEvaluationTimeAvg(List<Metrics> periodMetrics) {
     //get total patients queried in the metric period
     double totalEvaluationTimeSpent = 0;
 
@@ -348,6 +358,23 @@ public class MetricController extends BaseController {
     double validationIssueAvg = (totalValidationIssues / Integer.max(1, periodQueryMetrics.size()));
 
     return validationIssueAvg;
+  }
+
+  private double calculateReportGenerationTimeAvg(List<Metrics> periodMetrics) {
+    double totalReportGenTimeSpent = 0;
+
+    if(!(periodMetrics.size() > 0)) {
+      return totalReportGenTimeSpent;
+    }
+
+    List<MetricData> periodQueryMetrics = getPeriodMetricData(Constants.CATEGORY_REPORT, Constants.REPORT_GENERATION_TASK, periodMetrics);
+    for(MetricData data: periodQueryMetrics) {
+      totalReportGenTimeSpent += data.duration;
+    }
+
+    double currentReportGenTimeAvg = (totalReportGenTimeSpent / Integer.max(1, periodQueryMetrics.size()));
+
+    return currentReportGenTimeAvg;
   }
 
   private List<String> getUniqueReportIds(List<Metrics> metrics) {
