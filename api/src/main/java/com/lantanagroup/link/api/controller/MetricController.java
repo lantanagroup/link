@@ -94,14 +94,14 @@ public class MetricController extends BaseController {
 
     //calculate metrics based on period, we can assume that all categories have already been
     //filtered down based on tenant and/or report if those parameters were provided
-    MetricsReportResponse report = this.calculatePeriodMetrics(period, endDate, metrics, tenantId);
+    MetricsReportResponse report = this.calculatePeriodMetrics(period, endDate, metrics);
 
     return report;
   }
 
   //TODO: This functionality probably should be broken out into a service
 
-  private MetricsReportResponse calculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics, String tenantId) {
+  private MetricsReportResponse calculatePeriodMetrics(String period, LocalDate end, List<Metrics> metrics) {
     MetricsReportResponse report = new MetricsReportResponse();
 
     //get current period metrics
