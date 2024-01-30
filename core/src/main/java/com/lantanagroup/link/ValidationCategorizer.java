@@ -93,7 +93,7 @@ public class ValidationCategorizer {
           // using a simplified version of the title of the category to associate categorized results to categories. This
           // way, if the shared db's categories changes, it won't inadvertently change the category of previously categorized
           // results. This is a bit of a hack, but it works.
-          validationResultCategory.setCategoryCode(category.getTitle().replaceAll("[^a-zA-Z0-9]", "_"));
+          validationResultCategory.setCategoryCode(category.getId());
           resultCategories.add(validationResultCategory);
         }
       }
