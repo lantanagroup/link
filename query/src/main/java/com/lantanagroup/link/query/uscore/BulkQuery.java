@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -243,8 +244,13 @@ public class BulkQuery {
               if(entry.getResource() instanceof Patient){
                 Patient patient = (Patient)entry.getResource();
                 PatientId patientId = new PatientId();
-                patientId.setIdentifier(patient.getId());
-                patientId.setReference(patient.getIdentifier().stream().findFirst().get().getSystem() + "|" + patient.getIdentifier().stream().findFirst().get().getValue());
+                patientId.setReference(patient.getIdElement().toUnqualifiedVersionless().getValue());
+                Identifier identifier = patient.getIdentifierFirstRep();
+                if (identifier != null && identifier.hasValue()) {
+                  patientId.setIdentifier(identifier.hasSystem()
+                          ? String.format("%s|%s", identifier.getSystem(), identifier.getValue())
+                          : identifier.getValue());
+                }
                 patientList.getPatients().add(patientId);
               }
             });
