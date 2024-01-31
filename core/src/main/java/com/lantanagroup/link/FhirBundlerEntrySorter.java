@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FhirBundlerEntrySorter {
   private static final Logger logger = LoggerFactory.getLogger(FhirBundlerEntrySorter.class);
@@ -56,25 +57,24 @@ public class FhirBundlerEntrySorter {
     for (String patientId : fhirBundleProcessor.getPatientIds()) {
       logger.debug("Adding patient resources: {}", patientId);
       List<Bundle.BundleEntryComponent> relatedPatientResources = patientResources.get(patientId);
-      Bundle.BundleEntryComponent indMeasureReport = relatedPatientResources.stream()
+      List<Bundle.BundleEntryComponent> indMeasureReports = relatedPatientResources.stream()
               .filter(r -> r.getResource().getResourceType().equals(ResourceType.MeasureReport))
-              .findFirst()
-              .orElse(null);
-      Bundle.BundleEntryComponent patient = relatedPatientResources.stream()
+              .sorted(new ResourceComparator())
+              .collect(Collectors.toList());
+      List<Bundle.BundleEntryComponent> patients = relatedPatientResources.stream()
               .filter(r -> r.getResource().getResourceType().equals(ResourceType.Patient))
-              .findFirst()
-              .orElse(null);
+              .sorted(new ResourceComparator())
+              .collect(Collectors.toList());
 
-      if (indMeasureReport == null || patient == null) {
+      if (indMeasureReports.isEmpty() || patients.isEmpty()) {
         logger.warn("Patient {} is missing a MeasureReport or Patient resource", patientId);
-        continue;
       }
 
       // Individual MeasureReport is next
-      newEntriesList.add(indMeasureReport);
+      newEntriesList.addAll(indMeasureReports);
 
       // Patient is next
-      newEntriesList.add(patient);
+      newEntriesList.addAll(patients);
 
       // All other resources are next, sorted by resourceType/id
       relatedPatientResources.stream()
