@@ -1,13 +1,11 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
-import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -15,7 +13,6 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -27,11 +24,10 @@ public class FhirBundler {
   private final EventService eventService;
 
   private final TenantService tenantService;
-  private final ApiConfig apiConfig;
 
   private Organization org;
 
-  private Device device;
+  private Map<String, Resource> lineLevelResources;
 
   private final List<String> REMOVE_EXTENSIONS = List.of(
           "http://hl7.org/fhir/5.0/StructureDefinition/extension-MeasureReport.population.description",
@@ -46,10 +42,9 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(EventService eventService, TenantService tenantService, ApiConfig apiConfig) {
+  public FhirBundler(EventService eventService, TenantService tenantService) {
     this.eventService = eventService;
     this.tenantService = tenantService;
-    this.apiConfig = apiConfig;
   }
 
   private Bundling getBundlingConfig() {
@@ -66,23 +61,30 @@ public class FhirBundler {
     return this.org;
   }
 
-  private Device getDevice() {
-    if (this.device == null) {
-      this.device = FhirHelper.getDevice(apiConfig, tenantService);
-      this.device.setId(UUID.randomUUID().toString());
-      this.device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
+  private Device createDevice(Report report) {
+    if (report.getDeviceInfo() == null) {
+      return null;
     }
 
-    return this.device;
+    Device device = report.getDeviceInfo().copy();
+    device.setId(UUID.randomUUID().toString());
+    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
+
+    return device;
   }
 
   /**
-   * Creates a Library resource that contains the query plans used for the report
+   * Creates a Library resource that contains the query plan used for the report
    *
-   * @param measureIds The measure ids that were used for the report
+   * @param report The report
    * @return
    */
-  private Library createQueryPlanLibrary(List<String> measureIds) {
+  private Library createQueryPlanLibrary(Report report) {
+    String queryPlan = report.getQueryPlan();
+    if (StringUtils.isEmpty(queryPlan)) {
+      return null;
+    }
+
     Library lib = new Library();
     lib.setId(UUID.randomUUID().toString());
     lib.setStatus(Enumerations.PublicationStatus.ACTIVE);
@@ -90,24 +92,9 @@ public class FhirBundler {
             .setSystem(Constants.LibraryTypeSystem)
             .setCode(Constants.LibraryTypeModelDefinitionCode)));
     lib.setName("Link Query Plan");
-
-    // Build a subset of the query plans that were used for this report
-    Dictionary<String, QueryPlan> queryPlans = new Hashtable<>();
-    measureIds.forEach(mid -> {
-      QueryPlan queryPlan = this.tenantService.getConfig().getFhirQuery().getQueryPlans().get(mid);
-
-      if (queryPlan != null) {
-        queryPlans.put(mid, queryPlan);
-      } else {
-        logger.warn("Could not find query plan for {}", mid);
-      }
-    });
-
-    Yaml yaml = new Yaml();
-    String queryPlansYaml = yaml.dump(queryPlans);
     lib.addContent()
             .setContentType("text/yml")
-            .setData(queryPlansYaml.getBytes(StandardCharsets.UTF_8));
+            .setData(queryPlan.getBytes(StandardCharsets.UTF_8));
 
     return lib;
   }
@@ -115,11 +102,15 @@ public class FhirBundler {
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
-    bundle.addEntry().setResource(this.getDevice());
-
-    if (this.tenantService.getConfig().getBundling().isIncludesQueryPlans() && report.getMeasureIds() != null) {
-      bundle.addEntry().setResource(this.createQueryPlanLibrary(report.getMeasureIds()));
+    Device device = this.createDevice(report);
+    if (device != null) {
+      bundle.addEntry().setResource(device);
     }
+    Library library = this.createQueryPlanLibrary(report);
+    if (library != null) {
+      bundle.addEntry().setResource(library);
+    }
+    this.lineLevelResources = new HashMap<>();
 
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
@@ -250,28 +241,19 @@ public class FhirBundler {
       DomainResource domainResource = (DomainResource) resource;
 
       // Remove extensions from resources
-      domainResource.getExtension().stream()
-              .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
-              .collect(Collectors.toList())
-              .forEach(re -> domainResource.getExtension().remove(re));
+      domainResource.getExtension().removeIf(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()));
 
       // Remove extensions from group/populations of MeasureReports
       if (resource instanceof MeasureReport) {
         MeasureReport measureReport = (MeasureReport) resource;
         measureReport.getGroup().forEach(g -> {
           g.getPopulation().forEach(p -> {
-            p.getExtension().stream()
-                    .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
-                    .collect(Collectors.toList())
-                    .forEach(re -> p.getExtension().remove(re));
+            p.getExtension().removeIf(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()));
           });
         });
 
         measureReport.getEvaluatedResource().forEach(er -> {
-          er.getExtension().stream()
-                  .filter(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()))
-                  .collect(Collectors.toList())
-                  .forEach(re -> er.getExtension().remove(re));
+          er.getExtension().removeIf(e -> e.getUrl() != null && REMOVE_EXTENSIONS.contains(e.getUrl()));
         });
       }
     }
@@ -410,21 +392,17 @@ public class FhirBundler {
       return;
     }
 
-    // Get all individual measure reports in the DB for the report and filter them
-    // based on the aggregate
-    List<PatientMeasureReport> allIndMeasureReports =
-            this.tenantService.getPatientMeasureReports(aggregate.getReportId(), aggregate.getMeasureId());
-    List<PatientMeasureReport> indMeasureReports = allIndMeasureReports
-            .stream().filter(imr -> {
-              String imrId = imr.getMeasureReport().getIdElement().getIdPart();
-              return subjectList.getEntry().stream().anyMatch(e ->
-                      e.getItem() != null &&
-                              e.getItem().getReference() != null &&
-                              e.getItem().getReference().equalsIgnoreCase("MeasureReport/" + imrId));
-            })
-            .collect(Collectors.toList());
-
-    for (PatientMeasureReport patientMeasureReport : indMeasureReports) {
+    for (ListResource.ListEntryComponent subject : subjectList.getEntry()) {
+      String patientMeasureReportId = subject.getItem().getReferenceElement().getIdPart();
+      if (patientMeasureReportId == null) {
+        logger.warn("Found null ID in subject list");
+        continue;
+      }
+      PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(patientMeasureReportId);
+      if (patientMeasureReport == null) {
+        logger.warn("Patient measure report not found in database: {}", patientMeasureReportId);
+        continue;
+      }
       MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
       individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
       this.addIndividualMeasureReport(bundle, individualMeasureReport);
@@ -471,25 +449,29 @@ public class FhirBundler {
 
       for (int i = 0; i < individualMeasureReport.getContained().size(); i++) {
         Resource contained = individualMeasureReport.getContained().get(i);
-        String containedId = contained.getIdElement().getIdPart().replace("#", "");
-        Optional<Bundle.BundleEntryComponent> found = bundle.getEntry().stream()
-                .filter(e ->
-                        e.getResource().getResourceType() == contained.getResourceType() &&
-                                e.getResource().getIdElement().getIdPart().equals(contained.getIdElement().getIdPart()))
-                .findFirst();
+        String lineLevelResourceId = getNonLocalId(contained);
+        Resource found = this.lineLevelResources.get(lineLevelResourceId);
 
-        if (found.isEmpty()) {
+        if (found == null) {
           bundle.addEntry().setResource(contained);
+          this.lineLevelResources.put(lineLevelResourceId, contained);
         } else {
-          if (!found.get().getResource().equalsDeep(contained)) {
-            logger.error("Need to change the id of {}/{} because another resource has already been promoted with the same ID that is not the same", contained.getResourceType(), contained.getIdElement().getIdPart());
-          } else {
-            logger.debug("Resource {}/{} already has a copy that has been promoted. Not promoting/replacing.", contained.getResourceType(), contained.getIdElement().getIdPart());
+          Resource foundClone = found.copy().setMeta(null);
+          Resource containedClone = contained.copy().setMeta(null);
+          if (!foundClone.equalsDeep(containedClone)) {
+            logger.warn("Previously promoted resource {} is not equivalent", lineLevelResourceId);
+          }
+          for (CanonicalType profile : contained.getMeta().getProfile()) {
+            String value = profile.getValue();
+            if (!found.getMeta().hasProfile(value)) {
+              logger.debug("Adding profile {} to previously promoted resource {}", value, lineLevelResourceId);
+              found.getMeta().addProfile(value);
+            }
           }
         }
 
-        String oldReference = "#" + containedId;
-        String newReference = contained.getResourceType() + "/" + containedId;
+        String oldReference = "#" + getIdPart(contained);
+        String newReference = lineLevelResourceId;
         references.stream()
                 .filter(r -> r.getReference() != null && r.getReference().equals(oldReference))
                 .forEach(r -> r.setReference(newReference));

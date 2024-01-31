@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ToastService } from 'src/app/services/toast.service';
+import { ToastService } from 'src/services/toasts/toast.service';
 import { ToastData } from '../interfaces/toast.model';
 
 @Component({

@@ -214,7 +214,7 @@ public class PatientScoop {
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 
-        Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(poi.getId()));
+        Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
         PatientData patientData = null;
 
         try {
@@ -263,7 +263,7 @@ public class PatientScoop {
         // store data
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_STORE_PATIENT_DATA, Constants.CATEGORY_QUERY)) {
-          this.tenantService.savePatientData(dbPatientData);
+          this.tenantService.savePatientData(context.getMasterIdentifierValue(), dbPatientData);
         }
       } else {
         logger.info("Not storing patient data bundle");

@@ -1,11 +1,6 @@
 /* base/_form.scss */
 
-@import 
-  '../../../node_modules/bootstrap/scss/functions',
-  '../../../node_modules/bootstrap/scss/variables',
-  '../../../node_modules/bootstrap/scss/mixins',
-  '../../../node_modules/bootstrap/scss/utilities';
-
+@import '../customize-bootstrap.scss';
 
 // Layout/groups
 
@@ -39,14 +34,23 @@ label {
 }
 
 .label {
-  &__radio {
-    @include body-font-xs();
+  &__radio,
+  &__checkbox {
     align-items: center;
     color: $gray-800;
     cursor: pointer;
     display: flex;
     text-transform: none;
     width: 100%;
+  }
+
+  &__radio {
+    @include body-font-xs();
+  }
+
+  &__checkbox {
+    @include body-font-sm();
+    font-weight: $font-weight-normal;
   }
 
   &__lg {
@@ -76,12 +80,17 @@ textarea,
 select {
   border: 2px solid $gray-400;
   border-radius: 2px;
+  letter-spacing: 0.02em;
   padding: 0.25rem 0.5rem;
   width: 100%;
 
   &.input--lg {
     border-width: 1px;
-    padding: 0.75rem 0.5rem;
+    padding: 0.9375rem 0.5rem;
+  }
+
+  &.ng-invalid.ng-touched {
+    border-color: $red;
   }
 
   &:focus-visible,
@@ -91,6 +100,11 @@ select {
     outline-width: 2px;
     outline-offset: 2px;
   }
+
+  &::placeholder,
+  &:disabled {
+    color: $gray-400;
+  }
 }
 
 select {
@@ -99,15 +113,20 @@ select {
   background: url('../../assets/icons/chevron-down.svg') no-repeat calc(100% - 0.5rem) calc(100% - 0.5rem);
   background-size: 1rem auto;
   height: 2.25rem;
+  padding-right: 2rem;
 }
 
 textarea {
-  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.125rem) calc(100% - 0.25rem);
+  -ms-overflow-style: none;
+  background: url('../../assets/icons/edit.svg') no-repeat calc(100% - 0.25rem) calc(100% - 0.25rem);
   background-size: 1rem auto;
   min-height: 6rem;
   overflow-y: scroll;
   position: relative;
   resize: none !important;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 input[type='radio'] {
@@ -143,6 +162,43 @@ input[type='radio'] {
 
     &::after {
       transform: scale(0.625);
+    }
+  }
+}
+
+input[type='checkbox'] {
+  display: none;
+
+  + span {
+    background: transparent;
+    border: 0.125rem solid $blue;
+    border-radius: 0.125rem;
+    display: block;
+    height: 1.5rem;
+    margin-right: 1rem;
+    min-width: 1.5rem;
+    position: relative;
+    transition: $transition-base;
+    width: 1.5rem;
+
+    &::after {
+      background: url('../../assets/icons/check.svg') no-repeat center center;
+      content: '';
+      display: none;
+      height: 1.5rem;
+      left: -0.125rem;
+      position: absolute;
+      top: -0.125rem;
+      transform-origin: center center;
+      width: 1.5rem;
+    }
+  }
+
+  &:checked + span {
+    background: $blue-500;
+
+    &::after {
+      display: block;
     }
   }
 }

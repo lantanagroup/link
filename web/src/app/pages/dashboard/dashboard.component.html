@@ -5,8 +5,8 @@
   <app-section-heading
     [level]=2
     class="mb-4"
-    headingClasses="h3 text-white"
-    heading="System Performance"
+    headingClasses="h3 u-text-offwhite"
+    heading="System Performance Overview"
   >
     <app-button
       variant="outline--reverse"
@@ -19,7 +19,7 @@
   </app-section-heading>
 
   <div class="row">
-		<div class="col col-md-6 col-lg-3" *ngFor="let card of recentActivityData">
+		<div class="col col-md-6 col-lg-4" *ngFor="let card of metricCards">
 			<app-card 
 				[title]="card.name"
 				variant="alt"
@@ -27,11 +27,11 @@
 				[hasBorder]=true
 			>
 				<app-metric 
-					[mainValue]="card.highlight"
 					[subText]="card.subText"
-					[changeValue]="card.changeValue"
-					[isValueUp]="card.direction === 'up' ? true : false"
-					[data]="card.series"
+					[changeWindow]="card.changeWindow"
+					[isUpGood]="card.upGood"
+					[toTimestamp]="card.toTimestamp"
+					[metricData]="card.metricData"
 				/>
 			</app-card>
 		</div>
@@ -39,7 +39,7 @@
 </app-hero>
 
 <app-section>
-	<div class="container">
+	<div class="container dashboard-tables">
 
 		<app-section-heading
 			heading="Recent Activity"
@@ -56,48 +56,42 @@
 		</app-section-heading>
 
 		<div class="row">
-			<div class="col col-md-6 col-lg-4">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="completedDtOptions">
 				<app-card
 					title="Successful Submissions"
 					status="success"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-						<app-table 
-							[dtOptions]="completedDtOptions" 
-							variant="simple"
-						/>
-					</div>
+					<app-table 
+						[dtOptions]="completedDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
 
-			<div class="col col-md-6 col-lg-4">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="failedDtOptions">
 				<app-card
 					title="Failed Submissions"
 					status="failure"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-						<app-table 
-							[dtOptions]="failedDtOptions" 
-							variant="simple"
-						/>
-					</div>
+					<app-table 
+						[dtOptions]="failedDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
 
-			<div class="col col-md-6 col-lg-4">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="pendingDtOptions">
 				<app-card
 					title="Submissions In Progress"
 					status="inProgress"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
 					<app-table 
 						[dtOptions]="pendingDtOptions" 
 						variant="simple"
 					/>
-				</div>
 				</app-card>
 			</div>
 

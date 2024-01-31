@@ -67,6 +67,14 @@ $link-color: $blue-500;
 $link-decoration: none;
 $link-hover-color: $blue-700;
 
+$font-weight-lighter:         200;
+$font-weight-light:           300;
+$font-weight-normal:          400;
+$font-weight-medium:          500;
+$font-weight-semibold:        600;
+$font-weight-bold:            700;
+$font-weight-bolder:          800;
+
 // * Mixins //
 @mixin body-font() {
   font-family: $font-family-sans-serif;
@@ -90,7 +98,8 @@ $link-hover-color: $blue-700;
 
 @mixin body-font-lg() {
   @include body-font();
-  font-size: 1.125em;
+  font-size: 1.0625em;
+  letter-spacing: 0.04em;
   line-height: 1.5em;
 }
 
@@ -112,6 +121,7 @@ $link-hover-color: $blue-700;
   font-size: $h2-font-size;
   font-weight: $font-weight-bold;
   letter-spacing: 0.05em;
+  line-height: 1.4em;
 }
 
 @mixin subheading-01() {
@@ -161,6 +171,8 @@ $link-hover-color: $blue-700;
 // Layout
 /****************/
 
+$spacer: 1rem;
+
 $grid-gutter-width: 1.25rem;
 $container-padding-x: calc(3 * #{$grid-gutter-width});
 
@@ -192,8 +204,8 @@ $box-shadow-sm: 0 0.0625rem 0.25rem 0 rgba($black, 0.25);
 // Toast Notification
 /****************/
 
-$toast-font-size: 0.75rem;
-$toast-color: $blue-700;
+$toast-font-size: 1rem;
+$toast-color: $gray-800;
 $toast-background-color: $white;
 $toast-border-color: $gray-100;
 $toast-border-radius: 0.25rem;
@@ -201,3 +213,9 @@ $toast-box-shadow: $box-shadow-sm;
 $toast-header-color: $black;
 $toast-header-border-color: $white;
 $toast-header-border-color: $gray-100;
+
+/****************/
+// Other
+/****************/
+
+$transition-base: 0.3s ease-in-out all;

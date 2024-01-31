@@ -70,6 +70,16 @@ bootstrapApplication(AppComponent, {
         canActivate: ['AuthGuard']
       },
       {
+        path: 'profile/update-password',
+        loadComponent: () => import('./app/pages/profile/update-password/update-password.component').then(m => m.UpdatePasswordComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
+        path: 'profile/edit-profile',
+        loadComponent: () => import('./app/pages/profile/edit-profile/edit-profile.component').then(m => m.EditProfileComponent),
+        canActivate: ['AuthGuard']
+      },
+      {
         path: 'system-performance',
         loadComponent: () => import('./app/pages/system-performance/system-performance.component').then(m => m.SystemPerformanceComponent),
         canActivate: ['AuthGuard']

@@ -1,11 +1,17 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.rest.api.EncodingEnum;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.FhirQuery;
+import com.lantanagroup.link.db.model.tenant.QueryPlan;
+import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -19,8 +25,10 @@ import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Library;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
@@ -37,6 +45,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
@@ -156,7 +166,7 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
   }
 
   /**
@@ -174,7 +184,8 @@ public class ReportController extends BaseController {
           @RequestParam String periodEnd,
           @PathVariable String tenantId,
           @RequestParam boolean regenerate,
-          @RequestParam(defaultValue = "true") boolean validate)
+          @RequestParam(defaultValue = "true") boolean validate,
+          @RequestParam(defaultValue = "false") boolean skipQuery)
           throws Exception {
     List<String> singleMeasureBundleIds;
 
@@ -195,7 +206,7 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
@@ -233,121 +244,181 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate) throws Exception {
-    this.checkReportingPlan(tenantService, periodStart, measureIds);
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery) throws Exception {
+    Report report = null;
+    try(var stopwatch = stopwatchManager.start(Constants.REPORT_GENERATION_TASK, Constants.CATEGORY_REPORT)) {
+      this.checkReportingPlan(tenantService, periodStart, measureIds);
 
-    ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
-    ReportContext reportContext = new ReportContext(request, user);
+      ReportCriteria criteria = new ReportCriteria(packageId, measureIds, periodStart, periodEnd);
+      ReportContext reportContext = new ReportContext(request, user);
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforeMeasureResolution, criteria, reportContext);
 
-    // Get the latest measure def and update it on the FHIR storage server
-    this.resolveMeasures(criteria, reportContext);
+      // Get the latest measure def and update it on the FHIR storage server
+      this.resolveMeasures(criteria, reportContext);
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureResolution, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterMeasureResolution, criteria, reportContext);
 
-    String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
-    Report existingReport = tenantService.getReport(masterIdentifierValue);
+      String masterIdentifierValue = ReportIdHelper.getMasterIdentifierValue(criteria);
+      Report existingReport = tenantService.getReport(masterIdentifierValue);
 
-    // Search the reference document by measure criteria and reporting period
-    if (existingReport != null && !regenerate) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
-    }
+      // Search the reference document by measure criteria and reporting period
+      if (existingReport != null && !regenerate) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "A report has already been generated for the specified measure and reporting period. To regenerate the report, submit your request with regenerate=true.");
+      }
 
-    if (existingReport != null) {
-      incrementMinorVersion(existingReport);
-    }
+      if (existingReport != null) {
+        incrementMinorVersion(existingReport);
+      }
 
-    // Generate the master report id
-    if (!regenerate || existingReport == null) {
-      // generate master report id based on the report date range and the bundles used in the report generation
-      reportContext.setMasterIdentifierValue(masterIdentifierValue);
-    } else {
-      reportContext.setMasterIdentifierValue(existingReport.getId());
-      this.eventService.triggerEvent(tenantService, EventTypes.OnRegeneration, criteria, reportContext);
-    }
+      // Generate the master report id
+      if (!regenerate || existingReport == null) {
+        // generate master report id based on the report date range and the bundles used in the report generation
+        reportContext.setMasterIdentifierValue(masterIdentifierValue);
+      } else {
+        reportContext.setMasterIdentifierValue(existingReport.getId());
+        this.eventService.triggerEvent(tenantService, EventTypes.OnRegeneration, criteria, reportContext);
+      }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
-    // Get the patient identifiers for the given date
-    this.getPatientIdentifiers(tenantService, criteria, reportContext);
+      // Get the patient identifiers for the given date
+      this.getPatientIdentifiers(tenantService, criteria, reportContext);
 
-    if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
-      String msg = "A census for the specified criteria was not found.";
-      logger.error(msg);
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
-    }
+      if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
+        String msg = "A census for the specified criteria was not found.";
+        logger.error(msg);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
+      }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientOfInterestLookup, criteria, reportContext);
 
-    Report report = new Report();
-    report.setId(masterIdentifierValue);
-    report.setPeriodStart(criteria.getPeriodStart());
-    report.setPeriodEnd(criteria.getPeriodEnd());
-    report.setMeasureIds(measureIds);
-    report.setDeviceInfo(FhirHelper.getDevice(this.config));
+      QueryPlan queryPlan = this.getQueryPlan(tenantService.getConfig(), criteria.getQueryPlanId());
+      if (queryPlan == null) {
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
+      }
+      reportContext.setQueryPlan(queryPlan);
 
-    // Preserve the version of the already-existing report
-    if (existingReport != null) {
-      report.setVersion(existingReport.getVersion());
-    }
+      report = new Report();
+      report.setId(masterIdentifierValue);
+      report.setPeriodStart(criteria.getPeriodStart());
+      report.setPeriodEnd(criteria.getPeriodEnd());
+      report.setMeasureIds(measureIds);
+      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
+      report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
-    tenantService.saveReport(report, reportContext.getPatientLists());
+      // Preserve the version of the already-existing report
+      if (existingReport != null) {
+        report.setVersion(existingReport.getVersion());
+      }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
+      tenantService.saveReport(report, reportContext.getPatientLists());
 
-    // Scoop the data for the patients and store it
-    if (config.isSkipQuery()) {
-      logger.info("Skipping query and store");
-      for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
-        if (patient.getReference() != null) {
-          patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+      this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
+
+      // Scoop the data for the patients and store it
+      if (config.isSkipQuery() || skipQuery) {
+        logger.info("Skipping initial query and store");
+        for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
+          if (patient.getReference() != null) {
+            patient.setId(patient.getReference().replaceAll("^Patient/", ""));
+          }
         }
+      } else {
+        logger.info("Beginning initial query and store");
+        tenantService.beginReport(masterIdentifierValue);
+        this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
       }
-    } else {
-      logger.info("Beginning initial query and store");
-      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
-    }
 
-    this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
+      this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
-    logger.info("Beginning initial measure evaluation");
-    this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
+      logger.info("Beginning initial measure evaluation");
+      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
-    if (CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
-      logger.info("No supplemental query plan; skipping supplemental query and store");
-      logger.info("Beginning aggregation");
-      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
-    } else {
-      logger.info("Beginning supplemental query and store");
-      this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-      logger.info("Beginning supplemental measure evaluation and aggregation");
-      this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
-    }
-
-    report.setGeneratedTime(new Date());
-    tenantService.saveReport(report);
-
-    this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
-    logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
-
-    if (validate) {
-      try {
-        this.validationService.validate(stopwatchManager, tenantService, report);
-        logger.info("Done validating report");
-      } catch (Exception ex) {
-        logger.error("Error validating report {}", report.getId(), ex);
+      if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
+        logger.info("Skipping supplemental query and store");
+        logger.info("Beginning aggregation");
+        this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
+      } else {
+        logger.info("Beginning supplemental query and store");
+        this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
+        logger.info("Beginning supplemental measure evaluation and aggregation");
+        this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
       }
-    } else {
-      logger.info("Skipping validation for report {}", report.getId());
-    }
 
-    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
+      report.setGeneratedTime(new Date());
+      tenantService.saveReport(report);
+
+      this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
+      logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
+
+      if (validate) {
+        try {
+          this.validationService.validate(stopwatchManager, tenantService, report);
+          logger.info("Done validating report");
+        } catch (Exception ex) {
+          logger.error("Error validating report {}", report.getId(), ex);
+        }
+      } else {
+        logger.info("Skipping validation for report {}", report.getId());
+      }
+    }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
     return report;
+  }
+
+  private QueryPlan getQueryPlan(Tenant tenant, String queryPlanId) {
+    FhirQuery fhirQuery = tenant.getFhirQuery();
+    if (fhirQuery == null) {
+      return null;
+    }
+
+    // Attempt to retrieve from URL
+    String url = fhirQuery.getQueryPlanUrls().get(queryPlanId);
+    String content = null;
+    if (url != null) {
+      logger.info("Retrieving query plan: {}", url);
+      try {
+        content = IOUtils.toString(new URL(url), StandardCharsets.UTF_8);
+      } catch (IOException e) {
+        logger.error("Failed to retrieve query plan", e);
+      }
+    }
+
+    if (content != null) {
+      YAMLMapper mapper = new YAMLMapper();
+
+      // Attempt to parse as FHIR Library
+      try {
+        EncodingEnum encoding = EncodingEnum.detectEncoding(content);
+        IParser parser = encoding.newParser(FhirContextProvider.getFhirContext());
+        Library library = parser.parseResource(Library.class, content);
+        for (int index = 0; index < library.getContent().size(); index++) {
+          byte[] data = library.getContent().get(index).getData();
+          try {
+            return mapper.readValue(data, QueryPlan.class);
+          } catch (Exception e) {
+            logger.warn("Failed to parse content at index {}", index);
+          }
+        }
+      } catch (Exception e) {
+        logger.warn("Failed to parse as FHIR Library");
+      }
+
+      // Attempt to parse as raw YAML
+      try {
+        return mapper.readValue(content, QueryPlan.class);
+      } catch (Exception e) {
+        logger.warn("Failed to parse as raw YAML");
+      }
+    }
+
+    // Fall back to explicitly provided query plan
+    return fhirQuery.getQueryPlans().get(queryPlanId);
   }
 
   private void evaluateMeasures(TenantService tenantService, ReportCriteria criteria, ReportContext reportContext, Report report, QueryPhase queryPhase, boolean aggregateOnly) throws Exception {
@@ -408,7 +479,7 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService, this.config);
+    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService);
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
       sender.send(tenantService, submissionBundle, report, request, user);

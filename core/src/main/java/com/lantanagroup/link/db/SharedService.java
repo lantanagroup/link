@@ -67,11 +67,18 @@ public class SharedService {
     report.setTenantName(tenantConfig.getName());
     report.setVersion(rs.getString(2));
     report.setStatus(ReportStatuses.valueOf(rs.getString(3)));
-    report.setGeneratedTime(rs.getDate(4));
-    report.setSubmittedTime(rs.getDate(5));
+    report.setGeneratedTime(rs.getTimestamp(4));
+    report.setSubmittedTime(rs.getTimestamp(5));
     report.setPeriodStart(rs.getString(6));
     report.setPeriodEnd(rs.getString(7));
-    report.setMeasureIds((List<String>) new ObjectMapper().readValue(rs.getString(8), List.class));
+
+    try {
+      report.setMeasureIds((List<String>) new ObjectMapper().readValue(rs.getString(8), List.class));
+    } catch (Exception e) {
+      report.setMeasureIds(List.of("Error parsing measureIds"));
+      logger.error("Error parsing measureIds", e);
+    }
+
     return report;
   }
 

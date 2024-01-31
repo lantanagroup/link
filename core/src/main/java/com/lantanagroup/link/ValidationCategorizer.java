@@ -8,7 +8,6 @@ import com.lantanagroup.link.model.ValidationCategorySeverities;
 import com.lantanagroup.link.model.ValidationCategoryTypes;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,19 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor
 public class ValidationCategorizer {
   private static final Logger logger = LoggerFactory.getLogger(ValidationCategorizer.class.getName());
-
-  private List<ValidationResult> results;
 
   @Getter
   @Setter
   private List<RuleBasedValidationCategory> categories = new ArrayList<>();
-
-  public ValidationCategorizer(List<ValidationResult> results) {
-    this.results = results;
-  }
 
   public static List<ValidationCategory> loadAndRetrieveCategories() {
     ValidationCategorizer categorizer = new ValidationCategorizer();
@@ -54,15 +46,15 @@ public class ValidationCategorizer {
     }
   }
 
-  public List<ValidationResultCategory> categorize() {
+  public List<ValidationResultCategory> categorize(List<ValidationResult> results) {
     List<ValidationResultCategory> resultCategories = new ArrayList<>();
 
-    if (this.results == null) {
+    if (results == null) {
       return resultCategories;
     }
 
     for (RuleBasedValidationCategory category : this.categories) {
-      for (ValidationResult result : this.results) {
+      for (ValidationResult result : results) {
         boolean allTrueInCategory = category.getRuleSets().stream().allMatch(ruleSet -> {
           List<Boolean> ruleSetResults = ruleSet.getRules().stream().map(rule -> {
             boolean isMatch = false;
@@ -101,7 +93,7 @@ public class ValidationCategorizer {
           // using a simplified version of the title of the category to associate categorized results to categories. This
           // way, if the shared db's categories changes, it won't inadvertently change the category of previously categorized
           // results. This is a bit of a hack, but it works.
-          validationResultCategory.setCategoryCode(category.getTitle().replaceAll("[^a-zA-Z0-9]", "_"));
+          validationResultCategory.setCategoryCode(category.getId());
           resultCategories.add(validationResultCategory);
         }
       }

@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
+import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -12,6 +13,7 @@ import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +111,10 @@ public class ApiInit {
 
   public void init() {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+    if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
+      FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
+      logger.info("Setting client to never query for metadata");
+    }
 
     if (!this.config.isApplySchemas()) {
       logger.warn("Not configured to apply schemas to database. Skipping shared database schema init.");
@@ -128,25 +134,36 @@ public class ApiInit {
       }
     }
 
-    if (this.config.getSkipInit()) {
-      logger.info("Skipping API initialization processes to load report defs and search parameters");
-      return;
-    }
-
     if (!this.config.isApplySchemas()) {
       logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
     } else {
       this.initDatabases(tenants);
     }
 
-    if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
-      FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
-      logger.info("Setting client to never query for metadata");
+    if (this.config.getSkipInit()) {
+      logger.info("Skipping API initialization processes");
+      return;
     }
 
     // check that prerequisite services are available
     if (!this.checkPrerequisites()) {
       throw new IllegalStateException("Prerequisite services check failed. Cannot continue API initialization.");
+    }
+
+    ensureSupplementalDataSearchParameter();
+  }
+
+  private void ensureSupplementalDataSearchParameter() {
+    logger.info("Requesting evaluation of nonexistent measure to ensure supplemental-data search parameter exists");
+    try {
+      FhirContextProvider.getFhirContext().newRestfulGenericClient(this.config.getEvaluationService())
+              .operation()
+              .onInstance("Measure/nonexistent-measure")
+              .named("$evaluate-measure")
+              .withNoParameters(Parameters.class)
+              .execute();
+    } catch (ResourceNotFoundException e) {
+      logger.info("Caught 404 as expected");
     }
   }
 }

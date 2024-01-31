@@ -327,4 +327,115 @@ public class FhirHelper {
       property.addValueCode().setText(category + "-" + theEvent);
     }
   }
+
+  /**
+   * Returns patient's reference of the related resource
+   *
+   * @param resource The resource to check
+   * @return The patient's reference of the related resource, or null if resource or subject is not related to a patient or is null
+   */
+  public static String getPatientReference(Resource resource) {
+    switch (resource.getResourceType()) {
+      case Patient:
+        return resource.getIdElement().getIdPart();
+      case Encounter:
+        Encounter encounter = (Encounter) resource;
+        return (encounter.getSubject() != null) ? encounter.getSubject().getReference() : null;
+      case Observation:
+        Observation observation = (Observation) resource;
+        return (observation.getSubject() != null) ? observation.getSubject().getReference() : null;
+      case MedicationRequest:
+        MedicationRequest medicationRequest = (MedicationRequest) resource;
+        return (medicationRequest.getSubject() != null) ? medicationRequest.getSubject().getReference() : null;
+      case MedicationAdministration:
+        MedicationAdministration medicationAdministration = (MedicationAdministration) resource;
+        return (medicationAdministration.getSubject() != null) ? medicationAdministration.getSubject().getReference() : null;
+      case MedicationDispense:
+        MedicationDispense medicationDispense = (MedicationDispense) resource;
+        return (medicationDispense.getSubject() != null) ? medicationDispense.getSubject().getReference() : null;
+      case MedicationStatement:
+        MedicationStatement medicationStatement = (MedicationStatement) resource;
+        return (medicationStatement.getSubject() != null) ? medicationStatement.getSubject().getReference() : null;
+      case Condition:
+        Condition condition = (Condition) resource;
+        return (condition.getSubject() != null) ? condition.getSubject().getReference() : null;
+      case Procedure:
+        Procedure procedure = (Procedure) resource;
+        return (procedure.getSubject() != null) ? procedure.getSubject().getReference() : null;
+      case Immunization:
+        Immunization immunization = (Immunization) resource;
+        return (immunization.getPatient() != null) ? immunization.getPatient().getReference() : null;
+      case DiagnosticReport:
+        DiagnosticReport diagnosticReport = (DiagnosticReport) resource;
+        return (diagnosticReport.getSubject() != null) ? diagnosticReport.getSubject().getReference() : null;
+      case DocumentReference:
+        DocumentReference documentReference = (DocumentReference) resource;
+        return (documentReference.getSubject() != null) ? documentReference.getSubject().getReference() : null;
+      case List:
+        ListResource listResource = (ListResource) resource;
+        return (listResource.getSubject() != null) ? listResource.getSubject().getReference() : null;
+      case MeasureReport:
+        MeasureReport measureReport = (MeasureReport) resource;
+        return (measureReport.getSubject() != null) ? measureReport.getSubject().getReference() : null;
+      case RiskAssessment:
+        RiskAssessment riskAssessment = (RiskAssessment) resource;
+        return (riskAssessment.getSubject() != null) ? riskAssessment.getSubject().getReference() : null;
+      case CarePlan:
+        CarePlan carePlan = (CarePlan) resource;
+        return (carePlan.getSubject() != null) ? carePlan.getSubject().getReference() : null;
+      case Goal:
+        Goal goal = (Goal) resource;
+        return (goal.getSubject() != null) ? goal.getSubject().getReference() : null;
+      case ServiceRequest:
+        ServiceRequest serviceRequest = (ServiceRequest) resource;
+        return (serviceRequest.getSubject() != null) ? serviceRequest.getSubject().getReference() : null;
+      case Communication:
+        Communication communication = (Communication) resource;
+        return (communication.getSubject() != null) ? communication.getSubject().getReference() : null;
+      case CommunicationRequest:
+        CommunicationRequest communicationRequest = (CommunicationRequest) resource;
+        return (communicationRequest.getSubject() != null) ? communicationRequest.getSubject().getReference() : null;
+      case DeviceRequest:
+        DeviceRequest deviceRequest = (DeviceRequest) resource;
+        return (deviceRequest.getSubject() != null) ? deviceRequest.getSubject().getReference() : null;
+      case DeviceUseStatement:
+        DeviceUseStatement deviceUseStatement = (DeviceUseStatement) resource;
+        return (deviceUseStatement.getSubject() != null) ? deviceUseStatement.getSubject().getReference() : null;
+      case Flag:
+        Flag flag = (Flag) resource;
+        return (flag.getSubject() != null) ? flag.getSubject().getReference() : null;
+      case FamilyMemberHistory:
+        FamilyMemberHistory familyMemberHistory = (FamilyMemberHistory) resource;
+        return (familyMemberHistory.getPatient() != null) ? familyMemberHistory.getPatient().getReference() : null;
+      case ClinicalImpression:
+        ClinicalImpression clinicalImpression = (ClinicalImpression) resource;
+        return (clinicalImpression.getSubject() != null) ? clinicalImpression.getSubject().getReference() : null;
+      case Consent:
+        Consent consent = (Consent) resource;
+        return (consent.getPatient() != null) ? consent.getPatient().getReference() : null;
+      case DetectedIssue:
+        DetectedIssue detectedIssue = (DetectedIssue) resource;
+        return (detectedIssue.getPatient() != null) ? detectedIssue.getPatient().getReference() : null;
+      case NutritionOrder:
+        NutritionOrder nutritionOrder = (NutritionOrder) resource;
+        return (nutritionOrder.getPatient() != null) ? nutritionOrder.getPatient().getReference() : null;
+      case Specimen:
+        Specimen specimen = (Specimen) resource;
+        return (specimen.getSubject() != null) ? specimen.getSubject().getReference() : null;
+      case BodyStructure:
+        BodyStructure bodyStructure = (BodyStructure) resource;
+        return (bodyStructure.getPatient() != null) ? bodyStructure.getPatient().getReference() : null;
+      case ImagingStudy:
+        ImagingStudy imagingStudy = (ImagingStudy) resource;
+        return (imagingStudy.getSubject() != null) ? imagingStudy.getSubject().getReference() : null;
+      case Media:
+        Media media = (Media) resource;
+        return (media.getSubject() != null) ? media.getSubject().getReference() : null;
+      case Coverage:
+        Coverage coverage = (Coverage) resource;
+        return (coverage.getBeneficiary() != null) ? coverage.getBeneficiary().getReference() : null;
+    }
+
+    return null;
+  }
 }

@@ -1,0 +1,30 @@
+/* base/_charts.scss */
+
+@import '../customize-bootstrap.scss';
+
+// ****
+// overrides to NGX Chart styles
+// ****
+
+// legend styles
+.chart-legend {
+  float: right;
+
+  ul.legend-labels {
+    background: $blue-100;
+  }
+  
+  li.legend-label {
+    color: $gray-800;
+  }
+}
+
+// fixing the issue that dangles on this text are getting cut off
+ngx-charts-number-card {
+  g.cell {
+    .trimmed-label p {
+      @include body-font();
+      overflow: visible;
+    }
+  }
+}
