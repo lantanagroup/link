@@ -2039,6 +2039,19 @@ components:
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
+        vendor:
+          type: string
+          description: The vendor of the EHR system that the tenant uses.
+          enum:
+            - Epic
+            - Cerner
+            - Meditech
+            - Allscripts
+            - Athena
+            - Other
+        otherVendor:
+          type: string
+          description: The name of the vendor if the vendor is not in the list of known vendors. This can only be specified if "vendor" is set to "Other"
     Tenant:
       type: object
       required:
@@ -2054,6 +2067,19 @@ components:
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
+        vendor:
+          type: string
+          description: The vendor of the EHR system that the tenant uses.
+          enum:
+            - Epic
+            - Cerner
+            - Meditech
+            - Allscripts
+            - Athena
+            - Other
+        otherVendor:
+          type: string
+          description: The name of the vendor if the vendor is not in the list of known vendors. This can only be specified if "vendor" is set to "Other"
         connectionString:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'
