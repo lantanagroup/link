@@ -11,7 +11,6 @@ import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.model.ValidationCategory;
 import com.lantanagroup.link.model.ValidationCategoryResponse;
 import com.lantanagroup.link.model.ValidationCategorySeverities;
-import com.lantanagroup.link.model.ValidationCategoryTypes;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import com.lantanagroup.link.validation.ValidationService;
@@ -130,7 +129,6 @@ public class ValidationController extends BaseController {
     response.setId("uncategorized");
     response.setTitle("Uncategorized");
     response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setType(ValidationCategoryTypes.IMPORTANT);
     response.setAcceptable(false);
     response.setGuidance("These issues need to be categorized.");
     response.setCount(count);
