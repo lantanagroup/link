@@ -1,5 +1,6 @@
 package com.lantanagroup.link.spring;
 
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.auth0.jwk.JwkException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
@@ -72,6 +73,10 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
       HttpResponseException exception = (HttpResponseException) throwable;
       response.sendError(exception.getStatusCode(), exception.getReasonPhrase());
       return true;
+    }
+    if(throwable instanceof DataFormatException) {
+        response.sendError(400, throwable.getMessage());
+        return true;
     }
     return false;
   }
