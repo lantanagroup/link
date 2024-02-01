@@ -16,6 +16,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content title="Facility Name">
                 <app-link [link]="{url: '/facilities/facility/' + tenantId, title: mockBundleDetails?.facility?.name, target: '_self'}"></app-link>
               </app-mini-content>
@@ -45,7 +46,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
-
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
                 <strong>ID:</strong> 923123124<br>
                 <strong>Contexts:</strong> FHIRPath<br>
@@ -62,6 +63,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content>
                 <div class="d-flex align-items-start mb-2 u-gap2">
                   <div class="chip mr-1">CDI</div>

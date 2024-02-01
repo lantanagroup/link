@@ -84,7 +84,6 @@ export class AuthService {
 
   // This method will call the getToken and cache the response values.
   handleAuth(code: string) {
-    debugger;
     return this.getToken(code).pipe(
       tap(response => {
         // Store tokens in a secure storage

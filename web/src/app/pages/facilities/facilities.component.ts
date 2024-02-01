@@ -162,7 +162,7 @@ export class FacilitiesComponent implements OnInit {
         MEASURES: td.measures
           .filter(m => m && m.shortName)
           .map(m => {
-            const measure = this.pascalCaseToSpace.transform(m.shortName)
+            const measure = this.pascalCaseToSpace.transform(m.shortName.trimStart())
             return measure.split(' ')[0]
           })
       };
