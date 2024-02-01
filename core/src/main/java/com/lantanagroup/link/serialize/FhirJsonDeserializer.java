@@ -21,7 +21,7 @@ public class FhirJsonDeserializer<T> extends JsonDeserializer<T> {
       String jsonContent = jsonParser.readValueAsTree().toString();
       return (T) this.jsonParser.parseResource(jsonContent);
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
   }
 }
