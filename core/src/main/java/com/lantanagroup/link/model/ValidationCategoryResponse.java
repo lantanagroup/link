@@ -13,7 +13,7 @@ public class ValidationCategoryResponse extends ValidationCategory {
   private long count;
 
   public ValidationCategoryResponse(ValidationCategory category) {
-    super(category.getTitle(), category.getSeverity(), category.getAcceptable(), category.getType(), category.getGuidance());
+    super(category.getTitle(), category.getSeverity(), category.getAcceptable(), category.getGuidance());
     this.setId(category.getId());
   }
 }

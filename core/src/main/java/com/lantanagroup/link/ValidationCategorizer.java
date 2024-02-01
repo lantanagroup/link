@@ -5,7 +5,6 @@ import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.model.ValidationCategory;
 import com.lantanagroup.link.model.ValidationCategorySeverities;
-import com.lantanagroup.link.model.ValidationCategoryTypes;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,8 +30,8 @@ public class ValidationCategorizer {
     return categorizer.categories.stream().map(c -> (ValidationCategory) c).collect(Collectors.toList());
   }
 
-  public RuleBasedValidationCategory addCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, ValidationCategoryTypes type, String guidance) {
-    RuleBasedValidationCategory category = new RuleBasedValidationCategory(title, severity, acceptable, type, guidance);
+  public RuleBasedValidationCategory addCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, String guidance) {
+    RuleBasedValidationCategory category = new RuleBasedValidationCategory(title, severity, acceptable, guidance);
     this.categories.add(category);
     return category;
   }
