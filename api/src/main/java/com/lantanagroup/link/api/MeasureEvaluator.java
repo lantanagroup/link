@@ -2,6 +2,7 @@ package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
@@ -60,6 +61,12 @@ public class MeasureEvaluator {
     Bundle patientBundle;
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_RETRIEVE_PATIENT_DATA, Constants.CATEGORY_REPORT)) {
       patientBundle = PatientData.asBundle(tenantService.findPatientData(reportContext.getMasterIdentifierValue(), patientId));
+    }
+
+    // if patient is in the debugPatients list or debugPatients = "*" then write the patient data bundle to the file system
+    if (reportContext.getDebugPatients().contains("Patient/" + patientId) || reportContext.getDebugPatients().contains("*")) {
+      String fileName = ReportIdHelper.getPatientBundleFileName(reportContext.getMasterIdentifierValue(), patientId) + ".json";
+      Helper.dumpToFile(patientBundle, config.getDebugPath(), fileName);
     }
 
     logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());

@@ -25,6 +25,7 @@ public class ReportContext {
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<MeasureContext> measureContexts = new ArrayList<>();
   private QueryPlan queryPlan;
+  private List<String> debugPatients = new ArrayList<>();
 
   public ReportContext() {
   }
