@@ -4,7 +4,6 @@
     "title": "Incorrect display value for code",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "BEST_PRACTICE",
     "guidance": "Code display values and not usually used, except for human readability. \nAsk NHSN if they care)/validate\nAsk site/EHR about LOE to resolve",
     "ruleSets": [
       {
@@ -23,7 +22,6 @@
     "title": "Unknown Code System",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "CRITICAL",
     "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
     "ruleSets": [
       {
@@ -42,7 +40,6 @@
     "title": "Unresolved Code System",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "CRITICAL",
     "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
     "ruleSets": [
       {
@@ -65,7 +62,6 @@
     "title": "Invalid Code in required ValueSet",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "CRITICAL",
     "guidance": "The code is not part of the required ValueSet. This may cause issues with measure calculation.",
     "ruleSets": [
       {
@@ -81,9 +77,13 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^The code provided \\(.+?\\) is not in the value set '.+?' \\(.+?\\), and a code from this value set is required"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -92,7 +92,6 @@
     "title": "Can't validate code",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.",
     "ruleSets": [
       {
@@ -112,7 +111,6 @@
     "title": "Unresolved Epic Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is an Epic proprietary Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
     "ruleSets": [
       {
@@ -137,7 +135,6 @@
     "title": "Unresolved Medispan Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is an Medispan proprietary Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
     "ruleSets": [
       {
@@ -157,7 +154,6 @@
     "title": "Unresolved and Unrecognized Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is an unrecognized Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
     "ruleSets": [
       {
@@ -192,7 +188,6 @@
     "title": "Invalid code",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
     "ruleSets": [
       {
@@ -222,7 +217,6 @@
     "title": "Unknown Extension",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "Systems are allowed to include extensions (additional data). Extensions that do not modify the meaning of the data (modifierExtensions) can be safely ignored. This is not a modifierExtension.",
     "ruleSets": [
       {
@@ -242,7 +236,6 @@
     "title": "Does not match a slice",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
     "ruleSets": [
       {
@@ -262,7 +255,6 @@
     "title": "Unable to match profile",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
     "ruleSets": [
       {
@@ -282,7 +274,6 @@
     "title": "Does not match preferred ValueSet",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
     "ruleSets": [
       {
@@ -302,7 +293,6 @@
     "title": "Does not match extensible ValueSet",
     "severity": "WARNING",
     "acceptable": false,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
     "ruleSets": [
       {
@@ -322,7 +312,6 @@
     "title": "Possible matching profile",
     "severity": "INFORMATION",
     "acceptable": true,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
     "ruleSets": [
       {
@@ -342,7 +331,6 @@
     "title": "Identifier.type code not provided from IdentifyType VS",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is only for business identifiers. Not important, unless a business identifier, such as MRN is required to be identified.",
     "ruleSets": [
       {
@@ -362,7 +350,6 @@
     "title": "MedicationRequest.requestor does not have a proper reference",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "No identity or reference for requester (Provider). Safe to ignore when ordering provider is not needed.",
     "ruleSets": [
       {
@@ -387,7 +374,6 @@
     "title": "Identifier value starts with whitespace",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is a business identifier with whitespace at the front or back. Not important if business identifiers are not used. May want to have the whitespace trimmed.",
     "ruleSets": [
       {
@@ -412,7 +398,6 @@
     "title": "No measure score allowed with cohort",
     "severity": "ERROR",
     "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "The MeasureReport violates a business rule regarding MeasureScore. This issue needs to be resolved in the source data, the validator, or explicitely deemed an invalid error.",
     "ruleSets": [
       {
@@ -432,7 +417,6 @@
     "title": "Invalid whitespace (non-identifier)",
     "severity": "WARNING",
     "acceptable": true,
-    "type": "NOT_IMPORTANT",
     "guidance": "This is a non-identifier string element with whitespace at the front or back. Not generally important. May want to have the whitespace trimmed.",
     "ruleSets": [
       {
@@ -457,7 +441,6 @@
     "title": "Minimum slice occurrence not met",
     "severity": "ERROR",
     "acceptable": true,
-    "type": "POTENTIAL_CONCERN",
     "guidance": "This is likely a secondary issue. If the resource can't validate then it can't be counted as meeting the slicing requirements. Likely addressing the underlying issue will make this issue go away. ",
     "ruleSets": [
       {
@@ -476,8 +459,6 @@
     "id": "Link_Error_using_old_URL",
     "title": "Link Error using old URL",
     "severity": "WARNING",
-    "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "This is an issue with NHSNLink (using an old url) and should be reported in Jira.",
     "ruleSets": [
       {
@@ -497,7 +478,6 @@
     "title": "No codes from an extensible binding ValueSet",
     "severity": "WARNING",
     "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
@@ -506,9 +486,19 @@
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set '.*' \\(.*\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('(?:[A-Za-z]+|)'\\) is not in the value set 'USPS Two Letter Alphabetic Codes' \\(http:\\/\\/hl7\\.org\\/fhir\\/us\\/core\\/ValueSet\\/us-core-usps-state\\|(?:\\d+\\.\\d+\\.\\d+)?\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Could not confirm that the codes provided are in the value set \\'.*\\' \\(http\\:\\/\\/terminology\\.hl7\\.org\\/ValueSet\\/.*\\)\\, and a code should come from this value set unless it has no suitable code .*",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -517,7 +507,6 @@
     "title": "No code provided",
     "severity": "WARNING",
     "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "No code was provided, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
@@ -537,7 +526,6 @@
     "title": "Unable to validate measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
-    "type": "IMPORTANT",
     "guidance": "This appears to be an issue in the validation process and should be resolved as it may be hiding other issues.",
     "ruleSets": [
       {
@@ -561,16 +549,67 @@
     "id": "Minimum_requirement_not_met_for_profile",
     "title": "Minimum requirement not met for profile.",
     "severity": "ERROR",
-    "acceptable": false, 
-    "type": "CRITICAL", 
-    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements."
+    "acceptable": false,
+    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "minimum required = 1, but only found 0 \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   },
   {
     "id": "Invalid_whitespace_(non-identifier)",
-    "title": "Invalid whitespace (non-identifier)",
+    "title": "Invalid whitespace (non-identifier).",
     "severity": "WARNING",
+    "acceptable": true,  
+    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_code_system",
+    "title": "Invalid code system.",
+    "severity": "ERROR",
     "acceptable": true, 
-    "type": "NOT_IMPORTANT", 
-    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending."
+    "guidance": "URI must be valid and the System should identify a valid coding system.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
