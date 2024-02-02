@@ -43,6 +43,6 @@ public class ReportIdHelper {
   }
 
   public static String getPatientBundleFileName(String masterIdentifierValue, String patientId) {
-    return combine("patient-bundle-for-cqf", masterIdentifierValue, patientId);
+    return combine("patient-bundle-for-cqf-", masterIdentifierValue, "-" + patientId);
   }
 }
