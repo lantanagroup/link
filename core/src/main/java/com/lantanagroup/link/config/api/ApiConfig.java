@@ -151,6 +151,10 @@ public class ApiConfig {
   @Getter
   private String socketTimeout;
 
+  @Getter
+  @NotNull
+  private String debugPath;
+
   /**
    * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
    */
@@ -177,4 +181,5 @@ public class ApiConfig {
   private boolean allowQaEndpoints = false;
 
   private List<ApiInfoGroup> infoGroups = new ArrayList<>();
+
 }

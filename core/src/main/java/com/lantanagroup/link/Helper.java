@@ -1,9 +1,9 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.Report;
@@ -13,14 +13,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -190,6 +190,22 @@ public class Helper {
       text = text.replace("%" + key + "%", value);
     }
     return text;
+  }
+
+  public static void dumpToFile(Resource resource, String path, String fileName) {
+
+    IParser parser = FhirContextProvider.getFhirContext().newJsonParser();
+    String folderPath = Helper.expandEnvVars(path);
+    String filePath = Paths.get(folderPath, fileName).toString();
+    try (Writer writer = new FileWriter(filePath, StandardCharsets.UTF_8)) {
+      parser.encodeResourceToWriter(resource, writer);
+    }
+    catch (Exception e) {
+      logger.error("Error writing resource {} to file system", resource.getId(), e);
+    }
+    finally {
+      logger.info("Done writing resource {} to file system {}", resource.getId(), filePath);
+    }
   }
 
   public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService) {
