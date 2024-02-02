@@ -77,9 +77,13 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^The code provided \\(.+?\\) is not in the value set '.+?' \\(.+?\\), and a code from this value set is required"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -483,9 +487,19 @@
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set '.*' \\(.*\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('(?:[A-Za-z]+|)'\\) is not in the value set 'USPS Two Letter Alphabetic Codes' \\(http:\\/\\/hl7\\.org\\/fhir\\/us\\/core\\/ValueSet\\/us-core-usps-state\\|(?:\\d+\\.\\d+\\.\\d+)?\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Could not confirm that the codes provided are in the value set \\'.*\\' \\(http\\:\\/\\/terminology\\.hl7\\.org\\/ValueSet\\/.*\\)\\, and a code should come from this value set unless it has no suitable code .*",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -514,6 +528,73 @@
     "severity": "WARNING",
     "acceptable": false,
     "guidance": "This appears to be an issue in the validation process and should be resolved as it may be hiding other issues.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Minimum_requirement_not_met_for_profile",
+    "title": "Minimum requirement not met for profile.",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "minimum required = 1, but only found 0 \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_whitespace_(non-identifier)",
+    "title": "Invalid whitespace (non-identifier).",
+    "severity": "WARNING",
+    "acceptable": true,  
+    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_code_system",
+    "title": "Invalid code system.",
+    "severity": "ERROR",
+    "acceptable": true, 
+    "guidance": "URI must be valid and the System should identify a valid coding system.",
     "ruleSets": [
       {
         "rules": [
