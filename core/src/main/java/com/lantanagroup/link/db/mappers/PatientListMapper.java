@@ -3,7 +3,6 @@ package com.lantanagroup.link.db.mappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,7 +22,7 @@ public class PatientListMapper extends BaseMapper<PatientList> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(PatientList model) throws JsonProcessingException {
+  protected Parameters doToParameters(PatientList model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addString("measureId", model.getMeasureId());

@@ -12,14 +12,12 @@ public class ValidationCategory {
   private String title;
   private ValidationCategorySeverities severity;
   private Boolean acceptable;
-  private ValidationCategoryTypes type;
   private String guidance;
 
-  public ValidationCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, ValidationCategoryTypes type, String guidance) {
+  public ValidationCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, String guidance) {
     this.title = title;
     this.severity = severity;
     this.acceptable = acceptable;
-    this.type = type;
     this.guidance = guidance;
   }
 }

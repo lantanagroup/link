@@ -459,6 +459,7 @@
     "id": "Link_Error_using_old_URL",
     "title": "Link Error using old URL",
     "severity": "WARNING",
+    "acceptable": false,
     "guidance": "This is an issue with NHSNLink (using an old url) and should be reported in Jira.",
     "ruleSets": [
       {

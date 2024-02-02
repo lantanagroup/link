@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import static org.mockito.Mockito.*;
 
 public class FhirBundlerTests {
+
   private int patientMeasureReportCount = 0;
 
   private <T extends Resource> T deserializeResource(String resourcePath, Class<T> clazz) {
@@ -69,9 +70,10 @@ public class FhirBundlerTests {
     Aggregate aggregate = new Aggregate();
     aggregate.setReport(masterMeasureReport);
 
-    FhirBundler bundler = new FhirBundler(null, tenantService, new ApiConfig());
+    FhirBundler bundler = new FhirBundler(null, tenantService);
 
     Report report = new Report();
+    report.setDeviceInfo(new Device());
 
     List<PatientList> patientLists = new ArrayList<>();
     PatientList patientList = new PatientList();
@@ -82,6 +84,10 @@ public class FhirBundlerTests {
     when(tenantService.getPatientLists(any())).thenReturn(patientLists);
 
     List<PatientMeasureReport> pmrs = List.of(this.getPatientMeasureReport(0), this.getPatientMeasureReport(1), this.getPatientMeasureReport(2));
+    for (PatientMeasureReport pmr : pmrs) {
+      MeasureReport mr = pmr.getMeasureReport();
+      when(tenantService.getPatientMeasureReport(mr.getIdPart())).thenReturn(pmr);
+    }
     when(tenantService.getPatientMeasureReports(any())).thenReturn(pmrs);
     when(tenantService.getPatientMeasureReports(any(), any())).thenReturn(pmrs);
 
@@ -164,6 +170,8 @@ public class FhirBundlerTests {
     bundle.addEntry().setResource(createLibrary("library1", Constants.LibraryTypeModelDefinitionCode));
     bundle.addEntry().setResource(createMeasureReport("aggMeasureReport1", MeasureReport.MeasureReportType.SUBJECTLIST, null));
     bundle.addEntry().setResource(new Medication().setId("medication1"));
+    bundle.addEntry().setResource(new ListResource().setId("list2").setMeta(new Meta().addProfile(Constants.CensusProfileUrl)));
+    bundle.addEntry().setResource(new ListResource().setId("list1").setMeta(new Meta().addProfile(Constants.CensusProfileUrl)));
 
     FhirBundlerEntrySorter.sort(bundle);
 
@@ -174,11 +182,13 @@ public class FhirBundlerTests {
     System.out.println(sortedResourceReferences);
     Assert.assertEquals("Organization/organization1", sortedResourceReferences.get(0));
     Assert.assertEquals("Device/device1", sortedResourceReferences.get(1));
-    Assert.assertEquals("Library/library1", sortedResourceReferences.get(2));
-    Assert.assertEquals("MeasureReport/aggMeasureReport1", sortedResourceReferences.get(3));
-    Assert.assertEquals("MeasureReport/indMeasureReport1", sortedResourceReferences.get(4));
-    Assert.assertEquals("Patient/patient1", sortedResourceReferences.get(5));
-    Assert.assertEquals("MedicationRequest/medicationRequest1", sortedResourceReferences.get(6));
-    Assert.assertEquals("Medication/medication1", sortedResourceReferences.get(7));
+    Assert.assertEquals("List/list1", sortedResourceReferences.get(2));
+    Assert.assertEquals("List/list2", sortedResourceReferences.get(3));
+    Assert.assertEquals("Library/library1", sortedResourceReferences.get(4));
+    Assert.assertEquals("MeasureReport/aggMeasureReport1", sortedResourceReferences.get(5));
+    Assert.assertEquals("MeasureReport/indMeasureReport1", sortedResourceReferences.get(6));
+    Assert.assertEquals("Patient/patient1", sortedResourceReferences.get(7));
+    Assert.assertEquals("MedicationRequest/medicationRequest1", sortedResourceReferences.get(8));
+    Assert.assertEquals("Medication/medication1", sortedResourceReferences.get(9));
   }
 }

@@ -1,12 +1,11 @@
 /* header.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .header {
 
   &__subheader {
-    background: $blue;
+    background: $blue-700;
   }
 
   &__logo {
@@ -19,15 +18,7 @@
 }
 #SecondaryNavigation .header {
   &__btnLogout {
-    &::before {
-      content: '|';
-      color: $black;
-      display: inline-block;
-      font-family: $font-family-heading;
-      font-size: $font-size-base;
-      font-weight: $font-weight-medium;
-      margin: 0 0.5rem;
-    }
+    margin-left: 2.25rem;
     .btn {
       display: inline-block;
     }

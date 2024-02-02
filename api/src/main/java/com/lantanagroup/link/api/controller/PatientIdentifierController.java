@@ -11,6 +11,7 @@ import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.tenant.EhrPatientList;
+import com.lantanagroup.link.model.PatientListSearchResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
@@ -42,7 +43,7 @@ public class PatientIdentifierController extends BaseController {
   private SharedService sharedService;
 
   @GetMapping
-  public List<PatientList> searchPatientLists(@PathVariable String tenantId) {
+  public List<PatientListSearchResponse> searchPatientLists(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -50,8 +51,15 @@ public class PatientIdentifierController extends BaseController {
     }
 
     return tenantService.getAllPatientLists()
-            .stream().peek(pl -> pl.setPatients(null))
-            .collect(Collectors.toList());
+            .stream().map(pl -> {
+              PatientListSearchResponse response = new PatientListSearchResponse();
+              response.setId(pl.getId().toString());
+              response.setMeasureId(pl.getMeasureId());
+              response.setPeriodStart(pl.getPeriodStart());
+              response.setPeriodEnd(pl.getPeriodEnd());
+              response.setTotalPatients(pl.getPatients().size());
+              return response;
+            }).collect(Collectors.toList());
   }
 
   @GetMapping("/{id}")

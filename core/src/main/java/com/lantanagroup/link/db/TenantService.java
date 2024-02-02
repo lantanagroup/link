@@ -22,14 +22,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class TenantService {
   private static final Logger logger = LoggerFactory.getLogger(TenantService.class);
+  private static final Map<String, ComboPooledDataSource> dataSourcesByJdbcUrl = new ConcurrentHashMap<>();
 
   @Getter
   private final Tenant config;
@@ -48,10 +47,8 @@ public class TenantService {
   private final ValidationRepository validations;
   private final ValidationCategoryRepository validationCategories;
 
-  protected TenantService(Tenant config) {
+  protected TenantService(Tenant config, ComboPooledDataSource dataSource) {
     this.config = config;
-    ComboPooledDataSource dataSource = new ComboPooledDataSource();
-    dataSource.setJdbcUrl(config.getConnectionString());
     this.dataSource = dataSource;
     PlatformTransactionManager txManager = new DataSourceTransactionManager(this.dataSource);
     this.conceptMaps = new ConceptMapRepository(this.dataSource, txManager);
@@ -69,7 +66,11 @@ public class TenantService {
   }
 
   public static TenantService create(Tenant tenant) {
-    return new TenantService(tenant);
+    return new TenantService(tenant, dataSourcesByJdbcUrl.computeIfAbsent(tenant.getConnectionString(), jdbcUrl -> {
+      ComboPooledDataSource dataSource = new ComboPooledDataSource();
+      dataSource.setJdbcUrl(jdbcUrl);
+      return dataSource;
+    }));
   }
 
   public void testConnection() throws SQLException {
@@ -98,7 +99,7 @@ public class TenantService {
       return null;
     }
 
-    return new TenantService(tenant);
+    return TenantService.create(tenant);
   }
 
   public List<PatientList> getPatientLists(String reportId) {
@@ -125,8 +126,16 @@ public class TenantService {
     this.patientLists.save(patientList);
   }
 
+  public void beginReport(String reportId) {
+    this.patientDatas.beginReport(reportId);
+  }
+
   public List<PatientData> findPatientData(String patientId) {
     return this.patientDatas.findByPatientId(patientId);
+  }
+
+  public List<PatientData> findPatientData(String reportId, String patientId) {
+    return this.patientDatas.findByReportIdAndPatientId(reportId, patientId);
   }
 
   public int deletePatientDataRetrievedBefore(Date date) {
@@ -141,11 +150,16 @@ public class TenantService {
   }
 
   public void deleteAllPatientData(){
-    this.patientDatas.deleteAll();
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.validationCategories.deleteAll();
+    this.validations.deleteAll();
+
     this.aggregates.deleteAll();
     this.patientMeasureReports.deleteAll();
+
+    this.patientDatas.deleteAll();
+    this.dataTraces.deleteAll();
+    this.queries.deleteAll();
+
     this.reports.deleteAll();
     this.patientLists.deleteAll();
   }
@@ -172,8 +186,8 @@ public class TenantService {
     this.savePatientList(patientList);
   }
 
-  public void savePatientData(List<PatientData> patientData) {
-    this.patientDatas.saveAll(patientData);
+  public void savePatientData(String reportId, List<PatientData> patientData) {
+    this.patientDatas.saveAll(reportId, patientData);
   }
 
   public Report getReport(String id) {
@@ -197,11 +211,16 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
+    this.validationCategories.deleteForReport(reportId);
+    this.validations.deleteByReport(reportId);
+
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.patientDatas.deleteByReportId(reportId);
     this.dataTraces.deleteUnreferenced();
     this.queries.deleteUnreferenced();
-    this.aggregates.deleteByReportId(reportId);
-    this.patientMeasureReports.deleteByReportId(reportId);
+
     this.reports.deleteById(reportId);
   }
 
@@ -307,8 +326,7 @@ public class TenantService {
     this.validations.deleteByReport(reportId);
   }
 
-  public void insertValidationResults(String reportId, OperationOutcome outcome) {
-    List<ValidationResult> models = ValidationResultMapper.toValidationResults(outcome);
+  public void insertValidationResults(String reportId, List<ValidationResult> models) {
     this.validations.insertAll(reportId, models);
   }
 

@@ -2,7 +2,6 @@ package com.lantanagroup.link.db.mappers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.ConceptMap;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +18,7 @@ public class ConceptMapMapper extends BaseMapper<ConceptMap> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(ConceptMap model) throws JsonProcessingException {
+  protected Parameters doToParameters(ConceptMap model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addString("id", model.getId());
     parameters.addJsonList("contexts", model.getContexts());

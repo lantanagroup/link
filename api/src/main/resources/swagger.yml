@@ -466,7 +466,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PatientList'
+                  $ref: '#/components/schemas/PatientListSearchResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -746,6 +746,12 @@ paths:
           schema:
             type: boolean
             default: true
+        - name: skipQuery
+          in: query
+          description: Whether to skip querying the EHR for data
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: successful response
@@ -1549,27 +1555,6 @@ paths:
           example: http://some-system|321
           schema:
             type: string
-        - name: measureId
-          in: query
-          description: The ID of the measure that should be used to determine the query method for the integration test
-          example: NHSNGlycemicControlHypoglycemicInitialPopulation
-          required: true
-          schema:
-            type: string
-        - name: periodStart
-          in: query
-          description: The ISO formatted (FHIR) date for the reporting period's start
-          example: '2022-01-01T00:00:00.000Z'
-          required: true
-          schema:
-            type: string
-        - name: periodEnd
-          in: query
-          description: The ISO formatted (FHIR) date for the reporting period's end
-          example: '2022-01-31T23:59:59.000Z'
-          required: true
-          schema:
-            type: string
       responses:
         '200':
           description: successful response
@@ -1753,6 +1738,104 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deletePatientListById/{id}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a patient list by id
+        operationId: deletePatientListById
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+          - name: id
+            in: path
+            description: The id of the patient list to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deleteAllPatientData:
+      delete:
+        tags:
+          - QA
+        summary: Deletes all patient data for a tenant
+        operationId: deleteAllPatientData
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa/{tenantId}/$deletePatientFromList/{patientListId}/{patientId}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a patient from a patient list
+        operationId: deletePatientFromList
+        parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
+          - name: patientListId
+            in: path
+            description: The id of the patient list
+            required: true
+            schema:
+              type: string
+          - name: patientId
+            in: path
+            description: The id of the patient to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
+  /api/qa//$deleteReportById/{reportId}:
+      delete:
+        tags:
+          - QA
+        summary: Deletes a report by id
+        operationId: deleteReportById
+        parameters:
+          - name: reportId
+            in: path
+            description: The id of the report to delete
+            required: true
+            schema:
+              type: string
+        responses:
+          '204':
+            description: successful response with no content returned
+          '401':
+            $ref: '#/components/responses/Unauthorized'
+          '403':
+            $ref: '#/components/responses/Unauthorized'
 components:
   schemas:
     ApiInfoModel:
@@ -1786,6 +1869,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PatientId'
+    PatientListSearchResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        periodStart:
+          type: string
+        periodEnd:
+          type: string
+        measureId:
+          type: string
+        totalPatients:
+          type: number
     GenerateRequest:
       type: object
       properties:
@@ -1794,6 +1890,9 @@ components:
         validate:
           type: boolean
           default: true
+        skipQuery:
+          type: boolean
+          default: false
         bundleIds:
           type: array
           items:
@@ -1940,6 +2039,19 @@ components:
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
+        vendor:
+          type: string
+          description: The vendor of the EHR system that the tenant uses.
+          enum:
+            - Epic
+            - Cerner
+            - Meditech
+            - Allscripts
+            - Athena
+            - Other
+        otherVendor:
+          type: string
+          description: The name of the vendor if the vendor is not in the list of known vendors. This can only be specified if "vendor" is set to "Other"
     Tenant:
       type: object
       required:
@@ -1955,6 +2067,19 @@ components:
         cdcOrgId:
           type: string
           description: 'Organization ID for the tenant according to CDC. Used by the Measure Reporting Plan functionality, and when bundling to submit to NHSN; an Organization resource is created uses this as an identifier of the facility.'
+        vendor:
+          type: string
+          description: The vendor of the EHR system that the tenant uses.
+          enum:
+            - Epic
+            - Cerner
+            - Meditech
+            - Allscripts
+            - Athena
+            - Other
+        otherVendor:
+          type: string
+          description: The name of the vendor if the vendor is not in the list of known vendors. This can only be specified if "vendor" is set to "Other"
         connectionString:
           type: string
           description: 'The name of the database to use for the tenant''s PHI/PII data. The same connection string for the database server is used for each tenant, but a different database on the server is used for each tenant.'

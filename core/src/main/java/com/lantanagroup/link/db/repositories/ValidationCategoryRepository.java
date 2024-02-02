@@ -35,6 +35,11 @@ public class ValidationCategoryRepository {
     return jdbc.batchUpdate(sql, models.stream().map(mapper::toParameters).toArray(SqlParameterSource[]::new)).length;
   }
 
+  public void deleteAll() {
+    String sql = "DELETE FROM dbo.validationResultCategory;";
+    jdbc.update(sql, Map.of());
+  }
+
   public void deleteForReport(String reportId) {
     String sql = "DELETE FROM dbo.validationResultCategory WHERE validationResultId IN " +
             "(SELECT id FROM dbo.validationResult WHERE reportId = :reportId);";

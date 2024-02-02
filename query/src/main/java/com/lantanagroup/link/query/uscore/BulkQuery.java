@@ -14,6 +14,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.Identifier;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class BulkQuery {
 
     var config = tenantService.getConfig();
 
-    URI uri = new URI(config.getFhirQuery().getFhirServerBase() + config.getRelativeBulkUrl().replace("{groupId}", config.getBulkGroupId()));
+    URI uri = new URI(StringUtils.stripEnd(config.getFhirQuery().getFhirServerBase(), "/") + "/"  + StringUtils.stripStart(config.getRelativeBulkUrl().replace("{groupId}", config.getBulkGroupId()), "/"));
     HttpClient httpClient = HttpClient.newHttpClient();
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(uri);
     requestBuilder.setHeader("Accept", "application/fhir+json");
@@ -243,8 +244,13 @@ public class BulkQuery {
               if(entry.getResource() instanceof Patient){
                 Patient patient = (Patient)entry.getResource();
                 PatientId patientId = new PatientId();
-                patientId.setIdentifier(patient.getId());
-                patientId.setReference(patient.getIdentifier().stream().findFirst().get().getSystem() + "|" + patient.getIdentifier().stream().findFirst().get().getValue());
+                patientId.setReference(patient.getIdElement().toUnqualifiedVersionless().getValue());
+                Identifier identifier = patient.getIdentifierFirstRep();
+                if (identifier != null && identifier.hasValue()) {
+                  patientId.setIdentifier(identifier.hasSystem()
+                          ? String.format("%s|%s", identifier.getSystem(), identifier.getValue())
+                          : identifier.getValue());
+                }
                 patientList.getPatients().add(patientId);
               }
             });
@@ -259,18 +265,20 @@ public class BulkQuery {
   }
 
   private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {
-    Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
-    var authorizer = (ICustomAuth) context.getBean(authClass);
-    authorizer.setTenantService(tenantService);
+    if(tenantService.getConfig().getFhirQuery().getAuthClass() != null && !tenantService.getConfig().getFhirQuery().getAuthClass().isEmpty()){
+      Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
+      var authorizer = (ICustomAuth) context.getBean(authClass);
+      authorizer.setTenantService(tenantService);
 
-    String apiKey = authorizer.getApiKeyHeader();
-    String authHeader = authorizer.getAuthHeader();
+      String apiKey = authorizer.getApiKeyHeader();
+      String authHeader = authorizer.getAuthHeader();
 
-    if (authHeader != null && !authHeader.isEmpty()) {
-      requestBuilder.setHeader("Authorization", Helper.sanitizeHeader(authHeader));
-    }
-    if (apiKey != null && !apiKey.isEmpty()) {
-      requestBuilder.setHeader("apikey", Helper.sanitizeHeader(apiKey));
+      if (authHeader != null && !authHeader.isEmpty()) {
+        requestBuilder.setHeader("Authorization", Helper.sanitizeHeader(authHeader));
+      }
+      if (apiKey != null && !apiKey.isEmpty()) {
+        requestBuilder.setHeader("apikey", Helper.sanitizeHeader(apiKey));
+      }
     }
   }
 }

@@ -9,19 +9,24 @@ export interface Report {
   version: string;
   patientLists: string[];
   aggregates: string[];
+  tenantId: string;
   tenantName: string;
-  nhsnOrgId: string;
-  reportId: string;
-  activity: string;
+  cdcOrgId: string;
+  reportId: string
   details: string;
 };
 
 export interface ReportFilter {
   tenantId?: string;
-  status?: string;
+  status?: 'Draft' | 'Submitted' | string;
   startDate?: string;
   endDate?: string;
   measureIds?: string;
   count?: number;
   page?: number;
+}
+
+export interface ReportSummary {
+  total: number
+  reports: Report[]
 }

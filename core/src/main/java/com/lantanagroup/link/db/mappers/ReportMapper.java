@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.ReportStatuses;
 import org.hl7.fhir.r4.model.Device;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,12 +22,13 @@ public class ReportMapper extends BaseMapper<Report> {
     model.setGeneratedTime(row.getDate("generatedTime"));
     model.setSubmittedTime(row.getDate("submittedTime"));
     model.setDeviceInfo(row.getResource("deviceInfo", Device.class));
+    model.setQueryPlan(row.getString("queryPlan"));
 
     return model;
   }
 
   @Override
-  protected SqlParameterSource doToParameters(Report model) throws JsonProcessingException {
+  protected Parameters doToParameters(Report model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addString("id", model.getId());
     parameters.addJsonList("measureIds", model.getMeasureIds());
@@ -39,6 +39,7 @@ public class ReportMapper extends BaseMapper<Report> {
     parameters.addDate("generatedTime", model.getGeneratedTime());
     parameters.addDate("submittedTime", model.getSubmittedTime());
     parameters.addResource("deviceInfo", model.getDeviceInfo());
+    parameters.addString("queryPlan", model.getQueryPlan());
 
     return parameters;
   }

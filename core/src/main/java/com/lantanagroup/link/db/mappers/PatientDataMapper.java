@@ -21,8 +21,14 @@ public class PatientDataMapper extends BaseMapper<PatientData> {
     return model;
   }
 
+  public SqlParameterSource toParameters(String reportId, PatientData model) {
+    Parameters parameters = doToParameters(model);
+    parameters.addString("reportId", reportId);
+    return parameters;
+  }
+
   @Override
-  protected SqlParameterSource doToParameters(PatientData model) {
+  protected Parameters doToParameters(PatientData model) {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addUUID("dataTraceId", model.getDataTraceId());

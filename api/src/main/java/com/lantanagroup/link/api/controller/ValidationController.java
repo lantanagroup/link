@@ -11,7 +11,6 @@ import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.model.ValidationCategory;
 import com.lantanagroup.link.model.ValidationCategoryResponse;
 import com.lantanagroup.link.model.ValidationCategorySeverities;
-import com.lantanagroup.link.model.ValidationCategoryTypes;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import com.lantanagroup.link.validation.ValidationService;
@@ -130,7 +129,6 @@ public class ValidationController extends BaseController {
     response.setId("uncategorized");
     response.setTitle("Uncategorized");
     response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setType(ValidationCategoryTypes.IMPORTANT);
     response.setAcceptable(false);
     response.setGuidance("These issues need to be categorized.");
     response.setCount(count);
@@ -160,9 +158,9 @@ public class ValidationController extends BaseController {
     }
 
     List<ValidationResult> results = tenantService.getValidationResults(reportId);
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.setCategories(categories);
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
       return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
     }).collect(Collectors.toList());
@@ -207,9 +205,9 @@ public class ValidationController extends BaseController {
     }
 
     List<ValidationResult> results = tenantService.getValidationResults(reportId);
-    ValidationCategorizer categorizer = new ValidationCategorizer(results);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.setCategories(categories);
-    List<ValidationResultCategory> categorizedResults = categorizer.categorize();
+    List<ValidationResultCategory> categorizedResults = categorizer.categorize(results);
     List<ValidationResult> uncategorizedResults = results.stream().filter(r -> {
       return categorizedResults.stream().noneMatch(cr -> cr.getValidationResultId().equals(r.getId()));
     }).collect(Collectors.toList());

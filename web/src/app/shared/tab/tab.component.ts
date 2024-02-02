@@ -12,6 +12,4 @@ import { IdFromTitlePipe } from 'src/app/helpers/GlobalPipes.pipe';
 export class TabComponent {
   @Input() tabTitle: string = ''
   @Input() isActive: boolean = false
-
-  // todo: convert tabTitle to consistent ID -- here or in tab container?
 }

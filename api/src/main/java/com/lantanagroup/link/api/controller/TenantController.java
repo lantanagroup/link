@@ -5,6 +5,7 @@ import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.db.model.tenant.TenantVendors;
 import com.lantanagroup.link.model.SearchTenantResponse;
 import com.lantanagroup.link.model.TenantSummary;
 import com.lantanagroup.link.model.TenantSummaryResponse;
@@ -43,7 +44,7 @@ public class TenantController extends BaseController {
   @GetMapping
   public List<SearchTenantResponse> searchTenants() {
     return this.sharedService.getTenantConfigs().stream()
-            .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId()))
+            .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId(), t.getVendor(), t.getOtherVendor()))
             .collect(Collectors.toList());
   }
 
@@ -110,6 +111,10 @@ public class TenantController extends BaseController {
 
     if (StringUtils.isEmpty(newTenantConfig.getTimeZoneId())) {
       newTenantConfig.setTimeZoneId("UTC");
+    }
+
+    if (StringUtils.isNotEmpty(newTenantConfig.getOtherVendor()) && newTenantConfig.getVendor() != TenantVendors.Other) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "If 'otherVendor' is provided, 'vendor' must be 'Other'");
     }
 
     try {

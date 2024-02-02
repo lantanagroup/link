@@ -25,6 +25,16 @@ public class Tenant {
   private String cdcOrgId;
 
   /**
+   * The vendor that the tenant is using. This is used to determine how to query the EHR's FHIR API.
+   */
+  private TenantVendors vendor;
+
+  /**
+   * A free-text string representing the vendor if the vendor is not in the list of known vendors.
+   */
+  private String otherVendor;
+
+  /**
    * A description of the tenant that is more meaningful/useful than the id.
    */
   private String description;
