@@ -10,7 +10,7 @@ import { TableComponent } from 'src/app/shared/table/table.component';
 import { Tenant } from 'src/app/shared/interfaces/tenant.model';
 import { SearchBar } from 'src/app/shared/interfaces/table.model';
 import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
-import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString, ConvertToLocaleTime } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-facilities',
@@ -25,6 +25,7 @@ export class FacilitiesComponent implements OnInit {
   ) { }
   private pascalCaseToSpace = new PascalCaseToSpace
   private convertDateString = new ConvertDateString
+  private convertToLocaleTime = new ConvertToLocaleTime
 
   dtOptions: DataTables.Settings = {};
   
@@ -117,7 +118,11 @@ export class FacilitiesComponent implements OnInit {
         {
           title: 'Last Submission',
           data: columnIdMap[3],
-          orderable: true
+          orderable: true,
+          render: function(data, type, row) {
+            let parts = data.split(' ', 2)
+            return parts[0] + '<br>' + data.substring(parts[0].length).trim()
+          }
         },
         {
           title: 'Current Measures',
@@ -147,10 +152,11 @@ export class FacilitiesComponent implements OnInit {
       let submissionDate = td.lastSubmissionDate
 
       if(submissionDate) {
-        const [datePart, timePart] = td.lastSubmissionDate.split(' '),
-              transformedDate = this.convertDateString.transform(datePart)
+        // const [datePart, timePart] = td.lastSubmissionDate.split(' '),
+        //       transformedDate = this.convertDateString.transform(datePart)
 
-        submissionDate = `${transformedDate} ${timePart}`
+        // submissionDate = `${transformedDate} ${timePart}`
+        submissionDate = this.convertToLocaleTime.transform(submissionDate)
       }
 
       return {

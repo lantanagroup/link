@@ -20,7 +20,7 @@ import { Report } from 'src/app/shared/interfaces/report.model';
 import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
 import { TenantConceptMap, Normalization, QueryPlan, QueryPlans, TenantDetails } from 'src/app/shared/interfaces/tenant.model';
-import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString, ConvertToLocaleTime } from 'src/app/helpers/GlobalPipes.pipe';
 import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 
 interface DisplayConceptMap {
@@ -60,6 +60,7 @@ export class FacilityComponent {
 
   private pascalCaseToSpace = new PascalCaseToSpace
   private convertDateString = new ConvertDateString
+  private convertToLocaleString = new ConvertToLocaleTime
 
   constructor(
     private route: ActivatedRoute,
@@ -247,6 +248,10 @@ export class FacilityComponent {
         orderable: false,
         createdCell: (cell, cellData) => {
           $(cell).addClass('timestamp');
+        },
+        render: function(data, type, row) {
+          let parts = data.split(' ', 2)
+          return parts[0] + '<br>' + data.substring(parts[0].length).trim()
         }
       },
       {
@@ -368,9 +373,9 @@ export class FacilityComponent {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = this.convertDateString.transform(report.generatedTime)
+        timestamp = this.convertToLocaleString.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = this.convertDateString.transform(report.submittedTime)
+        timestamp = this.convertToLocaleString.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }

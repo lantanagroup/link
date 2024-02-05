@@ -14,7 +14,7 @@ import { MetricApiService } from 'src/services/api/metric/metric-api.service';
 import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
 import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
-import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+import { PascalCaseToSpace, ConvertDateString, ConvertToLocaleTime } from 'src/app/helpers/GlobalPipes.pipe';
 import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 
 @Component({
@@ -34,6 +34,7 @@ export class ActivitiesComponent implements OnInit {
   isDataLoaded: boolean = false;
   private pascalCaseToSpace = new PascalCaseToSpace
   private convertDateString = new ConvertDateString
+  private convertToLocaleTime = new ConvertToLocaleTime
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -140,6 +141,10 @@ export class ActivitiesComponent implements OnInit {
         orderable: false,
         createdCell: (cell, cellData) => {
           $(cell).addClass('timestamp');
+        },
+        render: function(data, type, row) {
+          let parts = data.split(' ', 2)
+          return parts[0] + '<br>' + data.substring(parts[0].length).trim()
         }
       },
       {
@@ -261,9 +266,9 @@ export class ActivitiesComponent implements OnInit {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = this.convertDateString.transform(report.generatedTime)
+        timestamp = this.convertToLocaleTime.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = this.convertDateString.transform(report.submittedTime)
+        timestamp = this.convertToLocaleTime.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }
