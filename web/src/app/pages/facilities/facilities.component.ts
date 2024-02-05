@@ -30,7 +30,7 @@ export class FacilitiesComponent implements OnInit {
   
   dtSearchBar: SearchBar = {
     title: 'Search Facilities',
-    placeholder: 'Enter facility name, CDC ID, etc.'
+    placeholder: 'Enter facility name, NHSN Org ID, etc.'
   };
   tableOptionsLoaded = false;
 
@@ -55,7 +55,7 @@ export class FacilitiesComponent implements OnInit {
   calculateDtOptions(): DataTables.Settings {
     // DataTable configuration
     const columnIdMap = ['NAME', 'NHSN_ORG_ID', 'DETAILS', 'SUBMISSION_DATE', 'MEASURES'],
-          pageLength = 15
+          pageLength = 5
 
     return {
       serverSide: true,
@@ -72,8 +72,8 @@ export class FacilitiesComponent implements OnInit {
         from(this.facilitiesApiService.fetchAllFacilities({page: page, sort: orderBy, sortAscend: sortAscend, searchCriteria: searchValue}))
           .subscribe(response => {
             callback({
-              recordsTotal: response?.total,
-              recordsFiltered: response?.tenants.length,
+              recordsTotal: response?.tenants.length,
+              recordsFiltered: response?.total,
               data: this.processDataForTable(response?.tenants)
             })
           })
