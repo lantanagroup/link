@@ -14,6 +14,7 @@ import { TableComponent } from 'src/app/shared/table/table.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
 import { LoaderComponent } from 'src/app/shared/loader/loader.component';
 import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
+import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
 
 /* dummy data */
 import { normalizationData } from 'src/app/helpers/ReportHelper';
@@ -31,6 +32,7 @@ export class BundleComponent {
   dtOptions: DataTables.Settings = {}
   bundleDetails: any = {}
   isDataLoaded: boolean = false
+  conceptMaps: TenantConceptMap[] = []
 
 
   // purely placeholder
@@ -94,10 +96,12 @@ export class BundleComponent {
         
         forkJoin({
           bundleDetails: this.globalApiService.getContentObservable(`${this.tenantId}/report/${this.bundleId}/aggregate`),
+          conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.tenantId}/conceptMap`)
           // other stuff, if needed
-        }).subscribe(({ bundleDetails }) => {
+        }).subscribe(({ bundleDetails, conceptMaps }) => {
           // currently this endpoint doesn't return anything, but someday
           this.bundleDetails = bundleDetails
+          this.conceptMaps = conceptMaps
           
           this.isDataLoaded = true
         })

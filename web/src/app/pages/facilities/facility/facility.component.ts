@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { forkJoin, from } from 'rxjs';
+import { forkJoin, from, switchMap, map } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
 import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
@@ -22,6 +22,14 @@ import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper'
 import { TenantConceptMap, Normalization, QueryPlan, QueryPlans, TenantDetails } from 'src/app/shared/interfaces/tenant.model';
 import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
 import { LoaderComponent } from 'src/app/shared/loader/loader.component';
+
+interface DisplayConceptMap {
+  id: string
+  name?: string
+  contexts: string
+  description?: string
+  purpose?: string
+}
 
 @Component({
     selector: 'app-facility',
@@ -45,7 +53,7 @@ export class FacilityComponent {
   resourceQueryKeys: string[] = [
     'PatientDataResourceFilter'
   ]
-  facilityConceptMaps: TenantConceptMap[] = []
+  facilityConceptMaps: any = []
   facilityQueryPlans: QueryPlan[] = []
   dtOptions: DataTables.Settings = {};
   isDataLoaded: boolean = false;
@@ -61,7 +69,7 @@ export class FacilityComponent {
     private reportsApiService: ReportApiService
   ) { }
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     this.route.paramMap.subscribe(params => {
       this.facilityId = params.get('id')
 
@@ -71,7 +79,35 @@ export class FacilityComponent {
         forkJoin({
           tenantDetails: this.globalApiService.getContentObservable<TenantDetails>(`tenant/${this.facilityId}`),
           conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.facilityId}/conceptMap`)
-        }).subscribe(({ tenantDetails, conceptMaps }) => {
+        }).pipe(
+          switchMap(({tenantDetails, conceptMaps}) => {
+            // Process conceptMaps
+            const conceptMapRequests = conceptMaps.map(conceptMap =>
+              this.globalApiService.getContentObservable(`${this.facilityId}/conceptMap/${conceptMap.id}`)
+                .pipe(
+                  map((conceptMapDetails: any, index) => {
+                    // Since this includes the id, name and contexts, we can replace it with this
+                    const updatedConceptMap = {
+                      id: conceptMapDetails?.id,
+                      contexts: conceptMapDetails?.contexts,
+                      title: conceptMapDetails.conceptMap.title ? conceptMapDetails?.conceptMap?.title.replace(/{{name}}/g, tenantDetails?.name) : `Concept Map ${index}`,
+                      description: conceptMapDetails.conceptMap.description ? conceptMapDetails.conceptMap.description.replace(/{{name}}/g, tenantDetails?.name) : null,
+                    }
+
+                    return updatedConceptMap
+                  })
+                )
+              )
+      
+            // Wait for all additional conceptMap details requests to complete
+            return forkJoin(conceptMapRequests).pipe(
+              map(updatedConceptMaps => ({
+                tenantDetails,
+                conceptMaps: updatedConceptMaps
+              }))
+            )
+          })
+        ).subscribe(({ tenantDetails, conceptMaps }) => {
           this.facilityDetails = tenantDetails
           this.facilityConceptMaps = conceptMaps
 
@@ -156,7 +192,6 @@ export class FacilityComponent {
 
   generateQueryPlans(data: QueryPlans): QueryPlan[] {
     let templateQueryPlans: QueryPlan[] = []
-    console.log('data:', data)
     for (const key of Object.keys(data)) {
       templateQueryPlans = [...templateQueryPlans, {
         ...data[key],

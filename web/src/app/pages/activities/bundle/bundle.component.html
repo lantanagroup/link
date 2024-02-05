@@ -47,11 +47,13 @@
               titleAlign="center"
             >
               <app-loader *ngIf="!isDataLoaded" />
-              <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
-                <strong>ID:</strong> 923123124<br>
-                <strong>Contexts:</strong> FHIRPath<br>
-                <strong>Path:</strong> 921837271<br>
-                <strong>Map:</strong> FHIR Concept Map
+              <app-mini-content *ngFor="let conceptMap of conceptMaps; index as i" title='Concept Map {{ i + 1 }}'>
+                <strong>ID:</strong> {{ conceptMap.id }}<br>
+                <strong>Contexts:</strong>
+                <ng-container *ngFor="let context of conceptMap.contexts">
+                  {{ context }}<br>
+                </ng-container>
+                <!-- <strong>Path:</strong> 921837271<br> -->
               </app-mini-content>
   
             </app-card>
