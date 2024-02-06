@@ -44,8 +44,8 @@ export class FacilityComponent {
   facilityNormalizations: Normalization[] = []
   dataQueryKeys: string[] = [
     'CodeSystemCleanup',
-    'ContainedResouceCleanup',
-    'CopyLocationToIdentifierType',
+    'ContainedResourceCleanup',
+    'CopyLocationIdentifierToType',
     'EncounterStatusTransformer',
     'FixPeriodDates',
     'FixResourceId'
@@ -112,11 +112,14 @@ export class FacilityComponent {
           this.facilityDetails = tenantDetails
           this.facilityConceptMaps = conceptMaps
 
+          console.log('deets:', this.facilityDetails)
+          
           // get normalizations
           this.facilityNormalizations = [
             ...this.generateNormalizations(this.facilityDetails.events.afterPatientDataQuery, this.dataQueryKeys),
             ...this.generateNormalizations(this.facilityDetails.events.afterPatientResourceQuery, this.resourceQueryKeys)
           ]
+          console.log('norms:', this.facilityNormalizations)
 
           // get query plans
           this.facilityQueryPlans = this.generateQueryPlans(this.facilityDetails.fhirQuery?.queryPlans)
