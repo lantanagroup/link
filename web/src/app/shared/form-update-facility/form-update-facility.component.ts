@@ -475,7 +475,7 @@ export class FormUpdateFacilityComponent {
     }
 
     if(data?.afterPatientResourceQuery && data?.afterPatientResourceQuery !== null) {
-      afterPatientDataQueryEvents = {
+      afterPatientResourceQueryEvents = {
         patientDataResourceFilter: data.afterPatientResourceQuery.some((item: string) => item === NormalizationClass.patientDataResourceFilter) ? 1 : 0
       }
     }
