@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/services/auth/auth.service';
+import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
-  private API_BASE_URL: string = 'https://dev.nhsnlink.org/api'; // Set the base URL
+
+  private API_BASE_URL: string = environment.apiUrl; // Set the base URL
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
