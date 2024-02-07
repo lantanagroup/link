@@ -19,7 +19,7 @@ export class DataService {
       case 'localhost':
         return 'https://dev.nhsnlink.org/api'
       default:
-        return `https://${hostname}/api`
+        return `${window.location.protocol}//${hostname}/api`
     }
   }
 

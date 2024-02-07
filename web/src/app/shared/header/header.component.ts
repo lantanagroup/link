@@ -23,7 +23,8 @@ export class HeaderComponent {
   }
   // Logout the user.
   logout() {
-    this.authService.logout();
+    const message = 'You have been logged out successfully.'
+    this.authService.logout(message);
   }
 
 

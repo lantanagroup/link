@@ -6,8 +6,11 @@
           <div class="login__logo">
             <img src="../../../assets/nhsn-logo-color.svg" alt="NHSNLink Logo" />
           </div>
-          <h1 class="mt-2 text-primary h2">Sign In to NHSNLink</h1>
-          <div class="d-flex justify-content-center mt-5">
+          <h1 class="mt-2 text-primary h2 mb-4">Sign In to NHSNLink</h1>
+
+          <p class="message mb-4" *ngIf="message" [innerHTML]="message"></p>
+          
+          <div class="d-flex justify-content-center">
             <app-button
             variant="solid"
             type="link"
