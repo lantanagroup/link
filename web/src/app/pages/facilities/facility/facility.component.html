@@ -26,9 +26,9 @@
               <app-mini-content title="NHSN Org Id">
                 <p *ngIf="facilityDetails?.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
               </app-mini-content>
-
+              
               <app-mini-content title="EHR Vendor">
-                <p><em>Todo:</em> Will be filled out once LNK-1854 is complete.</p>
+                <p *ngIf="facilityDetails?.vendor; else noData">{{ facilityDetails?.vendor }}</p>
               </app-mini-content>
 
               <app-mini-content title="FHIR API URL">

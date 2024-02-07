@@ -669,7 +669,7 @@ export class FormUpdateFacilityComponent {
       },
       cdcOrgId: facilityDetails?.cdcOrgId,
       connectionString: facilityDetails?.connectionString,
-      vendor: null, // todo : doesn't exist in endpoint
+      vendor: facilityDetails?.vendor,
       retentionPeriod: facilityDetails?.retentionPeriod,
       events: this.mapNormalizationsApiDataToForm(facilityDetails?.events),
       conceptMaps: this.mapConceptMapData(conceptMaps),
