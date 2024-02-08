@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/services/auth/auth.service';
-import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
-
-  private API_BASE_URL: string = environment.apiUrl; // Set the base URL
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -16,12 +13,27 @@ export class DataService {
     });
   }
 
+  private getApiBaseUrl(): string {
+    const hostname = window.location.hostname
+    switch (hostname) {
+      case 'localhost':
+        return 'https://dev.nhsnlink.org/api'
+      default:
+        return `${window.location.protocol}//${hostname}/api`
+    }
+  }
+
+  private constructApiUrl(resource: string) {
+    const baseUrl = this.getApiBaseUrl()
+    return `${baseUrl}/${resource}`
+  }
+
   private performRequest<T>(method: 'get' | 'post' | 'put', resource: string, data?: T) {
     if (!this.authService.isLoggedIn()) {
       throw new Error('User is not authenticated or token is invalid');
     }
 
-    const url = `${this.API_BASE_URL}/${resource}`;
+    const url = this.constructApiUrl(resource)
     const options = { headers: this.createHeaders() };
 
     switch (method) {

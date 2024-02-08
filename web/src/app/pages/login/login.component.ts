@@ -13,13 +13,26 @@ import { Router } from '@angular/router';
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-  constructor(private authService: AuthService, private router: Router) { }
+  public message: string | null = null
+  public errorMessage: string | null = null
+
+  constructor(
+    private authService: AuthService, 
+    private router: Router, 
+  ) { }
 
   // If user is already logged in, redirect to dashboard.
   ngOnInit(): void {
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/dashboard']); // Redirect to dashboard if logged in
     }
+
+    // show messages
+    this.message = sessionStorage.getItem('loginMessage')
+    if(this.message) {
+      this.message = decodeURIComponent(this.message)
+    }
+    sessionStorage.removeItem('loginMessage')
   }
   // Returns the sign-in redirect url to keycloak.
   signIn(): string {

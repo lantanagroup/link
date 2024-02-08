@@ -115,15 +115,23 @@ export class AuthService {
   }
 
   // Logs out the user by clearing the access_token
-  logout(): void {
+  logout(message?: string): void {
     sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('expires_in');
     sessionStorage.removeItem('id_token');
     sessionStorage.removeItem('refresh_token');
 
+    // set message if exists
+    if(message) {
+      sessionStorage.setItem('loginMessage', message)
+    } else {
+      sessionStorage.removeItem('loginMessage')
+    }
+
     this.updateAuthStatus(false)
 
     const logoutUrl = `${this.AUTH_ENDPOINT}/logout?redirect_uri=${this.getBaseURL()}`;
+
     window.location.href = logoutUrl;
   }
 
