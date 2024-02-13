@@ -29,9 +29,13 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^Unknown Code System '.*'$"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "A code with no system .* A system should be provided"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -71,19 +75,11 @@
             "regex": "^error$"
           },
           {
-            "field": "CODE",
-            "regex": "^code-invalid$"
-          },
-          {
             "field": "DETAILS_TEXT",
-            "regex": "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "^The code provided \\(.+?\\) is not in the value set '.+?' \\(.+?\\), and a code from this value set is required"
+            "regex": "The (code|value) provided \\(.*\\) is not in the value set '.*' \\(http:\\/\\/.*\\), and a code .*is required"
           }
         ],
-        "andOperator": false
+        "andOperator": true
       }
     ]
   },
@@ -263,9 +259,14 @@
             "field": "DETAILS_TEXT",
             "regex": "^Unable to find a match for profile .* among choices:",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Profile reference .* is unknown",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -605,6 +606,25 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_dateTime_format",
+    "title": "Invalid dateTime format.",
+    "severity": "ERROR",
+    "acceptable": false, 
+    "guidance": "A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "date has a time, it must have a timezone.*",
             "inverse": false
           }
         ],
