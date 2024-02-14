@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.validation.Validator;
 import org.springframework.beans.factory.InitializingBean;
@@ -73,8 +74,8 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
   }
 
   @Bean
-  public Validator validator(SharedService sharedService) {
-    return new Validator(sharedService);
+  public Validator validator(SharedService sharedService, ApiConfig apiConfig) {
+    return new Validator(sharedService, apiConfig);
   }
 
   /**

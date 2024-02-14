@@ -1,10 +1,13 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -15,18 +18,20 @@ import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
@@ -41,8 +46,13 @@ public class Validator {
   @Setter
   private SharedService sharedService;
 
-  public Validator(SharedService sharedService) {
+  private final List<String> allowedPackagePrefixes = List.of("structuredefinition-", "valueset-", "codesystem-", "implementationguide-", "measure-", "library-");
+  @Setter
+  private ApiConfig apiConfig;
+
+  public Validator(SharedService sharedService, ApiConfig apiConfig) {
     this.sharedService = sharedService;
+    this.apiConfig = apiConfig;
     this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
   }
 
@@ -93,24 +103,74 @@ public class Validator {
     }
   }
 
+  private void writeConformanceResourcesToFile() {
+    String resources = this.prePopulatedValidationSupport.fetchAllConformanceResources().stream()
+            .map(Object::toString)
+            .collect(Collectors.joining("\n"));
+    try {
+      Files.writeString(Path.of("d:\\code\\link\\conformance-resources.txt"), resources);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public void init() {
-    this.loadFiles();
+    this.loadPackages();
+    this.writeConformanceResourcesToFile();
+
     this.updateMeasures();
 
     this.validator = FhirContextProvider.getFhirContext().newValidator();
     this.validator.setExecutorService(Executors.newWorkStealingPool());
-    IValidatorModule module = new FhirInstanceValidator(this.getCachingValidationSupport());
+    IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
     this.validator.registerValidatorModule(module);
     this.validator.setConcurrentBundleValidation(true);
   }
 
-  private void loadFiles() {
+  private void loadPackages() {
+    if (StringUtils.isEmpty(this.apiConfig.getValidationPackagesPath())) {
+      logger.info("No validation packages path configured");
+      return;
+    }
+
     try {
       PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-      this.loadClassResources(resolver.getResources("terminology/**"));
-      this.loadClassResources(resolver.getResources("profiles/**"));
-    } catch (IOException ex) {
-      logger.error("Error loading resources for validation", ex);
+      org.springframework.core.io.Resource[] resources = resolver.getResources(this.apiConfig.getValidationPackagesPath());
+      for (org.springframework.core.io.Resource packageResource : resources) {
+        if (packageResource.getFile().isDirectory()) {
+          continue;
+        } else if (!packageResource.getFile().getName().endsWith(".tgz")) {
+          logger.warn("Unexpected package file name {}", packageResource.getFilename());
+          continue;
+        }
+
+        logger.info("Loading package {}", packageResource.getFilename());
+        NpmPackage npmPackage = NpmPackage.fromPackage(packageResource.getInputStream());
+
+        if (npmPackage.getFolders().containsKey("package")) {
+          NpmPackage.NpmPackageFolder packageFolder = npmPackage.getFolders().get("package");
+          Iterator var3 = packageFolder.listFiles().iterator();
+
+          while (var3.hasNext()) {
+            String nextFile = (String) var3.next();
+            String lowerCaseFileName = nextFile.toLowerCase(Locale.US);
+            String lowerCaseFileNamePrefix = lowerCaseFileName.substring(0, lowerCaseFileName.indexOf("-") + 1);
+
+            if (allowedPackagePrefixes.contains(lowerCaseFileNamePrefix) && lowerCaseFileName.endsWith(".json")) {
+              String input = new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
+              this.jsonParser.setParserErrorHandler(new LenientErrorHandler(false));
+              try {
+                IBaseResource resource = this.jsonParser.parseResource(input);
+                this.prePopulatedValidationSupport.addResource(resource);
+              } catch (DataFormatException ex) {
+                logger.error("Error parsing package {} resource {}", packageResource, nextFile, ex);
+              }
+            }
+          }
+        }
+      }
+    } catch (IOException e) {
+      logger.error("Error loading packages for validation: {}", e.getMessage());
     }
   }
 
@@ -161,7 +221,7 @@ public class Validator {
     }
   }
 
-  private CachingValidationSupport getCachingValidationSupport() {
+  private CachingValidationSupport getValidationSupportChain() {
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext()),
             new InMemoryTerminologyServerValidationSupport(FhirContextProvider.getFhirContext()),

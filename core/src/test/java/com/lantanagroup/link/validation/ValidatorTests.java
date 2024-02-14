@@ -2,6 +2,7 @@ package com.lantanagroup.link.validation;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.TestHelper;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import org.hl7.fhir.r4.model.*;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
   private static Validator validator;
+  private static Bundle largeBundle;
 
   /**
    * The validator should be initialized outside the actual tests so that we can determine the difference between the
@@ -31,6 +33,8 @@ public class ValidatorTests {
    */
   @BeforeClass
   public static void init() {
+    largeBundle = TestHelper.getBundle("large-submission-example.json");
+
     MeasureDefinition measureDefinition = new MeasureDefinition();
     measureDefinition.setBundle(new Bundle());
     measureDefinition.getBundle().addEntry()
@@ -39,7 +43,7 @@ public class ValidatorTests {
     when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
 
     if (validator == null) {
-      validator = new Validator(sharedService);
+      validator = new Validator(sharedService, new ApiConfig());
       validator.init();
 
       // Perform a single validation to pre-load all the packages and profiles
@@ -49,9 +53,27 @@ public class ValidatorTests {
   }
 
   @Test
-  public void testPerformance() throws IOException {
-    Bundle bundle = TestHelper.getBundle("large-submission-example.json");
-    OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
+  public void testPerformanceWithInit() {
+    logger.info("Testing initialization of validator");
+
+    MeasureDefinition measureDefinition = new MeasureDefinition();
+    measureDefinition.setBundle(new Bundle());
+    measureDefinition.getBundle().addEntry()
+            .setResource(new Measure().setUrl("http://test.com/fhir/Measure/a"));
+    SharedService sharedService = mock(SharedService.class);
+    when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
+
+    Validator newValidator = new Validator(sharedService, new ApiConfig());
+    newValidator.init();
+
+    // Perform a single validation to pre-load all the packages and profiles
+    newValidator.validate(largeBundle, OperationOutcome.IssueSeverity.ERROR);
+    logger.info("Done testing initialization of validator");
+  }
+
+  @Test
+  public void testPerformanceValidating() throws IOException {
+    OperationOutcome oo = validator.validate(largeBundle, OperationOutcome.IssueSeverity.INFORMATION);
 
     logger.info("Issues: {}", oo.getIssue().size());
     /*oo.getIssue().forEach(i -> {

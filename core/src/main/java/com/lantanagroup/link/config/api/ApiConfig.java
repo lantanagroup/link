@@ -177,4 +177,9 @@ public class ApiConfig {
   private boolean allowQaEndpoints = false;
 
   private List<ApiInfoGroup> infoGroups = new ArrayList<>();
+
+  /**
+   * <strong>api.validation-packages-path</strong><br>The path to the validation packages
+   */
+  private String validationPackagesPath = "classpath:/packages/**";
 }
