@@ -3,7 +3,6 @@ package com.lantanagroup.link.validation;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
@@ -28,7 +27,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -46,7 +48,8 @@ public class Validator {
   @Setter
   private SharedService sharedService;
 
-  private final List<String> allowedPackagePrefixes = List.of("structuredefinition-", "valueset-", "codesystem-", "implementationguide-", "measure-", "library-");
+  private final List<String> allowsResourceTypes = List.of("StructureDefinition", "ValueSet", "CodeSystem", "ImplementationGuide", "Measure", "Library");
+
   @Setter
   private ApiConfig apiConfig;
 
@@ -103,12 +106,15 @@ public class Validator {
     }
   }
 
+  /**
+   * Writes all conformance resources to a file for debugging purposes
+   */
   private void writeConformanceResourcesToFile() {
     String resources = this.prePopulatedValidationSupport.fetchAllConformanceResources().stream()
             .map(Object::toString)
             .collect(Collectors.joining("\n"));
     try {
-      Files.writeString(Path.of("d:\\code\\link\\conformance-resources.txt"), resources);
+      Files.writeString(Path.of("conformance-resources.txt"), resources);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -116,7 +122,10 @@ public class Validator {
 
   public void init() {
     this.loadPackages();
-    this.writeConformanceResourcesToFile();
+    this.loadTerminology();
+
+    // When needed for debugging
+    //this.writeConformanceResourcesToFile();
 
     this.updateMeasures();
 
@@ -127,6 +136,9 @@ public class Validator {
     this.validator.setConcurrentBundleValidation(true);
   }
 
+  /**
+   * Load allowed resources for all packages from the configured path into the pre-populated validation support
+   */
   private void loadPackages() {
     if (StringUtils.isEmpty(this.apiConfig.getValidationPackagesPath())) {
       logger.info("No validation packages path configured");
@@ -147,27 +159,15 @@ public class Validator {
         logger.info("Loading package {}", packageResource.getFilename());
         NpmPackage npmPackage = NpmPackage.fromPackage(packageResource.getInputStream());
 
-        if (npmPackage.getFolders().containsKey("package")) {
-          NpmPackage.NpmPackageFolder packageFolder = npmPackage.getFolders().get("package");
-          Iterator var3 = packageFolder.listFiles().iterator();
-
-          while (var3.hasNext()) {
-            String nextFile = (String) var3.next();
-            String lowerCaseFileName = nextFile.toLowerCase(Locale.US);
-            String lowerCaseFileNamePrefix = lowerCaseFileName.substring(0, lowerCaseFileName.indexOf("-") + 1);
-
-            if (allowedPackagePrefixes.contains(lowerCaseFileNamePrefix) && lowerCaseFileName.endsWith(".json")) {
-              String input = new String(packageFolder.getContent().get(nextFile), StandardCharsets.UTF_8);
-              this.jsonParser.setParserErrorHandler(new LenientErrorHandler(false));
-              try {
-                IBaseResource resource = this.jsonParser.parseResource(input);
-                this.prePopulatedValidationSupport.addResource(resource);
-              } catch (DataFormatException ex) {
-                logger.error("Error parsing package {} resource {}", packageResource, nextFile, ex);
-              }
-            }
+        npmPackage.listResources(allowsResourceTypes).forEach(resource -> {
+          try {
+            String resourceJson = new String(npmPackage.getFolders().get("package").getContent().get(resource), StandardCharsets.UTF_8);
+            IBaseResource baseResource = this.jsonParser.parseResource(resourceJson);
+            this.prePopulatedValidationSupport.addResource(baseResource);
+          } catch (DataFormatException ex) {
+            logger.error("Error parsing package {} resource {}", packageResource, resource, ex);
           }
-        }
+        });
       }
     } catch (IOException e) {
       logger.error("Error loading packages for validation: {}", e.getMessage());
@@ -179,6 +179,20 @@ public class Validator {
     this.sharedService.getMeasureDefinitions().forEach(md -> {
       // TODO
     });
+  }
+
+  /**
+   * Load resources from the terminology classpath directory into the pre-populated validation support
+   */
+  private void loadTerminology() {
+    try {
+      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      org.springframework.core.io.Resource[] resources = resolver.getResources("terminology/**");
+      this.loadClassResources(resources);
+    } catch (IOException e) {
+      logger.error("Error loading class resources for validation: {}", e.getMessage());
+    }
+
   }
 
   private void loadClassResources(org.springframework.core.io.Resource[] classResources) {
