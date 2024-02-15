@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
 import { ButtonComponent } from 'src/app/shared/button/button.component';
 import { SectionComponent } from 'src/app/shared/section/section.component';
@@ -11,7 +12,9 @@ import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.c
 import { IconComponent } from 'src/app/shared/icon/icon.component';
 import { TableComponent } from 'src/app/shared/table/table.component';
 import { LinkComponent } from 'src/app/shared/link/link.component';
-import { ReportApiService } from 'src/services/api/report/report-api.service';
+import { LoaderComponent } from 'src/app/shared/loader/loader.component';
+import { GlobalApiService } from 'src/services/api/globals/globals-api.service';
+import { TenantConceptMap } from 'src/app/shared/interfaces/tenant.model';
 
 /* dummy data */
 import { normalizationData } from 'src/app/helpers/ReportHelper';
@@ -19,7 +22,7 @@ import { normalizationData } from 'src/app/helpers/ReportHelper';
 @Component({
   selector: 'app-bundle',
   standalone: true,
-  imports: [CommonModule, HeroComponent, ButtonComponent, SectionComponent, TabContainerComponent, TabComponent, CardComponent, MiniContentComponent, IconComponent, TableComponent, LinkComponent],
+  imports: [CommonModule, HeroComponent, ButtonComponent, SectionComponent, TabContainerComponent, TabComponent, CardComponent, MiniContentComponent, IconComponent, TableComponent, LinkComponent, LoaderComponent],
   templateUrl: './bundle.component.html',
   styleUrls: ['./bundle.component.scss']
 })
@@ -28,6 +31,9 @@ export class BundleComponent {
   tenantId: string | null = 'ehr-test'
   dtOptions: DataTables.Settings = {}
   bundleDetails: any = {}
+  isDataLoaded: boolean = false
+  conceptMaps: TenantConceptMap[] = []
+
 
   // purely placeholder
   mockBundleDetails: any = {
@@ -76,7 +82,7 @@ export class BundleComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private reportsApiService: ReportApiService
+    private globalApiService: GlobalApiService
   ) {}
 
   async ngOnInit() {
@@ -86,23 +92,24 @@ export class BundleComponent {
 
       this.dtOptions = this.calculateDtOptions(this.mockBundleDetails.normalizations.details)
 
-      if(this.bundleId) {
-        this.GetBundleDetails(this.bundleId)
+      if(this.bundleId && this.tenantId) {
+        
+        forkJoin({
+          bundleDetails: this.globalApiService.getContentObservable(`${this.tenantId}/report/${this.bundleId}/aggregate`),
+          conceptMaps: this.globalApiService.getContentObservable<TenantConceptMap[]>(`${this.tenantId}/conceptMap`)
+          // other stuff, if needed
+        }).subscribe(({ bundleDetails, conceptMaps }) => {
+          // currently this endpoint doesn't return anything, but someday
+          this.bundleDetails = bundleDetails
+          this.conceptMaps = conceptMaps
+          
+          this.isDataLoaded = true
+        })
       } else {
         this.router.navigate(['/activities'])
       }
     })
   }
-
-  async GetBundleDetails(id: string) {
-    try {
-      this.bundleDetails = await this.reportsApiService.fetchReportById(id)
-      console.log('Bundle Details:', this.bundleDetails)
-    } catch (error) {
-      console.error('Error loading the bundle detail:', error)
-    }
-  }
-
 
   generateFacilityLink(): { url: string } {
     const url = this.tenantId

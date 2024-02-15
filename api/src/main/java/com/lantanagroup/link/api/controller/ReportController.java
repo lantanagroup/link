@@ -166,7 +166,7 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
   }
 
   /**
@@ -185,7 +185,8 @@ public class ReportController extends BaseController {
           @PathVariable String tenantId,
           @RequestParam boolean regenerate,
           @RequestParam(defaultValue = "true") boolean validate,
-          @RequestParam(defaultValue = "false") boolean skipQuery)
+          @RequestParam(defaultValue = "false") boolean skipQuery,
+          @RequestParam(required = false, defaultValue = "") List<String> debugPatients)
           throws Exception {
     List<String> singleMeasureBundleIds;
 
@@ -198,6 +199,8 @@ public class ReportController extends BaseController {
       }
     }
 
+    Optional<List<String>> debugPatientList = Optional.of(debugPatients);
+
     // get the associated bundle-ids
     if (!apiMeasurePackage.isPresent()) {
       throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
@@ -206,7 +209,7 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery, debugPatients);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
@@ -244,7 +247,7 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
     try(var stopwatch = stopwatchManager.start(Constants.REPORT_GENERATION_TASK, Constants.CATEGORY_REPORT)) {
       this.checkReportingPlan(tenantService, periodStart, measureIds);
@@ -298,6 +301,17 @@ public class ReportController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Query plan not found: " + criteria.getQueryPlanId());
       }
       reportContext.setQueryPlan(queryPlan);
+
+      // Validate the debug patients against the patient of interest list
+      if(!debugPatients.isEmpty() && !debugPatients.contains("*")) {
+        List<String> invalidDebugPatientsList = debugPatients.stream().filter(dp -> !reportContext.getPatientsOfInterest().stream().map(PatientOfInterestModel::getReference).collect(Collectors.toList()).contains(dp)).collect(Collectors.toList());
+        if (!invalidDebugPatientsList.isEmpty()) {
+          String msg = String.format("Debugging patients: %s do not exist", invalidDebugPatientsList);
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+        }
+      }
+      reportContext.setDebugPatients(debugPatients);
 
       report = new Report();
       report.setId(masterIdentifierValue);

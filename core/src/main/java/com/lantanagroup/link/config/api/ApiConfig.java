@@ -151,6 +151,10 @@ public class ApiConfig {
   @Getter
   private String socketTimeout;
 
+  @Getter
+  @NotNull
+  private String debugPath;
+
   /**
    * <strong>api.measure-evaluation-threads</strong><br>The number of threads to use for patient measure report generation.
    */
@@ -182,4 +186,5 @@ public class ApiConfig {
    * <strong>api.validation-packages-path</strong><br>The path to the validation packages
    */
   private String validationPackagesPath = "classpath:/packages/**";
+
 }

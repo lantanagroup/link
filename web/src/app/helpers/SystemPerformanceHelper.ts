@@ -113,7 +113,7 @@ export const errorHistory: ChartDataModel[] = [
 export const reportGenerationCurrent: ChartDatapoint[] = [
   {
     name: "Average Time per day",
-    value: 10686
+    value: 10432
   }
 ]
 
@@ -158,7 +158,7 @@ export const reportGenerationHistory: ChartDataModel[] = [{
 
 export const activeTenantCurrent: ChartDatapoint[] = [{
   name: "Total Tenants",
-  value: 20
+  value: 21
 }]
 
 export const activeTenantHistory: ChartDataModel[] = [{

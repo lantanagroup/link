@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from "@angular/core"
+import { DatePipe } from "@angular/common";
 
 // ID from Title
 @Pipe({ 
@@ -147,5 +148,21 @@ export class ConvertDateString implements PipeTransform {
   transform(date: string): string {
     const parts = date.split('-')
     return `${parts[1]}.${parts[2]}.${parts[0]}`
+  }
+}
+
+// Convert to local time
+@Pipe({
+  name: 'convertToLocaleTime',
+  standalone: true
+})
+export class ConvertToLocaleTime implements PipeTransform {
+  transform(date: string): string {
+    if (!date) return ''
+    
+    let datePipe = new DatePipe('en-US'),
+        formattedDate = datePipe.transform(date, 'MM.dd.yyyy h:mm a zzz', 'America/New_York') || ''
+
+    return formattedDate.replace('GMT-6', 'EST')
   }
 }

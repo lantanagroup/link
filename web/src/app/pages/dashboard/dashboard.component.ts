@@ -15,7 +15,7 @@ import { ReportApiService } from 'src/services/api/report/report-api.service';
 import { MetricApiService } from 'src/services/api/metric/metric-api.service';
 import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
 
-import { ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
+import { ConvertToLocaleTime } from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
     selector: 'app-dashboard',
@@ -32,7 +32,7 @@ export class DashboardComponent {
   cardCount: number = 3;
   columnSpan: number = 4;
 
-  private convertDateString = new ConvertDateString
+  private convertToLocaleTime = new ConvertToLocaleTime
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -63,7 +63,7 @@ export class DashboardComponent {
         {
           name: 'Average Query Time',
           subText: 'on average past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.queryTime
@@ -71,7 +71,7 @@ export class DashboardComponent {
         {
           name: 'Total Patients Queried',
           subText: 'patients queried past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.patientsQueried
@@ -79,7 +79,7 @@ export class DashboardComponent {
         {
           name: 'Average Validation Time',
           subText: 'on average past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.validation
@@ -152,6 +152,10 @@ export class DashboardComponent {
           data: columnIdMap[2],
           createdCell: (cell, cellData) => {
             $(cell).addClass('timestamp')
+          },
+          render: function(data, type, row) {
+            let parts = data.split(' ', 2)
+            return parts[0] + '<br>' + data.substring(parts[0].length).trim()
           }
         }
       ]
@@ -172,9 +176,9 @@ export class DashboardComponent {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = this.convertDateString.transform(report.generatedTime)
+        timestamp = this.convertToLocaleTime.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = this.convertDateString.transform(report.submittedTime)
+        timestamp = this.convertToLocaleTime.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }

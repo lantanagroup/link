@@ -41,4 +41,8 @@ public class ReportIdHelper {
   public static String getPatientDataBundleId(String masterIdentifierValue, String patientId) {
     return combine(masterIdentifierValue, hash(patientId));
   }
+
+  public static String getPatientBundleFileName(String masterIdentifierValue, String patientId) {
+    return combine("patient-bundle-for-cqf-", masterIdentifierValue, "-" + patientId);
+  }
 }

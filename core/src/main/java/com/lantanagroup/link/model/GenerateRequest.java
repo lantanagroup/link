@@ -16,4 +16,5 @@ public class GenerateRequest {
   private String periodEnd;
   boolean validate = true;
   boolean skipQuery = false;
+  private List<String> debugPatients = new ArrayList<>();
 }

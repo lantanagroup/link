@@ -108,8 +108,8 @@ export class FormUpdateFacilityComponent {
     bundling: new FormGroup ({
       name: new FormControl('', [Validators.required])
     }),
-    cdcOrgId: new FormControl(''), // todo : validation for 5 char min?
-    connectionString: new FormControl('', [databaseValidator()]),
+    cdcOrgId: new FormControl('', [Validators.required]), // todo : validation for 5 char min?
+    connectionString: new FormControl('', [Validators.required, databaseValidator()]),
     vendor: new FormControl(''),
     retentionPeriod: new FormControl('', [iso8601Validator()]), // todo : confirm this is the correct regex
     events: new FormGroup ({
@@ -475,7 +475,7 @@ export class FormUpdateFacilityComponent {
     }
 
     if(data?.afterPatientResourceQuery && data?.afterPatientResourceQuery !== null) {
-      afterPatientDataQueryEvents = {
+      afterPatientResourceQueryEvents = {
         patientDataResourceFilter: data.afterPatientResourceQuery.some((item: string) => item === NormalizationClass.patientDataResourceFilter) ? 1 : 0
       }
     }
@@ -669,7 +669,7 @@ export class FormUpdateFacilityComponent {
       },
       cdcOrgId: facilityDetails?.cdcOrgId,
       connectionString: facilityDetails?.connectionString,
-      vendor: null, // todo : doesn't exist in endpoint
+      vendor: facilityDetails?.vendor,
       retentionPeriod: facilityDetails?.retentionPeriod,
       events: this.mapNormalizationsApiDataToForm(facilityDetails?.events),
       conceptMaps: this.mapConceptMapData(conceptMaps),
@@ -776,6 +776,12 @@ export class FormUpdateFacilityComponent {
             error: (error) => {
               this.isDataLoaded = true;
               console.error('Error fetching measureDefs:', error)
+              this.toastService.showToast(
+                `Error Updating Facility: ${error.error.status}`,
+                error.error.message,
+                'failed'
+              )
+              this.facilitiesForm.markAllAsTouched()
             },
             complete: () => {
               this.isDataLoaded = true;
@@ -791,18 +797,36 @@ export class FormUpdateFacilityComponent {
         } else {
           // 2. Create new facility
           allObservables.unshift(this.globalApiService.postContentObservable('tenant', formData))
-          forkJoin(allObservables).subscribe(responses => {
-            let tenantResponse = responses[0],
-                conceptMapResponses = responses.slice(1)
 
-            this.isDataLoaded = true
-            this.toastService.showToast(
-              'New Tenant Created',
-              `${this.facilitiesForm.value.name} has been successfully created.`,
-              'success'
-            )
-            this.router.navigate(['/facilities/'])
+          forkJoin(allObservables).subscribe({
+            next: (responses) => {
+              let tenantResponse = responses[0],
+                  conceptMapResponses = responses.slice(1)
+              console.log(responses.length + '/' + allObservables.length, 'complete')
+            },
+            error: (error) => {
+              this.isDataLoaded = true;
+              console.error('Error creating tenant:', error)
+              this.toastService.showToast(
+                `Error Creating Facility: ${error.error.status}`,
+                error.error.message,
+                'failed'
+              )
+              this.facilitiesForm.markAllAsTouched()
+            },
+            complete: () => {
+              this.isDataLoaded = true;
+              this.toastService.showToast(
+                'Facility Created',
+                `${formData.name} has been successfully created.`,
+                'success'
+              )
+
+              this.router.navigate(['/facilities/'])
+            }
           })
+          
+          
         }
       } catch (error: any) {
         console.error('Error submitting facility data', error);
