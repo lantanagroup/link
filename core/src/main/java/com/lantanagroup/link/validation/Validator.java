@@ -127,8 +127,6 @@ public class Validator {
     // When needed for debugging
     //this.writeConformanceResourcesToFile();
 
-    this.updateMeasures();
-
     this.validator = FhirContextProvider.getFhirContext().newValidator();
     this.validator.setExecutorService(Executors.newWorkStealingPool());
     IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
@@ -172,13 +170,6 @@ public class Validator {
     } catch (IOException e) {
       logger.error("Error loading packages for validation: {}", e.getMessage());
     }
-  }
-
-  public void updateMeasures() {
-    // Add each measure canonical url to the resource fetcher
-    this.sharedService.getMeasureDefinitions().forEach(md -> {
-      // TODO
-    });
   }
 
   /**
