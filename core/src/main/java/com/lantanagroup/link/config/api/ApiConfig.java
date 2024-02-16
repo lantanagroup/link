@@ -182,4 +182,9 @@ public class ApiConfig {
 
   private List<ApiInfoGroup> infoGroups = new ArrayList<>();
 
+  /**
+   * <strong>api.validation-packages-path</strong><br>The path to the validation packages
+   */
+  private String validationPackagesPath = "classpath:/packages/**";
+
 }
