@@ -33,19 +33,4 @@ export class AppComponent {
       this.showHeaderAndFooter = !event.urlAfterRedirects.startsWith('/login');
     });
   }
-
-  /**
-   * Adding Bugherd script to dev and staging environments
-   * todo : Remove before final deployment
-   */
-
-  ngOnInit(): void {
-    if(window.location.hostname !== 'nhsnlink.org') {
-      const bugherdScript = this.renderer.createElement('script')
-
-      this.renderer.setAttribute(bugherdScript, 'src', 'https://www.bugherd.com/sidebarv2.js?apikey=l0lk84x9ox3ahezpcyc6hw')
-
-      this.renderer.appendChild(document.head, bugherdScript)
-    }
-  }
 }
