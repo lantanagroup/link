@@ -245,6 +245,25 @@ public class SharedService {
     }
   }
 
+  public boolean measureDefinitionExists(String measureId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM [dbo].[measureDef] WHERE measureId = ?");
+      ps.setNString(1, measureId);
+
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next()) {
+        return rs.getInt(1) > 0;
+      }
+
+      return false;
+    } catch (SQLException | NullPointerException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public MeasureDefinition getMeasureDefinition(String measureId) {
     try (Connection conn = this.getSQLConnection()) {
       assert conn != null;
