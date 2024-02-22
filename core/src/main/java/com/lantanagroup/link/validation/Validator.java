@@ -53,6 +53,8 @@ public class Validator {
   @Setter
   private ApiConfig apiConfig;
 
+  private volatile boolean initialized;
+
   public Validator(SharedService sharedService, ApiConfig apiConfig) {
     this.sharedService = sharedService;
     this.apiConfig = apiConfig;
@@ -121,17 +123,29 @@ public class Validator {
   }
 
   public void init() {
-    this.loadPackages();
-    this.loadTerminology();
+    if (this.initialized) {
+      return;
+    }
 
-    // When needed for debugging
-    //this.writeConformanceResourcesToFile();
+    synchronized (this) {
+      if (this.initialized) {
+        return;
+      }
 
-    this.validator = FhirContextProvider.getFhirContext().newValidator();
-    this.validator.setExecutorService(Executors.newWorkStealingPool());
-    IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
-    this.validator.registerValidatorModule(module);
-    this.validator.setConcurrentBundleValidation(true);
+      this.loadPackages();
+      this.loadTerminology();
+
+      // When needed for debugging
+      //this.writeConformanceResourcesToFile();
+
+      this.validator = FhirContextProvider.getFhirContext().newValidator();
+      this.validator.setExecutorService(Executors.newWorkStealingPool());
+      IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
+      this.validator.registerValidatorModule(module);
+      this.validator.setConcurrentBundleValidation(true);
+
+      this.initialized = true;
+    }
   }
 
   /**
@@ -273,6 +287,8 @@ public class Validator {
   }
 
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
+    this.init();
+
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
     OperationOutcome outcome = new OperationOutcome();
