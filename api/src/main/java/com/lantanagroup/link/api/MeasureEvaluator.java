@@ -1,7 +1,6 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -25,9 +24,11 @@ public class MeasureEvaluator {
   private String patientId;
   private StopwatchManager stopwatchManager;
   private TenantService tenantService;
+  private MeasureService measureService;
 
-  private MeasureEvaluator(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+  private MeasureEvaluator(TenantService tenantService, MeasureService measureService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.tenantService = tenantService;
+    this.measureService = measureService;
     this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
     this.reportContext = reportContext;
@@ -36,19 +37,9 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(TenantService tenantService, MeasureService measureService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, measureService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
-  }
-
-  private static Endpoint getTerminologyEndpoint(ApiConfig config) {
-    Endpoint terminologyEndpoint = new Endpoint();
-    terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
-    terminologyEndpoint.setConnectionType(new Coding());
-    terminologyEndpoint.getConnectionType().setSystem(Constants.TerminologyEndpointSystem);
-    terminologyEndpoint.getConnectionType().setCode(Constants.TerminologyEndpointCode);
-    terminologyEndpoint.setAddress(config.getTerminologyService());
-    return terminologyEndpoint;
   }
 
   private MeasureReport generateMeasureReport() {
@@ -71,23 +62,9 @@ public class MeasureEvaluator {
 
     logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
 
-    Parameters parameters = new Parameters();
-    parameters.addParameter().setName("periodStart").setValue(new StringType(start));
-    parameters.addParameter().setName("periodEnd").setValue(new StringType(end));
-    parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-    parameters.addParameter().setName("additionalData").setResource(patientBundle);
-    if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-      Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
-      parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
-      logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
-    }
-
-    logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
-
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
-      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
+      measureReport = measureService.evaluate(this.criteria.getPeriodStart(), this.criteria.getPeriodEnd(), patientId, patientBundle);
     }
 
     // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this

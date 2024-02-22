@@ -37,23 +37,7 @@ public class Helper {
   public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
-  public static ApiVersionModel getVersionInfo(String evaluationService) {
-    String cqfVersion = null;
-
-    if (StringUtils.isNotEmpty(evaluationService)) {
-      CapabilityStatement cs = new FhirDataProvider(evaluationService)
-              .getClient()
-              .capabilities()
-              .ofType(CapabilityStatement.class)
-              .execute();
-
-      if (cs != null) {
-        cqfVersion = cs.getImplementation().getDescription();
-      } else {
-        logger.warn("Could not retrieve capabilities of evaluation service, using cqf-version specified in build.yml");
-      }
-    }
-
+  public static ApiVersionModel getVersionInfo() {
     try {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -62,19 +46,13 @@ public class Helper {
 
       if (buildFile == null) {
         logger.warn("No build.yml file found, returning default \"dev\" build and \"0.9.0\" version");
-        return new ApiVersionModel(cqfVersion);
+        return new ApiVersionModel();
       }
 
-      ApiVersionModel apiInfo = mapper.readValue(buildFile, ApiVersionModel.class);
-
-      if (StringUtils.isNotEmpty(cqfVersion)) {
-        apiInfo.setCqfVersion(cqfVersion);
-      }
-
-      return apiInfo;
+      return mapper.readValue(buildFile, ApiVersionModel.class);
     } catch (IOException ex) {
       logger.error("Error deserializing build.yml file", ex);
-      return new ApiVersionModel(cqfVersion);
+      return new ApiVersionModel();
     }
   }
 

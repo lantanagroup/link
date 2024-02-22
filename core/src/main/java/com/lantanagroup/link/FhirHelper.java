@@ -241,7 +241,7 @@ public class FhirHelper {
   }
 
   public static Device getDevice(ApiConfig apiConfig) {
-    ApiVersionModel apiVersionModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
+    ApiVersionModel apiVersionModel = Helper.getVersionInfo();
     Device device = new Device();
     device.addDeviceName().setName(apiConfig.getName());
     device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
@@ -265,13 +265,6 @@ public class FhirHelper {
               .setType(new CodeableConcept().addCoding(new Coding().setCode("commit").setSystem(Constants.LinkDeviceVersionCodeSystem)))
               .setComponent(new Identifier().setValue("api"))
               .setValue(apiVersionModel.getCommit());
-    }
-
-    if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceVersionCodeSystem)))
-              .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiVersionModel.getCqfVersion());
     }
 
     return device;

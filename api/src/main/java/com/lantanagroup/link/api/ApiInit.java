@@ -2,7 +2,6 @@ package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
-import ca.uhn.fhir.rest.server.exceptions.ResourceNotFoundException;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -12,7 +11,6 @@ import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CapabilityStatement;
-import org.hl7.fhir.r4.model.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +33,8 @@ public class ApiInit {
     logger.info("Checking that API prerequisite services are available. maxRetry: {}, retryWait: {}", config.getMaxRetry(), config.getRetryWait());
 
     boolean allServicesAvailable = false;
-    boolean terminologyServiceAvailable = false;
-    boolean evaluationServiceAvailable = false;
+    boolean terminologyServiceAvailable = StringUtils.isEmpty(config.getTerminologyService());
+    boolean evaluationServiceAvailable = true;  // In-process evaluation is always "available"
 
     for (int retry = 0; config.getMaxRetry() == null || retry <= config.getMaxRetry(); retry++) {
       // Check terminology service availability
@@ -48,17 +46,6 @@ public class ApiInit {
           logger.error(String.format("Could not connect to terminology service %s (%s)", config.getTerminologyService(), e));
         }
       }
-
-      // Check evaluation service availability
-      if (!evaluationServiceAvailable) {
-        try {
-          new FhirDataProvider(config.getEvaluationService()).getClient().capabilities().ofType(CapabilityStatement.class).execute();
-          evaluationServiceAvailable = true;
-        } catch (BaseServerResponseException e) {
-          logger.error(String.format("Could not connect to evaluation service %s (%s)", config.getEvaluationService(), e));
-        }
-      }
-
 
       // Check if all services are now available
       allServicesAvailable = terminologyServiceAvailable && evaluationServiceAvailable;
@@ -143,22 +130,6 @@ public class ApiInit {
     // check that prerequisite services are available
     if (!this.checkPrerequisites()) {
       throw new IllegalStateException("Prerequisite services check failed. Cannot continue API initialization.");
-    }
-
-    ensureSupplementalDataSearchParameter();
-  }
-
-  private void ensureSupplementalDataSearchParameter() {
-    logger.info("Requesting evaluation of nonexistent measure to ensure supplemental-data search parameter exists");
-    try {
-      FhirContextProvider.getFhirContext().newRestfulGenericClient(this.config.getEvaluationService())
-              .operation()
-              .onInstance("Measure/nonexistent-measure")
-              .named("$evaluate-measure")
-              .withNoParameters(Parameters.class)
-              .execute();
-    } catch (ResourceNotFoundException e) {
-      logger.info("Caught 404 as expected");
     }
   }
 }

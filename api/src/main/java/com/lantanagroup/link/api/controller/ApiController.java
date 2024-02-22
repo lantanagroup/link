@@ -43,7 +43,7 @@ public class ApiController {
 
   @GetMapping
   public ApiVersionModel getVersionInfo() {
-    return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+    return Helper.getVersionInfo();
   }
 
   @GetMapping("/info")

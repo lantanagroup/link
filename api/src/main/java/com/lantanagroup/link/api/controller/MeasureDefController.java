@@ -44,24 +44,6 @@ public class MeasureDefController extends BaseController {
     binder.setDisallowedFields();
   }
 
-  /**
-   * Executes the measure bundle on the evaluation service (cqf-ruler)
-   */
-  private void executeBundle(Bundle bundle) {
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.apiConfig.getEvaluationService());
-
-    bundle.setType(Bundle.BundleType.BATCH);
-    bundle.getEntry().forEach(entry -> {
-      entry.setRequest(new Bundle.BundleEntryRequestComponent());
-      entry.getRequest()
-              .setMethod(Bundle.HTTPVerb.PUT)
-              .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-    });
-
-    logger.info("Loading measure definition {} on eval service {}", bundle.getIdElement().getIdPart(), this.apiConfig.getEvaluationService());
-    fhirDataProvider.transaction(bundle);
-  }
-
   private Bundle getBundleFromUrl(String url) throws URISyntaxException {
     URI uri = new URI(Helper.sanitizeUrl(url));
 
@@ -125,8 +107,6 @@ public class MeasureDefController extends BaseController {
     if (bundle.getEntry().stream().anyMatch(entry -> !entry.getResource().hasId())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure bundle contains resources without ids");
     }
-
-    this.executeBundle(bundle);
 
     MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(bundle.getIdElement().getIdPart());
 
