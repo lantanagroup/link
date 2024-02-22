@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Validator {
@@ -272,6 +274,38 @@ public class Validator {
     }
   }
 
+  /**
+   * Update the issue locations/expressions to use resource IDs instead of "ofType(MedicationRequest)" (for example).
+   * Only works on Bundle resources and looks for patterns such as "Bundle.entry[X].resource.ofType(MedicationRequest)" to replace with "Bundle.entry[X].resource.where(id = '123')"
+   *
+   * @param resource The resource to amend
+   * @param outcome  The outcome to amend
+   */
+  private void improveIssueExpressions(Resource resource, OperationOutcome outcome) {
+    final String regex = "^Bundle.entry\\[(\\d+)\\]\\.resource\\.ofType\\(.+?\\)(.*)$";
+    final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+
+    if (resource.getResourceType() == ResourceType.Bundle) {
+      Bundle bundle = (Bundle) resource;
+      for (OperationOutcome.OperationOutcomeIssueComponent issue : outcome.getIssue()) {
+        if (!issue.getExpression().isEmpty()) {
+          String location = issue.getExpression().get(0).asStringValue();
+          final Matcher matcher = pattern.matcher(location);
+
+          if (matcher.matches()) {
+            int entryIndex = Integer.parseInt(matcher.group(1));
+            if (entryIndex < bundle.getEntry().size()) {
+              String resourceId = bundle.getEntry().get(entryIndex).getResource().getIdElement().getIdPart();
+              ArrayList newExpressions = new ArrayList<>(issue.getExpression());
+              newExpressions.set(0, new StringType("Bundle.entry[" + entryIndex + "].resource.where(id = '" + resourceId + "')" + matcher.group(2)));
+              issue.setExpression(newExpressions);
+            }
+          }
+        }
+      }
+    }
+  }
+
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
@@ -282,6 +316,7 @@ public class Validator {
     outcome.setId(UUID.randomUUID().toString());
 
     this.validateResource(resource, outcome, severity);
+    this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
     logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));
