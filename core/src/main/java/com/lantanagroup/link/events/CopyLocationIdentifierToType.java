@@ -61,7 +61,6 @@ public class CopyLocationIdentifierToType implements IReportGenerationDataEvent 
   }
 
   @Override
-  public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) throws RuntimeException {
-    throw new RuntimeException("Not yet implemented");
+  public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
   }
 }

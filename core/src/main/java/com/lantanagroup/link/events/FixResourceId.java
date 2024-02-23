@@ -25,6 +25,5 @@ public class FixResourceId implements IReportGenerationDataEvent {
   }
 
   public void execute(TenantService tenantService, List<DomainResource> resourceList, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    throw new RuntimeException("Not Implemented yet.");
   }
 }
