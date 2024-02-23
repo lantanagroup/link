@@ -1,5 +1,6 @@
 package com.lantanagroup.link.model;
 
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.model.PatientList;
@@ -25,6 +26,7 @@ public class ReportContext {
   private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
   private List<MeasureContext> measureContexts = new ArrayList<>();
   private QueryPlan queryPlan;
+  private IGenericClient client;
   private List<String> debugPatients = new ArrayList<>();
 
   public ReportContext() {
