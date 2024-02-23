@@ -296,8 +296,9 @@ public class Validator {
             int entryIndex = Integer.parseInt(matcher.group(1));
             if (entryIndex < bundle.getEntry().size()) {
               String resourceId = bundle.getEntry().get(entryIndex).getResource().getIdElement().getIdPart();
+              String resourceType = bundle.getEntry().get(entryIndex).getResource().getResourceType().toString();
               ArrayList newExpressions = new ArrayList<>(issue.getExpression());
-              newExpressions.set(0, new StringType("Bundle.entry[" + entryIndex + "].resource.where(id = '" + resourceId + "')" + matcher.group(2)));
+              newExpressions.set(0, new StringType("Bundle.entry[" + entryIndex + "].resource.ofType(" + resourceType + ").where(id = '" + resourceId + "')" + matcher.group(2)));
               issue.setExpression(newExpressions);
             }
           }
