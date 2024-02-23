@@ -50,7 +50,7 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
               //Check for a value in alias
               if (value != null && existingType.isEmpty()) {
                 //Add type to list of existing types
-                types.add(FhirHelper.createCodeableConcept(value, "https://nhsnlink.org/location-alias"));
+                types.add(FhirHelper.createCodeableConcept(value, Constants.LocationAliasCodeSystem));
               }
             }
           }
