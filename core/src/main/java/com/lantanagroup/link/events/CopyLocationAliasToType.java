@@ -20,9 +20,6 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    //This is a specific transform to move data from a Location's alias to its type
-    //This must happen BEFORE ApplyConceptMaps as an event
-    logger.info("Called: " + CopyLocationAliasToType.class.getName());
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
       if (entry.getResource().getResourceType().equals(ResourceType.Location)) {
         Location locationResource = (Location) entry.getResource();
