@@ -236,6 +236,14 @@ public class TenantService {
     return this.patientMeasureReports.findByReportIdAndMeasureId(reportId, measureId);
   }
 
+  public PatientMeasureReportSize getPatientMeasureReportSize(String id) {
+    return patientMeasureReports.GetMeasureReportSizeById(id);
+  }
+
+  public List<PatientMeasureReportSize> getPatientMeasureReportSize(String patientId, String reportId, String measureId) {
+    return patientMeasureReports.GetMeasureReportSize(patientId, reportId, measureId);
+  }
+
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {
     this.patientMeasureReports.save(patientMeasureReport);
   }

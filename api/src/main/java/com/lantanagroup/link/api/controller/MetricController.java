@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
 import com.lantanagroup.link.model.*;
@@ -401,4 +402,78 @@ public class MetricController extends BaseController {
             .collect(Collectors.toList());
   }
 
+  @GetMapping("/size/{tenantId}")
+  public PatientMeasureReportSizeSummary getPatientMeasureReportSizeSummary(
+          @PathVariable String tenantId,
+          @RequestParam(name = "patientId", required = false) String patientId,
+          @RequestParam(name = "reportId", required = false) String reportId,
+          @RequestParam(name = "measureId", required = false) String measureId) {
+
+    var tenantService = TenantService.create(sharedService, tenantId);
+
+    var reportSizes = tenantService.getPatientMeasureReportSize(patientId, reportId, measureId);
+
+    var summary = new PatientMeasureReportSizeSummary();
+    Double sum = 0.0;
+    var measureCountMap = summary.getCountReportSizeByMeasureId();
+    var reportCountMap = summary.getCountReportSizeByReportId();
+    var patientCountMap = summary.getCountReportSizeByPatientId();
+
+    var averageReportSizeByMeasureId = summary.getAverageReportSizeByMeasureId();
+    var averageReportSizeByReportId = summary.getAverageReportSizeByReportId();
+    var averageReportSizeByPatientId= summary.getAverageReportSizeByPatientId();
+
+    for(var r : reportSizes)
+    {
+      var mId = r.getMeasureId();
+      var pId = r.getPatientId();
+      var rId = r.getReportId();
+
+      sum += r.getSizeKb();
+
+      if(measureCountMap.containsKey(mId))
+        measureCountMap.put(mId, measureCountMap.get(mId) + 1);
+      else {
+        measureCountMap.put(mId, 1);
+        averageReportSizeByMeasureId.put(mId, 0.0);
+      }
+      averageReportSizeByMeasureId.put(mId, averageReportSizeByMeasureId.get(mId) + r.getSizeKb());
+
+      if(reportCountMap.containsKey(rId))
+        reportCountMap.put(rId, reportCountMap.get(rId) + 1);
+      else {
+        reportCountMap.put(rId, 1);
+        averageReportSizeByReportId.put(rId, 0.0);
+      }
+
+      averageReportSizeByReportId.put(rId, averageReportSizeByReportId.get(rId) + r.getSizeKb());
+
+      if(patientCountMap.containsKey(pId))
+        patientCountMap.put(pId, patientCountMap.get(pId) + 1);
+      else {
+        patientCountMap.put(pId, 1);
+        averageReportSizeByPatientId.put(pId, 0.0);
+      }
+      averageReportSizeByPatientId.put(pId, averageReportSizeByPatientId.get(pId) + r.getSizeKb());
+    }
+
+    summary.setTotalSize(sum);
+    summary.setReports(reportSizes);
+    summary.setReportCount(reportSizes.size());
+    summary.setAverageReportSize(sum/reportSizes.size());
+
+    for(var kv : measureCountMap.entrySet()) {
+      averageReportSizeByMeasureId.put(kv.getKey(), averageReportSizeByMeasureId.get(kv.getKey())/kv.getValue());
+    }
+
+    for(var kv : reportCountMap.entrySet()) {
+      averageReportSizeByReportId.put(kv.getKey(), averageReportSizeByReportId.get(kv.getKey())/kv.getValue());
+    }
+
+    for(var kv : patientCountMap.entrySet()) {
+      averageReportSizeByPatientId.put(kv.getKey(), averageReportSizeByPatientId.get(kv.getKey())/kv.getValue());
+    }
+
+    return summary;
+  }
 }
