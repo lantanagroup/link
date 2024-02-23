@@ -12,6 +12,8 @@
     </parent>
 
     <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <cqf-fhir.version>3.0.0</cqf-fhir.version>
         <hapi-fhir.version>7.0.0</hapi-fhir.version>
         <spring-boot.version>3.2.0</spring-boot.version>
