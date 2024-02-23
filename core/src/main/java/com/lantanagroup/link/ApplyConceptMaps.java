@@ -19,6 +19,14 @@ public class ApplyConceptMaps {
 
   private List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps;
 
+  public static boolean isMapped(Coding coding, String system, String code) {
+    return coding.getExtensionsByUrl(Constants.ConceptMappingExtension).stream()
+            .map(Extension::getValue)
+            .filter(value -> value instanceof Coding)
+            .map(value -> (Coding) value)
+            .anyMatch(mappedCoding -> mappedCoding.is(system, code));
+  }
+
   public ApplyConceptMaps() {
     validationSupport.fetchAllStructureDefinitions();
   }
