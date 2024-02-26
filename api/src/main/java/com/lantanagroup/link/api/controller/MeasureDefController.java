@@ -5,12 +5,13 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.api.MeasureServiceWrapper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.MeasurePackage;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,5 +146,35 @@ public class MeasureDefController extends BaseController {
         this.sharedService.saveMeasurePackage(measurePackage);
       }
     });
+  }
+
+  @PostMapping("/{measureId}/$evaluate")
+  public MeasureReport evaluate(@PathVariable String measureId, @RequestBody Parameters parameters) {
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(measureId);
+
+    if (measureDefinition == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Could not find measure definition %s", measureId));
+    }
+
+    MeasureServiceWrapper measureServiceWrapper = new MeasureServiceWrapper(measureDefinition.getBundle(), null);
+
+    DateTimeType periodStart;
+    DateTimeType periodEnd;
+    StringType subject;
+    Bundle additionalData;
+    try {
+      periodStart = (DateTimeType) parameters.getParameterValue("periodStart");
+      periodEnd = (DateTimeType) parameters.getParameterValue("periodEnd");
+      subject = (StringType) parameters.getParameterValue("subject");
+      additionalData = (Bundle) parameters.getParameter("additionalData").getResource();
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to parse request body", e);
+    }
+
+    return measureServiceWrapper.evaluate(
+            periodStart.asStringValue(),
+            periodEnd.asStringValue(),
+            subject.asStringValue(),
+            additionalData);
   }
 }
