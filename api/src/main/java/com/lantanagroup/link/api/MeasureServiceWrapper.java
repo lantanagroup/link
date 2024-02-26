@@ -17,12 +17,12 @@ import org.opencds.cqf.fhir.cr.measure.r4.R4MeasureService;
 import org.opencds.cqf.fhir.utility.monad.Eithers;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
-public class MeasureService {
+public class MeasureServiceWrapper {
   private final MeasureDef measureDef;
   private final R4MeasureService measureService;
   private final Endpoint terminologyEndpoint;
 
-  public MeasureService(Bundle measureDefBundle, String terminologyService) {
+  public MeasureServiceWrapper(Bundle measureDefBundle, String terminologyService) {
     measureDef = new MeasureDef(measureDefBundle);
     Repository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
     for (IBaseResource resource : measureDef.getResources()) {

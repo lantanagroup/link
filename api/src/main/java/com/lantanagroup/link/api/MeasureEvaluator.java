@@ -24,11 +24,11 @@ public class MeasureEvaluator {
   private String patientId;
   private StopwatchManager stopwatchManager;
   private TenantService tenantService;
-  private MeasureService measureService;
+  private MeasureServiceWrapper measureServiceWrapper;
 
-  private MeasureEvaluator(TenantService tenantService, MeasureService measureService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+  private MeasureEvaluator(TenantService tenantService, MeasureServiceWrapper measureServiceWrapper, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.tenantService = tenantService;
-    this.measureService = measureService;
+    this.measureServiceWrapper = measureServiceWrapper;
     this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
     this.reportContext = reportContext;
@@ -37,8 +37,8 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(TenantService tenantService, MeasureService measureService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, measureService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(TenantService tenantService, MeasureServiceWrapper measureServiceWrapper, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, measureServiceWrapper, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
   }
 
@@ -64,7 +64,7 @@ public class MeasureEvaluator {
 
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
-      measureReport = measureService.evaluate(this.criteria.getPeriodStart(), this.criteria.getPeriodEnd(), patientId, patientBundle);
+      measureReport = measureServiceWrapper.evaluate(this.criteria.getPeriodStart(), this.criteria.getPeriodEnd(), patientId, patientBundle);
     }
 
     // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this
