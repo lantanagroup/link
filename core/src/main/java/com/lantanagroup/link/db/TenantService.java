@@ -236,7 +236,7 @@ public class TenantService {
     return this.patientMeasureReports.findByReportIdAndMeasureId(reportId, measureId);
   }
 
-  public PatientMeasureReportSize getPatientMeasureReportSize(String id) {
+  public PatientMeasureReportSize getPatientMeasureReportSizeById(String id) {
     return patientMeasureReports.GetMeasureReportSizeById(id);
   }
 

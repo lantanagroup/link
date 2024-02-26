@@ -452,4 +452,44 @@ public class MetricController extends BaseController {
 
     return summary;
   }
+
+  @GetMapping("/size/{tenantId}/{patientMeasureReportId}")
+  public PatientMeasureReportSizeSummary getPatientMeasureReportSizeSummaryById(
+          @PathVariable String tenantId,
+          @PathVariable String patientMeasureReportId) {
+
+    var tenantService = TenantService.create(sharedService, tenantId);
+
+    var reportSize = tenantService.getPatientMeasureReportSizeById(patientMeasureReportId);
+
+    var summary = new PatientMeasureReportSizeSummary();
+
+    var measureCountMap = summary.getCountReportSizeByMeasureId();
+    var reportCountMap = summary.getCountReportSizeByReportId();
+    var patientCountMap = summary.getCountReportSizeByPatientId();
+
+    var averageReportSizeByMeasureId = summary.getAverageReportSizeByMeasureId();
+    var averageReportSizeByReportId = summary.getAverageReportSizeByReportId();
+    var averageReportSizeByPatientId= summary.getAverageReportSizeByPatientId();
+
+    var mId = reportSize.getMeasureId();
+    var pId = reportSize.getPatientId();
+    var rId = reportSize.getReportId();
+
+    measureCountMap.merge(mId, 1, (count, value) -> count + value);
+    averageReportSizeByMeasureId.merge(mId, reportSize.getSizeKb(), (size, value) -> size + value);
+
+    reportCountMap.merge(rId, 1, (count, value) -> count + value);
+    averageReportSizeByReportId.merge(rId, reportSize.getSizeKb(), (size, value) -> size + value);
+
+    patientCountMap.merge(pId, 1, (count, value) -> count + value);
+    averageReportSizeByPatientId.merge(pId, reportSize.getSizeKb(), (size, value) -> size + value);
+
+    summary.setTotalSize(reportSize.getSizeKb());
+    summary.setReports(List.of(reportSize));
+    summary.setReportCount(1);
+    summary.setAverageReportSize(reportSize.getSizeKb());
+
+    return summary;
+  }
 }
