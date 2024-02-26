@@ -23,7 +23,7 @@ public class PatientId {
 
   public static PatientId createFromReference(String reference) {
     PatientId pid = new PatientId();
-    pid.setReference(reference);
+    pid.setReference(reference.startsWith("Patient/") ? reference : "Patient/" + reference);
     return pid;
   }
 

@@ -25,8 +25,8 @@ public class PatientListTests {
     patientList1.merge(patientList2);
 
     Assert.assertEquals(2, patientList1.getPatients().size());
-    Assert.assertEquals("test1", patientList1.getPatients().get(0).getReference());
-    Assert.assertEquals("test2", patientList1.getPatients().get(1).getReference());
+    Assert.assertEquals("Patient/test1", patientList1.getPatients().get(0).getReference());
+    Assert.assertEquals("Patient/test2", patientList1.getPatients().get(1).getReference());
     Assert.assertEquals("2023-03-26 02:30:01", dateFormat.format(patientList1.getLastUpdated()));
   }
 }

@@ -23,8 +23,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -241,6 +241,25 @@ public class SharedService {
     } catch (SQLServerException e) {
       SQLServerHelper.handleException(e);
     } catch (SQLException | NullPointerException | JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public boolean measureDefinitionExists(String measureId) {
+    try (Connection conn = this.getSQLConnection()) {
+      assert conn != null;
+
+      PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM [dbo].[measureDef] WHERE measureId = ?");
+      ps.setNString(1, measureId);
+
+      ResultSet rs = ps.executeQuery();
+
+      if (rs.next()) {
+        return rs.getInt(1) > 0;
+      }
+
+      return false;
+    } catch (SQLException | NullPointerException e) {
       throw new RuntimeException(e);
     }
   }

@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.FilterChain;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -65,7 +65,7 @@ public class ErrorFilter extends OncePerRequestFilter implements Ordered {
     }
     if (throwable instanceof ResponseStatusException) {
       ResponseStatusException exception = (ResponseStatusException) throwable;
-      response.sendError(exception.getStatus().value(), exception.getReason());
+      response.sendError(exception.getStatusCode().value(), exception.getReason());
       return true;
     }
     if (throwable instanceof HttpResponseException) {

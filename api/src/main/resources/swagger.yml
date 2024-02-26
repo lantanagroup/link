@@ -1360,6 +1360,37 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/measureDef/{measureId}/$evaluate:
+    post:
+      tags:
+        - Measure Definitions
+      summary: Evaluates the measure using parameters provided in the request body. See the $evaluate-measure operation defined in the base FHIR spec.
+      operationId: evaluateMeasureDef
+      parameters:
+        - name: measureId
+          in: path
+          description: The measureId of the measure definition to be evaluated
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: FHIR Parameters resource containing periodStart, periodEnd, subject, and additionalData
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/FHIR.Parameters'
+      responses:
+        '200':
+          description: successful response with measure report returned
+        '400':
+          description: invalid parameters
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measurePackage:
     get:
       tags:
@@ -2588,6 +2619,8 @@ components:
           type: array
           items:
             type: string
+    FHIR.Parameters:
+      type: object
     FHIR.Extension:
       type: object
       properties:

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
@@ -43,7 +43,7 @@ public class ApiController {
 
   @GetMapping
   public ApiVersionModel getVersionInfo() {
-    return Helper.getVersionInfo(this.apiConfig.getEvaluationService());
+    return Helper.getVersionInfo();
   }
 
   @GetMapping("/info")

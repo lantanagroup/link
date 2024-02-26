@@ -4,7 +4,7 @@ import com.lantanagroup.link.db.model.tenant.auth.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
 
