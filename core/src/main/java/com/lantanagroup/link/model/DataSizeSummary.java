@@ -10,15 +10,15 @@ import java.util.List;
 @Getter
 @Setter
 public class DataSizeSummary {
-  private List<Object> Data;
-  private double TotalSize;
-  private int Count;
-  private double AverageSize;
-  private double MinSize;
-  private double MaxSize;
+  private List<Object> data;
+  private double totalSize;
+  private int count;
+  private double averageSize;
+  private double minSize;
+  private double maxSize;
   private LocalDateTime startDate;
   private LocalDateTime endDate;
 
-  private HashMap<String, HashMap<String,Integer>> CountDataType = new HashMap<>();
-  private HashMap<String, HashMap<String, Double>> AverageDataSize = new HashMap<>();
+  private HashMap<String, HashMap<String,Integer>> countDataType = new HashMap<>();
+  private HashMap<String, HashMap<String, Double>> averageDataSize = new HashMap<>();
 }
