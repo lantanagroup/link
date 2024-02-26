@@ -425,7 +425,7 @@ public class MetricController extends BaseController {
     var dataAverageMap = summary.getAverageDataSize();
 
     var reportKey = "ReportId";
-    var measureKey = "Measure";
+    var measureKey = "MeasureId";
     var pidKey = "PatientId";
 
     dataCountMap.put(reportKey, new HashMap<>());
