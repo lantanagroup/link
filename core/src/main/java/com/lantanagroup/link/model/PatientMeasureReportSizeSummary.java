@@ -11,9 +11,9 @@ import java.util.List;
 @Setter
 public class PatientMeasureReportSizeSummary{
   private List<PatientMeasureReportSize> Reports;
-  private Double TotalSize;
+  private double TotalSize;
   private int ReportCount;
-  private Double AverageReportSize;
+  private double AverageReportSize;
 
   private HashMap<String, Integer> CountReportSizeByMeasureId= new HashMap<>();
   private HashMap<String, Double> AverageReportSizeByMeasureId = new HashMap<>();

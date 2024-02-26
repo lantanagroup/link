@@ -414,7 +414,7 @@ public class MetricController extends BaseController {
     var reportSizes = tenantService.getPatientMeasureReportSize(patientId, reportId, measureId);
 
     var summary = new PatientMeasureReportSizeSummary();
-    Double sum = 0.0;
+    double sum = 0.0;
     var measureCountMap = summary.getCountReportSizeByMeasureId();
     var reportCountMap = summary.getCountReportSizeByReportId();
     var patientCountMap = summary.getCountReportSizeByPatientId();
@@ -431,30 +431,14 @@ public class MetricController extends BaseController {
 
       sum += r.getSizeKb();
 
-      if(measureCountMap.containsKey(mId))
-        measureCountMap.put(mId, measureCountMap.get(mId) + 1);
-      else {
-        measureCountMap.put(mId, 1);
-        averageReportSizeByMeasureId.put(mId, 0.0);
-      }
-      averageReportSizeByMeasureId.put(mId, averageReportSizeByMeasureId.get(mId) + r.getSizeKb());
+      measureCountMap.merge(mId, 1, (count, value) -> count + value);
+      averageReportSizeByMeasureId.merge(mId, r.getSizeKb(), (size, value) -> size + value);
 
-      if(reportCountMap.containsKey(rId))
-        reportCountMap.put(rId, reportCountMap.get(rId) + 1);
-      else {
-        reportCountMap.put(rId, 1);
-        averageReportSizeByReportId.put(rId, 0.0);
-      }
+      reportCountMap.merge(rId, 1, (count, value) -> count + value);
+      averageReportSizeByReportId.merge(rId, r.getSizeKb(), (size, value) -> size + value);
 
-      averageReportSizeByReportId.put(rId, averageReportSizeByReportId.get(rId) + r.getSizeKb());
-
-      if(patientCountMap.containsKey(pId))
-        patientCountMap.put(pId, patientCountMap.get(pId) + 1);
-      else {
-        patientCountMap.put(pId, 1);
-        averageReportSizeByPatientId.put(pId, 0.0);
-      }
-      averageReportSizeByPatientId.put(pId, averageReportSizeByPatientId.get(pId) + r.getSizeKb());
+      patientCountMap.merge(pId, 1, (count, value) -> count + value);
+      averageReportSizeByPatientId.merge(pId, r.getSizeKb(), (size, value) -> size + value);
     }
 
     summary.setTotalSize(sum);
@@ -462,17 +446,9 @@ public class MetricController extends BaseController {
     summary.setReportCount(reportSizes.size());
     summary.setAverageReportSize(sum/reportSizes.size());
 
-    for(var kv : measureCountMap.entrySet()) {
-      averageReportSizeByMeasureId.put(kv.getKey(), averageReportSizeByMeasureId.get(kv.getKey())/kv.getValue());
-    }
-
-    for(var kv : reportCountMap.entrySet()) {
-      averageReportSizeByReportId.put(kv.getKey(), averageReportSizeByReportId.get(kv.getKey())/kv.getValue());
-    }
-
-    for(var kv : patientCountMap.entrySet()) {
-      averageReportSizeByPatientId.put(kv.getKey(), averageReportSizeByPatientId.get(kv.getKey())/kv.getValue());
-    }
+    averageReportSizeByMeasureId.replaceAll((key, value) -> value/measureCountMap.get(key));
+    averageReportSizeByReportId.replaceAll((key, value) -> value/reportCountMap.get(key));
+    averageReportSizeByPatientId.replaceAll((key, value) -> value/patientCountMap.get(key));
 
     return summary;
   }

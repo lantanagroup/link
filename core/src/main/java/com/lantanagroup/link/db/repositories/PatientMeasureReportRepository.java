@@ -46,13 +46,13 @@ public class PatientMeasureReportRepository {
   }
 
   public List<PatientMeasureReportSize> GetMeasureReportSize(String patientId, String reportId, String measureId) {
-    String sql =  "SELECT pmr.patientId, pmr.reportId, pmr.measureID, CAST(SUM(DATALENGTH(pmr.measureReport)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientMeasureReport AS pmr WHERE (ISNULL(:reportId, '') = '' OR reportId = :reportId) AND (ISNULL(:measureId, '') = '' OR measureId = :measureId) AND (ISNULL(:patientId, '') = ''  OR patientId = :patientId) GROUP BY pmr.patientId, pmr.reportId, pmr.measureId";
+    String sql =  "SELECT pmr.patientId, pmr.reportId, pmr.measureID, CAST(SUM(DATALENGTH(pmr.measureReport)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientMeasureReport AS pmr WHERE (:reportId = '' OR reportId = :reportId) AND (:measureId = '' OR measureId = :measureId) AND (:patientId = ''  OR patientId = :patientId) GROUP BY pmr.patientId, pmr.reportId, pmr.measureId";
 
     if(reportId == null) reportId = "";
     if(measureId == null) measureId = "";
     if(patientId == null) patientId = "";
 
-    HashMap<String, String> parameters = new HashMap<String, String>();
+    HashMap<String, String> parameters = new HashMap();
     parameters.put("reportId", reportId);
     parameters.put("patientId", patientId);
     parameters.put("measureId", measureId);
