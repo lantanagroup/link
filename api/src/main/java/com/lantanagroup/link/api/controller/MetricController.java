@@ -15,6 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -402,93 +407,145 @@ public class MetricController extends BaseController {
             .collect(Collectors.toList());
   }
 
-  @GetMapping("/size/{tenantId}")
-  public PatientMeasureReportSizeSummary getPatientMeasureReportSizeSummary(
+  @GetMapping("/size/PatientMeasureReport/{tenantId}")
+  public DataSizeSummary getPatientMeasureReportSizeSummary(
           @PathVariable String tenantId,
           @RequestParam(name = "patientId", required = false) String patientId,
           @RequestParam(name = "reportId", required = false) String reportId,
-          @RequestParam(name = "measureId", required = false) String measureId) {
+          @RequestParam(name = "measureId", required = false) String measureId,
+          @RequestParam(name = "patientMeasureReportId", required = false) String patientMeasureReportId) {
 
     var tenantService = TenantService.create(sharedService, tenantId);
 
-    var reportSizes = tenantService.getPatientMeasureReportSize(patientId, reportId, measureId);
+    var dataSizes = tenantService.getPatientMeasureReportSize(patientId, reportId, measureId, patientMeasureReportId);
 
-    var summary = new PatientMeasureReportSizeSummary();
+    var summary = new DataSizeSummary();
     double sum = 0.0;
-    var measureCountMap = summary.getCountReportSizeByMeasureId();
-    var reportCountMap = summary.getCountReportSizeByReportId();
-    var patientCountMap = summary.getCountReportSizeByPatientId();
+    var dataCountMap = summary.getCountDataType();
+    var dataAverageMap = summary.getAverageDataSize();
 
-    var averageReportSizeByMeasureId = summary.getAverageReportSizeByMeasureId();
-    var averageReportSizeByReportId = summary.getAverageReportSizeByReportId();
-    var averageReportSizeByPatientId= summary.getAverageReportSizeByPatientId();
+    var reportKey = "ReportId";
+    var measureKey = "Measure";
+    var pidKey = "PatientId";
 
-    for(var r : reportSizes)
+    dataCountMap.put(reportKey, new HashMap<>());
+    dataCountMap.put(measureKey, new HashMap<>());
+    dataCountMap.put(pidKey, new HashMap<>());
+
+    dataAverageMap.put(reportKey, new HashMap<>());
+    dataAverageMap.put(measureKey, new HashMap<>());
+    dataAverageMap.put(pidKey, new HashMap<>());
+
+    double min = 0, max = 0;
+    for(var r : dataSizes)
     {
       var mId = r.getMeasureId();
       var pId = r.getPatientId();
       var rId = r.getReportId();
 
-      sum += r.getSizeKb();
+      var sizeKb = r.getSizeKb();
+      sum += sizeKb;
 
-      measureCountMap.merge(mId, 1, (count, value) -> count + value);
-      averageReportSizeByMeasureId.merge(mId, r.getSizeKb(), (size, value) -> size + value);
+      if(min > sizeKb || min == 0)
+        min = sizeKb;
 
-      reportCountMap.merge(rId, 1, (count, value) -> count + value);
-      averageReportSizeByReportId.merge(rId, r.getSizeKb(), (size, value) -> size + value);
+      if(max < sizeKb)
+        max = sizeKb;
 
-      patientCountMap.merge(pId, 1, (count, value) -> count + value);
-      averageReportSizeByPatientId.merge(pId, r.getSizeKb(), (size, value) -> size + value);
+      dataCountMap.get(reportKey).merge(rId, 1, (count, value) -> count + value);
+      dataCountMap.get(measureKey).merge(mId, 1, (count, value) -> count + value);
+      dataCountMap.get(pidKey).merge(pId, 1, (count, value) -> count + value);
+
+      dataAverageMap.get(reportKey).merge(rId, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(measureKey).merge(mId, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(pidKey).merge(pId, r.getSizeKb(), (size, value) -> size + value);
     }
 
     summary.setTotalSize(sum);
-    summary.setReports(reportSizes);
-    summary.setReportCount(reportSizes.size());
-    summary.setAverageReportSize(sum/reportSizes.size());
+    summary.setData(Collections.singletonList(dataSizes));
+    summary.setCount(dataSizes.size());
+    summary.setAverageSize(sum/dataSizes.size());
+    summary.setMinSize(min);
+    summary.setMaxSize(max);
 
-    averageReportSizeByMeasureId.replaceAll((key, value) -> value/measureCountMap.get(key));
-    averageReportSizeByReportId.replaceAll((key, value) -> value/reportCountMap.get(key));
-    averageReportSizeByPatientId.replaceAll((key, value) -> value/patientCountMap.get(key));
+    dataAverageMap.get(reportKey).replaceAll((key, value) -> value/dataCountMap.get(reportKey).get(key));
+    dataAverageMap.get(measureKey).replaceAll((key, value) -> value/dataCountMap.get(measureKey).get(key));
+    dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
 
     return summary;
   }
 
-  @GetMapping("/size/{tenantId}/{patientMeasureReportId}")
-  public PatientMeasureReportSizeSummary getPatientMeasureReportSizeSummaryById(
+  @GetMapping("/size/PatientData/{tenantId}")
+  public DataSizeSummary getPatientDataSizeSummary(
           @PathVariable String tenantId,
-          @PathVariable String patientMeasureReportId) {
+          @RequestParam(name = "patientId", required = false) String patientId,
+          @RequestParam(name = "resourceType", required = false) String resourceType,
+          @RequestParam(name = "startDate", required = false) String startDate,
+          @RequestParam(name = "endDate", required = false) String endDate
+  ) {
 
     var tenantService = TenantService.create(sharedService, tenantId);
 
-    var reportSize = tenantService.getPatientMeasureReportSizeById(patientMeasureReportId);
+    LocalDateTime zdtStart = null, zdtEnd = null;
+    if(startDate != null && endDate != null)
+    {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+      zdtStart = LocalDateTime.parse(startDate, formatter);
+      zdtEnd = LocalDateTime.parse(endDate, formatter);
+    }
 
-    var summary = new PatientMeasureReportSizeSummary();
+    var dataSize = tenantService.getPatientDataReportSize(patientId, resourceType, zdtStart, zdtEnd);
 
-    var measureCountMap = summary.getCountReportSizeByMeasureId();
-    var reportCountMap = summary.getCountReportSizeByReportId();
-    var patientCountMap = summary.getCountReportSizeByPatientId();
+    var summary = new DataSizeSummary();
+    summary.setStartDate(zdtStart);
+    summary.setEndDate(zdtEnd);
+    double sum = 0.0;
+    var dataCountMap = summary.getCountDataType();
+    var dataAverageMap = summary.getAverageDataSize();
 
-    var averageReportSizeByMeasureId = summary.getAverageReportSizeByMeasureId();
-    var averageReportSizeByReportId = summary.getAverageReportSizeByReportId();
-    var averageReportSizeByPatientId= summary.getAverageReportSizeByPatientId();
+    var rtKey = "ResourceType";
+    var pidKey = "PatientId";
 
-    var mId = reportSize.getMeasureId();
-    var pId = reportSize.getPatientId();
-    var rId = reportSize.getReportId();
+    dataCountMap.put(rtKey, new HashMap<>());
+    dataCountMap.put(pidKey, new HashMap<>());
 
-    measureCountMap.merge(mId, 1, (count, value) -> count + value);
-    averageReportSizeByMeasureId.merge(mId, reportSize.getSizeKb(), (size, value) -> size + value);
+    dataAverageMap.put(rtKey, new HashMap<>());
+    dataAverageMap.put(pidKey, new HashMap<>());
 
-    reportCountMap.merge(rId, 1, (count, value) -> count + value);
-    averageReportSizeByReportId.merge(rId, reportSize.getSizeKb(), (size, value) -> size + value);
+    double min = 0, max = 0;
+    for(var r : dataSize)
+    {
+      var resourceKey = r.getResourceType();
+      var patientKey = r.getPatientId();
 
-    patientCountMap.merge(pId, 1, (count, value) -> count + value);
-    averageReportSizeByPatientId.merge(pId, reportSize.getSizeKb(), (size, value) -> size + value);
+      if(patientKey == null || resourceKey == null)
+        continue;
 
-    summary.setTotalSize(reportSize.getSizeKb());
-    summary.setReports(List.of(reportSize));
-    summary.setReportCount(1);
-    summary.setAverageReportSize(reportSize.getSizeKb());
+      var sizeKb = r.getSizeKb();
+      sum += sizeKb;
+
+      if(min > sizeKb || min == 0)
+        min = sizeKb;
+
+      if(max < sizeKb)
+        max = sizeKb;
+
+      dataCountMap.get(rtKey).merge(resourceKey, 1, (count, value) -> count + value);
+      dataCountMap.get(pidKey).merge(patientKey, 1, (count, value) -> count + value);
+
+      dataAverageMap.get(rtKey).merge(resourceKey, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(pidKey).merge(patientKey, r.getSizeKb(), (size, value) -> size + value);
+    }
+
+    summary.setTotalSize(sum);
+    summary.setData(Collections.singletonList(dataSize));
+    summary.setCount(dataSize.size());
+    summary.setAverageSize(sum/dataSize.size());
+    summary.setMinSize(min);
+    summary.setMaxSize(max);
+
+    dataAverageMap.get(rtKey).replaceAll((key, value) -> value/dataCountMap.get(rtKey).get(key));
+    dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
 
     return summary;
   }
