@@ -61,13 +61,11 @@ public class ReportGenerator {
     MeasureServiceWrapper measureServiceWrapper = new MeasureServiceWrapper(measureContext.getReportDefBundle(), config.getTerminologyService());
     measureServiceWrapper.preCompile();
     logger.info("Patient list is : " + measureContext.getPatientsOfInterest(queryPhase).size());
-    ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
-            ? new ForkJoinPool(config.getMeasureEvaluationThreads())
-            : ForkJoinPool.commonPool();
+    ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
 
-    try {
+
       forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
@@ -87,11 +85,6 @@ public class ReportGenerator {
                 }
               }))
               .get();
-    } finally {
-      if (forkJoinPool != null) {
-        forkJoinPool.shutdown();
-      }
-    }
   }
 
   private MeasureReport generate(MeasureServiceWrapper measureServiceWrapper, PatientOfInterestModel patient) {
