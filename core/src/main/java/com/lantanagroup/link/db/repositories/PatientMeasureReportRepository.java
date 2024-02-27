@@ -2,19 +2,22 @@ package com.lantanagroup.link.db.repositories;
 
 import com.lantanagroup.link.StreamUtils;
 import com.lantanagroup.link.db.mappers.PatientMeasureReportMapper;
+import com.lantanagroup.link.db.mappers.PatientMeasureReportSizeMapper;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.db.model.PatientMeasureReportSize;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class PatientMeasureReportRepository {
   private static final PatientMeasureReportMapper mapper = new PatientMeasureReportMapper();
-
+  private static final PatientMeasureReportSizeMapper sizeMapper = new PatientMeasureReportSizeMapper();
   private final TransactionTemplate txTemplate;
   private final NamedParameterJdbcTemplate jdbc;
 
@@ -30,6 +33,31 @@ public class PatientMeasureReportRepository {
     return jdbc.query(sql, parameters, mapper).stream()
             .reduce(StreamUtils::toOnlyElement)
             .orElse(null);
+  }
+
+  public PatientMeasureReportSize GetMeasureReportSizeById(String id) {
+    String sql =  "SELECT pmr.patientId,pmr.reportId,pmr.measureID, CAST(SUM(DATALENGTH(pmr.measureReport)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientMeasureReport AS pmr WHERE id = :id GROUP BY pmr.patientId, pmr.reportId, pmr.measureId";
+
+    Map<String, ?> parameters = Map.of("id", id);
+
+    return jdbc.query(sql, parameters, sizeMapper).stream()
+            .reduce(StreamUtils::toOnlyElement)
+            .orElse(null);
+  }
+
+  public List<PatientMeasureReportSize> GetMeasureReportSize(String patientId, String reportId, String measureId) {
+    String sql =  "SELECT pmr.patientId, pmr.reportId, pmr.measureID, CAST(SUM(DATALENGTH(pmr.measureReport)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientMeasureReport AS pmr WHERE (:reportId = '' OR reportId = :reportId) AND (:measureId = '' OR measureId = :measureId) AND (:patientId = ''  OR patientId = :patientId) GROUP BY pmr.patientId, pmr.reportId, pmr.measureId";
+
+    if(reportId == null) reportId = "";
+    if(measureId == null) measureId = "";
+    if(patientId == null) patientId = "";
+
+    HashMap<String, String> parameters = new HashMap();
+    parameters.put("reportId", reportId);
+    parameters.put("patientId", patientId);
+    parameters.put("measureId", measureId);
+
+    return jdbc.query(sql, parameters, sizeMapper);
   }
 
   public List<PatientMeasureReport> findByReportId(String reportId) {

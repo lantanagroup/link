@@ -22,6 +22,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -234,6 +235,19 @@ public class TenantService {
 
   public List<PatientMeasureReport> getPatientMeasureReports(String reportId, String measureId) {
     return this.patientMeasureReports.findByReportIdAndMeasureId(reportId, measureId);
+  }
+  public List<PatientMeasureReportSize> getPatientMeasureReportSize(String patientId, String reportId, String measureId, String patientMeasureReportId) {
+    if(patientMeasureReportId != null && !patientMeasureReportId.isEmpty()) {
+      var reportSize = patientMeasureReports.GetMeasureReportSizeById(patientMeasureReportId);
+      return List.of(reportSize);
+    }
+    else {
+        return patientMeasureReports.GetMeasureReportSize(patientId, reportId, measureId);
+    }
+  }
+
+  public List<PatientDataSize> getPatientDataReportSize(String patientId, String resourceType, LocalDateTime startDate, LocalDateTime endDate) {
+      return patientDatas.GetPatientDataResourceSizeInDateRange(patientId, resourceType, startDate, endDate);
   }
 
   public void savePatientMeasureReport(PatientMeasureReport patientMeasureReport) {

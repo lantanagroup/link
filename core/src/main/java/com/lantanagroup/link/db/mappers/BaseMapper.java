@@ -57,7 +57,9 @@ public abstract class BaseMapper<T> implements RowMapper<T> {
     public String getString(String columnName) throws SQLException {
       return resultSet.getNString(columnName);
     }
-
+    public double getDouble(String columnName) throws SQLException {
+      return resultSet.getDouble(columnName);
+    }
     public Date getDate(String columnName) throws SQLException {
       return resultSet.getTimestamp(columnName);
     }

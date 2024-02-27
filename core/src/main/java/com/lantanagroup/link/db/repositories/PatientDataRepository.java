@@ -1,7 +1,9 @@
 package com.lantanagroup.link.db.repositories;
 
 import com.lantanagroup.link.db.mappers.PatientDataMapper;
+import com.lantanagroup.link.db.mappers.PatientDataSizeMapper;
 import com.lantanagroup.link.db.model.PatientData;
+import com.lantanagroup.link.db.model.PatientDataSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -11,15 +13,13 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class PatientDataRepository {
   private static final Logger logger = LoggerFactory.getLogger(PatientDataRepository.class);
   private static final PatientDataMapper mapper = new PatientDataMapper();
-
+  private static final PatientDataSizeMapper sizeMapper = new PatientDataSizeMapper();
   private final TransactionTemplate txTemplate;
   private final NamedParameterJdbcTemplate jdbc;
 
@@ -42,6 +42,35 @@ public class PatientDataRepository {
             "WHERE RPD.reportId = :reportId AND RPD.patientId = :patientId;";
     Map<String, ?> parameters = Map.of("reportId", reportId, "patientId", patientId);
     return jdbc.query(sql, parameters, mapper);
+  }
+
+  public List<PatientDataSize> GetPatientDataResourceSize(String patientId, String resourceType) {
+    String sql =  "SELECT pmr.patientId, pmr.resourceType, CAST(SUM(DATALENGTH(pmr.resource)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientData AS pmr WHERE (:resourceType = '' OR resourceType = :resourceType) AND (:patientId = ''  OR patientId = :patientId) GROUP BY pmr.patientId, pmr.resourceType";
+
+    if(resourceType == null) resourceType = "";
+    if(patientId == null) patientId = "";
+
+    HashMap<String, String> parameters = new HashMap();
+    parameters.put("resourceType", resourceType);
+    parameters.put("patientId", patientId);
+
+
+    return jdbc.query(sql, parameters, sizeMapper);
+  }
+
+  public List<PatientDataSize> GetPatientDataResourceSizeInDateRange(String patientId, String resourceType, LocalDateTime startDate, LocalDateTime endDate) {
+    String sql =  "SELECT pmr.patientId, pmr.resourceType, CAST(SUM(DATALENGTH(pmr.resource)) as FLOAT)/1024.0 as sizeKb FROM dbo.patientData AS pmr WHERE (:resourceType = '' OR resourceType = :resourceType) AND (:patientId = ''  OR patientId = :patientId) AND (:startDate IS NULL OR pmr.retrieved BETWEEN :startDate AND :endDate) GROUP BY pmr.patientId, pmr.resourceType";
+
+    if(resourceType == null) resourceType = "";
+    if(patientId == null) patientId = "";
+
+    HashMap<String, Object> parameters = new HashMap<>();
+    parameters.put("resourceType", resourceType);
+    parameters.put("patientId", patientId);
+    parameters.put("startDate", startDate);
+    parameters.put("endDate", endDate);
+
+    return jdbc.query(sql, parameters, sizeMapper);
   }
 
   public void saveAll(String reportId, List<PatientData> models) {
