@@ -105,7 +105,6 @@ public class PatientScoop {
   public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new ConcurrentHashMap<>();
-    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
     ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
     ForkJoinPool patientFork = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
@@ -173,16 +172,11 @@ public class PatientScoop {
     } catch (Exception e) {
       logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
       return;
-    } finally {
-      if (patientFork != null) {
-        patientFork.shutdown();
-      }
     }
 
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
-      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
 
       patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
@@ -202,10 +196,6 @@ public class PatientScoop {
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
-    } finally {
-      if (patientDataFork != null) {
-        patientDataFork.shutdown();
-      }
     }
   }
 
@@ -240,10 +230,6 @@ public class PatientScoop {
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
-    } finally {
-      if (patientDataFork != null) {
-        patientDataFork.shutdown();
-      }
     }
   }
 

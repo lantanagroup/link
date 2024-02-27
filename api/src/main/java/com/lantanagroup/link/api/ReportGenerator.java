@@ -66,7 +66,7 @@ public class ReportGenerator {
     AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
 
-    try {
+
       forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
@@ -86,11 +86,6 @@ public class ReportGenerator {
                 }
               }))
               .get();
-    } finally {
-      if (forkJoinPool != null) {
-        forkJoinPool.shutdown();
-      }
-    }
   }
 
   private MeasureReport generate(PatientOfInterestModel patient) {
