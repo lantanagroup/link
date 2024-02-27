@@ -62,9 +62,7 @@ public class ReportGenerator {
       throw new IllegalStateException("api.evaluation-service has not been configured");
     }
     logger.info("Patient list is : " + measureContext.getPatientsOfInterest(queryPhase).size());
-    ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
-            ? new ForkJoinPool(config.getMeasureEvaluationThreads())
-            : ForkJoinPool.commonPool();
+    ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
 
