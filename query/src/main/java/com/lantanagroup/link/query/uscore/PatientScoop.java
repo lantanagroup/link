@@ -200,13 +200,10 @@ public class PatientScoop {
   }
 
   public void loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
-    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
     ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
 
     try {
-      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
-
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 

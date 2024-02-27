@@ -20,12 +20,6 @@ public class FhirQuery {
   private String authClass;
 
   /**
-   * The number of patients to query for in parallel using separate threads. Should not be greater than the number of
-   * cores available to the installation.
-   */
-  private int parallelPatients = 10;
-
-  /**
    * Configuration used by BasicAuth implementation
    */
   private BasicAuth basicAuth;
