@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -141,7 +141,7 @@ public class Validator {
       //this.writeConformanceResourcesToFile();
 
       this.validator = FhirContextProvider.getFhirContext().newValidator();
-      this.validator.setExecutorService(Executors.newWorkStealingPool());
+      this.validator.setExecutorService(ForkJoinPool.commonPool());
       IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
       this.validator.registerValidatorModule(module);
       this.validator.setConcurrentBundleValidation(true);
