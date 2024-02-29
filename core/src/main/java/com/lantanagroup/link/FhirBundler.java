@@ -61,18 +61,6 @@ public class FhirBundler {
     return this.org;
   }
 
-  private Device createDevice(Report report) {
-    if (report.getDeviceInfo() == null) {
-      return null;
-    }
-
-    Device device = report.getDeviceInfo().copy();
-    device.setId(UUID.randomUUID().toString());
-    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
-
-    return device;
-  }
-
   /**
    * Creates a Library resource that contains the query plan used for the report
    *
@@ -102,7 +90,7 @@ public class FhirBundler {
   public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
-    Device device = this.createDevice(report);
+    Device device = report.getDeviceInfo();
     if (device != null) {
       bundle.addEntry().setResource(device);
     }
