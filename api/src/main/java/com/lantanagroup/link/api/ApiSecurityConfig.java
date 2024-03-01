@@ -58,7 +58,7 @@ public class ApiSecurityConfig {
             .authorizeHttpRequests(registry -> {
               registry.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
               registry.requestMatchers("/config/**", "/api", "/api/docs").permitAll();
-              registry.requestMatchers("/api/**").authenticated();
+              registry.requestMatchers("/api/**", "/error").authenticated();
             })
             .headers(configurer -> configurer.contentSecurityPolicy(csp -> {
               csp.policyDirectives("script-src 'self'");

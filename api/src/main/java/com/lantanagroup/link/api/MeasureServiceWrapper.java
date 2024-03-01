@@ -4,10 +4,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Coding;
-import org.hl7.fhir.r4.model.Endpoint;
-import org.hl7.fhir.r4.model.MeasureReport;
+import org.hl7.fhir.r4.model.*;
 import org.opencds.cqf.fhir.api.Repository;
 import org.opencds.cqf.fhir.cql.EvaluationSettings;
 import org.opencds.cqf.fhir.cql.engine.retrieve.RetrieveSettings;
@@ -19,16 +16,13 @@ import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
 public class MeasureServiceWrapper {
   private final MeasureDef measureDef;
-  private final R4MeasureService measureService;
   private final Endpoint terminologyEndpoint;
+  private final MeasureEvaluationOptions options;
 
   public MeasureServiceWrapper(Bundle measureDefBundle, String terminologyService) {
     measureDef = new MeasureDef(measureDefBundle);
-    Repository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
-    for (IBaseResource resource : measureDef.getResources()) {
-      repository.update(resource);
-    }
-    MeasureEvaluationOptions options = MeasureEvaluationOptions.defaultOptions();
+    terminologyEndpoint = getTerminologyEndpoint(terminologyService);
+    options = MeasureEvaluationOptions.defaultOptions();
     EvaluationSettings evaluationSettings = options.getEvaluationSettings();
     evaluationSettings.getTerminologySettings()
             .setValuesetPreExpansionMode(TerminologySettings.VALUESET_PRE_EXPANSION_MODE.USE_IF_PRESENT)
@@ -39,8 +33,6 @@ public class MeasureServiceWrapper {
             .setTerminologyParameterMode(RetrieveSettings.TERMINOLOGY_FILTER_MODE.FILTER_IN_MEMORY)
             .setSearchParameterMode(RetrieveSettings.SEARCH_FILTER_MODE.FILTER_IN_MEMORY)
             .setProfileMode(RetrieveSettings.PROFILE_MODE.DECLARED);
-    measureService = new R4MeasureService(repository, options);
-    terminologyEndpoint = getTerminologyEndpoint(terminologyService);
   }
 
   private static Endpoint getTerminologyEndpoint(String terminologyService) {
@@ -57,10 +49,20 @@ public class MeasureServiceWrapper {
   }
 
   public void preCompile() {
-    evaluate(null, null, null, null);
+    String subject = "Patient/the-patient";
+    Patient patient = new Patient();
+    patient.setId(subject);
+    Bundle additionalData = new Bundle();
+    additionalData.addEntry().setResource(patient);
+    evaluate(null, null, subject, additionalData);
   }
 
   public MeasureReport evaluate(String periodStart, String periodEnd, String subject, Bundle additionalData) {
+    Repository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
+    for (IBaseResource resource : measureDef.getResources()) {
+      repository.update(resource);
+    }
+    R4MeasureService measureService = new R4MeasureService(repository, options);
     return measureService.evaluate(
             Eithers.forRight3(measureDef.getMeasure()),
             periodStart,
