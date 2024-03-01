@@ -670,6 +670,91 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/report/{reportId}/$regenerate:
+    get:
+      tags:
+        - Reports
+      summary: Regenerate a report
+      operationId: regenerateReport
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report to regenerate
+          required: true
+          schema:
+            type: string
+        - name: validate
+          in: query
+          description: Whether to validate the report at the end of generation
+          schema:
+            type: boolean
+            default: true
+        - name: skipQuery
+          in: query
+          description: Whether to skip querying the EHR for data
+          schema:
+            type: boolean
+            default: false
+        - name: debugPatients
+          in: query
+          description: A comma separated list of patient ids to include in the report
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Reports
+      summary: Regenerate a report
+      operationId: regenerateReportPost
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report to regenerate
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateReport'
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Report'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/{tenantId}/report/$generate:
     post:
       tags:

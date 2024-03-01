@@ -39,11 +39,9 @@ public class ValidatorTests {
     measureDefinition.setBundle(new Bundle());
     measureDefinition.getBundle().addEntry()
             .setResource(new Measure().setUrl("http://test.com/fhir/Measure/a"));
-    SharedService sharedService = mock(SharedService.class);
-    when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
 
     if (validator == null) {
-      validator = new Validator(sharedService, new ApiConfig());
+      validator = new Validator(new ApiConfig());
       validator.init();
 
       // Perform a single validation to pre-load all the packages and profiles
@@ -63,7 +61,7 @@ public class ValidatorTests {
     SharedService sharedService = mock(SharedService.class);
     when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
 
-    Validator newValidator = new Validator(sharedService, new ApiConfig());
+    Validator newValidator = new Validator(new ApiConfig());
     newValidator.init();
 
     // Perform a single validation to pre-load all the packages and profiles

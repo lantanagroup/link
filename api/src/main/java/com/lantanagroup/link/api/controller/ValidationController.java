@@ -1,7 +1,9 @@
 package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.ValidationCategorizer;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.mappers.ValidationResultMapper;
@@ -41,6 +43,8 @@ public class ValidationController extends BaseController {
   private SharedService sharedService;
   @Autowired
   private ValidationService validationService;
+  @Autowired
+  private ApiConfig apiConfig;
 
   /**
    * Validates a Bundle provided in the request body
@@ -323,6 +327,14 @@ public class ValidationController extends BaseController {
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());
     }
+
+    // Update the report's device with the current list of implementation guides
+    Device device = report.getDeviceInfo();
+    if (device == null) {
+      device = FhirHelper.getDevice(this.apiConfig);
+    }
+    FhirHelper.setImplementationGuideNotes(device, this.validator);
+    tenantService.saveReport(report);
 
     return outcome;
   }

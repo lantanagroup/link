@@ -3,11 +3,12 @@ package com.lantanagroup.link.validation;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.config.api.ApiConfig;
-import com.lantanagroup.link.db.SharedService;
+import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
@@ -24,7 +25,6 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -44,21 +44,22 @@ public class Validator {
 
   private FhirValidator validator;
 
-  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser().setPrettyPrint(true);
+  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser()
+          .setPrettyPrint(true)
+          .setParserErrorHandler(new LenientErrorHandler(false));
   private final IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
 
-  @Setter
-  private SharedService sharedService;
-
   private final List<String> allowsResourceTypes = List.of("StructureDefinition", "ValueSet", "CodeSystem", "ImplementationGuide", "Measure", "Library");
+
+  @Getter
+  private final List<ImplementationGuide> implementationGuides = new ArrayList<>();
 
   @Setter
   private ApiConfig apiConfig;
 
   private volatile boolean initialized;
 
-  public Validator(SharedService sharedService, ApiConfig apiConfig) {
-    this.sharedService = sharedService;
+  public Validator(ApiConfig apiConfig) {
     this.apiConfig = apiConfig;
     this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
   }
@@ -150,6 +151,19 @@ public class Validator {
     }
   }
 
+  private static ImplementationGuide getImplementationGuide(ImplementationGuide baseResource) {
+    ImplementationGuide ig = baseResource;
+    ImplementationGuide igToAdd = new ImplementationGuide();
+    igToAdd.setUrl(ig.getUrl());
+    igToAdd.setVersion(ig.getVersion());
+    igToAdd.setName(ig.getName());
+    igToAdd.setTitle(ig.getTitle());
+    igToAdd.setStatus(ig.getStatus() != null ? ig.getStatus() : Enumerations.PublicationStatus.UNKNOWN);
+    igToAdd.setDate(ig.getDate());
+    igToAdd.setPackageId(ig.getPackageId());
+    return igToAdd;
+  }
+
   /**
    * Load allowed resources for all packages from the configured path into the pre-populated validation support
    */
@@ -175,11 +189,29 @@ public class Validator {
 
         npmPackage.listResources(allowsResourceTypes).forEach(resource -> {
           try {
-            String resourceJson = new String(npmPackage.getFolders().get("package").getContent().get(resource), StandardCharsets.UTF_8);
-            IBaseResource baseResource = this.jsonParser.parseResource(resourceJson);
-            this.prePopulatedValidationSupport.addResource(baseResource);
-          } catch (DataFormatException ex) {
-            logger.error("Error parsing package {} resource {}", packageResource, resource, ex);
+            Resource baseResource;
+            try (InputStream stream = npmPackage.load(resource)) {
+              baseResource = (Resource) this.jsonParser.parseResource(stream);
+            }
+
+            if (baseResource.getResourceType() == ResourceType.ImplementationGuide) {
+              // This is only used to report the IGs in the validation response, so less information is needed than
+              // the entire IG resource has
+              ImplementationGuide igToAdd = getImplementationGuide((ImplementationGuide) baseResource);
+
+              if (this.implementationGuides.stream().noneMatch(ig -> ig.getUrl().equals(igToAdd.getUrl()))) {
+                this.implementationGuides.add(igToAdd);
+              }
+            } else {
+              this.prePopulatedValidationSupport.addResource(baseResource);
+            }
+          } catch (IOException | DataFormatException ex) {
+            String message = ex.getMessage();
+            // Only include the first line in the log message
+            if (message != null && message.indexOf("\n") > 0) {
+              message = message.substring(0, message.indexOf("\n"));
+            }
+            logger.error("Error parsing package {} resource {} due to \"{}\"", packageResource, resource, message);
           }
         });
       }
@@ -216,13 +248,13 @@ public class Validator {
       if (classResource.getFilename() != null && classResource.getFilename().endsWith(".json")) {
         try (InputStream is = classResource.getInputStream()) {
           resource = this.jsonParser.parseResource(is);
-        } catch (IOException ex) {
+        } catch (IOException | DataFormatException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else if (classResource.getFilename() != null && classResource.getFilename().endsWith(".xml")) {
         try (InputStream is = classResource.getInputStream()) {
           resource = this.xmlParser.parseResource(is);
-        } catch (IOException ex) {
+        } catch (IOException | DataFormatException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else {

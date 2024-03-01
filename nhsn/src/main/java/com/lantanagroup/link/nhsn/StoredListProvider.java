@@ -23,7 +23,7 @@ public class StoredListProvider implements IPatientIdProvider {
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<PatientOfInterestModel> getPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context) {
+  public void loadPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context) {
     context.getPatientLists().clear();
     context.getPatientsOfInterest().clear();
 
@@ -64,6 +64,5 @@ public class StoredListProvider implements IPatientIdProvider {
     }
 
     logger.info("Loaded {} patients from {} census lists", context.getPatientsOfInterest().size(), context.getPatientLists().size());
-    return context.getPatientsOfInterest();
   }
 }

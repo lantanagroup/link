@@ -18,7 +18,6 @@ public class Constants {
   public static final String MeasureScoringCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-scoring";
   public static final String MeasureImprovementNotationCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-improvement-notation";
   public static final String LinkDeviceVersionCodeSystem = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version";
-  public static final String LinkDevicePropertiesCodeSystem = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties";
   public static final String ReportBundleProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list";
