@@ -9,6 +9,7 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.AuditTypes;
+import com.lantanagroup.link.db.model.PatientData;
 import com.lantanagroup.link.model.TestResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
@@ -145,5 +146,36 @@ public class DataController extends BaseController {
     }
 
     return testResponse;
+  }
+
+  private Bundle getPatientDataBundle(List<PatientData> patientDataList) {
+    Bundle bundle = new Bundle();
+    bundle.setType(Bundle.BundleType.COLLECTION);
+    for (PatientData patientData : patientDataList) {
+      Bundle.BundleEntryComponent entry = bundle.addEntry();
+      entry.setResource((Resource) patientData.getResource());
+    }
+    return bundle;
+  }
+
+  @GetMapping("patient/{patientId}")
+  public Bundle getPatientData(@PathVariable String tenantId, @PathVariable String patientId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+    return getPatientDataBundle(tenantService.findPatientData(patientId));
+  }
+
+  @GetMapping("patient/{patientId}/{reportId}")
+  public Bundle getReportPatientData(
+          @PathVariable String tenantId,
+          @PathVariable String patientId,
+          @PathVariable String reportId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+    return getPatientDataBundle(tenantService.findPatientData(reportId, patientId));
   }
 }
