@@ -3,6 +3,7 @@ package com.lantanagroup.link.validation;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
@@ -24,7 +25,6 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -44,7 +44,9 @@ public class Validator {
 
   private FhirValidator validator;
 
-  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser().setPrettyPrint(true);
+  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser()
+          .setPrettyPrint(true)
+          .setParserErrorHandler(new LenientErrorHandler(false));
   private final IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
 
   private final List<String> allowsResourceTypes = List.of("StructureDefinition", "ValueSet", "CodeSystem", "ImplementationGuide", "Measure", "Library");
@@ -156,7 +158,7 @@ public class Validator {
     igToAdd.setVersion(ig.getVersion());
     igToAdd.setName(ig.getName());
     igToAdd.setTitle(ig.getTitle());
-    igToAdd.setStatus(Enumerations.PublicationStatus.UNKNOWN);
+    igToAdd.setStatus(ig.getStatus() != null ? ig.getStatus() : Enumerations.PublicationStatus.UNKNOWN);
     igToAdd.setDate(ig.getDate());
     igToAdd.setPackageId(ig.getPackageId());
     return igToAdd;
@@ -187,8 +189,10 @@ public class Validator {
 
         npmPackage.listResources(allowsResourceTypes).forEach(resource -> {
           try {
-            String resourceJson = new String(npmPackage.getFolders().get("package").getContent().get(resource), StandardCharsets.UTF_8);
-            Resource baseResource = (Resource) this.jsonParser.parseResource(resourceJson);
+            Resource baseResource;
+            try (InputStream stream = npmPackage.load(resource)) {
+              baseResource = (Resource) this.jsonParser.parseResource(stream);
+            }
 
             if (baseResource.getResourceType() == ResourceType.ImplementationGuide) {
               // This is only used to report the IGs in the validation response, so less information is needed than
@@ -201,8 +205,13 @@ public class Validator {
             } else {
               this.prePopulatedValidationSupport.addResource(baseResource);
             }
-          } catch (DataFormatException ex) {
-            logger.error("Error parsing package {} resource {}", packageResource, resource, ex);
+          } catch (IOException | DataFormatException ex) {
+            String message = ex.getMessage();
+            // Only include the first line in the log message
+            if (message != null && message.indexOf("\n") > 0) {
+              message = message.substring(0, message.indexOf("\n"));
+            }
+            logger.error("Error parsing package {} resource {} due to \"{}\"", packageResource, resource, message);
           }
         });
       }
