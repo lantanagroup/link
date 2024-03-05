@@ -16,6 +16,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <cqf-fhir.version>3.0.0</cqf-fhir.version>
         <hapi-fhir.version>7.0.0</hapi-fhir.version>
+        <jackson.version>2.16.1</jackson.version>
         <spring-boot.version>3.2.0</spring-boot.version>
     </properties>
 
@@ -33,6 +34,14 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
