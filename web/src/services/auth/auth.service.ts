@@ -14,7 +14,7 @@ interface TokenResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private AUTH_ENDPOINT = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect';
+  private AUTH_ENDPOINT = 'https://oauth.nhsnlink.org/realms/NHSNLink/protocol/openid-connect';
 
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn())
 
