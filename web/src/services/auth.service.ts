@@ -13,7 +13,7 @@ interface TokenResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private tokenEndpoint = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/token';
+  private tokenEndpoint = 'https://oauth.nhsnlink.org/realms/NHSNLink/protocol/openid-connect/token';
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -32,7 +32,7 @@ export class AuthService {
   // Login method that would return the auth url.
   login() {
     // Redirect to Keycloak login page
-    return `https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect/auth?client_id=nhsnlink-app&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
+    return `https://oauth.nhsnlink.org/realms/NHSNLink/protocol/openid-connect/auth?client_id=nhsnlink-app&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
   }
 
   // Using the code from redirect url, below method will get a valid token.
