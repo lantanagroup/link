@@ -1987,13 +1987,19 @@ paths:
             $ref: '#/components/responses/Unauthorized'
           '403':
             $ref: '#/components/responses/Unauthorized'
-  /api/qa//$deleteReportById/{reportId}:
+  /api/qa/{tenantId}/$deleteReportById/{reportId}:
       delete:
         tags:
           - QA
         summary: Deletes a report by id
         operationId: deleteReportById
         parameters:
+          - name: tenantId
+            in: path
+            description: The id of the tenant
+            required: true
+            schema:
+              type: string
           - name: reportId
             in: path
             description: The id of the report to delete
