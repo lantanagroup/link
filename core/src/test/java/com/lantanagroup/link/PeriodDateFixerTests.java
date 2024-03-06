@@ -1,10 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.DateTimeType;
-import org.hl7.fhir.r4.model.Encounter;
-import org.hl7.fhir.r4.model.Period;
+import org.hl7.fhir.r4.model.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -60,6 +57,11 @@ public class PeriodDateFixerTests {
 
     Assert.assertEquals(start, period.getStart());
     Assert.assertNotEquals(startString, period.getStartElement().asStringValue());
+
+    Assert.assertTrue(period.getStartElement().hasExtension());
+    Extension extension = period.getStartElement().getExtensionFirstRep();
+    Assert.assertEquals(Constants.OriginalElementValueExtension, extension.getUrl());
+    Assert.assertEquals("2023-05-25", extension.getValue().primitiveValue());
 
     Assert.assertEquals(end, period.getEnd());
     Assert.assertEquals(endString, period.getEndElement().asStringValue());

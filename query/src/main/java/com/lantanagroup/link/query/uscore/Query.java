@@ -60,12 +60,16 @@ public class Query {
     List<PatientOfInterestModel> patientsOfInterest = context.getPatientsOfInterest(queryPhase);
     if (patientsOfInterest.size() > 0) {
       try {
+        IGenericClient client = this.getFhirQueryClient(tenantService, context.getMasterIdentifierValue());
+        context.setClient(client);
         PatientScoop scoop = this.applicationContext.getBean(PatientScoop.class);
-        scoop.setFhirQueryServer(this.getFhirQueryClient(tenantService, context.getMasterIdentifierValue()));
+        scoop.setFhirQueryServer(client);
         scoop.setTenantService(tenantService);
         scoop.execute(criteria, context, patientsOfInterest, queryPhase);
       } catch (Exception ex) {
         logger.error("Error scooping data for patients", ex);
+      } finally {
+        context.setClient(null);
       }
     }
   }
