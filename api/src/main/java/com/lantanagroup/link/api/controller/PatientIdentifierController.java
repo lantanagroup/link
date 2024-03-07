@@ -254,7 +254,7 @@ public class PatientIdentifierController extends BaseController {
     }
     Identifier measureIdentifier = list.getIdentifier().get(0);
 
-    if (this.sharedService.measureDefinitionExists(measureIdentifier.getValue())) {
+    if (!this.sharedService.measureDefinitionExists(measureIdentifier.getValue())) {
       String msg = String.format("Measure %s (%s) not found on data store", measureIdentifier.getValue(), measureIdentifier.getSystem());
       logger.error(msg);
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
