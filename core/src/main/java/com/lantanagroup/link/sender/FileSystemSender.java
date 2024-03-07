@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Library;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
@@ -154,7 +157,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.info("Saved submission bundle to file system: {}", path);
   }
 
-  private void saveToFolder(Bundle bundle, String path) throws Exception {
+  private void saveToFolder(Bundle bundle, String path, TenantService tenantService, String reportId) throws Exception {
     File folder = new File(path);
 
     if (!folder.exists() && !folder.mkdirs()) {
@@ -181,25 +184,30 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     // Save aggregate measure reports
     logger.debug("Saving aggregate measure reports");
-    if (!fhirBundleProcessor.getAggregateMeasureReports().isEmpty()) {
-      for (int i = 0; i < fhirBundleProcessor.getAggregateMeasureReports().size(); i++) {
-        this.saveToFile(fhirBundleProcessor.getAggregateMeasureReports().get(i).getResource(), Paths.get(path, String.format("aggregate-%d.json", i + 1)).toString());
+    List<Bundle.BundleEntryComponent> aggregates = fhirBundleProcessor.getAggregateMeasureReports();
+    if (aggregates != null && !aggregates.isEmpty()) {
+      for (Bundle.BundleEntryComponent aggregate : aggregates) {
+        Resource aggregateReport = aggregate.getResource();
+        this.saveToFile(aggregateReport, Paths.get(path, String.format("aggregate-%s.json", aggregateReport.getIdElement().getIdPart())).toString());
       }
     }
 
     // Save census lists
     logger.debug("Saving census lists");
-    if (fhirBundleProcessor.getLinkCensusLists() != null && !fhirBundleProcessor.getLinkCensusLists().isEmpty()) {
-      for (int i = 0; i < fhirBundleProcessor.getLinkCensusLists().size(); i++) {
-        this.saveToFile(fhirBundleProcessor.getLinkCensusLists().get(i).getResource(), Paths.get(path, String.format("census-%d.json", i + 1)).toString());
+    List<Bundle.BundleEntryComponent> lists = fhirBundleProcessor.getLinkCensusLists();
+    if (lists != null && !lists.isEmpty()) {
+      for (Bundle.BundleEntryComponent entry : lists) {
+        Resource list = entry.getResource();
+        this.saveToFile(list,
+                Paths.get(path, String.format("census-%s.json", list.getIdElement().getIdPart())).toString());
       }
     }
 
     // Save patient resources
     logger.debug("Saving patient resources as patient bundles");
-
-    if (!fhirBundleProcessor.getPatientResources().isEmpty()) {
-      for (String patientId : fhirBundleProcessor.getPatientResources().keySet()) {
+    Set<String> patientIds = fhirBundleProcessor.getPatientResources().keySet();
+    if (!patientIds.isEmpty()) {
+      for (String patientId : patientIds) {
         Bundle patientBundle = new Bundle();
         patientBundle.setType(Bundle.BundleType.COLLECTION);
         patientBundle.getEntry().addAll(fhirBundleProcessor.getPatientResources().get(patientId));
@@ -217,6 +225,43 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     if (otherResourcesBundle.hasEntry()) {
       this.saveToFile(otherResourcesBundle, Paths.get(path, "other-resources.json").toString());
     }
+
+    // Annotating validation results with what file each issue occurs in and saving
+    logger.debug("Annotating and saving validation results");
+    OperationOutcome outcome =
+            tenantService.getValidationResultsOperationOutcome(reportId, OperationOutcome.IssueSeverity.INFORMATION, null);
+    List<OperationOutcome.OperationOutcomeIssueComponent> issues = outcome.getIssue();
+    issues.forEach(i -> {
+      String expression = i.getExpression().get(0).toString();
+      String resourceType = expression.substring(expression.indexOf("ofType(") + 7, expression.indexOf(")"));
+      String id = expression.substring(expression.indexOf("id = '") + 6, expression.indexOf("')"));
+      if(resourceType.equals("Organization") && id.equals(fhirBundleProcessor.getLinkOrganization().getResource().getIdElement().getIdPart())) {
+        i.setDiagnostics("organization.json");
+      }
+      else if(resourceType.equals("Device") && id.equals(fhirBundleProcessor.getLinkDevice().getResource().getIdElement().getIdPart())) {
+        i.setDiagnostics("device.json");
+      }
+      else if(resourceType.equals("MeasureReport") && aggregates != null &&
+              aggregates.stream().anyMatch(a -> a.getResource().getIdElement().getIdPart().equals(id))) {
+        i.setDiagnostics(String.format("aggregate-%s.json", id));
+      }
+      else if(resourceType.equals("List") && lists != null &&
+              lists.stream().anyMatch(l -> l.getResource().getIdElement().getIdPart().equals(id))) {
+        i.setDiagnostics(String.format("census-%s.json", id));
+      }
+      else if(resourceType.equals("Patient") && patientIds.stream().anyMatch(p -> p.equals(id))) {
+        i.setDiagnostics(String.format("patient-%s.json", id));
+      }
+      else if(resourceType.equals("Library") &&
+              id.equals(fhirBundleProcessor.getLinkQueryPlanLibrary().getResource().getIdElement().getIdPart())) {
+        i.setDiagnostics("query-plan.json");
+      }
+      else {
+        i.setDiagnostics("other-resources.json");
+      }
+    });
+    this.saveToFile(outcome, Paths.get(path, "validation-results.json").toString());
+
   }
 
   @SuppressWarnings("unused")
@@ -237,7 +282,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     if (this.config.getIsBundle()) {
       this.saveToFile(submissionBundle, path);
     } else {
-      this.saveToFolder(submissionBundle, path);
+      this.saveToFolder(submissionBundle, path, tenantService, report.getId());
     }
   }
 }
