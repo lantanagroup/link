@@ -390,7 +390,7 @@ public class ValidationController extends BaseController {
    * @param reportId The id of the report to validate against
    * @return Returns a ValidationCategoriesAndResults object
    */
-  @GetMapping(value = "/{tenantId}/{reportId}/category/results", produces = {"application/xml", "application/json"})
+  @GetMapping(value = "/{tenantId}/{reportId}/category/result", produces = {"application/xml", "application/json"})
   public ValidationCategoriesAndResults getValidationCategoriesAndResults(@PathVariable String tenantId, @PathVariable String reportId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
