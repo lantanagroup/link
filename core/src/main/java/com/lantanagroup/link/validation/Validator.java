@@ -93,6 +93,8 @@ public class Validator {
       case "Terminology_PassThrough_TX_Message":
       case "Terminology_TX_Code_ValueSet_Ext":
       case "Terminology_TX_NoValid_17":
+      case "Terminology_TX_NoValid_16":
+      case "Terminology_TX_NoValid_3_CC":
         return OperationOutcome.IssueType.CODEINVALID;
       case "Extension_EXT_Unknown":
         return OperationOutcome.IssueType.EXTENSION;
@@ -101,11 +103,15 @@ public class Validator {
       case "Validation_VAL_Profile_Minimum":
       case "Validation_VAL_Profile_Maximum":
       case "Extension_EXT_Type":
+      case "Validation_VAL_Profile_Unknown":
+      case "Reference_REF_NoDisplay":
         return OperationOutcome.IssueType.STRUCTURE;
       case "Type_Specific_Checks_DT_String_WS":
         return OperationOutcome.IssueType.VALUE;
       case "Terminology_TX_System_Unknown":
         return OperationOutcome.IssueType.UNKNOWN;
+      case "Type_Specific_Checks_DT_Code_WS":
+        return OperationOutcome.IssueType.INVALID;
       default:
         return OperationOutcome.IssueType.NULL;
     }
