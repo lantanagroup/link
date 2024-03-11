@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
@@ -15,7 +16,9 @@ import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +32,9 @@ import java.util.stream.Collectors;
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
+
+  private static final DefaultProfileValidationSupport validationSupport =
+          new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
 
   public static org.hl7.fhir.r4.model.Address getFHIRAddress(Address address) {
     org.hl7.fhir.r4.model.Address ret = new org.hl7.fhir.r4.model.Address();
@@ -337,6 +343,11 @@ public class FhirHelper {
     for (String event : events) {
       device.getNote().add(new Annotation().setText("Event: " + eventCategory + " executes " + event));
     }
+  }
+
+  public static FHIRPathEngine getFhirPathEngine() {
+    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
+    return new FHIRPathEngine(workerContext);
   }
 
   /**

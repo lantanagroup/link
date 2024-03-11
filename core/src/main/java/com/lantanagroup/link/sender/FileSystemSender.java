@@ -2,6 +2,7 @@ package com.lantanagroup.link.sender;
 
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
@@ -9,10 +10,7 @@ import com.lantanagroup.link.db.model.Report;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Library;
-import org.hl7.fhir.r4.model.OperationOutcome;
-import org.hl7.fhir.r4.model.Resource;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +21,16 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
@@ -55,7 +52,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     return this.config.getFormat();
   }
 
-  public Path getFilePath() {
+  public Path getFilePath(String type) {
     String suffix = "";
     String path;
 
@@ -77,7 +74,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       }
     }
 
-    String fileName = "submission-" + (new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date())) + suffix;
+    String fileName = type + "-" + (new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date())) + suffix;
 
     return Paths.get(path, fileName);
   }
@@ -157,7 +154,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.info("Saved submission bundle to file system: {}", path);
   }
 
-  private void saveToFolder(Bundle bundle, String path, TenantService tenantService, String reportId) throws Exception {
+  private void saveToFolder(Bundle bundle, OperationOutcome outcome, String path) throws Exception {
     File folder = new File(path);
 
     if (!folder.exists() && !folder.mkdirs()) {
@@ -170,16 +167,19 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     // Save link resources
     logger.debug("Saving link resources");
     if (fhirBundleProcessor.getLinkOrganization() != null) {
-      this.saveToFile(fhirBundleProcessor.getLinkOrganization().getResource(), Paths.get(path, "organization.json").toString());
+      this.saveToFile(fhirBundleProcessor.getLinkOrganization().getResource(),
+              Paths.get(path, Constants.ORGANIZATION_FILE_NAME).toString());
     }
 
     if (fhirBundleProcessor.getLinkDevice() != null) {
-      this.saveToFile(fhirBundleProcessor.getLinkDevice().getResource(), Paths.get(path, "device.json").toString());
+      this.saveToFile(fhirBundleProcessor.getLinkDevice().getResource(),
+              Paths.get(path, Constants.DEVICE_FILE_NAME).toString());
     }
 
     if (fhirBundleProcessor.getLinkQueryPlanLibrary() != null) {
       Library library = (Library) fhirBundleProcessor.getLinkQueryPlanLibrary().getResource();
-      this.saveToFile(library.getContentFirstRep().getData(), Paths.get(path, "query-plan.yml").toString());
+      this.saveToFile(library.getContentFirstRep().getData(),
+              Paths.get(path, Constants.QUERY_PLAN_FILE_NAME).toString());
     }
 
     // Save aggregate measure reports
@@ -228,36 +228,12 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     // Annotating validation results with what file each issue occurs in and saving
     logger.debug("Annotating and saving validation results");
-    OperationOutcome outcome =
-            tenantService.getValidationResultsOperationOutcome(reportId, OperationOutcome.IssueSeverity.INFORMATION, null);
     List<OperationOutcome.OperationOutcomeIssueComponent> issues = outcome.getIssue();
     issues.forEach(i -> {
       String expression = i.getExpression().get(0).toString();
-      String resourceType = expression.substring(expression.indexOf("ofType(") + 7, expression.indexOf(")"));
-      String id = expression.substring(expression.indexOf("id = '") + 6, expression.indexOf("')"));
-      if(resourceType.equals("Organization") && id.equals(fhirBundleProcessor.getLinkOrganization().getResource().getIdElement().getIdPart())) {
-        i.setDiagnostics("organization.json");
-      }
-      else if(resourceType.equals("Device") && id.equals(fhirBundleProcessor.getLinkDevice().getResource().getIdElement().getIdPart())) {
-        i.setDiagnostics("device.json");
-      }
-      else if(resourceType.equals("MeasureReport") && aggregates != null &&
-              aggregates.stream().anyMatch(a -> a.getResource().getIdElement().getIdPart().equals(id))) {
-        i.setDiagnostics(String.format("aggregate-%s.json", id));
-      }
-      else if(resourceType.equals("List") && lists != null &&
-              lists.stream().anyMatch(l -> l.getResource().getIdElement().getIdPart().equals(id))) {
-        i.setDiagnostics(String.format("census-%s.json", id));
-      }
-      else if(resourceType.equals("Patient") && patientIds.stream().anyMatch(p -> p.equals(id))) {
-        i.setDiagnostics(String.format("patient-%s.json", id));
-      }
-      else if(resourceType.equals("Library") &&
-              id.equals(fhirBundleProcessor.getLinkQueryPlanLibrary().getResource().getIdElement().getIdPart())) {
-        i.setDiagnostics("query-plan.json");
-      }
-      else {
-        i.setDiagnostics("other-resources.json");
+      if(expression.contains("Bundle.entry[")){
+        String entryIndex = expression.substring(expression.indexOf("Bundle.entry[") + 13, expression.indexOf("]"));
+        i.setDiagnostics(fhirBundleProcessor.getBundleEntryIndexToFileMap().get(Integer.parseInt(entryIndex)));
       }
     });
     this.saveToFile(outcome, Paths.get(path, "validation-results.json").toString());
@@ -277,12 +253,18 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             this.config.getFormat(),
             StringUtils.isEmpty(this.config.getEncryptSecret()) ? "without" : "with");
 
-    String path = this.getFilePath().toString();
+
+    OperationOutcome outcome =
+            tenantService.getValidationResultsOperationOutcome(report.getId(), OperationOutcome.IssueSeverity.INFORMATION, null);
 
     if (this.config.getIsBundle()) {
-      this.saveToFile(submissionBundle, path);
+      this.saveToFile(submissionBundle, this.getFilePath("submission").toString());
+      this.saveToFile(outcome, this.getFilePath("validation").toString());
     } else {
-      this.saveToFolder(submissionBundle, path, tenantService, report.getId());
+      String orgId = tenantService.getOrganizationID();
+      this.saveToFolder(submissionBundle, outcome,
+              (orgId != null && !orgId.isEmpty() ? this.getFilePath(orgId).toString()
+                      : this.getFilePath("submission").toString()));
     }
   }
 }

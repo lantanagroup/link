@@ -31,10 +31,6 @@ public class ApplyConceptMaps {
     validationSupport.fetchAllStructureDefinitions();
   }
 
-  private FHIRPathEngine getFhirPathEngine() {
-    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
-    return new FHIRPathEngine(workerContext);
-  }
 
   private void translateCoding(ConceptMap map, Coding code) {
     map.getGroup().stream().forEach((ConceptMap.ConceptMapGroupComponent group) -> {
@@ -81,7 +77,7 @@ public class ApplyConceptMaps {
     List<Base> results = new ArrayList<>();
     // logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
     pathList.stream().forEach(path -> {
-      results.addAll(getFhirPathEngine().evaluate(resource, path));
+      results.addAll(FhirHelper.getFhirPathEngine().evaluate(resource, path));
     });
     return results;
   }
