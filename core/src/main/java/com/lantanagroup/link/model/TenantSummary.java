@@ -15,5 +15,6 @@ public class TenantSummary {
   private String nhsnOrgId;
   private String lastSubmissionId;
   private String lastSubmissionDate;
+  private String totalPopulation;
   private List<TenantSummaryMeasure> measures = new ArrayList<>();
 }

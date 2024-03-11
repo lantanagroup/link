@@ -839,11 +839,29 @@ public class SharedService {
     return reports;
   }
 
-  private static TenantSummary getTenantSummaryResponse(Tenant tenantConfig, ResultSet rs) throws SQLException {
+  private TenantSummary getTenantSummaryResponse(Tenant tenantConfig, ResultSet rs) throws SQLException {
     TenantSummary tenantSummary = new TenantSummary();
     tenantSummary.setId(tenantConfig.getId());
     tenantSummary.setName(tenantConfig.getName());
     tenantSummary.setNhsnOrgId(tenantConfig.getCdcOrgId());
+
+    try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
+      String sql = "SELECT (SELECT COUNT(*) FROM OPENJSON(patients)) " +
+              "FROM dbo.patientList " +
+              "WHERE periodEnd = ? " +
+              "and periodStart = ?";
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ps.setString(1, rs.getString(5));
+      ps.setString(2, rs.getString(4));
+      ResultSet tPRs = ps.executeQuery();
+      while (tPRs.next()) {
+        tenantSummary.setTotalPopulation(tPRs.getString(1));
+        break;
+      }
+    } catch (SQLException e) {
+      logger.error("SQL exception while compiling totalPatients from database", e);
+      throw new RuntimeException(e);
+    }
 
     String measureIds = rs.getString(2);
     measureIds = measureIds.replaceAll("\\[", "").replaceAll("\\]", "");
@@ -852,6 +870,25 @@ public class SharedService {
     // get measures from measureIds string, split on comma, convert to list of TenantSummaryMeasure
     List<TenantSummaryMeasure> list = measures.stream().map(m -> {
       var measure = new TenantSummaryMeasure();
+
+      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())){
+        String sql = "SELECT (SELECT COUNT(*) FROM OPENJSON(report, '$.contained[0].entry')) " +
+                "FROM dbo.[aggregate] " +
+                "where reportId = ? "+
+                "and measureId = ?";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ps.setString(1, rs.getString(1));
+        ps.setString(2, m.replaceAll("\"", ""));
+        ResultSet iPRs = ps.executeQuery();
+        while (iPRs.next()) {
+          measure.setIncludedPopulation(iPRs.getString(1));
+          break;
+        }
+      } catch (SQLException e) {
+        logger.error("SQL exception while compiling totalPatients from database", e);
+        throw new RuntimeException(e);
+      }
+
       m = m.replace("\"", "");
       measure.setId(m);
       measure.setShortName(m);
@@ -896,7 +933,7 @@ public class SharedService {
       }
       // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
+        PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime, periodStart, periodEnd FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           TenantSummary tenantSummary = getTenantSummaryResponse(tenantConfig, rs);
@@ -907,6 +944,7 @@ public class SharedService {
         throw new RuntimeException(e);
       }
     }
+
     // sort  by name  or nhsnOrgId or  last submission date
     sortTenantSummaryList(sort, sortAscend, tenantSummaryList);
     return tenantSummaryList;
