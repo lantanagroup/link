@@ -1,16 +1,22 @@
-import { bootstrapApplication } from '@angular/platform-browser';
-import { AppComponent } from './app/app.component';
-import { Router, RouterModule } from '@angular/router';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { importProvidersFrom } from '@angular/core';
+import {bootstrapApplication} from '@angular/platform-browser';
+import {AppComponent} from './app/app.component';
+import {Router, RouterModule} from '@angular/router';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
+import {APP_INITIALIZER, importProvidersFrom} from '@angular/core';
 
-import { AuthInterceptor } from './services/auth/auth.interceptor';
-import { authGuard } from './services/auth/auth.guard';
-import { AuthService } from './services/auth/auth.service';
-import { CallbackComponent } from './callback/callback.component';
+import {AuthInterceptor} from './services/auth/auth.interceptor';
+import {authGuard} from './services/auth/auth.guard';
+import {AuthService} from './services/auth/auth.service';
+import {CallbackComponent} from './callback/callback.component';
+import {AppConfigService} from "./services/app.config";
+
+export function initConfig(appConfig: AppConfigService) {
+  return () => appConfig.loadConfig();
+}
 
 bootstrapApplication(AppComponent, {
   providers: [
+    {provide: APP_INITIALIZER, useFactory: initConfig, deps: [AppConfigService], multi: true},
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     {
       provide: 'AuthGuard',

@@ -9,7 +9,7 @@
     <app-button
       variant="outline--reverse"
       type="link"
-      [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account', target: '_blank'}"
+      [link]="{url: appConfigService.getConfig()?.authAccountUrl || '', target: '_blank'}"
     >
       <app-icon filePath="../../../assets/icons/view.svg" />
       Edit Profile
@@ -41,7 +41,7 @@
             <p>{{ userData.department }}</p>
           </app-mini-content>
         </div>
-        
+
         <div class="col col-sm-6 col-md-4">
           <app-mini-content title="Email" *ngIf="userData.email">
             <p>{{ userData.email }}</p>
@@ -51,7 +51,7 @@
             <p>{{ userData.phone }}</p>
           </app-mini-content>
         </div>
-        
+
         <div class="col col-sm-6 col-md-4">
           <app-mini-content title="Password">
             <p>*****************</p>
@@ -59,7 +59,7 @@
 
           <app-button
             type="link"
-            [link]="{url: 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/account/#/security/signingin', target: '_blank'}"
+            [link]="{url: appConfigService.getConfig()?.authAccountUrl || '', target: '_blank'}"
           >
             <app-icon filePath="../../../assets/icons/edit.svg" />
             Update Password
