@@ -1377,6 +1377,41 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/validate/{tenantId}/{reportId}/category/result:
+    get:
+      tags:
+        - Validation
+      summary: Retrieves the validation categories and results for a report
+      operationId: getValidationCategoriesAndResults
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant in which the report resides, and used to determine validation options
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The logical id of the report to submit
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful response
+          content:
+            'application/xml':
+              schema:
+                $ref: '#/components/schemas/ValidationCategoriesAndResults'
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ValidationCategoriesAndResults'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/measureDef:
     get:
       tags:
@@ -2947,6 +2982,8 @@ components:
             type: number
     ValidationCategoryResponse:
       type: object
+      xml:
+        name: category
       description: Information about the validation categories for a report.
       properties:
         id:
@@ -3033,6 +3070,50 @@ components:
         isInverse:
           type: boolean
           description: True if the rule should be inverted (i.e. if the regex matches, the rule fails)
+    ValidationResultResponse:
+      type: object
+      xml:
+        name: result
+      properties:
+        id:
+          type: string
+        reportId:
+          type: string
+        code:
+          type: string
+        details:
+          type: string
+        severity:
+          type: string
+        expression:
+          type: string
+        position:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+            xml:
+              name: category
+          xml:
+            wrapped: true
+    ValidationCategoriesAndResults:
+      type: object
+      xml:
+        name: validation
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCategoryResponse'
+          xml:
+            wrapped: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationResultResponse'
+          xml:
+            wrapped: true
   securitySchemes:
     oauth:
       type: oauth2

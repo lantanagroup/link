@@ -10,9 +10,7 @@ import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
-import com.lantanagroup.link.model.ValidationCategory;
-import com.lantanagroup.link.model.ValidationCategoryResponse;
-import com.lantanagroup.link.model.ValidationCategorySeverities;
+import com.lantanagroup.link.model.*;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import com.lantanagroup.link.validation.ValidationService;
@@ -383,5 +381,58 @@ public class ValidationController extends BaseController {
     }
 
     return ValidationResultMapper.toOperationOutcome(categoryResults);
+  }
+
+  /**
+   * Retrieves the validation categories and results for a report
+   *
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @return Returns a ValidationCategoriesAndResults object
+   */
+  @GetMapping(value = "/{tenantId}/{reportId}/category/result", produces = {"application/xml", "application/json"})
+  public ValidationCategoriesAndResults getValidationCategoriesAndResults(@PathVariable String tenantId, @PathVariable String reportId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    ValidationCategoriesAndResults categoriesAndResults = new ValidationCategoriesAndResults();
+    List<ValidationCategory> categories = ValidationCategorizer.loadAndRetrieveCategories();
+    List<ValidationResult> results = tenantService.getValidationResults(reportId);
+    List<ValidationResultCategory> resultCategories = tenantService.findValidationResultCategoriesByReport(reportId);
+
+    categoriesAndResults.setCategories(categories.stream()
+            .map(c -> {
+              ValidationCategoryResponse response = new ValidationCategoryResponse(c);
+              response.setCount(resultCategories.stream().filter(rc -> rc.getCategoryCode().equals(c.getId())).count());
+              return response;
+            })
+            .filter(c -> c.getCount() > 0)
+            .collect(Collectors.toList()));
+
+    categoriesAndResults.setResults(results.stream().map(r -> {
+      ValidationResultResponse response = new ValidationResultResponse();
+      response.setId(r.getId());
+      response.setCode(r.getCode());
+      response.setDetails(r.getDetails());
+      response.setSeverity(r.getSeverity());
+      response.setExpression(r.getExpression());
+      response.setPosition(r.getPosition());
+      response.setCategories(resultCategories.stream()
+              .filter(rc -> rc.getValidationResultId().equals(r.getId()))
+              .map(ValidationResultCategory::getCategoryCode)
+              .collect(Collectors.toList()));
+      return response;
+    }).collect(Collectors.toList()));
+
+    return categoriesAndResults;
   }
 }
