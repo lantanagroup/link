@@ -1,11 +1,16 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from 'src/services/auth/auth.service';
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {AuthService} from 'src/services/auth/auth.service';
+import {AppConfigService} from "../app.config";
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    public appConfigService: AppConfigService) {
+  }
 
   private createHeaders() {
     return new HttpHeaders({
@@ -14,13 +19,11 @@ export class DataService {
   }
 
   private getApiBaseUrl(): string {
-    const hostname = window.location.hostname
-    switch (hostname) {
-      case 'localhost':
-        return 'https://dev.nhsnlink.org/api'
-      default:
-        return `${window.location.protocol}//${hostname}/api`
+    const config = this.appConfigService.getConfig();
+    if (config && config.apiBaseUrl) {
+      return config.apiBaseUrl;
     }
+    throw new Error('API base URL is not set');
   }
 
   private constructApiUrl(resource: string) {

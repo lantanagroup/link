@@ -1,14 +1,15 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { jwtDecode } from 'jwt-decode';
-import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { IconComponent } from 'src/app/shared/icon/icon.component';
-import { ButtonComponent } from 'src/app/shared/button/button.component';
-import { SectionComponent } from 'src/app/shared/section/section.component';
-import { CardComponent } from 'src/app/shared/card/card.component';
-import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
-import { ProfileModel, FjorgeUser } from 'src/app/shared/interfaces/profile.model';
-import { ProfileApiService } from 'src/services/api/profile/profile-api.service';
+import {Component} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {jwtDecode} from 'jwt-decode';
+import {HeroComponent} from 'src/app/shared/hero/hero.component';
+import {IconComponent} from 'src/app/shared/icon/icon.component';
+import {ButtonComponent} from 'src/app/shared/button/button.component';
+import {SectionComponent} from 'src/app/shared/section/section.component';
+import {CardComponent} from 'src/app/shared/card/card.component';
+import {MiniContentComponent} from 'src/app/shared/mini-content/mini-content.component';
+import {ProfileModel} from 'src/app/shared/interfaces/profile.model';
+import {ProfileApiService} from 'src/services/api/profile/profile-api.service';
+import {AppConfigService} from "../../../services/app.config";
 
 @Component({
   selector: 'app-profile',
@@ -30,7 +31,8 @@ export class ProfileComponent {
   }
 
   constructor(
-    private profileApiService: ProfileApiService
+    private profileApiService: ProfileApiService,
+    public appConfigService: AppConfigService
   ) {}
 
   async ngOnInit() {
@@ -40,11 +42,11 @@ export class ProfileComponent {
     if(this.accessToken) {
       // Decode the access token
       const decodedToken: any = jwtDecode(this.accessToken)
-  
+
       // Extract the email and save it to the session storage
       this.userData.email = decodedToken?.email
       this.userData.name = decodedToken?.name
-      
+
       try {
         this.apiUserData = await this.profileApiService.fetchProfileData(this.userData?.email)
         this.userData.id = this.apiUserData.id
