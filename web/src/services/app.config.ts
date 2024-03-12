@@ -3,6 +3,7 @@ import {Injectable} from "@angular/core";
 import {firstValueFrom} from "rxjs";
 
 export interface AppConfig {
+  apiBaseUrl: string;
   authAccountUrl: string;
   authOpenIdUrl: string;
   authClientId: string;
