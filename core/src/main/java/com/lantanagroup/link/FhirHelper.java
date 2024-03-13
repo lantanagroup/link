@@ -346,6 +346,7 @@ public class FhirHelper {
   }
 
   public static FHIRPathEngine getFhirPathEngine() {
+    validationSupport.fetchAllStructureDefinitions();
     HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
     return new FHIRPathEngine(workerContext);
   }

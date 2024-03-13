@@ -230,10 +230,12 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.debug("Annotating and saving validation results");
     List<OperationOutcome.OperationOutcomeIssueComponent> issues = outcome.getIssue();
     issues.forEach(i -> {
-      String expression = i.getExpression().get(0).toString();
-      if(expression.contains("Bundle.entry[")){
-        String entryIndex = expression.substring(expression.indexOf("Bundle.entry[") + 13, expression.indexOf("]"));
-        i.setDiagnostics(fhirBundleProcessor.getBundleEntryIndexToFileMap().get(Integer.parseInt(entryIndex)));
+      if(i.hasExpression()){
+        String expression = i.getExpression().get(0).toString();
+        if(expression.contains("Bundle.entry[")){
+          String entryIndex = expression.substring(expression.indexOf("Bundle.entry[") + 13, expression.indexOf("]"));
+          i.setDiagnostics(fhirBundleProcessor.getBundleEntryIndexToFileMap().get(Integer.parseInt(entryIndex)));
+        }
       }
     });
     this.saveToFile(outcome, Paths.get(path, "validation-results.json").toString());

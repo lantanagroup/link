@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 public class ApplyConceptMaps {
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
-  private final DefaultProfileValidationSupport validationSupport = new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
 
   private List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps;
 
@@ -27,9 +26,7 @@ public class ApplyConceptMaps {
             .anyMatch(mappedCoding -> mappedCoding.is(system, code));
   }
 
-  public ApplyConceptMaps() {
-    validationSupport.fetchAllStructureDefinitions();
-  }
+  public ApplyConceptMaps() {}
 
 
   private void translateCoding(ConceptMap map, Coding code) {

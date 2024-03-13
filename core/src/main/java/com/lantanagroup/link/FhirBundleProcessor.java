@@ -39,92 +39,72 @@ public class FhirBundleProcessor {
   public FhirBundleProcessor(Bundle bundle) {
     this.bundle = bundle;
 
-    this.linkOrganization = this.bundle.getEntry().stream()
-            .filter(e -> {
-              if(e.getResource().getResourceType().equals(ResourceType.Organization) &&
-                      e.getResource().getMeta().hasProfile(Constants.SubmittingOrganizationProfile)){
-                int index = bundle.getEntry().indexOf(e);
-                bundleEntryIndexToFileMap.put(index, Constants.ORGANIZATION_FILE_NAME);
-                return true;
-              }
-              else return false;
-            })
-            .findFirst()
-            .orElse(null);
+    Bundle.BundleEntryComponent linkOrganization = null;
+    Bundle.BundleEntryComponent linkDevice = null;
+    Bundle.BundleEntryComponent linkQueryPlanLibrary = null;
+    List<Bundle.BundleEntryComponent> linkCensusLists = new ArrayList<>();
+    List<Bundle.BundleEntryComponent> aggregateMeasureReports = new ArrayList<>();
 
-    this.linkDevice = this.bundle.getEntry().stream()
-            .filter(e -> {
-
-              if(e.getResource().getResourceType().equals(ResourceType.Device) &&
-                      e.getResource().getMeta().hasProfile(Constants.SubmittingDeviceProfile)){
-                int index = bundle.getEntry().indexOf(e);
-                bundleEntryIndexToFileMap.put(index, Constants.DEVICE_FILE_NAME);
-                return true;
-              }
-              else return false;
-            })
-            .findFirst()
-            .orElse(null);
-
-    this.linkQueryPlanLibrary = this.bundle.getEntry().stream()
-            .filter(e -> e.getResource().getResourceType().equals(ResourceType.Library))
-            .filter(e -> {
-              Library library = (Library) e.getResource();
-              if(library.getType().getCoding().stream()
-                      .anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode))){
-                int index = bundle.getEntry().indexOf(e);
-                bundleEntryIndexToFileMap.put(index, Constants.QUERY_PLAN_FILE_NAME);
-                return true;
-              }
-              else return false;
-            })
-            .findFirst()
-            .orElse(null);
-
-    this.linkCensusLists = this.bundle.getEntry().stream()
-            .filter(e -> {
-                      if(e.getResource().getResourceType().equals(ResourceType.List) &&
-                      e.getResource().getMeta().getProfile().stream()
-                              .anyMatch(p -> p.getValue().equals(Constants.CensusProfileUrl))){
-                        int index = bundle.getEntry().indexOf(e);
-                        bundleEntryIndexToFileMap.put(index, String.format("census-%s.json",
-                                e.getResource().getIdElement().getIdPart()));
-                        return true;
-                      }
-                      else return false;
-                    })
-            .sorted(new FhirBundlerEntrySorter.ResourceComparator())
-            .collect(Collectors.toList());
-
-    this.aggregateMeasureReports = this.bundle.getEntry().stream()
-            .filter(e -> {
-              if(e.getResource().getResourceType().equals(ResourceType.MeasureReport)
-                      && ((MeasureReport) e.getResource()).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST)){
-                int index = bundle.getEntry().indexOf(e);
-                bundleEntryIndexToFileMap.put(index, String.format("aggregate-%s.json",
-                        e.getResource().getIdElement().getIdPart()));
-                return true;
-              }
-              else return false;
-            })
-            .sorted(new FhirBundlerEntrySorter.ResourceComparator())
-            .collect(Collectors.toList());
-
-    for (Bundle.BundleEntryComponent e : bundle.getEntry()) {
-      String patientReference = FhirHelper.getPatientReference(e.getResource());
-      int index = this.bundle.getEntry().indexOf(e);
-      if (patientReference != null) {
+    for (int index = 0; index < bundle.getEntry().size(); index++)  {
+      Bundle.BundleEntryComponent e = bundle.getEntry().get(index);
+      Resource resource = e.getResource();
+      ResourceType resourceType = resource.getResourceType();
+      String patientReference = FhirHelper.getPatientReference(resource);
+      if(resourceType.equals(ResourceType.Organization) &&
+              resource.getMeta().hasProfile(Constants.SubmittingOrganizationProfile)){
+        if(linkOrganization == null){
+          linkOrganization = e;
+          bundleEntryIndexToFileMap.put(index, Constants.ORGANIZATION_FILE_NAME);
+        }
+      }
+      else if(resourceType.equals(ResourceType.Device) &&
+              resource.getMeta().hasProfile(Constants.SubmittingDeviceProfile)){
+        if(linkDevice == null){
+          linkDevice = e;
+          bundleEntryIndexToFileMap.put(index, Constants.DEVICE_FILE_NAME);
+        }
+      }
+      else if(resourceType.equals(ResourceType.Library) && ((Library) resource).getType().getCoding().stream()
+              .anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode))){
+        if(linkQueryPlanLibrary == null){
+          linkQueryPlanLibrary = e;
+          bundleEntryIndexToFileMap.put(index, String.format("census-%s.json",
+                  e.getResource().getIdElement().getIdPart()));
+        }
+      }
+      else if(resourceType.equals(ResourceType.List) &&
+              resource.getMeta().getProfile().stream()
+                      .anyMatch(p -> p.getValue().equals(Constants.CensusProfileUrl))){
+        linkCensusLists.add(e);
+        bundleEntryIndexToFileMap.put(index, String.format("census-%s.json",
+                resource.getIdElement().getIdPart()));
+      } else if(resourceType.equals(ResourceType.MeasureReport)
+              && ((MeasureReport) resource).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST)) {
+        aggregateMeasureReports.add(e);
+        bundleEntryIndexToFileMap.put(index, String.format("aggregate-%s.json",
+                resource.getIdElement().getIdPart()));
+      } else if (patientReference != null) {
         String patientId = patientReference.replace("Patient/", "");
         if (!this.patientResources.containsKey(patientId)) {
           this.patientResources.put(patientId, new ArrayList<>());
         }
         this.patientResources.get(patientId).add(e);
         bundleEntryIndexToFileMap.put(index, String.format("patient-%s.json", patientId));
-      } else if (isOtherResource(e)) {
+      } else {
         this.otherResources.add(e);
         bundleEntryIndexToFileMap.put(index, "other-resources.json");
       }
     }
+
+    //Cleanup
+    this.linkOrganization = linkOrganization;
+    this.linkDevice = linkDevice;
+    this.linkQueryPlanLibrary = linkQueryPlanLibrary;
+    this.linkCensusLists = linkCensusLists.stream()
+            .sorted(new FhirBundlerEntrySorter.ResourceComparator()).collect(Collectors.toList());
+    this.aggregateMeasureReports = aggregateMeasureReports.stream()
+            .sorted(new FhirBundlerEntrySorter.ResourceComparator()).collect(Collectors.toList());
+
   }
 
   private static boolean isSameResource(Bundle.BundleEntryComponent e1, Bundle.BundleEntryComponent e2) {
