@@ -49,7 +49,7 @@ public class FhirBundleProcessor {
       Bundle.BundleEntryComponent e = bundle.getEntry().get(index);
       Resource resource = e.getResource();
       ResourceType resourceType = resource.getResourceType();
-      String id = resource.getIdElement().getIdPart();
+      String resourceId = resource.getIdElement().getIdPart();
       String patientReference = FhirHelper.getPatientReference(resource);
       if(resourceType.equals(ResourceType.Organization) &&
               resource.getMeta().hasProfile(Constants.SubmittingOrganizationProfile)){
@@ -69,7 +69,7 @@ public class FhirBundleProcessor {
               .anyMatch(c -> c.getCode().equals(Constants.LibraryTypeModelDefinitionCode))){
         if(linkQueryPlanLibrary == null){
           linkQueryPlanLibrary = e;
-          bundleEntryIndexToFileMap.put(index, String.format("census-%s.json", id));
+          bundleEntryIndexToFileMap.put(index, String.format("census-%s.json", resourceId));
         }
       }
       else if(resourceType.equals(ResourceType.List) &&
@@ -81,7 +81,7 @@ public class FhirBundleProcessor {
       } else if(resourceType.equals(ResourceType.MeasureReport)
               && ((MeasureReport) resource).getType().equals(MeasureReport.MeasureReportType.SUBJECTLIST)) {
         aggregateMeasureReports.add(e);
-        bundleEntryIndexToFileMap.put(index, String.format("aggregate-%s.json", id));
+        bundleEntryIndexToFileMap.put(index, String.format("aggregate-%s.json", resourceId));
       } else if (patientReference != null) {
         String patientId = patientReference.replace("Patient/", "");
         if (!this.patientResources.containsKey(patientId)) {
