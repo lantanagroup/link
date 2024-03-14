@@ -19,6 +19,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -27,12 +28,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -821,22 +820,14 @@ public class SharedService {
     return null;
   }
 
-  private String getReportsSQL() {
-    try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("get-reports.sql")) {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-      return reader.lines().collect(Collectors.joining("\n"));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public List<GlobalReportResponse> getAllReports() {
     List<GlobalReportResponse> reports = new ArrayList<>();
 
     for (Tenant tenantConfig : this.getTenantConfigs()) {
       // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        PreparedStatement ps = conn.prepareStatement(this.getReportsSQL());
+        String getReportsSQL = IOUtils.resourceToString("get-reports.sql", StandardCharsets.UTF_8);
+        PreparedStatement ps = conn.prepareStatement(getReportsSQL);
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           String reportId = rs.getString(1);
@@ -846,7 +837,8 @@ public class SharedService {
       } catch (SQLException e) {
         logger.error("SQL exception while retrieving global reports from database", e);
         throw new RuntimeException(e);
-      } catch (JsonProcessingException e) {
+      } catch (IOException e) {
+        logger.error("Could not read get-reports.sql file", e);
         throw new RuntimeException(e);
       }
     }
