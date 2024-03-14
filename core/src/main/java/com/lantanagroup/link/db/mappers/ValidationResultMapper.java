@@ -2,10 +2,10 @@ package com.lantanagroup.link.db.mappers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
+import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.StringType;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,10 +35,15 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
    * Convert an operation outcome issue to a persistable validation result. The validation libraries return an
    * OperationOutcome, and this method is used to convert the OO to a persistable model.
    */
-  private static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
+  public static ValidationResult toValidationResult(OperationOutcome.OperationOutcomeIssueComponent model) {
     ValidationResult result = new ValidationResult();
 
-    result.setCode(model.getCode().toCode());
+    if (model.getCode() == OperationOutcome.IssueType.NULL) {
+      result.setCode("NULL");
+    } else {
+      result.setCode(model.getCode().toCode());
+    }
+
     result.setDetails(model.getDetails().getText());
     result.setSeverity(model.getSeverity().toCode());
     result.setExpression(getExpression(model));
@@ -81,7 +86,10 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
    */
   private static OperationOutcome.OperationOutcomeIssueComponent toOperationOutcomeIssue(ValidationResult result) {
     OperationOutcome.OperationOutcomeIssueComponent issue = new OperationOutcome.OperationOutcomeIssueComponent();
-    issue.setCode(OperationOutcome.IssueType.fromCode(result.getCode()));
+    String code = result.getCode();
+    if (!StringUtils.equals(code, "NULL")) {
+      issue.setCode(OperationOutcome.IssueType.fromCode(code));
+    }
     issue.setSeverity(OperationOutcome.IssueSeverity.fromCode(result.getSeverity()));
     issue.getDetails().setText(result.getDetails());
 
@@ -146,7 +154,7 @@ public class ValidationResultMapper extends BaseMapper<ValidationResult> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(ValidationResult model) throws JsonProcessingException {
+  protected Parameters doToParameters(ValidationResult model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
 
     parameters.addUUID("id", model.getId());

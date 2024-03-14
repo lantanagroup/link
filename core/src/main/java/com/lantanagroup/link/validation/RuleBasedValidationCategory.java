@@ -2,7 +2,6 @@ package com.lantanagroup.link.validation;
 
 import com.lantanagroup.link.model.ValidationCategory;
 import com.lantanagroup.link.model.ValidationCategorySeverities;
-import com.lantanagroup.link.model.ValidationCategoryTypes;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,8 +15,8 @@ import java.util.List;
 public class RuleBasedValidationCategory extends ValidationCategory {
   private List<ValidationCategoryRuleSet> ruleSets = new ArrayList<>();
 
-  public RuleBasedValidationCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, ValidationCategoryTypes type, String guidance) {
-    super(title, severity, acceptable, type, guidance);
+  public RuleBasedValidationCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, String guidance) {
+    super(title, severity, acceptable, guidance);
   }
 
   public ValidationCategoryRuleSet addRuleSet() {

@@ -21,8 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class creates a master measure report based on every individual report generated for each patient included in the "census" list..
@@ -30,15 +32,15 @@ import java.util.concurrent.ForkJoinPool;
 public class ReportGenerator {
   private static final Logger logger = LoggerFactory.getLogger(ReportGenerator.class);
 
-  private ReportContext reportContext;
-  private ReportContext.MeasureContext measureContext;
-  private ReportCriteria criteria;
-  private ApiConfig config;
-  private IReportAggregator reportAggregator;
-  private StopwatchManager stopwatchManager;
-  private SharedService sharedService;
-  private TenantService tenantService;
-  private Report report;
+  private final ReportContext reportContext;
+  private final ReportContext.MeasureContext measureContext;
+  private final ReportCriteria criteria;
+  private final ApiConfig config;
+  private final IReportAggregator reportAggregator;
+  private final StopwatchManager stopwatchManager;
+  private final SharedService sharedService;
+  private final TenantService tenantService;
+  private final Report report;
 
   public ReportGenerator(SharedService sharedService, TenantService tenantService, StopwatchManager stopwatchManager, ReportContext reportContext, ReportContext.MeasureContext measureContext, ReportCriteria criteria, ApiConfig config, IReportAggregator reportAggregator, Report report) {
     this.sharedService = sharedService;
@@ -63,8 +65,11 @@ public class ReportGenerator {
     ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
             ? new ForkJoinPool(config.getMeasureEvaluationThreads())
             : ForkJoinPool.commonPool();
+    AtomicInteger progress = new AtomicInteger(0);
+    List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
+
     try {
-      forkJoinPool.submit(() -> measureContext.getPatientsOfInterest(queryPhase).parallelStream().forEach(patient -> {
+      forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
                   return;
@@ -76,6 +81,10 @@ public class ReportGenerator {
                   }
                 } catch (Exception e) {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
+                } finally {
+                  int completed = progress.incrementAndGet();
+                  double percent = Math.round((completed * 100.0) / pois.size());
+                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
                 }
               }))
               .get();

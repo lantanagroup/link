@@ -1,22 +1,26 @@
 <ng-container *ngIf="type === 'link'; else buttonTemplate">
   <a
-    [ngClass]="'btn btn--' + variant"
+    [ngClass]="getButtonClass()"
     [attr.disabled]="disabled && true"
     [target]="link?.target || '_self'"
     [href]="link?.url || '#'"
   >
-    <ng-container *ngTemplateOutlet="buttonContent" />
+    <span class="btn__inner">
+      <ng-container *ngTemplateOutlet="buttonContent" />
+    </span>
   </a>
 </ng-container>
 
 <ng-template #buttonTemplate>
   <button
-    [ngClass]="'btn btn--' + variant"
+    [ngClass]="getButtonClass()"
     (click)="onClickHandler?.()"
     [disabled]="disabled && true"
     [type]="type"
   >
-    <ng-container *ngTemplateOutlet="buttonContent" />
+    <span class="btn__inner">
+      <ng-container *ngTemplateOutlet="buttonContent" />
+    </span>
   </button>
 </ng-template>
 

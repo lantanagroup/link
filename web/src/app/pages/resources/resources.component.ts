@@ -1,21 +1,44 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardComponent } from 'src/app/shared/card/card.component';
-import { ResourceContentsComponent } from 'src/app/shared/resource-contents/resource-contents.component';
 import { ResourceGroup } from 'src/app/shared/interfaces/resource-contents.model';
 import { HeroComponent } from 'src/app/shared/hero/hero.component';
+import { DataService } from 'src/services/api/data.service';
+import { LinkComponent } from 'src/app/shared/link/link.component';
+import { SectionComponent } from 'src/app/shared/section/section.component';
+import { MiniContentComponent } from 'src/app/shared/mini-content/mini-content.component';
 
 @Component({
   selector: 'app-resources',
   standalone: true,
-  imports: [CommonModule, HeroComponent, CardComponent, ResourceContentsComponent],
+  imports: [CommonModule, HeroComponent, CardComponent, LinkComponent, SectionComponent, MiniContentComponent],
   templateUrl: './resources.component.html',
   styleUrls: ['./resources.component.scss']
 })
-export class ResourcesComponent {
+export class ResourcesComponent implements OnInit {
+  constructor(private dataService: DataService) { }
+  ResourceContentsData: ResourceGroup[] = [];
 
-  //Test data
-  resourceGroups: ResourceGroup[] = [
+  ngOnInit(): void {
+    this.fetchResourceContents();
+  }
+
+  fetchResourceContents(): void {
+    this.dataService.getData('info').subscribe({
+      next: (data: any) => {
+        this.ResourceContentsData = data as ResourceGroup[];
+      },
+      error: (error) => {
+        console.error('Error fetching resource contents:', error);
+      },
+      complete: () => {
+        console.log('Resource Content fetched Successfully.');
+      }
+    });
+  }
+
+  //TODO: Kepping test data for now but can be removed later.
+  resourceGroupsTestData: ResourceGroup[] = [
     {
       name: 'DQM: INFO, SPECS AND HISTORY',
       sections: [

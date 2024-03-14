@@ -1,55 +1,80 @@
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+/* metric.component.scss */ 
 
-.metric-container {
-  border-radius: 0;
-  padding: 0;
-}
+@import '../../../scss/customize-bootstrap.scss';
 
-.metric-body {
-  padding: 0 !important;
-  border-radius: 0%;
+
+app-metric,
+.metric {
+  height: 100%;
 }
 
-.card-header {
-  background-color: $blue-700;
-  border-radius: 0%;
-}
+.metric {
+  display: flex;
+  flex-direction: column;
 
-.metric-title {
-  text-align: center;
-  color: $blue-200;
-  font-size: 100px;
-  line-height: 100px;
-  font-weight: 600;
-}
-.metric-subtext {
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 24px;
-  text-align: center;
-}
-.card-footer {
-  background: white !important;
-  padding: 0;
-}
-.changeValue {
-  color: $blue-700;
-  font-weight: 500;
-  font-size: 36px;
-  line-height: 24px;
-}
-.changeValueSubtext {
-  color: rgba(0, 0, 0);
-  font-weight: 400;
-  font-size: 12px;
-}
-.chart-Container {
-  color: red;
-}
-.changeValueContainer {
-  padding-top: 16.5px;
-  padding-right: 7px; /* Assuming you meant right instead of left twice */
-  padding-bottom: 17px;
-  padding-left: 40.77px;
+  &__kpi {
+    color: $blue-200;
+    font-family: $font-family-heading;
+    font-size: 6.25em;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0;
+    line-height: 1em;
+    text-transform: uppercase;
+  }
+
+  &__trend-number {
+    color: $gray-800;
+    font-size: 2.25em;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0;
+    line-height: 1.2em;
+    text-transform: uppercase;
+  }
+
+  &__body {
+    align-items: center;
+    background: $gray-800;
+    display: flex;
+    flex: 1 0 auto;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__footer {
+    color: $gray-800;
+    position: relative;
+
+    &--left,
+    &--right {
+      flex: 1 1 0%;
+    }
+
+    &--left {
+      app-icon {
+        margin-right: 0.125rem;
+      }
+    }
+
+    &::after {
+      background: $gray-700;
+      bottom: 0;
+      content: '';
+      display: block;
+      height: calc(100% - 1rem);
+      left: 50%;
+      position: absolute;
+      top: 0.5rem;
+      transform: translateX(-50%);
+      width: 0.125rem;
+    }
+  }
+
+  &--down {
+    .metric__footer--left {
+      app-icon,
+      .icon {
+        transform: rotate(180deg);
+      }
+    }
+  }
 }

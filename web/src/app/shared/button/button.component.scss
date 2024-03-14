@@ -1,71 +1,123 @@
 /* button.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .btn {
-  align-items: center;
-  background: $blue-300;
-  border: 2px solid $blue-300;
+  @include nav();
+  background: $blue;
+  border: 2px solid $blue;
   border-radius: 0;
-  color: $blue-50;
-  display: flex;
-  font-family: $font-family-heading;
-  gap: 0.5rem;
-  letter-spacing: 0.2em;
-  padding: calc(#{$spacer} * 0.5) calc(#{$spacer} * 0.75);
-  text-transform: uppercase;
+  color: $blue-100;
+  letter-spacing: 0.16em;
+  padding: 0.5rem 0.75rem;
+  width: auto;
+
+  &__inner {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
 
   svg path {
-    color: $blue-50;
+    color: $blue-100;
+    transition: $transition-base;
+  }
+
+  &:disabled {
+    background: $blue;
+    border-color: $blue;
+    color: $blue-100;
+    cursor: not-allowed !important;
+    opacity: 0.6;
   }
 
   &--reverse {
-    background: $blue-50;
-    border: 2px solid $blue-50;
-    color: $blue-300;
+    background: $blue-100;
+    border: 2px solid $blue-100;
+    color: $blue-500;
 
     svg path {
-      color: $blue-300;
+      color: $blue-500;
     }
   }
 
   &--outline {
     background: transparent;
-    color: $blue-300;
+    color: $blue-500;
 
     svg path {
-      color: $blue-300;
+      color: $blue-500;
     }
   }
 
   &--outline--reverse {
     background: transparent;
-    border-color: $blue-50;
-    color: $blue-50;
+    border-color: $blue-100;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
   }
 
   &:hover {
-    background: $blue-500;
-    border-color: $blue-500;
-    color: $blue-50;
+    background: $blue-700;
+    border-color: $blue-700;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
   }
 
   &:active {
-    background: $blue-600;
-    border-color: $blue-600;
-    color: $blue-50;
+    background: $gray-700;
+    border-color: $gray-700;
+    color: $blue-100;
 
     svg path {
-      color: $blue-50;
+      color: $blue-100;
     }
+  }
+
+  &--text {
+    @include body-font();
+    border: none;
+    background: transparent;
+    color: $blue;
+    font-weight: $font-weight-normal;
+    padding: 0.25rem;
+    text-transform: none;
+
+    svg path {
+      color: $blue;
+    }
+
+    &:hover,
+    &:active {
+      background: transparent;
+      color: $blue-700;
+
+      svg path {
+        color: $blue-700;
+      }
+    }
+  }
+
+  &.mr-1 {
+    margin-right: 0.25rem;
+  }
+  &.mr-2 {
+    margin-right: 0.5rem;
+  }
+  &.mr-3 {
+    margin-right: 0.75rem;
+  }
+  &.mr-4 {
+    margin-right: 1rem;
+  }
+
+  &.ml-auto {
+    margin-left: auto;
   }
 }

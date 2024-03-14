@@ -1,0 +1,14 @@
+/* link.component.scss */
+
+.link {
+  align-items: center;
+  display: flex;
+  letter-spacing: 0.02em;
+  line-height: 1.5em;
+
+  app-icon,
+  svg,
+  .icon {
+    margin: 0 0 0.1875rem 0.75rem;
+  }
+}

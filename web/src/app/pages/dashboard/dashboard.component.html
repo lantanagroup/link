@@ -5,8 +5,8 @@
   <app-section-heading
     [level]=2
     class="mb-4"
-    headingClasses="h3 text-white"
-    heading="System Performance"
+    headingClasses="h3 u-text-offwhite"
+    heading="System Performance Overview"
   >
     <app-button
       variant="outline--reverse"
@@ -17,120 +17,84 @@
       View All
     </app-button>
   </app-section-heading>
-	
+
   <div class="row">
-		<div class="col col-lg-3">
+		<div class="col col-md-6 col-lg-4" *ngFor="let card of metricCards">
 			<app-card 
-				title="Average Query Time"
+				[title]="card.name"
 				variant="alt"
 				titleAlign="center"
 				[hasBorder]=true
 			>
-				<app-metric mainValue="6.1"
-					subText="hours on average past 7 days"
-					changeValue="18%"></app-metric>
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card 
-				title="Pre-Qualification Issues"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="99"
-				subText="errors per 1,000 patients"
-				changeValue="2%"
-				[isValueUp]="false" />
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card
-				title="Total Patients Queried"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="23K"
-				subText="patients queried past 7 days"
-				changeValue="33%" />
-			</app-card>
-		</div>
-
-		<div class="col col-lg-3">
-			<app-card
-				title="Average Validation Time"
-				variant="alt"
-				titleAlign="center"
-				[hasBorder]=true
-			>
-				<app-metric
-				mainValue="3.2"
-				subText="hours on average past 7 days"
-				changeValue="10%"
-				[isValueUp]="false" />
+				<app-metric 
+					[subText]="card.subText"
+					[changeWindow]="card.changeWindow"
+					[isUpGood]="card.upGood"
+					[toTimestamp]="card.toTimestamp"
+					[metricData]="card.metricData"
+				/>
 			</app-card>
 		</div>
 	</div>
 </app-hero>
 
-<section>
-  <div class="container py-4">
+<app-section>
+	<div class="container dashboard-tables">
+
 		<app-section-heading
 			heading="Recent Activity"
 			[level]=3
 		>
 			<app-button
-      	variant="outline"
-      	type="link"
-      	[link]="{url: '/recent-activity'}"
-    	>
+				variant="outline"
+				type="link"
+				[link]="{url: '/activities'}"
+			>
 				<app-icon filePath="../../../assets/icons/plus.svg" />
 				View All
 			</app-button>
 		</app-section-heading>
 
 		<div class="row">
-			<div class="col">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="completedDtOptions">
 				<app-card
 					title="Successful Submissions"
 					status="success"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-						<app-table [dtOptions]="completedDtOptions" />
-					</div>
+					<app-table 
+						[dtOptions]="completedDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
-			
-			<div class="col">
+
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="failedDtOptions">
 				<app-card
 					title="Failed Submissions"
 					status="failure"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-						<app-table [dtOptions]="failedDtOptions" />
-					</div>
+					<app-table 
+						[dtOptions]="failedDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
 
-			<div class="col">
+			<div class="col col-md-6" [ngClass]="'col-lg-' + columnSpan" *ngIf="pendingDtOptions">
 				<app-card
 					title="Submissions In Progress"
 					status="inProgress"
 					titleAlign="center"
 				>
-					<div recent_activity_table__wrapper >
-          <app-table [dtOptions]="pendingDtOptions" />
-        </div>
+					<app-table 
+						[dtOptions]="pendingDtOptions" 
+						variant="simple"
+					/>
 				</app-card>
 			</div>
 
 		</div>
-  </div>
-</section>
+	</div>
+</app-section>

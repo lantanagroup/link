@@ -1,7 +1,8 @@
 <div class="content" role="main">
-  <app-header />
-  <div id="main" class="bg-primary-subtle">
-    <router-outlet />
+  <app-header *ngIf="showHeaderAndFooter"></app-header>
+  <div id="main">
+    <router-outlet></router-outlet>
   </div>
-  <app-footer />
+  <app-toast title="" copy="" status="success"></app-toast>
+  <app-footer *ngIf="showHeaderAndFooter"></app-footer>
 </div>

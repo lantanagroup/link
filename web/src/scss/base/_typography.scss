@@ -1,15 +1,30 @@
 /* base/_typography.scss */
 
-@import 
-  '../../../node_modules/bootstrap/scss/functions',
-  '../../../node_modules/bootstrap/scss/variables',
-  '../../../node_modules/bootstrap/scss/mixins',
-  '../../../node_modules/bootstrap/scss/utilities';
+@import '../customize-bootstrap.scss';
 
+body {
+  @include body-font();
+  color: $black;
+}
+
+// setting up mixins to use throughout the site
 // links
 
 a {
+  color: $blue-500;
   transition: $transition-base;
+
+  &:hover {
+    color: $blue-700;
+
+    app-icon,
+    svg,
+    icon {
+      path {
+        stroke: $blue-700;
+      }
+    }
+  }
 }
 
 .skip-link {
@@ -17,48 +32,46 @@ a {
 	top: -50px;
 }
 
-// headings
+// paragraphs
 
-h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
-  color: $blue-700;
-  font-family: $font-family-heading;
-  font-weight: $font-weight-medium;
-  text-transform: none;
+.p {
+  &--xs {
+    @include body-font-xs();
+  }
+
+  &--small {
+    @include body-font-sm();
+  }
+
+  &--large {
+    @include body-font-lg();
+  }
 }
 
+// headings
+
 h1, .h1 {
-  color: $white;
-  letter-spacing: 0.06em;
-  line-height: 1.5em;
+  @include heading-01();
+
   &--small {
     font-size: 2.5em !important;
     letter-spacing: 0.05em;
-    line-height: 1.4em;
   }
 }
 h2, .h2 {
-  color: $white;
-  letter-spacing: 0.225em;
-  text-transform: uppercase;
+  @include heading-02();
 }
 h3, .h3 {
-  line-height: 1em;
-  letter-spacing: 0.04em;
+  @include subheading-01();
 }
 h4, .h4 {
-  line-height: 1.5em;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  @include subheading-02();
 }
 h5, .h5 {
-  font-family: $font-family-sans-serif;
-  font-weight: $font-weight-normal;
-  letter-spacing: 0.025em;
+  @include subheading-03();
 }
 h6, .h6 {
-  font-family: $font-family-sans-serif;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  @include subheading-04();
 }
 
 .h--display {

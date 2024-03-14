@@ -11,6 +11,7 @@ import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.tenant.EhrPatientList;
+import com.lantanagroup.link.model.PatientListSearchResponse;
 import com.lantanagroup.link.query.auth.HapiFhirAuthenticationInterceptor;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.*;
@@ -42,7 +43,7 @@ public class PatientIdentifierController extends BaseController {
   private SharedService sharedService;
 
   @GetMapping
-  public List<PatientList> searchPatientLists(@PathVariable String tenantId) {
+  public List<PatientListSearchResponse> searchPatientLists(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -50,8 +51,15 @@ public class PatientIdentifierController extends BaseController {
     }
 
     return tenantService.getAllPatientLists()
-            .stream().peek(pl -> pl.setPatients(null))
-            .collect(Collectors.toList());
+            .stream().map(pl -> {
+              PatientListSearchResponse response = new PatientListSearchResponse();
+              response.setId(pl.getId().toString());
+              response.setMeasureId(pl.getMeasureId());
+              response.setPeriodStart(pl.getPeriodStart());
+              response.setPeriodEnd(pl.getPeriodEnd());
+              response.setTotalPatients(pl.getPatients().size());
+              return response;
+            }).collect(Collectors.toList());
   }
 
   @GetMapping("/{id}")
@@ -90,6 +98,33 @@ public class PatientIdentifierController extends BaseController {
       }
     }
   }
+
+  @PostMapping("/list")
+  public void savePatientList(@RequestBody String patientList,
+                              @PathVariable String tenantId,
+                              @RequestParam String measureId,
+                              @RequestParam String periodStart,
+                              @RequestParam String periodEnd) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    List<String> patientIds = Arrays.asList(patientList.replace("\r", "").split("\n"));
+    PatientList list = new PatientList();
+    list.setMeasureId(measureId);
+    list.setPeriodStart(periodStart);
+    list.setPeriodEnd(periodEnd);
+    list.setLastUpdated(new Date());
+    list.setPatients(patientIds.stream()
+            .filter(StringUtils::isNotEmpty)
+            .map(PatientId::createFromReference)
+            .collect(Collectors.toList()));
+
+    try {
+      assert tenantService != null;
+      this.storePatientList(tenantService, list);
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving patient list", e);
+    }
+  }
+
 
   private IGenericClient createClient(TenantService tenantService) throws ClassNotFoundException {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
@@ -130,7 +165,7 @@ public class PatientIdentifierController extends BaseController {
     for (ListResource source : sources) {
       logger.info("Converting List: {}", source.getIdElement().getIdPart());
       for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-        PatientId patientId = this.convertListItem(tenantService, sourceEntry, baseUrl);
+        PatientId patientId = this.convertListItem(sourceEntry, baseUrl);
 
         if (patientId != null && !patientList.getPatients().contains(patientId)) {
           patientList.getPatients().add(patientId);
@@ -141,7 +176,7 @@ public class PatientIdentifierController extends BaseController {
     return patientList;
   }
 
-  private PatientId convertListItem(TenantService tenantService, ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
+  private PatientId convertListItem(ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
     if (listEntry.getItem().hasReference()) {
       URI referenceUrl = new URI(listEntry.getItem().getReference());
       String reference;
@@ -236,6 +271,7 @@ public class PatientIdentifierController extends BaseController {
       logger.info("Merged list contains {} entries", found.getPatients().size());
     } else {
       logger.info("No pre-existing patient list found");
+      patientList.deduplicate();
       found = patientList;
     }
 
@@ -296,7 +332,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(value);
 
     for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
-      PatientId patientId = this.convertListItem(tenantService, sourceEntry, null);
+      PatientId patientId = this.convertListItem(sourceEntry, null);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);

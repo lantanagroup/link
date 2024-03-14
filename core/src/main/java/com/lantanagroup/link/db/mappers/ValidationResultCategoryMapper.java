@@ -2,7 +2,6 @@ package com.lantanagroup.link.db.mappers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,7 +18,7 @@ public class ValidationResultCategoryMapper extends BaseMapper<ValidationResultC
   }
 
   @Override
-  protected SqlParameterSource doToParameters(ValidationResultCategory model) throws JsonProcessingException {
+  protected Parameters doToParameters(ValidationResultCategory model) throws JsonProcessingException {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addUUID("validationResultId", model.getValidationResultId());

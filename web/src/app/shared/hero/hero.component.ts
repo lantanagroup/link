@@ -11,9 +11,22 @@ import { SectionHeadingComponent } from '../section-heading/section-heading.comp
 })
 export class HeroComponent {
 
-  @Input() subHeading?: string;
+  @Input() subHeading?: string | TemplateRef<any>;
   @Input() pageTitle!: string;
+  @Input() isSubPage: boolean = false;
   @Input() color?: 'blue' | 'green' | 'purple' | 'shade';
   @Input() cta?: TemplateRef<any>;
   @Input() size?: 'sm' | 'md' | 'lg' = 'sm';
+
+  headingClasses = 'text-uppercase u-text-offwhite';
+
+  isTemplateRef(value: any): value is TemplateRef<any> {
+    return value instanceof TemplateRef
+  }
+
+  ngOnInit(): void {
+    if(this.isSubPage) {
+      this.headingClasses += ' h2 fw-bold'
+    }
+  }
 }

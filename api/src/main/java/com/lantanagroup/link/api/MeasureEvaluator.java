@@ -59,7 +59,7 @@ public class MeasureEvaluator {
 
     Bundle patientBundle;
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_RETRIEVE_PATIENT_DATA, Constants.CATEGORY_REPORT)) {
-      patientBundle = PatientData.asBundle(tenantService.findPatientData(patientId));
+      patientBundle = PatientData.asBundle(tenantService.findPatientData(reportContext.getMasterIdentifierValue(), patientId));
     }
 
     logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
@@ -88,6 +88,14 @@ public class MeasureEvaluator {
     // String output = fhirContext.newJsonParser().setPrettyPrint(true).encodeResourceToString(measureReport);
 
     if (null != measureReport) {
+      // Explicitly set the measure URL, appending the version if available
+      Measure measure = this.measureContext.getMeasure();
+      String measureUrl = measure.getUrl();
+      if (measure.hasVersion()) {
+        measureUrl += "|" + measure.getVersion();
+      }
+      measureReport.setMeasure(measureUrl);
+
       // Fix the measure report's evaluatedResources to make sure resource references are correctly formatted
       for (Reference evaluatedResource : measureReport.getEvaluatedResource()) {
         if (!evaluatedResource.hasReference()) continue;

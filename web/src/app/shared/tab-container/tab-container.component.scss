@@ -1,0 +1,40 @@
+/* tab-container.component.scss */
+
+@import '../../../scss/customize-bootstrap.scss';
+
+.tab {
+
+  &-content {
+    .tab-pane {
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+  }
+
+  &__btn {
+    @include nav-secondary();
+    background: none;
+    border: none;
+    color: $blue;
+    display: block;
+    font-weight: $font-weight-bold;
+    letter-spacing: 0.16em;
+    margin: 0.625rem 0 2.25rem;
+    outline: none;
+    padding: 0;
+    text-align: left;
+    transition: $transition-base;
+
+    &:hover {
+      color: $blue-700;
+    }
+
+    &:active,
+    &.active {
+      color: $black;
+    }
+  }
+}

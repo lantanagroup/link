@@ -1,7 +1,6 @@
 /* icon.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
 
 .icon,
 svg {
@@ -10,19 +9,27 @@ svg {
   width: calc(#{$spacer} * 1.5);
 
   path {
+    transition: $transition-base;
+
     .btn &,
     .btn--outline-reverse & {
       stroke: $blue-50;
     }
 
     .btn--reverse &,
-    .btn--outline & {
-      stroke: $blue-300;
+    .btn--outline &,
+    .btn--text & {
+      stroke: $blue;
     }
 
     .btn:hover &,
     .btn:active & {
       stroke: $blue-50;
+    }
+
+    .btn--text:hover &,
+    .btn--text:active & {
+      stroke: $blue-700;
     }
   }
 }

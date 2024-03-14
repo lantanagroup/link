@@ -1,7 +1,7 @@
 package com.lantanagroup.link.validation;
 
-import ca.uhn.fhir.context.FhirContext;
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.TestHelper;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import org.hl7.fhir.r4.model.*;
@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.mock;
@@ -24,7 +23,6 @@ import static org.mockito.Mockito.when;
 @Ignore
 public class ValidatorTests {
   protected static final Logger logger = LoggerFactory.getLogger(ValidatorTests.class);
-  private static FhirContext ctx = FhirContext.forR4();
   private static Validator validator;
 
   /**
@@ -42,6 +40,7 @@ public class ValidatorTests {
 
     if (validator == null) {
       validator = new Validator(sharedService);
+      validator.init();
 
       // Perform a single validation to pre-load all the packages and profiles
       validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
@@ -49,21 +48,15 @@ public class ValidatorTests {
     }
   }
 
-  private Bundle getBundle(String resourcePath) {
-    return ctx.newJsonParser().parseResource(
-            Bundle.class,
-            Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(resourcePath)));
-  }
-
   @Test
   public void testPerformance() throws IOException {
-    Bundle bundle = this.getBundle("large-submission-example.json");
+    Bundle bundle = TestHelper.getBundle("large-submission-example.json");
     OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
 
-    logger.info("Issues:");
-    oo.getIssue().forEach(i -> {
+    logger.info("Issues: {}", oo.getIssue().size());
+    /*oo.getIssue().forEach(i -> {
       logger.info("{} - {} - {}", i.getSeverity(), i.getLocation(), i.getDiagnostics());
-    });
+    });*/
   }
 
   @Test
@@ -89,7 +82,7 @@ public class ValidatorTests {
 
   @Test
   public void validateNhsnMeasureIg() throws IOException {
-    var bundle1 = this.getBundle("single-submission-example.json");
+    var bundle1 = TestHelper.getBundle("single-submission-example.json");
 
     OperationOutcome oo = validator.validate(bundle1, OperationOutcome.IssueSeverity.ERROR);
     Assert.assertEquals(0, oo.getIssue().size());

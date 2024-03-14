@@ -1,11 +1,18 @@
 /* card.component.scss */
 
-@import '../../../scss/customize-bootstrap.scss',
-        '../../../../node_modules/bootstrap/scss/bootstrap.scss';
+@import '../../../scss/customize-bootstrap.scss';
+
+app-card,
+.card {
+  height: calc(100% - 1.25rem);
+}
 
 .card {
+  background: $white;
   border: none;
   box-shadow: $box-shadow-sm;
+  display: flex;
+  flex-direction: column;
   margin: 0.625rem 0;
 
   &--border {
@@ -14,19 +21,19 @@
 
   &--alt {
     .card__header {
-      background: $gray-200;
+      background: $gray-700;
     }
 
     .card__title {
-      font-size: 1rem !important;
-      font-weight: $font-weight-medium;
-      letter-spacing: 0.04em;
-      line-height: 1.625em;
+      font-size: 0.875rem !important;
+      font-weight: $font-weight-bold;
+      letter-spacing: 0.06em;
+      line-height: 1.85em;
     }
   }
 
   &__header {
-    background: $blue-700;
+    background: $gray-800;
     > * {
       padding: 0.5rem 1.5rem;
     }
@@ -59,20 +66,19 @@
     
     &--inProgress {
       &::after {
-        background: $gray-100;
+        background: $gray-400;
       }
     }
   }
 
   &__body {
-    background: $white;
+    // background: $white;
+    flex: 1 0 auto;
+    position: relative;
   }
 
   &__title {
     color: $white;
-    font-size: 1.25rem !important;
-    font-weight: $font-weight-normal;
-    letter-spacing: 0.13em;
     margin: 0;
   }
 }

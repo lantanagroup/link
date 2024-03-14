@@ -23,6 +23,8 @@ public class Constants {
   public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list";
   public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org.fhir/sid/us-npi";
+  public static final String OperationOutcomeTotalExtensionUrl = "http://nhsnlink.org/oo-total";
+  public static final String OperationOutcomeSeverityExtensionUrl = "http://nhsnlink.org/oo-severity";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";
   public static final String TerminologyEndpointCode = "hl7-fhir-rest";
   public static final String TerminologyEndpointSystem = "http://terminology.hl7.org/CodeSystem/endpoint-connection-type";
@@ -55,4 +57,8 @@ public class Constants {
   public static final String MONTHLY_PERIOD = "lastMonth";
   public static final String QUARTERLY_PERIOD = "lastQuarter";
   public static final String YEARLY_PERIOD = "lastYear";
+
+  public static final String VALIDATION_ISSUE_TASK = "Validation";
+  public static final String VALIDATION_ISSUE_CATEGORY = "Validation Issues";
+  public static final String REPORT_GENERATION_TASK = "Report Generation";
 }

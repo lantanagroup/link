@@ -1,27 +1,32 @@
 <app-hero pageTitle="Activities"
 	size="md">
-	<em>Cards to come...</em>
-</app-hero>
-<section>
-	  <div class="container">
-      <app-section-heading
-  		[level]="4"
-  		class="mb-2"
-  		headingClasses="h3 text-black"
-  		heading="Facility Activity"
-  	>
-  		<app-button
-  		  variant="outline--reverse"
-  		  type="button"
-  		  [onClickHandler]="showAlert"
-		  >
-  		  <app-icon filePath="../../../assets/icons/sliders.svg" />
-		  </app-button>
-	  </app-section-heading>
-    <div table__wrapper>
-      <app-table [dtOptions]="dtOptions"
-  	    tableTitle="Facility Activity"
-      />
-    </div>
+
+	<div class="row">
+		<div class="col col-md-6 col-lg-3" *ngFor="let card of metricCards">
+			<app-card 
+				[title]="card.name"
+				variant="alt"
+				titleAlign="center"
+				[hasBorder]=true
+			>
+				<app-metric 
+					[subText]="card.subText"
+					[isUpGood]="card.upGood"
+					[changeWindow]="card.changeWindow"
+					[toTimestamp]="card.toTimestamp"
+					[metricData]="card.metricData"
+				/>
+			</app-card>
+		</div>
 	</div>
-</section>
+</app-hero>
+
+<app-section>
+	  <div class="container">
+			<app-table 
+				[dtOptions]="dtOptions"
+				tableTitle="Facility Activity"
+				[hasSearch]="dtSearchBar"
+			/>
+	</div>
+</app-section>

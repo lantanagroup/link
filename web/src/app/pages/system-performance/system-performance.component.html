@@ -1,76 +1,135 @@
 <app-hero
   color="shade"
   pageTitle="System Performance"
-  [cta]="heroButton"
 />
 
-<section>
-  <div class="container py-4">
+<app-section>
+  <div class="container">
     <div class="row">
       
-      <div class="col col-md-12 col-lg-8">
+      <div class="col col-12">
         <app-card
-          title="System Health"
-          variant="alt"
+          title="Errors"
           [hasPadding]=true
         >
-          <em>Data coming soon ...</em>
+          <div class="mx-2">
+            <ngx-charts-line-chart    
+              [results]="errorHistory"
+              [scheme]="lineChartColorScheme"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              xAxisLabel="Date"
+              yAxisLabel="# of Errors/Day"
+              [referenceLines]="totalErrorRefs"
+              [showRefLines]="true"
+              [wrapTicks]="true"
+              [legend]="true"
+            />
+          </div>
         </app-card>
       </div>
       
       <div class="col col-md-6 col-lg-4">
         <app-card
-          title="System Speed"
-          variant="alt"
-          [hasPadding]=true
+          title="Avg. Report Generation Time"
+          [hasPadding]=false
         >
-          <em>Data coming soon ...</em>
+          <ngx-charts-number-card      
+            [results]="reportGenerationCurrent"
+            [cardColor]="cardColors.background"
+            [bandColor]="cardColors.band"
+            [textColor]="cardColors.text"
+            [innerPadding]="0"
+            [valueFormatting]="secondsToTimestamp.transform"
+          />
         </app-card>
       </div>
 
-      <div class="col col-md-6 col-lg-4">
+      <div class="col col-md-6 col-lg-8">
         <app-card
-          title="Uptime"
-          variant="alt"
+          title="Avg. Report Generation Time (30 Day Trend)"
           [hasPadding]=true
         >
-          <em>Data coming soon ...</em>
+          <div class="mx-2">
+            <ngx-charts-line-chart
+              [results]="reportGenerationHistory"
+              [scheme]="lineChartColorScheme"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              xAxisLabel="Date"
+              yAxisLabel="Avg. Generation Time/Day"
+              [yAxisTickFormatting]="secondsToTimestamp.transform"
+              [referenceLines]="reportGenerationRefs"
+              [showRefLines]="true"
+              [wrapTicks]="true"
+            >  
+              <ng-template #tooltipTemplate let-model="model">
+                <div class="py-1 px-2">
+                  {{ model.series }} &bull; {{ model.name }}<br>
+                  <span class="p--large"><strong>{{ model.value | secondsToTimestamp }}</strong></span>
+                </div>
+              </ng-template>
+
+              <ng-template #seriesTooltipTemplate let-model="model">
+                <span>{{ model[0].series }}: {{ model[0].value | secondsToTimestamp }}</span>
+              </ng-template>
+            </ngx-charts-line-chart>
+          </div>
         </app-card>  
       </div>
 
       <div class="col col-md-6 col-lg-4">
         <app-card
-          title="Total Data Load"
-          variant="alt"
-          [hasPadding]=true
+          title="Active Tenants"
+          [hasPadding]=false
         >
-          <em>Data coming soon ...</em>
+          <ngx-charts-number-card      
+            [results]="activeTenantCurrent"
+            [cardColor]="cardColors.background"
+            [bandColor]="cardColors.band"
+            [textColor]="cardColors.text"
+            [innerPadding]="0"
+          />
         </app-card>  
       </div>
 
-      <div class="col col-md-6 col-lg-4">
+      <div class="col col-md-6 col-lg-8">
         <app-card
-          title="Connection Status"
-          variant="alt"
+          title="Active Tenants (30 Day Trend)"
           [hasPadding]=true
         >
-          <em>Data coming soon ...</em>
-        </app-card>
-      </div>
-
-      <div class="col col-12">
-        <app-card
-          title="Census Daily Total"
-          variant="alt"
-          [hasPadding]=true
-        >
-          <em>Data coming soon ...</em>
+          <div class="mx-2">
+            <ngx-charts-line-chart
+              [results]="activeTenantHistory"
+              [scheme]="lineChartColorScheme"
+              [showXAxisLabel]="true"
+              [showYAxisLabel]="true"
+              [xAxis]="true"
+              [yAxis]="true"
+              xAxisLabel="Date"
+              yAxisLabel="Active Tenants/Day"
+              [referenceLines]="activeTenantHistoryRefs"
+              [showRefLines]="true"
+              [wrapTicks]="true"
+            >
+              <ng-template #tooltipTemplate let-model="model">
+                <div class="py-1 px-2">
+                  {{ model.series }} &bull; {{ model.name }}<br>
+                  <span class="p--large"><strong>{{ model.value }}</strong></span>
+                </div>
+              </ng-template>
+            </ngx-charts-line-chart>
+          </div>
         </app-card>
       </div>
 
     </div>
   </div>
-</section>
+</app-section>
 
 <ng-template #heroButton>
   <app-button

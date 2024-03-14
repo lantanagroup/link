@@ -1,5 +1,6 @@
 package com.lantanagroup.link.model;
 
+import com.lantanagroup.link.db.model.tenant.TenantVendors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,4 +13,6 @@ public class SearchTenantResponse {
   private String name;
   private String retentionPeriod;
   private String cdcOrgId;
+  private TenantVendors vendor;
+  private String otherVendor;
 }

@@ -4,31 +4,31 @@
 /****************/
 
 // color system
-$gray-50: #f5f3f3; // custom
-$gray-100: #8b939f;
-$gray-200: #4d545e;
-$gray-250: #414750; // custom
-$gray-500: #14181f;
+$white: #fff;
 
-$blue: #1759c4;
-$blue-50: #f3f8ff; // custom
-$blue-100: #c7ebff;
-$blue-200: #00b3ff;
-$blue-300: #2871e6;
-$blue-400: #0c699d;
-$blue-600: #0944a2;
-$blue-650: #162f4e; // custom
-$blue-700: #021b3a;
-$blue-900: #030344;
+$gray-50: #f2f6ff; // custom
+$gray-100: #f5f3f3;
+$gray-400: #bdbdbd;
+$gray-700: #555;
+$gray-800: #333;
+$gray-900: #000;
 
-$green: #58790c;
-$green-900: #003d0d;
+$blue: #005eaa;
+$blue-50: #edf9ff; // custom
+$blue-100: #f5f5f5;
+$blue-200: #c0e9ff;
+$blue-400: $blue;
+$blue-500: $blue;
+$blue-700: #26418f;
+$blue-800: #29434e;
 
-$red: #ab2816;
+$green: #497d0c;
 
-$orange: #ff9900;
+$red: #af4448;
 
-$purple-900: #33143a;
+$orange: #f7931e;
+
+$purple: #712177;
 
 $black: #000;
 
@@ -42,6 +42,7 @@ $warning: $red;
 $danger: $red;
 $light: $blue-50;
 // $dark: todo;
+$in-progress: $gray-700;
 
 // backgrounds
 $primary-bg-subtle: $blue-50;
@@ -50,23 +51,138 @@ $primary-bg-subtle: $blue-50;
 // Text
 /****************/
 
-$font-family-sans-serif: 'Poppins', sans-serif; 
-$font-family-heading: 'Futura PT', 'Futura', 'Poppins', sans-serif; // custom
+$font-family-sans-serif: Arial, sans-serif; 
+$font-family-heading: Tahoma, Arial, sans-serif; // custom
+
+$headings-font-weight: inherit;
 
 $h1-font-size: 3.375em;
-$h2-font-size: 1em;
+$h2-font-size: 2.5em;
 $h3-font-size: 2em;
-$h4-font-size: 1.5em;
-$h5-font-size: 2.125em;
+$h4-font-size: 1.375em;
+$h5-font-size: 1.25em;
+$h6-font-size: 1em;
 
+$link-color: $blue-500;
 $link-decoration: none;
+$link-hover-color: $blue-700;
+
+$font-weight-lighter:         200;
+$font-weight-light:           300;
+$font-weight-normal:          400;
+$font-weight-medium:          500;
+$font-weight-semibold:        600;
+$font-weight-bold:            700;
+$font-weight-bolder:          800;
+
+// * Mixins //
+@mixin body-font() {
+  font-family: $font-family-sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-xs() {
+  @include body-font();
+  font-size: 0.75em;
+  letter-spacing: -0.01em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-sm() {
+  @include body-font();
+  font-size: 0.875em;
+  line-height: 1.5em;
+}
+
+@mixin body-font-lg() {
+  @include body-font();
+  font-size: 1.0625em;
+  letter-spacing: 0.04em;
+  line-height: 1.5em;
+}
+
+@mixin heading() {
+  font-family: $font-family-heading;
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.04em;
+  line-height: 1.5em;
+}
+
+@mixin heading-01() {
+  @include heading();
+  font-size: $h1-font-size;
+  letter-spacing: 0.06em;
+}
+
+@mixin heading-02() {
+  @include heading();
+  font-size: $h2-font-size;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.05em;
+  line-height: 1.4em;
+}
+
+@mixin subheading-01() {
+  @include heading();
+  font-size: $h3-font-size;
+  line-height: 1em;
+}
+
+@mixin subheading-02() {
+  @include heading();
+  font-size: $h4-font-size;
+}
+
+@mixin subheading-03() {
+  @include heading();
+  font-size: $h5-font-size;
+  letter-spacing: 0.1em;
+  line-height: 1.3em;
+  text-transform: uppercase;
+}
+
+@mixin subheading-04() {
+  @include heading();
+  font-family: $font-family-sans-serif;
+  font-size: $h6-font-size;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.02em;
+  line-height: 1.25em;
+  text-transform: uppercase;
+}
+
+@mixin nav() {
+  font-family: $font-family-heading;
+  font-size: 1rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.225em;
+  text-transform: uppercase;
+}
+
+@mixin nav-secondary() {
+  @include nav();
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.17em;
+}
 
 /****************/
 // Layout
 /****************/
 
+$spacer: 1rem;
+
 $grid-gutter-width: 1.25rem;
 $container-padding-x: calc(3 * #{$grid-gutter-width});
+
+$container-max-widths: (
+  sm: 500px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+  xxl: 1440px
+);
 
 /****************/
 // Border Radius
@@ -83,3 +199,23 @@ $box-shadow-sm: 0 0.0625rem 0.25rem 0 rgba($black, 0.25);
 
 // $box-shadow-lg:               0 1rem 3rem rgba($black, .175) !default;
 // $box-shadow-inset:            inset 0 1px 2px rgba($black, .075) !default;
+
+/****************/
+// Toast Notification
+/****************/
+
+$toast-font-size: 1rem;
+$toast-color: $gray-800;
+$toast-background-color: $white;
+$toast-border-color: $gray-100;
+$toast-border-radius: 0.25rem;
+$toast-box-shadow: $box-shadow-sm;
+$toast-header-color: $black;
+$toast-header-border-color: $white;
+$toast-header-border-color: $gray-100;
+
+/****************/
+// Other
+/****************/
+
+$transition-base: 0.3s ease-in-out all;

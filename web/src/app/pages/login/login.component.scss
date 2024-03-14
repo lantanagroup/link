@@ -1,0 +1,47 @@
+@import '../../../scss/customize-bootstrap.scss',
+        '../../../../node_modules/bootstrap/scss/bootstrap.scss',
+        '../../../scss/abstracts';
+
+
+.login__logo {
+  margin: 0 auto;
+  max-width: 29rem;
+  width: 90%;
+
+  img {
+    height: auto;
+    width: 100%;
+  }
+}
+
+.login-bg {
+  @include background-2x('../../assets/backgrounds/bg-blue-lg', 'png', 100%, auto, center bottom, no-repeat);
+  background-size: cover;
+  color: $white;
+  padding: 2rem 0 2.5rem;
+  min-height: 100vh;
+}
+
+.inner-container {
+  min-height: 75vh;
+  max-width: 1085px;
+  margin: auto; /* Centers the box */
+  box-sizing: border-box;
+}
+
+.login-logo {
+  color: $blue;
+  font-family: $font-family-heading;
+  font-size: 4.75rem;
+  letter-spacing: 0.025em;
+  line-height: 1.3em;
+}
+
+h2 {
+  color: $blue-600;
+}
+
+.btnSignIn {
+  margin-top: 200px;
+}
+

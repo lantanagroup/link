@@ -1,12 +1,17 @@
 <footer class="footer">
-	<div class="container-fluid">
+	<div class="container">
 		<div class="row align-items-center">
-			<p class="col col-12 col-sm-6 text-md-start text-center mb-4 mb-md-0 fw-semibold">
+			<p class="col col-12 col-sm-4 text-md-start text-center mb-4 mb-md-0 p--small">
 				&copy;{{ copyrightYear }} NHSNLink. All rights reserved.
 			</p>
-			<p class="col col-12 col-sm-6 text-md-end text-center text-uppercase footer__logo fw-medium mb-0">
-				NHSN<span class="fw-bold">Link</span>
+			<p class="col col-12 col-sm-4 text-center mb-4 mb-md-0 p--large">
+				NHSNLink Version {{ appData?.version }}
 			</p>
+			<div class="col col-12 col-sm-4 text-md-end text-center">
+				<a href="/" class="footer__logo">
+					<img src="../../../assets/nhsn-logo-white.svg" alt="NHSNLink Logo" />
+				</a>
+			</div>
 		</div>
 	</div>
 </footer>

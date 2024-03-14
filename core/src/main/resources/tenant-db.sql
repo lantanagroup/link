@@ -53,6 +53,28 @@ IF NOT EXISTS (SELECT *
 GO
 
 IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'report'
+                 AND COLUMN_NAME = 'deviceInfo')
+    BEGIN
+        ALTER TABLE dbo.report
+            ADD deviceInfo NVARCHAR(MAX) NULL;
+    END
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'report'
+                 AND COLUMN_NAME = 'queryPlan')
+    BEGIN
+        ALTER TABLE dbo.report
+            ADD queryPlan NVARCHAR(MAX) NULL;
+    END
+GO
+
+IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'
                  AND TABLE_NAME = 'reportPatientList')
@@ -130,6 +152,25 @@ IF NOT EXISTS (SELECT *
     BEGIN
         ALTER TABLE dbo.patientData
             ADD dataTraceId uniqueidentifier NULL REFERENCES dbo.dataTrace (id);
+    END
+
+GO
+
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.TABLES
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'reportPatientData')
+    BEGIN
+        CREATE TABLE dbo.reportPatientData
+        (
+            id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
+            reportId     nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
+            patientId    nvarchar(64)     NOT NULL,
+            resourceType nvarchar(64)     NOT NULL,
+            resourceId   nvarchar(64)     NOT NULL,
+            UNIQUE (reportId, patientId, resourceType, resourceId),
+            INDEX ix_reportPatientData_reportId_patientId (reportId, patientId)
+        );
     END
 
 GO
@@ -218,17 +259,6 @@ IF (SELECT DATA_TYPE
 GO
 
 IF NOT EXISTS (SELECT *
-               FROM INFORMATION_SCHEMA.COLUMNS
-               WHERE TABLE_SCHEMA = 'dbo'
-                 AND TABLE_NAME = 'report'
-                 AND COLUMN_NAME = 'deviceInfo')
-    BEGIN
-        ALTER TABLE dbo.report
-            ADD deviceInfo NVARCHAR(MAX) NULL;
-    END
-GO
-
-IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'
                  AND TABLE_NAME = 'validationResult')
@@ -241,7 +271,7 @@ IF NOT EXISTS (SELECT *
             details    nvarchar(max)    NOT NULL,
             severity   nvarchar(128)    NOT NULL,
             expression nvarchar(max)    NULL,
-            position nvarchar(32) NULL
+            position   nvarchar(32)     NULL
         );
     END
 GO

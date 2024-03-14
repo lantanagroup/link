@@ -14,4 +14,5 @@ public class ReportBase {
   private String periodStart;
   private String periodEnd;
   private Device deviceInfo;
+  private String queryPlan;
 }

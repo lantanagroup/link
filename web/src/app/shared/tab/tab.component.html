@@ -1,0 +1,8 @@
+<div 
+  class="tab__pane"
+  [ngClass]="isActive ? 'active' : ''"
+  [id]="tabTitle | idFromTitle" 
+  role="tabpanel" 
+>
+  <ng-content />
+</div>

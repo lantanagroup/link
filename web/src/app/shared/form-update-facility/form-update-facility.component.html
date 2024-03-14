@@ -1,0 +1,983 @@
+<app-loader *ngIf="!isDataLoaded"/>
+
+<form 
+  [formGroup]="facilitiesForm"
+  (ngSubmit)="onSubmit()"
+>
+  <app-section-heading
+  [level]="3"
+  [heading]="facilityId ? 'Edit ' + facilityId : 'Add New Facility'"
+  >
+    <app-button
+      type="submit"
+      classes="mr-4"
+      [disabled]="!facilitiesForm.valid"
+    >
+      <app-icon filePath="../../../assets/icons/save.svg" />
+      Save Facility
+    </app-button>
+
+    <app-button
+      variant="outline"
+      type="link"
+      [link]="{url: facilityId ? '/facilities/facility/' + facilityId : '/facilities'}"
+    >
+      <app-icon filePath="../../../assets/icons/cancel.svg" />
+      Cancel
+    </app-button>
+  </app-section-heading>
+
+  <app-accordion
+    title="Profile"
+    [isExpanded]="isDataLoaded"
+  >
+    <div class="row">
+      <div class="col col-md-6 form__field">
+        <label for="name">Facility Name<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name"
+          placeholder="Facility Name"
+        />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.name.touched && facilitiesForm.controls.name.errors">Facility Name is required.</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="tenantId">Tenant ID<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="tenantId" 
+          formControlName="id"
+        />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.id.touched && facilitiesForm.controls.id.errors">Please enter a unique tenant ID.</p>
+      </div>
+
+      <div class="col-12 form__field">
+        <label for="description">Description/Notes</label>
+        <textarea
+          id="description" 
+          formControlName="description"
+        ></textarea>
+      </div>
+
+      <div class="col col-md-6 form__field" formGroupName="bundling">
+        <label for="bundleName">Name for Bundling<span class="text-warning">*</span></label>
+        <input 
+          type="text" 
+          id="bundleName" 
+          formControlName="name"
+        />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.bundling.controls.name.touched && facilitiesForm.controls.bundling.controls.name.errors">Bundle name is required.</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="cdcOrgId">CDC Org ID</label>
+        <input 
+          type="text"
+          id="cdcOrgId"
+          formControlName="cdcOrgId"
+        />
+        <p class="form__description">Provided by facility or NHSN directly</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="database">Database</label>
+        <input 
+          type="text"
+          id="database"
+          formControlName="connectionString"
+          placeholder="MSSQL Server Connection String"
+        />
+        <p class="form__description">Where all tenant-specific data is stored</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.connectionString.touched && facilitiesForm.controls.connectionString.errors?.['invalidDb']">Connection string must start with jdbc:sqlserver://</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="vendor">Vendor</label>
+        <select name="vendor" id="vendor" formControlName="vendor">
+          <option value="">Please Select</option>
+          <option value="Epic">Epic</option>
+          <option value="Cerner">Cerner</option>
+          <option value="AllScripts">AllScripts</option>
+        </select>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionPeriod">Data Retention Period</label>
+        <input 
+          type="text"
+          id="dataRetentionPeriod"
+          formControlName="retentionPeriod"
+        />
+        <p class="form__description">ISO 8601 formatted string</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.retentionPeriod.touched && facilitiesForm.controls.retentionPeriod.errors?.['invalidIso']">Invalid ISO duration, should be formatted like P[n]Y[n]M[n]D.</p>
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Normalizations"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="events">
+      <ng-container formGroupName="afterPatientDataQuery">
+
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Code System Cleanup</label>
+          <label for="codeSystemCleanupFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="codeSystemCleanupFalse"
+              name="codeSystemCleanup" 
+              formControlName="codeSystemCleanup"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="codeSystemCleanupTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="codeSystemCleanupTrue" 
+              name="codeSystemCleanup"
+              formControlName="codeSystemCleanup"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Contained Resource Cleanup</label>
+          <label for="containedResourceCleanupFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="containedResourceCleanupFalse"
+              name="containedResourceCleanup" 
+              formControlName="containedResourceCleanup"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="containedResourceCleanupTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="containedResourceCleanupTrue" 
+              name="containedResourceCleanup"
+              formControlName="containedResourceCleanup"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Copy Location to Identifier Type</label>
+          <label for="copyLocationIdentifierToTypeFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="copyLocationIdentifierToTypeFalse"
+              name="copyLocationIdentifierToType" 
+              formControlName="copyLocationIdentifierToType"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="copyLocationIdentifierToTypeTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="copyLocationIdentifierToTypeTrue" 
+              name="copyLocationIdentifierToType"
+              formControlName="copyLocationIdentifierToType"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Encounter Status Transformer</label>
+          <label for="encounterStatusTransformerFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="encounterStatusTransformerFalse"
+              name="encounterStatusTransformer" 
+              formControlName="encounterStatusTransformer"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="encounterStatusTransformerTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="encounterStatusTransformerTrue" 
+              name="encounterStatusTransformer"
+              formControlName="encounterStatusTransformer"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Fix Period Dates</label>
+          <label for="fixPeriodDatesFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixPeriodDatesFalse"
+              name="fixPeriodDates" 
+              formControlName="fixPeriodDates"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="fixPeriodDatesTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixPeriodDatesTrue" 
+              name="fixPeriodDates"
+              formControlName="fixPeriodDates"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+  
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Fix Resource IDs</label>
+          <label for="fixResourceIdFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixResourceIdFalse"
+              name="fixResourceId" 
+              formControlName="fixResourceId"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="fixResourceIdTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="fixResourceIdTrue" 
+              name="fixResourceId"
+              formControlName="fixResourceId"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+      </ng-container>
+
+      <ng-container formGroupName="afterPatientResourceQuery">
+        <div class="col col-md-3 form__field">
+          <label class="text-capitalize mb-1">Patient Data Resource Filter</label>
+          <label for="patientDataResourceFilterFalse" class="label__radio">
+            <input 
+              type="radio" 
+              id="patientDataResourceFilterFalse"
+              name="patientDataResourceFilter" 
+              formControlName="patientDataResourceFilter"
+              [value]=0
+            />
+            <span></span>
+            No
+          </label>
+  
+          <label for="patientDataResourceFilterTrue" class="label__radio">
+            <input 
+              type="radio" 
+              id="patientDataResourceFilterTrue" 
+              name="patientDataResourceFilter"
+              formControlName="patientDataResourceFilter"
+              [value]=1
+            />
+            <span></span>
+            Yes
+          </label>
+        </div>
+      </ng-container>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Concept Maps"
+    [isExpanded]="false"
+  >
+    <div formArrayName="conceptMaps">
+      <fieldset 
+        *ngFor="let conceptMap of conceptMaps.controls; let i = index" 
+        class="row form__group"
+        [formGroupName]="i"
+      >
+        <div class="col col-md-3 form__field order-0">
+          <label for="id">ID</label>
+          <input 
+            type="text" 
+            id="id" 
+            placeholder="Must be unique"
+            formControlName="id"
+          />
+        </div>
+
+        <div class="col col-md-3 form__field order-0">
+          <label for="name">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name"
+          />
+        </div>
+
+        <div class="col-12 form__field order-2">
+          <label for="contexts">Contexts</label>
+          <textarea
+            id="contexts" 
+            placeholder="One FHIRPath per line"
+            formControlName="contexts"
+          ></textarea>
+        </div>
+
+        <div class="col-12 form__field order-2">
+          <label for="map">Map</label>
+          <textarea
+            id="map"
+            placeholder="FHIR ConceptMap Json"
+            formControlName="conceptMap"
+          ></textarea>
+        </div>
+        
+        <div class="col-12 col-md-6 order-md-1 order-3 mt-4 pt-1">
+          <app-button
+            variant="text"
+            classes="text-warning ml-auto d-block"
+            [onClickHandler]="getRemoveConceptMapHandler(i)"
+          >
+            Delete Map
+          </app-button>
+        </div>
+      </fieldset>
+
+      <app-button
+        type="button"
+        [onClickHandler]="getAddConceptMapHandler()"
+      >
+        <app-icon filePath="../../../assets/icons/plus.svg" />
+        Add Concept Map
+      </app-button>
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Scheduling"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="scheduling">
+      <div class="col col-md-6 form__field">
+        <label for="queryPatientListCron">Query Patient List</label>
+        <input 
+          type="text" 
+          id="queryPatientListCron" 
+          formControlName="queryPatientListCron"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="dataRetentionCheckCron">Data Retention Check</label>
+        <input 
+          type="text" 
+          id="dataRetentionCheckCron" 
+          formControlName="dataRetentionCheckCron"
+        />
+        <p class="form__description">CRON Expression</p>
+      </div>
+
+      <div formArrayName="generateAndSubmitReports">
+        <label class="label__lg d-block mb-4">Generate and Submit</label>
+
+        <fieldset 
+          *ngFor="let schedule of schedules.controls; let i = index" 
+          class="row form__group"
+          [formGroupName]="i"
+        >
+          <ng-container *ngIf="isMeasureDefsLoaded; else isLoading">
+            <div class="col col-md-6" formArrayName="measureIds">
+              <label for="measureIds">Measure IDs</label>
+              <div class="form__field" *ngFor="let measure of getMeasureIds(i).controls; let j = index" >
+                <label 
+                    class="label__checkbox" 
+                    [for]="measureDefs[j].measureId"
+                  >
+                  <input 
+                    type="checkbox"
+                    [id]="measureDefs[j].measureId"
+                    [name]="measureDefs[j].measureId"
+                    [checked]="measure.value"
+                  />
+                  <span></span>
+                  {{ measureDefs[j].measureId | pascalCaseToSpace }}
+                </label>
+              </div>
+            </div>
+  
+            <div class="col col-md-6 form__field mt-4 pt-1">
+              <app-button
+                variant="text"
+                classes="text-warning ml-auto d-none d-md-block"
+                [onClickHandler]="getRemoveScheduleHandler(i)"
+              >
+                Delete Schedule
+              </app-button>
+  
+              <label for="reportingPeriod" class="-mt-1">Reporting Period</label>
+              <select 
+                id="reportingPeriod" 
+                formControlName="reportingPeriodMethod"
+              >
+                <option value="LastMonth">Last Month</option>
+                <option value="LastWeek">Last Week</option>
+                <option value="CurrentMonth">Current Month</option>
+                <option value="CurrentWeek">Current Week</option>
+              </select>
+            </div>
+  
+            <div class="col col-md-6 form__field">
+              <label for="schedule">Schedule (CRON)</label>
+              <input 
+                type="text" 
+                id="schedule" 
+                formControlName="cron"
+              />
+            </div>
+  
+            <div class="col col-md-6 form__field">
+              <label for="regenerate">Regenerate</label>
+              <select 
+                id="regenerate" 
+                formControlName="regenerateIfExists"
+              >
+                <option [value]="1">Yes</option>
+                <option [value]="0">No</option>
+              </select>
+            </div>
+  
+            <app-button
+              variant="text"
+              classes="text-warning d-md-none"
+              [onClickHandler]="getRemoveScheduleHandler(i)"
+            >
+              Delete Schedule
+            </app-button>
+          </ng-container>
+        </fieldset>
+
+        <app-button
+          type="button"
+          [onClickHandler]="getAddScheduleHandler()"
+          *ngIf="isMeasureDefsLoaded; else loadingBtn"
+        >
+          <app-icon filePath="../../../assets/icons/plus.svg" />
+          Add Schedule
+        </app-button>
+
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Native FHIR Query"
+    [isExpanded]="false"
+  >
+    <div class="row" formGroupName="fhirQuery">
+      <div class="col col-md-6 form__field">
+        <label for="fhirEndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="fhirEndpoint" 
+          formControlName="fhirServerBase"
+        />
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.fhirQuery.controls.fhirServerBase.touched && facilitiesForm.controls.fhirQuery.controls.fhirServerBase.errors?.['invalidUrl']">Invalid URL</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="parallelPatients">Parallel Patients</label>
+        <input 
+          type="number" 
+          id="parallelPatients" 
+          formControlName="parallelPatients"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="authClass">Authentication Method</label>
+        <select name="authClass" id="authClass" formControlName="authClass">
+          <option [value]="null">None</option>
+          <option value="BasicAuth">Basic</option>
+          <option value="BasicAuthAndApiKey">Basic + API Key</option>
+          <option value="AzureAuth">Azure OAuth</option>
+          <option value="EpicAuth">Epic OAuth</option>
+          <option value="CernerAuth">Cerner OAuth</option>
+          <option value="TokenAuth">Token OAuth</option>
+        </select>
+      </div>
+
+      <ng-container [ngSwitch]="conditionals['authClass']">
+        <ng-container *ngSwitchCase="'BasicAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Basic Auth</label>
+          <div class="row" formGroupName="basicAuth">
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthUsername">Username</label>
+              <input 
+                type="text" 
+                id="basicAuthUsername" 
+                formControlName="username"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthPassword">Password</label>
+              <input 
+                type="password" 
+                id="basicAuthPassword" 
+                formControlName="password"
+              />
+            </div>
+          </div>
+        </ng-container>
+      
+        <ng-container *ngSwitchCase="'BasicAuthAndApiKey'">
+          <label class="label__lg d-block mt-4 mb-0">Basic Auth + API Key</label>
+          <div class="row" formGroupName="basicAuthAndApiKey">
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyUsername">Username</label>
+              <input 
+                type="text" 
+                id="basicAuthAndApiKeyUsername" 
+                formControlName="username"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyPassword">Password</label>
+              <input 
+                type="password" 
+                id="basicAuthAndApiKeyPassword" 
+                formControlName="password"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="basicAuthAndApiKeyApiKey">API Key</label>
+              <input 
+                type="text" 
+                id="basicAuthAndApiKeyApiKey" 
+                formControlName="apiKey"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'AzureAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Azure OAuth</label>
+          <div class="row" formGroupName="azureAuth">
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="azureAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="azureAuthClientID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthSecret">Secret Key</label>
+              <input 
+                type="text" 
+                id="azureAuthSecret" 
+                formControlName="secret"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="azureAuthResource">Resource</label>
+              <input 
+                type="text" 
+                id="azureAuthResource" 
+                formControlName="resource"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'EpicAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Epic OAuth</label>
+          <div class="row" formGroupName="epicAuth">
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthKey">Key</label>
+              <input 
+                type="text" 
+                id="epicAuthKey" 
+                formControlName="key"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="epicAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="epicAuthID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="epicAuthAudience">Audience</label>
+              <input 
+                type="text" 
+                id="epicAuthAudience" 
+                formControlName="audience"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'CernerAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Cerner OAuth</label>
+          <div class="row" formGroupName="cernerAuth">
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthTokenUrl">Token URL</label>
+              <input 
+                type="text" 
+                id="cernerAuthTokenUrl" 
+                formControlName="tokenUrl"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthClientID">Client ID</label>
+              <input 
+                type="text" 
+                id="cernerAuthID" 
+                formControlName="clientId"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthSecret">Secret Key</label>
+              <input 
+                type="text" 
+                id="cernerAuthSecret" 
+                formControlName="secret"
+              />
+            </div>
+
+            <div class="col col-md-6 form__field">
+              <label for="cernerAuthScopes">Scopes</label>
+              <input 
+                type="text" 
+                id="cernerAuthScopes" 
+                formControlName="scopes"
+              />
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'TokenAuth'">
+          <label class="label__lg d-block mt-4 mb-0">Token OAuth</label>
+          <div class="row" formGroupName="tokenAuth">
+
+            <div class="col col-md-6 form__field">
+              <label for="tokenAuthToken">Token</label>
+              <input 
+                type="text" 
+                id="tokenAuthToken" 
+                formControlName="token"
+              />
+            </div>
+
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault></ng-container>
+      </ng-container>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Census Acquisition"
+    [isExpanded]="false"
+  >
+    <div class="row">
+      <div class="col col-md-6 form__field">
+        <label for="censusAcquisitionMethod">Method</label>
+        <select name="censusAcquisitionMethod" id="censusAcquisitionMethod" formControlName="censusAcquisitionMethod">
+          <option value="">Please Select</option>
+          <option value="FHIRList">FHIR List</option>
+          <option value="BulkFHIR">Bulk FHIR</option>
+          <option value="CSVViaSFTP">CSV via SFTP</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" formGroupName="queryList">
+      <ng-container [ngSwitch]="conditionals['censusAcquisitionMethod']">
+
+        <ng-container *ngSwitchCase="'BulkFHIR'">
+          <label class="label__lg d-block mt-4 mb-0">Bulk FHIR</label>
+          <div class="col-12 form__field">
+            <em>Functionality still under development...</em>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'CSVViaSFTP'">
+          <label class="label__lg d-block mt-4 mb-0">CSV Via SFTP</label>
+          <div class="col-12 form__field">
+            <em>Functionality still under development...</em>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'FHIRList'">
+          <label class="label__lg d-block mt-4 mb-0">FHIR List</label>
+          <div class="col col-md-6 form__field">
+            <label for="fhirServerBase">FHIR Server Base</label>
+            <input
+              type="text"
+              id="fhirServerBase"
+              name="fhirServerBase"
+              formControlName="fhirServerBase"
+            />
+            <p class="form__description text-warning" *ngIf="facilitiesForm.controls.queryList.controls.fhirServerBase.touched && facilitiesForm.controls.queryList.controls.fhirServerBase.errors?.['invalidUrl']">Invalid URL</p>
+          </div>
+
+          <div formArrayName="lists">
+            <fieldset 
+              *ngFor="let list of lists.controls; let i = index" 
+              class="row form__group"
+              [formGroupName]="i"
+            >
+              <div class="col col-md-4 form__field">
+                <label for="measureId">Measure ID</label>
+                <select
+                  id="measureId"
+                  name="measureId"
+                  formControlName="measureId"
+                >
+                  <option value="">Please Select</option>
+                  <option 
+                    *ngFor="let measure of measureDefs"
+                    [value]="measure.measureId"
+                  >{{ measure.measureId | pascalCaseToSpace }}</option>
+                </select>
+              </div>
+      
+              <div class="col col-md-6 form__field">
+                <label for="listId">List ID</label>
+                <input
+                  type="text"
+                  id="listId"
+                  name="listId"
+                  formControlName="listId"
+                >
+              </div>
+              
+              <div class="col col-md-2 form__field pt-4">
+                <app-button
+                  variant="text"
+                  classes="text-warning"
+                  [onClickHandler]="getRemoveListHandler(i)"
+                >
+                  Delete List
+                </app-button>
+              </div>
+            </fieldset>
+      
+            <app-button
+              type="button"
+              [onClickHandler]="getAddListHandler()"
+              *ngIf="isMeasureDefsLoaded; else loadingBtn"
+            >
+              <app-icon filePath="../../../assets/icons/plus.svg" />
+              Add List
+            </app-button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault></ng-container>
+      </ng-container>
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Bulk FHIR"
+    [isExpanded]="false"
+  >
+    <div class="row">
+
+      <div class="col col-md-6 form__field">
+        <label for="bulkFHIREndpoint">FHIR Endpoint</label>
+        <input 
+          type="text" 
+          id="bulkFHIREndpoint" 
+        />
+        <p class="form__description">Endpoint is relative to "Native FHIR Query" FHIR Endpoint</p>
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="waitInterval">Wait Interval</label>
+        <input 
+          type="number" 
+          id="waitInterval" 
+          formControlName="bulkWaitTimeInMilliseconds"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="groupID">Group ID</label>
+        <input 
+          type="text" 
+          id="groupID" 
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="initialResponseURLHeader">Initial Response URL Header</label>
+        <input 
+          type="text" 
+          id="initialResponseURLHeader" 
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressHeaderName">Progress Header Name</label>
+        <input 
+          type="text" 
+          id="progressHeaderName" 
+          placeholder="X-Progress"
+        />
+      </div>
+
+      <div class="col col-md-6 form__field">
+        <label for="progressCompleteHeaderValue">Progress Complete Header Value</label>
+        <input 
+          type="text" 
+          id="progressCompleteHeaderValue" 
+          placeholder="complete"
+        />
+      </div>
+
+    </div>
+  </app-accordion>
+
+  <app-accordion
+    title="Query Plans"
+    [isExpanded]="false"
+  >
+    <ng-container formGroupName="fhirQuery">
+      <div formArrayName="queryPlans">
+        <fieldset 
+          *ngFor="let queryPlan of queryPlans.controls; let i = index" 
+          class="row form__group"
+          [formGroupName]="i"
+        >
+          <div class="col col-md-4 form__field">
+            <label for="measureId">Measure ID</label>
+            <select
+              id="measureId"
+              name="measureId"
+              formControlName="measureId"
+            >
+              <option value="">Please Select</option>
+              <option 
+                *ngFor="let measure of measureDefs"
+                [value]="measure.measureId"
+              >{{ measure.measureId | pascalCaseToSpace }}</option>
+            </select>
+          </div>
+  
+          <div class="col col-md-6 form__field">
+            <label for="plan">Query Plan</label>
+            <textarea 
+              id="plan"
+              placeholder="Enter JSON Here"
+              formControlName="plan"
+            ></textarea>
+          </div>
+          
+          <div class="col col-md-2 form__field pt-4">
+            <app-button
+              variant="text"
+              classes="text-warning"
+              [onClickHandler]="getRemoveQueryPlanHandler(i)"
+            >
+              Delete Plan
+            </app-button>
+          </div>
+        </fieldset>
+  
+        <app-button
+          type="button"
+          [onClickHandler]="getAddQueryPlanHandler()"
+          *ngIf="isMeasureDefsLoaded; else loadingBtn"
+        >
+          <app-icon filePath="../../../assets/icons/plus.svg" />
+          Add Query Plan
+        </app-button>
+      </div>
+    </ng-container>
+  </app-accordion>
+</form>
+
+<ng-template #isLoading>
+  <app-loader />
+</ng-template>
+
+<ng-template #loadingBtn>
+  <app-button
+    type="button"
+    [disabled]="true"
+  >
+    Loading data...
+  </app-button>
+</ng-template>

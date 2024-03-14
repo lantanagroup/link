@@ -1,0 +1,334 @@
+<app-hero
+  subHeading="Facility Detail"
+  [pageTitle]="facilityDetails?.name"
+  [isSubPage]="true"
+  color="purple"
+  [cta]="heroButton"
+/>
+
+<app-section>
+  <div class="container">
+
+    <app-tab-container>
+      <app-tab tabTitle="Facility Profile">
+        <div class="row">
+          <div class="col col-md-6">
+            <app-card
+              title="Facility Details"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <app-loader *ngIf="!isDataLoaded" />
+              <app-mini-content title="Facility Name">
+                <p>{{ facilityDetails?.name }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="NHSN Org Id">
+                <p *ngIf="facilityDetails?.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="EHR Vendor">
+                <p><em>Todo:</em> Will be filled out once LNK-1854 is complete.</p>
+              </app-mini-content>
+
+              <app-mini-content title="FHIR API URL">
+                <app-link *ngIf="facilityDetails?.fhirQuery?.fhirServerBase; else noData" [link]="{url: facilityDetails.fhirQuery.fhirServerBase, title: facilityDetails.fhirQuery.fhirServerBase}" />
+              </app-mini-content>
+            </app-card>
+          </div>
+
+          <div class="col col-md-6">
+            <app-card
+              title="Facility Concept Maps"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <app-loader *ngIf="!isDataLoaded" />
+              <app-mini-content *ngFor="let conceptMap of facilityConceptMaps; index as i" title='Concept Map {{ i + 1 }}'>
+                <strong>ID:</strong> {{ conceptMap.id }}<br>
+                <strong>Contexts:</strong>
+                <ng-container *ngFor="let context of conceptMap.contexts">
+                  {{ context }}<br>
+                </ng-container>
+                <!-- <strong>Path:</strong> 921837271<br> -->
+              </app-mini-content>
+
+            </app-card>
+          </div>
+
+          <!-- <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Facility Measures"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip mr-1">CDI</div>
+                <strong>C. difficile infection</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HOB</div>
+                <strong>Hospital-onset bactermia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HYPO</div>
+                <strong>Medical-related hypoglycemia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">HYPR</div>
+                <strong>Inpatient hypoglycemia</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">RPS</div>
+                <strong>Respitory pathogen surveillance</strong>
+              </div>
+
+              <div class="d-flex align-items-start mb-2 u-gap2">
+                <div class="chip">VTE</div>
+                <strong>Hospital-associated venous thromboembolism</strong>
+              </div>
+            </app-card>
+          </div> -->
+        </div>
+      </app-tab>
+
+      <app-tab tabTitle="Activity">
+        <app-table
+          [dtOptions]="dtOptions"
+          tableTitle="Facility Activity"
+        />
+      </app-tab>
+
+      <app-tab tabTitle="Technical Details">
+        <app-accordion
+          title="Normalizations"
+          [isExpanded]="false"
+        >
+          <div class="row">
+            <div class="col col-md-6 col-lg-3" *ngFor="let normalization of facilityNormalizations">
+              <app-mini-content [title]="normalization.name | pascalCaseToSpace">
+                <p>{{ normalization.value }}</p>
+              </app-mini-content>
+            </div>
+          </div>
+        </app-accordion>
+
+        <app-accordion
+          *ngIf="facilityDetails?.scheduling"
+          title="Scheduling"
+          [isExpanded]="false"
+        >
+          <app-loader *ngIf="!isDataLoaded" />
+          <div class="row">
+            <div class="col col-md-6">
+              <app-mini-content title="Query Patient List (Cron)">
+                <p *ngIf="facilityDetails.scheduling?.queryPatientListCron; else noData">{{ facilityDetails.scheduling.queryPatientListCron }}</p>
+              </app-mini-content>
+            </div>
+
+            <div class="col col-md-6">
+              <app-mini-content title="Data Retention Check (Cron)">
+                <p *ngIf="facilityDetails.scheduling?.dataRetentionCheckCron; else noData">{{ facilityDetails.scheduling.dataRetentionCheckCron }}</p>
+              </app-mini-content>
+            </div>
+
+            <div class="col col-md-6">
+              <app-mini-content title="Bulk Data (Cron)">
+                <p *ngIf="facilityDetails.scheduling?.bulkDataCron; else noData">{{ facilityDetails.scheduling.bulkDataCron }}</p>
+              </app-mini-content>
+            </div>
+
+            <div class="col col-md-6">
+              <app-mini-content title="Bulk Data Follow Up (Cron)">
+                <p *ngIf="facilityDetails.scheduling?.bulkDataFollowUpCron; else noData">{{ facilityDetails.scheduling.bulkDataFollowUpCron }}</p>
+              </app-mini-content>
+            </div>
+          </div>
+
+          <h4 class="text-uppercase fw-bold mb-4">Generate and Submit</h4>
+
+          <div class="repeater" *ngFor="let schedule of facilityDetails.scheduling?.generateAndSubmitReports">
+            <div class="row">
+              <div class="col col-md-6">
+                <app-mini-content title="Measures IDs">
+                  <p class="mb-1" *ngFor="let measure of schedule?.measureIds">{{ measure | pascalCaseToSpace }}</p>
+                </app-mini-content>
+              </div>
+  
+              <div class="col col-md-6">
+                <app-mini-content title="Reporting Period">
+                  <p *ngIf="schedule?.reportingPeriodMethod; else noData">{{ schedule.reportingPeriodMethod | pascalCaseToSpace }}</p>
+                </app-mini-content>
+              </div>
+              
+              <div class="col col-md-6">
+                <app-mini-content title="Schedule (Cron)">
+                  <p *ngIf="schedule?.cron; else noData">{{ schedule.cron }}</p>
+                </app-mini-content>
+              </div>
+              
+              <div class="col col-md-6">
+                <app-mini-content title="Regenerate">
+                  <p *ngIf="schedule?.regenerateIfExists; else noData">{{ schedule.regenerateIfExists }}</p>
+                </app-mini-content>
+              </div>
+            </div>
+          </div>
+
+        </app-accordion>
+
+        <app-accordion
+          title="Native FHIR Query"
+          [isExpanded]="false"
+        >
+          <app-loader *ngIf="!isDataLoaded" />
+          <div class="row">
+            <div class="col col-md-6">
+              <app-mini-content title="FHIR Endpoint">
+                <p *ngIf="facilityDetails?.fhirQuery?.fhirServerBase; else noData">{{ facilityDetails.fhirQuery.fhirServerBase }}</p>
+              </app-mini-content>
+            </div>
+            <div class="col col-md-6">
+              <app-mini-content title="Parallel Patients">
+                <p *ngIf="facilityDetails?.fhirQuery?.parallelPatients; else noData">{{ facilityDetails.fhirQuery.parallelPatients }}</p>
+              </app-mini-content>
+            </div>
+            <div class="col col-md-6">
+              <app-mini-content title="Authentication Method">
+                <ng-container *ngIf="facilityDetails?.fhirQuery?.authClass; else noAuth">
+                  <p>{{ facilityDetails.fhirQuery.authClass.split('.').pop() | pascalCaseToSpace }}</p>
+                </ng-container>
+              </app-mini-content>
+            </div>
+          </div>
+        </app-accordion>
+
+        <app-accordion
+          title="Census Acquisition"
+          [isExpanded]="false"
+        >
+          <app-loader *ngIf="!isDataLoaded" />
+          <app-mini-content title="Method">
+            <p *ngIf="facilityDetails?.queryList; else noData">FHIR List</p>
+          </app-mini-content>
+
+          <div class="repeater" *ngFor="let queryList of facilityDetails?.queryList?.lists">
+            <h4 class="text-uppercase fw-bold mb-4">FHIR Lists</h4>
+            <div class="row">
+              <div class="col col-md-6">
+                <app-mini-content title="Measure ID">
+                  <div *ngFor="let measureId of queryList?.measureId" class="d-flex align-items-center mb-2 u-gap2">
+                    <div class="chip">{{ generateMeasureChip(measureId) }}</div>
+                    <span>{{ generateMeasureName(measureId) }}</span>
+                  </div>
+                </app-mini-content>
+              </div>
+
+              <div class="col col-md-6">
+                <app-mini-content title="List ID">
+                  <p *ngFor="let listId of queryList?.listId">{{ listId }}</p>
+                </app-mini-content>
+              </div>
+            </div>
+          </div>
+
+        </app-accordion>
+
+        <app-accordion
+          title="Query Plans"
+          [isExpanded]="false"
+        >
+          <ng-container *ngIf="facilityQueryPlans">
+            <div class="repeater" *ngFor="let queryPlan of facilityQueryPlans">
+              <div class="row">
+                <div class="col col-md-4">
+                  <app-mini-content title="Measure ID">
+                    <div *ngIf="queryPlan?.measureId" class="d-flex align-items-center mb-2 u-gap2">
+                      <div class="chip">{{ generateMeasureChip(queryPlan?.measureId) }}</div>
+                      <span>{{ generateMeasureName(queryPlan?.measureId) }}</span>
+                    </div>
+                  </app-mini-content>
+                </div>
+  
+                <div class="col col-md-4">
+                  <app-mini-content title="Initial">
+                    <ng-container *ngIf="queryPlan?.initial; else noData">
+                      <div *ngFor="let plan of queryPlan?.initial" class="mb-4">
+                        <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
+                        <strong>Parameters:</strong>
+                        <ng-container *ngIf="plan?.parameters; else noDataInline">
+                          <div class="repeater repeater--mini" *ngFor="let parameter of plan?.parameters">
+                            <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
+                            <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
+                            <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
+                          </div>
+                        </ng-container>
+                        <strong>References:</strong> 
+                        <ng-container *ngIf="plan?.references; else noDataInline">
+                          <br>
+                          Operation Type - {{ plan?.references?.operationType }}<br>
+                          Paged - {{ plan?.references?.paged }}<br>
+                        </ng-container>
+                        <strong>Early Exit:</strong> {{ plan?.earlyExit }}<br>
+                      </div>
+                    </ng-container>
+                  </app-mini-content>
+                </div>
+  
+                <div class="col col-md-4">
+                  <app-mini-content title="Supplemental">
+                    <ng-container *ngIf="queryPlan?.supplemental; else noData">
+                      <div *ngFor="let plan of queryPlan?.supplemental" class="mb-4">
+                        <strong>Resource Type:</strong> {{ plan?.resourceType }}<br>
+                        <strong>Parameters:</strong>
+                        <ng-container *ngIf="plan?.parameters; else noDataInline">
+                          <div class="repeater repeater--mini" *ngFor="let parameter of plan?.parameters">
+                            <p class="mb-0" *ngIf="parameter?.name">Name - {{ parameter?.name }}</p>
+                            <p class="mb-0" *ngIf="parameter?.literal">Literal - {{ parameter?.literal }}</p>
+                            <p class="mb-0" *ngIf="parameter?.format">Format - {{ parameter?.format }}</p>
+                          </div>
+                        </ng-container>
+                        <strong>References:</strong><br>
+                          Operation Type - {{ plan?.references?.operationType }}<br>
+                          Paged - {{ plan?.references?.paged }}<br>
+                        <strong>Early Exit:</strong> {{ plan?.earlyExit }}<br>
+                      </div>
+                    </ng-container>
+                  </app-mini-content>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </app-accordion>
+
+      </app-tab>
+    </app-tab-container>
+  </div>
+</app-section>
+
+<ng-template #heroButton>
+  <app-button
+    variant="outline--reverse"
+    type="link"
+    [link]="generateEditLink()"
+  >
+    <app-icon filePath="../../../assets/icons/edit.svg" />
+    Edit Facility
+  </app-button>
+</ng-template>
+
+<ng-template #noData>
+  <p>n/a</p>
+</ng-template>
+
+<ng-template #noDataInline>
+  n/a<br>
+</ng-template>
+
+<ng-template #noAuth>
+  <p>None</p>
+</ng-template>

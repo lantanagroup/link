@@ -1,7 +1,6 @@
 package com.lantanagroup.link.db.mappers;
 
 import com.lantanagroup.link.db.model.Query;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +20,7 @@ public class QueryMapper extends BaseMapper<Query> {
   }
 
   @Override
-  protected SqlParameterSource doToParameters(Query model) {
+  protected Parameters doToParameters(Query model) {
     Parameters parameters = new Parameters();
     parameters.addUUID("id", model.getId());
     parameters.addString("reportId", model.getReportId());

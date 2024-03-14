@@ -2,15 +2,19 @@
   color="green"
   pageTitle="Resources"
 />
-<section>
-	<div class="container py-4">
+<app-section>
+	<div class="container">
 		<div class="row">
-			<div *ngFor="let group of resourceGroups"
+			<div *ngFor="let group of ResourceContentsData"
 				class="col col-md-6">
-				<app-card [title]="group.name">
-					<app-resource-contents [resourceSections]="group.sections" />
+
+				<app-card [title]="group.name" [hasPadding]="true">
+					<app-mini-content *ngFor="let section of group.sections" [title]="section.name">
+						<app-link *ngFor="let link of section.links" [link]="link" class="mb-3" />
+					</app-mini-content>
 				</app-card>
+
 			</div>
 		</div>
 	</div>
-</section>
+</app-section>

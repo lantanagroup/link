@@ -1,0 +1,100 @@
+/* base/_globals.scss */
+
+@import '../customize-bootstrap';
+
+body,
+html {
+  height: 100%;
+}
+
+body {
+  background: $gray-50 !important;
+}
+
+// this is to make the footer always at the bottom regardless of page height
+.content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  > *:last-child {
+    margin-top: auto;
+  }
+}
+
+// Global chip element
+.chips {
+  display: inline-grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chip {
+  @include body-font-xs();
+  background: $blue;
+  border-radius: 0.25rem;
+  color: $blue-100;
+  display: block;
+  flex: none;
+  font-weight: $font-weight-bold;
+  min-width: 2.5rem;
+  padding: 0.75rem 0.375rem;
+  text-align: center;
+  transition: $transition-base;
+  white-space: nowrap;
+  width: auto;
+
+  &--grid {
+    min-width: none;
+    width: max-content;
+  }
+
+  &:hover {
+    background: $blue-700;
+    cursor: pointer;
+  }
+
+  &:active {
+    background: $gray-700;
+  }
+}
+
+// Global dots
+.dot {
+  border-radius: 50%;
+  display: block;
+  height: 0.75rem;
+  margin-right: 0.25rem;
+  min-width: 0.75rem;
+  width: 0.75rem;
+
+  &--neutral,
+  &--inProgress {
+    background: $gray-400;
+  }
+
+  &--success {
+    background: $green;
+  }
+
+  &--failed {
+    background: $red;
+  }
+}
+
+// Repeated blocks
+.repeater {
+  border-bottom: 2px solid $gray-900;
+  margin-bottom: 2rem;
+
+  &--mini {
+    border-bottom: 1px solid $gray-300;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}

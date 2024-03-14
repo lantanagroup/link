@@ -1,4 +1,38 @@
-<table [dtOptions]="dtOptions"
-	datatable
-	class="row-border hover shadow">
-</table>
+<ng-container *ngIf="hasSearch">
+	<div class="mb-4 pb-4">
+		<h4 *ngIf="hasSearch.title" class="text-uppercase">{{ hasSearch.title }}</h4>
+		<input #customSearch type="text" class="form-control input--lg shadow-sm" [placeholder]="hasSearch.placeholder">
+	</div>
+</ng-container>
+
+<ng-container *ngIf="tableTitle || filters">
+	<app-section-heading
+		[heading]="tableTitle"
+		[level]=3
+		class="mb-3"
+	>
+		<ng-container *ngIf="filters">
+			<app-button
+        variant="text"
+				type="button"
+				[onClickHandler]="toggleFilters"
+			>
+				<app-icon filePath="../../../assets/icons/sliders.svg" />
+			</app-button>
+		</ng-container>
+
+	</app-section-heading>
+</ng-container>
+
+<div 
+	class="table__container"
+	[ngClass]="variant === 'standard' ? 'shadow-sm rounded table--standard' : 'table--simple'"
+>
+	<table 
+		[dtOptions]="dtOptions"
+		datatable
+		[ngClass]="classes"
+		#datatableElement
+	>
+	</table>
+</div>

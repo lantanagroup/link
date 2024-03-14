@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth/auth.service';
 
 @Component({
   selector: 'app-callback',
@@ -18,12 +18,13 @@ export class CallbackComponent implements OnInit {
   ngOnInit() {
     const code = this.route.snapshot.queryParamMap.get('code');
     console.log(code);
-    // debugger;
     if (code) {
       this.authService.handleAuth(code).subscribe({
         next: () => {
           // Navigate to the desired route after successful login
-          this.router.navigate(['/secure']);
+          // TODO: Handle browser cookies code here:
+          // Research on HTTP only browser cookies.
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           console.error('Authentication error:', error);

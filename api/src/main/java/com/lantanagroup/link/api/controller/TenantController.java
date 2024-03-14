@@ -5,7 +5,11 @@ import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.tenant.Tenant;
-import com.lantanagroup.link.model.*;
+import com.lantanagroup.link.db.model.tenant.TenantVendors;
+import com.lantanagroup.link.model.SearchTenantResponse;
+import com.lantanagroup.link.model.TenantSummary;
+import com.lantanagroup.link.model.TenantSummaryResponse;
+import com.lantanagroup.link.model.TenantSummarySort;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
@@ -43,7 +44,7 @@ public class TenantController extends BaseController {
   @GetMapping
   public List<SearchTenantResponse> searchTenants() {
     return this.sharedService.getTenantConfigs().stream()
-            .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId()))
+            .map(t -> new SearchTenantResponse(t.getId(), t.getName(), t.getRetentionPeriod(), t.getCdcOrgId(), t.getVendor(), t.getOtherVendor()))
             .collect(Collectors.toList());
   }
 
@@ -109,7 +110,11 @@ public class TenantController extends BaseController {
     }
 
     if (StringUtils.isEmpty(newTenantConfig.getTimeZoneId())) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'timeZoneId' is required");
+      newTenantConfig.setTimeZoneId("UTC");
+    }
+
+    if (StringUtils.isNotEmpty(newTenantConfig.getOtherVendor()) && newTenantConfig.getVendor() != TenantVendors.Other) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "If 'otherVendor' is provided, 'vendor' must be 'Other'");
     }
 
     try {
@@ -201,7 +206,11 @@ public class TenantController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not connect to database specified for tenant. Updates to tenant not persisted.");
       }
 
-      tenantService.initDatabase();
+      if (!this.config.isApplySchemas()) {
+        logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
+      } else {
+        tenantService.initDatabase();
+      }
     }
 
     this.validateTenantConfig(tenant, existingTenantConfig);
@@ -231,7 +240,11 @@ public class TenantController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not connect to database specified for new tenant. Tenant not created.");
     }
 
-    tenantService.initDatabase();
+    if (!this.config.isApplySchemas()) {
+      logger.warn("Not configured to apply schemas to database. Skipping tenant database schema init.");
+    } else {
+      tenantService.initDatabase();
+    }
 
     this.sharedService.saveTenantConfig(tenant);
     this.scheduler.reset(tenant.getId());

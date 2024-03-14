@@ -1,0 +1,131 @@
+<app-hero
+  [subHeading]="subHeading"
+  [pageTitle]="mockBundleDetails?.facility?.name"
+  [isSubPage]="true"
+  [cta]="heroButton"
+/>
+
+<app-section>
+  <div class="container">
+    <app-tab-container>
+      <app-tab tabTitle="Bundle Summary">
+        <div class="row">
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Submission Details"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <app-mini-content title="Facility Name">
+                <app-link [link]="{url: '/facilities/facility/' + tenantId, title: mockBundleDetails?.facility?.name, target: '_self'}"></app-link>
+              </app-mini-content>
+
+              <app-mini-content title="Submitted On">
+                <p><em>{{ mockBundleDetails?.submittedOn }}</em></p>
+              </app-mini-content>
+
+              <app-mini-content title="Reporting Period">
+                <p><em>7 days<br>{{ mockBundleDetails?.reportingPeriod }}</em></p>
+              </app-mini-content>
+
+              <app-mini-content title="NHSN Org Id">
+                <p>{{ mockBundleDetails?.facility?.cdcOrgId }}</p>
+              </app-mini-content>
+
+              <app-mini-content title="EHR Vendor">
+                <!-- TODO: API - THIS IS MISSING IN THE API -->
+                <p><em>EPIC</em></p>
+              </app-mini-content>
+            </app-card>
+          </div>
+
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Concept Maps Applied"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+
+              <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
+                <strong>ID:</strong> 923123124<br>
+                <strong>Contexts:</strong> FHIRPath<br>
+                <strong>Path:</strong> 921837271<br>
+                <strong>Map:</strong> FHIR Concept Map
+              </app-mini-content>
+  
+            </app-card>
+          </div>
+
+          <div class="col col-md-6 col-lg-4">
+            <app-card
+              title="Measures Included"
+              [hasPadding]=true
+              titleAlign="center"
+            >
+              <app-mini-content>
+                <div class="d-flex align-items-start mb-2 u-gap2">
+                  <div class="chip mr-1">CDI</div>
+                  <div>
+                    <p class="text-primary mb-1"><strong>C. difficile infection</strong></p>
+                    <strong>Total in census:</strong> 6,441<br>
+                    <strong>Total that met IP:</strong> 5,887
+                  </div>
+                </div>
+              </app-mini-content>
+
+              <app-mini-content>
+                <div class="d-flex align-items-start mb-2 u-gap2">
+                  <div class="chip mr-1">HYPO</div>
+                  <div>
+                    <p class="text-primary mb-1"><strong>Medical-related hypoglycemia</strong></p>
+                    <strong>Total in census:</strong> 17,213<br>
+                    <strong>Total that met IP:</strong> 15,421
+                  </div>
+                </div>
+              </app-mini-content>
+
+            </app-card>
+          </div>
+        </div>
+      </app-tab>
+
+      <app-tab tabTitle="Normalizations">
+        <app-card
+          title="Normalizations: Methods"
+          [hasPadding]="true"
+        >
+          <div class="row">
+            <div class="col col-6 col-md-4" *ngFor="let methods of mockBundleDetails?.normalizations?.methods">
+              <app-mini-content [title]="methods.name">
+                <p>{{ methods.value }}</p>
+              </app-mini-content>
+            </div>
+          </div>
+        </app-card>
+
+        <div class="mt-4">
+          <app-table
+            tableTitle="Normalizations: Details"
+            [dtOptions]="dtOptions"
+          />
+        </div>
+      </app-tab>
+
+    </app-tab-container>
+  </div>
+</app-section>
+
+<ng-template #heroButton>
+  <app-button
+    variant="outline--reverse"
+    type="link"
+    [link]="generateFacilityLink()"
+  >
+    <app-icon filePath="../../../assets/icons/view.svg" />
+    View Facility
+  </app-button>
+</ng-template>
+
+<ng-template #subHeading>
+  <p class="h4 text-black py-1 px-3 bg-primary-subtle text-uppercase mt-3 d-inline-block">Submission Detail: <strong>Bundle {{ bundleId }}</strong></p>
+</ng-template>

@@ -1,0 +1,117 @@
+<app-hero
+  color="shade"
+>
+  <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-lg-between pt-4">
+    <div>
+      <h1 class="h2 u-text-offwhite text-uppercase fw-bold">{{ userData.name }}</h1>
+      <h4 class="text-uppercase u-text-offwhite mb-0">User ID: <strong>{{ userData.id }}</strong></h4>
+    </div>
+    <app-button
+      variant="outline--reverse"
+      type="link"
+      [link]="{url: '/profile/'}"
+    >
+      <app-icon filePath="../../../assets/icons/cancel.svg" />
+      Cancel
+    </app-button>
+  </div>
+</app-hero>
+
+<app-section>
+  <div class="container">
+    <app-card
+      title="Edit Profile"
+      [hasPadding]="true"
+    >
+      <form 
+        [formGroup]="updateProfileForm"
+        (ngSubmit)="onSubmit()"
+      >
+        <div class="row">
+          <div class="col col-sm-6 col-md-4">
+
+            <div class="form__field">
+              <label for="name">Name<span class="text-warning">*</span></label>
+              <input 
+                type="text" 
+                id="name" 
+                formControlName="name"
+              />
+            </div>
+
+            <div class="form__field">
+              <label for="email">Email<span class="text-warning">*</span></label>
+              <input 
+                type="text" 
+                id="email" 
+                formControlName="email"
+              />
+            </div>
+    
+            <div class="form__field">
+              <label for="phone">Phone Number</label>
+              <input 
+                type="text" 
+                id="phone" 
+                formControlName="phone"
+              />
+            </div>
+
+          </div>
+
+          <div class="col col-sm-6 col-md-4">
+            <div class="form__field">
+              <label for="organization">Organization</label>
+              <input 
+                type="text" 
+                id="organization" 
+                formControlName="organization"
+              />
+            </div>
+
+            <div class="form__field">
+              <label for="role">Role</label>
+              <input 
+                type="text" 
+                id="role" 
+                formControlName="role"
+              />
+            </div>
+
+            <div class="form__field">
+              <label for="department">Department</label>
+              <input 
+                type="text" 
+                id="department" 
+                formControlName="department"
+              />
+            </div>
+
+          </div>
+
+          <div class="col col-12 mt-2">
+            <app-button
+              type="submit"
+              classes="mr-4"
+              [disabled]="!updateProfileForm.valid"
+            >
+              <app-icon filePath="../../../assets/icons/save.svg" />
+              Save Profile
+            </app-button>
+    
+            <app-button
+              variant="outline"
+              type="link"
+              [link]="{url: '/profile/'}"
+            >
+              <app-icon filePath="../../../assets/icons/cancel.svg" />
+              Cancel
+            </app-button>
+          </div>
+        </div>
+      </form>
+
+    </app-card>
+
+  </div>
+</app-section>

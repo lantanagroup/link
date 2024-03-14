@@ -1,7 +1,7 @@
 // login.component.ts
 
 import { Component } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/auth/auth.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 
