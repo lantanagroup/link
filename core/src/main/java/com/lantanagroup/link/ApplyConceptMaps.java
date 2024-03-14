@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 public class ApplyConceptMaps {
   private static final Logger logger = LoggerFactory.getLogger(ApplyConceptMaps.class);
 
+  private final FHIRPathEngine engine = FhirHelper.getFhirPathEngine();;
+
   private List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps;
 
   public static boolean isMapped(Coding coding, String system, String code) {
@@ -74,7 +76,7 @@ public class ApplyConceptMaps {
     List<Base> results = new ArrayList<>();
     // logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
     pathList.stream().forEach(path -> {
-      results.addAll(FhirHelper.getFhirPathEngine().evaluate(resource, path));
+      results.addAll(this.engine.evaluate(resource, path));
     });
     return results;
   }
