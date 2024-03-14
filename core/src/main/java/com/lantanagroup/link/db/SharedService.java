@@ -902,9 +902,9 @@ public class SharedService {
               if (StringUtils.isEmpty(searchCriteria)) {
                 return true;
               }
-              return tenantConfig.getName().toLowerCase().contains(searchCriteria.toLowerCase()) ||
-                      tenantConfig.getId().toLowerCase().contains(searchCriteria.toLowerCase()) ||
-                      tenantConfig.getCdcOrgId().toLowerCase().contains(searchCriteria.toLowerCase());
+              return StringUtils.containsIgnoreCase(tenantConfig.getName(), searchCriteria) ||
+                      StringUtils.containsIgnoreCase(tenantConfig.getId(), searchCriteria) ||
+                      StringUtils.containsIgnoreCase(tenantConfig.getCdcOrgId(), searchCriteria);
             })
             .map(this::getTenantSummaryResponse)
             .collect(Collectors.toList());
