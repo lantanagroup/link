@@ -1396,6 +1396,14 @@ paths:
           required: true
           schema:
             type: string
+        - name: Accept
+          in: header
+          description: The desired response format
+          required: false
+          schema:
+            type: string
+            default: application/xml
+            enum: [ application/json, application/xml, text/html ]
       responses:
         '200':
           description: successful response
@@ -1406,6 +1414,9 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/ValidationCategoriesAndResults'
+            'text/html':
+              schema:
+                type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

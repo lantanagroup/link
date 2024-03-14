@@ -6,6 +6,8 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.validation.ValidationCategorizer;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -22,7 +24,6 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -31,7 +32,6 @@ import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -154,7 +154,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.info("Saved submission bundle to file system: {}", path);
   }
 
-  private void saveToFolder(Bundle bundle, String path) throws Exception {
+  private void saveToFolder(Bundle bundle, String path, TenantService tenantService, Report report) throws Exception {
     File folder = new File(path);
 
     if (!folder.exists() && !folder.mkdirs()) {
@@ -217,6 +217,13 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     if (otherResourcesBundle.hasEntry()) {
       this.saveToFile(otherResourcesBundle, Paths.get(path, "other-resources.json").toString());
     }
+
+    // Save validation results as HTML
+    logger.debug("Saving validation results as HTML");
+    String html = new ValidationCategorizer().getValidationCategoriesAndResultsHtml(tenantService, report);
+    if (StringUtils.isNotEmpty(html)) {
+      this.saveToFile(html.getBytes(StandardCharsets.UTF_8), Paths.get(path, "validation-report.html").toString());
+    }
   }
 
   @SuppressWarnings("unused")
@@ -237,7 +244,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     if (this.config.getIsBundle()) {
       this.saveToFile(submissionBundle, path);
     } else {
-      this.saveToFolder(submissionBundle, path);
+      this.saveToFolder(submissionBundle, path, tenantService, report);
     }
   }
 }

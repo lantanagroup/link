@@ -2,7 +2,6 @@ package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.FhirHelper;
-import com.lantanagroup.link.ValidationCategorizer;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -10,9 +9,12 @@ import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
-import com.lantanagroup.link.model.*;
+import com.lantanagroup.link.model.ValidationCategoriesAndResults;
+import com.lantanagroup.link.model.ValidationCategory;
+import com.lantanagroup.link.model.ValidationCategoryResponse;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
+import com.lantanagroup.link.validation.ValidationCategorizer;
 import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import org.hl7.fhir.r4.model.Bundle;
@@ -126,17 +128,6 @@ public class ValidationController extends BaseController {
     return this.getValidationSummary(outcome);
   }
 
-  private static ValidationCategoryResponse buildUncategorizedCategory(int count) {
-    ValidationCategoryResponse response = new ValidationCategoryResponse();
-    response.setId("uncategorized");
-    response.setTitle("Uncategorized");
-    response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setAcceptable(false);
-    response.setGuidance("These issues need to be categorized.");
-    response.setCount(count);
-    return response;
-  }
-
   /**
    * Retrieves the validation categories for a report, for a custom set of categories
    *
@@ -177,7 +168,7 @@ public class ValidationController extends BaseController {
             .collect(Collectors.toList());
 
     if (!uncategorizedResults.isEmpty()) {
-      responses.add(buildUncategorizedCategory(uncategorizedResults.size()));
+      responses.add(ValidationCategorizer.buildUncategorizedCategory(uncategorizedResults.size()));
     }
 
     return responses;
@@ -262,7 +253,7 @@ public class ValidationController extends BaseController {
             .collect(Collectors.toList());
 
     if (uncategorizedCount > 0) {
-      responses.add(buildUncategorizedCategory(uncategorizedCount));
+      responses.add(ValidationCategorizer.buildUncategorizedCategory(uncategorizedCount));
     }
 
     return responses;
@@ -404,35 +395,29 @@ public class ValidationController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    ValidationCategoriesAndResults categoriesAndResults = new ValidationCategoriesAndResults();
-    List<ValidationCategory> categories = ValidationCategorizer.loadAndRetrieveCategories();
-    List<ValidationResult> results = tenantService.getValidationResults(reportId);
-    List<ValidationResultCategory> resultCategories = tenantService.findValidationResultCategoriesByReport(reportId);
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    return categorizer.getValidationCategoriesAndResults(tenantService, report);
+  }
 
-    categoriesAndResults.setCategories(categories.stream()
-            .map(c -> {
-              ValidationCategoryResponse response = new ValidationCategoryResponse(c);
-              response.setCount(resultCategories.stream().filter(rc -> rc.getCategoryCode().equals(c.getId())).count());
-              return response;
-            })
-            .filter(c -> c.getCount() > 0)
-            .collect(Collectors.toList()));
+  @GetMapping(value = "/{tenantId}/{reportId}/category/result", produces = {"text/html"})
+  public String getValidationCategoriesAndResultsHtml(@PathVariable String tenantId, @PathVariable String reportId) {
+    try {
+      TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
-    categoriesAndResults.setResults(results.stream().map(r -> {
-      ValidationResultResponse response = new ValidationResultResponse();
-      response.setId(r.getId());
-      response.setCode(r.getCode());
-      response.setDetails(r.getDetails());
-      response.setSeverity(r.getSeverity());
-      response.setExpression(r.getExpression());
-      response.setPosition(r.getPosition());
-      response.setCategories(resultCategories.stream()
-              .filter(rc -> rc.getValidationResultId().equals(r.getId()))
-              .map(ValidationResultCategory::getCategoryCode)
-              .collect(Collectors.toList()));
-      return response;
-    }).collect(Collectors.toList()));
+      if (tenantService == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+      }
 
-    return categoriesAndResults;
+      Report report = tenantService.getReport(reportId);
+
+      if (report == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+      }
+
+      ValidationCategorizer categorizer = new ValidationCategorizer();
+      return categorizer.getValidationCategoriesAndResultsHtml(tenantService, report);
+    } catch (IOException e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error loading validation categories from resources");
+    }
   }
 }
