@@ -46,8 +46,6 @@ public class MeasureEvaluator {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
-    String start = this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."));
-    String end = this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."));
 
     Bundle patientBundle;
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_RETRIEVE_PATIENT_DATA, Constants.CATEGORY_REPORT)) {
@@ -60,7 +58,7 @@ public class MeasureEvaluator {
       Helper.dumpToFile(patientBundle, config.getDebugPath(), fileName);
     }
 
-    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
+    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, criteria.getPeriodStart(), criteria.getPeriodEnd(), patientId, patientBundle.getEntry().size());
 
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
