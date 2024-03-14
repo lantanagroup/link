@@ -12,9 +12,11 @@ export interface Report {
   tenantId: string;
   tenantName: string;
   cdcOrgId: string;
-  reportId: string
+  reportId: string;
   details: string;
-};
+  totalPatients: number;
+  maxTotalInIP: number;
+}
 
 export interface ReportFilter {
   tenantId?: string;

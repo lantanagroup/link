@@ -5,7 +5,7 @@
     </envs>
     <module name="api" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.lantanagroup.link.api.ApiApplication" />
-    <option name="VM_PARAMETERS" value="-Dserver.port=8082 -Dapi.no-scheduling=true" />
+    <option name="VM_PARAMETERS" value="-Dserver.port=8082 -Dapi.no-scheduling=true -Dapi.skip-init=true -Dapi.apply-schemas=false" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.lantanagroup.link.api.*" />

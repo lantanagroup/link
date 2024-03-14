@@ -11,11 +11,15 @@ import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.db.model.*;
+import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.*;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
@@ -23,16 +27,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.*;
 import java.util.function.Function;
@@ -78,6 +82,9 @@ public class SharedService {
       report.setMeasureIds(List.of("Error parsing measureIds"));
       logger.error("Error parsing measureIds", e);
     }
+
+    report.setTotalPatients(rs.getInt(9));
+    report.setMaxTotalInIP(rs.getInt(10));
 
     return report;
   }
@@ -815,13 +822,22 @@ public class SharedService {
     return null;
   }
 
+  private String getReportsSQL() {
+    try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("get-reports.sql")) {
+      BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+      return reader.lines().collect(Collectors.joining("\n"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<GlobalReportResponse> getAllReports() {
     List<GlobalReportResponse> reports = new ArrayList<>();
 
     for (Tenant tenantConfig : this.getTenantConfigs()) {
       // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        PreparedStatement ps = conn.prepareStatement("SELECT id, version, status, generatedTime, submittedTime, periodStart, periodEnd, measureIds FROM [dbo].[report]");
+        PreparedStatement ps = conn.prepareStatement(this.getReportsSQL());
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {
           String reportId = rs.getString(1);
@@ -839,74 +855,51 @@ public class SharedService {
     return reports;
   }
 
-  private TenantSummary getTenantSummaryResponse(Tenant tenantConfig, ResultSet rs) throws SQLException {
+  private TenantSummary getTenantSummaryResponse(Tenant tenantConfig) {
     TenantSummary tenantSummary = new TenantSummary();
     tenantSummary.setId(tenantConfig.getId());
     tenantSummary.setName(tenantConfig.getName());
     tenantSummary.setNhsnOrgId(tenantConfig.getCdcOrgId());
 
-    try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-      String sql = "SELECT (SELECT COUNT(*) FROM OPENJSON(patients)) " +
-              "FROM dbo.patientList " +
-              "WHERE periodEnd = ? " +
-              "and periodStart = ?";
-      PreparedStatement ps = conn.prepareStatement(sql);
-      ps.setString(1, rs.getString(5));
-      ps.setString(2, rs.getString(4));
-      ResultSet tPRs = ps.executeQuery();
-      while (tPRs.next()) {
-        tenantSummary.setTotalPopulation(tPRs.getString(1));
-        break;
-      }
-    } catch (SQLException e) {
-      logger.error("SQL exception while compiling totalPatients from database", e);
-      throw new RuntimeException(e);
+    List<TenantSummaryMeasure> measures = null;
+
+    if (tenantConfig.getScheduling() != null && tenantConfig.getScheduling().getGenerateAndSubmitReports() != null) {
+      measures = tenantConfig
+              .getScheduling()
+              .getGenerateAndSubmitReports()
+              .stream()
+              .map(GenerateReport::getMeasureIds)
+              .reduce(new ArrayList<String>(), (acc, measureIds) -> {
+                for (String measureId : measureIds) {
+                  if (!acc.contains(measureId)) {
+                    acc.add(measureId);
+                  }
+                }
+                return acc;
+              })
+              .stream()
+              .map(mid -> {
+                TenantSummaryMeasure measure = new TenantSummaryMeasure();
+                measure.setId(mid);
+                MeasureDefConfig measureDefConfig = this.config.getMeasureDefinitions()
+                        .stream()
+                        .filter(mdc -> mdc.getId().equals(mid))
+                        .findFirst()
+                        .orElse(null);
+                if (measureDefConfig != null) {
+                  measure.setShortName(measureDefConfig.getShortName());
+                  measure.setLongName(measureDefConfig.getLongName());
+                }
+                return measure;
+              })
+              .collect(Collectors.toList());
     }
 
-    String measureIds = rs.getString(2);
-    measureIds = measureIds.replaceAll("\\[", "").replaceAll("\\]", "");
-
-    List<String> measures = Arrays.asList(measureIds.split(","));
-    // get measures from measureIds string, split on comma, convert to list of TenantSummaryMeasure
-    List<TenantSummaryMeasure> list = measures.stream().map(m -> {
-      var measure = new TenantSummaryMeasure();
-
-      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())){
-        String sql = "SELECT (SELECT COUNT(*) FROM OPENJSON(report, '$.contained[0].entry')) " +
-                "FROM dbo.[aggregate] " +
-                "where reportId = ? "+
-                "and measureId = ?";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, rs.getString(1));
-        ps.setString(2, m.replaceAll("\"", ""));
-        ResultSet iPRs = ps.executeQuery();
-        while (iPRs.next()) {
-          measure.setIncludedPopulation(iPRs.getString(1));
-          break;
-        }
-      } catch (SQLException e) {
-        logger.error("SQL exception while compiling totalPatients from database", e);
-        throw new RuntimeException(e);
-      }
-
-      m = m.replace("\"", "");
-      measure.setId(m);
-      measure.setShortName(m);
-      measure.setLongName(m);
-      return measure;
-    }).collect(Collectors.toList());
-
-    tenantSummary.setMeasures(list);
-    tenantSummary.setLastSubmissionId(rs.getString(1));
-    //convert time stamp to date yyyy-MM-dd HH:mm:ss
-    DateTimeFormatter dateTimeFormatter = null;
-    String date = rs.getTimestamp(3).toLocalDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    tenantSummary.setLastSubmissionDate(date);
+    tenantSummary.setMeasures(measures);
     return tenantSummary;
   }
 
   private static void sortTenantSummaryList(TenantSummarySort sort, boolean sortAscend, List<TenantSummary> tenantSummaryList) {
-
     Map<TenantSummarySort, Function<TenantSummary, String>> sortColumnMapper = new HashMap<>();
 
     sortColumnMapper.put(TenantSummarySort.NAME, TenantSummary::getName);
@@ -920,33 +913,22 @@ public class SharedService {
     }
   }
 
-  public List<TenantSummary> getTenantSummary(String searchCriteria, TenantSummarySort sort, boolean sortAscend) {
-
-    List<TenantSummary> tenantSummaryList = new ArrayList<>();
-    // filter the tenants
-    for (Tenant tenantConfig : this.getTenantConfigs()) {
-      // if search criteria is not empty, filter tenants by search criteria
-      if (!StringUtils.isBlank(searchCriteria)) {
-        if (!(tenantConfig.getName().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getId().toLowerCase().contains(searchCriteria.toLowerCase()) || tenantConfig.getCdcOrgId().toLowerCase().contains(searchCriteria.toLowerCase()))) {
-          continue;
-        }
-      }
-      // TODO: Move to TenantService
-      try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        PreparedStatement ps = conn.prepareStatement("SELECT id, measureIds, submittedTime, periodStart, periodEnd FROM [dbo].[report]  WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC");
-        ResultSet rs = ps.executeQuery();
-        while (rs.next()) {
-          TenantSummary tenantSummary = getTenantSummaryResponse(tenantConfig, rs);
-          tenantSummaryList.add(tenantSummary);
-        }
-      } catch (SQLException e) {
-        logger.error("SQL exception while retrieving global reports from database", e);
-        throw new RuntimeException(e);
-      }
-    }
+  public List<TenantSummary> searchTenants(String searchCriteria, TenantSummarySort sort, boolean sortAscend) {
+    List<TenantSummary> tenantSummaries = this.getTenantConfigs()
+            .stream().filter(tenantConfig -> {
+              if (StringUtils.isEmpty(searchCriteria)) {
+                return true;
+              }
+              return tenantConfig.getName().toLowerCase().contains(searchCriteria.toLowerCase()) ||
+                      tenantConfig.getId().toLowerCase().contains(searchCriteria.toLowerCase()) ||
+                      tenantConfig.getCdcOrgId().toLowerCase().contains(searchCriteria.toLowerCase());
+            })
+            .map(this::getTenantSummaryResponse)
+            .collect(Collectors.toList());
 
     // sort  by name  or nhsnOrgId or  last submission date
-    sortTenantSummaryList(sort, sortAscend, tenantSummaryList);
-    return tenantSummaryList;
+    sortTenantSummaryList(sort, sortAscend, tenantSummaries);
+
+    return tenantSummaries;
   }
 }

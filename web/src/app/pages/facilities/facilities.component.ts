@@ -1,16 +1,16 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { from } from 'rxjs';
-import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { IconComponent } from 'src/app/shared/icon/icon.component';
-import { ButtonComponent } from 'src/app/shared/button/button.component';
-import { SectionComponent } from 'src/app/shared/section/section.component';
-import { SectionHeadingComponent } from 'src/app/shared/section-heading/section-heading.component';
-import { TableComponent } from 'src/app/shared/table/table.component';
-import { Tenant } from 'src/app/shared/interfaces/tenant.model';
-import { SearchBar } from 'src/app/shared/interfaces/table.model';
-import { FacilitiesApiService } from 'src/services/api/facilities/facilities-api.service';
-import { PascalCaseToSpace, ConvertDateString, ConvertToLocaleTime } from 'src/app/helpers/GlobalPipes.pipe';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {from} from 'rxjs';
+import {HeroComponent} from 'src/app/shared/hero/hero.component';
+import {IconComponent} from 'src/app/shared/icon/icon.component';
+import {ButtonComponent} from 'src/app/shared/button/button.component';
+import {SectionComponent} from 'src/app/shared/section/section.component';
+import {SectionHeadingComponent} from 'src/app/shared/section-heading/section-heading.component';
+import {TableComponent} from 'src/app/shared/table/table.component';
+import {Tenant} from 'src/app/shared/interfaces/tenant.model';
+import {SearchBar} from 'src/app/shared/interfaces/table.model';
+import {FacilitiesApiService} from 'src/services/api/facilities/facilities-api.service';
+import {ConvertDateString, ConvertToLocaleTime, PascalCaseToSpace} from 'src/app/helpers/GlobalPipes.pipe';
 
 @Component({
   selector: 'app-facilities',
@@ -28,7 +28,7 @@ export class FacilitiesComponent implements OnInit {
   private convertToLocaleTime = new ConvertToLocaleTime
 
   dtOptions: DataTables.Settings = {};
-  
+
   dtSearchBar: SearchBar = {
     title: 'Search Facilities',
     placeholder: 'Enter facility name, NHSN Org ID, etc.'
@@ -105,13 +105,17 @@ export class FacilitiesComponent implements OnInit {
           data: columnIdMap[2],
           orderable: false,
           createdCell: (cell, cellData) => {
-            if (cellData.toLowerCase().includes('progress')) {
+            if (cellData && cellData.toLowerCase().includes('progress')) {
               $(cell).addClass('cell--initiated');
             } else {
               $(cell).addClass('cell--complete');
             }
           },
           render: function (data, type, row) {
+            if (!row.DETAILS || row.DETAILS === 'No Scheduled Reports') {
+              return 'N/A';
+            }
+
             return `<a href="/activities/bundle/${row.FACILITY_ID}/${row.DETAILS}">Bundle<br>#${data}</a>`
           }
         },
@@ -120,8 +124,11 @@ export class FacilitiesComponent implements OnInit {
           data: columnIdMap[3],
           orderable: true,
           render: function(data, type, row) {
-            let parts = data.split(' ', 2)
-            return parts[0] + '<br>' + data.substring(parts[0].length).trim()
+            if (data) {
+              let parts = data.split(' ', 2)
+              return parts[0] + '<br>' + data.substring(parts[0].length).trim()
+            }
+            return 'N/A';
           }
         },
         {
@@ -144,7 +151,7 @@ export class FacilitiesComponent implements OnInit {
 
   // This is the method that would accept the reponse data from the api and process it further to be sent to the dt options.
   processDataForTable(tenantsData: Tenant[] | undefined) {
-    if(!tenantsData) 
+    if (!tenantsData)
       return
 
     return tenantsData.map(td => {
@@ -165,12 +172,12 @@ export class FacilitiesComponent implements OnInit {
         NHSN_ORG_ID: td.nhsnOrgId,
         DETAILS: td.lastSubmissionId,
         SUBMISSION_DATE: submissionDate,
-        MEASURES: td.measures
+        MEASURES: td.measures ? td.measures
           .filter(m => m && m.shortName)
           .map(m => {
             const measure = this.pascalCaseToSpace.transform(m.shortName.trimStart())
             return measure.split(' ')[0]
-          })
+          }) : 'No Scheduled Reports'
       };
     });
   }

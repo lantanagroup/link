@@ -4,6 +4,7 @@ import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.api.scheduling.Scheduler;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.db.model.tenant.TenantVendors;
 import com.lantanagroup.link.model.SearchTenantResponse;
@@ -49,7 +50,7 @@ public class TenantController extends BaseController {
   }
 
   @GetMapping("summary")
-  public TenantSummaryResponse searchTenantSummaries(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) String sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
+  public TenantSummaryResponse searchTenants(@RequestParam(required = false) String searchCriteria, @RequestParam(defaultValue = "NAME", required = false) String sort, @RequestParam(defaultValue = "1", required = false) int page, @RequestParam(defaultValue = "true", required = false) boolean sortAscend) {
     // validation
     int itemsPerPage = 5;
 
@@ -67,9 +68,22 @@ public class TenantController extends BaseController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid sort criteria. Valid values are NAME, NHSN_ORG_ID, SUBMISSION_DATE");
       }
     }
-    List<TenantSummary> tenants = this.sharedService.getTenantSummary(searchCriteria, TenantSummarySort.valueOf(sort.trim()), sortAscend).stream().collect(Collectors.toList());
 
-    List<TenantSummary> results = tenants.stream().skip(skip).limit(itemsPerPage).collect(Collectors.toList());
+    List<TenantSummary> tenants = this.sharedService.searchTenants(searchCriteria, TenantSummarySort.valueOf(sort.trim()), sortAscend);
+    List<TenantSummary> results = tenants.stream()
+            .skip(skip)
+            .limit(itemsPerPage)
+            .collect(Collectors.toList());
+
+    results.forEach(t -> {
+      TenantService tenantService = TenantService.create(this.sharedService.getTenantConfig(t.getId()));
+      Report lastReport = tenantService.findLastReport();
+
+      if (lastReport != null) {
+        t.setLastSubmissionId(lastReport.getId());
+        t.setLastSubmissionDate(String.valueOf(lastReport.getSubmittedTime()));
+      }
+    });
 
     TenantSummaryResponse response = new TenantSummaryResponse();
     response.setTotal(tenants.size());

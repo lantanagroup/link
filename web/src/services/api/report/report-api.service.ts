@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { DataService } from 'src/services/api/data.service';
-import { firstValueFrom } from 'rxjs';
-import { ReportFilter } from 'src/app/shared/interfaces/report.model';
+import {Injectable} from '@angular/core';
+import {DataService} from 'src/services/api/data.service';
+import {firstValueFrom} from 'rxjs';
+import {ReportFilter} from 'src/app/shared/interfaces/report.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +22,7 @@ export class ReportApiService {
       });
 
       // Determine the URL to call based on whether there are filters
-      const url = queryParams.toString() ? `report/?${queryParams}` : 'report/';
+      const url = queryParams.toString() ? `report?${queryParams}` : 'report/';
 
       // Fetch the data
       const response = await firstValueFrom(this.dataService.getData<any>(url));

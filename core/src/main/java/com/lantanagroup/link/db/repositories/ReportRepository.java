@@ -48,6 +48,12 @@ public class ReportRepository {
     return jdbc.query(sql, parameters, mapper);
   }
 
+  public Report findLastReport() {
+    String sql = "SELECT TOP 1 * FROM dbo.report WHERE submittedTime IS NOT NULL ORDER BY submittedTime DESC;";
+    return jdbc.query(sql, mapper).stream()
+            .reduce(StreamUtils::toOnlyElement)
+            .orElse(null);
+  }
   private int insert(Report model) {
     String sql = "INSERT INTO dbo.report (id, measureIds, periodStart, periodEnd, status, version, generatedTime, submittedTime, deviceInfo, queryPlan) " +
             "VALUES (:id, :measureIds, :periodStart, :periodEnd, :status, :version, :generatedTime, :submittedTime, :deviceInfo, :queryPlan);";

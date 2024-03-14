@@ -1,6 +1,8 @@
 package com.lantanagroup.link.config.api;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,10 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -159,9 +158,9 @@ public class ApiConfig {
   private boolean noScheduling = false;
 
   /**
-   * <strong>api.measure-def-urls</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
+   * <strong>api.measure-definitions</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
    */
-  private HashMap<String, String> measureDefUrls = new HashMap<>();
+  private List<MeasureDefConfig> measureDefinitions = new ArrayList<>();
 
   /**
    * Allows use of QA debugging endpoints. DO NOT ALLOW IN PRODUCTION!!!!

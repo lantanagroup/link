@@ -1,4 +1,4 @@
-import { Report } from "../shared/interfaces/report.model";
+import {Report} from "../shared/interfaces/report.model";
 
 
 type StatusType = 'pending' | 'submitted' | 'failed';
@@ -38,6 +38,8 @@ export function generateRandomData(numEntries: number): Report[] {
       status: status,
       version: "1.0",
       patientLists: [],
+      totalPatients: Math.floor(Math.random() * 1000),
+      maxTotalInIP: Math.floor(Math.random() * 1000)
     });
   }
   return randomData;
