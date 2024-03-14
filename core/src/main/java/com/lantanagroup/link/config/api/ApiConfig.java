@@ -158,7 +158,7 @@ public class ApiConfig {
   private boolean noScheduling = false;
 
   /**
-   * <strong>api.measure-definitions</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
+   * <strong>api.measure-definitions</strong><br>Each of the measure definitions supported by the installation, by identifier, short name, long name and the url for where the definition lives.
    */
   private List<MeasureDefConfig> measureDefinitions = new ArrayList<>();
 

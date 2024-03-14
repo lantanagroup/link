@@ -9,8 +9,23 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MeasureDefConfig {
+  /**
+   * The unique identifier for the measure definition
+   */
   private String id;
+
+  /**
+   * The short name for the measure definition (i.e. "Hypo")
+   */
   private String shortName;
+
+  /**
+   * The long name for the measure definition (i.e. "Hypoglycemia")
+   */
   private String longName;
+
+  /**
+   * The URL where the latest version of the measure definition lives
+   */
   private String definitionUrl;
 }
