@@ -13,7 +13,6 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.db.model.*;
-import com.lantanagroup.link.db.model.tenant.GenerateReport;
 import com.lantanagroup.link.db.model.tenant.Tenant;
 import com.lantanagroup.link.model.*;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -868,16 +867,8 @@ public class SharedService {
               .getScheduling()
               .getGenerateAndSubmitReports()
               .stream()
-              .map(GenerateReport::getMeasureIds)
-              .reduce(new ArrayList<String>(), (acc, measureIds) -> {
-                for (String measureId : measureIds) {
-                  if (!acc.contains(measureId)) {
-                    acc.add(measureId);
-                  }
-                }
-                return acc;
-              })
-              .stream()
+              .flatMap(gr -> gr.getMeasureIds().stream())
+              .distinct()
               .map(mid -> {
                 TenantSummaryMeasure measure = new TenantSummaryMeasure();
                 measure.setId(mid);
