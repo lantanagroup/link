@@ -36,6 +36,10 @@ public class FhirHelper {
   private static final DefaultProfileValidationSupport validationSupport =
           new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
 
+  static {
+    validationSupport.fetchAllStructureDefinitions();
+  }
+
   public static org.hl7.fhir.r4.model.Address getFHIRAddress(Address address) {
     org.hl7.fhir.r4.model.Address ret = new org.hl7.fhir.r4.model.Address();
 
@@ -346,7 +350,6 @@ public class FhirHelper {
   }
 
   public static FHIRPathEngine getFhirPathEngine() {
-    validationSupport.fetchAllStructureDefinitions();
     HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
     return new FHIRPathEngine(workerContext);
   }
