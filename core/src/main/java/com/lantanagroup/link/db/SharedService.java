@@ -826,7 +826,7 @@ public class SharedService {
     for (Tenant tenantConfig : this.getTenantConfigs()) {
       // TODO: Move to TenantService
       try (Connection conn = this.getSQLConnection(tenantConfig.getConnectionString())) {
-        String getReportsSQL = IOUtils.resourceToString("get-reports.sql", StandardCharsets.UTF_8);
+        String getReportsSQL = IOUtils.resourceToString("/get-reports.sql", StandardCharsets.UTF_8);
         PreparedStatement ps = conn.prepareStatement(getReportsSQL);
         ResultSet rs = ps.executeQuery();
         while (rs.next()) {

@@ -6,16 +6,17 @@ SELECT r.id,
        r.periodStart,
        r.periodEnd,
        r.measureIds,
-       CASE
-           WHEN pl.patients IS NOT NULL THEN (SELECT COUNT(*) FROM OPENJSON(pl.patients))
-           ELSE NULL
-           END AS totalPatients,
-       t.maxTotalInIP
-FROM [dbo].[report] r
-         CROSS APPLY OPENJSON(r.measureIds) AS mids
-         LEFT JOIN [dbo].[patientList] pl
-                   ON pl.measureId = mids.value AND r.periodStart = pl.periodStart AND r.periodEnd = pl.periodEnd
-         LEFT JOIN (SELECT a.reportId, MAX(a.totalInIP) AS maxTotalInIP
-                    FROM (SELECT reportId, (SELECT COUNT(*) FROM OPENJSON(report, '$.contained[0].entry')) AS totalInIP
-                          from [dbo].[aggregate]) a
-                    GROUP BY a.reportId) t ON t.reportId = r.id
+       counts.totalPatients,
+       counts.maxTotalInIP
+FROM dbo.report r
+         LEFT JOIN (SELECT R.id,
+                           MAX(PL.patientCount)  AS totalPatients,
+                           MAX(A.ipPatientCount) AS maxTotalInIP
+                    FROM dbo.report AS R
+                             INNER JOIN dbo.reportPatientList AS RPL ON R.id = RPL.reportId
+                             INNER JOIN (SELECT *, (SELECT COUNT(*) FROM OPENJSON(patients)) AS patientCount
+                                         FROM dbo.patientList) AS PL ON RPL.patientListId = PL.id
+                             INNER JOIN (SELECT *,
+                                                (SELECT COUNT(*) FROM OPENJSON(report, '$.contained[0].entry')) AS ipPatientCount
+                                         FROM dbo.[aggregate]) AS A ON R.id = A.reportId
+                    GROUP BY R.id) AS counts ON r.id = counts.id
