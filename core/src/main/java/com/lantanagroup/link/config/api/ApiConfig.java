@@ -175,4 +175,12 @@ public class ApiConfig {
    */
   private String validationPackagesPath = "classpath:/packages/**";
 
+
+  /**
+   * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
+   * is signed up to report during the calculated reporting period.
+   */
+  private ReportingPlan reportingPlan;
+
+
 }
