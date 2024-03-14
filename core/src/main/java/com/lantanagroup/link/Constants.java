@@ -61,4 +61,9 @@ public class Constants {
   public static final String VALIDATION_ISSUE_TASK = "Validation";
   public static final String VALIDATION_ISSUE_CATEGORY = "Validation Issues";
   public static final String REPORT_GENERATION_TASK = "Report Generation";
+
+  //Submission file names
+  public static final String ORGANIZATION_FILE_NAME = "organization.json";
+  public static final String DEVICE_FILE_NAME = "device.json";
+  public static final String QUERY_PLAN_FILE_NAME = "query-plan.yml";
 }

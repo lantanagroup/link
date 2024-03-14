@@ -13,7 +13,7 @@ public class FileSystemSenderTests {
   @Test
   public void getFilePathTest_NoConfigPath() {
     FileSystemSender sender = new FileSystemSender();
-    Assert.assertThrows(IllegalArgumentException.class, () -> { sender.getFilePath(); });
+    Assert.assertThrows(IllegalArgumentException.class, () -> { sender.getFilePath("submission"); });
   }
 
   @Test
@@ -23,7 +23,7 @@ public class FileSystemSenderTests {
     FileSystemSender sender = new FileSystemSender();
     sender.setConfig(config);
 
-    Path path = sender.getFilePath();
+    Path path = sender.getFilePath("submission");
     Assert.assertNotNull(path);
     Assert.assertTrue(path.toString().startsWith(config.getPath()));
   }
