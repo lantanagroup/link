@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -410,7 +409,7 @@ public class MetricController extends BaseController {
   }
 
   @GetMapping("/size/PatientMeasureReport/{tenantId}")
-  public ResponseEntity<DataSizeSummary> getPatientMeasureReportSizeSummary(
+  public DataSizeSummary getPatientMeasureReportSizeSummary(
           @PathVariable String tenantId,
           @RequestParam(name = "patientId", required = false) String patientId,
           @RequestParam(name = "reportId", required = false) String reportId,
@@ -474,11 +473,11 @@ public class MetricController extends BaseController {
     dataAverageMap.get(measureKey).replaceAll((key, value) -> value/dataCountMap.get(measureKey).get(key));
     dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
 
-    return ResponseEntity.ok(summary);
+    return summary;
   }
 
   @GetMapping("/size/PatientData/{tenantId}")
-  public ResponseEntity<DataSizeSummary> getPatientDataSizeSummary(
+  public DataSizeSummary getPatientDataSizeSummary(
           @PathVariable String tenantId,
           @RequestParam(name = "patientId", required = false) String patientId,
           @RequestParam(name = "resourceType", required = false) String resourceType,
@@ -499,7 +498,7 @@ public class MetricController extends BaseController {
     catch(DateTimeParseException ex)
     {
       logger.error("Error parsing DateTime parameter: " + ex.getMessage());
-      return ResponseEntity.badRequest().body(null);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     var dataSize = tenantService.getPatientDataReportSize(patientId, resourceType, ldtStart, ldtEnd);
@@ -555,6 +554,6 @@ public class MetricController extends BaseController {
     dataAverageMap.get(rtKey).replaceAll((key, value) -> value/dataCountMap.get(rtKey).get(key));
     dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
 
-    return ResponseEntity.ok(summary);
+    return summary;
   }
 }
