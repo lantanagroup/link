@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -81,6 +82,10 @@ public class ReportController extends BaseController {
 
   @Autowired
   private ValidationService validationService;
+
+  @Autowired
+  private ApiConfig apiConfig;
+
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -275,15 +280,15 @@ public class ReportController extends BaseController {
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
-    if (tenantService.getConfig().getReportingPlan() == null) {
+    if (apiConfig.getReportingPlan() == null) {
       return;
     }
 
-    if (!tenantService.getConfig().getReportingPlan().isEnabled()) {
+    if (!apiConfig.getReportingPlan().isEnabled()) {
       return;
     }
 
-    if (StringUtils.isEmpty(tenantService.getConfig().getReportingPlan().getUrl())) {
+    if (StringUtils.isEmpty(apiConfig.getReportingPlan().getUrl())) {
       logger.error("Reporting plan for tenant {} is not configured with a URL", tenantService.getConfig().getId());
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -293,13 +298,13 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan(), tenantService.getConfig().getCdcOrgId());
+    ReportingPlanService reportingPlanService = new ReportingPlanService(apiConfig.getReportingPlan(), tenantService.getConfig().getCdcOrgId());
 
     Date date = Helper.parseFhirDate(periodStart);
     int year = date.getYear() + 1900;
     int month = date.getMonth() + 1;
     for (String bundleId : measureIds) {
-      String planName = tenantService.getConfig().getReportingPlan().getPlanNames().get(bundleId);
+      String planName = apiConfig.getReportingPlan().getPlanNames().get(bundleId);
       if (!reportingPlanService.isReporting(planName, year, month)) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
       }

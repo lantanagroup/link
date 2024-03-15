@@ -383,4 +383,8 @@ public class TenantService {
   public List<ValidationResult> getUncategorizedValidationResults(String reportId) {
     return this.validations.getUncategorized(reportId);
   }
+
+  public String getOrganizationID(){
+    return this.config.getCdcOrgId();
+  }
 }

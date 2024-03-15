@@ -174,6 +174,17 @@ public class ApiConfig {
    */
   private String validationPackagesPath = "classpath:/packages/**";
 
+  /**
+   * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
+   * is signed up to report during the calculated reporting period.
+   */
+  private ReportingPlan reportingPlan;
+
+  /**
+   * Finds a single measure definition by it's ID
+   * @param measureId The id of the measure to find
+   * @return MeasureDefConfig
+   */
   public MeasureDefConfig getMeasureDefinition(String measureId) {
     return measureDefinitions
             .stream()
@@ -181,4 +192,6 @@ public class ApiConfig {
             .findFirst()
             .orElse(null);
   }
+
+
 }
