@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,20 +67,8 @@ public class Helper {
     return new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT).format(date);
   }
 
-  public static Date parseFhirDate(String dateStr) throws ParseException {
-    if (StringUtils.isEmpty(dateStr)) {
-      return null;
-    }
-
-    SimpleDateFormat formatterMillis = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
-    SimpleDateFormat formatterSec = new SimpleDateFormat(SIMPLE_DATE_SECONDS_FORMAT);
-    Date dateReturned;
-    try {
-      dateReturned = formatterMillis.parse(dateStr);
-    } catch (Exception ex) {
-      dateReturned = formatterSec.parse(dateStr);
-    }
-    return dateReturned;
+  public static Date parseFhirDate(String dateStr) {
+    return new DateTimeType(dateStr).getValue();
   }
 
   public static <T> List<T> concatenate(List<T> list1, List<T> list2) {
