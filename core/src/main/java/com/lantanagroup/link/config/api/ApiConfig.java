@@ -174,4 +174,11 @@ public class ApiConfig {
    */
   private String validationPackagesPath = "classpath:/packages/**";
 
+  public MeasureDefConfig getMeasureDefinition(String measureId) {
+    return measureDefinitions
+            .stream()
+            .filter(m -> m.getId().equals(measureId))
+            .findFirst()
+            .orElse(null);
+  }
 }

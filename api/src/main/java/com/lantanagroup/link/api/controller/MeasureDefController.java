@@ -86,9 +86,7 @@ public class MeasureDefController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either a Bundle must be specified in a JSON body of the request, or a \"measureId\" query parameter must be specified");
     }
 
-    MeasureDefConfig foundMeasureDef = this.apiConfig.getMeasureDefinitions().stream()
-            .filter(measureDef -> measureDef.getId().equals(measureId))
-            .findFirst().orElse(null);
+    MeasureDefConfig foundMeasureDef = this.apiConfig.getMeasureDefinition(measureId);
     if (StringUtils.isNotEmpty(measureId) && foundMeasureDef == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The specified measureId is not configured with a measure definition URL");
     }

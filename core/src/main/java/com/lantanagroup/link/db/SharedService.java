@@ -864,11 +864,7 @@ public class SharedService {
               .map(mid -> {
                 TenantSummaryMeasure measure = new TenantSummaryMeasure();
                 measure.setId(mid);
-                MeasureDefConfig measureDefConfig = this.config.getMeasureDefinitions()
-                        .stream()
-                        .filter(mdc -> mdc.getId().equals(mid))
-                        .findFirst()
-                        .orElse(null);
+                MeasureDefConfig measureDefConfig = this.config.getMeasureDefinition(mid);
                 if (measureDefConfig != null) {
                   measure.setShortName(measureDefConfig.getShortName());
                   measure.setLongName(measureDefConfig.getLongName());
