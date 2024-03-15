@@ -1,4 +1,4 @@
-package com.lantanagroup.link.db.model.tenant;
+package com.lantanagroup.link.config.api;
 
 import lombok.Getter;
 import lombok.Setter;

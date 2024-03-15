@@ -1,6 +1,8 @@
 package com.lantanagroup.link.config.api;
 
 import com.lantanagroup.link.config.YamlPropertySourceFactory;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,10 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Getter
@@ -159,9 +158,9 @@ public class ApiConfig {
   private boolean noScheduling = false;
 
   /**
-   * <strong>api.measure-def-urls</strong><br>A set of URLs representing the latest measure definition, keyed by measure ID
+   * <strong>api.measure-definitions</strong><br>Each of the measure definitions supported by the installation, by identifier, short name, long name and the url for where the definition lives.
    */
-  private HashMap<String, String> measureDefUrls = new HashMap<>();
+  private List<MeasureDefConfig> measureDefinitions = new ArrayList<>();
 
   /**
    * Allows use of QA debugging endpoints. DO NOT ALLOW IN PRODUCTION!!!!
@@ -174,5 +173,25 @@ public class ApiConfig {
    * <strong>api.validation-packages-path</strong><br>The path to the validation packages
    */
   private String validationPackagesPath = "classpath:/packages/**";
+
+  /**
+   * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
+   * is signed up to report during the calculated reporting period.
+   */
+  private ReportingPlan reportingPlan;
+
+  /**
+   * Finds a single measure definition by it's ID
+   * @param measureId The id of the measure to find
+   * @return MeasureDefConfig
+   */
+  public MeasureDefConfig getMeasureDefinition(String measureId) {
+    return measureDefinitions
+            .stream()
+            .filter(m -> m.getId().equals(measureId))
+            .findFirst()
+            .orElse(null);
+  }
+
 
 }

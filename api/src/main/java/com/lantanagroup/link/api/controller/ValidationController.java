@@ -49,7 +49,6 @@ public class ValidationController extends BaseController {
   /**
    * Validates a Bundle provided in the request body
    *
-   * @param tenantId The id of the tenant
    * @param severity The minimum severity level to report on
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
@@ -73,7 +72,6 @@ public class ValidationController extends BaseController {
   /**
    * Validates a Bundle provided in the request body
    *
-   * @param tenantId The id of the tenant
    * @param severity The minimum severity level to report on
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
@@ -92,7 +90,9 @@ public class ValidationController extends BaseController {
    * @throws IOException
    */
   @GetMapping("/{tenantId}/{reportId}")
-  public OperationOutcome getValidationIssuesForReport(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity, @RequestParam(required = false) String code) {
+  public OperationOutcome getValidationIssuesForReport(@PathVariable String tenantId, @PathVariable String reportId,
+                                                       @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity,
+                                                       @RequestParam(required = false) String code) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {

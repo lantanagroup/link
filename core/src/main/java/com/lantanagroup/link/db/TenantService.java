@@ -199,6 +199,10 @@ public class TenantService {
     return this.reports.findByPatientListId(id);
   }
 
+  public Report findLastReport() {
+    return this.reports.findLastReport();
+  }
+
   public List<Report> searchReports() {
     return this.reports.findAll();
   }
@@ -378,5 +382,9 @@ public class TenantService {
 
   public List<ValidationResult> getUncategorizedValidationResults(String reportId) {
     return this.validations.getUncategorized(reportId);
+  }
+
+  public String getOrganizationID(){
+    return this.config.getCdcOrgId();
   }
 }

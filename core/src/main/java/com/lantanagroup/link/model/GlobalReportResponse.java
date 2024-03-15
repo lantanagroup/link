@@ -10,4 +10,6 @@ public class GlobalReportResponse extends Report {
   private String tenantId;
   private String tenantName;
   private String cdcOrgId;
+  private Integer totalPatients;
+  private Integer maxTotalInIP;
 }
