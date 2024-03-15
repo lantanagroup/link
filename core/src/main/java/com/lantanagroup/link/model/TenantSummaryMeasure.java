@@ -13,5 +13,4 @@ public class TenantSummaryMeasure {
   private String id;
   private String shortName;
   private String longName;
-  private String includedPopulation;
 }

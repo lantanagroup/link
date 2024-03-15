@@ -2,11 +2,11 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.api.MeasureServiceWrapper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.MeasurePackage;
@@ -86,11 +86,12 @@ public class MeasureDefController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either a Bundle must be specified in a JSON body of the request, or a \"measureId\" query parameter must be specified");
     }
 
-    if (StringUtils.isNotEmpty(measureId) && this.apiConfig.getMeasureDefUrls().get(measureId) == null) {
+    MeasureDefConfig foundMeasureDef = this.apiConfig.getMeasureDefinition(measureId);
+    if (StringUtils.isNotEmpty(measureId) && foundMeasureDef == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The specified measureId is not configured with a measure definition URL");
     }
 
-    String url = StringUtils.isNotEmpty(measureId) ? this.apiConfig.getMeasureDefUrls().get(measureId) : null;
+    String url = foundMeasureDef != null ? foundMeasureDef.getDefinitionUrl() : null;
     Bundle bundle = bundleBody == null ? this.getBundleFromUrl(url) : bundleBody;
 
     if (bundle == null) {

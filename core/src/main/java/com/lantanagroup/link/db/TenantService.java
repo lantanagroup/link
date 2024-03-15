@@ -199,6 +199,10 @@ public class TenantService {
     return this.reports.findByPatientListId(id);
   }
 
+  public Report findLastReport() {
+    return this.reports.findLastReport();
+  }
+
   public List<Report> searchReports() {
     return this.reports.findAll();
   }
