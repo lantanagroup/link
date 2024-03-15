@@ -7,6 +7,8 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.validation.ValidationCategorizer;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -22,7 +24,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +32,6 @@ import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -54,14 +54,6 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
   public Path getFilePath(String type) {
     String suffix = "";
-    String path;
-
-    if (this.config == null || this.config.getPath() == null || this.config.getPath().isEmpty()) {
-      logger.info("Not configured with a path to store the submission bundle. Using the system temporary directory");
-      throw new IllegalArgumentException("Error: Not configured with a path in FileSystemSender to store the submission bundle");
-    } else {
-      path = Helper.expandEnvVars(this.config.getPath());
-    }
 
     if (this.config.getIsBundle()) {
       switch (this.getFormat()) {
@@ -71,7 +63,22 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         case JSON:
           suffix = ".json";
           break;
+        default:
+          throw new RuntimeException("No suffix specified for submission file");
       }
+    }
+
+    return this.getFilePath(type, suffix);
+  }
+
+  public Path getFilePath(String type, String suffix) {
+    String path;
+
+    if (this.config == null || this.config.getPath() == null || this.config.getPath().isEmpty()) {
+      logger.info("Not configured with a path to store the submission bundle. Using the system temporary directory");
+      throw new IllegalArgumentException("Error: Not configured with a path in FileSystemSender to store the submission bundle");
+    } else {
+      path = Helper.expandEnvVars(this.config.getPath());
     }
 
     String fileName = type + "-" + (new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date())) + suffix;
@@ -154,7 +161,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.info("Saved submission bundle to file system: {}", path);
   }
 
-  private void saveToFolder(Bundle bundle, OperationOutcome outcome, String path) throws Exception {
+  private void saveToFolder(TenantService tenantService, Report report, Bundle bundle, OperationOutcome outcome, String path) throws Exception {
     File folder = new File(path);
 
     if (!folder.exists() && !folder.mkdirs()) {
@@ -226,6 +233,13 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       this.saveToFile(otherResourcesBundle, Paths.get(path, "other-resources.json").toString());
     }
 
+    // Save validation results as HTML
+    logger.debug("Saving validation results as HTML");
+    String html = this.getValidationReportHTML(tenantService, report);
+    if (StringUtils.isNotEmpty(html)) {
+      this.saveToFile(html.getBytes(StandardCharsets.UTF_8), Paths.get(path, "validation-report.html").toString());
+    }
+    
     // Annotating validation results with what file each issue occurs in and saving
     logger.debug("Annotating and saving validation results");
     List<OperationOutcome.OperationOutcomeIssueComponent> issues = outcome.getIssue();
@@ -239,7 +253,11 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       }
     });
     this.saveToFile(outcome, Paths.get(path, "validation-results.json").toString());
+  }
 
+  private String getValidationReportHTML(TenantService tenantService, Report report) throws IOException {
+    return new ValidationCategorizer()
+            .getValidationCategoriesAndResultsHtml(tenantService, report);
   }
 
   @SuppressWarnings("unused")
@@ -256,17 +274,27 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             StringUtils.isEmpty(this.config.getEncryptSecret()) ? "without" : "with");
 
 
-    OperationOutcome outcome =
-            tenantService.getValidationResultsOperationOutcome(report.getId(), OperationOutcome.IssueSeverity.INFORMATION, null);
+    OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
+            report.getId(),
+            OperationOutcome.IssueSeverity.INFORMATION,
+            null);
 
     if (this.config.getIsBundle()) {
       this.saveToFile(submissionBundle, this.getFilePath("submission").toString());
       this.saveToFile(outcome, this.getFilePath("validation").toString());
+
+      // Save validation results as HTML
+      logger.debug("Saving validation results as HTML");
+      String html = this.getValidationReportHTML(tenantService, report);
+      if (StringUtils.isNotEmpty(html)) {
+        this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
+      }
     } else {
       String orgId = tenantService.getOrganizationID();
-      this.saveToFolder(submissionBundle, outcome,
-              (orgId != null && !orgId.isEmpty() ? this.getFilePath(orgId).toString()
-                      : this.getFilePath("submission").toString()));
+      String path = orgId != null && !orgId.isEmpty() ?
+              this.getFilePath(orgId).toString() :
+              this.getFilePath("submission").toString();
+      this.saveToFolder(tenantService, report, submissionBundle, outcome, path);
     }
   }
 }

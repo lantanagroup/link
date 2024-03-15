@@ -3,7 +3,6 @@ package com.lantanagroup.link.validation;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
 import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.ValidationCategorizer;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.mappers.ValidationResultMapper;

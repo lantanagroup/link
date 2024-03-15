@@ -1,11 +1,12 @@
-package com.lantanagroup.link;
+package com.lantanagroup.link.validation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
-import com.lantanagroup.link.model.ValidationCategory;
-import com.lantanagroup.link.model.ValidationCategorySeverities;
-import com.lantanagroup.link.validation.RuleBasedValidationCategory;
+import com.lantanagroup.link.model.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -17,11 +18,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Getter
+@Setter
 public class ValidationCategorizer {
   private static final Logger logger = LoggerFactory.getLogger(ValidationCategorizer.class.getName());
 
-  @Getter
-  @Setter
   private List<RuleBasedValidationCategory> categories = new ArrayList<>();
 
   public static List<ValidationCategory> loadAndRetrieveCategories() {
@@ -99,5 +100,74 @@ public class ValidationCategorizer {
     }
 
     return resultCategories;
+  }
+
+  public static ValidationCategoryResponse buildUncategorizedCategory(int count) {
+    ValidationCategoryResponse response = new ValidationCategoryResponse();
+    response.setId("uncategorized");
+    response.setTitle("Uncategorized");
+    response.setSeverity(ValidationCategorySeverities.WARNING);
+    response.setAcceptable(false);
+    response.setGuidance("These issues need to be categorized.");
+    response.setCount(count);
+    return response;
+  }
+
+  public ValidationCategoriesAndResults getValidationCategoriesAndResults(TenantService tenantService, Report report) {
+    ValidationCategoriesAndResults categoriesAndResults = new ValidationCategoriesAndResults(report);
+    List<ValidationCategory> categories = ValidationCategorizer.loadAndRetrieveCategories();
+    List<ValidationResult> results = tenantService.getValidationResults(report.getId());
+    List<ValidationResultCategory> resultCategories = tenantService.findValidationResultCategoriesByReport(report.getId());
+
+    categoriesAndResults.setCategories(categories.stream()
+            .map(c -> {
+              ValidationCategoryResponse response = new ValidationCategoryResponse(c);
+              response.setCount(resultCategories.stream().filter(rc -> rc.getCategoryCode().equals(c.getId())).count());
+              return response;
+            })
+            .filter(c -> c.getCount() > 0)
+            .collect(Collectors.toList()));
+
+    if (results.stream().anyMatch(r -> resultCategories.stream().noneMatch(rc -> rc.getValidationResultId().equals(r.getId())))) {
+      categoriesAndResults.getCategories().add(buildUncategorizedCategory(tenantService.countUncategorizedValidationResults(report.getId())));
+    }
+
+    categoriesAndResults.setResults(results.stream().map(r -> {
+      ValidationResultResponse resultResponse = new ValidationResultResponse();
+      resultResponse.setId(r.getId());
+      resultResponse.setCode(r.getCode());
+      resultResponse.setDetails(r.getDetails());
+      resultResponse.setSeverity(r.getSeverity());
+      resultResponse.setExpression(r.getExpression());
+      resultResponse.setPosition(r.getPosition());
+      resultResponse.setCategories(resultCategories.stream()
+              .filter(rc -> rc.getValidationResultId().equals(r.getId()))
+              .map(ValidationResultCategory::getCategoryCode)
+              .collect(Collectors.toList()));
+
+      if (resultResponse.getCategories().isEmpty()) {
+        resultResponse.getCategories().add("uncategorized");
+      }
+
+      return resultResponse;
+    }).collect(Collectors.toList()));
+
+    return categoriesAndResults;
+  }
+
+  public String getValidationCategoriesAndResultsHtml(TenantService tenantService, Report report) throws IOException {
+    ValidationCategoriesAndResults categoriesAndResults = this.getValidationCategoriesAndResults(tenantService, report);
+
+    if (categoriesAndResults.getResults() != null && categoriesAndResults.getResults().isEmpty()) {
+      return null;
+    }
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    try (InputStream is = this.getClass().getClassLoader().getResourceAsStream("validation-categories.html")) {
+      String json = mapper.writeValueAsString(categoriesAndResults);
+      String html = Helper.readInputStream(is);
+      return html.replace("var report = {};", "var report = " + json + ";");
+    }
   }
 }
