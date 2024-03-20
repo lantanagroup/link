@@ -51,13 +51,18 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+  private static final Map<String, Lock> tenantLocks = new ConcurrentHashMap<>();
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -316,6 +321,10 @@ public class ReportController extends BaseController {
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
+    Lock tenantLock = tenantLocks.computeIfAbsent(tenantService.getConfig().getId(), id -> new ReentrantLock());
+    if (!tenantLock.tryLock()) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Report in progress for tenant");
+    }
     try(var stopwatch = stopwatchManager.start(Constants.REPORT_GENERATION_TASK, Constants.CATEGORY_REPORT)) {
       this.checkReportingPlan(tenantService, periodStart, measureIds);
 
@@ -443,6 +452,8 @@ public class ReportController extends BaseController {
       } else {
         logger.info("Skipping validation for report {}", report.getId());
       }
+    } finally {
+      tenantLock.unlock();
     }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
