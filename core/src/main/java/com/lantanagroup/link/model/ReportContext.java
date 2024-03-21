@@ -19,15 +19,15 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class ReportContext {
-  private HttpServletRequest request;
-  private LinkCredentials user;
-  private String masterIdentifierValue;
-  private List<PatientList> patientLists = new ArrayList<>();
-  private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-  private List<MeasureContext> measureContexts = new ArrayList<>();
-  private QueryPlan queryPlan;
-  private IGenericClient client;
-  private List<String> debugPatients = new ArrayList<>();
+  private volatile HttpServletRequest request;
+  private volatile LinkCredentials user;
+  private volatile String masterIdentifierValue;
+  private volatile List<PatientList> patientLists = new ArrayList<>();
+  private volatile List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+  private volatile List<MeasureContext> measureContexts = new ArrayList<>();
+  private volatile QueryPlan queryPlan;
+  private volatile IGenericClient client;
+  private volatile List<String> debugPatients = new ArrayList<>();
 
   public ReportContext() {
   }
@@ -54,13 +54,13 @@ public class ReportContext {
   @Getter
   @Setter
   public static class MeasureContext {
-    private String bundleId;
-    private Bundle reportDefBundle;
-    private Measure measure;
-    private String reportId;
-    private List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-    private Map<String, MeasureReport> patientReportsByPatientId = new HashMap<>();
-    private MeasureReport measureReport;
+    private volatile String bundleId;
+    private volatile Bundle reportDefBundle;
+    private volatile Measure measure;
+    private volatile String reportId;
+    private volatile List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+    private volatile Map<String, MeasureReport> patientReportsByPatientId = new HashMap<>();
+    private volatile MeasureReport measureReport;
 
     public List<PatientOfInterestModel> getPatientsOfInterest(QueryPhase queryPhase) {
       switch (queryPhase) {
