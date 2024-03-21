@@ -80,8 +80,8 @@ public class ReportGenerator {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
                 } finally {
                   int completed = progress.incrementAndGet();
-                  double percent = Math.round((completed * 100.0) / pois.size());
-                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
+                  double percent = (completed * 100.0) / pois.size();
+                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.1f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
                 }
               }))
               .get();
