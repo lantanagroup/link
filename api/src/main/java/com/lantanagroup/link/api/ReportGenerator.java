@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -73,8 +74,8 @@ public class ReportGenerator {
                 }
                 try {
                   MeasureReport measureReport = generate(measureServiceWrapper, patient);
-                  synchronized (this) {
-                    measureContext.getPatientReportsByPatientId().put(patient.getId(), measureReport);
+                  if (queryPhase == QueryPhase.INITIAL && FhirHelper.hasNonzeroPopulationCount(measureReport)) {
+                    measureContext.getSupplementalPatientsOfInterest().add(patient);
                   }
                 } catch (Exception e) {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
@@ -111,7 +112,7 @@ public class ReportGenerator {
   }
 
   public void aggregate() throws ParseException {
-    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
+    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.tenantService, this.criteria, this.measureContext);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
     Aggregate aggregateReport = new Aggregate();

@@ -58,7 +58,7 @@ public class EncounterStatusTransformerTest {
     patientOfInterest.setId(patientID);
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     patientsOfInterest.add(patientOfInterest);
-    context.setPatientsOfInterest(patientsOfInterest);
+    context.setInitialPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue(reportID);
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
 

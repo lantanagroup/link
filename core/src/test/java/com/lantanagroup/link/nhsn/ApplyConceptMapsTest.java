@@ -95,7 +95,7 @@ public class ApplyConceptMapsTest {
     model.setId("10000");
     patientOfInterestModel.add(model);
 
-    context.setPatientsOfInterest(patientOfInterestModel);
+    context.setInitialPatientsOfInterest(patientOfInterestModel);
 
     List<Coding> codes = new ArrayList<>();
     codes.add(getLocation().getType().get(0).getCoding().get(0));

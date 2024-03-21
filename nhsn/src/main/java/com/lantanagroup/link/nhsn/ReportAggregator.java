@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.Optional;
 
 @Component
@@ -38,23 +37,23 @@ public class ReportAggregator extends GenericAggregator implements IReportAggreg
             "MeasureReport/" + individualMeasureReport.getIdElement().getIdPart());
   }
 
-  public void aggregatePatientReports(MeasureReport masterMeasureReport, Collection<MeasureReport> measureReports) {
-    // aggregate all individual reports in ones
-    for (MeasureReport patientMeasureReportResource : measureReports) {
-      for (MeasureReport.MeasureReportGroupComponent group : patientMeasureReportResource.getGroup()) {
-        for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
-          // Check if group and population code exist in master, if not create
-          MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
-          // Add population.count to the master group/population count
-          measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
-          // If this population incremented the master
-          if (population.getCount() > 0) {
-            // add subject results
-            addSubjectResult(patientMeasureReportResource, measureGroupPopulation);
-          }
+  public void aggregatePatientReport(MeasureReport masterMeasureReport, MeasureReport measureReport) {
+    for (MeasureReport.MeasureReportGroupComponent group : measureReport.getGroup()) {
+      for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
+        // Check if group and population code exist in master, if not create
+        MeasureReport.MeasureReportGroupPopulationComponent measureGroupPopulation = getOrCreateGroupAndPopulation(masterMeasureReport, population, group);
+        // Add population.count to the master group/population count
+        measureGroupPopulation.setCount(measureGroupPopulation.getCount() + population.getCount());
+        // If this population incremented the master
+        if (population.getCount() > 0) {
+          // add subject results
+          addSubjectResult(measureReport, measureGroupPopulation);
         }
       }
     }
+  }
+
+  public void finishAggregation(MeasureReport masterMeasureReport) {
     for (MeasureReport.MeasureReportGroupComponent group : masterMeasureReport.getGroup()) {
       for (MeasureReport.MeasureReportGroupPopulationComponent population : group.getPopulation()) {
         logger.debug(

@@ -1,7 +1,6 @@
 package com.lantanagroup.link.model;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.tenant.QueryPlan;
@@ -23,7 +22,7 @@ public class ReportContext {
   private volatile LinkCredentials user;
   private volatile String masterIdentifierValue;
   private volatile List<PatientList> patientLists = new ArrayList<>();
-  private volatile List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
+  private volatile List<PatientOfInterestModel> initialPatientsOfInterest = new ArrayList<>();
   private volatile List<MeasureContext> measureContexts = new ArrayList<>();
   private volatile QueryPlan queryPlan;
   private volatile IGenericClient client;
@@ -37,10 +36,14 @@ public class ReportContext {
     this.user = user;
   }
 
+  public List<PatientOfInterestModel> getPatientsOfInterest() {
+    return initialPatientsOfInterest;
+  }
+
   public List<PatientOfInterestModel> getPatientsOfInterest(QueryPhase queryPhase) {
     switch (queryPhase) {
       case INITIAL:
-        return patientsOfInterest;
+        return initialPatientsOfInterest;
       case SUPPLEMENTAL:
         return measureContexts.stream()
                 .flatMap(measureContext -> measureContext.getPatientsOfInterest(queryPhase).stream())
@@ -58,29 +61,23 @@ public class ReportContext {
     private volatile Bundle reportDefBundle;
     private volatile Measure measure;
     private volatile String reportId;
-    private volatile List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
-    private volatile Map<String, MeasureReport> patientReportsByPatientId = new HashMap<>();
+    private volatile List<PatientOfInterestModel> initialPatientsOfInterest = new ArrayList<>();
+    private volatile List<PatientOfInterestModel> supplementalPatientsOfInterest = Collections.synchronizedList(new ArrayList<>());
     private volatile MeasureReport measureReport;
+
+    public List<PatientOfInterestModel> getPatientsOfInterest() {
+      return initialPatientsOfInterest;
+    }
 
     public List<PatientOfInterestModel> getPatientsOfInterest(QueryPhase queryPhase) {
       switch (queryPhase) {
         case INITIAL:
-          return patientsOfInterest;
+          return initialPatientsOfInterest;
         case SUPPLEMENTAL:
-          Set<String> patientIds = patientReportsByPatientId.entrySet().stream()
-                  .filter(reportById -> FhirHelper.hasNonzeroPopulationCount(reportById.getValue()))
-                  .map(Map.Entry::getKey)
-                  .collect(Collectors.toSet());
-          return patientsOfInterest.stream()
-                  .filter(poi -> patientIds.contains(poi.getId()))
-                  .collect(Collectors.toList());
+          return supplementalPatientsOfInterest;
         default:
           throw new IllegalArgumentException(queryPhase.toString());
       }
-    }
-
-    public Collection<MeasureReport> getPatientReports() {
-      return patientReportsByPatientId.values();
     }
   }
 }
