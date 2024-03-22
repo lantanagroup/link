@@ -164,8 +164,8 @@ public class PatientScoop {
           logger.error("Unable to retrieve patient with identifier " + Helper.sanitizeString(poi.toString()), e);
         } finally {
           int completed = progress.incrementAndGet();
-          double percent = Math.round((completed * 100.0) / patientsOfInterest.size());
-          logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.2f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
+          double percent = (completed * 100.0) / patientsOfInterest.size();
+          logger.info("Progress ({}%) for Patient Resource {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
         return null;
       }).collect(Collectors.toList())).get();
@@ -173,6 +173,8 @@ public class PatientScoop {
       logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
       return;
     }
+
+    progress.set(0);
 
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
@@ -188,6 +190,10 @@ public class PatientScoop {
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
+        } finally {
+          int completed = progress.incrementAndGet();
+          double percent = (completed * 100.0) / patients.size();
+          logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patients.size());
         }
 
         this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
@@ -217,8 +223,8 @@ public class PatientScoop {
           return null;
         } finally {
           int completed = progress.incrementAndGet();
-          double percent = Math.round((completed * 100.0) / patientsOfInterest.size());
-          logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.2f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
+          double percent = (completed * 100.0) / patientsOfInterest.size();
+          logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
 
         this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());

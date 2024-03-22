@@ -1,6 +1,9 @@
 package com.lantanagroup.link;
 
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
@@ -11,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Optional;
 
 public abstract class GenericAggregator implements IReportAggregator {
@@ -20,10 +22,12 @@ public abstract class GenericAggregator implements IReportAggregator {
   @Autowired
   private ApiConfig config;
 
-  protected abstract void aggregatePatientReports(MeasureReport masterMeasureReport, Collection<MeasureReport> measureReports);
+  protected abstract void aggregatePatientReport(MeasureReport masterMeasureReport, MeasureReport measureReport);
+
+  protected abstract void finishAggregation(MeasureReport masterMeasureReport);
 
   @Override
-  public MeasureReport generate(ReportCriteria criteria, ReportContext.MeasureContext measureContext) throws ParseException {
+  public MeasureReport generate(TenantService tenantService, ReportCriteria criteria, ReportContext.MeasureContext measureContext) throws ParseException {
     // Create the master measure report
     MeasureReport masterMeasureReport = new MeasureReport();
     masterMeasureReport.setId(measureContext.getReportId());
@@ -39,8 +43,16 @@ public abstract class GenericAggregator implements IReportAggregator {
       masterMeasureReport.setMeasure(measureContext.getMeasure().getUrl());
     }
 
-    // TODO: Swap the order of aggregatePatientReports and createGroupsFromMeasure?
-    this.aggregatePatientReports(masterMeasureReport, measureContext.getPatientReports());
+    for (PatientOfInterestModel poi : measureContext.getPatientsOfInterest()) {
+      String pmrId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), poi.getId());
+      PatientMeasureReport pmr = tenantService.getPatientMeasureReport(pmrId);
+      if (pmr == null) {
+        logger.warn("Patient measure report not found in database: {}", pmrId);
+        continue;
+      }
+      this.aggregatePatientReport(masterMeasureReport, pmr.getMeasureReport());
+    }
+    this.finishAggregation(masterMeasureReport);
 
     this.createGroupsFromMeasure(masterMeasureReport, measureContext);
 

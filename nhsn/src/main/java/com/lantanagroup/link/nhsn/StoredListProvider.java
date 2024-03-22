@@ -54,9 +54,9 @@ public class StoredListProvider implements IPatientIdProvider {
     Collector<PatientOfInterestModel, ?, Map<String, PatientOfInterestModel>> deduplicator =
             Collectors.toMap(PatientOfInterestModel::toString, Function.identity(), (poi1, poi2) -> poi1);
     Map<String, PatientOfInterestModel> poiMap = context.getPatientsOfInterest().stream().collect(deduplicator);
-    context.setPatientsOfInterest(new ArrayList<>(poiMap.values()));
+    context.setInitialPatientsOfInterest(new ArrayList<>(poiMap.values()));
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      measureContext.setPatientsOfInterest(measureContext.getPatientsOfInterest().stream()
+      measureContext.setInitialPatientsOfInterest(measureContext.getPatientsOfInterest().stream()
               .collect(deduplicator)
               .values().stream()
               .map(poi -> poiMap.get(poi.toString()))

@@ -1,5 +1,9 @@
 package com.lantanagroup.link.nhsn;
 
+import com.lantanagroup.link.ReportIdHelper;
+import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.model.PatientMeasureReport;
+import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.*;
@@ -8,6 +12,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.text.ParseException;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ReportAggregatorTests {
   private Bundle getReportDefBundle() {
@@ -36,10 +43,19 @@ public class ReportAggregatorTests {
     context.getMeasure().setUrl("http://test.com/fhir/Measure/SomeMeasure");
     context.getMeasure().setVersion(version);
     context.setReportDefBundle(this.getReportDefBundle());
-    context.getPatientReportsByPatientId().put("test-patient1", this.getPatientMeasureReport("test-patient1", 1));
-    context.getPatientReportsByPatientId().put("test-patient2", this.getPatientMeasureReport("test-patient2", 2));
-    context.getPatientReportsByPatientId().put("test-patient3", this.getPatientMeasureReport("test-patient3", 0));
+    context.setReportId("abc123");
     return context;
+  }
+
+  private void addPatientOfInterest(ReportContext.MeasureContext context, TenantService tenantService, String patientId, int populationCount) {
+    PatientOfInterestModel poi = new PatientOfInterestModel();
+    poi.setReference("Patient/" + patientId);
+    poi.setId(patientId);
+    context.getPatientsOfInterest().add(poi);
+    String pmrId = ReportIdHelper.getPatientMeasureReportId(context.getReportId(), patientId);
+    PatientMeasureReport pmr = new PatientMeasureReport();
+    pmr.setMeasureReport(this.getPatientMeasureReport(patientId, populationCount));
+    when(tenantService.getPatientMeasureReport(pmrId)).thenReturn(pmr);
   }
 
   @Test
@@ -50,7 +66,7 @@ public class ReportAggregatorTests {
             "2023-08-22T00:00:00Z",
             "2023-08-22T23:59:59Z");
     ReportAggregator aggregator = new ReportAggregator();
-    MeasureReport aggregate = aggregator.generate(criteria, context);
+    MeasureReport aggregate = aggregator.generate(mock(TenantService.class), criteria, context);
     Assert.assertEquals("http://test.com/fhir/Measure/SomeMeasure", aggregate.getMeasure());
   }
 
@@ -62,7 +78,7 @@ public class ReportAggregatorTests {
             "2023-08-22T00:00:00Z",
             "2023-08-22T23:59:59Z");
     ReportAggregator aggregator = new ReportAggregator();
-    MeasureReport aggregate = aggregator.generate(criteria, context);
+    MeasureReport aggregate = aggregator.generate(mock(TenantService.class), criteria, context);
     Assert.assertEquals("http://test.com/fhir/Measure/SomeMeasure|1.0.1", aggregate.getMeasure());
   }
 
@@ -74,7 +90,11 @@ public class ReportAggregatorTests {
             "2023-08-22T00:00:00Z",
             "2023-08-22T23:59:59Z");
     ReportAggregator aggregator = new ReportAggregator();
-    MeasureReport aggregate = aggregator.generate(criteria, context);
+    TenantService tenantService = mock(TenantService.class);
+    addPatientOfInterest(context, tenantService, "test-patient1", 1);
+    addPatientOfInterest(context, tenantService, "test-patient2", 2);
+    addPatientOfInterest(context, tenantService, "test-patient3", 0);
+    MeasureReport aggregate = aggregator.generate(tenantService, criteria, context);
     Assert.assertEquals(MeasurePopulation.INITIALPOPULATION.toCode(), aggregate.getGroupFirstRep().getPopulationFirstRep().getCode().getCodingFirstRep().getCode());
     Assert.assertEquals(3, aggregate.getGroupFirstRep().getPopulationFirstRep().getCount());
   }
