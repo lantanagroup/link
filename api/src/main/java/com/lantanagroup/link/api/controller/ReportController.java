@@ -35,6 +35,7 @@ import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -397,6 +398,8 @@ public class ReportController extends BaseController {
       report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService, validator));
       report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
+      MDC.put("reportId", report.getId());
+
       // Preserve the version of the already-existing report
       if (existingReport != null) {
         report.setVersion(existingReport.getVersion());
@@ -459,6 +462,8 @@ public class ReportController extends BaseController {
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
+
+    MDC.clear();
 
     return report;
   }

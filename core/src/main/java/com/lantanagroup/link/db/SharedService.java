@@ -2,6 +2,7 @@ package com.lantanagroup.link.db;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.db.DBAppender;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.core.db.DataSourceConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -98,6 +99,10 @@ public class SharedService {
     source.setDataSource(dataSource);
     source.setContext(logCtx);
     source.start();
+
+    PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+    encoder.setContext(logCtx);
+    encoder.setPattern("%X{reportId}");
 
     DBAppender appender = new DBAppender();
     appender.setContext(logCtx);
