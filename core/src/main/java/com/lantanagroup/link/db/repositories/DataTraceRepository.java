@@ -26,8 +26,8 @@ public class DataTraceRepository {
   }
 
   public int insertAll(List<DataTrace> models) {
-    String sql = "INSERT INTO dbo.dataTrace (id, queryId, patientId, resourceType, resourceId, originalResource) " +
-            "VALUES (:id, :queryId, :patientId, :resourceType, :resourceId, :originalResource);";
+    String sql = "INSERT INTO dbo.dataTrace (id, queryId, patientId, resourceType, resourceId) " +
+            "VALUES (:id, :queryId, :patientId, :resourceType, :resourceId);";
     SqlParameterSource[] parameters = models.stream()
             .map(mapper::toParameters)
             .toArray(SqlParameterSource[]::new);
