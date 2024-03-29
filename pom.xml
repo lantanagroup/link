@@ -23,7 +23,7 @@
     <groupId>com.lantanagroup.link</groupId>
     <artifactId>link</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.3-SNAPSHOT</version>
+    <version>0.4.1-SNAPSHOT</version>
 
     <modules>
         <module>core</module>
