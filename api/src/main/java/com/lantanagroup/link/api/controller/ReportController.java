@@ -321,6 +321,7 @@ public class ReportController extends BaseController {
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
+    String currentVersion = "";
     Lock tenantLock = tenantLocks.computeIfAbsent(tenantService.getConfig().getId(), id -> new ReentrantLock());
     if (!tenantLock.tryLock()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Report in progress for tenant");
@@ -442,9 +443,12 @@ public class ReportController extends BaseController {
       this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
       logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
+      //New report generation means increment the version
+      currentVersion = String.valueOf(Integer.parseInt(this.sharedService.getCurrentMetricVersion(report.getId())) + 1);
+
       if (validate) {
         try {
-          this.validationService.validate(stopwatchManager, tenantService, report);
+          this.validationService.validate(stopwatchManager, tenantService, report, currentVersion);
           logger.info("Done validating report");
         } catch (Exception ex) {
           logger.error("Error validating report {}", report.getId(), ex);
@@ -456,7 +460,8 @@ public class ReportController extends BaseController {
       tenantLock.unlock();
     }
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(),
+            currentVersion);
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
@@ -580,7 +585,8 @@ public class ReportController extends BaseController {
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    stopwatchManager.storeMetrics(tenantId, reportId);
+    String version = this.sharedService.getCurrentMetricVersion(reportId);
+    stopwatchManager.storeMetrics(tenantId, reportId, version);
 
     tenantService.saveReport(report);
 

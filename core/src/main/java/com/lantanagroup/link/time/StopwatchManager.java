@@ -67,7 +67,7 @@ public class StopwatchManager {
     return statistics.toString();
   }
 
-  public synchronized void storeMetrics(String tenantId, String reportId) {
+  public synchronized void storeMetrics(String tenantId, String reportId, String version) {
     List<Metrics> metrics = new ArrayList<>();
     for (Map.Entry<String, List<Duration>> entry : durationsByTask.entrySet()) {
       List<Duration> durations = entry.getValue();
@@ -77,6 +77,7 @@ public class StopwatchManager {
       Metrics metric = new Metrics();
       metric.setTenantId(tenantId);
       metric.setReportId(reportId);
+      metric.setVersionNum(version);
       metric.setTaskName(task);
       metric.setCategory(category);
       metric.setTimestamp(new Date());
