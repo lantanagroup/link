@@ -447,10 +447,11 @@ public class SharedService {
     metrics.forEach(metric -> {
       try (Connection conn = this.getSQLConnection()) {
         assert conn != null;
-        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?) }");
+        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?, ?) }");
         cs.setNString("id", metric.getId().toString());
         cs.setNString("tenantId", metric.getTenantId());
         cs.setNString("reportId", metric.getReportId());
+        cs.setNString("version", metric.getVersion());
         cs.setNString("category", metric.getCategory());
         cs.setNString("taskName", metric.getTaskName());
         cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));

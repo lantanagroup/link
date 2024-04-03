@@ -321,6 +321,7 @@ public class ReportController extends BaseController {
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
+    String currentVersion = "";
     Lock tenantLock = tenantLocks.computeIfAbsent(tenantService.getConfig().getId(), id -> new ReentrantLock());
     if (!tenantLock.tryLock()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Report in progress for tenant");
@@ -456,7 +457,7 @@ public class ReportController extends BaseController {
       tenantLock.unlock();
     }
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
@@ -580,7 +581,8 @@ public class ReportController extends BaseController {
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     tenantService.saveReport(report);
 
