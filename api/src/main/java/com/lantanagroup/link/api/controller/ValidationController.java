@@ -310,9 +310,8 @@ public class ValidationController extends BaseController {
     }
 
     StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
-    String version = this.sharedService.getCurrentMetricVersion(reportId);
-    OperationOutcome outcome = this.validationService.validate(stopwatchManager, tenantService, report, version);
-    stopwatchManager.storeMetrics(tenantId, reportId, version);
+    OperationOutcome outcome = this.validationService.validate(stopwatchManager, tenantService, report);
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());

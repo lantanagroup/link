@@ -77,7 +77,7 @@ public class StopwatchManager {
       Metrics metric = new Metrics();
       metric.setTenantId(tenantId);
       metric.setReportId(reportId);
-      metric.setVersionNum(version);
+      metric.setVersion(version);
       metric.setTaskName(task);
       metric.setCategory(category);
       metric.setTimestamp(new Date());

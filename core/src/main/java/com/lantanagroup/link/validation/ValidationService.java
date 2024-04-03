@@ -39,7 +39,7 @@ public class ValidationService {
   @Autowired
   private EventService eventService;
 
-  public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report, String version) {
+  public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
     OperationOutcome outcome;
 
     Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService);
@@ -86,7 +86,7 @@ public class ValidationService {
     String category = Constants.VALIDATION_ISSUE_CATEGORY;
     metric.setTenantId(tenantService.getConfig().getId());
     metric.setReportId(report.getId());
-    metric.setVersionNum(version);
+    metric.setVersion(report.getVersion());
     metric.setTaskName(task);
     metric.setCategory(category);
     metric.setTimestamp(new Date());

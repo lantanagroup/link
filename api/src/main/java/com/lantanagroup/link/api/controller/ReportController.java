@@ -443,12 +443,9 @@ public class ReportController extends BaseController {
       this.sharedService.audit(user, request, tenantService, AuditTypes.Generate, String.format("Generated report %s", report.getId()));
       logger.info("Done generating report {}, continuing to bundle and validate...", report.getId());
 
-      //New report generation means increment the version
-      currentVersion = String.valueOf(Integer.parseInt(this.sharedService.getCurrentMetricVersion(report.getId())) + 1);
-
       if (validate) {
         try {
-          this.validationService.validate(stopwatchManager, tenantService, report, currentVersion);
+          this.validationService.validate(stopwatchManager, tenantService, report);
           logger.info("Done validating report");
         } catch (Exception ex) {
           logger.error("Error validating report {}", report.getId(), ex);
@@ -460,8 +457,7 @@ public class ReportController extends BaseController {
       tenantLock.unlock();
     }
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(),
-            currentVersion);
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
@@ -585,8 +581,8 @@ public class ReportController extends BaseController {
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    String version = this.sharedService.getCurrentMetricVersion(reportId);
-    stopwatchManager.storeMetrics(tenantId, reportId, version);
+
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     tenantService.saveReport(report);
 

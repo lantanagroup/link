@@ -89,7 +89,6 @@ IF OBJECT_ID(N'dbo.metrics', N'U') IS NULL
             id           UNIQUEIDENTIFIER NOT NULL PRIMARY KEY DEFAULT NEWID(),
             tenantId     NVARCHAR(128)    NOT NULL,
             reportId     NVARCHAR(128)    NOT NULL,
-            versionNum   NVARCHAR(128),
             category     NVARCHAR(128),
             taskName     NVARCHAR(128),
             timestamp    NVARCHAR(128) DEFAULT GETDATE(),
@@ -122,15 +121,14 @@ CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
     @id UNIQUEIDENTIFIER,
     @tenantId NVARCHAR(128),
     @reportId NVARCHAR(128),
-    @versionNum NVARCHAR(128),
     @category NVARCHAR(128),
     @taskName NVARCHAR(128),
     @timestamp NVARCHAR(128),
     @data NVARCHAR(MAX)
 AS
 BEGIN
-    INSERT INTO dbo.metrics(id, tenantId, reportId, versionNum, category, taskName, timestamp, data)
-    VALUES(@id, @tenantId, @reportId, @versionNum, @category, @taskName, @timestamp, @data)
+    INSERT INTO dbo.metrics(id, tenantId, reportId, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @category, @taskName, @timestamp, @data)
 END
 GO
 
@@ -279,6 +277,35 @@ BEGIN
         SET measures = @measures
         WHERE packageId = @packageId
     END
+END
+GO
+
+-- LNK-1547: Adding a column
+IF NOT EXISTS (SELECT *
+               FROM INFORMATION_SCHEMA.COLUMNS
+               WHERE TABLE_SCHEMA = 'dbo'
+                 AND TABLE_NAME = 'metrics'
+                 AND COLUMN_NAME = 'version')
+    BEGIN
+        ALTER TABLE dbo.metrics
+            ADD version NVARCHAR(128);
+    END
+GO
+
+-- LNK-1359
+CREATE OR ALTER PROCEDURE [dbo].[saveMetrics]
+    @id UNIQUEIDENTIFIER,
+    @tenantId NVARCHAR(128),
+    @reportId NVARCHAR(128),
+    @version NVARCHAR(128),
+    @category NVARCHAR(128),
+    @taskName NVARCHAR(128),
+    @timestamp NVARCHAR(128),
+    @data NVARCHAR(MAX)
+AS
+BEGIN
+    INSERT INTO dbo.metrics(id, tenantId, reportId, version, category, taskName, timestamp, data)
+    VALUES(@id, @tenantId, @reportId, @version, @category, @taskName, @timestamp, @data)
 END
 GO
 

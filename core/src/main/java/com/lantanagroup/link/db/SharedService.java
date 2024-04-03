@@ -451,7 +451,7 @@ public class SharedService {
         cs.setNString("id", metric.getId().toString());
         cs.setNString("tenantId", metric.getTenantId());
         cs.setNString("reportId", metric.getReportId());
-        cs.setNString("versionNum", metric.getVersionNum());
+        cs.setNString("version", metric.getVersion());
         cs.setNString("category", metric.getCategory());
         cs.setNString("taskName", metric.getTaskName());
         cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
@@ -521,30 +521,6 @@ public class SharedService {
     } catch (SQLException | NullPointerException | JsonProcessingException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public String getCurrentMetricVersion(String reportId){
-
-    try (Connection conn = this.getSQLConnection()) {
-      assert conn != null;
-
-      StringBuilder sql = new StringBuilder();
-      sql.append("SELECT MAX(versionNum) FROM [dbo].[metrics] WHERE reportId = ?");
-
-      PreparedStatement ps = conn.prepareStatement(sql.toString());
-      ps.setNString(1, reportId);
-
-      ResultSet rs = ps.executeQuery();
-      String versionNumber = "";
-      while(rs.next()){
-        versionNumber = rs.getString(1);
-      }
-      //Default to 0 if no previous versions to pull from. Will only increment up in ReportController.generateRequest
-      return versionNumber == null ? "0" : versionNumber;
-    } catch(SQLException | NullPointerException e){
-      throw new RuntimeException(e);
-    }
-
   }
 
   public List<Audit> getAudits() {
