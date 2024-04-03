@@ -1,0 +1,2897 @@
+{
+  "resourceType": "Bundle",
+  "meta": {
+    "profile": [
+      "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle"
+    ],
+    "tag": [
+      {
+        "system": "https://nhsnlink.org",
+        "code": "report",
+        "display": "Report"
+      }
+    ]
+  },
+  "identifier": {
+    "system": "urn:ietf:rfc:3986",
+    "value": "urn:uuid:fb9bada2-f64d-4217-9e09-87030cef931f"
+  },
+  "type": "collection",
+  "timestamp": "2023-11-16T14:27:57.128+00:00",
+  "entry": [
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Organization/e0a344da-bc1c-445b-add6-4a7d9015f3b5",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "e0a344da-bc1c-445b-add6-4a7d9015f3b5",
+        "meta": {
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-organization"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://www.cdc.gov/nhsn/OrgID",
+            "value": "ucdavis"
+          }
+        ],
+        "active": true,
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ]
+          }
+        ],
+        "name": "UCDavis Tenant",
+        "telecom": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+                "valueCode": "unknown"
+              }
+            ]
+          }
+        ],
+        "address": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+                "valueCode": "unknown"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Device/eadcc644-4f63-42d9-92c1-60e76e5210d1",
+      "resource": {
+        "resourceType": "Device",
+        "id": "eadcc644-4f63-42d9-92c1-60e76e5210d1",
+        "meta": {
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-submitting-device"
+          ]
+        },
+        "deviceName": [
+          {
+            "name": "NHSNLink",
+            "type": "user-friendly-name"
+          }
+        ],
+        "version": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "build"
+                }
+              ]
+            },
+            "component": {
+              "value": "api"
+            },
+            "value": "dev"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "version"
+                }
+              ]
+            },
+            "component": {
+              "value": "cqf-ruler"
+            },
+            "value": "CQF-Ruler 0.14.0"
+          }
+        ],
+        "property": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-FixResourceId"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-CodeSystemCleanup"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-ContainedResourceCleanup"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-CopyLocationIdentifierToType"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "event"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "AfterPatientDataQuery-EncounterStatusTransformer"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "code": "concept-map"
+                }
+              ]
+            },
+            "valueCode": [
+              {
+                "coding": [
+                  {
+                    "code": "ucdavis-epic-encounter-class"
+                  }
+                ],
+                "text": "ucdavis-epic-encounter-class"
+              },
+              {
+                "coding": [
+                  {
+                    "code": "ucdavis-epic-encounter-type"
+                  }
+                ],
+                "text": "ucdavis-epic-encounter-type"
+              },
+              {
+                "coding": [
+                  {
+                    "code": "ucdavis-epic-location-type"
+                  }
+                ],
+                "text": "{{bundling.name}} Location Type"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Binary/queryPlan",
+      "resource": {
+        "resourceType": "Binary",
+        "id": "queryPlan",
+        "contentType": "text/yml",
+        "data": "TkhTTkdseWNlbWljQ29udHJvbEh5cG9nbHljZW1pY0luaXRpYWxQb3B1bGF0aW9uOiAhIWNvbS5sYW50YW5hZ3JvdXAubGluay5kYi5tb2RlbC50ZW5hbnQuUXVlcnlQbGFuCiAgaW5pdGlhbDoKICAtIGVhcmx5RXhpdDogdHJ1ZQogICAgcGFyYW1ldGVyczoKICAgIC0ge2Zvcm1hdDogbnVsbCwgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBwYXRpZW50LCBwYWdlZDogMCwgdmFyaWFibGU6IHBhdGllbnRJZH0KICAgIC0ge2Zvcm1hdDogZ2UlcywgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBkYXRlLCBwYWdlZDogMCwgdmFyaWFibGU6IGxvb2tiYWNrU3RhcnR9CiAgICAtIHtmb3JtYXQ6IGxlJXMsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogZGF0ZSwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBwZXJpb2RFbmR9CiAgICByZWZlcmVuY2VzOiBudWxsCiAgICByZXNvdXJjZVR5cGU6IEVuY291bnRlcgogIC0gZWFybHlFeGl0OiBmYWxzZQogICAgcGFyYW1ldGVyczoKICAgIC0ge2Zvcm1hdDogbnVsbCwgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBwYXRpZW50LCBwYWdlZDogMCwgdmFyaWFibGU6IHBhdGllbnRJZH0KICAgIC0ge2Zvcm1hdDogZ2UlcywgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBhdXRob3JlZG9uLCBwYWdlZDogMCwgdmFyaWFibGU6IGxvb2tiYWNrU3RhcnR9CiAgICAtIHtmb3JtYXQ6IGxlJXMsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogYXV0aG9yZWRvbiwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBwZXJpb2RFbmR9CiAgICByZWZlcmVuY2VzOiBudWxsCiAgICByZXNvdXJjZVR5cGU6IE1lZGljYXRpb25SZXF1ZXN0CiAgLSBlYXJseUV4aXQ6IGZhbHNlCiAgICBwYXJhbWV0ZXJzOiBbXQogICAgcmVmZXJlbmNlczoge29wZXJhdGlvblR5cGU6IFJFQUQsIHBhZ2VkOiAwfQogICAgcmVzb3VyY2VUeXBlOiBMb2NhdGlvbgogIC0gZWFybHlFeGl0OiBmYWxzZQogICAgcGFyYW1ldGVyczogW10KICAgIHJlZmVyZW5jZXM6IHtvcGVyYXRpb25UeXBlOiBTRUFSQ0gsIHBhZ2VkOiAxMDB9CiAgICByZXNvdXJjZVR5cGU6IE1lZGljYXRpb24KICBsb29rYmFjazogUDBECiAgc3VwcGxlbWVudGFsOgogIC0gZWFybHlFeGl0OiBmYWxzZQogICAgcGFyYW1ldGVyczoKICAgIC0ge2Zvcm1hdDogbnVsbCwgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBwYXRpZW50LCBwYWdlZDogMCwgdmFyaWFibGU6IHBhdGllbnRJZH0KICAgIHJlZmVyZW5jZXM6IG51bGwKICAgIHJlc291cmNlVHlwZTogQ29uZGl0aW9uCiAgLSBlYXJseUV4aXQ6IGZhbHNlCiAgICBwYXJhbWV0ZXJzOgogICAgLSB7Zm9ybWF0OiBudWxsLCBpZHM6IG51bGwsIGxpdGVyYWw6IG51bGwsIG5hbWU6IHBhdGllbnQsIHBhZ2VkOiAwLCB2YXJpYWJsZTogcGF0aWVudElkfQogICAgcmVmZXJlbmNlczogbnVsbAogICAgcmVzb3VyY2VUeXBlOiBDb3ZlcmFnZQogIC0gZWFybHlFeGl0OiBmYWxzZQogICAgcGFyYW1ldGVyczoKICAgIC0ge2Zvcm1hdDogbnVsbCwgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBwYXRpZW50LCBwYWdlZDogMCwgdmFyaWFibGU6IHBhdGllbnRJZH0KICAgIC0ge2Zvcm1hdDogZ2UlcywgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBkYXRlLCBwYWdlZDogMCwgdmFyaWFibGU6IGxvb2tiYWNrU3RhcnR9CiAgICAtIHtmb3JtYXQ6IGxlJXMsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogZGF0ZSwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBwZXJpb2RFbmR9CiAgICAtIHtmb3JtYXQ6IG51bGwsIGlkczogbnVsbCwgbGl0ZXJhbDogbGFib3JhdG9yeSwgbmFtZTogY2F0ZWdvcnksIHBhZ2VkOiAwLCB2YXJpYWJsZTogbnVsbH0KICAgIHJlZmVyZW5jZXM6IG51bGwKICAgIHJlc291cmNlVHlwZTogT2JzZXJ2YXRpb24KICAtIGVhcmx5RXhpdDogZmFsc2UKICAgIHBhcmFtZXRlcnM6CiAgICAtIHtmb3JtYXQ6IG51bGwsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogcGF0aWVudCwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBwYXRpZW50SWR9CiAgICAtIHtmb3JtYXQ6IGdlJXMsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogZGF0ZSwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBsb29rYmFja1N0YXJ0fQogICAgLSB7Zm9ybWF0OiBsZSVzLCBpZHM6IG51bGwsIGxpdGVyYWw6IG51bGwsIG5hbWU6IGRhdGUsIHBhZ2VkOiAwLCB2YXJpYWJsZTogcGVyaW9kRW5kfQogICAgcmVmZXJlbmNlczogbnVsbAogICAgcmVzb3VyY2VUeXBlOiBQcm9jZWR1cmUKICAtIGVhcmx5RXhpdDogZmFsc2UKICAgIHBhcmFtZXRlcnM6CiAgICAtIHtmb3JtYXQ6IG51bGwsIGlkczogbnVsbCwgbGl0ZXJhbDogbnVsbCwgbmFtZTogcGF0aWVudCwgcGFnZWQ6IDAsIHZhcmlhYmxlOiBwYXRpZW50SWR9CiAgICAtIHtmb3JtYXQ6IG51bGwsIGlkczogRW5jb3VudGVyLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBlbmNvdW50ZXIsIHBhZ2VkOiAxMDAsIHZhcmlhYmxlOiBudWxsfQogICAgcmVmZXJlbmNlczogbnVsbAogICAgcmVzb3VyY2VUeXBlOiBTZXJ2aWNlUmVxdWVzdAogIC0gZWFybHlFeGl0OiBmYWxzZQogICAgcGFyYW1ldGVyczoKICAgIC0ge2Zvcm1hdDogbnVsbCwgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBwYXRpZW50LCBwYWdlZDogMCwgdmFyaWFibGU6IHBhdGllbnRJZH0KICAgIC0ge2Zvcm1hdDogZ2UlcywgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBjb2xsZWN0ZWQsIHBhZ2VkOiAwLCB2YXJpYWJsZTogbG9va2JhY2tTdGFydH0KICAgIC0ge2Zvcm1hdDogbGUlcywgaWRzOiBudWxsLCBsaXRlcmFsOiBudWxsLCBuYW1lOiBjb2xsZWN0ZWQsIHBhZ2VkOiAwLCB2YXJpYWJsZTogcGVyaW9kRW5kfQogICAgcmVmZXJlbmNlczogbnVsbAogICAgcmVzb3VyY2VUeXBlOiBTcGVjaW1lbgo="
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/List/d7353ecc-5a4a-407d-bb5c-05e3fa5557c9",
+      "resource": {
+        "resourceType": "List",
+        "id": "d7353ecc-5a4a-407d-bb5c-05e3fa5557c9",
+        "meta": {
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-patient-list-applicable-period-extension",
+            "valuePeriod": {
+              "start": "2022-09-01T00:00:00.000Z",
+              "end": "2022-09-30T23:59:59.000Z"
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "system": "https://nhsnlink.org",
+            "value": "NHSNGlycemicControlHypoglycemicInitialPopulation"
+          }
+        ],
+        "status": "current",
+        "mode": "snapshot",
+        "entry": [
+          {
+            "item": {
+              "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MeasureReport/c8848af4-e11b1a59",
+      "resource": {
+        "resourceType": "MeasureReport",
+        "id": "c8848af4-e11b1a59",
+        "meta": {
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/subjectlist-measurereport"
+          ]
+        },
+        "contained": [
+          {
+            "resourceType": "List",
+            "id": "1",
+            "status": "current",
+            "mode": "snapshot",
+            "entry": [
+              {
+                "item": {
+                  "reference": "MeasureReport/c8848af4-e11b1a59-18bf1cde"
+                }
+              }
+            ]
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/measure-version",
+            "valueString": "0.0.017"
+          }
+        ],
+        "status": "complete",
+        "type": "subject-list",
+        "measure": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation|0.0.017",
+        "reporter": {
+          "reference": "Organization/e0a344da-bc1c-445b-add6-4a7d9015f3b5"
+        },
+        "period": {
+          "start": "2022-09-01T00:00:00+00:00",
+          "end": "2022-09-30T23:59:59+00:00"
+        },
+        "group": [
+          {
+            "population": [
+              {
+                "code": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+                      "code": "initial-population",
+                      "display": "Initial Population"
+                    }
+                  ]
+                },
+                "count": 1,
+                "subjectResults": {
+                  "reference": "#1"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MeasureReport/c8848af4-e11b1a59-18bf1cde",
+      "resource": {
+        "resourceType": "MeasureReport",
+        "id": "c8848af4-e11b1a59-18bf1cde",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/extension-measureScoring",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/measure-scoring",
+                  "code": "cohort",
+                  "display": "Cohort"
+                }
+              ]
+            }
+          }
+        ],
+        "status": "complete",
+        "type": "individual",
+        "measure": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Measure/NHSNGlycemicControlHypoglycemicInitialPopulation",
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3"
+        },
+        "date": "2023-11-16T14:27:30+00:00",
+        "reporter": {
+          "reference": "Organization/e0a344da-bc1c-445b-add6-4a7d9015f3b5"
+        },
+        "period": {
+          "start": "2022-09-01T00:00:00+00:00",
+          "end": "2022-09-30T23:59:59+00:00"
+        },
+        "improvementNotation": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/measure-improvement-notation",
+              "code": "increase"
+            }
+          ]
+        },
+        "group": [
+          {
+            "population": [
+              {
+                "code": {
+                  "coding": [
+                    {
+                      "system": "http://terminology.hl7.org/CodeSystem/measure-population",
+                      "code": "initial-population",
+                      "display": "Initial Population"
+                    }
+                  ]
+                },
+                "count": 1
+              }
+            ],
+            "measureScore": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+                  "valueCode": "unknown"
+                }
+              ]
+            }
+          }
+        ],
+        "evaluatedResource": [
+          {
+            "reference": "Condition/hash-ad10167465f1ad15053f815577a42b7f1c39b34f"
+          },
+          {
+            "reference": "Medication/hash-302b94c7060b03c7fb43fbb969b30acf85d669cb"
+          },
+          {
+            "reference": "Observation/hash-20d5572549ed8db0155bf014fe54b4ce2cfd7580"
+          },
+          {
+            "reference": "Coverage/hash-b01528e3fd5b487c86f0919c598f1f4f106cc62a"
+          },
+          {
+            "reference": "Observation/hash-970aa187ed8258463750a387ad09b3e315305a6e"
+          },
+          {
+            "reference": "Condition/e2KlGEBNnAivqoLOB8a8yaOGR1xWcQGZyNY-TFHcBIrQ3"
+          },
+          {
+            "reference": "Location/eDBJk5l9wvYtFV1k7axqRJw3"
+          },
+          {
+            "reference": "Location/evblJInhSlK6TP0Dy-dJ1Px242zkVA470IoliWvESgYw3"
+          },
+          {
+            "reference": "MedicationRequest/edYJaVV0bqytZCwEhG7QzTtbh9hxLS1M-pr7n9AWPOgc3"
+          },
+          {
+            "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3"
+          },
+          {
+            "reference": "Observation/hash-21801ba2e8c259bd2b53f145ae61fe29c30fdd40"
+          },
+          {
+            "reference": "MedicationRequest/eEn3cjQ44kSUo4hRsWwq1NUT5SEG823h2vEViT.BsomA3"
+          },
+          {
+            "reference": "Location/eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3"
+          },
+          {
+            "reference": "Medication/hash-17539f19e407e714c71751e649d3e6103de2c794"
+          },
+          {
+            "reference": "Condition/hash-2845972ed274effdcb5d8cd42fb1860c0e199e71"
+          },
+          {
+            "reference": "Observation/hash-f76afedfd8e2e0affdd3efa2381b67326ec225ee"
+          },
+          {
+            "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3"
+          },
+          {
+            "reference": "Observation/hash-f0d01cd352bbcba43c881c0b5d55ae294be3faef"
+          },
+          {
+            "reference": "Observation/hash-2128076cb99ae80f52b8aabab2d4c104818339b2"
+          },
+          {
+            "reference": "Location/eWNn8ipSQ1jAdwbQhgc2Kig3"
+          },
+          {
+            "reference": "MedicationRequest/eM0nwAAOnSe0zh-aSe639kXSGQq4Fcygajx5-uIdjNCI3"
+          },
+          {
+            "reference": "Medication/hash-7219377c8cc906ad43fe676ced55dede2ff6589f"
+          },
+          {
+            "reference": "Observation/hash-b66b3cfef26ce62de401e1383e263ea03a5465af"
+          },
+          {
+            "reference": "Condition/hash-b1ea2d5c0f41757f32aff487b556b4b200f1866f"
+          },
+          {
+            "reference": "Observation/hash-08cbff401f6c827d5e8157415dc192d7975eed1d"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Condition/hash-b1ea2d5c0f41757f32aff487b556b4b200f1866f",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "hash-b1ea2d5c0f41757f32aff487b556b4b200f1866f",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:24+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-condition"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "e1o2hFU9zitv4yuRLYHq7nYdj0Napq1PcWlckLEw-ofbOPox5HbNElSg93NgtvcBUPMu8lEJ1w067KxPm9IKQcA3"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "encounter-diagnosis",
+                "display": "Encounter Diagnosis"
+              }
+            ],
+            "text": "Encounter Diagnosis"
+          },
+          {
+            "coding": [
+              {
+                "system": "http://open.epic.com/FHIR/StructureDefinition/condition-category",
+                "code": "visit-diagnosis",
+                "display": "Visit Diagnosis"
+              }
+            ],
+            "text": "Visit Diagnosis"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "302866003",
+              "display": "Hypoglycemia (disorder)"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E16.2",
+              "display": "Hypoglycemia"
+            }
+          ],
+          "text": "Hypoglycemia"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:08+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "White"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/patient-genderIdentity",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/gender-identity",
+                  "code": "male",
+                  "display": "male"
+                }
+              ]
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "M"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:2.16.840.1.113883.4.1",
+            "_value": {
+              "extension": [
+                {
+                  "url": "http://hl7.org/fhir/StructureDefinition/rendered-value",
+                  "valueString": "xxx-xx-5845"
+                }
+              ]
+            }
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "CEID"
+            },
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.688884.100",
+            "value": "UCD5JBP579R3WXV"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "EPI"
+            },
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.5.737384.0",
+            "value": "E3193791"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "EXTERNAL"
+            },
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698084",
+            "value": "Z3310848"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "FHIR"
+            },
+            "system": "http://open.epic.com/FHIR/StructureDefinition/patient-dstu2-fhir-id",
+            "value": "T.MDxGXLj8VtkgBYVOHwBHKpin8IRiw.2clxrWvfu6.4B"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "FHIR STU3"
+            },
+            "system": "http://open.epic.com/FHIR/StructureDefinition/patient-fhir-id",
+            "value": "e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "INTERNAL"
+            },
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698084",
+            "value": "  Z3310848"
+          },
+          {
+            "use": "usual",
+            "type": {
+              "text": "MRN"
+            },
+            "system": "urn:oid:2.16.840.1.113883.3.16.100.1",
+            "value": "9302129"
+          },
+          {
+            "use": "usual",
+            "system": "https://open.epic.com/FHIR/StructureDefinition/PayerMemberId",
+            "value": "123123123"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "text": "Mildandmoderate Xxtesthypo",
+            "family": "Xxtesthypo",
+            "given": [
+              "Mildandmoderate"
+            ]
+          },
+          {
+            "use": "usual",
+            "text": "Mildandmoderate Xxtesthypo",
+            "family": "Xxtesthypo",
+            "given": [
+              "Mildandmoderate"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "916-555-1919",
+            "use": "home",
+            "rank": 1
+          },
+          {
+            "system": "phone",
+            "value": "916-555-1313",
+            "use": "work",
+            "rank": 2
+          },
+          {
+            "system": "phone",
+            "value": "916-555-7979",
+            "use": "mobile",
+            "rank": 3
+          },
+          {
+            "system": "email",
+            "value": "test@ucdavis.edu",
+            "rank": 1
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1976-01-07",
+        "deceasedBoolean": false,
+        "address": [
+          {
+            "use": "old",
+            "line": [
+              "123 Sesame St"
+            ],
+            "city": "Lansing",
+            "state": "MI",
+            "postalCode": "48864",
+            "country": "US"
+          },
+          {
+            "use": "old",
+            "line": [
+              "123 Sesame St"
+            ],
+            "city": "OKEMOS",
+            "district": "INGHAM",
+            "state": "MI",
+            "postalCode": "48864",
+            "country": "US"
+          },
+          {
+            "use": "home",
+            "line": [
+              "123 Sesame St"
+            ],
+            "city": "OKEMOS",
+            "district": "INGHAM",
+            "state": "MI",
+            "postalCode": "48864",
+            "country": "US"
+          }
+        ],
+        "contact": [
+          {
+            "relationship": [
+              {
+                "coding": [
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v2-0131",
+                    "code": "C",
+                    "display": "Emergency Contact"
+                  },
+                  {
+                    "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.827665.1000",
+                    "code": "12",
+                    "display": "FRIEND"
+                  }
+                ],
+                "text": "FRIEND"
+              }
+            ],
+            "name": {
+              "use": "usual",
+              "text": "Takekawa,Paul"
+            },
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "916-555-4646",
+                "use": "mobile"
+              }
+            ]
+          },
+          {
+            "relationship": [
+              {
+                "coding": [
+                  {
+                    "system": "http://terminology.hl7.org/CodeSystem/v2-0131",
+                    "code": "E",
+                    "display": "Employer"
+                  }
+                ]
+              }
+            ],
+            "telecom": [
+              {
+                "system": "phone",
+                "value": "916-737-5776",
+                "use": "work"
+              }
+            ],
+            "address": {
+              "use": "work",
+              "line": [
+                "1889 ALHAMBRA BLVD"
+              ],
+              "city": "SACRAMENTO",
+              "state": "CA",
+              "postalCode": "95816"
+            },
+            "organization": {
+              "display": "Midtown Deli"
+            }
+          }
+        ],
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en",
+                  "display": "English"
+                }
+              ],
+              "text": "English"
+            },
+            "preferred": true
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Location/eDBJk5l9wvYtFV1k7axqRJw3",
+      "resource": {
+        "resourceType": "Location",
+        "id": "eDBJk5l9wvYtFV1k7axqRJw3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:13+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-location"
+          ]
+        },
+        "identifier": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/sid/us-tin",
+                  "code": "TAX"
+                }
+              ],
+              "text": "Tax ID Number"
+            },
+            "value": "680334324"
+          },
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/sid/us-tin",
+                  "code": "TAX"
+                }
+              ],
+              "text": "Tax ID Number"
+            },
+            "value": "680344702"
+          },
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.696570",
+            "value": "100"
+          }
+        ],
+        "status": "active",
+        "name": "UC Davis Health",
+        "mode": "instance",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.696570",
+                "code": "100"
+              }
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "916-734-2011",
+            "rank": 1
+          }
+        ],
+        "address": {
+          "line": [
+            "1651 Stockton Blvd"
+          ],
+          "city": "Sacramento",
+          "state": "CALIFORNIA",
+          "postalCode": "95817"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Medication/hash-17539f19e407e714c71751e649d3e6103de2c794",
+      "resource": {
+        "resourceType": "Medication",
+        "id": "hash-17539f19e407e714c71751e649d3e6103de2c794",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:17+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medication"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "eidGBu2ibky6xUDdqjtmkQGwFRq1.YumBaq8mVetlUg.2MXHBM7gOcY3SS6WRhHpoaYYjr0L-0lhfYwzHABvv23-EXsPnfONeg0gPQaWWc5Q3"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698288",
+            "value": "26024"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "A10BA02"
+            },
+            {
+              "system": "urn:oid:2.16.840.1.113883.6.208",
+              "code": "40974"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "6809"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "151825"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "151827"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "152161"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "235743"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "405304"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "541766"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "583192"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "645109"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "861004"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "861006"
+            }
+          ],
+          "text": "METFORMIN 1,000 MG TABLET"
+        },
+        "form": {
+          "coding": [
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.698288.310",
+              "code": "Tab",
+              "display": "Tablet"
+            }
+          ],
+          "text": "Tablet"
+        },
+        "ingredient": [
+          {
+            "itemCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://www.whocc.no/atc",
+                  "code": "A10BA02"
+                },
+                {
+                  "system": "urn:oid:2.16.840.1.113883.6.208",
+                  "code": "40974"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "6809"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "151825"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "151827"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "152161"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "235743"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "405304"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "541766"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "583192"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "645109"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "861004"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "861006"
+                }
+              ],
+              "text": "METFORMIN 1,000 MG TABLET"
+            },
+            "strength": {
+              "numerator": {
+                "value": 1000,
+                "unit": "mg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mg"
+              },
+              "denominator": {
+                "value": 1000,
+                "unit": "mg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mg"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Observation/hash-08cbff401f6c827d5e8157415dc192d7975eed1d",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "hash-08cbff401f6c827d5e8157415dc192d7975eed1d",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:26+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-lab-observation"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "eMSH2.ySXgy4y4d1JPa5kM-FvBOITA4buyODwv-CwuzDn5cfMrpKzMZZuSOIDgl-z3"
+          }
+        ],
+        "basedOn": [
+          {
+            "identifier": {
+              "use": "usual",
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.798268",
+              "value": "280811611"
+            },
+            "display": "POC GLUCOSE PRN"
+          }
+        ],
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ],
+            "text": "Laboratory"
+          },
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.798268.30",
+                "code": "POC",
+                "display": "POC"
+              }
+            ],
+            "text": "POC"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2340-8",
+              "display": "Glucose [Mass/volume] in Blood by Automated test strip"
+            },
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.5.737384.11",
+              "code": "POCP000004"
+            },
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.768282",
+              "code": "2168",
+              "display": "POC GLUCOSE"
+            }
+          ],
+          "text": "POC GLUCOSE"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        },
+        "effectiveDateTime": "2022-09-08T00:25:00Z",
+        "issued": "2022-09-08T02:03:04Z",
+        "valueQuantity": {
+          "value": 123,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "A",
+                "display": "Abnormal"
+              }
+            ],
+            "text": "Abnormal"
+          }
+        ],
+        "specimen": {
+          "reference": "Specimen/e4kuNJyQDL8WQealYCM5Ur4IZHzxJPSKBsFZ0PTL2BZE3",
+          "display": "Specimen"
+        },
+        "referenceRange": [
+          {
+            "low": {
+              "value": 70,
+              "unit": "mg/dL",
+              "system": "http://unitsofmeasure.org",
+              "code": "mg/dL"
+            },
+            "high": {
+              "value": 99,
+              "unit": "mg/dL",
+              "system": "http://unitsofmeasure.org",
+              "code": "mg/dL"
+            },
+            "text": "70 - 99 mg/dL"
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Location/evblJInhSlK6TP0Dy-dJ1Px242zkVA470IoliWvESgYw3",
+      "resource": {
+        "resourceType": "Location",
+        "id": "evblJInhSlK6TP0Dy-dJ1Px242zkVA470IoliWvESgYw3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:12+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-location"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://open.epic.com/fhir/extensions/specialty",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+                  "code": "17",
+                  "display": "Emergency Department"
+                }
+              ]
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.686980",
+            "value": "100001090"
+          }
+        ],
+        "status": "active",
+        "name": "EMERGENCY - PAVILION",
+        "alias": [
+          "ED",
+          "EDPAV"
+        ],
+        "mode": "instance",
+        "type": [
+          {
+            "coding": [
+              {
+                "extension": [
+                  {
+                    "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-mapped-concept-extension",
+                    "valueCoding": {
+                      "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.686980",
+                      "code": "100001090"
+                    }
+                  }
+                ],
+                "system": "https://www.cdc.gov/nhsn/cdaportal/terminology/codesystem/hsloc.html",
+                "code": "1104-9\n1061-1\n1108-0"
+              }
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "916-734-3790",
+            "rank": 1
+          },
+          {
+            "system": "fax",
+            "value": "916-703-6549"
+          }
+        ],
+        "address": {
+          "line": [
+            "2315 Stockton Boulevard"
+          ],
+          "city": "Sacramento",
+          "state": "CALIFORNIA",
+          "postalCode": "95817-2201"
+        },
+        "managingOrganization": {
+          "reference": "Organization/eZ1rqc-IsgVIl39roCcoVMw3",
+          "display": "UC Davis Health Hospital"
+        },
+        "partOf": {
+          "reference": "Location/eUd.12yskXg36OKrV18QBpQ3",
+          "display": "UC Davis Health Hospital"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Location/eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3",
+      "resource": {
+        "resourceType": "Location",
+        "id": "eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:12+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-location"
+          ]
+        },
+        "extension": [
+          {
+            "url": "https://open.epic.com/fhir/extensions/specialty",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.688867.4150",
+                  "code": "10",
+                  "display": "Cardiology"
+                }
+              ]
+            }
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.686980",
+            "value": "100001011"
+          }
+        ],
+        "status": "active",
+        "name": "D6 CARDIOLOGY",
+        "mode": "instance",
+        "type": [
+          {
+            "coding": [
+              {
+                "extension": [
+                  {
+                    "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-mapped-concept-extension",
+                    "valueCoding": {
+                      "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.686980",
+                      "code": "100001011"
+                    }
+                  }
+                ],
+                "system": "https://www.cdc.gov/nhsn/cdaportal/terminology/codesystem/hsloc.html",
+                "code": "1208-8"
+              }
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "916-703-3060",
+            "rank": 1
+          },
+          {
+            "system": "fax",
+            "value": "916-703-3065"
+          }
+        ],
+        "address": {
+          "line": [
+            "2315 Stockton Boulevard"
+          ],
+          "city": "Sacramento",
+          "state": "CALIFORNIA",
+          "postalCode": "95817-2201"
+        },
+        "managingOrganization": {
+          "reference": "Organization/eZ1rqc-IsgVIl39roCcoVMw3",
+          "display": "UC Davis Health Hospital"
+        },
+        "partOf": {
+          "reference": "Location/eUd.12yskXg36OKrV18QBpQ3",
+          "display": "UC Davis Health Hospital"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:10+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-encounter"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-mapped-concept-extension",
+              "valueCoding": {
+                "system": "urn:oid:1.2.840.114350.1.72.1.7.7.10.696784.13260",
+                "code": "6",
+                "display": "Discharge"
+              }
+            }
+          ],
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "IMP",
+          "display": "inpatient"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "extension": [
+                  {
+                    "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-mapped-concept-extension",
+                    "valueCoding": {
+                      "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.10110",
+                      "code": "1",
+                      "display": "Inpatient"
+                    }
+                  }
+                ],
+                "system": "http://snomed.info/sct",
+                "code": "32485007",
+                "display": "Hospital admission (procedure)"
+              }
+            ],
+            "text": "Inpatient"
+          },
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.30",
+                "code": "3",
+                "display": "Hospital Encounter"
+              }
+            ],
+            "text": "Hospital Encounter"
+          },
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.18875",
+                "code": "1",
+                "display": "Emergency Admission"
+              }
+            ],
+            "text": "Emergency Admission"
+          }
+        ],
+        "serviceType": {
+          "coding": [
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.18886",
+              "code": "23",
+              "display": "(A) Cardiology"
+            }
+          ],
+          "text": "(A) Cardiology"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "participant": [
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "extension": [
+                      {
+                        "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension",
+                        "valueUri": "http://hl7.org/fhir/v3/ParticipationType"
+                      }
+                    ],
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "ADM",
+                    "display": "admitter"
+                  }
+                ],
+                "text": "admitter"
+              }
+            ],
+            "individual": {
+              "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+              "type": "Practitioner",
+              "display": "Michael Fac-Phy Ucdobrien"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "extension": [
+                      {
+                        "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension",
+                        "valueUri": "http://hl7.org/fhir/v3/ParticipationType"
+                      }
+                    ],
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "DIS",
+                    "display": "discharger"
+                  }
+                ],
+                "text": "discharger"
+              }
+            ],
+            "individual": {
+              "reference": "Practitioner/eTA2R66i-1Vlqom3Hv0eH1A3",
+              "type": "Practitioner",
+              "display": "Hershan S Johl, MD"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "extension": [
+                      {
+                        "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension",
+                        "valueUri": "http://hl7.org/fhir/v3/ParticipationType"
+                      }
+                    ],
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "ATND",
+                    "display": "attender"
+                  }
+                ],
+                "text": "attender"
+              }
+            ],
+            "period": {
+              "start": "2022-09-07T21:40:39Z",
+              "end": "2022-09-07T21:40:48Z"
+            },
+            "individual": {
+              "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+              "type": "Practitioner",
+              "display": "Michael Fac-Phy Ucdobrien"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "extension": [
+                      {
+                        "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension",
+                        "valueUri": "http://hl7.org/fhir/v3/ParticipationType"
+                      }
+                    ],
+                    "system": "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                    "code": "ATND",
+                    "display": "attender"
+                  }
+                ],
+                "text": "attender"
+              }
+            ],
+            "period": {
+              "start": "2022-09-07T21:40:48Z",
+              "end": "2022-09-08T00:59:00Z"
+            },
+            "individual": {
+              "reference": "Practitioner/eTA2R66i-1Vlqom3Hv0eH1A3",
+              "type": "Practitioner",
+              "display": "Hershan S Johl, MD"
+            }
+          },
+          {
+            "type": [
+              {
+                "coding": [
+                  {
+                    "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.18869",
+                    "code": "NURSE - SHIF",
+                    "display": "Nurse - Shift"
+                  }
+                ],
+                "text": "Nurse - Shift"
+              }
+            ],
+            "period": {
+              "start": "2022-09-08T01:35:00Z",
+              "end": "2022-09-08T10:40:03Z"
+            },
+            "individual": {
+              "reference": "Practitioner/e3iYIEPlhuE2I08h4NQplBg3",
+              "type": "Practitioner",
+              "display": "Michael Licnrs-Ancstf Ucdobrien"
+            }
+          }
+        ],
+        "period": {
+          "start": "2022-09-07T17:08:00Z",
+          "end": "2022-09-08T00:59:00Z"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "302866003",
+                "display": "Hypoglycemia (disorder)"
+              }
+            ],
+            "text": "Hypoglycemia"
+          },
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Diabetes mellitus type 2 (disorder)"
+              }
+            ],
+            "text": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+          },
+          {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.728286",
+                "code": "31",
+                "display": "Diabetes"
+              }
+            ],
+            "text": "Diabetes"
+          }
+        ],
+        "account": [
+          {
+            "identifier": {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.726582",
+              "value": "950000006035"
+            },
+            "display": "XXTESTHYPO,MILDANDMODERATE"
+          }
+        ],
+        "hospitalization": {
+          "extension": [
+            {
+              "url": "http://open.epic.com/FHIR/StructureDefinition/extension/ip-admit-datetime",
+              "valueDateTime": "2022-09-08T00:33:00Z"
+            }
+          ],
+          "admitSource": {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.10310",
+                "code": "310006",
+                "display": "Emergency Room"
+              }
+            ],
+            "text": "Emergency Room"
+          },
+          "dischargeDisposition": {
+            "coding": [
+              {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.698084.18888",
+                "code": "9901",
+                "display": "Discharged to Home or Self Care (Routine Discharge)"
+              }
+            ],
+            "text": "Discharged to Home or Self Care (Routine Discharge)"
+          }
+        },
+        "location": [
+          {
+            "location": {
+              "reference": "Location/evblJInhSlK6TP0Dy-dJ1Px242zkVA470IoliWvESgYw3",
+              "display": "EMERGENCY - PAVILION"
+            },
+            "period": {
+              "start": "2022-09-07T17:08:00Z",
+              "end": "2022-09-08T00:33:00Z"
+            }
+          },
+          {
+            "location": {
+              "reference": "Location/eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3",
+              "display": "D6 CARDIOLOGY"
+            },
+            "period": {
+              "start": "2022-09-08T00:33:00Z",
+              "end": "2022-09-08T00:59:00Z"
+            }
+          },
+          {
+            "location": {
+              "reference": "Location/eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3",
+              "display": "D6 CARDIOLOGY"
+            }
+          },
+          {
+            "location": {
+              "reference": "Location/eDBJk5l9wvYtFV1k7axqRJw3",
+              "display": "UC Davis Health"
+            }
+          },
+          {
+            "location": {
+              "reference": "Location/eWNn8ipSQ1jAdwbQhgc2Kig3",
+              "display": "6747"
+            },
+            "physicalType": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
+                  "code": "ro",
+                  "display": "Room"
+                }
+              ],
+              "text": "Room"
+            }
+          },
+          {
+            "location": {
+              "identifier": {
+                "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.666968",
+                "value": "125"
+              },
+              "display": "674702"
+            },
+            "physicalType": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/location-physical-type",
+                  "code": "bd",
+                  "display": "Bed"
+                }
+              ],
+              "text": "Bed"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Location/eWNn8ipSQ1jAdwbQhgc2Kig3",
+      "resource": {
+        "resourceType": "Location",
+        "id": "eWNn8ipSQ1jAdwbQhgc2Kig3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:13+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-location"
+          ]
+        },
+        "status": "active",
+        "name": "6747",
+        "alias": [
+          "6747"
+        ],
+        "mode": "instance",
+        "partOf": {
+          "reference": "Location/eXBrBFn1O0VCYMaMbfejShehmh2Jm2hXqFwtHjvn-hhA3",
+          "display": "D6 CARDIOLOGY"
+        }
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MedicationRequest/edYJaVV0bqytZCwEhG7QzTtbh9hxLS1M-pr7n9AWPOgc3",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "edYJaVV0bqytZCwEhG7QzTtbh9hxLS1M-pr7n9AWPOgc3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:12+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.798268",
+            "value": "280811413"
+          }
+        ],
+        "status": "stopped",
+        "intent": "order",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                "code": "inpatient",
+                "display": "Inpatient"
+              }
+            ],
+            "text": "Inpatient"
+          }
+        ],
+        "medicationReference": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+              "valueString": "Medication/eDCbdxw9IPg7ytIuCdmi226lYHpwzHH.MOxWmeiKbBfKQs8Rcy68KMnKbETdaToh2xnSFP4HTyeELIlIwlHOJQW76nx3RJSGk7yJC7aLUifA3"
+            }
+          ],
+          "reference": "Medication/hash-302b94c7060b03c7fb43fbb969b30acf85d669cb",
+          "display": "Glucose Chewable Tablets"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        },
+        "authoredOn": "2022-09-07T20:03:29Z",
+        "requester": {
+          "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+          "type": "Practitioner",
+          "display": "Michael Fac-Phy Ucdobrien"
+        },
+        "recorder": {
+          "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+          "type": "Practitioner",
+          "display": "Michael Fac-Phy Ucdobrien"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Diabetes mellitus type 2 (disorder)"
+              },
+              {
+                "system": "http://hl7.org/fhir/sid/icd-10-cm",
+                "code": "E11.649",
+                "display": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+              }
+            ],
+            "text": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+          }
+        ],
+        "courseOfTherapyType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+              "code": "acute",
+              "display": "Short course (acute) therapy"
+            }
+          ],
+          "text": "Short course (acute) therapy"
+        },
+        "dosageInstruction": [
+          {
+            "text": "12 g (3 tablet), ORAL, EVERY 15 MINUTES IF NEEDED, Starting on Wed 9/7/22 at 1300, Until Wed 9/7/22 at 2228, hypoglycemia\nGive 3 tabs for blood glucose levels 60-70 mg/dL. Give 6 tabs for blood glucose levels less than 60 mg/dL.\n",
+            "timing": {
+              "repeat": {
+                "boundsPeriod": {
+                  "start": "2022-09-07T20:00:42Z",
+                  "end": "2022-09-08T05:28:24Z"
+                },
+                "frequency": 1,
+                "period": 15,
+                "periodUnit": "min"
+              },
+              "code": {
+                "text": "Q15MIN PRN"
+              }
+            },
+            "asNeededBoolean": true,
+            "route": {
+              "coding": [
+                {
+                  "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.798268.7025",
+                  "code": "15",
+                  "display": "ORAL"
+                }
+              ],
+              "text": "ORAL"
+            },
+            "doseAndRate": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "calculated",
+                      "display": "calculated"
+                    }
+                  ],
+                  "text": "calculated"
+                },
+                "doseQuantity": {
+                  "value": 12,
+                  "unit": "g",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "g"
+                }
+              },
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "admin-amount",
+                      "display": "admin-amount"
+                    }
+                  ],
+                  "text": "admin-amount"
+                },
+                "doseQuantity": {
+                  "value": 3,
+                  "unit": "tablet",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "{tbl}"
+                }
+              },
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "ordered",
+                      "display": "ordered"
+                    }
+                  ],
+                  "text": "ordered"
+                },
+                "doseQuantity": {
+                  "value": 3,
+                  "unit": "tablet",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "{tbl}"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Medication/hash-7219377c8cc906ad43fe676ced55dede2ff6589f",
+      "resource": {
+        "resourceType": "Medication",
+        "id": "hash-7219377c8cc906ad43fe676ced55dede2ff6589f",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:17+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medication"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "eMIlY5qZp2WAWc1K8OyYOX..JafEDyjh.OkXPyCR1gTM39hzf2NdkJcU5I.DXsh41M9n9jCEckp9Wa6limv-vv9GtPjYOTcfzsujzfJEWCmg3"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698288",
+            "value": "11430"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "A10BA02"
+            },
+            {
+              "system": "urn:oid:2.16.840.1.113883.6.208",
+              "code": "13318"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "6809"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "105376"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "151825"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "151827"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "152161"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "204045"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "235743"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "405304"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "541766"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "583192"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "645109"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "861007"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "861008"
+            }
+          ],
+          "text": "Metformin Tablet"
+        },
+        "form": {
+          "coding": [
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.698288.310",
+              "code": "Tab",
+              "display": "Tablet"
+            }
+          ],
+          "text": "Tablet"
+        },
+        "ingredient": [
+          {
+            "itemCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://www.whocc.no/atc",
+                  "code": "A10BA02"
+                },
+                {
+                  "system": "urn:oid:2.16.840.1.113883.6.208",
+                  "code": "13318"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "6809"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "105376"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "151825"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "151827"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "152161"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "204045"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "235743"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "405304"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "541766"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "583192"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "645109"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "861007"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "861008"
+                }
+              ],
+              "text": "Metformin Tablet"
+            },
+            "strength": {
+              "numerator": {
+                "value": 500,
+                "unit": "mg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mg"
+              },
+              "denominator": {
+                "value": 500,
+                "unit": "mg",
+                "system": "http://unitsofmeasure.org",
+                "code": "mg"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Medication/hash-302b94c7060b03c7fb43fbb969b30acf85d669cb",
+      "resource": {
+        "resourceType": "Medication",
+        "id": "hash-302b94c7060b03c7fb43fbb969b30acf85d669cb",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:17+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medication"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "eDCbdxw9IPg7ytIuCdmi226lYHpwzHH.MOxWmeiKbBfKQs8Rcy68KMnKbETdaToh2xnSFP4HTyeELIlIwlHOJQW76nx3RJSGk7yJC7aLUifA3"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698288",
+            "value": "17295"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://www.whocc.no/atc",
+              "code": "V06DC01"
+            },
+            {
+              "system": "urn:oid:2.16.840.1.113883.6.208",
+              "code": "47400"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "4850"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "92821"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "310519"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "607868"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1038798"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1086383"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1147993"
+            }
+          ],
+          "text": "Glucose Chewable Tablets"
+        },
+        "form": {
+          "coding": [
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.698288.310",
+              "code": "Chew",
+              "display": "Chewable Tablet"
+            }
+          ],
+          "text": "Chewable Tablet"
+        },
+        "ingredient": [
+          {
+            "itemCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://www.whocc.no/atc",
+                  "code": "V06DC01"
+                },
+                {
+                  "system": "urn:oid:2.16.840.1.113883.6.208",
+                  "code": "47400"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "4850"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "92821"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "310519"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "607868"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "1038798"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "1086383"
+                },
+                {
+                  "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+                  "code": "1147993"
+                }
+              ],
+              "text": "Glucose Chewable Tablets"
+            },
+            "strength": {
+              "numerator": {
+                "value": 4,
+                "unit": "gram",
+                "system": "http://unitsofmeasure.org",
+                "code": "g"
+              },
+              "denominator": {
+                "value": 4,
+                "unit": "gram",
+                "system": "http://unitsofmeasure.org",
+                "code": "g"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Coverage/hash-b01528e3fd5b487c86f0919c598f1f4f106cc62a",
+      "resource": {
+        "resourceType": "Coverage",
+        "id": "hash-b01528e3fd5b487c86f0919c598f1f4f106cc62a",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:24+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-coverage"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://open.epic.com/FHIR/StructureDefinition/extension/billing-organization",
+            "valueReference": {
+              "reference": "Organization/2d228940-6b0a-44c5-b6bd-772103423661"
+            }
+          },
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "eAAcXTK6ELZ0revZMvWZAECFiG-ytu2oAFirKpxgYixPfbnt.gDN2poS17s80fPfk3"
+          }
+        ],
+        "identifier": [
+          {
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.678671",
+            "value": "5103368"
+          }
+        ],
+        "status": "active",
+        "subscriber": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "subscriberId": "xxxxx3123",
+        "beneficiary": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "relationship": {
+          "coding": [
+            {
+              "system": "urn:oid:1.2.840.114350.1.13.93.3.7.10.678671.305",
+              "code": "01",
+              "display": "Self"
+            },
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/subscriber-relationship",
+              "code": "self",
+              "display": "Self"
+            }
+          ],
+          "text": "Self"
+        },
+        "period": {
+          "start": "2012-06-01"
+        },
+        "payor": [
+          {
+            "reference": "Organization/eXwk9C6O5A8XLaxBq59IG1Q3",
+            "identifier": {
+              "use": "official",
+              "system": "http://open.epic.com/FHIR/StructureDefinition/payer-id",
+              "value": "835"
+            },
+            "display": "UNITED HEALTHCARE"
+          }
+        ],
+        "class": [
+          {
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/coverage-class",
+                  "code": "group",
+                  "display": "Group"
+                }
+              ]
+            },
+            "value": "12345"
+          },
+          {
+            "extension": [
+              {
+                "url": "http://open.epic.com/FHIR/StructureDefinition/extension/epic-id",
+                "valueIdentifier": {
+                  "use": "secondary",
+                  "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.698080",
+                  "value": "8350001"
+                }
+              }
+            ],
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/coverage-class",
+                  "code": "plan",
+                  "display": "Plan"
+                }
+              ]
+            },
+            "value": "8350001",
+            "name": "UNITED HEALTHCARE"
+          }
+        ],
+        "order": 1
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MedicationRequest/eM0nwAAOnSe0zh-aSe639kXSGQq4Fcygajx5-uIdjNCI3",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "eM0nwAAOnSe0zh-aSe639kXSGQq4Fcygajx5-uIdjNCI3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:12+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.798268",
+            "value": "280811412"
+          }
+        ],
+        "status": "active",
+        "intent": "plan",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                "code": "community",
+                "display": "Community"
+              }
+            ],
+            "text": "Community"
+          }
+        ],
+        "reportedBoolean": true,
+        "medicationReference": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+              "valueString": "Medication/eidGBu2ibky6xUDdqjtmkQGwFRq1.YumBaq8mVetlUg.2MXHBM7gOcY3SS6WRhHpoaYYjr0L-0lhfYwzHABvv23-EXsPnfONeg0gPQaWWc5Q3"
+            }
+          ],
+          "reference": "Medication/hash-17539f19e407e714c71751e649d3e6103de2c794",
+          "display": "METFORMIN 1,000 MG TABLET"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        },
+        "authoredOn": "2022-09-07T19:56:46Z",
+        "requester": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/data-absent-reason",
+              "valueCode": "unknown"
+            }
+          ]
+        },
+        "recorder": {
+          "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+          "type": "Practitioner",
+          "display": "Michael Fac-Phy Ucdobrien"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Diabetes mellitus type 2 (disorder)"
+              },
+              {
+                "system": "http://hl7.org/fhir/sid/icd-10-cm",
+                "code": "E11.649",
+                "display": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+              }
+            ],
+            "text": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+          }
+        ],
+        "courseOfTherapyType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+              "code": "continuous",
+              "display": "Continuous long term therapy"
+            }
+          ],
+          "text": "Continuous long term therapy"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1,000 mg by mouth 2 times daily with meals., Long-term, Historical",
+            "patientInstruction": "Take 1,000 mg by mouth 2 times daily with meals.",
+            "timing": {
+              "repeat": {
+                "timeOfDay": [
+                  "07:00:00",
+                  "17:00:00"
+                ]
+              },
+              "code": {
+                "text": "BID WITH MEALS"
+              }
+            },
+            "asNeededBoolean": false,
+            "route": {
+              "coding": [
+                {
+                  "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.798268.7025",
+                  "code": "15",
+                  "display": "ORAL"
+                }
+              ],
+              "text": "ORAL"
+            },
+            "method": {
+              "text": "Take"
+            },
+            "doseAndRate": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "ordered",
+                      "display": "ordered"
+                    }
+                  ],
+                  "text": "ordered"
+                },
+                "doseQuantity": {
+                  "value": 1000,
+                  "unit": "mg",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/MedicationRequest/eEn3cjQ44kSUo4hRsWwq1NUT5SEG823h2vEViT.BsomA3",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "eEn3cjQ44kSUo4hRsWwq1NUT5SEG823h2vEViT.BsomA3",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:12+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-medicationrequest"
+          ]
+        },
+        "identifier": [
+          {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.2.798268",
+            "value": "280811414"
+          }
+        ],
+        "status": "stopped",
+        "intent": "order",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                "code": "inpatient",
+                "display": "Inpatient"
+              }
+            ],
+            "text": "Inpatient"
+          }
+        ],
+        "medicationReference": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+              "valueString": "Medication/eMIlY5qZp2WAWc1K8OyYOX..JafEDyjh.OkXPyCR1gTM39hzf2NdkJcU5I.DXsh41M9n9jCEckp9Wa6limv-vv9GtPjYOTcfzsujzfJEWCmg3"
+            }
+          ],
+          "reference": "Medication/hash-7219377c8cc906ad43fe676ced55dede2ff6589f",
+          "display": "Metformin Tablet"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        },
+        "authoredOn": "2022-09-07T20:03:29Z",
+        "requester": {
+          "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+          "type": "Practitioner",
+          "display": "Michael Fac-Phy Ucdobrien"
+        },
+        "recorder": {
+          "reference": "Practitioner/e.haW0LGk4-7DaWqz8YHGRg3",
+          "type": "Practitioner",
+          "display": "Michael Fac-Phy Ucdobrien"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "44054006",
+                "display": "Diabetes mellitus type 2 (disorder)"
+              },
+              {
+                "system": "http://hl7.org/fhir/sid/icd-10-cm",
+                "code": "E11.649",
+                "display": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+              }
+            ],
+            "text": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+          }
+        ],
+        "courseOfTherapyType": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-course-of-therapy",
+              "code": "continuous",
+              "display": "Continuous long term therapy"
+            }
+          ],
+          "text": "Continuous long term therapy"
+        },
+        "dosageInstruction": [
+          {
+            "text": "1,000 mg, ORAL, TWO TIMES DAILY WITH MEALS, First dose on Wed 9/7/22 at 1700, Until Discontinued\nAdminister with food to minimize GI upset.\n",
+            "timing": {
+              "repeat": {
+                "boundsPeriod": {
+                  "start": "2022-09-08T00:00:00Z",
+                  "end": "2022-09-08T05:28:24Z"
+                }
+              },
+              "code": {
+                "text": "BID WITH MEALS"
+              }
+            },
+            "asNeededBoolean": false,
+            "route": {
+              "coding": [
+                {
+                  "system": "urn:oid:1.2.840.114350.1.13.93.3.7.4.798268.7025",
+                  "code": "15",
+                  "display": "ORAL"
+                }
+              ],
+              "text": "ORAL"
+            },
+            "doseAndRate": [
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "calculated",
+                      "display": "calculated"
+                    }
+                  ],
+                  "text": "calculated"
+                },
+                "doseQuantity": {
+                  "value": 1000,
+                  "unit": "mg",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "mg"
+                }
+              },
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "admin-amount",
+                      "display": "admin-amount"
+                    }
+                  ],
+                  "text": "admin-amount"
+                },
+                "doseQuantity": {
+                  "value": 2,
+                  "unit": "tablet",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "{tbl}"
+                }
+              },
+              {
+                "type": {
+                  "coding": [
+                    {
+                      "system": "http://epic.com/CodeSystem/dose-rate-type",
+                      "code": "ordered",
+                      "display": "ordered"
+                    }
+                  ],
+                  "text": "ordered"
+                },
+                "doseQuantity": {
+                  "value": 1000,
+                  "unit": "mg",
+                  "system": "http://unitsofmeasure.org",
+                  "code": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/Condition/hash-ad10167465f1ad15053f815577a42b7f1c39b34f",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "hash-ad10167465f1ad15053f815577a42b7f1c39b34f",
+        "meta": {
+          "extension": [
+            {
+              "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-received-date-extension",
+              "valueDateTime": "2023-11-16T14:27:24+00:00"
+            }
+          ],
+          "profile": [
+            "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/hypoglycemic-reporting-condition"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension",
+            "valueString": "e1o2hFU9zitv4yuRLYHq7nYdj0Napq1PcWlckLEw-ofbpXfULgoXpa-88opLrJ47dp7tlzqOd36FOsrJDGy2Gtw3"
+          }
+        ],
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "encounter-diagnosis",
+                "display": "Encounter Diagnosis"
+              }
+            ],
+            "text": "Encounter Diagnosis"
+          },
+          {
+            "coding": [
+              {
+                "system": "http://open.epic.com/FHIR/StructureDefinition/condition-category",
+                "code": "visit-diagnosis",
+                "display": "Visit Diagnosis"
+              }
+            ],
+            "text": "Visit Diagnosis"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Diabetes mellitus type 2 (disorder)"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.649",
+              "display": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+        },
+        "subject": {
+          "reference": "Patient/e9OWyCMy2fizjLDgpi.WpeKAqkmQ41e90vlBxNwh-U7I3",
+          "display": "Xxtesthypo, Mildandmoderate"
+        },
+        "encounter": {
+          "reference": "Encounter/e2Hre01ze8oHDyBaPM17ZNJk-lt10fbHbI.pjt0m-tro3",
+          "identifier": {
+            "use": "usual",
+            "system": "urn:oid:1.2.840.114350.1.13.93.3.7.3.698084.8",
+            "value": "130000204461"
+          },
+          "display": "Hospital Encounter"
+        },
+        "evidence": [
+          {
+            "detail": [
+              {
+                "reference": "Condition/e2KlGEBNnAivqoLOB8a8yaOGR1xWcQGZyNY-TFHcBIrQ3",
+                "display": "Type 2 diabetes mellitus with hypoglycemia without coma, unspecified whether long term insulin use (HCC)"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

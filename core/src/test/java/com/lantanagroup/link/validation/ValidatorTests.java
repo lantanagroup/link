@@ -51,6 +51,23 @@ public class ValidatorTests {
   }
 
   @Test
+  public void HAPI_Repro_5688() {
+    MeasureDefinition measureDefinition = new MeasureDefinition();
+    var bundle = TestHelper.getBundle("HAPI_5688_Bundle.json");
+
+    Validator newValidator = new Validator(new ApiConfig());
+    newValidator.init();
+    var outcome = newValidator.validate(bundle, OperationOutcome.IssueSeverity.NULL);
+
+    for(var i : outcome.getIssue()) {
+      var text = i.getDetails().getText();
+      if(text != null && text.contains("invoke")) {
+        logger.debug(text);
+      }
+    }
+  }
+
+  @Test
   public void testPerformanceWithInit() {
     logger.info("Testing initialization of validator");
 
