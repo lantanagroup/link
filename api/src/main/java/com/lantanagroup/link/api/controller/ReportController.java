@@ -321,7 +321,6 @@ public class ReportController extends BaseController {
    */
   private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
-    String currentVersion = "";
     Lock tenantLock = tenantLocks.computeIfAbsent(tenantService.getConfig().getId(), id -> new ReentrantLock());
     if (!tenantLock.tryLock()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT, "Report in progress for tenant");
