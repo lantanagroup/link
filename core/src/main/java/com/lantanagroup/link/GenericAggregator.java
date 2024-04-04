@@ -44,6 +44,10 @@ public abstract class GenericAggregator implements IReportAggregator {
     }
 
     for (PatientOfInterestModel poi : measureContext.getPatientsOfInterest()) {
+      if (StringUtils.isEmpty(poi.getId())) {
+        logger.error("Patient {} has no ID; cannot aggregate", poi);
+        continue;
+      }
       String pmrId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), poi.getId());
       PatientMeasureReport pmr = tenantService.getPatientMeasureReport(pmrId);
       if (pmr == null) {
