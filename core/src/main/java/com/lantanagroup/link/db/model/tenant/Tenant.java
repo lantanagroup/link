@@ -79,11 +79,6 @@ public class Tenant {
    */
   private FhirQuery fhirQuery;
 
-  /**
-   * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant
-   * is signed up to report during the calculated reporting period.
-   */
-  private ReportingPlan reportingPlan;
 
   /**
    * ISO 8601 formatted duration in which to keep data for each tenant. Defaulted to 3 months.

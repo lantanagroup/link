@@ -1,6 +1,5 @@
 package com.lantanagroup.link;
 
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.PatientList;
@@ -74,6 +73,8 @@ public class FhirBundlerTests {
 
     Report report = new Report();
     report.setDeviceInfo(new Device());
+    report.getDeviceInfo().getMeta().addProfile(Constants.SubmittingDeviceProfile);
+    report.getDeviceInfo().getDeviceName().add(new Device.DeviceDeviceNameComponent().setName("Test Device"));
 
     List<PatientList> patientLists = new ArrayList<>();
     PatientList patientList = new PatientList();

@@ -26,9 +26,9 @@
               <app-mini-content title="NHSN Org Id">
                 <p *ngIf="facilityDetails?.cdcOrgId; else noData">{{ facilityDetails?.cdcOrgId }}</p>
               </app-mini-content>
-
+              
               <app-mini-content title="EHR Vendor">
-                <p><em>Todo:</em> Will be filled out once LNK-1854 is complete.</p>
+                <p *ngIf="facilityDetails?.vendor; else noData">{{ facilityDetails?.vendor }}</p>
               </app-mini-content>
 
               <app-mini-content title="FHIR API URL">
@@ -155,7 +155,10 @@
             <div class="row">
               <div class="col col-md-6">
                 <app-mini-content title="Measures IDs">
-                  <p class="mb-1" *ngFor="let measure of schedule?.measureIds">{{ measure | pascalCaseToSpace }}</p>
+                  <div *ngFor="let measureId of schedule?.measureIds" class="d-flex align-items-center mb-2 u-gap2">
+                    <div class="chip">{{ generateMeasureChip(measureId) }}</div>
+                    <span>{{ generateMeasureName(measureId) }}</span>
+                  </div>
                 </app-mini-content>
               </div>
   

@@ -72,17 +72,18 @@
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="cdcOrgId">CDC Org ID</label>
+        <label for="cdcOrgId">CDC Org ID<span class="text-warning">*</span></label>
         <input 
           type="text"
           id="cdcOrgId"
           formControlName="cdcOrgId"
         />
         <p class="form__description">Provided by facility or NHSN directly</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.cdcOrgId.touched && facilitiesForm.controls.cdcOrgId.errors">CDC Org Id is required.</p>
       </div>
 
       <div class="col col-md-6 form__field">
-        <label for="database">Database</label>
+        <label for="database">Database<span class="text-warning">*</span></label>
         <input 
           type="text"
           id="database"
@@ -91,6 +92,7 @@
         />
         <p class="form__description">Where all tenant-specific data is stored</p>
         <p class="form__description text-warning" *ngIf="facilitiesForm.controls.connectionString.touched && facilitiesForm.controls.connectionString.errors?.['invalidDb']">Connection string must start with jdbc:sqlserver://</p>
+        <p class="form__description text-warning" *ngIf="facilitiesForm.controls.connectionString.touched && facilitiesForm.controls.connectionString.errors?.['required']">Connection string is required.</p>
       </div>
 
       <div class="col col-md-6 form__field">

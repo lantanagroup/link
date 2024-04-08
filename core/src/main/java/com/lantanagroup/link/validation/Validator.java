@@ -1,11 +1,14 @@
 package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
+import ca.uhn.fhir.parser.DataFormatException;
 import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.config.api.ApiConfig;
+import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
@@ -15,18 +18,24 @@ import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.utilities.npm.NpmPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
@@ -35,14 +44,23 @@ public class Validator {
 
   private FhirValidator validator;
 
-  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser().setPrettyPrint(true);
+  private final IParser jsonParser = FhirContextProvider.getFhirContext().newJsonParser()
+          .setPrettyPrint(true)
+          .setParserErrorHandler(new LenientErrorHandler(false));
   private final IParser xmlParser = FhirContextProvider.getFhirContext().newXmlParser();
 
-  @Setter
-  private SharedService sharedService;
+  private final List<String> allowsResourceTypes = List.of("StructureDefinition", "ValueSet", "CodeSystem", "ImplementationGuide", "Measure", "Library");
 
-  public Validator(SharedService sharedService) {
-    this.sharedService = sharedService;
+  @Getter
+  private final List<ImplementationGuide> implementationGuides = new ArrayList<>();
+
+  @Setter
+  private ApiConfig apiConfig;
+
+  private volatile boolean initialized;
+
+  public Validator(ApiConfig apiConfig) {
+    this.apiConfig = apiConfig;
     this.prePopulatedValidationSupport = new PrePopulatedValidationSupport(FhirContextProvider.getFhirContext());
   }
 
@@ -75,6 +93,8 @@ public class Validator {
       case "Terminology_PassThrough_TX_Message":
       case "Terminology_TX_Code_ValueSet_Ext":
       case "Terminology_TX_NoValid_17":
+      case "Terminology_TX_NoValid_16":
+      case "Terminology_TX_NoValid_3_CC":
         return OperationOutcome.IssueType.CODEINVALID;
       case "Extension_EXT_Unknown":
         return OperationOutcome.IssueType.EXTENSION;
@@ -83,42 +103,141 @@ public class Validator {
       case "Validation_VAL_Profile_Minimum":
       case "Validation_VAL_Profile_Maximum":
       case "Extension_EXT_Type":
+      case "Validation_VAL_Profile_Unknown":
+      case "Reference_REF_NoDisplay":
         return OperationOutcome.IssueType.STRUCTURE;
       case "Type_Specific_Checks_DT_String_WS":
         return OperationOutcome.IssueType.VALUE;
       case "Terminology_TX_System_Unknown":
         return OperationOutcome.IssueType.UNKNOWN;
+      case "Type_Specific_Checks_DT_Code_WS":
+        return OperationOutcome.IssueType.INVALID;
       default:
         return OperationOutcome.IssueType.NULL;
     }
   }
 
-  public void init() {
-    this.loadFiles();
-    this.updateMeasures();
-
-    this.validator = FhirContextProvider.getFhirContext().newValidator();
-    this.validator.setExecutorService(Executors.newWorkStealingPool());
-    IValidatorModule module = new FhirInstanceValidator(this.getCachingValidationSupport());
-    this.validator.registerValidatorModule(module);
-    this.validator.setConcurrentBundleValidation(true);
-  }
-
-  private void loadFiles() {
+  /**
+   * Writes all conformance resources to a file for debugging purposes
+   */
+  private void writeConformanceResourcesToFile() {
+    String resources = this.prePopulatedValidationSupport.fetchAllConformanceResources().stream()
+            .map(Object::toString)
+            .collect(Collectors.joining("\n"));
     try {
-      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-      this.loadClassResources(resolver.getResources("terminology/**"));
-      this.loadClassResources(resolver.getResources("profiles/**"));
-    } catch (IOException ex) {
-      logger.error("Error loading resources for validation", ex);
+      Files.writeString(Path.of("conformance-resources.txt"), resources);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 
-  public void updateMeasures() {
-    // Add each measure canonical url to the resource fetcher
-    this.sharedService.getMeasureDefinitions().forEach(md -> {
-      // TODO
-    });
+  public void init() {
+    if (this.initialized) {
+      return;
+    }
+
+    synchronized (this) {
+      if (this.initialized) {
+        return;
+      }
+
+      this.loadPackages();
+      this.loadTerminology();
+
+      // When needed for debugging
+      //this.writeConformanceResourcesToFile();
+
+      this.validator = FhirContextProvider.getFhirContext().newValidator();
+      this.validator.setExecutorService(ForkJoinPool.commonPool());
+      IValidatorModule module = new FhirInstanceValidator(this.getValidationSupportChain());
+      this.validator.registerValidatorModule(module);
+      this.validator.setConcurrentBundleValidation(true);
+
+      this.initialized = true;
+    }
+  }
+
+  private static ImplementationGuide getImplementationGuide(ImplementationGuide baseResource) {
+    ImplementationGuide ig = baseResource;
+    ImplementationGuide igToAdd = new ImplementationGuide();
+    igToAdd.setUrl(ig.getUrl());
+    igToAdd.setVersion(ig.getVersion());
+    igToAdd.setName(ig.getName());
+    igToAdd.setTitle(ig.getTitle());
+    igToAdd.setStatus(ig.getStatus() != null ? ig.getStatus() : Enumerations.PublicationStatus.UNKNOWN);
+    igToAdd.setDate(ig.getDate());
+    igToAdd.setPackageId(ig.getPackageId());
+    return igToAdd;
+  }
+
+  /**
+   * Load allowed resources for all packages from the configured path into the pre-populated validation support
+   */
+  private void loadPackages() {
+    if (StringUtils.isEmpty(this.apiConfig.getValidationPackagesPath())) {
+      logger.info("No validation packages path configured");
+      return;
+    }
+
+    try {
+      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      org.springframework.core.io.Resource[] resources = resolver.getResources(this.apiConfig.getValidationPackagesPath());
+      for (org.springframework.core.io.Resource packageResource : resources) {
+        if (packageResource.getFile().isDirectory()) {
+          continue;
+        } else if (!packageResource.getFile().getName().endsWith(".tgz")) {
+          logger.warn("Unexpected package file name {}", packageResource.getFilename());
+          continue;
+        }
+
+        logger.info("Loading package {}", packageResource.getFilename());
+        NpmPackage npmPackage = NpmPackage.fromPackage(packageResource.getInputStream());
+
+        npmPackage.listResources(allowsResourceTypes).forEach(resource -> {
+          try {
+            Resource baseResource;
+            try (InputStream stream = npmPackage.load(resource)) {
+              baseResource = (Resource) this.jsonParser.parseResource(stream);
+            }
+
+            if (baseResource.getResourceType() == ResourceType.ImplementationGuide) {
+              // This is only used to report the IGs in the validation response, so less information is needed than
+              // the entire IG resource has
+              ImplementationGuide igToAdd = getImplementationGuide((ImplementationGuide) baseResource);
+
+              if (this.implementationGuides.stream().noneMatch(ig -> ig.getUrl().equals(igToAdd.getUrl()))) {
+                this.implementationGuides.add(igToAdd);
+              }
+            } else {
+              this.prePopulatedValidationSupport.addResource(baseResource);
+            }
+          } catch (IOException | DataFormatException ex) {
+            String message = ex.getMessage();
+            // Only include the first line in the log message
+            if (message != null && message.indexOf("\n") > 0) {
+              message = message.substring(0, message.indexOf("\n"));
+            }
+            logger.error("Error parsing package {} resource {} due to \"{}\"", packageResource, resource, message);
+          }
+        });
+      }
+    } catch (IOException e) {
+      logger.error("Error loading packages for validation: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * Load resources from the terminology classpath directory into the pre-populated validation support
+   */
+  private void loadTerminology() {
+    try {
+      PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+      org.springframework.core.io.Resource[] resources = resolver.getResources("terminology/**");
+      this.loadClassResources(resources);
+    } catch (IOException e) {
+      logger.error("Error loading class resources for validation: {}", e.getMessage());
+    }
+
   }
 
   private void loadClassResources(org.springframework.core.io.Resource[] classResources) {
@@ -135,13 +254,13 @@ public class Validator {
       if (classResource.getFilename() != null && classResource.getFilename().endsWith(".json")) {
         try (InputStream is = classResource.getInputStream()) {
           resource = this.jsonParser.parseResource(is);
-        } catch (IOException ex) {
+        } catch (IOException | DataFormatException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else if (classResource.getFilename() != null && classResource.getFilename().endsWith(".xml")) {
         try (InputStream is = classResource.getInputStream()) {
           resource = this.xmlParser.parseResource(is);
-        } catch (IOException ex) {
+        } catch (IOException | DataFormatException ex) {
           logger.error("Error parsing resource {}", classResource.getFilename(), ex);
         }
       } else {
@@ -161,7 +280,7 @@ public class Validator {
     }
   }
 
-  private CachingValidationSupport getCachingValidationSupport() {
+  private CachingValidationSupport getValidationSupportChain() {
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext()),
             new InMemoryTerminologyServerValidationSupport(FhirContextProvider.getFhirContext()),
@@ -207,7 +326,42 @@ public class Validator {
     }
   }
 
+  /**
+   * Update the issue locations/expressions to use resource IDs instead of "ofType(MedicationRequest)" (for example).
+   * Only works on Bundle resources and looks for patterns such as "Bundle.entry[X].resource.ofType(MedicationRequest)" to replace with "Bundle.entry[X].resource.where(id = '123')"
+   *
+   * @param resource The resource to amend
+   * @param outcome  The outcome to amend
+   */
+  private void improveIssueExpressions(Resource resource, OperationOutcome outcome) {
+    final String regex = "^Bundle.entry\\[(\\d+)\\]\\.resource\\.ofType\\(.+?\\)(.*)$";
+    final Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+
+    if (resource.getResourceType() == ResourceType.Bundle) {
+      Bundle bundle = (Bundle) resource;
+      for (OperationOutcome.OperationOutcomeIssueComponent issue : outcome.getIssue()) {
+        if (!issue.getExpression().isEmpty()) {
+          String location = issue.getExpression().get(0).asStringValue();
+          final Matcher matcher = pattern.matcher(location);
+
+          if (matcher.matches()) {
+            int entryIndex = Integer.parseInt(matcher.group(1));
+            if (entryIndex < bundle.getEntry().size()) {
+              String resourceId = bundle.getEntry().get(entryIndex).getResource().getIdElement().getIdPart();
+              String resourceType = bundle.getEntry().get(entryIndex).getResource().getResourceType().toString();
+              ArrayList newExpressions = new ArrayList<>(issue.getExpression());
+              newExpressions.set(0, new StringType("Bundle.entry[" + entryIndex + "].resource.ofType(" + resourceType + ").where(id = '" + resourceId + "')" + matcher.group(2)));
+              issue.setExpression(newExpressions);
+            }
+          }
+        }
+      }
+    }
+  }
+
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
+    this.init();
+
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
     OperationOutcome outcome = new OperationOutcome();
@@ -217,6 +371,7 @@ public class Validator {
     outcome.setId(UUID.randomUUID().toString());
 
     this.validateResource(resource, outcome, severity);
+    this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
     logger.debug("Validation took {} seconds", TimeUnit.MILLISECONDS.toSeconds(end.getTime() - start.getTime()));

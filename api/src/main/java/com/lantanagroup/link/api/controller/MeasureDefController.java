@@ -2,15 +2,16 @@ package com.lantanagroup.link.api.controller;
 
 import ca.uhn.fhir.rest.api.EncodingEnum;
 import com.lantanagroup.link.FhirContextProvider;
-import com.lantanagroup.link.FhirDataProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.Helper;
+import com.lantanagroup.link.api.MeasureServiceWrapper;
 import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.MeasurePackage;
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,24 +43,6 @@ public class MeasureDefController extends BaseController {
   @InitBinder
   public void initializeBinder(WebDataBinder binder) {
     binder.setDisallowedFields();
-  }
-
-  /**
-   * Executes the measure bundle on the evaluation service (cqf-ruler)
-   */
-  private void executeBundle(Bundle bundle) {
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.apiConfig.getEvaluationService());
-
-    bundle.setType(Bundle.BundleType.BATCH);
-    bundle.getEntry().forEach(entry -> {
-      entry.setRequest(new Bundle.BundleEntryRequestComponent());
-      entry.getRequest()
-              .setMethod(Bundle.HTTPVerb.PUT)
-              .setUrl(entry.getResource().getResourceType().toString() + "/" + entry.getResource().getIdElement().getIdPart());
-    });
-
-    logger.info("Loading measure definition {} on eval service {}", bundle.getIdElement().getIdPart(), this.apiConfig.getEvaluationService());
-    fhirDataProvider.transaction(bundle);
   }
 
   private Bundle getBundleFromUrl(String url) throws URISyntaxException {
@@ -103,11 +86,12 @@ public class MeasureDefController extends BaseController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Either a Bundle must be specified in a JSON body of the request, or a \"measureId\" query parameter must be specified");
     }
 
-    if (StringUtils.isNotEmpty(measureId) && this.apiConfig.getMeasureDefUrls().get(measureId) == null) {
+    MeasureDefConfig foundMeasureDef = this.apiConfig.getMeasureDefinition(measureId);
+    if (StringUtils.isNotEmpty(measureId) && foundMeasureDef == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The specified measureId is not configured with a measure definition URL");
     }
 
-    String url = StringUtils.isNotEmpty(measureId) ? this.apiConfig.getMeasureDefUrls().get(measureId) : null;
+    String url = foundMeasureDef != null ? foundMeasureDef.getDefinitionUrl() : null;
     Bundle bundle = bundleBody == null ? this.getBundleFromUrl(url) : bundleBody;
 
     if (bundle == null) {
@@ -125,8 +109,6 @@ public class MeasureDefController extends BaseController {
     if (bundle.getEntry().stream().anyMatch(entry -> !entry.getResource().hasId())) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure bundle contains resources without ids");
     }
-
-    this.executeBundle(bundle);
 
     MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(bundle.getIdElement().getIdPart());
 
@@ -165,5 +147,35 @@ public class MeasureDefController extends BaseController {
         this.sharedService.saveMeasurePackage(measurePackage);
       }
     });
+  }
+
+  @PostMapping("/{measureId}/$evaluate")
+  public MeasureReport evaluate(@PathVariable String measureId, @RequestBody Parameters parameters) {
+    MeasureDefinition measureDefinition = this.sharedService.getMeasureDefinition(measureId);
+
+    if (measureDefinition == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format("Could not find measure definition %s", measureId));
+    }
+
+    MeasureServiceWrapper measureServiceWrapper = new MeasureServiceWrapper(measureDefinition.getBundle(), null);
+
+    DateTimeType periodStart;
+    DateTimeType periodEnd;
+    StringType subject;
+    Bundle additionalData;
+    try {
+      periodStart = (DateTimeType) parameters.getParameterValue("periodStart");
+      periodEnd = (DateTimeType) parameters.getParameterValue("periodEnd");
+      subject = (StringType) parameters.getParameterValue("subject");
+      additionalData = (Bundle) parameters.getParameter("additionalData").getResource();
+    } catch (Exception e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to parse request body", e);
+    }
+
+    return measureServiceWrapper.evaluate(
+            periodStart.asStringValue(),
+            periodEnd.asStringValue(),
+            subject.asStringValue(),
+            additionalData);
   }
 }

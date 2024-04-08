@@ -34,12 +34,8 @@ public class LogController extends BaseController {
     Date startDateObj;
     Date endDateObj;
 
-    try {
-      startDateObj = Helper.parseFhirDate(startDate);
-      endDateObj = Helper.parseFhirDate(endDate);
-    } catch (ParseException ex) {
-      throw new IllegalArgumentException("Invalid date format, must be in the format yyyy-MM-dd'T'HH:mm:ss.SSSXXX or yyyy-MM-dd'T'HH:mm:ssXXX");
-    }
+    startDateObj = Helper.parseFhirDate(startDate);
+    endDateObj = Helper.parseFhirDate(endDate);
 
     List<LogMessage> logMessages = this.sharedService.findLogMessages(startDateObj, endDateObj, severity, page, content);
     LogSearchResponse res = new LogSearchResponse();

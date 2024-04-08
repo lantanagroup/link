@@ -29,9 +29,13 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^Unknown Code System '.*'$"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "A code with no system .* A system should be provided"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -76,10 +80,10 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^The value provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code is required from this value set"
+            "regex": "The (code|value) provided \\(.*\\) is not in the value set '.*' \\(http:\\/\\/.*\\), and a code .*is required"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -464,9 +468,19 @@
             "field": "DETAILS_TEXT",
             "regex": "'http:\\/\\/lantanagroup\\.com\\/fhir\\/nhsn-measures.*'",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('(?:[A-Za-z]+|)'\\) is not in the value set 'USPS Two Letter Alphabetic Codes' \\(http:\\/\\/hl7\\.org\\/fhir\\/us\\/core\\/ValueSet\\/us-core-usps-state\\|(?:\\d+\\.\\d+\\.\\d+)?\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Could not confirm that the codes provided are in the value set \\'.*\\' \\(http\\:\\/\\/terminology\\.hl7\\.org\\/ValueSet\\/.*\\)\\, and a code should come from this value set unless it has no suitable code .*",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -483,9 +497,19 @@
             "field": "DETAILS_TEXT",
             "regex": "None of the codings provided are in the value set '.*' \\(.*\\), and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value provided \\('(?:[A-Za-z]+|)'\\) is not in the value set 'USPS Two Letter Alphabetic Codes' \\(http:\\/\\/hl7\\.org\\/fhir\\/us\\/core\\/ValueSet\\/us-core-usps-state\\|(?:\\d+\\.\\d+\\.\\d+)?\\), and a code should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Could not confirm that the codes provided are in the value set \\'.*\\' \\(http\\:\\/\\/terminology\\.hl7\\.org\\/ValueSet\\/.*\\)\\, and a code should come from this value set unless it has no suitable code .*",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -525,6 +549,116 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Minimum_requirement_not_met_for_profile",
+    "title": "Minimum requirement not met for profile.",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "minimum required = 1, but only found 0 \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Unresolved_url",
+    "title": "Unresolved URL",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "The URL in the validation details is not resolvable. Link may not have the profiles/resources loaded that are represented by the canonical URL.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_code_system",
+    "title": "Invalid code system.",
+    "severity": "ERROR",
+    "acceptable": true, 
+    "guidance": "URI must be valid and the System should identify a valid coding system.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_whitespace_(non-identifier)",
+    "title": "Invalid whitespace (non-identifier).",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Canonical URL '.*' does not resolve",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Invalid_dateTime_format",
+    "title": "Invalid dateTime format.",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "date has a time, it must have a timezone.*",
             "inverse": false
           }
         ],

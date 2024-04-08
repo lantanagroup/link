@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static ca.uhn.fhir.rest.api.Constants.HEADER_REQUEST_ID;
@@ -104,9 +105,9 @@ public class PatientScoop {
   public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new ConcurrentHashMap<>();
-    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
-    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
-    ForkJoinPool patientFork = new ForkJoinPool(threshold);
+    ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
+    ForkJoinPool patientFork = ForkJoinPool.commonPool();
+    AtomicInteger progress = new AtomicInteger(0);
 
     try {
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
@@ -117,7 +118,6 @@ public class PatientScoop {
           UUID queryId = UUID.randomUUID();
           if (poi.getReference() != null) {
             String id = poi.getReference();
-
             if (id.indexOf("/") > 0) {
               id = id.substring(id.indexOf("/") + 1);
             }
@@ -162,23 +162,23 @@ public class PatientScoop {
           }
         } catch (Exception e) {
           logger.error("Unable to retrieve patient with identifier " + Helper.sanitizeString(poi.toString()), e);
+        } finally {
+          int completed = progress.incrementAndGet();
+          double percent = (completed * 100.0) / patientsOfInterest.size();
+          logger.info("Progress ({}%) for Patient Resource {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
-
         return null;
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
       return;
-    } finally {
-      if (patientFork != null) {
-        patientFork.shutdown();
-      }
     }
+
+    progress.set(0);
 
     try {
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
-      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
 
       patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
@@ -190,6 +190,10 @@ public class PatientScoop {
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
+        } finally {
+          int completed = progress.incrementAndGet();
+          double percent = (completed * 100.0) / patients.size();
+          logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patients.size());
         }
 
         this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
@@ -198,19 +202,14 @@ public class PatientScoop {
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
-    } finally {
-      if (patientDataFork != null) {
-        patientDataFork.shutdown();
-      }
     }
   }
 
   public void loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
-    int threshold = this.tenantService.getConfig().getFhirQuery().getParallelPatients();
-    ForkJoinPool patientDataFork = new ForkJoinPool(threshold);
-    try {
-      logger.info(String.format("Throttling patient query load to " + threshold + " at a time"));
+    ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
+    AtomicInteger progress = new AtomicInteger(0);
 
+    try {
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 
@@ -222,6 +221,10 @@ public class PatientScoop {
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
           return null;
+        } finally {
+          int completed = progress.incrementAndGet();
+          double percent = (completed * 100.0) / patientsOfInterest.size();
+          logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
 
         this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
@@ -230,10 +233,6 @@ public class PatientScoop {
       }).collect(Collectors.toList())).get();
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
-    } finally {
-      if (patientDataFork != null) {
-        patientDataFork.shutdown();
-      }
     }
   }
 

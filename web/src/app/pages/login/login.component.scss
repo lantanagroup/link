@@ -17,7 +17,6 @@
 .login-bg {
   @include background-2x('../../assets/backgrounds/bg-blue-lg', 'png', 100%, auto, center bottom, no-repeat);
   background-size: cover;
-  color: $white;
   padding: 2rem 0 2.5rem;
   min-height: 100vh;
 }

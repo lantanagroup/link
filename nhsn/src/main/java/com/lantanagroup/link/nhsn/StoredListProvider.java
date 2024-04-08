@@ -23,7 +23,7 @@ public class StoredListProvider implements IPatientIdProvider {
   private static final Logger logger = LoggerFactory.getLogger(StoredListProvider.class);
 
   @Override
-  public List<PatientOfInterestModel> getPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context) {
+  public void loadPatientsOfInterest(TenantService tenantService, ReportCriteria criteria, ReportContext context) {
     context.getPatientLists().clear();
     context.getPatientsOfInterest().clear();
 
@@ -54,9 +54,9 @@ public class StoredListProvider implements IPatientIdProvider {
     Collector<PatientOfInterestModel, ?, Map<String, PatientOfInterestModel>> deduplicator =
             Collectors.toMap(PatientOfInterestModel::toString, Function.identity(), (poi1, poi2) -> poi1);
     Map<String, PatientOfInterestModel> poiMap = context.getPatientsOfInterest().stream().collect(deduplicator);
-    context.setPatientsOfInterest(new ArrayList<>(poiMap.values()));
+    context.setInitialPatientsOfInterest(new ArrayList<>(poiMap.values()));
     for (ReportContext.MeasureContext measureContext : context.getMeasureContexts()) {
-      measureContext.setPatientsOfInterest(measureContext.getPatientsOfInterest().stream()
+      measureContext.setInitialPatientsOfInterest(measureContext.getPatientsOfInterest().stream()
               .collect(deduplicator)
               .values().stream()
               .map(poi -> poiMap.get(poi.toString()))
@@ -64,6 +64,5 @@ public class StoredListProvider implements IPatientIdProvider {
     }
 
     logger.info("Loaded {} patients from {} census lists", context.getPatientsOfInterest().size(), context.getPatientLists().size());
-    return context.getPatientsOfInterest();
   }
 }

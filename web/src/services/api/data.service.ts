@@ -1,12 +1,16 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthService } from 'src/services/auth/auth.service';
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
+import {AuthService} from 'src/services/auth/auth.service';
+import {AppConfigService} from "../app.config";
 
 @Injectable({ providedIn: 'root' })
 export class DataService {
-  private API_BASE_URL: string = 'https://dev.nhsnlink.org/api'; // Set the base URL
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+    public appConfigService: AppConfigService) {
+  }
 
   private createHeaders() {
     return new HttpHeaders({
@@ -14,12 +18,25 @@ export class DataService {
     });
   }
 
+  private getApiBaseUrl(): string {
+    const config = this.appConfigService.getConfig();
+    if (config && config.apiBaseUrl) {
+      return config.apiBaseUrl;
+    }
+    throw new Error('API base URL is not set');
+  }
+
+  private constructApiUrl(resource: string) {
+    const baseUrl = this.getApiBaseUrl()
+    return `${baseUrl}/${resource}`
+  }
+
   private performRequest<T>(method: 'get' | 'post' | 'put', resource: string, data?: T) {
     if (!this.authService.isLoggedIn()) {
       throw new Error('User is not authenticated or token is invalid');
     }
 
-    const url = `${this.API_BASE_URL}/${resource}`;
+    const url = this.constructApiUrl(resource)
     const options = { headers: this.createHeaders() };
 
     switch (method) {

@@ -16,6 +16,7 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content title="Facility Name">
                 <app-link [link]="{url: '/facilities/facility/' + tenantId, title: mockBundleDetails?.facility?.name, target: '_self'}"></app-link>
               </app-mini-content>
@@ -45,12 +46,14 @@
               [hasPadding]=true
               titleAlign="center"
             >
-
-              <app-mini-content *ngFor="let n of [1,2,3]" [title]="'Concept Map ' + n">
-                <strong>ID:</strong> 923123124<br>
-                <strong>Contexts:</strong> FHIRPath<br>
-                <strong>Path:</strong> 921837271<br>
-                <strong>Map:</strong> FHIR Concept Map
+              <app-loader *ngIf="!isDataLoaded" />
+              <app-mini-content *ngFor="let conceptMap of conceptMaps; index as i" title='Concept Map {{ i + 1 }}'>
+                <strong>ID:</strong> {{ conceptMap.id }}<br>
+                <strong>Contexts:</strong>
+                <ng-container *ngFor="let context of conceptMap.contexts">
+                  {{ context }}<br>
+                </ng-container>
+                <!-- <strong>Path:</strong> 921837271<br> -->
               </app-mini-content>
   
             </app-card>
@@ -62,12 +65,13 @@
               [hasPadding]=true
               titleAlign="center"
             >
+              <app-loader *ngIf="!isDataLoaded" />
               <app-mini-content>
                 <div class="d-flex align-items-start mb-2 u-gap2">
                   <div class="chip mr-1">CDI</div>
                   <div>
                     <p class="text-primary mb-1"><strong>C. difficile infection</strong></p>
-                    <strong>Total in census:</strong> 6,441<br>
+                    <strong>Total in census:</strong> 17,213<br>
                     <strong>Total that met IP:</strong> 5,887
                   </div>
                 </div>
@@ -95,7 +99,7 @@
           [hasPadding]="true"
         >
           <div class="row">
-            <div class="col col-6 col-md-4" *ngFor="let methods of mockBundleDetails?.normalizations?.methods">
+            <div class="col col-6 col-md-" *ngFor="let methods of mockBundleDetails?.normalizations?.methods">
               <app-mini-content [title]="methods.name">
                 <p>{{ methods.value }}</p>
               </app-mini-content>

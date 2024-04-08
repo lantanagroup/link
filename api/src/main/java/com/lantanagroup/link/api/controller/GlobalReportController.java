@@ -37,25 +37,17 @@ public class GlobalReportController extends BaseController {
     if (!startDate.isEmpty()) {
       Date date = Helper.parseFhirDate(startDate);
 
-      reports = reports.stream().filter(x -> {
-        try {
-          return Helper.parseFhirDate(x.getPeriodStart()).after(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date);
-        } catch (ParseException e) {
-          throw new RuntimeException(e);
-        }
-      }).collect(Collectors.toList());
+      reports = reports.stream().filter(x ->
+        Helper.parseFhirDate(x.getPeriodStart()).after(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date)
+      ).collect(Collectors.toList());
     }
 
     if (!endDate.isEmpty()) {
       Date date = Helper.parseFhirDate(endDate);
 
-      reports = reports.stream().filter(x -> {
-        try {
-          return Helper.parseFhirDate(x.getPeriodEnd()).before(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date);
-        } catch (ParseException e) {
-          throw new RuntimeException(e);
-        }
-      }).collect(Collectors.toList());
+      reports = reports.stream().filter(x ->
+        Helper.parseFhirDate(x.getPeriodEnd()).before(date) || Helper.parseFhirDate(x.getPeriodStart()).equals(date)
+      ).collect(Collectors.toList());
     }
 
     if (!tenantId.isEmpty()) {
@@ -66,8 +58,7 @@ public class GlobalReportController extends BaseController {
       reports = reports.stream().filter(x -> x.getStatus().equals(ReportStatuses.valueOf(status))).collect(Collectors.toList());
     }
 
-    if(measureIds.length() > 0)
-    {
+    if (!measureIds.isEmpty()) {
       String[] ids = measureIds.split(",");
       reports = reports.stream().filter(x -> {
         HashSet<String> measureIdsSet = new HashSet<>(x.getMeasureIds());
@@ -80,7 +71,11 @@ public class GlobalReportController extends BaseController {
       }).collect(Collectors.toList());
     }
 
-    reports = reports.stream().skip((long) (page -1) * count).limit(count).collect(Collectors.toList());
+    reports = reports
+            .stream()
+            .skip((long) (page - 1) * count)
+            .limit(count)
+            .collect(Collectors.toList());
 
     return reports;
   }

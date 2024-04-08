@@ -5,7 +5,7 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import org.hl7.fhir.r4.model.Bundle;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 @SuppressWarnings("unused")
 public interface IReportSender {

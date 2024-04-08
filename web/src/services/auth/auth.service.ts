@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { tap, catchError, throwError, BehaviorSubject } from 'rxjs';
+import {Injectable} from '@angular/core';
+import {HttpClient} from '@angular/common/http';
+import {Router} from '@angular/router';
+import {BehaviorSubject, catchError, tap, throwError} from 'rxjs';
+import {AppConfigService} from "../app.config";
 
 interface TokenResponse {
   access_token: string;
@@ -14,11 +15,13 @@ interface TokenResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private AUTH_ENDPOINT = 'https://oauth.nhsnlink.org/auth/realms/NHSNLink/protocol/openid-connect';
-
   private authStatus = new BehaviorSubject<boolean>(this.isLoggedIn())
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    public appConfigService: AppConfigService) {
+  }
 
   /* Methods */
 
@@ -35,7 +38,7 @@ export class AuthService {
   // Login method that would return the auth url.
   login() {
     // Redirect to Keycloak login page
-    return `${this.AUTH_ENDPOINT}/auth?client_id=nhsnlink-app&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
+    return `${this.appConfigService.getConfig()?.authOpenIdUrl}/auth?client_id=${this.appConfigService.getConfig()?.authClientId}&response_type=code&redirect_uri=${this.getBaseURL()}/callback&scope=openid%20profile%20email`;
   }
 
   // Using the code from redirect url, below method will get a valid token.
@@ -47,7 +50,7 @@ export class AuthService {
     payload.set('redirect_uri', this.getBaseURL() + '/callback');
     payload.set('grant_type', 'authorization_code');
 
-    return this.http.post<TokenResponse>(`${this.AUTH_ENDPOINT}/token`, payload.toString(), {
+    return this.http.post<TokenResponse>(`${this.appConfigService.getConfig()?.authOpenIdUrl}/token`, payload.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
   }
@@ -65,7 +68,7 @@ export class AuthService {
     payload.set('refresh_token', refreshToken);
     payload.set('grant_type', 'refresh_token');
 
-    return this.http.post<TokenResponse>(`${this.AUTH_ENDPOINT}/token`, payload.toString(), {
+    return this.http.post<TokenResponse>(`${this.appConfigService.getConfig()?.authOpenIdUrl}/token`, payload.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap(response => {
@@ -84,7 +87,6 @@ export class AuthService {
 
   // This method will call the getToken and cache the response values.
   handleAuth(code: string) {
-    debugger;
     return this.getToken(code).pipe(
       tap(response => {
         // Store tokens in a secure storage
@@ -116,15 +118,23 @@ export class AuthService {
   }
 
   // Logs out the user by clearing the access_token
-  logout(): void {
+  logout(message?: string): void {
     sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('expires_in');
     sessionStorage.removeItem('id_token');
     sessionStorage.removeItem('refresh_token');
 
+    // set message if exists
+    if(message) {
+      sessionStorage.setItem('loginMessage', message)
+    } else {
+      sessionStorage.removeItem('loginMessage')
+    }
+
     this.updateAuthStatus(false)
 
-    const logoutUrl = `${this.AUTH_ENDPOINT}/logout?redirect_uri=${this.getBaseURL()}`;
+    const logoutUrl = `${this.appConfigService.getConfig()?.authOpenIdUrl}/logout?client_id=${this.appConfigService.getConfig()?.authClientId}&post_logout_redirect_uri=${this.getBaseURL()}`;
+
     window.location.href = logoutUrl;
   }
 

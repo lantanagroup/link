@@ -26,9 +26,9 @@ public class EncounterStatusTransformer implements IReportGenerationDataEvent {
         if (patientEncounter.getPeriod().hasEnd() && patientEncounter.getStatus() != Encounter.EncounterStatus.FINISHED) {
           logger.debug("Updating Encounter {} status from {} to FINISHED", patientEncounter.getIdElement().getIdPart(), patientEncounter.getStatus());
 
-          patientEncounter.addExtension()
+          patientEncounter.getStatusElement().addExtension()
                   .setUrl(Constants.OriginalElementValueExtension)
-                  .setValue(new CodeType().setValue(patientEncounter.getStatus().toString()));
+                  .setValue(new CodeType(patientEncounter.getStatus().toCode()));
           patientEncounter.setStatus(Encounter.EncounterStatus.FINISHED);
         }
       }

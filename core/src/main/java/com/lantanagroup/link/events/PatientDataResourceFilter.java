@@ -159,6 +159,5 @@ public class PatientDataResourceFilter implements IReportGenerationDataEvent {
   @SuppressWarnings("unused")
   @Override
   public void execute(TenantService tenantService, List<DomainResource> data, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    throw new RuntimeException("Not yet implemented");
   }
 }

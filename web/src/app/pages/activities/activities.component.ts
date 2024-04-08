@@ -1,21 +1,21 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { from } from 'rxjs';
-import { HeroComponent } from 'src/app/shared/hero/hero.component';
-import { CardComponent } from 'src/app/shared/card/card.component';
-import { MetricComponent } from 'src/app/shared/metric/metric.component';
-import { DataTablesModule } from 'angular-datatables';
-import { TableComponent } from 'src/app/shared/table/table.component';
-import { SectionComponent } from 'src/app/shared/section/section.component';
-import { Report } from 'src/app/shared/interfaces/report.model';
-import { SearchBar } from 'src/app/shared/interfaces/table.model';
-import { ReportApiService } from 'src/services/api/report/report-api.service';
-import { MetricApiService } from 'src/services/api/metric/metric-api.service';
-import { MetricCard, TimePeriod } from 'src/app/shared/interfaces/metrics.model';
+import {Component, OnInit} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {from} from 'rxjs';
+import {HeroComponent} from 'src/app/shared/hero/hero.component';
+import {CardComponent} from 'src/app/shared/card/card.component';
+import {MetricComponent} from 'src/app/shared/metric/metric.component';
+import {DataTablesModule} from 'angular-datatables';
+import {TableComponent} from 'src/app/shared/table/table.component';
+import {SectionComponent} from 'src/app/shared/section/section.component';
+import {Report} from 'src/app/shared/interfaces/report.model';
+import {SearchBar} from 'src/app/shared/interfaces/table.model';
+import {ReportApiService} from 'src/services/api/report/report-api.service';
+import {MetricApiService} from 'src/services/api/metric/metric-api.service';
+import {MetricCard, TimePeriod} from 'src/app/shared/interfaces/metrics.model';
 
-import { calculatePeriodLength, formatDate } from 'src/app/helpers/ReportHelper';
-import { PascalCaseToSpace, ConvertDateString } from 'src/app/helpers/GlobalPipes.pipe';
-import { LoaderComponent } from 'src/app/shared/loader/loader.component';
+import {calculatePeriodLength, formatDate} from 'src/app/helpers/ReportHelper';
+import {ConvertDateString, ConvertToLocaleTime, PascalCaseToSpace} from 'src/app/helpers/GlobalPipes.pipe';
+import {LoaderComponent} from 'src/app/shared/loader/loader.component';
 
 @Component({
   selector: 'app-activities',
@@ -34,6 +34,7 @@ export class ActivitiesComponent implements OnInit {
   isDataLoaded: boolean = false;
   private pascalCaseToSpace = new PascalCaseToSpace
   private convertDateString = new ConvertDateString
+  private convertToLocaleTime = new ConvertToLocaleTime
 
   constructor(
     private reportsApiService: ReportApiService,
@@ -56,7 +57,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Total Patients Reported',
           subText: 'patients reported past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.patientsReported
@@ -64,7 +65,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Evaluations',
           subText: 'evaluations on average past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: true,
           toTimestamp: false,
           metricData: metricData?.evaluation
@@ -72,7 +73,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Query Time',
           subText: 'on average past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.queryTime
@@ -80,7 +81,7 @@ export class ActivitiesComponent implements OnInit {
         {
           name: 'Average Validation Time',
           subText: 'on average past 7 days',
-          changeWindow: 'yesterday',
+          changeWindow: 'last week',
           upGood: false,
           toTimestamp: true,
           metricData: metricData?.validation
@@ -98,7 +99,7 @@ export class ActivitiesComponent implements OnInit {
   calculateDtOptions(): DataTables.Settings {
     // DataTable configuration
     // ! for column ordering, will change
-    const columnIdMap = ['TIMESTAMP', 'ACTIVITY', 'DETAILS', 'FACILITY', 'NHSN_ORG_ID', 'REPORTING_PERIOD', 'MEASURES'],
+    const columnIdMap = ['TIMESTAMP', 'ACTIVITY', 'DETAILS', 'FACILITY', 'NHSN_ORG_ID', 'REPORTING_PERIOD', 'MEASURES', 'PATIENTS'],
           pageLength = 15
 
     return {
@@ -140,6 +141,10 @@ export class ActivitiesComponent implements OnInit {
         orderable: false,
         createdCell: (cell, cellData) => {
           $(cell).addClass('timestamp');
+        },
+        render: function(data, type, row) {
+          let parts = data.split(' ', 2)
+          return parts[0] + '<br>' + data.substring(parts[0].length).trim()
         }
       },
       {
@@ -157,7 +162,7 @@ export class ActivitiesComponent implements OnInit {
         render: function (data, type, row) {
           let dotClass;
           switch (row.STATUS) {
-            case 'Submitted': 
+            case 'Submitted':
               dotClass = 'success'
               break
             case 'Draft':
@@ -166,7 +171,7 @@ export class ActivitiesComponent implements OnInit {
             default:
               dotClass = 'failed'
           }
-          
+
           return `<div class="d-flex align-items-center">
                   <span class="dot dot--${dotClass}"></span>
                   <span>${data}</span>
@@ -235,6 +240,11 @@ export class ActivitiesComponent implements OnInit {
           }
           return '';
         }
+      },
+        {
+          title: 'Patients',
+          data: columnIdMap[7],
+          orderable: false
       }]
     }
 
@@ -261,9 +271,9 @@ export class ActivitiesComponent implements OnInit {
       // timestamp
       let timestamp
       if (report.generatedTime && status === 'submitted') {
-        timestamp = this.convertDateString.transform(report.generatedTime)
+        timestamp = this.convertToLocaleTime.transform(report.generatedTime)
       } else if (report.submittedTime) {
-        timestamp = this.convertDateString.transform(report.submittedTime)
+        timestamp = this.convertToLocaleTime.transform(report.submittedTime)
       } else {
         timestamp = 'n/a'
       }
@@ -286,6 +296,12 @@ export class ActivitiesComponent implements OnInit {
         activity = 'Successful Submission'
       }
 
+      let patients = 'N/A';
+
+      if (report.totalPatients >= 0 && report.maxTotalInIP >= 0) {
+        patients = report.maxTotalInIP + '/' + report.totalPatients;
+      }
+
       return {
         ID: report.id,
         STATUS: status,
@@ -298,7 +314,8 @@ export class ActivitiesComponent implements OnInit {
         MEASURES: report.measureIds.map(m => {
           const measure = this.pascalCaseToSpace.transform(m)
           return measure.split(' ')[0]
-        })
+        }),
+        PATIENTS: patients
       };
     });
   }

@@ -1,5 +1,6 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Strings;
@@ -11,22 +12,33 @@ import com.lantanagroup.link.db.model.tenant.Address;
 import com.lantanagroup.link.model.ApiVersionModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
+import com.lantanagroup.link.validation.Validator;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
 public class FhirHelper {
   private static final Logger logger = LoggerFactory.getLogger(FhirHelper.class);
+
+  private static final DefaultProfileValidationSupport validationSupport =
+          new DefaultProfileValidationSupport(FhirContextProvider.getFhirContext());
+
+  static {
+    validationSupport.fetchAllStructureDefinitions();
+  }
 
   public static org.hl7.fhir.r4.model.Address getFHIRAddress(Address address) {
     org.hl7.fhir.r4.model.Address ret = new org.hl7.fhir.r4.model.Address();
@@ -241,8 +253,10 @@ public class FhirHelper {
   }
 
   public static Device getDevice(ApiConfig apiConfig) {
-    ApiVersionModel apiVersionModel = Helper.getVersionInfo(apiConfig.getEvaluationService());
+    ApiVersionModel apiVersionModel = Helper.getVersionInfo();
     Device device = new Device();
+    device.setId(UUID.randomUUID().toString());
+    device.getMeta().addProfile(Constants.SubmittingDeviceProfile);
     device.addDeviceName().setName(apiConfig.getName());
     device.getDeviceNameFirstRep().setType(Device.DeviceNameType.USERFRIENDLYNAME);
 
@@ -267,65 +281,77 @@ public class FhirHelper {
               .setValue(apiVersionModel.getCommit());
     }
 
-    if (StringUtils.isNotEmpty(apiVersionModel.getCqfVersion())) {
-      device.addVersion()
-              .setType(new CodeableConcept().addCoding(new Coding().setCode("version").setSystem(Constants.LinkDeviceVersionCodeSystem)))
-              .setComponent(new Identifier().setValue("cqf-ruler"))
-              .setValue(apiVersionModel.getCqfVersion());
-    }
-
     return device;
   }
 
-  public static Device getDevice(ApiConfig apiConfig, TenantService tenantService) {
+  public static Device getDevice(ApiConfig apiConfig, TenantService tenantService, Validator validator) {
     Device device = getDevice(apiConfig);
 
     if (tenantService.getConfig().getEvents() != null) {
-      addPropertyToDevice(device, "BeforeMeasureResolution", tenantService.getConfig().getEvents().getBeforeMeasureResolution());
-      addPropertyToDevice(device, "AfterMeasureResolution", tenantService.getConfig().getEvents().getAfterMeasureResolution());
-      addPropertyToDevice(device, "OnRegeneration", tenantService.getConfig().getEvents().getOnRegeneration());
-      addPropertyToDevice(device, "BeforePatientOfInterestLookup", tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
-      addPropertyToDevice(device, "AfterPatientOfInterestLookup", tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
-      addPropertyToDevice(device, "BeforePatientDataQuery", tenantService.getConfig().getEvents().getBeforePatientDataQuery());
-      addPropertyToDevice(device, "AfterPatientResourceQuery", tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
-      addPropertyToDevice(device, "AfterPatientDataQuery", tenantService.getConfig().getEvents().getAfterPatientDataQuery());
-      addPropertyToDevice(device, "AfterApplyConceptMaps", tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
-      addPropertyToDevice(device, "BeforePatientDataStore", tenantService.getConfig().getEvents().getBeforePatientDataStore());
-      addPropertyToDevice(device, "AfterPatientDataStore", tenantService.getConfig().getEvents().getAfterPatientDataStore());
-      addPropertyToDevice(device, "BeforeMeasureEval", tenantService.getConfig().getEvents().getBeforeMeasureEval());
-      addPropertyToDevice(device, "AfterMeasureEval", tenantService.getConfig().getEvents().getAfterMeasureEval());
-      addPropertyToDevice(device, "BeforeReportStore", tenantService.getConfig().getEvents().getBeforeReportStore());
-      addPropertyToDevice(device, "AfterReportStore", tenantService.getConfig().getEvents().getAfterReportStore());
-      addPropertyToDevice(device, "BeforeBundling", tenantService.getConfig().getEvents().getBeforeBundling());
-      addPropertyToDevice(device, "AfterBundling", tenantService.getConfig().getEvents().getAfterBundling());
+      addEventNotesToDevice(device, "BeforeMeasureResolution", tenantService.getConfig().getEvents().getBeforeMeasureResolution());
+      addEventNotesToDevice(device, "AfterMeasureResolution", tenantService.getConfig().getEvents().getAfterMeasureResolution());
+      addEventNotesToDevice(device, "OnRegeneration", tenantService.getConfig().getEvents().getOnRegeneration());
+      addEventNotesToDevice(device, "BeforePatientOfInterestLookup", tenantService.getConfig().getEvents().getBeforePatientOfInterestLookup());
+      addEventNotesToDevice(device, "AfterPatientOfInterestLookup", tenantService.getConfig().getEvents().getAfterPatientOfInterestLookup());
+      addEventNotesToDevice(device, "BeforePatientDataQuery", tenantService.getConfig().getEvents().getBeforePatientDataQuery());
+      addEventNotesToDevice(device, "AfterPatientResourceQuery", tenantService.getConfig().getEvents().getAfterPatientResourceQuery());
+      addEventNotesToDevice(device, "AfterPatientDataQuery", tenantService.getConfig().getEvents().getAfterPatientDataQuery());
+      addEventNotesToDevice(device, "AfterApplyConceptMaps", tenantService.getConfig().getEvents().getAfterApplyConceptMaps());
+      addEventNotesToDevice(device, "BeforePatientDataStore", tenantService.getConfig().getEvents().getBeforePatientDataStore());
+      addEventNotesToDevice(device, "AfterPatientDataStore", tenantService.getConfig().getEvents().getAfterPatientDataStore());
+      addEventNotesToDevice(device, "BeforeMeasureEval", tenantService.getConfig().getEvents().getBeforeMeasureEval());
+      addEventNotesToDevice(device, "AfterMeasureEval", tenantService.getConfig().getEvents().getAfterMeasureEval());
+      addEventNotesToDevice(device, "BeforeReportStore", tenantService.getConfig().getEvents().getBeforeReportStore());
+      addEventNotesToDevice(device, "AfterReportStore", tenantService.getConfig().getEvents().getAfterReportStore());
+      addEventNotesToDevice(device, "BeforeBundling", tenantService.getConfig().getEvents().getBeforeBundling());
+      addEventNotesToDevice(device, "AfterBundling", tenantService.getConfig().getEvents().getAfterBundling());
     }
 
     List<com.lantanagroup.link.db.model.ConceptMap> conceptMaps = tenantService.getAllConceptMaps();
 
     if (!conceptMaps.isEmpty()) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.setType(new CodeableConcept().addCoding(new Coding().setCode("concept-map").setSystem(Constants.LinkDevicePropertiesCodeSystem)));
+      for (ConceptMap conceptMap : conceptMaps) {
+        String title = conceptMap.getConceptMap().getTitle();
+        String version = StringUtils.isNotEmpty(conceptMap.getConceptMap().getVersion()) ? " (" + conceptMap.getConceptMap().getVersion() + ")" : "";
+        if (StringUtils.isNotEmpty(title)) {
+          title = conceptMap.getConceptMap().getName();
+        } else {
+          title = conceptMap.getId();
+        }
 
-      for (ConceptMap conceptMap : tenantService.getAllConceptMaps()) {
-        property.addValueCode(new CodeableConcept().addCoding(new Coding().setCode(conceptMap.getId())).setText(conceptMap.getConceptMap().getName()));
+        device.getNote().add(new Annotation().setText("Concept Map: " + title + version));
       }
     }
+
+    setImplementationGuideNotes(device, validator);
 
     return device;
   }
 
-  private static void addPropertyToDevice(Device device, String category, List<String> events) {
+  public static void setImplementationGuideNotes(Device device, Validator validator) {
+    String prefix = "Implementation Guide: ";
+    device.getNote().removeIf(annotation -> annotation.getText().startsWith(prefix));
+    validator.init();       // Ensure the validator is initialized so we can get the implementation guides from it
+
+    for (ImplementationGuide ig : validator.getImplementationGuides()) {
+      String igNote = String.format("%s%s - %s - %s - %s", prefix, StringUtils.isEmpty(ig.getTitle()) ? ig.getName() : ig.getTitle(), ig.getUrl(), ig.getVersion(), ig.getDate());
+      device.addNote(new Annotation().setText(igNote));
+    }
+  }
+
+  private static void addEventNotesToDevice(Device device, String eventCategory, List<String> events) {
     if (events == null) {
       return;
     }
 
     for (String event : events) {
-      Device.DevicePropertyComponent property = device.addProperty();
-      property.getType().addCoding().setCode("event").setSystem(Constants.LinkDevicePropertiesCodeSystem);
-
-      String theEvent = event.indexOf(".") > 0 ? event.substring(event.lastIndexOf(".") + 1) : event;
-      property.addValueCode().setText(category + "-" + theEvent);
+      device.getNote().add(new Annotation().setText("Event: " + eventCategory + " executes " + event));
     }
+  }
+
+  public static FHIRPathEngine getFhirPathEngine() {
+    HapiWorkerContext workerContext = new HapiWorkerContext(FhirContextProvider.getFhirContext(), validationSupport);
+    return new FHIRPathEngine(workerContext);
   }
 
   /**

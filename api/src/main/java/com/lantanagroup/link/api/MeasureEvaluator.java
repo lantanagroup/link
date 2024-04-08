@@ -1,7 +1,7 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
-import com.lantanagroup.link.FhirDataProvider;
+import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
@@ -24,9 +24,11 @@ public class MeasureEvaluator {
   private String patientId;
   private StopwatchManager stopwatchManager;
   private TenantService tenantService;
+  private MeasureServiceWrapper measureServiceWrapper;
 
-  private MeasureEvaluator(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
+  private MeasureEvaluator(TenantService tenantService, MeasureServiceWrapper measureServiceWrapper, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, String patientId) {
     this.tenantService = tenantService;
+    this.measureServiceWrapper = measureServiceWrapper;
     this.stopwatchManager = stopwatchManager;
     this.criteria = criteria;
     this.reportContext = reportContext;
@@ -35,52 +37,32 @@ public class MeasureEvaluator {
     this.patientId = patientId;
   }
 
-  public static MeasureReport generateMeasureReport(TenantService tenantService, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
-    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
+  public static MeasureReport generateMeasureReport(TenantService tenantService, MeasureServiceWrapper measureServiceWrapper, StopwatchManager stopwatchManager, ReportCriteria criteria, ReportContext reportContext, ReportContext.MeasureContext measureContext, ApiConfig config, PatientOfInterestModel patientOfInterest) {
+    MeasureEvaluator evaluator = new MeasureEvaluator(tenantService, measureServiceWrapper, stopwatchManager, criteria, reportContext, measureContext, config, patientOfInterest.getId());
     return evaluator.generateMeasureReport();
-  }
-
-  private static Endpoint getTerminologyEndpoint(ApiConfig config) {
-    Endpoint terminologyEndpoint = new Endpoint();
-    terminologyEndpoint.setStatus(Endpoint.EndpointStatus.ACTIVE);
-    terminologyEndpoint.setConnectionType(new Coding());
-    terminologyEndpoint.getConnectionType().setSystem(Constants.TerminologyEndpointSystem);
-    terminologyEndpoint.getConnectionType().setCode(Constants.TerminologyEndpointCode);
-    terminologyEndpoint.setAddress(config.getTerminologyService());
-    return terminologyEndpoint;
   }
 
   private MeasureReport generateMeasureReport() {
     MeasureReport measureReport;
     String patientDataBundleId = ReportIdHelper.getPatientDataBundleId(reportContext.getMasterIdentifierValue(), patientId);
     String measureId = this.measureContext.getMeasure().getIdElement().getIdPart();
-    String start = this.criteria.getPeriodStart().substring(0, this.criteria.getPeriodStart().indexOf("."));
-    String end = this.criteria.getPeriodEnd().substring(0, this.criteria.getPeriodEnd().indexOf("."));
 
     Bundle patientBundle;
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_RETRIEVE_PATIENT_DATA, Constants.CATEGORY_REPORT)) {
       patientBundle = PatientData.asBundle(tenantService.findPatientData(reportContext.getMasterIdentifierValue(), patientId));
     }
 
-    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, start, end, patientId, patientBundle.getEntry().size());
-
-    Parameters parameters = new Parameters();
-    parameters.addParameter().setName("periodStart").setValue(new StringType(start));
-    parameters.addParameter().setName("periodEnd").setValue(new StringType(end));
-    parameters.addParameter().setName("subject").setValue(new StringType(patientId));
-    parameters.addParameter().setName("additionalData").setResource(patientBundle);
-    if (!this.config.getEvaluationService().equals(this.config.getTerminologyService())) {
-      Endpoint terminologyEndpoint = getTerminologyEndpoint(this.config);
-      parameters.addParameter().setName("terminologyEndpoint").setResource(terminologyEndpoint);
-      logger.info("evaluate-measure is being executed with the terminologyEndpoint parameter.");
+    // if patient is in the debugPatients list or debugPatients = "*" then write the patient data bundle to the file system
+    if (reportContext.getDebugPatients().contains("Patient/" + patientId) || reportContext.getDebugPatients().contains("*")) {
+      String fileName = ReportIdHelper.getPatientBundleFileName(reportContext.getMasterIdentifierValue(), patientId) + ".json";
+      Helper.dumpToFile(patientBundle, config.getDebugPath(), fileName);
     }
 
-    logger.info(String.format("Evaluating measure for patient %s and measure %s", patientId, measureId));
+    logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, criteria.getPeriodStart(), criteria.getPeriodEnd(), patientId, patientBundle.getEntry().size());
 
-    FhirDataProvider fhirDataProvider = new FhirDataProvider(this.config.getEvaluationService());
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
-      measureReport = fhirDataProvider.getMeasureReport(measureId, parameters);
+      measureReport = measureServiceWrapper.evaluate(this.criteria.getPeriodStart(), this.criteria.getPeriodEnd(), patientId, patientBundle);
     }
 
     // TODO: commenting out this code because the narrative text isn't being generated, will need to look into this

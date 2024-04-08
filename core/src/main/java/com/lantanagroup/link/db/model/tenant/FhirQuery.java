@@ -4,7 +4,7 @@ import com.lantanagroup.link.db.model.tenant.auth.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.Map;
 
@@ -18,12 +18,6 @@ public class FhirQuery {
    * The class that should be used (if any) to authenticate queries to the EHR's FHIR server.
    */
   private String authClass;
-
-  /**
-   * The number of patients to query for in parallel using separate threads. Should not be greater than the number of
-   * cores available to the installation.
-   */
-  private int parallelPatients = 10;
 
   /**
    * Configuration used by BasicAuth implementation

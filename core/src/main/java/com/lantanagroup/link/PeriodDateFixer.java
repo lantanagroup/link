@@ -25,14 +25,16 @@ public class PeriodDateFixer
         DateTimeType end = p.getEndElement();
 
         if (start.getPrecision() == TemporalPrecisionEnum.DAY && end.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
+          p.getStartElement().addExtension()
+                  .setUrl(Constants.OriginalElementValueExtension)
+                  .setValue(p.getStartElement().copy());
+
           start.setPrecision(end.getPrecision());
           start.setTimeZone(end.getTimeZone());
           start.setHour(0);
           start.setMinute(0);
           start.setSecond(0);
           start.setMillis(0);
-
-          p.setStartElement(start);
       }
 
     });

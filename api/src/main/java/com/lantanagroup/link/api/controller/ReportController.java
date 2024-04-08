@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.api.ReportGenerator;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
@@ -23,8 +24,9 @@ import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
@@ -41,7 +43,6 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
@@ -50,13 +51,18 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/{tenantId}/report")
 public class ReportController extends BaseController {
   private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
+  private static final Map<String, Lock> tenantLocks = new ConcurrentHashMap<>();
 
   // Disallow binding of sensitive attributes
   // Ex: DISALLOWED_FIELDS = new String[]{"details.role", "details.age", "is_admin"};
@@ -81,6 +87,10 @@ public class ReportController extends BaseController {
 
   @Autowired
   private ValidationService validationService;
+
+  @Autowired
+  private ApiConfig apiConfig;
+
 
   @InitBinder
   public void initBinder(WebDataBinder binder) {
@@ -143,14 +153,76 @@ public class ReportController extends BaseController {
     }
   }
 
-  private List<PatientOfInterestModel> getPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-    List<PatientOfInterestModel> patientOfInterestModelList;
-
+  private void loadPatientIdentifiers(TenantService tenantService, ReportCriteria criteria, ReportContext context) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
     Class<?> patientIdResolverClass = Class.forName(this.config.getPatientIdResolver());
     IPatientIdProvider provider = (IPatientIdProvider) this.context.getBean(patientIdResolverClass);
-    patientOfInterestModelList = provider.getPatientsOfInterest(tenantService, criteria, context);
+    provider.loadPatientsOfInterest(tenantService, criteria, context);
+  }
 
-    return patientOfInterestModelList;
+  @PostMapping("/{reportId}/$regenerate")
+  public Report regenerateReport(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @PathVariable String tenantId,
+          @PathVariable String reportId,
+          @RequestBody GenerateRequest input)
+          throws Exception {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    GenerateRequest generateRequest = new GenerateRequest();
+    generateRequest.setBundleIds(report.getMeasureIds());
+    generateRequest.setPeriodStart(report.getPeriodStart());
+    generateRequest.setPeriodEnd(report.getPeriodEnd());
+    generateRequest.setRegenerate(true);
+    generateRequest.setValidate(input.isValidate());
+    generateRequest.setSkipQuery(input.isSkipQuery());
+    generateRequest.setDebugPatients(input.getDebugPatients());
+
+    return generateReport(user, request, tenantId, generateRequest);
+  }
+
+  @GetMapping("/{reportId}/$regenerate")
+  public Report regenerateReport(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @PathVariable String tenantId,
+          @PathVariable String reportId,
+          @RequestParam(defaultValue = "true") boolean validate,
+          @RequestParam(defaultValue = "false") boolean skipQuery,
+          @RequestParam(required = false, defaultValue = "") List<String> debugPatients)
+          throws Exception {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    GenerateRequest generateRequest = new GenerateRequest();
+    generateRequest.setBundleIds(report.getMeasureIds());
+    generateRequest.setPeriodStart(report.getPeriodStart());
+    generateRequest.setPeriodEnd(report.getPeriodEnd());
+    generateRequest.setRegenerate(true);
+    generateRequest.setValidate(validate);
+    generateRequest.setSkipQuery(skipQuery);
+    generateRequest.setDebugPatients(debugPatients);
+
+    return generateReport(user, request, tenantId, generateRequest);
   }
 
   @PostMapping("/$generate")
@@ -166,7 +238,7 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
+    return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
   }
 
   /**
@@ -185,7 +257,8 @@ public class ReportController extends BaseController {
           @PathVariable String tenantId,
           @RequestParam boolean regenerate,
           @RequestParam(defaultValue = "true") boolean validate,
-          @RequestParam(defaultValue = "false") boolean skipQuery)
+          @RequestParam(defaultValue = "false") boolean skipQuery,
+          @RequestParam(required = false, defaultValue = "") List<String> debugPatients)
           throws Exception {
     List<String> singleMeasureBundleIds;
 
@@ -198,6 +271,8 @@ public class ReportController extends BaseController {
       }
     }
 
+    Optional<List<String>> debugPatientList = Optional.of(debugPatients);
+
     // get the associated bundle-ids
     if (!apiMeasurePackage.isPresent()) {
       throw new IllegalStateException(String.format("Multimeasure %s is not set-up.", multiMeasureBundleId));
@@ -206,19 +281,19 @@ public class ReportController extends BaseController {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     singleMeasureBundleIds = apiMeasurePackage.get().getMeasureIds();
-    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery);
+    return generateResponse(tenantService, user, request, multiMeasureBundleId, singleMeasureBundleIds, periodStart, periodEnd, regenerate, validate, skipQuery, debugPatients);
   }
 
   private void checkReportingPlan(TenantService tenantService, String periodStart, List<String> measureIds) throws ParseException, URISyntaxException, IOException {
-    if (tenantService.getConfig().getReportingPlan() == null) {
+    if (apiConfig.getReportingPlan() == null) {
       return;
     }
 
-    if (!tenantService.getConfig().getReportingPlan().isEnabled()) {
+    if (!apiConfig.getReportingPlan().isEnabled()) {
       return;
     }
 
-    if (StringUtils.isEmpty(tenantService.getConfig().getReportingPlan().getUrl())) {
+    if (StringUtils.isEmpty(apiConfig.getReportingPlan().getUrl())) {
       logger.error("Reporting plan for tenant {} is not configured with a URL", tenantService.getConfig().getId());
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -228,13 +303,13 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    ReportingPlanService reportingPlanService = new ReportingPlanService(tenantService.getConfig().getReportingPlan(), tenantService.getConfig().getCdcOrgId());
+    ReportingPlanService reportingPlanService = new ReportingPlanService(apiConfig.getReportingPlan(), tenantService.getConfig().getCdcOrgId());
 
     Date date = Helper.parseFhirDate(periodStart);
     int year = date.getYear() + 1900;
     int month = date.getMonth() + 1;
     for (String bundleId : measureIds) {
-      String planName = tenantService.getConfig().getReportingPlan().getPlanNames().get(bundleId);
+      String planName = apiConfig.getReportingPlan().getPlanNames().get(bundleId);
       if (!reportingPlanService.isReporting(planName, year, month)) {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Measure not in MRP for specified year and month");
       }
@@ -244,8 +319,12 @@ public class ReportController extends BaseController {
   /**
    * generates a response with one or multiple reports
    */
-  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery) throws Exception {
+  private Report generateResponse(TenantService tenantService, LinkCredentials user, HttpServletRequest request, String packageId, List<String> measureIds, String periodStart, String periodEnd, boolean regenerate, boolean validate, boolean skipQuery, List<String>  debugPatients) throws Exception {
     Report report = null;
+    Lock tenantLock = tenantLocks.computeIfAbsent(tenantService.getConfig().getId(), id -> new ReentrantLock());
+    if (!tenantLock.tryLock()) {
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Report in progress for tenant");
+    }
     try(var stopwatch = stopwatchManager.start(Constants.REPORT_GENERATION_TASK, Constants.CATEGORY_REPORT)) {
       this.checkReportingPlan(tenantService, periodStart, measureIds);
 
@@ -283,9 +362,9 @@ public class ReportController extends BaseController {
       this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientOfInterestLookup, criteria, reportContext);
 
       // Get the patient identifiers for the given date
-      this.getPatientIdentifiers(tenantService, criteria, reportContext);
+      this.loadPatientIdentifiers(tenantService, criteria, reportContext);
 
-      if (reportContext.getPatientLists() == null || reportContext.getPatientLists().size() < 1) {
+      if (reportContext.getPatientLists() == null || reportContext.getPatientLists().isEmpty()) {
         String msg = "A census for the specified criteria was not found.";
         logger.error(msg);
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
@@ -299,12 +378,23 @@ public class ReportController extends BaseController {
       }
       reportContext.setQueryPlan(queryPlan);
 
+      // Validate the debug patients against the patient of interest list
+      if(!debugPatients.isEmpty() && !debugPatients.contains("*")) {
+        List<String> invalidDebugPatientsList = debugPatients.stream().filter(dp -> !reportContext.getPatientsOfInterest().stream().map(PatientOfInterestModel::getReference).collect(Collectors.toList()).contains(dp)).collect(Collectors.toList());
+        if (!invalidDebugPatientsList.isEmpty()) {
+          String msg = String.format("Debugging patients: %s do not exist", invalidDebugPatientsList);
+          logger.error(msg);
+          throw new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
+        }
+      }
+      reportContext.setDebugPatients(debugPatients);
+
       report = new Report();
       report.setId(masterIdentifierValue);
       report.setPeriodStart(criteria.getPeriodStart());
       report.setPeriodEnd(criteria.getPeriodEnd());
       report.setMeasureIds(measureIds);
-      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
+      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService, validator));
       report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
       // Preserve the version of the already-existing report
@@ -362,6 +452,8 @@ public class ReportController extends BaseController {
       } else {
         logger.info("Skipping validation for report {}", report.getId());
       }
+    } finally {
+      tenantLock.unlock();
     }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());

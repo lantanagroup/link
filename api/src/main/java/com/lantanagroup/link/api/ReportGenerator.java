@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api;
 
 import com.lantanagroup.link.Constants;
+import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.IReportAggregator;
 import com.lantanagroup.link.ReportIdHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
@@ -58,44 +59,36 @@ public class ReportGenerator {
    * This method accepts a list of patients and generates an individual measure report for each patient.
    */
   public void generate(QueryPhase queryPhase) throws ExecutionException, InterruptedException {
-    if (this.config.getEvaluationService() == null) {
-      throw new IllegalStateException("api.evaluation-service has not been configured");
-    }
+    MeasureServiceWrapper measureServiceWrapper = new MeasureServiceWrapper(measureContext.getReportDefBundle(), config.getTerminologyService());
+    measureServiceWrapper.preCompile();
     logger.info("Patient list is : " + measureContext.getPatientsOfInterest(queryPhase).size());
-    ForkJoinPool forkJoinPool = config.getMeasureEvaluationThreads() != null
-            ? new ForkJoinPool(config.getMeasureEvaluationThreads())
-            : ForkJoinPool.commonPool();
+    ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
 
-    try {
+
       forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
                   return;
                 }
                 try {
-                  MeasureReport measureReport = generate(patient);
-                  synchronized (this) {
-                    measureContext.getPatientReportsByPatientId().put(patient.getId(), measureReport);
+                  MeasureReport measureReport = generate(measureServiceWrapper, patient);
+                  if (queryPhase == QueryPhase.INITIAL && FhirHelper.hasNonzeroPopulationCount(measureReport)) {
+                    measureContext.getSupplementalPatientsOfInterest().add(patient);
                   }
                 } catch (Exception e) {
                   logger.error("Error generating measure report for patient {}", patient.getId(), e);
                 } finally {
                   int completed = progress.incrementAndGet();
-                  double percent = Math.round((completed * 100.0) / pois.size());
-                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.2f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
+                  double percent = (completed * 100.0) / pois.size();
+                  logger.info("Progress ({}%) for report {} is {} of {}", String.format("%.1f", percent), reportContext.getMasterIdentifierValue(), completed, pois.size());
                 }
               }))
               .get();
-    } finally {
-      if (forkJoinPool != null) {
-        forkJoinPool.shutdown();
-      }
-    }
   }
 
-  private MeasureReport generate(PatientOfInterestModel patient) {
+  private MeasureReport generate(MeasureServiceWrapper measureServiceWrapper, PatientOfInterestModel patient) {
     String measureReportId = ReportIdHelper.getPatientMeasureReportId(measureContext.getReportId(), patient.getId());
     PatientMeasureReport patientMeasureReport = new PatientMeasureReport();
     patientMeasureReport.setId(measureReportId);
@@ -105,7 +98,7 @@ public class ReportGenerator {
 
     logger.info("Generating measure report for patient " + patient);
 
-    MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.tenantService, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
+    MeasureReport measureReport = MeasureEvaluator.generateMeasureReport(this.tenantService, measureServiceWrapper, this.stopwatchManager, criteria, reportContext, measureContext, config, patient);
     measureReport.setId(measureReportId);
     patientMeasureReport.setMeasureReport(measureReport);
 
@@ -119,7 +112,7 @@ public class ReportGenerator {
   }
 
   public void aggregate() throws ParseException {
-    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.criteria, this.measureContext);
+    MeasureReport masterMeasureReport = this.reportAggregator.generate(this.tenantService, this.criteria, this.measureContext);
     this.measureContext.setMeasureReport(masterMeasureReport);
 
     Aggregate aggregateReport = new Aggregate();

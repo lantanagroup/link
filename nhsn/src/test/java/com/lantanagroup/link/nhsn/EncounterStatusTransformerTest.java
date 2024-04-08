@@ -58,7 +58,7 @@ public class EncounterStatusTransformerTest {
     patientOfInterest.setId(patientID);
     List<PatientOfInterestModel> patientsOfInterest = new ArrayList<>();
     patientsOfInterest.add(patientOfInterest);
-    context.setPatientsOfInterest(patientsOfInterest);
+    context.setInitialPatientsOfInterest(patientsOfInterest);
     context.setMasterIdentifierValue(reportID);
     String bundleId = ReportIdHelper.getPatientDataBundleId(context.getMasterIdentifierValue(), patientOfInterest.getId());
 
@@ -68,8 +68,8 @@ public class EncounterStatusTransformerTest {
     Encounter encounterTest2 = (Encounter)bundle.getEntry().get(2).getResource();
     //Rewriting these tests to check that the transformed values persist rather than checking that they DON'T persist
     Assert.assertEquals(encounterTest1.getStatus(), Encounter.EncounterStatus.FINISHED);
-    Assert.assertEquals(encounterTest1.getExtension().size(), 1);
+    Assert.assertTrue(encounterTest1.getStatusElement().hasExtension());
     Assert.assertEquals(encounterTest2.getStatus(), Encounter.EncounterStatus.TRIAGED);
-    Assert.assertEquals(encounterTest2.getExtension().size(), 0);
+    Assert.assertFalse(encounterTest2.getStatusElement().hasExtension());
   }
 }

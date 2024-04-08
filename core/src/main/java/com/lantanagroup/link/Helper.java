@@ -1,9 +1,9 @@
 package com.lantanagroup.link;
 
+import ca.uhn.fhir.parser.IParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Aggregate;
 import com.lantanagroup.link.db.model.Report;
@@ -13,14 +13,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.CapabilityStatement;
+import org.hl7.fhir.r4.model.DateTimeType;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -37,23 +38,7 @@ public class Helper {
   public static final String SIMPLE_DATE_MILLIS_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   public static final String SIMPLE_DATE_SECONDS_FORMAT = "yyyy-MM-dd'T'HH:mm:ssXXX";
 
-  public static ApiVersionModel getVersionInfo(String evaluationService) {
-    String cqfVersion = null;
-
-    if (StringUtils.isNotEmpty(evaluationService)) {
-      CapabilityStatement cs = new FhirDataProvider(evaluationService)
-              .getClient()
-              .capabilities()
-              .ofType(CapabilityStatement.class)
-              .execute();
-
-      if (cs != null) {
-        cqfVersion = cs.getImplementation().getDescription();
-      } else {
-        logger.warn("Could not retrieve capabilities of evaluation service, using cqf-version specified in build.yml");
-      }
-    }
-
+  public static ApiVersionModel getVersionInfo() {
     try {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -62,19 +47,13 @@ public class Helper {
 
       if (buildFile == null) {
         logger.warn("No build.yml file found, returning default \"dev\" build and \"0.9.0\" version");
-        return new ApiVersionModel(cqfVersion);
+        return new ApiVersionModel();
       }
 
-      ApiVersionModel apiInfo = mapper.readValue(buildFile, ApiVersionModel.class);
-
-      if (StringUtils.isNotEmpty(cqfVersion)) {
-        apiInfo.setCqfVersion(cqfVersion);
-      }
-
-      return apiInfo;
+      return mapper.readValue(buildFile, ApiVersionModel.class);
     } catch (IOException ex) {
       logger.error("Error deserializing build.yml file", ex);
-      return new ApiVersionModel(cqfVersion);
+      return new ApiVersionModel();
     }
   }
 
@@ -88,20 +67,8 @@ public class Helper {
     return new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT).format(date);
   }
 
-  public static Date parseFhirDate(String dateStr) throws ParseException {
-    if (StringUtils.isEmpty(dateStr)) {
-      return null;
-    }
-
-    SimpleDateFormat formatterMillis = new SimpleDateFormat(SIMPLE_DATE_MILLIS_FORMAT);
-    SimpleDateFormat formatterSec = new SimpleDateFormat(SIMPLE_DATE_SECONDS_FORMAT);
-    Date dateReturned;
-    try {
-      dateReturned = formatterMillis.parse(dateStr);
-    } catch (Exception ex) {
-      dateReturned = formatterSec.parse(dateStr);
-    }
-    return dateReturned;
+  public static Date parseFhirDate(String dateStr) {
+    return new DateTimeType(dateStr).getValue();
   }
 
   public static <T> List<T> concatenate(List<T> list1, List<T> list2) {
@@ -190,6 +157,22 @@ public class Helper {
       text = text.replace("%" + key + "%", value);
     }
     return text;
+  }
+
+  public static void dumpToFile(Resource resource, String path, String fileName) {
+
+    IParser parser = FhirContextProvider.getFhirContext().newJsonParser();
+    String folderPath = Helper.expandEnvVars(path);
+    String filePath = Paths.get(folderPath, fileName).toString();
+    try (Writer writer = new FileWriter(filePath, StandardCharsets.UTF_8)) {
+      parser.encodeResourceToWriter(resource, writer);
+    }
+    catch (Exception e) {
+      logger.error("Error writing resource {} to file system", resource.getId(), e);
+    }
+    finally {
+      logger.info("Done writing resource {} to file system {}", resource.getId(), filePath);
+    }
   }
 
   public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService) {

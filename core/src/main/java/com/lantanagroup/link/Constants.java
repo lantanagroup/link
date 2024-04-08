@@ -18,7 +18,6 @@ public class Constants {
   public static final String MeasureScoringCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-scoring";
   public static final String MeasureImprovementNotationCodeSystem = "http://terminology.hl7.org/CodeSystem/measure-improvement-notation";
   public static final String LinkDeviceVersionCodeSystem = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-version";
-  public static final String LinkDevicePropertiesCodeSystem = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/CodeSystem/codesystem-link-device-properties";
   public static final String ReportBundleProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list";
@@ -32,6 +31,7 @@ public class Constants {
   public static final String OriginalElementValueExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-element-value-extension";
   public static final String OriginalResourceIdExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension";
   public static final String BundlingFullUrlFormat = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/%s";
+  public static final String LocationAliasCodeSystem = "https://nhsnlink.org/location-alias";
 
   //Metric taskName Constants
   public static final String TASK_SUBMIT = "submit";
@@ -61,4 +61,9 @@ public class Constants {
   public static final String VALIDATION_ISSUE_TASK = "Validation";
   public static final String VALIDATION_ISSUE_CATEGORY = "Validation Issues";
   public static final String REPORT_GENERATION_TASK = "Report Generation";
+
+  //Submission file names
+  public static final String ORGANIZATION_FILE_NAME = "organization.json";
+  public static final String DEVICE_FILE_NAME = "device.json";
+  public static final String QUERY_PLAN_FILE_NAME = "query-plan.yml";
 }

@@ -49,9 +49,7 @@ export class GlobalApiService {
   postContentObservable<T>(path: string, data: any): Observable<T> {
     return this.dataService.postData<T>(path, data).pipe(
       catchError((error) => {
-        console.error('Error posting data:', error)
-
-        return throwError(() => new Error('Error posting data to ' + path))
+        throw error
       })
     )
   }
@@ -73,10 +71,7 @@ export class GlobalApiService {
   putContentObservable<T>(path: string, data: any): Observable<T> {
     return this.dataService.putData<T>(path, data).pipe(
       catchError((error) => {
-        console.error('Error updating data:', error)
-        console.error('message:', error.error.message)
-
-        return throwError(() => new Error('Error putting data to ' + path))
+        throw error
       })
     )
   }

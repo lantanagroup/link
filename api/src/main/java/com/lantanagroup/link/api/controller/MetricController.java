@@ -2,6 +2,7 @@ package com.lantanagroup.link.api.controller;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.MetricData;
 import com.lantanagroup.link.db.model.Metrics;
 import com.lantanagroup.link.model.*;
@@ -14,6 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -401,4 +407,146 @@ public class MetricController extends BaseController {
             .collect(Collectors.toList());
   }
 
+  @GetMapping("/size/PatientMeasureReport/{tenantId}")
+  public DataSizeSummary getPatientMeasureReportSizeSummary(
+          @PathVariable String tenantId,
+          @RequestParam(name = "patientId", required = false) String patientId,
+          @RequestParam(name = "reportId", required = false) String reportId,
+          @RequestParam(name = "measureId", required = false) String measureId,
+          @RequestParam(name = "patientMeasureReportId", required = false) String patientMeasureReportId) {
+
+    var tenantService = TenantService.create(sharedService, tenantId);
+
+    var dataSizes = tenantService.getPatientMeasureReportSize(patientId, reportId, measureId, patientMeasureReportId);
+
+    var summary = new DataSizeSummary();
+    double sum = 0.0;
+    var dataCountMap = summary.getCountDataType();
+    var dataAverageMap = summary.getAverageDataSize();
+
+    var reportKey = "ReportId";
+    var measureKey = "MeasureId";
+    var pidKey = "PatientId";
+
+    dataCountMap.put(reportKey, new HashMap<>());
+    dataCountMap.put(measureKey, new HashMap<>());
+    dataCountMap.put(pidKey, new HashMap<>());
+
+    dataAverageMap.put(reportKey, new HashMap<>());
+    dataAverageMap.put(measureKey, new HashMap<>());
+    dataAverageMap.put(pidKey, new HashMap<>());
+
+    double min = 0, max = 0;
+    for(var r : dataSizes)
+    {
+      var mId = r.getMeasureId();
+      var pId = r.getPatientId();
+      var rId = r.getReportId();
+
+      var sizeKb = r.getSizeKb();
+      sum += sizeKb;
+
+      if(min > sizeKb || min == 0)
+        min = sizeKb;
+
+      if(max < sizeKb)
+        max = sizeKb;
+
+      dataCountMap.get(reportKey).merge(rId, 1, (count, value) -> count + value);
+      dataCountMap.get(measureKey).merge(mId, 1, (count, value) -> count + value);
+      dataCountMap.get(pidKey).merge(pId, 1, (count, value) -> count + value);
+
+      dataAverageMap.get(reportKey).merge(rId, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(measureKey).merge(mId, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(pidKey).merge(pId, r.getSizeKb(), (size, value) -> size + value);
+    }
+
+    summary.setTotalSize(sum);
+    summary.setData(Collections.singletonList(dataSizes));
+    summary.setCount(dataSizes.size());
+    summary.setAverageSize(sum/dataSizes.size());
+    summary.setMinSize(min);
+    summary.setMaxSize(max);
+
+    dataAverageMap.get(reportKey).replaceAll((key, value) -> value/dataCountMap.get(reportKey).get(key));
+    dataAverageMap.get(measureKey).replaceAll((key, value) -> value/dataCountMap.get(measureKey).get(key));
+    dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
+
+    return summary;
+  }
+
+  @GetMapping("/size/PatientData/{tenantId}")
+  public DataSizeSummary getPatientDataSizeSummary(
+          @PathVariable String tenantId,
+          @RequestParam(name = "patientId", required = false) String patientId,
+          @RequestParam(name = "resourceType", required = false) String resourceType,
+          @RequestParam(name = "startDate", required = false) String startDate,
+          @RequestParam(name = "endDate", required = false) String endDate
+  ) {
+
+    var tenantService = TenantService.create(sharedService, tenantId);
+
+    LocalDateTime zdtStart = null, zdtEnd = null;
+    if(startDate != null && endDate != null)
+    {
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+      zdtStart = LocalDateTime.parse(startDate, formatter);
+      zdtEnd = LocalDateTime.parse(endDate, formatter);
+    }
+
+    var dataSize = tenantService.getPatientDataReportSize(patientId, resourceType, zdtStart, zdtEnd);
+
+    var summary = new DataSizeSummary();
+    summary.setStartDate(zdtStart);
+    summary.setEndDate(zdtEnd);
+    double sum = 0.0;
+    var dataCountMap = summary.getCountDataType();
+    var dataAverageMap = summary.getAverageDataSize();
+
+    var rtKey = "ResourceType";
+    var pidKey = "PatientId";
+
+    dataCountMap.put(rtKey, new HashMap<>());
+    dataCountMap.put(pidKey, new HashMap<>());
+
+    dataAverageMap.put(rtKey, new HashMap<>());
+    dataAverageMap.put(pidKey, new HashMap<>());
+
+    double min = 0, max = 0;
+    for(var r : dataSize)
+    {
+      var resourceKey = r.getResourceType();
+      var patientKey = r.getPatientId();
+
+      if(patientKey == null || resourceKey == null)
+        continue;
+
+      var sizeKb = r.getSizeKb();
+      sum += sizeKb;
+
+      if(min > sizeKb || min == 0)
+        min = sizeKb;
+
+      if(max < sizeKb)
+        max = sizeKb;
+
+      dataCountMap.get(rtKey).merge(resourceKey, 1, (count, value) -> count + value);
+      dataCountMap.get(pidKey).merge(patientKey, 1, (count, value) -> count + value);
+
+      dataAverageMap.get(rtKey).merge(resourceKey, r.getSizeKb(), (size, value) -> size + value);
+      dataAverageMap.get(pidKey).merge(patientKey, r.getSizeKb(), (size, value) -> size + value);
+    }
+
+    summary.setTotalSize(sum);
+    summary.setData(Collections.singletonList(dataSize));
+    summary.setCount(dataSize.size());
+    summary.setAverageSize(sum/dataSize.size());
+    summary.setMinSize(min);
+    summary.setMaxSize(max);
+
+    dataAverageMap.get(rtKey).replaceAll((key, value) -> value/dataCountMap.get(rtKey).get(key));
+    dataAverageMap.get(pidKey).replaceAll((key, value) -> value/dataCountMap.get(pidKey).get(key));
+
+    return summary;
+  }
 }

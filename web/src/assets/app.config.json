@@ -1,0 +1,6 @@
+{
+  "apiBaseUrl": "https://dev.nhsnlink.org/api",
+  "authAccountUrl": "https://oauth.nhsnlink.org/realms/NHSNLink/account",
+  "authOpenIdUrl": "https://oauth.nhsnlink.org/realms/NHSNLink/protocol/openid-connect",
+  "authClientId": "nhsnlink-app"
+}

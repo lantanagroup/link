@@ -1,18 +1,20 @@
 package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.lantanagroup.link.ValidationCategorizer;
+import com.lantanagroup.link.FhirHelper;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
+import com.lantanagroup.link.model.ValidationCategoriesAndResults;
 import com.lantanagroup.link.model.ValidationCategory;
 import com.lantanagroup.link.model.ValidationCategoryResponse;
-import com.lantanagroup.link.model.ValidationCategorySeverities;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.RuleBasedValidationCategory;
+import com.lantanagroup.link.validation.ValidationCategorizer;
 import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
 import org.hl7.fhir.r4.model.Bundle;
@@ -41,11 +43,12 @@ public class ValidationController extends BaseController {
   private SharedService sharedService;
   @Autowired
   private ValidationService validationService;
+  @Autowired
+  private ApiConfig apiConfig;
 
   /**
    * Validates a Bundle provided in the request body
    *
-   * @param tenantId The id of the tenant
    * @param severity The minimum severity level to report on
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
@@ -69,7 +72,6 @@ public class ValidationController extends BaseController {
   /**
    * Validates a Bundle provided in the request body
    *
-   * @param tenantId The id of the tenant
    * @param severity The minimum severity level to report on
    * @return Returns an OperationOutcome resource that provides details about each of the issues found
    */
@@ -88,7 +90,9 @@ public class ValidationController extends BaseController {
    * @throws IOException
    */
   @GetMapping("/{tenantId}/{reportId}")
-  public OperationOutcome getValidationIssuesForReport(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity, @RequestParam(required = false) String code) {
+  public OperationOutcome getValidationIssuesForReport(@PathVariable String tenantId, @PathVariable String reportId,
+                                                       @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity,
+                                                       @RequestParam(required = false) String code) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -122,17 +126,6 @@ public class ValidationController extends BaseController {
   public String getValidationSummary(@PathVariable String tenantId, @PathVariable String reportId, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity, @RequestParam(required = false) String code) {
     OperationOutcome outcome = this.getValidationIssuesForReport(tenantId, reportId, severity, code);
     return this.getValidationSummary(outcome);
-  }
-
-  private static ValidationCategoryResponse buildUncategorizedCategory(int count) {
-    ValidationCategoryResponse response = new ValidationCategoryResponse();
-    response.setId("uncategorized");
-    response.setTitle("Uncategorized");
-    response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setAcceptable(false);
-    response.setGuidance("These issues need to be categorized.");
-    response.setCount(count);
-    return response;
   }
 
   /**
@@ -175,7 +168,7 @@ public class ValidationController extends BaseController {
             .collect(Collectors.toList());
 
     if (!uncategorizedResults.isEmpty()) {
-      responses.add(buildUncategorizedCategory(uncategorizedResults.size()));
+      responses.add(ValidationCategorizer.buildUncategorizedCategory(uncategorizedResults.size()));
     }
 
     return responses;
@@ -260,7 +253,7 @@ public class ValidationController extends BaseController {
             .collect(Collectors.toList());
 
     if (uncategorizedCount > 0) {
-      responses.add(buildUncategorizedCategory(uncategorizedCount));
+      responses.add(ValidationCategorizer.buildUncategorizedCategory(uncategorizedCount));
     }
 
     return responses;
@@ -324,6 +317,14 @@ public class ValidationController extends BaseController {
       outcome.addContained(report.getDeviceInfo());
     }
 
+    // Update the report's device with the current list of implementation guides
+    Device device = report.getDeviceInfo();
+    if (device == null) {
+      device = FhirHelper.getDevice(this.apiConfig);
+    }
+    FhirHelper.setImplementationGuideNotes(device, this.validator);
+    tenantService.saveReport(report);
+
     return outcome;
   }
 
@@ -371,5 +372,52 @@ public class ValidationController extends BaseController {
     }
 
     return ValidationResultMapper.toOperationOutcome(categoryResults);
+  }
+
+  /**
+   * Retrieves the validation categories and results for a report
+   *
+   * @param tenantId The id of the tenant
+   * @param reportId The id of the report to validate against
+   * @return Returns a ValidationCategoriesAndResults object
+   */
+  @GetMapping(value = "/{tenantId}/{reportId}/category/result", produces = {"application/xml", "application/json"})
+  public ValidationCategoriesAndResults getValidationCategoriesAndResults(@PathVariable String tenantId, @PathVariable String reportId) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Report report = tenantService.getReport(reportId);
+
+    if (report == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+    }
+
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    return categorizer.getValidationCategoriesAndResults(tenantService, report);
+  }
+
+  @GetMapping(value = "/{tenantId}/{reportId}/category/result", produces = {"text/html"})
+  public String getValidationCategoriesAndResultsHtml(@PathVariable String tenantId, @PathVariable String reportId) {
+    try {
+      TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+      if (tenantService == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+      }
+
+      Report report = tenantService.getReport(reportId);
+
+      if (report == null) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
+      }
+
+      ValidationCategorizer categorizer = new ValidationCategorizer();
+      return categorizer.getValidationCategoriesAndResultsHtml(tenantService, report);
+    } catch (IOException e) {
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error loading validation categories from resources");
+    }
   }
 }

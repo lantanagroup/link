@@ -184,6 +184,7 @@ export interface TenantDetails {
   bulkWaitTimeInMilliseconds?: string | null
   bundling?: Bundle
   cdcOrgId: string
+  vendor?: string
   connectionString?: string
   description?: string | null
   events?: Events
