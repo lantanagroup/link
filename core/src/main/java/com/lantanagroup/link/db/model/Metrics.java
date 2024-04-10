@@ -13,6 +13,7 @@ public class Metrics {
   private UUID id = UUID.randomUUID();
   private String tenantId;
   private String reportId;
+  private String version;
   private String category;
   private String taskName;
   private Date timestamp;

@@ -459,7 +459,7 @@ public class ReportController extends BaseController {
       tenantLock.unlock();
     }
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
@@ -585,7 +585,8 @@ public class ReportController extends BaseController {
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     tenantService.saveReport(report);
 

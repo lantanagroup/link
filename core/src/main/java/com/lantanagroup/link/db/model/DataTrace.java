@@ -16,7 +16,6 @@ public class DataTrace {
   private String patientId;
   private String resourceType;
   private String resourceId;
-  private String originalResource;
 
   public static void setId(IBaseResource resource, UUID id) {
     resource.setUserData(userDataKey, id);

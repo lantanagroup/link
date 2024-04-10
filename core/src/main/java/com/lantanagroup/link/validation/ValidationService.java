@@ -86,6 +86,7 @@ public class ValidationService {
     String category = Constants.VALIDATION_ISSUE_CATEGORY;
     metric.setTenantId(tenantService.getConfig().getId());
     metric.setReportId(report.getId());
+    metric.setVersion(report.getVersion());
     metric.setTaskName(task);
     metric.setCategory(category);
     metric.setTimestamp(new Date());

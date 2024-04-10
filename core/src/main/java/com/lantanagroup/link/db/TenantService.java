@@ -320,7 +320,6 @@ public class TenantService {
 
   public void saveDataTraces(UUID queryId, String patientId, List<IBaseResource> resources) {
     try {
-      IParser parser = FhirContextProvider.getFhirContext().newJsonParser();
       List<DataTrace> models = new ArrayList<>();
       for (IBaseResource resource : resources) {
         UUID dataTraceId = UUID.randomUUID();
@@ -331,7 +330,6 @@ public class TenantService {
         model.setPatientId(patientId);
         model.setResourceType(resource.fhirType());
         model.setResourceId(resource.getIdElement().getIdPart());
-        model.setOriginalResource(parser.encodeResourceToString(resource));
         models.add(model);
       }
       this.dataTraces.insertAll(models);
