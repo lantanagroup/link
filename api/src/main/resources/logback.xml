@@ -5,14 +5,6 @@
     <property name="LOGBACK_ROLLINGPOLICY_MAX_HISTORY" value="0"/>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.lantanagroup.link" level="DEBUG"/>
+    <logger name="com.lantanagroup.link" level="INFO" />
     <logger name="org.springframework.web" level="DEBUG"/>
-
-    <appender name="link-db" class="ch.qos.logback.classic.db.DBAppender">
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-        </filter>
-    </appender>
-
 </configuration>
