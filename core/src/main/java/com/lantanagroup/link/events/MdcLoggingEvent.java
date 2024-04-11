@@ -8,6 +8,7 @@ import ch.qos.logback.classic.spi.LoggerContextVO;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,18 @@ public class MdcLoggingEvent implements ILoggingEvent {
 
   @Override
   public Object[] getArgumentArray() {
+    var argList = mOrigEvent.getArgumentArray().clone();
+    Map<String, String> mpm = mOrigEvent.getMDCPropertyMap();
+
+    try {
+      if (mpm.containsKey("reportId")) {
+        var reportId = mpm.get("reportId");
+        argList[0] = reportId;
+        return argList;
+      }
+    } catch (Exception e) {
+        return mOrigEvent.getArgumentArray();
+    }
     return mOrigEvent.getArgumentArray();
   }
 

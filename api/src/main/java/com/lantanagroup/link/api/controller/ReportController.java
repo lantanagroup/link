@@ -411,31 +411,31 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       if (config.isSkipQuery() || skipQuery) {
-        logger.info("Skipping initial query and store");
+        logger.info("Skipping initial query and store", report.getId());
         for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
           if (patient.getReference() != null) {
             patient.setId(patient.getReference().replaceAll("^Patient/", ""));
           }
         }
       } else {
-        logger.info("Beginning initial query and store");
+        logger.info("Beginning initial query and store", report.getId());
         tenantService.beginReport(masterIdentifierValue);
         this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
       }
 
       this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
-      logger.info("Beginning initial measure evaluation");
+      logger.info("Beginning initial measure evaluation", report.getId());
       this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
       if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
-        logger.info("Skipping supplemental query and store");
-        logger.info("Beginning aggregation");
+        logger.info("Skipping supplemental query and store", report.getId());
+        logger.info("Beginning aggregation", report.getId());
         this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
       } else {
-        logger.info("Beginning supplemental query and store");
+        logger.info("Beginning supplemental query and store", report.getId());
         this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-        logger.info("Beginning supplemental measure evaluation and aggregation");
+        logger.info("Beginning supplemental measure evaluation and aggregation", report.getId());
         this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
       }
 
