@@ -37,18 +37,18 @@ public class MdcLoggingEvent implements ILoggingEvent {
 
   @Override
   public Object[] getArgumentArray() {
-    var argList = mOrigEvent.getArgumentArray().clone();
-    Map<String, String> mpm = mOrigEvent.getMDCPropertyMap();
-
-    try {
-      if (mpm.containsKey("reportId")) {
-        var reportId = mpm.get("reportId");
-        argList[0] = reportId;
-        return argList;
-      }
-    } catch (Exception e) {
-        return mOrigEvent.getArgumentArray();
-    }
+//    var argList = mOrigEvent.getArgumentArray().clone();
+//    Map<String, String> mpm = mOrigEvent.getMDCPropertyMap();
+//
+//    try {
+//      if (mpm.containsKey("reportId")) {
+//        var reportId = mpm.get("reportId");
+//        argList[0] = reportId;
+//        return argList;
+//      }
+//    } catch (Exception e) {
+//        return mOrigEvent.getArgumentArray();
+//    }
     return mOrigEvent.getArgumentArray();
   }
 

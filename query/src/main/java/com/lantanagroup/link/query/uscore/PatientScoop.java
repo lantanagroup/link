@@ -17,6 +17,7 @@ import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -110,7 +111,10 @@ public class PatientScoop {
     AtomicInteger progress = new AtomicInteger(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        MDC.setContextMap(contextMapCopy);
+
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
@@ -177,10 +181,12 @@ public class PatientScoop {
     progress.set(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
 
       patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
+        MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
         PatientData patientData = null;
@@ -210,7 +216,9 @@ public class PatientScoop {
     AtomicInteger progress = new AtomicInteger(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 
         Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));

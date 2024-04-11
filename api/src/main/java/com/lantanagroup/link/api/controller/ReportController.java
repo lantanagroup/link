@@ -411,31 +411,31 @@ public class ReportController extends BaseController {
 
       // Scoop the data for the patients and store it
       if (config.isSkipQuery() || skipQuery) {
-        logger.info("Skipping initial query and store", report.getId());
+        logger.info("Skipping initial query and store");
         for (PatientOfInterestModel patient : reportContext.getPatientsOfInterest()) {
           if (patient.getReference() != null) {
             patient.setId(patient.getReference().replaceAll("^Patient/", ""));
           }
         }
       } else {
-        logger.info("Beginning initial query and store", report.getId());
+        logger.info("Beginning initial query and store");
         tenantService.beginReport(masterIdentifierValue);
         this.queryFhir(tenantService, criteria, reportContext, QueryPhase.INITIAL);
       }
 
       this.eventService.triggerEvent(tenantService, EventTypes.AfterPatientDataQuery, criteria, reportContext);
 
-      logger.info("Beginning initial measure evaluation", report.getId());
+      logger.info("Beginning initial measure evaluation");
       this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.INITIAL, false);
 
       if (config.isSkipQuery() || skipQuery || CollectionUtils.isEmpty(reportContext.getQueryPlan().getSupplemental())) {
-        logger.info("Skipping supplemental query and store", report.getId());
-        logger.info("Beginning aggregation", report.getId());
+        logger.info("Skipping supplemental query and store");
+        logger.info("Beginning aggregation");
         this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, true);
       } else {
-        logger.info("Beginning supplemental query and store", report.getId());
+        logger.info("Beginning supplemental query and store");
         this.queryFhir(tenantService, criteria, reportContext, QueryPhase.SUPPLEMENTAL);
-        logger.info("Beginning supplemental measure evaluation and aggregation", report.getId());
+        logger.info("Beginning supplemental measure evaluation and aggregation");
         this.evaluateMeasures(tenantService, criteria, reportContext, report, QueryPhase.SUPPLEMENTAL, false);
       }
 
@@ -457,13 +457,12 @@ public class ReportController extends BaseController {
       }
     } finally {
       tenantLock.unlock();
+      MDC.clear();
     }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
-
-    MDC.clear();
 
     return report;
   }
