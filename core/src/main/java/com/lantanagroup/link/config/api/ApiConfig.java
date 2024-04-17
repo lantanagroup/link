@@ -172,7 +172,7 @@ public class ApiConfig {
   /**
    * <strong>api.validation-packages-path</strong><br>The path to the validation packages
    */
-  private String validationPackagesPath = "classpath:/packages/**";
+  private String validationPackagesPath = "classpath:/packages/*.tgz";
 
   /**
    * Configuration for how to query the MRP (reporting plan) interface at CDC/NHSN to determine if a facility/tenant

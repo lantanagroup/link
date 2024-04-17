@@ -182,15 +182,10 @@ public class Validator {
     try {
       PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
       org.springframework.core.io.Resource[] resources = resolver.getResources(this.apiConfig.getValidationPackagesPath());
-      for (org.springframework.core.io.Resource packageResource : resources) {
-        if (packageResource.getFile().isDirectory()) {
-          continue;
-        } else if (!packageResource.getFile().getName().endsWith(".tgz")) {
-          logger.warn("Unexpected package file name {}", packageResource.getFilename());
-          continue;
-        }
 
-        logger.info("Loading package {}", packageResource.getFilename());
+      for (org.springframework.core.io.Resource packageResource : resources) {
+
+        logger.info("Loading package {}", packageResource.toString());
         NpmPackage npmPackage = NpmPackage.fromPackage(packageResource.getInputStream());
 
         npmPackage.listResources(allowsResourceTypes).forEach(resource -> {
@@ -232,45 +227,62 @@ public class Validator {
   private void loadTerminology() {
     try {
       PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-      org.springframework.core.io.Resource[] resources = resolver.getResources("terminology/**");
-      this.loadClassResources(resources);
+      org.springframework.core.io.Resource[] xmlResources = resolver.getResources("terminology/*.xml");
+      org.springframework.core.io.Resource[] jsonResources = resolver.getResources("terminology/*.json");
+      this.loadXmlResource(xmlResources);
+      this.loadJsonResources(jsonResources);
     } catch (IOException e) {
       logger.error("Error loading class resources for validation: {}", e.getMessage());
     }
 
   }
 
-  private void loadClassResources(org.springframework.core.io.Resource[] classResources) {
-    logger.debug("Loading {} class resources for validation", classResources.length);
+  private void loadXmlResource(org.springframework.core.io.Resource[] xmlResources){
+    logger.debug("Loading {} class resources for validation", xmlResources.length);
 
     List<IBaseResource> resources = new ArrayList<>();
-    for (org.springframework.core.io.Resource classResource : classResources) {
+    for (org.springframework.core.io.Resource classResource : xmlResources) {
       IBaseResource resource = null;
 
-      if (StringUtils.isEmpty(classResource.getFilename()) || !classResource.isReadable()) {
+      if (StringUtils.isEmpty(classResource.toString()) || !classResource.isReadable()) {
         continue;
       }
 
-      if (classResource.getFilename() != null && classResource.getFilename().endsWith(".json")) {
-        try (InputStream is = classResource.getInputStream()) {
-          resource = this.jsonParser.parseResource(is);
-        } catch (IOException | DataFormatException ex) {
-          logger.error("Error parsing resource {}", classResource.getFilename(), ex);
-        }
-      } else if (classResource.getFilename() != null && classResource.getFilename().endsWith(".xml")) {
-        try (InputStream is = classResource.getInputStream()) {
-          resource = this.xmlParser.parseResource(is);
-        } catch (IOException | DataFormatException ex) {
-          logger.error("Error parsing resource {}", classResource.getFilename(), ex);
-        }
-      } else {
-        logger.warn("Unexpected file name {}", classResource.getFilename());
+      try (InputStream is = classResource.getInputStream()) {
+        resource = this.xmlParser.parseResource(is);
+      } catch (IOException | DataFormatException ex) {
+        logger.error("Error parsing resource {}", classResource.toString(), ex);
       }
 
       if (resource != null) {
         resources.add(resource);
       } else {
-        logger.warn("Unable to parse resource {}", classResource.getFilename());
+        logger.warn("Unable to parse resource {}", classResource.toString());
+      }
+    }
+  }
+
+  private void loadJsonResources(org.springframework.core.io.Resource[] jsonResources) {
+    logger.debug("Loading {} class resources for validation", jsonResources.length);
+
+    List<IBaseResource> resources = new ArrayList<>();
+    for (org.springframework.core.io.Resource classResource : jsonResources) {
+      IBaseResource resource = null;
+
+      if (StringUtils.isEmpty(classResource.toString()) || !classResource.isReadable()) {
+        continue;
+      }
+
+      try (InputStream is = classResource.getInputStream()) {
+        resource = this.jsonParser.parseResource(is);
+      } catch (IOException | DataFormatException ex) {
+        logger.error("Error parsing resource {}", classResource.toString(), ex);
+      }
+
+      if (resource != null) {
+        resources.add(resource);
+      } else {
+        logger.warn("Unable to parse resource {}", classResource.toString());
       }
     }
 
