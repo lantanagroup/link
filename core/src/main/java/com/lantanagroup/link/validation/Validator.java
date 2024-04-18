@@ -229,15 +229,15 @@ public class Validator {
       PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
       org.springframework.core.io.Resource[] xmlResources = resolver.getResources("terminology/*.xml");
       org.springframework.core.io.Resource[] jsonResources = resolver.getResources("terminology/*.json");
-      this.loadresources(xmlResources, this.xmlParser);
-      this.loadresources(jsonResources, this.jsonParser);
+      this.loadResources(xmlResources, this.xmlParser);
+      this.loadResources(jsonResources, this.jsonParser);
     } catch (IOException e) {
       logger.error("Error loading class resources for validation: {}", e.getMessage());
     }
 
   }
 
-  private void loadresources(org.springframework.core.io.Resource[] classResources, IParser parser){
+  private void loadResources(org.springframework.core.io.Resource[] classResources, IParser parser){
     logger.debug("Loading {} class resources for validation", classResources.length);
 
     List<IBaseResource> resources = new ArrayList<>();
