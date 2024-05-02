@@ -128,6 +128,9 @@ public class TenantService {
   }
 
   public void beginReport(String reportId) {
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
+    this.dataTraces.deleteByReportId(reportId);
     this.patientDatas.beginReport(reportId);
   }
 
