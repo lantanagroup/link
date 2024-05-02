@@ -141,8 +141,8 @@ public class TenantService {
 
   public int deletePatientDataRetrievedBefore(Date date) {
     int result = this.patientDatas.deleteByRetrievedBefore(date);
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.dataTraces.deleteByRetrievedBefore(date);
+    this.queries.deleteByRetrievedBefore(date);
     return result;
   }
 
@@ -223,8 +223,8 @@ public class TenantService {
     this.patientMeasureReports.deleteByReportId(reportId);
 
     this.patientDatas.deleteByReportId(reportId);
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.dataTraces.deleteByReportId(reportId);
+    this.queries.deleteByReportId(reportId);
 
     this.reports.deleteById(reportId);
   }

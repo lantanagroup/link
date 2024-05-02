@@ -8,6 +8,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,9 +38,15 @@ public class QueryRepository {
     return jdbc.update(sql, Map.of());
   }
 
-  public int deleteUnreferenced() {
-    String sql = "DELETE FROM dbo.query WHERE id NOT IN " +
-            "(SELECT queryId FROM dbo.dataTrace WHERE queryId IS NOT NULL);";
-    return jdbc.update(sql, Map.of());
+  public int deleteByReportId(String reportId) {
+    String sql = "DELETE FROM dbo.query WHERE reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    return jdbc.update(sql, parameters);
+  }
+
+  public int deleteByRetrievedBefore(Date date) {
+    String sql = "DELETE FROM dbo.query WHERE retrieved < :date;";
+    Map<String, ?> parameters = Map.of("date", date);
+    return jdbc.update(sql, parameters);
   }
 }
