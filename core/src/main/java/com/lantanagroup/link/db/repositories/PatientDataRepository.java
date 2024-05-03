@@ -115,8 +115,19 @@ public class PatientDataRepository {
   }
 
   public void beginReport(String reportId) {
-    String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
-    jdbc.update(sql, Map.of("reportId", reportId));
+    {
+      String sql = "UPDATE PD " +
+              "SET PD.dataTraceId = NULL " +
+              "FROM dbo.patientData AS PD " +
+              "INNER JOIN dbo.dataTrace AS DT ON PD.dataTraceId = DT.id " +
+              "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+              "WHERE Q.reportId = :reportId;";
+      jdbc.update(sql, Map.of("reportId", reportId));
+    }
+    {
+      String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
+      jdbc.update(sql, Map.of("reportId", reportId));
+    }
   }
 
   public void deleteAll() {
