@@ -10,6 +10,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,9 +43,19 @@ public class DataTraceRepository {
     return jdbc.update(sql, Map.of());
   }
 
-  public int deleteUnreferenced() {
-    String sql = "DELETE FROM dbo.dataTrace WHERE id NOT IN " +
-            "(SELECT dataTraceId FROM dbo.patientData WHERE dataTraceId IS NOT NULL);";
-    return jdbc.update(sql, Map.of());
+  public int deleteByReportId(String reportId) {
+    String sql = "DELETE DT FROM dbo.dataTrace AS DT " +
+            "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+            "WHERE Q.reportId = :reportId;";
+    Map<String, ?> parameters = Map.of("reportId", reportId);
+    return jdbc.update(sql, parameters);
+  }
+
+  public int deleteByRetrievedBefore(Date date) {
+    String sql = "DELETE DT FROM dbo.dataTrace AS DT " +
+            "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+            "WHERE Q.retrieved < :date;";
+    Map<String, ?> parameters = Map.of("date", date);
+    return jdbc.update(sql, parameters);
   }
 }
