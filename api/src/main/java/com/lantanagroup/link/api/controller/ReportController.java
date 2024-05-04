@@ -398,12 +398,13 @@ public class ReportController extends BaseController {
       report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService, validator));
       report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
-      MDC.put("reportId", report.getId());
-
       // Preserve the version of the already-existing report
       if (existingReport != null) {
         report.setVersion(existingReport.getVersion());
       }
+
+      MDC.put("report", String.format("%s-%s-%s",
+              tenantService.getConfig().getId(), report.getId(), report.getVersion()));
 
       tenantService.saveReport(report, reportContext.getPatientLists());
 
