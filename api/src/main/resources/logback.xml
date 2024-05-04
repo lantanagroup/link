@@ -5,7 +5,6 @@
     <property name="LOGBACK_ROLLINGPOLICY_MAX_HISTORY" value="0"/>
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
 
-    <logger name="com.lantanagroup.link" level="DEBUG" />
+    <logger name="com.lantanagroup.link" level="DEBUG"/>
     <logger name="org.springframework.web" level="DEBUG"/>
-    <logger name="link-db" level="INFO" />
 </configuration>

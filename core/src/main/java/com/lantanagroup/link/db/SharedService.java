@@ -1,19 +1,14 @@
 package com.lantanagroup.link.db;
 
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.db.DBAppender;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.db.DataSourceConnectionSource;
-import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.Helper;
-import com.lantanagroup.link.appender.MdcDbAppender;
 import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.api.MeasureDefConfig;
@@ -104,20 +99,7 @@ public class SharedService {
     source.setContext(logCtx);
     source.start();
 
-//    ReportLoggingLayout layout = new ReportLoggingLayout();
-//    layout.setContext(logCtx);
-//    layout.setPrefix("ReportGeneration");
-//    layout.setPrintThreadName(true);
-//    layout.start();
-
-    //LayoutWrappingEncoder encoder = new LayoutWrappingEncoder();
-//    PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-//    encoder.setContext(logCtx);
-//    //encoder.setLayout(layout);
-//    encoder.setPattern("%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %reportId - %message%n");
-//    encoder.start();
-
-    DBAppender appender = new MdcDbAppender();
+    DBAppender appender = new DBAppender();
     appender.setContext(logCtx);
     appender.setConnectionSource(source);
     appender.setName("link-db");
