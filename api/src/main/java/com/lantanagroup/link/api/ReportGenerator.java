@@ -20,9 +20,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,8 +68,12 @@ public class ReportGenerator {
     AtomicInteger progress = new AtomicInteger(0);
     List<PatientOfInterestModel> pois = measureContext.getPatientsOfInterest(queryPhase);
 
+    var contextMapCopy = MDC.getCopyOfContextMap();
 
-      forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
+    forkJoinPool.submit(() -> pois.parallelStream().forEach(patient -> {
+
+                MDC.setContextMap(contextMapCopy);
+
                 if (StringUtils.isEmpty(patient.getId())) {
                   logger.error("Patient {} has no ID; cannot generate measure report", patient);
                   return;

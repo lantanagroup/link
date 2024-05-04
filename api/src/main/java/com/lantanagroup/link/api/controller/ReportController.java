@@ -35,6 +35,7 @@ import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -402,6 +403,9 @@ public class ReportController extends BaseController {
         report.setVersion(existingReport.getVersion());
       }
 
+      MDC.put("report", String.format("%s-%s-%s",
+              tenantService.getConfig().getId(), report.getId(), report.getVersion()));
+
       tenantService.saveReport(report, reportContext.getPatientLists());
 
       this.eventService.triggerEvent(tenantService, EventTypes.BeforePatientDataQuery, criteria, reportContext);
@@ -454,6 +458,7 @@ public class ReportController extends BaseController {
       }
     } finally {
       tenantLock.unlock();
+      MDC.clear();
     }
 
     this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
