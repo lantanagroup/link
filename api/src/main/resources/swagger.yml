@@ -1022,6 +1022,40 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/{tenantId}/report/{reportId}/{version}/$insights:
+    get:
+      tags:
+        - Reports
+      summary: Get insights (logs, metrics, and statistics) for a report
+      operationId: getInsights
+      parameters:
+        - name: tenantId
+          in: path
+          description: The id of the tenant
+          required: true
+          schema:
+            type: string
+        - name: reportId
+          in: path
+          description: The id of the report
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          description: The version of the report
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report insights
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/validate:
     post:
       tags:

@@ -10,6 +10,7 @@ import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.db.repositories.*;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import lombok.Getter;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -20,7 +21,10 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -208,6 +212,19 @@ public class TenantService {
 
   public List<Report> searchReports() {
     return this.reports.findAll();
+  }
+
+  public String getReportInsights(String tenantId, String reportId, String version) {
+    try (Connection connection = this.dataSource.getConnection()) {
+      String sql = IOUtils.resourceToString("/insights-tenant.sql", StandardCharsets.UTF_8);
+      PreparedStatement statement = connection.prepareStatement(sql);
+      statement.setNString(1, reportId);
+      statement.execute();
+      return SQLUtils.format(statement, "Patient lists", "Individual measure reports", "Aggregate measure reports",
+              "Patient data", "Validation issues");
+    } catch (SQLException | IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void saveReport(Report report) {
