@@ -16,8 +16,7 @@ ORDER BY CASE LE.level_string
              WHEN 'WARN' THEN 2
              WHEN 'INFO' THEN 3
              WHEN 'DEBUG' THEN 4
-             ELSE 5
-             END;
+             ELSE 5 END;
 
 -- Errors and warnings
 
@@ -33,8 +32,7 @@ GROUP BY LE.level_string, LE.formatted_message
 ORDER BY CASE LE.level_string
              WHEN 'ERROR' THEN 1
              WHEN 'WARN' THEN 2
-             ELSE 3
-             END,
+             ELSE 3 END,
          MIN(LE.timestmp);
 
 -- Metrics

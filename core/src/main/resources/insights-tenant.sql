@@ -37,3 +37,19 @@ FROM dbo.patientData AS PD
 WHERE RPD.reportId = @ReportId
 GROUP BY PD.resourceType
 ORDER BY PD.resourceType;
+
+-- Validation issues
+
+SELECT severity,
+       code,
+       COUNT(*) AS [count]
+FROM dbo.validationResult
+WHERE reportId = @ReportId
+GROUP BY severity, code
+ORDER BY CASE severity
+             WHEN 'fatal' THEN 1
+             WHEN 'error' THEN 2
+             WHEN 'warning' THEN 3
+             WHEN 'information' THEN 4
+             ELSE 5 END,
+         code;

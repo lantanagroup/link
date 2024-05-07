@@ -220,7 +220,8 @@ public class TenantService {
       PreparedStatement statement = connection.prepareStatement(sql);
       statement.setNString(1, reportId);
       statement.execute();
-      return SQLUtils.format(statement, "Patient lists", "Individual measure reports", "Aggregate measure reports", "Patient data");
+      return SQLUtils.format(statement, "Patient lists", "Individual measure reports", "Aggregate measure reports",
+              "Patient data", "Validation issues");
     } catch (SQLException | IOException e) {
       throw new RuntimeException(e);
     }
