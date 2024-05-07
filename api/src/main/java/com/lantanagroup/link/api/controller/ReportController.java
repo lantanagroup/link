@@ -666,6 +666,18 @@ public class ReportController extends BaseController {
     return patientMeasureReport.getMeasureReport();
   }
 
+  @GetMapping(path = "/{reportId}/{version}/$insights", produces = "text/html")
+  public String getInsights(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String version) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    return this.sharedService.getReportInsights(tenantId, reportId, version)
+            + tenantService.getReportInsights(tenantId, reportId, version);
+  }
+
   @GetMapping
   public List<Report> searchReports(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
