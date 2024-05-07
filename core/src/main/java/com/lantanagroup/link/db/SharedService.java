@@ -847,6 +847,20 @@ public class SharedService {
     return reports;
   }
 
+  public String getReportInsights(String tenantId, String reportId, String version) {
+    try (Connection connection = this.getSQLConnection()) {
+      String sql = IOUtils.resourceToString("/insights-shared.sql", StandardCharsets.UTF_8);
+      PreparedStatement statement = connection.prepareStatement(sql);
+      statement.setNString(1, tenantId);
+      statement.setNString(2, reportId);
+      statement.setNString(3, version);
+      statement.execute();
+      return SQLUtils.format(statement, "Log messages", "Errors and warnings", "Metrics");
+    } catch (SQLException | IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private TenantSummary getTenantSummaryResponse(Tenant tenantConfig) {
     TenantSummary tenantSummary = new TenantSummary();
     tenantSummary.setId(tenantConfig.getId());

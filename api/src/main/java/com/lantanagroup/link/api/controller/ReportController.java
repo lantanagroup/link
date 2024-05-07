@@ -666,6 +666,31 @@ public class ReportController extends BaseController {
     return patientMeasureReport.getMeasureReport();
   }
 
+  @GetMapping(path = "/{reportId}/{version}/$insights", produces = "text/html")
+  public String getInsights(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String version) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    String styles;
+    try {
+      styles = IOUtils.resourceToString("/insights.css", StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      styles = "";
+    }
+    String content = this.sharedService.getReportInsights(tenantId, reportId, version)
+            + tenantService.getReportInsights(tenantId, reportId, version);
+    StringBuilder result = new StringBuilder();
+    result.append("<html><head>");
+    result.append(String.format("<style type=\"text/css\">%s</style>", styles));
+    result.append("</head><body>");
+    result.append(String.format("<div class=\"container\">%s</div>", content));
+    result.append("</body></html>");
+    return result.toString();
+  }
+
   @GetMapping
   public List<Report> searchReports(@PathVariable String tenantId) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
