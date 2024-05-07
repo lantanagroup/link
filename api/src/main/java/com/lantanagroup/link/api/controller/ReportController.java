@@ -674,8 +674,15 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
     }
 
-    return this.sharedService.getReportInsights(tenantId, reportId, version)
+    String styles;
+    try {
+      styles = IOUtils.resourceToString("/insights.css", StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      styles = "";
+    }
+    String content = this.sharedService.getReportInsights(tenantId, reportId, version)
             + tenantService.getReportInsights(tenantId, reportId, version);
+    return String.format("<style type=\"text/css\">%s</style><div class=\"container\">%s</div>", styles, content);
   }
 
   @GetMapping

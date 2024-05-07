@@ -1,0 +1,23 @@
+.container {
+    font-family: sans-serif;
+    font-size: 14px;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+h2 {
+    margin-top: 42px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td,
+th {
+    padding: 3px 6px;
+}
+
+td {
+    border-top: solid 1px lightgray;
+}
