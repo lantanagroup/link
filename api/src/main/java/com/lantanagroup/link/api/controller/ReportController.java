@@ -682,7 +682,13 @@ public class ReportController extends BaseController {
     }
     String content = this.sharedService.getReportInsights(tenantId, reportId, version)
             + tenantService.getReportInsights(tenantId, reportId, version);
-    return String.format("<style type=\"text/css\">%s</style><div class=\"container\">%s</div>", styles, content);
+    StringBuilder result = new StringBuilder();
+    result.append("<html><head>");
+    result.append(String.format("<style type=\"text/css\">%s</style>", styles));
+    result.append("</head><body>");
+    result.append(String.format("<div class=\"container\">%s</div>", content));
+    result.append("</body></html>");
+    return result.toString();
   }
 
   @GetMapping
