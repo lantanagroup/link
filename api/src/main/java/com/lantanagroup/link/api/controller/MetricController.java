@@ -464,7 +464,7 @@ public class MetricController extends BaseController {
     summary.setTotalSize(sum);
     summary.setData(Collections.singletonList(dataSizes));
     summary.setCount(dataSizes.size());
-    summary.setAverageSize(sum/dataSizes.size());
+    summary.setAverageSize(sum == 0 || dataSizes.size() == 0 ? 0 : sum/dataSizes.size());
     summary.setMinSize(min);
     summary.setMaxSize(max);
 
@@ -540,7 +540,7 @@ public class MetricController extends BaseController {
     summary.setTotalSize(sum);
     summary.setData(Collections.singletonList(dataSize));
     summary.setCount(dataSize.size());
-    summary.setAverageSize(sum/dataSize.size());
+    summary.setAverageSize(sum == 0 || dataSize.size() == 0 ? 0 : sum/dataSize.size());
     summary.setMinSize(min);
     summary.setMaxSize(max);
 
