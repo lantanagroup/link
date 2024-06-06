@@ -79,7 +79,7 @@ public class FhirBundler {
     lib.setType(new CodeableConcept().addCoding(new Coding()
             .setSystem(Constants.LibraryTypeSystem)
             .setCode(Constants.LibraryTypeModelDefinitionCode)));
-    lib.setName("Link Query Plan");
+    lib.setTitle("Link Query Plan");
     lib.addContent()
             .setContentType("text/yml")
             .setData(queryPlan.getBytes(StandardCharsets.UTF_8));
