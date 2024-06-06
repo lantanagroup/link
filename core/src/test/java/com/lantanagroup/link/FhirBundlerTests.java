@@ -36,7 +36,7 @@ public class FhirBundlerTests {
     MeasureReport mr = new MeasureReport();
     Patient patient = new Patient();
 
-    mr.setId("test-mr" + this.patientMeasureReportCount);
+    mr.setId("a-b-c" + this.patientMeasureReportCount);
     mr.setType(MeasureReport.MeasureReportType.INDIVIDUAL);
     mr.setSubject(new Reference("Patient/test-patient" + this.patientMeasureReportCount));
     mr.addGroup().addPopulation()
