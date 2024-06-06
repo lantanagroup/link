@@ -107,7 +107,32 @@ public class FhirBundler {
     }
 
     for (Aggregate aggregate : aggregates) {
-      this.addMeasureReports(bundle, aggregate);
+      this.addAggregateMeasureReport(bundle, aggregate.getReport());
+    }
+
+    Map<String, List<String>> pmrIdsByHashedPatientId = new HashMap<>();
+    for (Aggregate aggregate : aggregates) {
+      List<String> pmrIds = getPatientMeasureReportIds(aggregate);
+      if (pmrIds == null) {
+        continue;
+      }
+      for (String pmrId : pmrIds) {
+        String hashedPatientId = ReportIdHelper.getHashedPatientId(pmrId);
+        pmrIdsByHashedPatientId.computeIfAbsent(hashedPatientId, k -> new ArrayList<>()).add(pmrId);
+      }
+    }
+
+    for (List<String> pmrIds : pmrIdsByHashedPatientId.values()) {
+      for (String pmrId : pmrIds) {
+        PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(pmrId);
+        if (patientMeasureReport == null) {
+          logger.warn("Patient measure report not found in database: {}", pmrId);
+          continue;
+        }
+        MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
+        individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
+        this.addIndividualMeasureReport(bundle, individualMeasureReport);
+      }
     }
 
     triggerEvent(this.tenantService, EventTypes.AfterBundling, bundle);
@@ -342,12 +367,8 @@ public class FhirBundler {
     }
   }
 
-  private void addMeasureReports(Bundle bundle, Aggregate aggregate) {
+  private List<String> getPatientMeasureReportIds(Aggregate aggregate) {
     MeasureReport aggregateMeasureReport = aggregate.getReport();
-    logger.debug("Adding measure reports: {}", aggregateMeasureReport.getMeasure());
-
-    this.addAggregateMeasureReport(bundle, aggregateMeasureReport);
-
     String subjectListId = null;
 
     for (MeasureReport.MeasureReportGroupComponent group : aggregateMeasureReport.getGroup()) {
@@ -365,7 +386,7 @@ public class FhirBundler {
 
     if (subjectListId == null) {
       logger.warn("No subject list for initial-population on aggregate measure report {}", aggregateMeasureReport.getIdElement().getIdPart());
-      return;
+      return null;
     }
 
     String finalSubjectListId = subjectListId;
@@ -377,24 +398,20 @@ public class FhirBundler {
 
     if (subjectList == null) {
       logger.error("Aggregate measure report {} does not have a contained subject list", aggregateMeasureReport.getIdElement().getIdPart());
-      return;
+      return null;
     }
 
+    List<String> patientMeasureReportIds = new ArrayList<>();
     for (ListResource.ListEntryComponent subject : subjectList.getEntry()) {
       String patientMeasureReportId = subject.getItem().getReferenceElement().getIdPart();
       if (patientMeasureReportId == null) {
         logger.warn("Found null ID in subject list");
         continue;
       }
-      PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(patientMeasureReportId);
-      if (patientMeasureReport == null) {
-        logger.warn("Patient measure report not found in database: {}", patientMeasureReportId);
-        continue;
-      }
-      MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
-      individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
-      this.addIndividualMeasureReport(bundle, individualMeasureReport);
+      patientMeasureReportIds.add(patientMeasureReportId);
     }
+
+    return patientMeasureReportIds;
   }
 
   private void addAggregateMeasureReport(Bundle bundle, MeasureReport aggregateMeasureReport) {

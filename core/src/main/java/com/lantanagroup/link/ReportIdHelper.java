@@ -38,6 +38,14 @@ public class ReportIdHelper {
     return combine(masterMeasureReportId, hash(patientId));
   }
 
+  public static String getHashedPatientId(String patientMeasureReportId) {
+    String[] components = patientMeasureReportId.split("-");
+    if (components.length != 3) {
+      throw new IllegalArgumentException("Invalid patient measure report ID: " + patientMeasureReportId);
+    }
+    return components[2];
+  }
+
   public static String getPatientDataBundleId(String masterIdentifierValue, String patientId) {
     return combine(masterIdentifierValue, hash(patientId));
   }
