@@ -88,8 +88,8 @@ public class FhirBundler {
     return lib;
   }
 
-  public Submission generateSubmission(Report report) throws IOException {
-    Submission submission = new Submission();
+  public Submission generateSubmission(Report report, boolean pretty) throws IOException {
+    Submission submission = new Submission(pretty);
 
     submission.write(Submission.ORGANIZATION, this.getOrg());
 

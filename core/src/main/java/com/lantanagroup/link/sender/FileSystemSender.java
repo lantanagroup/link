@@ -200,7 +200,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Submission submission = bundler.generateSubmission(report);
+      Submission submission = bundler.generateSubmission(report, this.config.getPretty());
       String orgId = tenantService.getOrganizationID();
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :

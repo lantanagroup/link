@@ -1,6 +1,6 @@
 package com.lantanagroup.link;
 
-import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
@@ -16,13 +16,13 @@ public class Submission {
   public static final String AGGREGATE = "aggregate-%s.json";
   public static final String PATIENT = "patient-%s.json";
 
-  private final FhirContext fhirContext;
+  private final IParser parser;
 
   @Getter
   private final Path root;
 
-  public Submission() {
-    fhirContext = FhirContextProvider.getFhirContext();
+  public Submission(boolean pretty) {
+    parser = FhirContextProvider.getFhirContext().newJsonParser().setPrettyPrint(pretty);
     try {
       root = Files.createTempDirectory("link-");
     } catch (IOException e) {
@@ -38,13 +38,13 @@ public class Submission {
 
   public void write(String filename, IBaseResource resource) throws IOException {
     try (Writer writer = Files.newBufferedWriter(root.resolve(filename))) {
-      fhirContext.newJsonParser().encodeResourceToWriter(resource, writer);
+      parser.encodeResourceToWriter(resource, writer);
     }
   }
 
   public <T extends IBaseResource> T read(Class<T> resourceType, String filename) throws IOException {
     try (Reader reader = Files.newBufferedReader(root.resolve(filename))) {
-      return fhirContext.newJsonParser().parseResource(resourceType, reader);
+      return parser.parseResource(resourceType, reader);
     }
   }
 }
