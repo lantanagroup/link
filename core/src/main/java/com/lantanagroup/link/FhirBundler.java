@@ -14,6 +14,7 @@ import org.hl7.fhir.r4.model.codesystems.MeasurePopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,6 +88,89 @@ public class FhirBundler {
     return lib;
   }
 
+  public Submission generateSubmission(Report report) throws IOException {
+    Submission submission = new Submission();
+
+    submission.write(Submission.ORGANIZATION, this.getOrg());
+
+    Device device = report.getDeviceInfo();
+    if (device != null) {
+      submission.write(Submission.DEVICE, device);
+    }
+
+    Library library = this.createQueryPlanLibrary(report);
+    if (library != null) {
+      submission.write(Submission.QUERY_PLAN, library.getContentFirstRep().getData());
+    }
+
+    List<ListResource> censuses = this.getCensuses(report, true);
+    if (!censuses.isEmpty()) {
+      submission.write(Submission.CENSUS, censuses.get(0));
+    }
+
+    Collection<Aggregate> aggregates = this.tenantService.getAggregates(report.getId());
+
+    for (Aggregate aggregate : aggregates) {
+      submission.write(
+              String.format(Submission.AGGREGATE, aggregate.getMeasureId()),
+              this.getAggregateMeasureReport(aggregate));
+    }
+
+    Map<String, List<String>> pmrIdsByHashedPatientId = new HashMap<>();
+    for (Aggregate aggregate : aggregates) {
+      List<String> pmrIds = getPatientMeasureReportIds(aggregate);
+      if (pmrIds == null) {
+        continue;
+      }
+      for (String pmrId : pmrIds) {
+        String hashedPatientId = ReportIdHelper.getHashedPatientId(pmrId);
+        pmrIdsByHashedPatientId.computeIfAbsent(hashedPatientId, k -> new ArrayList<>()).add(pmrId);
+      }
+    }
+
+    for (Map.Entry<String, List<String>> entry : pmrIdsByHashedPatientId.entrySet()) {
+      Bundle bundle = new Bundle();
+      bundle.setType(this.getBundlingConfig().getBundleType());
+      bundle.setTimestamp(new Date());
+      this.lineLevelResources = new HashMap<>();
+
+      String hashedPatientId = entry.getKey();
+      for (String pmrId : entry.getValue()) {
+        PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(pmrId);
+        if (patientMeasureReport == null) {
+          logger.warn("Patient measure report not found in database: {}", pmrId);
+          continue;
+        }
+        MeasureReport individualMeasureReport = patientMeasureReport.getMeasureReport();
+        individualMeasureReport.getContained().forEach(this::cleanupResource);  // Ensure all contained resources have the right profiles
+        this.addIndividualMeasureReport(bundle, individualMeasureReport);
+      }
+
+      this.cleanEntries(bundle);
+
+      long noProfileResources = bundle.getEntry().stream()
+              .filter(e -> e.getResource().getMeta().getProfile().isEmpty())
+              .count();
+
+      if (noProfileResources > 0) {
+        logger.warn("{} resources in the bundle don't have profiles", noProfileResources);
+      }
+
+      FhirBundlerEntrySorter.sort(bundle);
+
+      String patientId = bundle.getEntry().stream()
+              .map(Bundle.BundleEntryComponent::getResource)
+              .filter(resource -> resource instanceof Patient)
+              .map(Resource::getIdPart)
+              .findFirst()
+              .orElse(null);
+      String filename = String.format(Submission.PATIENT, Objects.requireNonNullElse(patientId, hashedPatientId));
+      submission.write(filename, bundle);
+    }
+
+    return submission;
+  }
+
   public Bundle generateBundle(Report report) {
     logger.info("Building Bundle for MeasureReport to send...");
 
@@ -105,30 +189,17 @@ public class FhirBundler {
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
     if (this.getBundlingConfig().isIncludeCensuses()) {
-      for (ListResource census : this.getCensuses(report)) {
+      for (ListResource census : this.getCensuses(report, this.getBundlingConfig().isMergeCensuses())) {
         bundle.addEntry().setResource(census);
       }
     }
 
-    Collection<Aggregate> aggregates = this.tenantService.getAggregates(report.getId());
-
-    for (Aggregate aggregate : aggregates) {
+    for (Aggregate aggregate : this.tenantService.getAggregates(report.getId())) {
       bundle.addEntry().setResource(this.getAggregateMeasureReport(aggregate));
-    }
-
-    Map<String, List<String>> pmrIdsByHashedPatientId = new HashMap<>();
-    for (Aggregate aggregate : aggregates) {
-      List<String> pmrIds = getPatientMeasureReportIds(aggregate);
+      List<String> pmrIds = this.getPatientMeasureReportIds(aggregate);
       if (pmrIds == null) {
         continue;
       }
-      for (String pmrId : pmrIds) {
-        String hashedPatientId = ReportIdHelper.getHashedPatientId(pmrId);
-        pmrIdsByHashedPatientId.computeIfAbsent(hashedPatientId, k -> new ArrayList<>()).add(pmrId);
-      }
-    }
-
-    for (List<String> pmrIds : pmrIdsByHashedPatientId.values()) {
       for (String pmrId : pmrIds) {
         PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(pmrId);
         if (patientMeasureReport == null) {
@@ -348,10 +419,10 @@ public class FhirBundler {
     census.setStatus(ListResource.ListStatus.CURRENT);
   }
 
-  private Collection<ListResource> getCensuses(Report report) {
+  private List<ListResource> getCensuses(Report report, boolean merge) {
     logger.debug("Adding censuses");
-    Collection<ListResource> patientLists = this.getPatientLists(report);
-    if (patientLists.size() > 1 && this.getBundlingConfig().isMergeCensuses()) {
+    List<ListResource> patientLists = this.getPatientLists(report);
+    if (patientLists.size() > 1 && merge) {
       logger.debug("Merging censuses");
       ListResource mergedCensus = patientLists.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
