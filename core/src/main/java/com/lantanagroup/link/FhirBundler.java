@@ -6,6 +6,7 @@ import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.PatientMeasureReport;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -88,7 +89,7 @@ public class FhirBundler {
     return lib;
   }
 
-  public Submission generateSubmission(Report report, boolean pretty) throws IOException {
+  public Submission generateSubmission(Report report, Validator validator, boolean pretty) throws IOException {
     Submission submission = new Submission(pretty);
 
     submission.write(Submission.ORGANIZATION, this.getOrg());
@@ -164,8 +165,13 @@ public class FhirBundler {
               .map(Resource::getIdPart)
               .findFirst()
               .orElse(null);
-      String filename = String.format(Submission.PATIENT, Objects.requireNonNullElse(patientId, hashedPatientId));
-      submission.write(filename, bundle);
+      String id = Objects.requireNonNullElse(patientId, hashedPatientId);
+      String bundleFilename = String.format(Submission.PATIENT, id);
+      submission.write(bundleFilename, bundle);
+
+      OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
+      String ooFilename = String.format(Submission.VALIDATION, id);
+      submission.write(ooFilename, oo);
     }
 
     return submission;

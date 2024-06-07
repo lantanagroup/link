@@ -3,10 +3,12 @@ package com.lantanagroup.link.sender;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.validation.ValidationCategorizer;
+import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,9 @@ import static com.google.common.primitives.Bytes.concat;
 @Component
 public class FileSystemSender extends GenericSender implements IReportSender {
   protected static Logger logger = LoggerFactory.getLogger(FileSystemSender.class);
+
+  @Autowired
+  private ApiConfig apiConfig;
 
   @Autowired
   @Setter
@@ -200,12 +205,14 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Submission submission = bundler.generateSubmission(report, this.config.getPretty());
+      Validator validator = new Validator(this.apiConfig);
+      Submission submission = bundler.generateSubmission(report, validator, this.config.getPretty());
       String orgId = tenantService.getOrganizationID();
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :
               this.getFilePath("submission").toString();
       Files.move(submission.getRoot(), Paths.get(path));
+      logger.info("Saved submission to file system: {}", path);
     }
   }
 }
