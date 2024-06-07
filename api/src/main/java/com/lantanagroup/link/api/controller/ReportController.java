@@ -576,11 +576,9 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
-    Bundle submissionBundle = bundler.generateBundle(report);
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
-      sender.send(tenantService, submissionBundle, report, request, user);
+      sender.send(this.eventService, tenantService, report, request, user);
     }
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
@@ -593,7 +591,12 @@ public class ReportController extends BaseController {
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
 
-    return download ? submissionBundle : null;
+    if (download) {
+      FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+      return bundler.generateBundle(report);
+    } else {
+      return null;
+    }
   }
 
   @GetMapping("/{reportId}/aggregate")

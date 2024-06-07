@@ -1,6 +1,7 @@
 package com.lantanagroup.link;
 
 import ca.uhn.fhir.context.FhirContext;
+import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.io.*;
@@ -16,6 +17,8 @@ public class Submission {
   public static final String PATIENT = "patient-%s.json";
 
   private final FhirContext fhirContext;
+
+  @Getter
   private final Path root;
 
   public Submission() {
