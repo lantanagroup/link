@@ -87,7 +87,9 @@ public class FhirBundler {
     return lib;
   }
 
-  public Bundle generateBundle(Collection<Aggregate> aggregates, Report report) {
+  public Bundle generateBundle(Report report) {
+    logger.info("Building Bundle for MeasureReport to send...");
+
     Bundle bundle = this.createBundle();
     bundle.addEntry().setResource(this.getOrg());
     Device device = report.getDeviceInfo();
@@ -107,6 +109,8 @@ public class FhirBundler {
         bundle.addEntry().setResource(census);
       }
     }
+
+    Collection<Aggregate> aggregates = this.tenantService.getAggregates(report.getId());
 
     for (Aggregate aggregate : aggregates) {
       bundle.addEntry().setResource(this.getAggregateMeasureReport(aggregate));
@@ -151,6 +155,8 @@ public class FhirBundler {
 
     // Sort the entries so they're always in the same order
     FhirBundlerEntrySorter.sort(bundle);
+
+    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
 
     return bundle;
   }
