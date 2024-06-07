@@ -103,11 +103,13 @@ public class FhirBundler {
     triggerEvent(this.tenantService, EventTypes.BeforeBundling, bundle);
 
     if (this.getBundlingConfig().isIncludeCensuses()) {
-      this.addCensuses(bundle, report);
+      for (ListResource census : this.getCensuses(report)) {
+        bundle.addEntry().setResource(census);
+      }
     }
 
     for (Aggregate aggregate : aggregates) {
-      this.addAggregateMeasureReport(bundle, aggregate.getReport());
+      bundle.addEntry().setResource(this.getAggregateMeasureReport(aggregate));
     }
 
     Map<String, List<String>> pmrIdsByHashedPatientId = new HashMap<>();
@@ -340,14 +342,9 @@ public class FhirBundler {
     census.setStatus(ListResource.ListStatus.CURRENT);
   }
 
-  private void addCensuses(Bundle bundle, Report report) {
+  private Collection<ListResource> getCensuses(Report report) {
     logger.debug("Adding censuses");
     Collection<ListResource> patientLists = this.getPatientLists(report);
-
-    if (patientLists.isEmpty()) {
-      return;
-    }
-
     if (patientLists.size() > 1 && this.getBundlingConfig().isMergeCensuses()) {
       logger.debug("Merging censuses");
       ListResource mergedCensus = patientLists.iterator().next().copy();
@@ -357,13 +354,13 @@ public class FhirBundler {
       for (ListResource census : patientLists) {
         FhirHelper.mergePatientLists(mergedCensus, census);
       }
-      bundle.addEntry().setResource(mergedCensus);
+      return List.of(mergedCensus);
     } else {
       for (ListResource census : patientLists) {
         logger.debug("Adding census: {}", census.getId());
         this.setCensusProperties(census);
-        bundle.addEntry().setResource(census);
       }
+      return patientLists;
     }
   }
 
@@ -414,7 +411,8 @@ public class FhirBundler {
     return patientMeasureReportIds;
   }
 
-  private void addAggregateMeasureReport(Bundle bundle, MeasureReport aggregateMeasureReport) {
+  private MeasureReport getAggregateMeasureReport(Aggregate aggregate) {
+    MeasureReport aggregateMeasureReport = aggregate.getReport();
     logger.debug("Adding aggregate measure report: {}", aggregateMeasureReport.getId());
 
     aggregateMeasureReport.getMeta().addProfile(Constants.SubjectListMeasureReportProfile);
@@ -422,7 +420,7 @@ public class FhirBundler {
     // Set the reporter to the facility/org
     aggregateMeasureReport.setReporter(new Reference().setReference("Organization/" + this.getOrg().getIdElement().getIdPart()));
 
-    bundle.addEntry().setResource(aggregateMeasureReport);
+    return aggregateMeasureReport;
   }
 
   private void addIndividualMeasureReport(Bundle bundle, MeasureReport individualMeasureReport) {
