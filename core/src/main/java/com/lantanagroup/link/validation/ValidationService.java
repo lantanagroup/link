@@ -2,6 +2,7 @@ package com.lantanagroup.link.validation;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.EventService;
+import com.lantanagroup.link.FhirBundler;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -42,7 +43,8 @@ public class ValidationService {
   public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
     OperationOutcome outcome;
 
-    Bundle bundle = Helper.generateBundle(tenantService, report, this.eventService);
+    FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+    Bundle bundle = bundler.generateBundle(report);
 
     ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();

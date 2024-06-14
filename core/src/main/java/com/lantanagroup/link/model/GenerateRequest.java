@@ -14,7 +14,7 @@ public class GenerateRequest {
   private List<String> bundleIds = new ArrayList<>();
   private String periodStart;
   private String periodEnd;
-  boolean validate = true;
+  boolean validate = false;
   boolean skipQuery = false;
   private List<String> debugPatients = new ArrayList<>();
 }

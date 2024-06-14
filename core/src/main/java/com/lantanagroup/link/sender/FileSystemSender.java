@@ -2,17 +2,20 @@ package com.lantanagroup.link.sender;
 
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
-import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.validation.ValidationCategorizer;
+import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.OperationOutcome;
+import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,21 +26,24 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
 
 import static com.google.common.primitives.Bytes.concat;
 
 @Component
 public class FileSystemSender extends GenericSender implements IReportSender {
   protected static Logger logger = LoggerFactory.getLogger(FileSystemSender.class);
+
+  @Autowired
+  private ApiConfig apiConfig;
 
   @Autowired
   @Setter
@@ -161,100 +167,6 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     logger.info("Saved submission bundle to file system: {}", path);
   }
 
-  private void saveToFolder(TenantService tenantService, Report report, Bundle bundle, OperationOutcome outcome, String path) throws Exception {
-    File folder = new File(path);
-
-    if (!folder.exists() && !folder.mkdirs()) {
-      logger.error("Unable to create folder {}", path);
-      throw new RuntimeException("Unable to create folder for submission");
-    }
-
-    FhirBundleProcessor fhirBundleProcessor = new FhirBundleProcessor(bundle);
-
-    // Save link resources
-    logger.debug("Saving link resources");
-    if (fhirBundleProcessor.getLinkOrganization() != null) {
-      this.saveToFile(fhirBundleProcessor.getLinkOrganization().getResource(),
-              Paths.get(path, Constants.ORGANIZATION_FILE_NAME).toString());
-    }
-
-    if (fhirBundleProcessor.getLinkDevice() != null) {
-      this.saveToFile(fhirBundleProcessor.getLinkDevice().getResource(),
-              Paths.get(path, Constants.DEVICE_FILE_NAME).toString());
-    }
-
-    if (fhirBundleProcessor.getLinkQueryPlanLibrary() != null) {
-      Library library = (Library) fhirBundleProcessor.getLinkQueryPlanLibrary().getResource();
-      this.saveToFile(library.getContentFirstRep().getData(),
-              Paths.get(path, Constants.QUERY_PLAN_FILE_NAME).toString());
-    }
-
-    // Save aggregate measure reports
-    logger.debug("Saving aggregate measure reports");
-    List<Bundle.BundleEntryComponent> aggregates = fhirBundleProcessor.getAggregateMeasureReports();
-    if (aggregates != null && !aggregates.isEmpty()) {
-      for (Bundle.BundleEntryComponent aggregate : aggregates) {
-        Resource aggregateReport = aggregate.getResource();
-        this.saveToFile(aggregateReport, Paths.get(path, String.format("aggregate-%s.json", aggregateReport.getIdElement().getIdPart())).toString());
-      }
-    }
-
-    // Save census lists
-    logger.debug("Saving census lists");
-    List<Bundle.BundleEntryComponent> lists = fhirBundleProcessor.getLinkCensusLists();
-    if (lists != null && !lists.isEmpty()) {
-      for (Bundle.BundleEntryComponent entry : lists) {
-        Resource list = entry.getResource();
-        this.saveToFile(list,
-                Paths.get(path, String.format("census-%s.json", list.getIdElement().getIdPart())).toString());
-      }
-    }
-
-    // Save patient resources
-    logger.debug("Saving patient resources as patient bundles");
-    Set<String> patientIds = fhirBundleProcessor.getPatientResources().keySet();
-    if (!patientIds.isEmpty()) {
-      for (String patientId : patientIds) {
-        Bundle patientBundle = new Bundle();
-        patientBundle.setType(Bundle.BundleType.COLLECTION);
-        patientBundle.getEntry().addAll(fhirBundleProcessor.getPatientResources().get(patientId));
-
-        this.saveToFile(patientBundle, Paths.get(path, String.format("patient-%s.json", patientId)).toString());
-      }
-    }
-
-    // Save other resources
-    logger.debug("Saving other resources");
-    Bundle otherResourcesBundle = new Bundle();
-    otherResourcesBundle.setType(Bundle.BundleType.COLLECTION);
-    otherResourcesBundle.getEntry().addAll(fhirBundleProcessor.getOtherResources());
-
-    if (otherResourcesBundle.hasEntry()) {
-      this.saveToFile(otherResourcesBundle, Paths.get(path, "other-resources.json").toString());
-    }
-
-    // Save validation results as HTML
-    logger.debug("Saving validation results as HTML");
-    String html = this.getValidationReportHTML(tenantService, report);
-    if (StringUtils.isNotEmpty(html)) {
-      this.saveToFile(html.getBytes(StandardCharsets.UTF_8), Paths.get(path, "validation-report.html").toString());
-    }
-    
-    // Annotating validation results with what file each issue occurs in and saving
-    logger.debug("Annotating and saving validation results");
-    List<OperationOutcome.OperationOutcomeIssueComponent> issues = outcome.getIssue();
-    issues.forEach(i -> {
-      if(i.hasExpression()){
-        String expression = i.getExpression().get(0).toString();
-        if(expression.contains("Bundle.entry[")){
-          String entryIndex = expression.substring(expression.indexOf("Bundle.entry[") + 13, expression.indexOf("]"));
-          i.setDiagnostics(fhirBundleProcessor.getBundleEntryIndexToFileMap().get(Integer.parseInt(entryIndex)));
-        }
-      }
-    });
-    this.saveToFile(outcome, Paths.get(path, "validation-results.json").toString());
-  }
-
   private String getValidationReportHTML(TenantService tenantService, Report report) throws IOException {
     return new ValidationCategorizer()
             .getValidationCategoriesAndResultsHtml(tenantService, report);
@@ -262,7 +174,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
   @SuppressWarnings("unused")
   @Override
-  public void send(TenantService tenantService, Bundle submissionBundle, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
+  public void send(EventService eventService, TenantService tenantService, Report report, HttpServletRequest request, LinkCredentials user) throws Exception {
     if (this.config == null) {
       logger.info("Not configured to send to file system");
       return;
@@ -279,7 +191,10 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             OperationOutcome.IssueSeverity.INFORMATION,
             null);
 
+    FhirBundler bundler = new FhirBundler(eventService, tenantService);
+
     if (this.config.getIsBundle()) {
+      Bundle submissionBundle = bundler.generateBundle(report);
       this.saveToFile(submissionBundle, this.getFilePath("submission").toString());
       this.saveToFile(outcome, this.getFilePath("validation").toString());
 
@@ -290,11 +205,14 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
+      Validator validator = new Validator(this.apiConfig);
+      Submission submission = bundler.generateSubmission(report, validator, this.config.getPretty());
       String orgId = tenantService.getOrganizationID();
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :
               this.getFilePath("submission").toString();
-      this.saveToFolder(tenantService, report, submissionBundle, outcome, path);
+      Files.move(submission.getRoot(), Paths.get(path));
+      logger.info("Saved submission to file system: {}", path);
     }
   }
 }
