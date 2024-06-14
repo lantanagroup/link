@@ -11,6 +11,7 @@ import com.lantanagroup.link.validation.ValidationCategorizer;
 import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hl7.fhir.r4.model.Bundle;
@@ -211,7 +212,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :
               this.getFilePath("submission").toString();
-      Files.move(submission.getRoot(), Paths.get(path));
+      FileUtils.moveDirectory(submission.getRoot().toFile(), new File(path));
       logger.info("Saved submission to file system: {}", path);
     }
   }
