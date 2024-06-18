@@ -75,7 +75,9 @@ public class ValidationRepository {
   }
 
   public int deleteByReport(String reportId) {
-    String sql = "DELETE FROM dbo.validationResultCategory WHERE validationResultId IN (SELECT id FROM dbo.validationResult WHERE reportId = :reportId); " +
+    String sql = "DELETE VRC FROM dbo.validationResultCategory AS VRC " +
+            "INNER JOIN dbo.validationResult AS VR ON VRC.validationResultId = VR.id " +
+            "WHERE VR.reportId = :reportId; " +
             "DELETE FROM dbo.validationResult WHERE reportId = :reportId;";
     return jdbc.update(sql, Map.of("reportId", reportId));
   }
