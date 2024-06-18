@@ -236,7 +236,6 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
-    this.validationCategories.deleteForReport(reportId);
     this.validations.deleteByReport(reportId);
 
     this.aggregates.deleteByReportId(reportId);
@@ -380,10 +379,6 @@ public class TenantService {
 
   public void insertValidationResultCategories(List<ValidationResultCategory> models) {
     this.validationCategories.insertAll(models);
-  }
-
-  public void deleteValidationCategoriesForReport(String reportId) {
-    this.validationCategories.deleteForReport(reportId);
   }
 
   public List<ValidationResultCategory> findValidationResultCategoriesByReport(String reportId) {

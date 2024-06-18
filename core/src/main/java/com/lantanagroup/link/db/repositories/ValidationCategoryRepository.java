@@ -39,11 +39,4 @@ public class ValidationCategoryRepository {
     String sql = "DELETE FROM dbo.validationResultCategory;";
     jdbc.update(sql, Map.of());
   }
-
-  public void deleteForReport(String reportId) {
-    String sql = "DELETE FROM dbo.validationResultCategory WHERE validationResultId IN " +
-            "(SELECT id FROM dbo.validationResult WHERE reportId = :reportId);";
-    Map<String, ?> parameters = Map.of("reportId", reportId);
-    jdbc.update(sql, parameters);
-  }
 }
