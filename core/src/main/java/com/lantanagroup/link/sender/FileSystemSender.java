@@ -3,7 +3,6 @@ package com.lantanagroup.link.sender;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
@@ -29,7 +28,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -44,7 +42,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   protected static Logger logger = LoggerFactory.getLogger(FileSystemSender.class);
 
   @Autowired
-  private ApiConfig apiConfig;
+  private Validator validator;
 
   @Autowired
   @Setter
@@ -206,8 +204,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Validator validator = new Validator(this.apiConfig);
-      Submission submission = bundler.generateSubmission(report, validator, this.config.getPretty());
+      Submission submission = bundler.generateSubmission(report, this.validator, this.config.getPretty());
       String orgId = tenantService.getOrganizationID();
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :

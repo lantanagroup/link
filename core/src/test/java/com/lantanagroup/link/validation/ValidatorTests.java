@@ -2,7 +2,6 @@ package com.lantanagroup.link.validation;
 
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.TestHelper;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.model.MeasureDefinition;
 import org.hl7.fhir.r4.model.*;
@@ -41,8 +40,7 @@ public class ValidatorTests {
             .setResource(new Measure().setUrl("http://test.com/fhir/Measure/a"));
 
     if (validator == null) {
-      validator = new Validator(new ApiConfig());
-      validator.init();
+      validator = new Validator();
 
       // Perform a single validation to pre-load all the packages and profiles
       validator.validate(new Bundle(), OperationOutcome.IssueSeverity.ERROR);
@@ -61,8 +59,7 @@ public class ValidatorTests {
     SharedService sharedService = mock(SharedService.class);
     when(sharedService.getMeasureDefinitions()).thenReturn(List.of(measureDefinition));
 
-    Validator newValidator = new Validator(new ApiConfig());
-    newValidator.init();
+    Validator newValidator = new Validator();
 
     // Perform a single validation to pre-load all the packages and profiles
     newValidator.validate(largeBundle, OperationOutcome.IssueSeverity.ERROR);
