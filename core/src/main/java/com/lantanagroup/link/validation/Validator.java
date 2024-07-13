@@ -25,9 +25,6 @@ import java.util.regex.Pattern;
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
 
-  private boolean initialized;
-  private FhirValidator validator;
-
   private static OperationOutcome.IssueSeverity getIssueSeverity(ResultSeverityEnum severity) {
     switch (severity) {
       case ERROR:
@@ -81,13 +78,9 @@ public class Validator {
     }
   }
 
-  private synchronized void initialize() {
-    if (this.initialized) {
-      return;
-    }
-
+  private static FhirValidator initialize() {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
-    this.validator = fhirContext.newValidator();
+    FhirValidator validator = fhirContext.newValidator();
 
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
@@ -95,18 +88,18 @@ public class Validator {
             ClasspathBasedValidationSupport.getInstance());
     CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
-    this.validator.registerValidatorModule(validatorModule);
+    validator.registerValidatorModule(validatorModule);
 
-    this.validator.setExecutorService(ForkJoinPool.commonPool());
-    this.validator.setConcurrentBundleValidation(true);
+    validator.setExecutorService(ForkJoinPool.commonPool());
+    validator.setConcurrentBundleValidation(true);
 
-    this.initialized = true;
+    return validator;
   }
 
-  private void validateResource(Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
+  private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
     ValidationOptions opts = new ValidationOptions();
 
-    ValidationResult result = this.validator.validateWithResult(resource, opts);
+    ValidationResult result = validator.validateWithResult(resource, opts);
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
@@ -174,7 +167,7 @@ public class Validator {
   }
 
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
-    this.initialize();
+    FhirValidator validator = initialize();
 
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
@@ -184,7 +177,7 @@ public class Validator {
     //noinspection unused
     outcome.setId(UUID.randomUUID().toString());
 
-    this.validateResource(resource, outcome, severity);
+    this.validateResource(validator, resource, outcome, severity);
     this.improveIssueExpressions(resource, outcome);
 
     Date end = new Date();
