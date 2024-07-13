@@ -7,16 +7,14 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
+import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -78,14 +76,22 @@ public class Validator {
     }
   }
 
-  private static FhirValidator initialize() {
+  private static FhirValidator initialize(Bundle support) {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
 
+    PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(fhirContext);
+    if (support != null) {
+      support.getEntry().stream()
+              .map(Bundle.BundleEntryComponent::getResource)
+              .filter(Objects::nonNull)
+              .forEachOrdered(prePopulatedValidationSupport::addResource);
+    }
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
-            ClasspathBasedValidationSupport.getInstance());
+            ClasspathBasedValidationSupport.getInstance(),
+            prePopulatedValidationSupport);
     CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
     validator.registerValidatorModule(validatorModule);
@@ -166,8 +172,8 @@ public class Validator {
     }
   }
 
-  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
-    FhirValidator validator = initialize();
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, Bundle support) {
+    FhirValidator validator = initialize(support);
 
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
@@ -189,5 +195,9 @@ public class Validator {
     outcome.addExtension(Constants.OperationOutcomeSeverityExtensionUrl, new CodeType(severity.toCode()));
 
     return outcome;
+  }
+
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
+    return validate(resource, severity, null);
   }
 }
