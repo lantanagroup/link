@@ -76,17 +76,16 @@ public class Validator {
     }
   }
 
-  private static FhirValidator initialize(Bundle support) {
+  private static FhirValidator initialize(List<Bundle> support) {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
 
     PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(fhirContext);
-    if (support != null) {
-      support.getEntry().stream()
-              .map(Bundle.BundleEntryComponent::getResource)
-              .filter(Objects::nonNull)
-              .forEachOrdered(prePopulatedValidationSupport::addResource);
-    }
+    support.stream()
+            .flatMap(bundle -> bundle.getEntry().stream())
+            .map(Bundle.BundleEntryComponent::getResource)
+            .filter(Objects::nonNull)
+            .forEachOrdered(prePopulatedValidationSupport::addResource);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
@@ -172,7 +171,7 @@ public class Validator {
     }
   }
 
-  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, Bundle support) {
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support) {
     FhirValidator validator = initialize(support);
 
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
@@ -198,6 +197,6 @@ public class Validator {
   }
 
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
-    return validate(resource, severity, null);
+    return validate(resource, severity, List.of());
   }
 }
