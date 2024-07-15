@@ -7,7 +7,6 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
-import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.r4.model.*;
@@ -80,17 +79,18 @@ public class Validator {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
 
-    PrePopulatedValidationSupport prePopulatedValidationSupport = new PrePopulatedValidationSupport(fhirContext);
+    MeasureDefinitionBasedValidationSupport measureDefinitionBasedValidationSupport =
+            new MeasureDefinitionBasedValidationSupport(fhirContext);
     support.stream()
             .flatMap(bundle -> bundle.getEntry().stream())
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(Objects::nonNull)
-            .forEachOrdered(prePopulatedValidationSupport::addResource);
+            .forEachOrdered(measureDefinitionBasedValidationSupport::addResource);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             ClasspathBasedValidationSupport.getInstance(),
-            prePopulatedValidationSupport);
+            measureDefinitionBasedValidationSupport);
     CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
     validator.registerValidatorModule(validatorModule);
