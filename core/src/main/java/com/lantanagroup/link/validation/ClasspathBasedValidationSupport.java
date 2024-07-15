@@ -24,8 +24,6 @@ public class ClasspathBasedValidationSupport extends PrePopulatedValidationSuppo
   private static final String[] FHIR_RESOURCE_TYPES = new String[]{
           ResourceType.CodeSystem.name(),
           ResourceType.ImplementationGuide.name(),
-          ResourceType.Library.name(),
-          ResourceType.Measure.name(),
           ResourceType.StructureDefinition.name(),
           ResourceType.ValueSet.name()
   };
