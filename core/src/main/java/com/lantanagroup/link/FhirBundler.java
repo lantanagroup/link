@@ -1,10 +1,8 @@
 package com.lantanagroup.link;
 
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.Aggregate;
-import com.lantanagroup.link.db.model.PatientList;
-import com.lantanagroup.link.db.model.PatientMeasureReport;
-import com.lantanagroup.link.db.model.Report;
+import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
 import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -25,6 +23,8 @@ public class FhirBundler {
 
   private final EventService eventService;
 
+  private final SharedService sharedService;
+
   private final TenantService tenantService;
 
   private Organization org;
@@ -44,8 +44,9 @@ public class FhirBundler {
           "https://open.epic.com/FHIR/StructureDefinition/extension/patient-merge-unmerge-instant"
   );
 
-  public FhirBundler(EventService eventService, TenantService tenantService) {
+  public FhirBundler(EventService eventService, SharedService sharedService, TenantService tenantService) {
     this.eventService = eventService;
+    this.sharedService = sharedService;
     this.tenantService = tenantService;
   }
 
@@ -90,6 +91,12 @@ public class FhirBundler {
   }
 
   public Submission generateSubmission(Report report, Validator validator, boolean pretty) throws IOException {
+    List<Bundle> measureDefinitions = report.getMeasureIds().stream()
+            .map(sharedService::getMeasureDefinition)
+            .filter(Objects::nonNull)
+            .map(MeasureDefinition::getBundle)
+            .collect(Collectors.toList());
+
     Submission submission = new Submission(pretty);
 
     submission.write(Submission.ORGANIZATION, this.getOrg());
@@ -169,7 +176,7 @@ public class FhirBundler {
       String bundleFilename = String.format(Submission.PATIENT, id);
       submission.write(bundleFilename, bundle);
 
-      OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION);
+      OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
       String ooFilename = String.format(Submission.VALIDATION, id);
       submission.write(ooFilename, oo);
     }

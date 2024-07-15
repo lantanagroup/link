@@ -588,7 +588,7 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
 
     if (download) {
-      FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+      FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
       return bundler.generateBundle(report);
     } else {
       return null;
