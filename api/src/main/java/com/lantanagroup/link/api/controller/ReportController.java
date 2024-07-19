@@ -23,7 +23,6 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.ValidationService;
-import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
@@ -82,9 +81,6 @@ public class ReportController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
-
-  @Autowired
-  private Validator validator;
 
   @Autowired
   private ValidationService validationService;
@@ -395,7 +391,7 @@ public class ReportController extends BaseController {
       report.setPeriodStart(criteria.getPeriodStart());
       report.setPeriodEnd(criteria.getPeriodEnd());
       report.setMeasureIds(measureIds);
-      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService, validator));
+      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
       report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
       // Preserve the version of the already-existing report
@@ -592,7 +588,7 @@ public class ReportController extends BaseController {
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
 
     if (download) {
-      FhirBundler bundler = new FhirBundler(this.eventService, tenantService);
+      FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
       return bundler.generateBundle(report);
     } else {
       return null;

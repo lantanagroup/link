@@ -3,8 +3,8 @@ package com.lantanagroup.link.sender;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
-import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
+import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.validation.ValidationCategorizer;
@@ -29,7 +29,6 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -44,13 +43,15 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   protected static Logger logger = LoggerFactory.getLogger(FileSystemSender.class);
 
   @Autowired
-  private ApiConfig apiConfig;
+  private Validator validator;
 
   @Autowired
   @Setter
   private FileSystemSenderConfig config;
 
   private final SecureRandom random = new SecureRandom();
+  @Autowired
+  private SharedService sharedService;
 
   private FileSystemSenderConfig.Formats getFormat() {
     if (this.config == null || this.config.getFormat() == null) {
@@ -192,7 +193,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             OperationOutcome.IssueSeverity.INFORMATION,
             null);
 
-    FhirBundler bundler = new FhirBundler(eventService, tenantService);
+    FhirBundler bundler = new FhirBundler(eventService, this.sharedService, tenantService);
 
     if (this.config.getIsBundle()) {
       Bundle submissionBundle = bundler.generateBundle(report);
@@ -206,8 +207,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Validator validator = new Validator(this.apiConfig);
-      Submission submission = bundler.generateSubmission(report, validator, this.config.getPretty());
+      Submission submission = bundler.generateSubmission(report, this.validator, this.config.getPretty());
       String orgId = tenantService.getOrganizationID();
       String path = orgId != null && !orgId.isEmpty() ?
               this.getFilePath(orgId).toString() :

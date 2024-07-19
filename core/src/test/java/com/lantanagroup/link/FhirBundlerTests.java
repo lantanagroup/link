@@ -70,7 +70,7 @@ public class FhirBundlerTests {
     aggregate.setReport(masterMeasureReport);
     when(tenantService.getAggregates(any())).thenReturn(List.of(aggregate));
 
-    FhirBundler bundler = new FhirBundler(null, tenantService);
+    FhirBundler bundler = new FhirBundler(null, null, tenantService);
 
     Report report = new Report();
     report.setDeviceInfo(new Device());

@@ -322,7 +322,7 @@ public class ValidationController extends BaseController {
     if (device == null) {
       device = FhirHelper.getDevice(this.apiConfig);
     }
-    FhirHelper.setImplementationGuideNotes(device, this.validator);
+    FhirHelper.setImplementationGuideNotes(device);
     tenantService.saveReport(report);
 
     return outcome;
