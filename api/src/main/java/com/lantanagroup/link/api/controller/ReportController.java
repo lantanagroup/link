@@ -676,7 +676,7 @@ public class ReportController extends BaseController {
 
     String styles;
     try {
-      styles = IOUtils.resourceToString("/insights.css", StandardCharsets.UTF_8);
+      styles = IOUtils.resourceToString("/report.css", StandardCharsets.UTF_8);
     } catch (IOException e) {
       styles = "";
     }
