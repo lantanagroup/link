@@ -22,6 +22,8 @@ import java.util.regex.Pattern;
 public class Validator {
   protected static final Logger logger = LoggerFactory.getLogger(Validator.class);
 
+  private volatile FhirValidator validator;
+
   private static OperationOutcome.IssueSeverity getIssueSeverity(ResultSeverityEnum severity) {
     switch (severity) {
       case ERROR:
@@ -171,8 +173,14 @@ public class Validator {
     }
   }
 
-  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support) {
-    FhirValidator validator = initialize(support);
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support, boolean reinitialize) {
+    FhirValidator validator;
+    if (reinitialize || this.validator == null) {
+      validator = initialize(support);
+      this.validator = validator;
+    } else {
+      validator = this.validator;
+    }
 
     logger.debug("Validating {}", resource.getResourceType().toString().toLowerCase());
 
@@ -196,7 +204,11 @@ public class Validator {
     return outcome;
   }
 
+  public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support) {
+    return validate(resource, severity, support, true);
+  }
+
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
-    return validate(resource, severity, List.of());
+    return validate(resource, severity, List.of(), true);
   }
 }
