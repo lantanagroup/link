@@ -4,6 +4,7 @@ import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.Bundling;
+import com.lantanagroup.link.validation.SimplePreQualReport;
 import com.lantanagroup.link.validation.Validator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -137,6 +138,7 @@ public class FhirBundler {
     }
 
     Validator validator = new Validator();
+    SimplePreQualReport preQual = new SimplePreQualReport(this.tenantService.getConfig().getId(), report);
 
     for (Map.Entry<String, List<String>> entry : pmrIdsByHashedPatientId.entrySet()) {
       Bundle bundle = new Bundle();
@@ -181,7 +183,11 @@ public class FhirBundler {
       OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions, false);
       String ooFilename = String.format(Submission.VALIDATION, id);
       submission.write(ooFilename, oo);
+
+      preQual.add(oo);
     }
+
+    submission.write(Submission.PRE_QUAL, preQual.generate());
 
     return submission;
   }

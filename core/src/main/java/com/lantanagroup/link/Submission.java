@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -16,6 +17,7 @@ public class Submission {
   public static final String AGGREGATE = "aggregate-%s.json";
   public static final String PATIENT = "patient-%s.json";
   public static final String VALIDATION = "validation-%s.json";
+  public static final String PRE_QUAL = "validation.html";
 
   private final IParser parser;
 
@@ -29,6 +31,10 @@ public class Submission {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+  }
+
+  public void write(String filename, String string) throws IOException {
+    write(filename, string.getBytes(StandardCharsets.UTF_8));
   }
 
   public void write(String filename, byte[] bytes) throws IOException {

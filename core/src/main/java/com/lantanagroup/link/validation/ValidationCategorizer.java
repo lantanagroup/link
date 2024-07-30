@@ -3,12 +3,14 @@ package com.lantanagroup.link.validation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.model.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -107,13 +110,23 @@ public class ValidationCategorizer {
     return resultCategories;
   }
 
+  private static void buildUncategorizedCategory(ValidationCategory category) {
+    category.setId("uncategorized");
+    category.setTitle("Uncategorized");
+    category.setSeverity(ValidationCategorySeverities.WARNING);
+    category.setAcceptable(false);
+    category.setGuidance("These issues need to be categorized.");
+  }
+
+  public static ValidationCategory buildUncategorizedCategory() {
+    ValidationCategory category = new ValidationCategory();
+    buildUncategorizedCategory(category);
+    return category;
+  }
+
   public static ValidationCategoryResponse buildUncategorizedCategory(int count) {
     ValidationCategoryResponse response = new ValidationCategoryResponse();
-    response.setId("uncategorized");
-    response.setTitle("Uncategorized");
-    response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setAcceptable(false);
-    response.setGuidance("These issues need to be categorized.");
+    buildUncategorizedCategory(response);
     response.setCount(count);
     return response;
   }
@@ -188,6 +201,29 @@ public class ValidationCategorizer {
       this.code = result.getCode();
       this.details = result.getDetails();
       this.expression = result.getExpression();
+    }
+
+    public Issue(OperationOutcome.OperationOutcomeIssueComponent ooIssue) {
+      this(ValidationResultMapper.toValidationResult(ooIssue));
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(severity, code, details);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      if (object == this) {
+        return true;
+      }
+      if (!(object instanceof Issue)) {
+        return false;
+      }
+      Issue issue = (Issue) object;
+      return Objects.equals(severity, issue.severity)
+              && Objects.equals(code, issue.code)
+              && Objects.equals(details, issue.details);
     }
   }
 }
