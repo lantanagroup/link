@@ -77,6 +77,15 @@ public class Validator {
     }
   }
 
+  /**
+   * Initializes a FhirValidator based on the following validation support:
+   * <ul>
+   *   <li>Default (base R4) profiles</li>
+   *   <li>In-memory terminology</li>
+   *   <li>Any IGs found on the classpath</li>
+   *   <li>Specified measure definition bundles</li>
+   * </ul>
+   */
   private static FhirValidator initialize(List<Bundle> support) {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
@@ -173,6 +182,14 @@ public class Validator {
     }
   }
 
+  /**
+   * Validates a resource at the specified severity threshold.
+   * Uses the specified measure definition bundles as additional validation support.
+   * Optionally skips reinitialization of the underlying FhirValidator.
+   * This is only appropriate when validating multiple resources with the same support.
+   * E.g., validating individual MeasureReport bundles all generated as part of the same report.
+   * In such a case, the Validator instance should not be shared across requests.
+   */
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support, boolean reinitialize) {
     FhirValidator validator;
     if (reinitialize || this.validator == null) {
@@ -204,10 +221,17 @@ public class Validator {
     return outcome;
   }
 
+  /**
+   * Validates a resource at the specified severity threshold.
+   * Uses the specified measure definition bundles as additional validation support.
+   */
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity, List<Bundle> support) {
     return validate(resource, severity, support, true);
   }
 
+  /**
+   * Validates a resource at the specified severity threshold.
+   */
   public OperationOutcome validate(Resource resource, OperationOutcome.IssueSeverity severity) {
     return validate(resource, severity, List.of(), true);
   }

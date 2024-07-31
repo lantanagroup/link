@@ -33,13 +33,13 @@ public class Submission {
     }
   }
 
-  public void write(String filename, String string) throws IOException {
-    write(filename, string.getBytes(StandardCharsets.UTF_8));
+  public void write(String filename, String content) throws IOException {
+    write(filename, content.getBytes(StandardCharsets.UTF_8));
   }
 
-  public void write(String filename, byte[] bytes) throws IOException {
+  public void write(String filename, byte[] content) throws IOException {
     try (OutputStream stream = Files.newOutputStream(root.resolve(filename))) {
-      stream.write(bytes);
+      stream.write(content);
     }
   }
 

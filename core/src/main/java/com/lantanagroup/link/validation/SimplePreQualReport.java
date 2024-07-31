@@ -15,6 +15,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Generates an HTML pre-qualification report based on validation output (as OperationOutcomes).
+ * This is a simplified report in which validation issues are deduplicated.
+ */
 public class SimplePreQualReport {
   private final String tenantId;
   private final Report report;
@@ -35,6 +39,10 @@ public class SimplePreQualReport {
     countsByIssue = new HashMap<>();
   }
 
+  /**
+   * Categorizes validation issues.
+   * Adds categories and (deduplicated) issues to running totals.
+   */
   public void add(OperationOutcome operationOutcome) {
     for (OperationOutcome.OperationOutcomeIssueComponent ooIssue : operationOutcome.getIssue()) {
       ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
@@ -54,6 +62,9 @@ public class SimplePreQualReport {
     }
   }
 
+  /**
+   * Generates the pre-qualification report as an HTML string.
+   */
   public String generate() throws IOException {
     Map<String, Object> substitutions = new HashMap<>();
     substitutions.put("tenant", tenantId);
