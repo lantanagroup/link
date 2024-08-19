@@ -196,6 +196,9 @@ public class ValidationCategorizer {
     private final String details;
     private final String expression;
 
+    @Setter
+    private List<ValidationCategory> categories;
+
     public Issue(ValidationResult result) {
       this.severity = result.getSeverity();
       this.code = result.getCode();

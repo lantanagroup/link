@@ -56,6 +56,7 @@ public class SimplePreQualReport {
                 .map(categoriesById::get)
                 .collect(Collectors.toList());
       }
+      issue.setCategories(categories);
       for (ValidationCategory category : categories) {
         countsByCategory.merge(category, 1, Integer::sum);
       }
@@ -118,6 +119,9 @@ public class SimplePreQualReport {
       addCell(builder, issue.getSeverity());
       addCell(builder, issue.getCode());
       addCell(builder, issue.getDetails());
+      addCell(builder, issue.getCategories().stream()
+              .map(ValidationCategory::getTitle)
+              .collect(Collectors.joining(", ")));
       addCell(builder, count);
       builder.append("</tr>");
     }
