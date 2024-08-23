@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.Reference;
+import org.hl7.fhir.r4.model.StringType;
 
 import java.util.List;
 
@@ -34,6 +35,9 @@ public class ReferenceRelativizer {
         continue;
       }
       if (cleanExpectedBaseUrl == null || StringUtils.equals(referenceBaseUrl, cleanExpectedBaseUrl)) {
+        reference.addExtension()
+                .setUrl(Constants.OriginalElementValueExtension)
+                .setValue(new StringType(referenceElement));
         reference.setReference(referenceId.toUnqualified().getValue());
       }
     }
