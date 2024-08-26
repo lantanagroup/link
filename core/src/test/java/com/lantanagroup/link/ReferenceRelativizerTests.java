@@ -5,16 +5,20 @@ import org.hl7.fhir.r4.model.Reference;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
 import static org.junit.Assert.assertArrayEquals;
 
 public class ReferenceRelativizerTests {
   private final ReferenceRelativizer referenceRelativizer;
-  private final List<String> references = List.of(
+  private final String[] references = new String[]{
           "Patient/1",
           "https://foo/fhir/Patient/2",
-          "https://bar/fhir/Patient/3");
+          "https://bar/fhir/Patient/3",
+          "#4",
+          "https://foo/fhir/Patient/5/_history/1",
+          "https://bar/fhir/Patient/6/_history/1",
+          "https://ƀäž/fhir/Patient/7",
+          null
+  };
   private ListResource list;
 
   public ReferenceRelativizerTests() {
@@ -40,18 +44,42 @@ public class ReferenceRelativizerTests {
   @Test
   public void testRelativizeWithNonNullExpectedBaseUrl() {
     referenceRelativizer.relativize(list, "https://foo/fhir");
-    doTest("Patient/1", "Patient/2", "https://bar/fhir/Patient/3");
+    doTest(
+            "Patient/1",
+            "Patient/2",
+            "https://bar/fhir/Patient/3",
+            "#4",
+            "Patient/5/_history/1",
+            "https://bar/fhir/Patient/6/_history/1",
+            "https://ƀäž/fhir/Patient/7",
+            null);
   }
 
   @Test
   public void testRelativizeWithNonNullExpectedBaseUrlAndTrailingSlash() {
     referenceRelativizer.relativize(list, "https://foo/fhir/");
-    doTest("Patient/1", "Patient/2", "https://bar/fhir/Patient/3");
+    doTest(
+            "Patient/1",
+            "Patient/2",
+            "https://bar/fhir/Patient/3",
+            "#4",
+            "Patient/5/_history/1",
+            "https://bar/fhir/Patient/6/_history/1",
+            "https://ƀäž/fhir/Patient/7",
+            null);
   }
 
   @Test
   public void testRelativizeWithNullExpectedBaseUrl() {
     referenceRelativizer.relativize(list, null);
-    doTest("Patient/1", "Patient/2", "Patient/3");
+    doTest(
+            "Patient/1",
+            "Patient/2",
+            "Patient/3",
+            "#4",
+            "Patient/5/_history/1",
+            "Patient/6/_history/1",
+            "Patient/7",
+            null);
   }
 }
