@@ -137,17 +137,18 @@ public class FhirBundler {
       }
     }
 
+    Map<IdType, Resource> sharedResourcesById = new HashMap<>();
     Validator validator = new Validator();
     SimplePreQualReport preQual = new SimplePreQualReport(this.tenantService.getConfig().getId(), report);
 
-    for (Map.Entry<String, List<String>> entry : pmrIdsByHashedPatientId.entrySet()) {
+    for (Map.Entry<String, List<String>> pmrIdByHashedPatientId : pmrIdsByHashedPatientId.entrySet()) {
       Bundle bundle = new Bundle();
       bundle.setType(this.getBundlingConfig().getBundleType());
       bundle.setTimestamp(new Date());
       this.lineLevelResources = new HashMap<>();
 
-      String hashedPatientId = entry.getKey();
-      for (String pmrId : entry.getValue()) {
+      String hashedPatientId = pmrIdByHashedPatientId.getKey();
+      for (String pmrId : pmrIdByHashedPatientId.getValue()) {
         PatientMeasureReport patientMeasureReport = this.tenantService.getPatientMeasureReport(pmrId);
         if (patientMeasureReport == null) {
           logger.warn("Patient measure report not found in database: {}", pmrId);
@@ -177,15 +178,44 @@ public class FhirBundler {
               .findFirst()
               .orElse(null);
       String id = Objects.requireNonNullElse(patientId, hashedPatientId);
-      String bundleFilename = String.format(Submission.PATIENT, id);
-      submission.write(bundleFilename, bundle);
 
       OperationOutcome oo = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions, false);
       String ooFilename = String.format(Submission.VALIDATION, id);
       submission.write(ooFilename, oo);
 
       preQual.add(oo);
+
+      for (int entryIndex = bundle.getEntry().size() - 1; entryIndex >= 0; entryIndex--) {
+        Bundle.BundleEntryComponent entry = bundle.getEntry().get(entryIndex);
+        Resource resource = entry.getResource();
+        if (!getBundlingConfig().getSharedResourceTypes().contains(resource.fhirType())) {
+          continue;
+        }
+        bundle.getEntry().remove(entryIndex);
+        IdType resourceId = resource.getIdElement().toUnqualifiedVersionless();
+        Resource found = sharedResourcesById.get(resourceId);
+        if (found == null) {
+          sharedResourcesById.put(resourceId, resource);
+        } else {
+          if (!equalsWithoutMeta(found, resource)) {
+            logger.warn("Previously found shared resource {} is not equivalent", resourceId);
+          }
+        }
+      }
+
+      String bundleFilename = String.format(Submission.PATIENT, id);
+      submission.write(bundleFilename, bundle);
     }
+
+    Bundle sharedBundle = new Bundle();
+    sharedBundle.setType(this.getBundlingConfig().getBundleType());
+    sharedBundle.setTimestamp(new Date());
+    for (Resource sharedResource : sharedResourcesById.values()) {
+      sharedBundle.addEntry().setResource(sharedResource);
+    }
+    this.cleanEntries(sharedBundle);
+    FhirBundlerEntrySorter.sort(sharedBundle);
+    submission.write(Submission.SHARED, sharedBundle);
 
     submission.write(Submission.PRE_QUAL, preQual.generate());
 
@@ -557,9 +587,7 @@ public class FhirBundler {
           bundle.addEntry().setResource(contained);
           this.lineLevelResources.put(lineLevelResourceId, contained);
         } else {
-          Resource foundClone = found.copy().setMeta(null);
-          Resource containedClone = contained.copy().setMeta(null);
-          if (!foundClone.equalsDeep(containedClone)) {
+          if (!equalsWithoutMeta(found, contained)) {
             logger.warn("Previously promoted resource {} is not equivalent", lineLevelResourceId);
           }
           for (CanonicalType profile : contained.getMeta().getProfile()) {
@@ -580,6 +608,12 @@ public class FhirBundler {
 
       individualMeasureReport.getContained().clear();
     }
+  }
+
+  private boolean equalsWithoutMeta(Resource resource1, Resource resource2) {
+    Resource clone1 = resource1.copy().setMeta(null);
+    Resource clone2 = resource2.copy().setMeta(null);
+    return clone1.equalsDeep(clone2);
   }
 
   private String getNonLocalId(IBaseResource resource) {

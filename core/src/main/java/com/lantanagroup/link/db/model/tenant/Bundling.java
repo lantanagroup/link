@@ -3,6 +3,9 @@ package com.lantanagroup.link.db.model.tenant;
 import lombok.Getter;
 import lombok.Setter;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.ResourceType;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -61,4 +64,12 @@ public class Bundling {
    * Bundle's Organization.name field
    */
   private Address address;
+
+  /**
+   * Resource types that will be moved from patient-specific bundles into a separate file during folder submission.
+   * Such resources will be deduplicated based on ID.
+   */
+  private List<String> sharedResourceTypes = List.of(
+          ResourceType.Location.name(),
+          ResourceType.Medication.name());
 }

@@ -16,6 +16,7 @@ public class Submission {
   public static final String CENSUS = "census.json";
   public static final String AGGREGATE = "aggregate-%s.json";
   public static final String PATIENT = "patient-%s.json";
+  public static final String SHARED = "shared-resources.json";
   public static final String VALIDATION = "validation-%s.json";
   public static final String PRE_QUAL = "validation.html";
 
