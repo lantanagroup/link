@@ -108,8 +108,7 @@ public class MeasureEvaluator {
                 .setCode(improvementNotationCode);
         measureReport.setImprovementNotation(improvementNotation);
       }
-
-      //This logic assumes that there's no hybrid scoring types for a single measure (not even sure it's allowed to do so)
+      
       // group.measureScore is required for DEQM profile validation of non-cohort measures
       if (measure.getScoring().hasCoding()) {
         measureReport.getGroup().forEach(g -> {
