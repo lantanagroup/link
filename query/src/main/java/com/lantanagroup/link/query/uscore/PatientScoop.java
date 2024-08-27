@@ -189,10 +189,9 @@ public class PatientScoop {
         MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = null;
-
         try {
-          patientData = this.loadInitialPatientData(criteria, context, patient);
+          PatientData patientData = this.loadInitialPatientData(criteria, context, patient);
+          this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -201,8 +200,6 @@ public class PatientScoop {
           double percent = (completed * 100.0) / patients.size();
           logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patients.size());
         }
-
-        this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
 
         return patient.getIdElement().getIdPart();
       }).collect(Collectors.toList())).get();
@@ -221,11 +218,10 @@ public class PatientScoop {
         MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 
-        Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
-        PatientData patientData = null;
-
         try {
-          patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
+          Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
+          PatientData patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
+          this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
           return null;
@@ -234,8 +230,6 @@ public class PatientScoop {
           double percent = (completed * 100.0) / patientsOfInterest.size();
           logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
-
-        this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
 
         return poi.getId();
       }).collect(Collectors.toList())).get();
