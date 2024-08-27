@@ -108,7 +108,7 @@ public class MeasureEvaluator {
                 .setCode(improvementNotationCode);
         measureReport.setImprovementNotation(improvementNotation);
       }
-      
+
       // group.measureScore is required for DEQM profile validation of non-cohort measures
       if (measure.getScoring().hasCoding()) {
         measureReport.getGroup().forEach(g -> {
@@ -118,7 +118,7 @@ public class MeasureEvaluator {
             }
           } else {
             // Cohort measure should only have one population (IP)
-            g.setMeasureScore(new Quantity(g.getPopulation().get(0).getCount()));
+            g.setMeasureScore(new Quantity(!g.getPopulation().isEmpty() ? g.getPopulation().get(0).getCount() : 0));
           }
         });
       }
