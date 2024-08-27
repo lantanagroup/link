@@ -123,7 +123,6 @@ public class MeasureEvaluator {
           }
         });
       }
-      }
 
       logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
     }
