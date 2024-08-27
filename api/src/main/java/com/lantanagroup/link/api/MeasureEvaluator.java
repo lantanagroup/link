@@ -109,15 +109,23 @@ public class MeasureEvaluator {
         measureReport.setImprovementNotation(improvementNotation);
       }
 
+      //This logic assumes that there's no hybrid scoring types for a single measure (not even sure it's allowed to do so)
       // group.measureScore is required for DEQM profile validation of non-cohort measures
-      if(measure.getScoring().hasCoding() &&
-              measure.getScoring().getCoding().stream().noneMatch(c -> c.hasCode() && c.getCode().equals("cohort"))) {
-        measureReport.getGroup().stream()
-                .filter(g -> g.getMeasureScore() == null || g.getMeasureScore().getValue() == null)
-                .forEach(g -> {
-                  g.getMeasureScore().addExtension(Constants.DataAbsentReasonExtensionUrl, new CodeType(Constants.DataAbsentReasonUnknownCode));
-                });
+      if(measure.getScoring().hasCoding()){
+        if(measure.getScoring().getCoding().stream().noneMatch(c -> c.hasCode() && c.getCode().equals("cohort"))) {
+          measureReport.getGroup().stream()
+                  .filter(g -> g.getMeasureScore() == null || g.getMeasureScore().getValue() == null)
+                  .forEach(g -> g.getMeasureScore()
+                          .addExtension(Constants.DataAbsentReasonExtensionUrl, new CodeType(Constants.DataAbsentReasonUnknownCode)));
+        }
+        //Setting measureScore to count retrieved from IP
+        else{
+          measureReport.getGroup().forEach(g ->
+                  //Cohort measure should only have one population (IP)
+                  g.setMeasureScore(new Quantity(g.getPopulation().get(0).getCount())));
+        }
       }
+
       logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
     }
 
