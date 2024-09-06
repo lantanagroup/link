@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.sl.cache.CacheFactory;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.lantanagroup.link.FhirContextProvider;
@@ -47,7 +48,25 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    * @param args
    */
   public static void main(String[] args) {
+    initializeCacheFactory();
     SpringApplication.run(ApiApplication.class, args);
+  }
+
+  /**
+   * Force HAPI to resolve CacheProviders using the current thread's context class loader.
+   * This is intended to be called from the main thread during application startup.
+   * That way, when running in a Spring Boot repackaged fat JAR, we get Spring Boot's custom class loader.
+   */
+  private static void initializeCacheFactory() {
+    // CacheFactory creates a ServiceLoader for CacheProviders in its static initializer
+    // Subsequent requests for CacheProvider instances use that ServiceLoader to perform resolution
+    // So all we really need is for CacheFactory's static initializer to run on the current thread
+    // Use Class.forName to achieve that
+    try {
+      Class.forName(CacheFactory.class.getName());
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**
