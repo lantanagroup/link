@@ -24,7 +24,9 @@ public class PeriodDateFixer
         DateTimeType start = p.getStartElement();
         DateTimeType end = p.getEndElement();
 
-        if (start.getPrecision() == TemporalPrecisionEnum.DAY && end.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
+        if (start.asStringValue() != null && end.asStringValue() != null &&
+                start.getPrecision() == TemporalPrecisionEnum.DAY &&
+                end.getPrecision().getCalendarConstant() > TemporalPrecisionEnum.DAY.getCalendarConstant()) {
           p.getStartElement().addExtension()
                   .setUrl(Constants.OriginalElementValueExtension)
                   .setValue(p.getStartElement().copy());

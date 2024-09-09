@@ -23,7 +23,6 @@ import com.lantanagroup.link.query.uscore.Query;
 import com.lantanagroup.link.time.Stopwatch;
 import com.lantanagroup.link.time.StopwatchManager;
 import com.lantanagroup.link.validation.ValidationService;
-import com.lantanagroup.link.validation.Validator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
@@ -35,6 +34,7 @@ import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -81,9 +81,6 @@ public class ReportController extends BaseController {
 
   @Autowired
   private SharedService sharedService;
-
-  @Autowired
-  private Validator validator;
 
   @Autowired
   private ValidationService validationService;
@@ -394,13 +391,16 @@ public class ReportController extends BaseController {
       report.setPeriodStart(criteria.getPeriodStart());
       report.setPeriodEnd(criteria.getPeriodEnd());
       report.setMeasureIds(measureIds);
-      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService, validator));
+      report.setDeviceInfo(FhirHelper.getDevice(this.config, tenantService));
       report.setQueryPlan(new YAMLMapper().writeValueAsString(queryPlan));
 
       // Preserve the version of the already-existing report
       if (existingReport != null) {
         report.setVersion(existingReport.getVersion());
       }
+
+      MDC.put("report", String.format("%s-%s-%s",
+              tenantService.getConfig().getId(), report.getId(), report.getVersion()));
 
       tenantService.saveReport(report, reportContext.getPatientLists());
 
@@ -454,9 +454,10 @@ public class ReportController extends BaseController {
       }
     } finally {
       tenantLock.unlock();
+      MDC.clear();
     }
 
-    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId());
+    this.stopwatchManager.storeMetrics(tenantService.getConfig().getId(), report.getId(), report.getVersion());
     logger.info("Statistics for report {} are:\n{}", report.getId(), this.stopwatchManager.getStatistics());
     this.stopwatchManager.reset();
 
@@ -571,22 +572,27 @@ public class ReportController extends BaseController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found");
     }
 
-    Bundle submissionBundle = Helper.generateBundle(tenantService, report, this.eventService);
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
-      sender.send(tenantService, submissionBundle, report, request, user);
+      sender.send(this.eventService, tenantService, report, request, user);
     }
     FhirHelper.incrementMajorVersion(report);
     report.setStatus(ReportStatuses.Submitted);
     report.setSubmittedTime(new Date());
 
-    stopwatchManager.storeMetrics(tenantId, reportId);
+
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     tenantService.saveReport(report);
 
     this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
 
-    return download ? submissionBundle : null;
+    if (download) {
+      FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
+      return bundler.generateBundle(report);
+    } else {
+      return null;
+    }
   }
 
   @GetMapping("/{reportId}/aggregate")
@@ -658,6 +664,31 @@ public class ReportController extends BaseController {
     }
 
     return patientMeasureReport.getMeasureReport();
+  }
+
+  @GetMapping(path = "/{reportId}/{version}/$insights", produces = "text/html")
+  public String getInsights(@PathVariable String tenantId, @PathVariable String reportId, @PathVariable String version) {
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    String styles;
+    try {
+      styles = IOUtils.resourceToString("/report.css", StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      styles = "";
+    }
+    String content = this.sharedService.getReportInsights(tenantId, reportId, version)
+            + tenantService.getReportInsights(tenantId, reportId, version);
+    StringBuilder result = new StringBuilder();
+    result.append("<html><head>");
+    result.append(String.format("<style type=\"text/css\">%s</style>", styles));
+    result.append("</head><body>");
+    result.append(String.format("<div class=\"container\">%s</div>", content));
+    result.append("</body></html>");
+    return result.toString();
   }
 
   @GetMapping

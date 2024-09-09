@@ -17,6 +17,7 @@ import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -110,7 +111,10 @@ public class PatientScoop {
     AtomicInteger progress = new AtomicInteger(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        MDC.setContextMap(contextMapCopy);
+
         int poiIndex = patientsOfInterest.indexOf(poi);
 
         //noinspection unused
@@ -177,16 +181,17 @@ public class PatientScoop {
     progress.set(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       // loop through the patient ids to retrieve the patientData using each patient.
       List<Patient> patients = new ArrayList<>(patientMap.values());
 
       patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
+        MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
 
-        PatientData patientData = null;
-
         try {
-          patientData = this.loadInitialPatientData(criteria, context, patient);
+          PatientData patientData = this.loadInitialPatientData(criteria, context, patient);
+          this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -195,8 +200,6 @@ public class PatientScoop {
           double percent = (completed * 100.0) / patients.size();
           logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patients.size());
         }
-
-        this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
 
         return patient.getIdElement().getIdPart();
       }).collect(Collectors.toList())).get();
@@ -210,14 +213,15 @@ public class PatientScoop {
     AtomicInteger progress = new AtomicInteger(0);
 
     try {
+      var contextMapCopy = MDC.getCopyOfContextMap();
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
+        MDC.setContextMap(contextMapCopy);
         logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
 
-        Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
-        PatientData patientData = null;
-
         try {
-          patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
+          Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
+          PatientData patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
+          this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
           return null;
@@ -226,8 +230,6 @@ public class PatientScoop {
           double percent = (completed * 100.0) / patientsOfInterest.size();
           logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
         }
-
-        this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
 
         return poi.getId();
       }).collect(Collectors.toList())).get();

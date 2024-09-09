@@ -311,7 +311,7 @@ public class ValidationController extends BaseController {
 
     StopwatchManager stopwatchManager = new StopwatchManager(this.sharedService);
     OperationOutcome outcome = this.validationService.validate(stopwatchManager, tenantService, report);
-    stopwatchManager.storeMetrics(tenantId, reportId);
+    stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
 
     if (report.getDeviceInfo() != null) {
       outcome.addContained(report.getDeviceInfo());
@@ -322,7 +322,7 @@ public class ValidationController extends BaseController {
     if (device == null) {
       device = FhirHelper.getDevice(this.apiConfig);
     }
-    FhirHelper.setImplementationGuideNotes(device, this.validator);
+    FhirHelper.setImplementationGuideNotes(device);
     tenantService.saveReport(report);
 
     return outcome;

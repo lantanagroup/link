@@ -109,12 +109,19 @@ public class MeasureEvaluator {
         measureReport.setImprovementNotation(improvementNotation);
       }
 
-      // group.measureScore is required for DEQM profile validation
-      measureReport.getGroup().stream()
-              .filter(g -> g.getMeasureScore() == null || g.getMeasureScore().getValue() == null)
-              .forEach(g -> {
-                g.getMeasureScore().addExtension(Constants.DataAbsentReasonExtensionUrl, new CodeType(Constants.DataAbsentReasonUnknownCode));
-              });
+      // group.measureScore is required for DEQM profile validation of non-cohort measures
+      if (measure.getScoring().hasCoding()) {
+        measureReport.getGroup().forEach(g -> {
+          if (measure.getScoring().getCoding().stream().noneMatch(c -> c.hasCode() && c.getCode().equals("cohort"))) {
+            if (g.getMeasureScore() == null || g.getMeasureScore().getValue() == null) {
+              g.getMeasureScore().addExtension(Constants.DataAbsentReasonExtensionUrl, new CodeType(Constants.DataAbsentReasonUnknownCode));
+            }
+          } else {
+            // Cohort measure should only have one population (IP)
+            g.setMeasureScore(new Quantity(!g.getPopulation().isEmpty() ? g.getPopulation().get(0).getCount() : 0));
+          }
+        });
+      }
 
       logger.info(String.format("Done generating measure report for %s", patientDataBundleId));
     }

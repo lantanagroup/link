@@ -115,8 +115,19 @@ public class PatientDataRepository {
   }
 
   public void beginReport(String reportId) {
-    String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
-    jdbc.update(sql, Map.of("reportId", reportId));
+    {
+      String sql = "UPDATE PD " +
+              "SET PD.dataTraceId = NULL " +
+              "FROM dbo.patientData AS PD " +
+              "INNER JOIN dbo.dataTrace AS DT ON PD.dataTraceId = DT.id " +
+              "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
+              "WHERE Q.reportId = :reportId;";
+      jdbc.update(sql, Map.of("reportId", reportId));
+    }
+    {
+      String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
+      jdbc.update(sql, Map.of("reportId", reportId));
+    }
   }
 
   public void deleteAll() {
@@ -137,17 +148,16 @@ public class PatientDataRepository {
   }
 
   public void deleteByReportId(String reportId) {
+    Map<String, ?> parameters = Map.of("reportId", reportId);
     {
-      String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
-      Map<String, ?> parameters = Map.of("reportId", reportId);
+      String sql = "DELETE PD FROM dbo.patientData AS PD " +
+              "INNER JOIN dbo.reportPatientData AS RPD ON " +
+              "PD.patientId = RPD.patientId AND PD.resourceType = RPD.resourceType AND PD.resourceId = RPD.resourceId " +
+              "WHERE RPD.reportId = :reportId;";
       jdbc.update(sql, parameters);
     }
     {
-      String sql = "DELETE FROM dbo.patientData WHERE dataTraceId IN " +
-              "(SELECT dataTraceId FROM dbo.dataTrace AS DT " +
-              "INNER JOIN dbo.query AS Q ON DT.queryId = Q.id " +
-              "WHERE Q.reportId = :reportId);";
-      Map<String, ?> parameters = Map.of("reportId", reportId);
+      String sql = "DELETE FROM dbo.reportPatientData WHERE reportId = :reportId;";
       jdbc.update(sql, parameters);
     }
   }

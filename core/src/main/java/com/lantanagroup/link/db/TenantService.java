@@ -10,6 +10,7 @@ import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.db.repositories.*;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import lombok.Getter;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -20,7 +21,10 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -128,7 +132,10 @@ public class TenantService {
   }
 
   public void beginReport(String reportId) {
+    this.aggregates.deleteByReportId(reportId);
+    this.patientMeasureReports.deleteByReportId(reportId);
     this.patientDatas.beginReport(reportId);
+    this.dataTraces.deleteByReportId(reportId);
   }
 
   public List<PatientData> findPatientData(String patientId) {
@@ -141,8 +148,8 @@ public class TenantService {
 
   public int deletePatientDataRetrievedBefore(Date date) {
     int result = this.patientDatas.deleteByRetrievedBefore(date);
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.dataTraces.deleteByRetrievedBefore(date);
+    this.queries.deleteByRetrievedBefore(date);
     return result;
   }
 
@@ -207,6 +214,19 @@ public class TenantService {
     return this.reports.findAll();
   }
 
+  public String getReportInsights(String tenantId, String reportId, String version) {
+    try (Connection connection = this.dataSource.getConnection()) {
+      String sql = IOUtils.resourceToString("/insights-tenant.sql", StandardCharsets.UTF_8);
+      PreparedStatement statement = connection.prepareStatement(sql);
+      statement.setNString(1, reportId);
+      statement.execute();
+      return SQLUtils.format(statement, "Patient lists", "Individual measure reports", "Aggregate measure reports",
+              "Patient data", "Validation issues");
+    } catch (SQLException | IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public void saveReport(Report report) {
     this.reports.save(report);
   }
@@ -216,15 +236,14 @@ public class TenantService {
   }
 
   public void deleteReport(String reportId){
-    this.validationCategories.deleteForReport(reportId);
     this.validations.deleteByReport(reportId);
 
     this.aggregates.deleteByReportId(reportId);
     this.patientMeasureReports.deleteByReportId(reportId);
 
     this.patientDatas.deleteByReportId(reportId);
-    this.dataTraces.deleteUnreferenced();
-    this.queries.deleteUnreferenced();
+    this.dataTraces.deleteByReportId(reportId);
+    this.queries.deleteByReportId(reportId);
 
     this.reports.deleteById(reportId);
   }
@@ -320,7 +339,6 @@ public class TenantService {
 
   public void saveDataTraces(UUID queryId, String patientId, List<IBaseResource> resources) {
     try {
-      IParser parser = FhirContextProvider.getFhirContext().newJsonParser();
       List<DataTrace> models = new ArrayList<>();
       for (IBaseResource resource : resources) {
         UUID dataTraceId = UUID.randomUUID();
@@ -331,7 +349,6 @@ public class TenantService {
         model.setPatientId(patientId);
         model.setResourceType(resource.fhirType());
         model.setResourceId(resource.getIdElement().getIdPart());
-        model.setOriginalResource(parser.encodeResourceToString(resource));
         models.add(model);
       }
       this.dataTraces.insertAll(models);
@@ -362,10 +379,6 @@ public class TenantService {
 
   public void insertValidationResultCategories(List<ValidationResultCategory> models) {
     this.validationCategories.insertAll(models);
-  }
-
-  public void deleteValidationCategoriesForReport(String reportId) {
-    this.validationCategories.deleteForReport(reportId);
   }
 
   public List<ValidationResultCategory> findValidationResultCategoriesByReport(String reportId) {

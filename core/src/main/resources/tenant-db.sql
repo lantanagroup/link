@@ -125,6 +125,11 @@ IF NOT EXISTS (SELECT *
 
 GO
 
+ALTER TABLE dbo.dataTrace
+    DROP COLUMN IF EXISTS originalResource;
+
+GO
+
 IF NOT EXISTS (SELECT *
                FROM INFORMATION_SCHEMA.TABLES
                WHERE TABLE_SCHEMA = 'dbo'

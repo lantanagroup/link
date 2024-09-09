@@ -12,7 +12,7 @@ import com.lantanagroup.link.db.model.tenant.Address;
 import com.lantanagroup.link.model.ApiVersionModel;
 import com.lantanagroup.link.serialize.FhirJsonDeserializer;
 import com.lantanagroup.link.serialize.FhirJsonSerializer;
-import com.lantanagroup.link.validation.Validator;
+import com.lantanagroup.link.validation.ClasspathBasedValidationSupport;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -284,7 +284,7 @@ public class FhirHelper {
     return device;
   }
 
-  public static Device getDevice(ApiConfig apiConfig, TenantService tenantService, Validator validator) {
+  public static Device getDevice(ApiConfig apiConfig, TenantService tenantService) {
     Device device = getDevice(apiConfig);
 
     if (tenantService.getConfig().getEvents() != null) {
@@ -323,17 +323,16 @@ public class FhirHelper {
       }
     }
 
-    setImplementationGuideNotes(device, validator);
+    setImplementationGuideNotes(device);
 
     return device;
   }
 
-  public static void setImplementationGuideNotes(Device device, Validator validator) {
+  public static void setImplementationGuideNotes(Device device) {
     String prefix = "Implementation Guide: ";
     device.getNote().removeIf(annotation -> annotation.getText().startsWith(prefix));
-    validator.init();       // Ensure the validator is initialized so we can get the implementation guides from it
 
-    for (ImplementationGuide ig : validator.getImplementationGuides()) {
+    for (ImplementationGuide ig : ClasspathBasedValidationSupport.getInstance().getImplementationGuides()) {
       String igNote = String.format("%s%s - %s - %s - %s", prefix, StringUtils.isEmpty(ig.getTitle()) ? ig.getName() : ig.getTitle(), ig.getUrl(), ig.getVersion(), ig.getDate());
       device.addNote(new Annotation().setText(igNote));
     }

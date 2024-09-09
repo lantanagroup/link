@@ -15,12 +15,12 @@
       "entry": [
         {
           "item": {
-            "reference": "MeasureReport/test-mr2"
+            "reference": "MeasureReport/a-b-c2"
           }
         },
         {
           "item": {
-            "reference": "MeasureReport/test-mr3"
+            "reference": "MeasureReport/a-b-c3"
           }
         }
       ]

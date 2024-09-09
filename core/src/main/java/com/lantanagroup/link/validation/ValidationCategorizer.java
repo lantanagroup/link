@@ -3,12 +3,14 @@ package com.lantanagroup.link.validation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lantanagroup.link.Helper;
 import com.lantanagroup.link.db.TenantService;
+import com.lantanagroup.link.db.mappers.ValidationResultMapper;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.db.model.tenant.ValidationResult;
 import com.lantanagroup.link.db.model.tenant.ValidationResultCategory;
 import com.lantanagroup.link.model.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.r4.model.OperationOutcome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Getter
@@ -46,6 +50,46 @@ public class ValidationCategorizer {
     }
   }
 
+  public boolean isMatch(ValidationCategoryRule rule, Issue issue) {
+    Predicate<String> predicate = value -> {
+      boolean result = rule.getPattern().matcher(value).find();
+      if (rule.isInverse()) {
+        result = !result;
+      }
+      return result;
+    };
+    switch (rule.getField()) {
+      case SEVERITY:
+        return predicate.test(issue.getSeverity());
+      case CODE:
+        return predicate.test(issue.getCode());
+      case DETAILS_TEXT:
+        return predicate.test(issue.getDetails());
+      case EXPRESSION:
+        return predicate.test(issue.getExpression());
+      default:
+        return false;
+    }
+  }
+
+  public boolean isMatch(ValidationCategoryRuleSet ruleSet, Issue issue) {
+    List<Boolean> results = ruleSet.getRules().stream()
+            .map(rule -> isMatch(rule, issue))
+            .collect(Collectors.toList());
+    return ruleSet.isAndOperator() ? !results.contains(false) : results.contains(true);
+  }
+
+  public boolean isMatch(RuleBasedValidationCategory category, Issue issue) {
+    return category.getRuleSets().stream().allMatch(ruleSet -> isMatch(ruleSet, issue));
+  }
+
+  public List<String> categorize(Issue issue) {
+    return this.categories.stream()
+            .filter(category -> isMatch(category, issue))
+            .map(ValidationCategory::getId)
+            .collect(Collectors.toList());
+  }
+
   public List<ValidationResultCategory> categorize(List<ValidationResult> results) {
     List<ValidationResultCategory> resultCategories = new ArrayList<>();
 
@@ -53,62 +97,36 @@ public class ValidationCategorizer {
       return resultCategories;
     }
 
-    for (RuleBasedValidationCategory category : this.categories) {
-      for (ValidationResult result : results) {
-        boolean allTrueInCategory = category.getRuleSets().stream().allMatch(ruleSet -> {
-          List<Boolean> ruleSetResults = ruleSet.getRules().stream().map(rule -> {
-            boolean isMatch = false;
-            switch (rule.getField()) {
-              case SEVERITY:
-                isMatch = rule.getPattern().matcher(result.getSeverity()).find();
-                break;
-              case CODE:
-                isMatch = rule.getPattern().matcher(result.getCode()).find();
-                break;
-              case DETAILS_TEXT:
-                isMatch = rule.getPattern().matcher(result.getDetails()).find();
-                break;
-              case EXPRESSION:
-                isMatch = rule.getPattern().matcher(result.getExpression()).find();
-                break;
-              default:
-                return false;
-            }
-
-            return rule.isInverse() != isMatch;
-          }).collect(Collectors.toList());
-
-          if (ruleSet.isAndOperator()) {
-            return ruleSetResults.stream().allMatch(r -> r);
-          }
-
-          return ruleSetResults.stream().anyMatch(r -> r);
-        });
-
-        if (allTrueInCategory) {
-          ValidationResultCategory validationResultCategory = new ValidationResultCategory();
-          validationResultCategory.setValidationResultId(result.getId());
-
-          // Because the categories are defined in the shared DB and the validation results are stored in the tenant DB,
-          // using a simplified version of the title of the category to associate categorized results to categories. This
-          // way, if the shared db's categories changes, it won't inadvertently change the category of previously categorized
-          // results. This is a bit of a hack, but it works.
-          validationResultCategory.setCategoryCode(category.getId());
-          resultCategories.add(validationResultCategory);
-        }
+    for (ValidationResult result : results) {
+      Issue issue = new Issue(result);
+      for (String categoryCode : categorize(issue)) {
+        ValidationResultCategory category = new ValidationResultCategory();
+        category.setValidationResultId(result.getId());
+        category.setCategoryCode(categoryCode);
+        resultCategories.add(category);
       }
     }
 
     return resultCategories;
   }
 
+  private static void buildUncategorizedCategory(ValidationCategory category) {
+    category.setId("uncategorized");
+    category.setTitle("Uncategorized");
+    category.setSeverity(ValidationCategorySeverities.WARNING);
+    category.setAcceptable(false);
+    category.setGuidance("These issues need to be categorized.");
+  }
+
+  public static ValidationCategory buildUncategorizedCategory() {
+    ValidationCategory category = new ValidationCategory();
+    buildUncategorizedCategory(category);
+    return category;
+  }
+
   public static ValidationCategoryResponse buildUncategorizedCategory(int count) {
     ValidationCategoryResponse response = new ValidationCategoryResponse();
-    response.setId("uncategorized");
-    response.setTitle("Uncategorized");
-    response.setSeverity(ValidationCategorySeverities.WARNING);
-    response.setAcceptable(false);
-    response.setGuidance("These issues need to be categorized.");
+    buildUncategorizedCategory(response);
     response.setCount(count);
     return response;
   }
@@ -168,6 +186,47 @@ public class ValidationCategorizer {
       String json = mapper.writeValueAsString(categoriesAndResults);
       String html = Helper.readInputStream(is);
       return html.replace("var report = {};", "var report = " + json + ";");
+    }
+  }
+
+  @Getter
+  public static class Issue {
+    private final String severity;
+    private final String code;
+    private final String details;
+    private final String expression;
+
+    @Setter
+    private List<ValidationCategory> categories;
+
+    public Issue(ValidationResult result) {
+      this.severity = result.getSeverity();
+      this.code = result.getCode();
+      this.details = result.getDetails();
+      this.expression = result.getExpression();
+    }
+
+    public Issue(OperationOutcome.OperationOutcomeIssueComponent ooIssue) {
+      this(ValidationResultMapper.toValidationResult(ooIssue));
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(severity, code, details);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+      if (object == this) {
+        return true;
+      }
+      if (!(object instanceof Issue)) {
+        return false;
+      }
+      Issue issue = (Issue) object;
+      return Objects.equals(severity, issue.severity)
+              && Objects.equals(code, issue.code)
+              && Objects.equals(details, issue.details);
     }
   }
 }

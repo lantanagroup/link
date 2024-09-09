@@ -21,7 +21,7 @@ public class Constants {
   public static final String ReportBundleProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/nhsn-measurereport-bundle";
   public static final String IndividualMeasureReportProfileUrl = "http://hl7.org/fhir/us/davinci-deqm/StructureDefinition/indv-measurereport-deqm";
   public static final String CensusProfileUrl = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/poi-list";
-  public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org.fhir/sid/us-npi";
+  public static final String NationalProviderIdentifierSystemUrl = "http://hl7.org/fhir/sid/us-npi";
   public static final String OperationOutcomeTotalExtensionUrl = "http://nhsnlink.org/oo-total";
   public static final String OperationOutcomeSeverityExtensionUrl = "http://nhsnlink.org/oo-severity";
   public static final String IdentifierSystem = "urn:ietf:rfc:3986";

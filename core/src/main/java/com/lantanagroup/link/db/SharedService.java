@@ -447,10 +447,11 @@ public class SharedService {
     metrics.forEach(metric -> {
       try (Connection conn = this.getSQLConnection()) {
         assert conn != null;
-        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?) }");
+        SQLCSHelper cs = new SQLCSHelper(conn, "{ CALL saveMetrics (?, ?, ?, ?, ?, ?, ?, ?) }");
         cs.setNString("id", metric.getId().toString());
         cs.setNString("tenantId", metric.getTenantId());
         cs.setNString("reportId", metric.getReportId());
+        cs.setNString("version", metric.getVersion());
         cs.setNString("category", metric.getCategory());
         cs.setNString("taskName", metric.getTaskName());
         cs.setNString("timestamp", new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(metric.getTimestamp()));
@@ -844,6 +845,20 @@ public class SharedService {
     }
 
     return reports;
+  }
+
+  public String getReportInsights(String tenantId, String reportId, String version) {
+    try (Connection connection = this.getSQLConnection()) {
+      String sql = IOUtils.resourceToString("/insights-shared.sql", StandardCharsets.UTF_8);
+      PreparedStatement statement = connection.prepareStatement(sql);
+      statement.setNString(1, tenantId);
+      statement.setNString(2, reportId);
+      statement.setNString(3, version);
+      statement.execute();
+      return SQLUtils.format(statement, "Log messages", "Errors and warnings", "Metrics");
+    } catch (SQLException | IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private TenantSummary getTenantSummaryResponse(Tenant tenantConfig) {

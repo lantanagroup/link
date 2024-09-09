@@ -36,7 +36,7 @@ public class FhirBundlerTests {
     MeasureReport mr = new MeasureReport();
     Patient patient = new Patient();
 
-    mr.setId("test-mr" + this.patientMeasureReportCount);
+    mr.setId("a-b-c" + this.patientMeasureReportCount);
     mr.setType(MeasureReport.MeasureReportType.INDIVIDUAL);
     mr.setSubject(new Reference("Patient/test-patient" + this.patientMeasureReportCount));
     mr.addGroup().addPopulation()
@@ -68,8 +68,9 @@ public class FhirBundlerTests {
     MeasureReport masterMeasureReport = this.deserializeResource("master-mr1.json", MeasureReport.class);
     Aggregate aggregate = new Aggregate();
     aggregate.setReport(masterMeasureReport);
+    when(tenantService.getAggregates(any())).thenReturn(List.of(aggregate));
 
-    FhirBundler bundler = new FhirBundler(null, tenantService);
+    FhirBundler bundler = new FhirBundler(null, null, tenantService);
 
     Report report = new Report();
     report.setDeviceInfo(new Device());
@@ -93,7 +94,7 @@ public class FhirBundlerTests {
     when(tenantService.getPatientMeasureReports(any(), any())).thenReturn(pmrs);
 
     // Generate the bundle
-    Bundle bundle = bundler.generateBundle(List.of(aggregate), report);
+    Bundle bundle = bundler.generateBundle(report);
 
     Assert.assertNotNull(bundle);
     Assert.assertEquals(8, bundle.getEntry().size());

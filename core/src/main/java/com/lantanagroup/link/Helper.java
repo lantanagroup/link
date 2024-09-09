@@ -174,13 +174,4 @@ public class Helper {
       logger.info("Done writing resource {} to file system {}", resource.getId(), filePath);
     }
   }
-
-  public static Bundle generateBundle(TenantService tenantService, Report report, EventService eventService) {
-    FhirBundler bundler = new FhirBundler(eventService, tenantService);
-    logger.info("Building Bundle for MeasureReport to send...");
-    List<Aggregate> aggregates = tenantService.getAggregates(report.getId());
-    Bundle bundle = bundler.generateBundle(aggregates, report);
-    logger.info(String.format("Done building Bundle for MeasureReport with %s entries", bundle.getEntry().size()));
-    return bundle;
-  }
 }

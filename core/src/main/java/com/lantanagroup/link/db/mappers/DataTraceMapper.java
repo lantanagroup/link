@@ -15,7 +15,6 @@ public class DataTraceMapper extends BaseMapper<DataTrace> {
     model.setPatientId(row.getString("patientId"));
     model.setResourceType(row.getString("resourceType"));
     model.setResourceId(row.getString("resourceId"));
-    model.setOriginalResource(row.getString("originalResource"));
     return model;
   }
 
@@ -27,7 +26,6 @@ public class DataTraceMapper extends BaseMapper<DataTrace> {
     parameters.addString("patientId", model.getPatientId());
     parameters.addString("resourceType", model.getResourceType());
     parameters.addString("resourceId", model.getResourceId());
-    parameters.addString("originalResource", model.getOriginalResource());
     return parameters;
   }
 }
