@@ -72,6 +72,9 @@ public class Validator {
         return OperationOutcome.IssueType.UNKNOWN;
       case "Type_Specific_Checks_DT_Code_WS":
         return OperationOutcome.IssueType.INVALID;
+      case "MEASURE_MR_GRP_POP_COUNT_MISMATCH":
+      case "MEASURE_MR_SCORE_PROHIBITED_MS":
+        return OperationOutcome.IssueType.BUSINESSRULE;
       default:
         return OperationOutcome.IssueType.NULL;
     }
