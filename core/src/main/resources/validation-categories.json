@@ -94,7 +94,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^The system .* http:\\/\\/hl7\\.org/fhir\\/sid\\/icd-9-cm was found but did not contain enough information to properly validate the code \\(mode = fragment\\) \\(from Tx-Server\\)",
+            "regex": "^The system .* was found but did not contain enough information to properly validate the code \\(mode = fragment\\) \\(from Tx-Server\\)",
             "inverse": false
           }
         ],
