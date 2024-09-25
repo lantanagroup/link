@@ -421,7 +421,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.\\w+\\[[0-9]+\\]\\.value",
+            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
             "inverse": true
           }
         ],
