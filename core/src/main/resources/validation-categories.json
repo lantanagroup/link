@@ -588,30 +588,6 @@
     ]
   },
   {
-    "id": "Invalid_whitespace_(non-identifier)",
-    "title": "Invalid whitespace (non-identifier).",
-    "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
     "id": "Invalid_dateTime_format",
     "title": "Invalid dateTime format.",
     "severity": "ERROR",
