@@ -77,13 +77,9 @@
           {
             "field": "CODE",
             "regex": "^code-invalid$"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The (code|value) provided \\(.*\\) is not in the value set '.*' \\(http:\\/\\/.*\\), and a code .*is required"
           }
         ],
-        "andOperator": false
+        "andOperator": true
       }
     ]
   },
