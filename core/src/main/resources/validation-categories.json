@@ -190,18 +190,15 @@
         "rules": [
           {
             "field": "SEVERITY",
-            "regex": "^error$",
-            "pattern": "^error$"
+            "regex": "^error$"
           },
           {
             "field": "CODE",
-            "regex": "^code-invalid$",
-            "pattern": "^code-invalid$"
+            "regex": "^code-invalid$"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'",
-            "pattern": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
           }
         ],
         "andOperator": true
