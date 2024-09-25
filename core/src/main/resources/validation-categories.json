@@ -397,7 +397,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^No measureScore when the scoring of the message is \"cohort\"",
+            "regex": "^No measureScore when the scoring of the message is ''cohort''",
             "inverse": false
           }
         ],
