@@ -560,7 +560,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = 1, but only found 0 \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "regex": "minimum required = \\d+, but only found \\d+ \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
             "inverse": false
           }
         ],
