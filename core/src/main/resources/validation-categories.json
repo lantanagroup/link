@@ -161,17 +161,17 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%urn:oid:1.2.840.114350%",
+            "regex": "urn:oid:1\\.2\\.840\\.114350",
             "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%http://%epic.com%",
+            "regex": "https?://.+epic\\.com",
             "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%urn:oid:2.16.840.1.113883.6.68%",
+            "regex": "urn:oid:2\\.16\\.840\\.1\\.113883\\.6\\.68",
             "inverse": true
           }
         ],
