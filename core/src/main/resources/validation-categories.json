@@ -339,8 +339,8 @@
     ]
   },
   {
-    "id": "MedicationRequest_requestor_does_not_have_a_proper_reference",
-    "title": "MedicationRequest.requestor does not have a proper reference",
+    "id": "MedicationRequest_requester_does_not_have_a_proper_reference",
+    "title": "MedicationRequest.requester does not have a proper reference",
     "severity": "WARNING",
     "acceptable": true,
     "guidance": "No identity or reference for requester (Provider). Safe to ignore when ordering provider is not needed.",
