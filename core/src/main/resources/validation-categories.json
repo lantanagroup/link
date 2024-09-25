@@ -118,7 +118,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Code System URI 'http://.*epic\\.com/.*' is unknown so the code cannot be validated",
+            "regex": "^Code System URI 'https?://.*epic\\.com/.*' is unknown so the code cannot be validated",
             "inverse": false
           }
         ],
