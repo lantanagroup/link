@@ -588,30 +588,6 @@
     ]
   },
   {
-    "id": "Invalid_code_system",
-    "title": "Invalid code system.",
-    "severity": "ERROR",
-    "acceptable": true, 
-    "guidance": "URI must be valid and the System should identify a valid coding system.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
     "id": "Invalid_whitespace_(non-identifier)",
     "title": "Invalid whitespace (non-identifier).",
     "severity": "WARNING",
