@@ -536,7 +536,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
+            "regex": "Canonical URL 'http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/Measure/.*' does not resolve",
             "inverse": false
           },
           {
