@@ -581,11 +581,6 @@
             "field": "DETAILS_TEXT",
             "regex": "Canonical URL '.*' does not resolve",
             "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
           }
         ],
         "andOperator": false
