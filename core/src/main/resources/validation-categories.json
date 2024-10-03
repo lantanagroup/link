@@ -77,13 +77,9 @@
           {
             "field": "CODE",
             "regex": "^code-invalid$"
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The (code|value) provided \\(.*\\) is not in the value set '.*' \\(http:\\/\\/.*\\), and a code .*is required"
           }
         ],
-        "andOperator": false
+        "andOperator": true
       }
     ]
   },
@@ -98,7 +94,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^The system .* http:\\/\\/hl7\\.org/fhir\\/sid\\/icd-9-cm was found but did not contain enough information to properly validate the code \\(mode = fragment\\) \\(from Tx-Server\\)",
+            "regex": "^The system .* was found but did not contain enough information to properly validate the code \\(mode = fragment\\) \\(from Tx-Server\\)",
             "inverse": false
           }
         ],
@@ -122,7 +118,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Code System URI 'http://.*epic\\.com/.*' is unknown so the code cannot be validated",
+            "regex": "^Code System URI 'https?://.*epic\\.com/.*' is unknown so the code cannot be validated",
             "inverse": false
           }
         ],
@@ -165,17 +161,17 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%urn:oid:1.2.840.114350%",
+            "regex": "urn:oid:1\\.2\\.840\\.114350",
             "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%http://%epic.com%",
+            "regex": "https?://.+epic\\.com",
             "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "%urn:oid:2.16.840.1.113883.6.68%",
+            "regex": "urn:oid:2\\.16\\.840\\.1\\.113883\\.6\\.68",
             "inverse": true
           }
         ],
@@ -194,18 +190,15 @@
         "rules": [
           {
             "field": "SEVERITY",
-            "regex": "^error$",
-            "pattern": "^error$"
+            "regex": "^error$"
           },
           {
             "field": "CODE",
-            "regex": "^code-invalid$",
-            "pattern": "^code-invalid$"
+            "regex": "^code-invalid$"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'",
-            "pattern": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
           }
         ],
         "andOperator": true
@@ -346,8 +339,8 @@
     ]
   },
   {
-    "id": "MedicationRequest_requestor_does_not_have_a_proper_reference",
-    "title": "MedicationRequest.requestor does not have a proper reference",
+    "id": "MedicationRequest_requester_does_not_have_a_proper_reference",
+    "title": "MedicationRequest.requester does not have a proper reference",
     "severity": "WARNING",
     "acceptable": true,
     "guidance": "No identity or reference for requester (Provider). Safe to ignore when ordering provider is not needed.",
@@ -404,7 +397,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^No measureScore when the scoring of the message is \"cohort\"",
+            "regex": "^No measureScore when the scoring of the message is ''cohort''",
             "inverse": false
           }
         ],
@@ -428,7 +421,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.\\w+\\[[0-9]+\\]\\.value",
+            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
             "inverse": true
           }
         ],
@@ -543,7 +536,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
+            "regex": "Canonical URL 'http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/Measure/.*' does not resolve",
             "inverse": false
           },
           {
@@ -567,7 +560,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = 1, but only found 0 \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "regex": "minimum required = \\d+, but only found \\d+ \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
             "inverse": false
           }
         ],
@@ -587,59 +580,6 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Canonical URL '.*' does not resolve",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "Invalid_code_system",
-    "title": "Invalid code system.",
-    "severity": "ERROR",
-    "acceptable": true, 
-    "guidance": "URI must be valid and the System should identify a valid coding system.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "Invalid_whitespace_(non-identifier)",
-    "title": "Invalid whitespace (non-identifier).",
-    "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "Source systems SHOULD remove any leading or trailing whitespace in text elements before sending.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Canonical URL '.*' does not resolve",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
             "inverse": false
           }
         ],
