@@ -40,6 +40,11 @@ public class Tenant {
   private String description;
 
   /**
+   * Parameter that indicates that some operations will be slightly modified to work for querying Veradigm databases
+   */
+  private Boolean isVeradigm = false;
+
+  /**
    * The Time Zone string for the Tenant
    */
   private String timeZoneId;
