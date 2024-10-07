@@ -63,20 +63,6 @@ public class MeasureEvaluator {
 
     logger.info("Executing $evaluate-measure for measure: {}, start: {}, end: {}, patient: {}, resources: {}", measureId, criteria.getPeriodStart(), criteria.getPeriodEnd(), patientId, patientBundle.getEntry().size());
 
-    patientBundle.getEntry().forEach(e -> {
-      List<Reference> references = FhirHelper.collect(e.getResource(), Reference.class);
-      references.forEach(r -> {
-        String url = r.getReference();
-        String firstPart = url.substring(0, url.lastIndexOf("/"));
-        //Assume that all references have AT LEAST 1 '/' in it. Do nothing if there's only 1 '/'
-        if(firstPart.lastIndexOf("/") != -1) {
-          String relativeUrl = url.substring(firstPart.lastIndexOf("/") + 1);
-          r.setReference(relativeUrl);
-        }
-      });
-
-    });
-
     //noinspection unused
     try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_MEASURE, Constants.CATEGORY_EVALUATE)) {
       measureReport = measureServiceWrapper.evaluate(this.criteria.getPeriodStart(), this.criteria.getPeriodEnd(), patientId, patientBundle);
