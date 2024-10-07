@@ -133,7 +133,7 @@ public class PatientData {
         String joinedIds = String.join(",", ids);
         IQuery<Bundle> query = fhirQueryServer.search()
                 .forResource(resourceType)
-                .usingStyle(SearchStyleEnum.POST)
+                .usingStyle((this.tenantService.getConfig().getIsVeradigm() ? SearchStyleEnum.GET : SearchStyleEnum.POST))
                 .whereMap(Map.of(pagedName, List.of(joinedIds)))
                 .whereMap(unpagedMap)
                 .returnBundle(Bundle.class);
@@ -169,7 +169,7 @@ public class PatientData {
           for (List<String> ids : pagedIds) {
             IQuery<Bundle> query = fhirQueryServer.search()
                     .forResource(resourceType)
-                    .usingStyle(SearchStyleEnum.POST)
+                    .usingStyle((this.tenantService.getConfig().getIsVeradigm() ? SearchStyleEnum.GET : SearchStyleEnum.POST))
                     .where(Resource.RES_ID.exactly().codes(ids))
                     .returnBundle(Bundle.class);
             addAllResources(query);
@@ -177,7 +177,7 @@ public class PatientData {
         } else {
           IQuery<Bundle> query = fhirQueryServer.search()
                   .forResource(resourceType)
-                  .usingStyle(SearchStyleEnum.POST)
+                  .usingStyle((this.tenantService.getConfig().getIsVeradigm() ? SearchStyleEnum.GET : SearchStyleEnum.POST))
                   .where(Resource.RES_ID.exactly().codes(unpagedIds))
                   .returnBundle(Bundle.class);
           addAllResources(query);
@@ -213,11 +213,11 @@ public class PatientData {
         return patientId;
       case "lookbackstart":
         Period lookback = Period.parse(context.getQueryPlan().getLookback());
-        return criteria.getPeriodStartDate().minus(lookback) + "T00:00:00Z";
+        return criteria.getPeriodStartDate().minus(lookback) + (this.tenantService.getConfig().getIsVeradigm() ? "" : "T00:00:00Z");
       case "periodstart":
-        return criteria.getPeriodStartDate().toString() + "T00:00:00Z";
+        return criteria.getPeriodStartDate().toString() + (this.tenantService.getConfig().getIsVeradigm() ? "" : "T00:00:00Z");
       case "periodend":
-        return criteria.getPeriodEndDate().toString() + "T23:59:59Z";
+        return criteria.getPeriodEndDate().toString() + (this.tenantService.getConfig().getIsVeradigm() ? "" : "T23:59:59Z");
       default:
         throw new IllegalStateException("Unrecognized parameter variable: " + variable);
     }
