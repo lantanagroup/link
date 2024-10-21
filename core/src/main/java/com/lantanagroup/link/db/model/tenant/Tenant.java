@@ -40,7 +40,8 @@ public class Tenant {
   private String description;
 
   /**
-   * Parameter that indicates that some operations will be slightly modified to work for querying Veradigm databases
+   * Parameter that indicates that some operations will be slightly modified to work for querying Veradigm databases.
+   * Defaulted to false.
    */
   private Boolean isVeradigm = false;
 
