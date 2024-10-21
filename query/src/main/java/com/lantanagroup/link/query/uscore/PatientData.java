@@ -22,6 +22,8 @@ import org.hl7.fhir.r4.model.*;
 import org.hl7.fhir.r4.model.Bundle.BundleType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
 
 import java.time.Period;
 import java.util.*;
@@ -84,6 +86,10 @@ public class PatientData {
     logResourceTypeCounts();
   }
 
+  private SearchStyleEnum getSearchStyle(){
+    return this.tenantService.getConfig().getIsVeradigm() ? SearchStyleEnum.GET : SearchStyleEnum.POST;
+  }
+
   private void search(TypedQueryPlan plan) {
     logger.info("Querying for patient {} and resource type {}", patientId, plan.getResourceType());
     try (Stopwatch stopwatch = stopwatchManager.start(plan.getResourceType(), Constants.CATEGORY_QUERY)) {
@@ -133,7 +139,7 @@ public class PatientData {
         String joinedIds = String.join(",", ids);
         IQuery<Bundle> query = fhirQueryServer.search()
                 .forResource(resourceType)
-                .usingStyle(SearchStyleEnum.POST)
+                .usingStyle(getSearchStyle())
                 .whereMap(Map.of(pagedName, List.of(joinedIds)))
                 .whereMap(unpagedMap)
                 .returnBundle(Bundle.class);
@@ -169,7 +175,7 @@ public class PatientData {
           for (List<String> ids : pagedIds) {
             IQuery<Bundle> query = fhirQueryServer.search()
                     .forResource(resourceType)
-                    .usingStyle(SearchStyleEnum.POST)
+                    .usingStyle(getSearchStyle())
                     .where(Resource.RES_ID.exactly().codes(ids))
                     .returnBundle(Bundle.class);
             addAllResources(query);
@@ -177,7 +183,7 @@ public class PatientData {
         } else {
           IQuery<Bundle> query = fhirQueryServer.search()
                   .forResource(resourceType)
-                  .usingStyle(SearchStyleEnum.POST)
+                  .usingStyle(getSearchStyle())
                   .where(Resource.RES_ID.exactly().codes(unpagedIds))
                   .returnBundle(Bundle.class);
           addAllResources(query);
@@ -213,11 +219,23 @@ public class PatientData {
         return patientId;
       case "lookbackstart":
         Period lookback = Period.parse(context.getQueryPlan().getLookback());
-        return criteria.getPeriodStartDate().minus(lookback) + "T00:00:00Z";
+        if (this.tenantService.getConfig().getIsVeradigm()) {
+            return criteria.getPeriodStartDate().minus(lookback).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } else {
+            return criteria.getPeriodStartDate().minus(lookback).atStartOfDay(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
       case "periodstart":
-        return criteria.getPeriodStartDate().toString() + "T00:00:00Z";
+        if (this.tenantService.getConfig().getIsVeradigm()) {
+            return criteria.getPeriodStartDate().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } else {
+            return criteria.getPeriodStartDate().atStartOfDay(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
       case "periodend":
-        return criteria.getPeriodEndDate().toString() + "T23:59:59Z";
+        if (this.tenantService.getConfig().getIsVeradigm()) {
+            return criteria.getPeriodEndDate().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } else {
+            return criteria.getPeriodEndDate().atTime(23, 59, 59).atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        }
       default:
         throw new IllegalStateException("Unrecognized parameter variable: " + variable);
     }
