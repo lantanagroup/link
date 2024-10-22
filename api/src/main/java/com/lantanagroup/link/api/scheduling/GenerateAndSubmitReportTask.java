@@ -3,6 +3,8 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.api.controller.ReportController;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -11,7 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
+import java.util.TimeZone;
 
 @Component
 public class GenerateAndSubmitReportTask implements Runnable {
@@ -32,6 +37,9 @@ public class GenerateAndSubmitReportTask implements Runnable {
   @Autowired
   private ReportController reportController;
 
+  @Autowired
+  private SharedService sharedService;
+
   @Override
   public void run() {
     if (this.measureIds == null || this.measureIds.isEmpty()) {
@@ -44,8 +52,13 @@ public class GenerateAndSubmitReportTask implements Runnable {
       throw new IllegalArgumentException("reportingPeriodMethod");
     }
 
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+    TimeZone timezone = TimeZone.getTimeZone(
+            Objects.requireNonNullElse(tenantService.getConfig().getTimeZoneId(),
+                    ZoneId.systemDefault().getId()));
+
     logger.info("Starting scheduled task to generate a report");
-    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
+    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod, timezone);
     Report report;
 
     try {

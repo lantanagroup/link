@@ -7,7 +7,6 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
-import com.lantanagroup.link.db.model.MeasureDefinition;
 import com.lantanagroup.link.db.model.PatientId;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.tenant.EhrPatientList;
@@ -93,7 +92,8 @@ public class PatientIdentifierController extends BaseController {
       }
 
       for (int j = 0; j < list.getMeasureId().size(); j++) {
-        PatientList patientList = this.convert(tenantService, sources, list.getMeasureId().get(j), new URI(client.getServerBase()));
+        PatientList patientList = this.convert(tenantService, sources, list.getMeasureId().get(j),
+                new URI(client.getServerBase()), list.getReportingPeriodMethod());
         this.storePatientList(tenantService, patientList);
       }
     }
@@ -155,15 +155,15 @@ public class PatientIdentifierController extends BaseController {
     return list;
   }
 
-  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier, URI baseUrl) throws URISyntaxException {
+  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier, URI baseUrl,
+                              ReportingPeriodMethods reportingPeriodMethod) throws URISyntaxException {
     logger.info("Converting List resources to DB PatientLists");
     PatientList patientList = new PatientList();
 
     var timeZoneId = tenantService.getConfig().getTimeZoneId();
     var timeZone = TimeZone.getTimeZone(Objects.requireNonNullElse(timeZoneId, ZoneId.systemDefault().getId()));
 
-    // TODO: Make ReportingPeriodMethods configurable
-    ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(ReportingPeriodMethods.CurrentMonth, timeZone);
+    ReportingPeriodCalculator calculator = new ReportingPeriodCalculator(reportingPeriodMethod, timeZone);
 
     patientList.setLastUpdated(new Date());
     patientList.setPeriodStart(calculator.getStart());
