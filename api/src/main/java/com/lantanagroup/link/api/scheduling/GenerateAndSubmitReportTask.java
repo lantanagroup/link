@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TimeZone;
 
 @Component
@@ -40,6 +41,10 @@ public class GenerateAndSubmitReportTask implements Runnable {
   @Autowired
   private SharedService sharedService;
 
+  private boolean validTimeZone(String timezone) {
+    return Set.of(TimeZone.getAvailableIDs()).contains(timezone);
+  }
+
   @Override
   public void run() {
     if (this.measureIds == null || this.measureIds.isEmpty()) {
@@ -53,12 +58,17 @@ public class GenerateAndSubmitReportTask implements Runnable {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    TimeZone timezone = TimeZone.getTimeZone(
-            Objects.requireNonNullElse(tenantService.getConfig().getTimeZoneId(),
-                    ZoneId.systemDefault().getId()));
+    String timeZoneId = tenantService != null ? tenantService.getConfig().getTimeZoneId() : null;
+
+    if(timeZoneId != null && !validTimeZone(timeZoneId)){
+      logger.error("Invalid timezone entered");
+      throw new IllegalArgumentException("timeZoneId");
+    }
+
+    TimeZone timeZone = TimeZone.getTimeZone(Objects.requireNonNullElse(timeZoneId, ZoneId.systemDefault().getId()));
 
     logger.info("Starting scheduled task to generate a report");
-    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod, timezone);
+    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod, timeZone);
     Report report;
 
     try {
