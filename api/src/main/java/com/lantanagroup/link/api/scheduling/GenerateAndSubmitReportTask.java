@@ -41,8 +41,10 @@ public class GenerateAndSubmitReportTask implements Runnable {
   @Autowired
   private SharedService sharedService;
 
+  private static final Set<String> VALID_TIMEZONE_IDS = Set.of(TimeZone.getAvailableIDs());
+
   private boolean validTimeZone(String timezone) {
-    return Set.of(TimeZone.getAvailableIDs()).contains(timezone);
+    return VALID_TIMEZONE_IDS.contains(timezone);
   }
 
   @Override
@@ -57,8 +59,17 @@ public class GenerateAndSubmitReportTask implements Runnable {
       throw new IllegalArgumentException("reportingPeriodMethod");
     }
 
+    if (this.sharedService == null) {
+      logger.error("SharedService is not initialized");
+      throw new IllegalStateException("SharedService is not initialized");
+    }
+
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
-    String timeZoneId = tenantService != null ? tenantService.getConfig().getTimeZoneId() : null;
+
+    String timeZoneId = null;
+    if (tenantService != null && tenantService.getConfig() != null) {
+      timeZoneId = tenantService.getConfig().getTimeZoneId();
+    }
 
     if(timeZoneId != null && !validTimeZone(timeZoneId)){
       logger.error("Invalid timezone entered");
