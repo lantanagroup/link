@@ -1,5 +1,6 @@
 package com.lantanagroup.link.db.model.tenant;
 
+import com.lantanagroup.link.ReportingPeriodMethods;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,4 +19,6 @@ public class EhrPatientList {
   @NotNull
   @Size(min = 1)
   private List<@NotBlank String> measureId;
+
+  private ReportingPeriodMethods reportingPeriodMethod = ReportingPeriodMethods.CurrentMonth;
 }

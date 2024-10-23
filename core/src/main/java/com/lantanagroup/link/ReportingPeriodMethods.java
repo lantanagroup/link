@@ -4,5 +4,7 @@ public enum ReportingPeriodMethods {
   LastMonth,
   CurrentMonth,
   LastWeek,
-  CurrentWeek
+  CurrentWeek,
+  Yesterday,
+  Today
 }

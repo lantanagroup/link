@@ -3,6 +3,8 @@ package com.lantanagroup.link.api.scheduling;
 import com.lantanagroup.link.ReportingPeriodCalculator;
 import com.lantanagroup.link.ReportingPeriodMethods;
 import com.lantanagroup.link.api.controller.ReportController;
+import com.lantanagroup.link.db.SharedService;
+import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.db.model.Report;
 import com.lantanagroup.link.model.GenerateRequest;
 import lombok.Setter;
@@ -11,7 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TimeZone;
 
 @Component
 public class GenerateAndSubmitReportTask implements Runnable {
@@ -32,6 +38,15 @@ public class GenerateAndSubmitReportTask implements Runnable {
   @Autowired
   private ReportController reportController;
 
+  @Autowired
+  private SharedService sharedService;
+
+  private static final Set<String> VALID_TIMEZONE_IDS = Set.of(TimeZone.getAvailableIDs());
+
+  private boolean validTimeZone(String timezone) {
+    return VALID_TIMEZONE_IDS.contains(timezone);
+  }
+
   @Override
   public void run() {
     if (this.measureIds == null || this.measureIds.isEmpty()) {
@@ -44,8 +59,27 @@ public class GenerateAndSubmitReportTask implements Runnable {
       throw new IllegalArgumentException("reportingPeriodMethod");
     }
 
+    if (this.sharedService == null) {
+      logger.error("SharedService is not initialized");
+      throw new IllegalStateException("SharedService is not initialized");
+    }
+
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    String timeZoneId = null;
+    if (tenantService != null && tenantService.getConfig() != null) {
+      timeZoneId = tenantService.getConfig().getTimeZoneId();
+    }
+
+    if(timeZoneId != null && !validTimeZone(timeZoneId)){
+      logger.error("Invalid timezone entered");
+      throw new IllegalArgumentException("timeZoneId");
+    }
+
+    TimeZone timeZone = TimeZone.getTimeZone(Objects.requireNonNullElse(timeZoneId, ZoneId.systemDefault().getId()));
+
     logger.info("Starting scheduled task to generate a report");
-    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod);
+    ReportingPeriodCalculator rpc = new ReportingPeriodCalculator(this.reportingPeriodMethod, timeZone);
     Report report;
 
     try {

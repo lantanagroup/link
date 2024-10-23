@@ -56,6 +56,11 @@ public class ReportingPeriodCalculator {
       case CurrentWeek:
         cal.add(Calendar.DATE, -startOfWeek);
         break;
+      case Yesterday:
+        cal.add(Calendar.DATE, -1);
+        break;
+      case Today:
+        break;
       default:
         throw new IllegalArgumentException("method");
     }
@@ -96,6 +101,17 @@ public class ReportingPeriodCalculator {
       case CurrentWeek:
         cal.add(Calendar.DATE, -startOfWeek + 7);
         cal.add(Calendar.SECOND, -1);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        break;
+      case Yesterday:
+        cal.add(Calendar.DATE, -1);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        break;
+      case Today:
         cal.set(Calendar.HOUR_OF_DAY, 23);
         cal.set(Calendar.MINUTE, 59);
         cal.set(Calendar.SECOND, 59);
