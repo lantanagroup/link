@@ -104,7 +104,8 @@ public class PatientIdentifierController extends BaseController {
                               @PathVariable String tenantId,
                               @RequestParam String measureId,
                               @RequestParam String periodStart,
-                              @RequestParam String periodEnd) {
+                              @RequestParam String periodEnd,
+                              @RequestParam(required = false) Boolean identifier) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -122,7 +123,7 @@ public class PatientIdentifierController extends BaseController {
     list.setLastUpdated(new Date());
     list.setPatients(patientIds.stream()
             .filter(StringUtils::isNotEmpty)
-            .map(PatientId::createFromReference)
+            .map(identifier != null && identifier ? PatientId::createFromIdentifier : PatientId::createFromReference)
             .collect(Collectors.toList()));
 
     try {
