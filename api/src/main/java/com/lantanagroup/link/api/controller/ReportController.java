@@ -194,7 +194,7 @@ public class ReportController extends BaseController {
           HttpServletRequest request,
           @PathVariable String tenantId,
           @PathVariable String reportId,
-          @RequestParam(defaultValue = "true") boolean validate,
+          @RequestParam(defaultValue = "false") boolean validate,
           @RequestParam(defaultValue = "false") boolean skipQuery,
           @RequestParam(required = false, defaultValue = "") List<String> debugPatients)
           throws Exception {
@@ -253,7 +253,7 @@ public class ReportController extends BaseController {
           @RequestParam String periodEnd,
           @PathVariable String tenantId,
           @RequestParam boolean regenerate,
-          @RequestParam(defaultValue = "true") boolean validate,
+          @RequestParam(defaultValue = "false") boolean validate,
           @RequestParam(defaultValue = "false") boolean skipQuery,
           @RequestParam(required = false, defaultValue = "") List<String> debugPatients)
           throws Exception {
