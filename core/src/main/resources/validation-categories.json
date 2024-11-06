@@ -33,6 +33,10 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "A code with no system .* A system should be provided"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^CodeSystem is unknown and can't be validated"
           }
         ],
         "andOperator": false

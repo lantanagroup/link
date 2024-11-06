@@ -2,12 +2,11 @@ package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
+import ca.uhn.fhir.context.support.IValidationSupport;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
-import org.hl7.fhir.common.hapi.validation.support.CachingValidationSupport;
-import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
-import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
+import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -84,9 +83,12 @@ public class Validator {
    * Initializes a FhirValidator based on the following validation support:
    * <ul>
    *   <li>Default (base R4) profiles</li>
-   *   <li>In-memory terminology</li>
-   *   <li>Any IGs found on the classpath</li>
+   *   <li>IGs/resources found on the classpath</li>
    *   <li>Specified measure definition bundles</li>
+   *   <li>Snapshot-generating support</li>
+   *   <li>In-memory terminology service</li>
+   *   <li>Common code systems terminology service</li>
+   *   <li>Unknown code system warning support</li>
    * </ul>
    */
   private static FhirValidator initialize(List<Bundle> support) {
@@ -100,11 +102,17 @@ public class Validator {
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(Objects::nonNull)
             .forEachOrdered(measureDefinitionBasedValidationSupport::addResource);
+    UnknownCodeSystemWarningValidationSupport unknownCodeSystemWarningValidationSupport =
+            new UnknownCodeSystemWarningValidationSupport(fhirContext);
+    unknownCodeSystemWarningValidationSupport.setNonExistentCodeSystemSeverity(IValidationSupport.IssueSeverity.WARNING);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
-            new InMemoryTerminologyServerValidationSupport(fhirContext),
             ClasspathBasedValidationSupport.getInstance(),
-            measureDefinitionBasedValidationSupport);
+            measureDefinitionBasedValidationSupport,
+            new SnapshotGeneratingValidationSupport(fhirContext),
+            new InMemoryTerminologyServerValidationSupport(fhirContext),
+            new CommonCodeSystemsTerminologyService(fhirContext),
+            unknownCodeSystemWarningValidationSupport);
     CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
     validator.registerValidatorModule(validatorModule);
