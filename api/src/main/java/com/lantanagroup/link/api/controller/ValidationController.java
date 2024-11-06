@@ -1,6 +1,7 @@
 package com.lantanagroup.link.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
 import com.lantanagroup.link.config.api.ApiConfig;
 import com.lantanagroup.link.db.SharedService;
@@ -17,6 +18,7 @@ import com.lantanagroup.link.validation.RuleBasedValidationCategory;
 import com.lantanagroup.link.validation.ValidationCategorizer;
 import com.lantanagroup.link.validation.ValidationService;
 import com.lantanagroup.link.validation.Validator;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Device;
 import org.hl7.fhir.r4.model.OperationOutcome;
@@ -66,6 +68,18 @@ public class ValidationController extends BaseController {
     }
 
     return outcome;
+  }
+
+  /**
+   * Validates a resource provided in the request body
+   *
+   * @return Returns a raw OperationOutcome resource (without "enhancement" by Link)
+   */
+  @PostMapping("/raw")
+  public OperationOutcome validateRaw(@RequestBody String json) {
+    Validator validator = new Validator();
+    IBaseResource resource = FhirContextProvider.getFhirContext().newJsonParser().parseResource(json);
+    return validator.validateRaw(resource);
   }
 
   /**

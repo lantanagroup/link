@@ -8,6 +8,7 @@ import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.hl7.fhir.common.hapi.validation.support.*;
 import org.hl7.fhir.common.hapi.validation.validator.FhirInstanceValidator;
+import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +122,14 @@ public class Validator {
     validator.setConcurrentBundleValidation(true);
 
     return validator;
+  }
+
+  public OperationOutcome validateRaw(IBaseResource resource) {
+    FhirValidator validator = initialize(List.of());
+    OperationOutcome outcome = new OperationOutcome();
+    ValidationResult result = validator.validateWithResult(resource);
+    result.populateOperationOutcome(outcome);
+    return outcome;
   }
 
   private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
