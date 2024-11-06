@@ -1,5 +1,6 @@
 package com.lantanagroup.link.validation;
 
+import ca.uhn.fhir.context.support.ValidationSupportContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.parser.LenientErrorHandler;
 import ca.uhn.fhir.rest.api.EncodingEnum;
@@ -114,6 +115,16 @@ public class ClasspathBasedValidationSupport extends PrePopulatedValidationSuppo
     } catch (IOException e) {
       logger.error("Failed to add terminology", e);
     }
+  }
+
+  @Override
+  public boolean isCodeSystemSupported(ValidationSupportContext theValidationSupportContext, String theSystem) {
+    return false;
+  }
+
+  @Override
+  public boolean isValueSetSupported(ValidationSupportContext theValidationSupportContext, String theValueSetUrl) {
+    return false;
   }
 
   private static class Singleton {
