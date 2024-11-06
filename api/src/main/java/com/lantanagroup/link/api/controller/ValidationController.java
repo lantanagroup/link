@@ -38,8 +38,6 @@ public class ValidationController extends BaseController {
 
   private static final Logger logger = LoggerFactory.getLogger(ValidationController.class);
   @Autowired
-  private Validator validator;
-  @Autowired
   private SharedService sharedService;
   @Autowired
   private ValidationService validationService;
@@ -54,7 +52,8 @@ public class ValidationController extends BaseController {
    */
   @PostMapping
   public OperationOutcome validate(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
-    OperationOutcome outcome = this.validator.validate(bundle, severity);
+    Validator validator = new Validator();
+    OperationOutcome outcome = validator.validate(bundle, severity);
 
     Device found = bundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Device)
@@ -77,7 +76,8 @@ public class ValidationController extends BaseController {
    */
   @PostMapping("/summary")
   public String validateSummary(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
-    OperationOutcome outcome = this.validator.validate(bundle, severity);
+    Validator validator = new Validator();
+    OperationOutcome outcome = validator.validate(bundle, severity);
     return this.getValidationSummary(outcome);
   }
 
