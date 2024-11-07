@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api.controller;
 
+import ca.uhn.fhir.parser.DataFormatException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lantanagroup.link.FhirContextProvider;
 import com.lantanagroup.link.FhirHelper;
@@ -77,9 +78,19 @@ public class ValidationController extends BaseController {
    */
   @PostMapping("/raw")
   public OperationOutcome validateRaw(@RequestBody String json) {
-    Validator validator = new Validator();
-    IBaseResource resource = FhirContextProvider.getFhirContext().newJsonParser().parseResource(json);
-    return validator.validateRaw(resource);
+    if (json == null || json.trim().isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "JSON input cannot be empty");
+    }
+    try {
+      Validator validator = new Validator();
+      IBaseResource resource = FhirContextProvider.getFhirContext().newJsonParser().parseResource(json);
+      return validator.validateRaw(resource);
+    } catch (DataFormatException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid FHIR JSON format: " + e.getMessage());
+    } catch (Exception e) {
+      logger.error("Error validating raw JSON", e);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error processing validation request");
+    }
   }
 
   /**
