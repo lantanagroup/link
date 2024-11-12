@@ -32,6 +32,7 @@ public class CodeSystemCleanup implements IReportGenerationDataEvent {
     if (coding.getSystem() != null && this.codeSystemMap.containsKey(coding.getSystem())) {
       String originalValue = coding.getSystem();
       coding.setSystem(this.codeSystemMap.get(originalValue));
+      // TODO: Extension should be on the Coding.system element, not the Coding itself?
       coding.addExtension()
               .setUrl(Constants.OriginalElementValueExtension)
               .setValue(new UriType(originalValue));

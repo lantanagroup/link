@@ -32,9 +32,6 @@ public class ValidationService {
   private SharedService sharedService;
 
   @Autowired
-  private Validator validator;
-
-  @Autowired
   private EventService eventService;
 
   public OperationOutcome validate(StopwatchManager stopwatchManager, TenantService tenantService, Report report) {
@@ -49,13 +46,15 @@ public class ValidationService {
     FhirBundler bundler = new FhirBundler(this.eventService, this.sharedService, tenantService);
     Bundle bundle = bundler.generateBundle(report);
 
+    Validator validator = new Validator();
+
     ValidationCategorizer categorizer = new ValidationCategorizer();
     categorizer.loadFromResources();
 
     try (Stopwatch stopwatch = stopwatchManager.start(Constants.TASK_VALIDATE, Constants.CATEGORY_VALIDATION)) {
       // Always get information severity level so that we persist all possible issues, but only return the severity asked
       // for when making requests to the REST API.
-      outcome = this.validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
+      outcome = validator.validate(bundle, OperationOutcome.IssueSeverity.INFORMATION, measureDefinitions);
 
       tenantService.deleteValidationResults(report.getId());
 
