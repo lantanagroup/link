@@ -19,12 +19,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -33,6 +36,7 @@ import static ca.uhn.fhir.rest.api.Constants.HEADER_REQUEST_ID;
 @Getter
 @Setter
 @Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PatientScoop {
   protected static final Logger logger = LoggerFactory.getLogger(PatientScoop.class);
 
@@ -61,8 +65,6 @@ public class PatientScoop {
       throw new Exception("No FHIR server to query");
     }
 
-    // Because this is a @Component, it instantiates only once. Make sure ApplyConceptMaps is re-created
-    // each execution so that we always get the latest concept maps
     this.applyConceptMaps = new ApplyConceptMaps();
 
     switch (queryPhase) {
@@ -103,22 +105,27 @@ public class PatientScoop {
     return null;
   }
 
+  private Semaphore getSemaphore() {
+    return new Semaphore(this.tenantService.getConfig().getFhirQuery().getQueryThreads(), true);
+  }
+
   public void loadInitialPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     // first get the patients and store them in the patientMap
     Map<String, Patient> patientMap = new ConcurrentHashMap<>();
     ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
     ForkJoinPool patientFork = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
+    Semaphore semaphore = getSemaphore();
 
     try {
       var contextMapCopy = MDC.getCopyOfContextMap();
       patientFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
-        MDC.setContextMap(contextMapCopy);
-
-        int poiIndex = patientsOfInterest.indexOf(poi);
+        semaphore.acquireUninterruptibly();
 
         //noinspection unused
         try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_PATIENT, Constants.CATEGORY_QUERY)) {
+          MDC.setContextMap(contextMapCopy);
+          int poiIndex = patientsOfInterest.indexOf(poi);
           UUID queryId = UUID.randomUUID();
           if (poi.getReference() != null) {
             String id = poi.getReference();
@@ -167,6 +174,7 @@ public class PatientScoop {
         } catch (Exception e) {
           logger.error("Unable to retrieve patient with identifier " + Helper.sanitizeString(poi.toString()), e);
         } finally {
+          semaphore.release();
           int completed = progress.incrementAndGet();
           double percent = (completed * 100.0) / patientsOfInterest.size();
           logger.info("Progress ({}%) for Patient Resource {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
@@ -186,16 +194,18 @@ public class PatientScoop {
       List<Patient> patients = new ArrayList<>(patientMap.values());
 
       patientDataFork.submit(() -> patients.parallelStream().map(patient -> {
-        MDC.setContextMap(contextMapCopy);
-        logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
+        semaphore.acquireUninterruptibly();
 
         try {
+          MDC.setContextMap(contextMapCopy);
+          logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
           PatientData patientData = this.loadInitialPatientData(criteria, context, patient);
           this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
         } finally {
+          semaphore.release();
           int completed = progress.incrementAndGet();
           double percent = (completed * 100.0) / patients.size();
           logger.info("Progress ({}%) for Initial Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patients.size());
@@ -211,14 +221,16 @@ public class PatientScoop {
   public void loadSupplementalPatientData(ReportCriteria criteria, ReportContext context, List<PatientOfInterestModel> patientsOfInterest) {
     ForkJoinPool patientDataFork = ForkJoinPool.commonPool();
     AtomicInteger progress = new AtomicInteger(0);
+    Semaphore semaphore = getSemaphore();
 
     try {
       var contextMapCopy = MDC.getCopyOfContextMap();
       patientDataFork.submit(() -> patientsOfInterest.parallelStream().map(poi -> {
-        MDC.setContextMap(contextMapCopy);
-        logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
+        semaphore.acquireUninterruptibly();
 
         try {
+          MDC.setContextMap(contextMapCopy);
+          logger.debug(String.format("Continuing to load data for patient with logical ID %s", poi.getId()));
           Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
           PatientData patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
           this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
@@ -226,6 +238,7 @@ public class PatientScoop {
           logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
           return null;
         } finally {
+          semaphore.release();
           int completed = progress.incrementAndGet();
           double percent = (completed * 100.0) / patientsOfInterest.size();
           logger.info("Progress ({}%) for Supplemental Patient Data {} is {} of {}", String.format("%.1f", percent), context.getMasterIdentifierValue(), completed, patientsOfInterest.size());
