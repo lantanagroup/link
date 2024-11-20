@@ -47,7 +47,6 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    * @param args
    */
   public static void main(String[] args) {
-    initializeCacheFactory();
     SpringApplication.run(ApiApplication.class, args);
   }
 
@@ -85,6 +84,7 @@ public class ApiApplication extends SpringBootServletInitializer implements Init
    */
   @Bean(initMethod = "init")
   public ApiInit apiInit() {
+    initializeCacheFactory();
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     return new ApiInit();
   }
