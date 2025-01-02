@@ -6,6 +6,7 @@ import ca.uhn.fhir.interceptor.api.Pointcut;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.lantanagroup.link.db.TenantService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -14,14 +15,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
+import java.util.List;
 
 @SuppressWarnings("unused")
 @Interceptor
 public class HapiFhirAuthenticationInterceptor {
   private static final Logger logger = LoggerFactory.getLogger(HapiFhirAuthenticationInterceptor.class);
   private final ICustomAuth authorizer;
-  private String authHeader;
-  private String apiKey;
+  private volatile String authHeader;
+  private volatile String apiKey;
 
   public HapiFhirAuthenticationInterceptor(TenantService tenantService, ApplicationContext context) throws ClassNotFoundException {
     if (tenantService.getConfig().getFhirQuery() == null || StringUtils.isEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
@@ -46,12 +48,27 @@ public class HapiFhirAuthenticationInterceptor {
       return;
     }
     try {
-      logger.debug("Requesting Authorization header from auth class");
+      logger.debug("Refreshing credentials");
       this.authHeader = authorizer.getAuthHeader();
       this.apiKey = authorizer.getApiKeyHeader();
     } catch (Exception ex) {
-      logger.error("Error establishing Authorization header of FHIR server request: " + ex.getMessage());
+      logger.error("Failed to refresh credentials", ex);
     }
+  }
+
+  private synchronized void refresh(IHttpRequest request) {
+    String requestedAuthHeader = getHeader(request, "Authorization");
+    String requestedApiKey = getHeader(request, "apikey");
+    if (!StringUtils.equals(requestedAuthHeader, authHeader) || !StringUtils.equals(requestedApiKey, apiKey)) {
+      // Another thread has already refreshed the credentials since we made this request
+      return;
+    }
+    refresh();
+  }
+
+  private String getHeader(IHttpRequest request, String name) {
+    List<String> headers = request.getAllHeaders().get(name);
+    return CollectionUtils.isEmpty(headers) ? null : headers.get(0);
   }
 
   private void removeHeaders(IHttpRequest request) {
@@ -94,7 +111,7 @@ public class HapiFhirAuthenticationInterceptor {
     if (!(response.getResponse() instanceof HttpResponse)) {
       return;
     }
-    refresh();
+    refresh(request);
     removeHeaders(request);
     addHeaders(request);
     IHttpResponse newResponse = request.execute();
