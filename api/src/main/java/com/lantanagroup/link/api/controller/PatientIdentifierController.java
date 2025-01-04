@@ -123,8 +123,8 @@ public class PatientIdentifierController extends BaseController {
     list.setLastUpdated(new Date());
     list.setPatients(patientIds.stream()
             .filter(StringUtils::isNotEmpty)
-            .map(patientId -> identifierSystem != null ? identifierSystem + "|" + patientId : patientId)
-            .map(identifierSystem != null ? PatientId::createFromIdentifier : PatientId::createFromReference)
+            .map(patientId -> StringUtils.isNotEmpty(identifierSystem) ? identifierSystem + "|" + patientId : patientId)
+            .map(StringUtils.isNotEmpty(identifierSystem) ? PatientId::createFromIdentifier : PatientId::createFromReference)
             .collect(Collectors.toList()));
 
     try {
