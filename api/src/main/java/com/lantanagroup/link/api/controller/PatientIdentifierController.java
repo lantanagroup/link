@@ -105,7 +105,8 @@ public class PatientIdentifierController extends BaseController {
                               @RequestParam String measureId,
                               @RequestParam String periodStart,
                               @RequestParam String periodEnd,
-                              @RequestParam(required = false) String identifierSystem) {
+                              @RequestParam(required = false) String identifierSystem,
+                              @RequestParam(defaultValue = "false") boolean replace) {
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
 
     if (tenantService == null) {
@@ -129,7 +130,7 @@ public class PatientIdentifierController extends BaseController {
 
     try {
       assert tenantService != null;
-      this.storePatientList(tenantService, list);
+      this.storePatientList(tenantService, list, replace);
     } catch (Exception e) {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error saving patient list", e);
     }
@@ -263,20 +264,24 @@ public class PatientIdentifierController extends BaseController {
     }
   }
 
-  private void storePatientList(TenantService tenantService, PatientList patientList) throws Exception {
+  private void storePatientList(TenantService tenantService, PatientList patientList, boolean replace) {
     logger.info("Storing patient list");
     PatientList found = tenantService.findPatientList(patientList.getMeasureId(), patientList.getPeriodStart(), patientList.getPeriodEnd());
 
     // Merge the list of patients found with the new list
     if (found != null) {
-      logger.info("Merging with pre-existing patient list with {} entries that has {} (measure) {} (start) and {} (end)",
+      logger.info("{} pre-existing patient list with {} entries that has {} (measure) {} (start) and {} (end)",
+              replace ? "Replacing" : "Merging with",
               found.getPatients().size(),
               found.getMeasureId(),
               found.getPeriodStart(),
               found.getPeriodEnd());
+      if (replace) {
+        found.getPatients().clear();
+      }
       patientList.setId(found.getId());
       found.merge(patientList);
-      logger.info("Merged list contains {} entries", found.getPatients().size());
+      logger.info("New list contains {} entries", found.getPatients().size());
     } else {
       logger.info("No pre-existing patient list found");
       patientList.deduplicate();
@@ -284,6 +289,10 @@ public class PatientIdentifierController extends BaseController {
     }
 
     tenantService.savePatientList(found);
+  }
+
+  private void storePatientList(TenantService tenantService, PatientList patientList) {
+    storePatientList(tenantService, patientList, false);
   }
 
   private void receiveFHIR(TenantService tenantService, ListResource listResource) throws Exception {
