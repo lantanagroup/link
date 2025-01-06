@@ -98,6 +98,8 @@ public class PatientData {
       } else {
         searchByReferences(plan.getResourceType(), plan.getReferences());
       }
+    } catch (ReportFailureException e) {
+      throw e;
     } catch (Exception e) {
       logger.error("Error in query", e);
     }
