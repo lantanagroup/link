@@ -3,6 +3,7 @@ package com.lantanagroup.link.query.uscore;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.interceptor.LoggingInterceptor;
 import com.lantanagroup.link.FhirContextProvider;
+import com.lantanagroup.link.ReportFailureException;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -43,6 +44,7 @@ public class Query {
 
       try {
         fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
+        fhirQueryClient.registerInterceptor(new ErrorCountingInterceptor(tenantService));
       } catch (ClassNotFoundException e) {
         logger.error("Error registering authentication interceptor", e);
       }
@@ -66,6 +68,8 @@ public class Query {
         scoop.setFhirQueryServer(client);
         scoop.setTenantService(tenantService);
         scoop.execute(criteria, context, patientsOfInterest, queryPhase);
+      } catch (ReportFailureException e) {
+        throw e;
       } catch (Exception ex) {
         logger.error("Error scooping data for patients", ex);
       } finally {

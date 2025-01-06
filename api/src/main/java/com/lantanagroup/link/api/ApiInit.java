@@ -1,5 +1,6 @@
 package com.lantanagroup.link.api;
 
+import ca.uhn.fhir.rest.client.api.IRestfulClientFactory;
 import ca.uhn.fhir.rest.client.api.ServerValidationModeEnum;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.lantanagroup.link.FhirContextProvider;
@@ -93,7 +94,10 @@ public class ApiInit {
   }
 
   public void init() {
-    FhirContextProvider.getFhirContext().getRestfulClientFactory().setSocketTimeout(getSocketTimout());
+    IRestfulClientFactory clientFactory = FhirContextProvider.getFhirContext().getRestfulClientFactory();
+    clientFactory.setSocketTimeout(getSocketTimout());
+    clientFactory.setPoolMaxTotal(this.config.getPoolMaxTotal());
+    clientFactory.setPoolMaxPerRoute(this.config.getPoolMaxPerRoute());
     if (this.config.getValidateFhirServer() != null && !this.config.getValidateFhirServer()) {
       FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
       logger.info("Setting client to never query for metadata");

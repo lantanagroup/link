@@ -143,6 +143,9 @@ public class ApiConfig {
   @Getter
   private String socketTimeout;
 
+  private int poolMaxTotal = 100;
+  private int poolMaxPerRoute = 100;
+
   @Getter
   @NotNull
   private String debugPath;

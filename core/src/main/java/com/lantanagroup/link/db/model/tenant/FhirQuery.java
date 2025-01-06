@@ -20,6 +20,11 @@ public class FhirQuery {
   private String authClass;
 
   /**
+   * The number of consecutive query errors to ignore before failing out of a report.
+   */
+  private int maxConsecutiveErrors = 100;
+
+  /**
    * The number of patients to query for in parallel using separate threads.
    */
   private int queryThreads = 4;

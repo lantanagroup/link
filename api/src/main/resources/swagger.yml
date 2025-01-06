@@ -537,6 +537,19 @@ paths:
           required: true
           schema:
             type: string
+        - name: identifierSystem
+          in: query
+          description: System to use for an identifier-based patient list (omitted for an ID-based list)
+          required: false
+          schema:
+            type: string
+        - name: replace
+          in: query
+          description: Whether to replace an existing list, if any
+          required: false
+          schema:
+            type: boolean
+            default: false
       requestBody:
         content:
           text/plain:

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -84,6 +85,8 @@ public class PatientScoop {
       PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
       patientData.loadInitialData(patient);
       return patientData;
+    } catch (ReportFailureException e) {
+      throw e;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patient.getIdElement().getIdPart(), e);
     }
@@ -98,6 +101,8 @@ public class PatientScoop {
       PatientData patientData = new PatientData(this.stopwatchManager, this.tenantService, this.eventService, this.getFhirQueryServer(), criteria, context, this.tenantService.getConfig().getFhirQuery());
       patientData.loadSupplementalData(patientId, patientBundle);
       return patientData;
+    } catch (ReportFailureException e) {
+      throw e;
     } catch (Exception e) {
       logger.error("Error loading data for Patient with logical ID " + patientId, e);
     }
@@ -171,6 +176,8 @@ public class PatientScoop {
               return patient;
             }
           }
+        } catch (ReportFailureException e) {
+          throw e;
         } catch (Exception e) {
           logger.error("Unable to retrieve patient with identifier " + Helper.sanitizeString(poi.toString()), e);
         } finally {
@@ -181,6 +188,10 @@ public class PatientScoop {
         }
         return null;
       }).collect(Collectors.toList())).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof ReportFailureException) {
+        throw (ReportFailureException) e.getCause();
+      }
     } catch (Exception e) {
       logger.error("Error retrieving Patient resources: {}", e.getMessage(), e);
       return;
@@ -201,6 +212,8 @@ public class PatientScoop {
           logger.debug(String.format("Beginning to load data for patient with logical ID %s", patient.getIdElement().getIdPart()));
           PatientData patientData = this.loadInitialPatientData(criteria, context, patient);
           this.storePatientData(criteria, context, patient.getIdElement().getIdPart(), patientData.getBundle());
+        } catch (ReportFailureException e) {
+          throw e;
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", patient.getId(), ex.getMessage(), ex);
           return null;
@@ -213,6 +226,10 @@ public class PatientScoop {
 
         return patient.getIdElement().getIdPart();
       }).collect(Collectors.toList())).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof ReportFailureException) {
+        throw (ReportFailureException) e.getCause();
+      }
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
     }
@@ -234,6 +251,8 @@ public class PatientScoop {
           Bundle patientBundle = com.lantanagroup.link.db.model.PatientData.asBundle(this.tenantService.findPatientData(context.getMasterIdentifierValue(), poi.getId()));
           PatientData patientData = this.loadSupplementalPatientData(criteria, context, poi.getId(), patientBundle);
           this.storePatientData(criteria, context, poi.getId(), patientData.getBundle());
+        } catch (ReportFailureException e) {
+          throw e;
         } catch (Exception ex) {
           logger.error("Error loading patient data for patient {}: {}", poi.getId(), ex.getMessage(), ex);
           return null;
@@ -246,6 +265,10 @@ public class PatientScoop {
 
         return poi.getId();
       }).collect(Collectors.toList())).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() instanceof ReportFailureException) {
+        throw (ReportFailureException) e.getCause();
+      }
     } catch (Exception e) {
       logger.error("Error scooping data for patients {}", e.getMessage(), e);
     }
