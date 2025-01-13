@@ -24,18 +24,15 @@ public class HapiFhirAuthenticationInterceptor {
   private volatile String authHeader;
   private volatile String apiKey;
 
-  public HapiFhirAuthenticationInterceptor(TenantService tenantService, ApplicationContext context) throws ClassNotFoundException {
+  public HapiFhirAuthenticationInterceptor(TenantService tenantService, ApplicationContext context) throws ReflectiveOperationException {
     if (tenantService.getConfig().getFhirQuery() == null || StringUtils.isEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
       authorizer = null;
       return;
     }
 
-    // Get the Class definition of the auth class specified in config
+    // Get the auth class specified in config
     Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
-
-    // Get an instance of the class using Spring so that it injects/autowires
-    logger.debug(String.format("Getting an instance of the auth class \"%s\" from Spring", tenantService.getConfig().getFhirQuery().getAuthClass()));
-    authorizer = (ICustomAuth) context.getBean(authClass);
+    authorizer = (ICustomAuth) authClass.getConstructor().newInstance();
 
     authorizer.setTenantService(tenantService);
 

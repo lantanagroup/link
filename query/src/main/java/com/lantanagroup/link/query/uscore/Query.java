@@ -45,7 +45,7 @@ public class Query {
       try {
         fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
         fhirQueryClient.registerInterceptor(new ErrorCountingInterceptor(tenantService));
-      } catch (ClassNotFoundException e) {
+      } catch (ReflectiveOperationException e) {
         logger.error("Error registering authentication interceptor", e);
       }
     } else {

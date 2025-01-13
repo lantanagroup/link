@@ -137,7 +137,7 @@ public class PatientIdentifierController extends BaseController {
   }
 
 
-  private IGenericClient createClient(TenantService tenantService) throws ClassNotFoundException {
+  private IGenericClient createClient(TenantService tenantService) throws ReflectiveOperationException {
     FhirContextProvider.getFhirContext().getRestfulClientFactory().setServerValidationMode(ServerValidationModeEnum.NEVER);
     IGenericClient client = FhirContextProvider.getFhirContext().newRestfulGenericClient(
             StringUtils.isNotEmpty(tenantService.getConfig().getQueryList().getFhirServerBase()) ?
