@@ -6,14 +6,12 @@ import com.lantanagroup.link.db.TenantService;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-@Component
 public class AzureAuth implements ICustomAuth {
   private static final Logger logger = LoggerFactory.getLogger(AzureAuth.class);
 

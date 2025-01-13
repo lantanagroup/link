@@ -57,7 +57,7 @@ public class BulkQuery {
 
       try {
         fhirQueryClient.registerInterceptor(new HapiFhirAuthenticationInterceptor(tenantService, this.applicationContext));
-      } catch (ClassNotFoundException e) {
+      } catch (ReflectiveOperationException e) {
         logger.error("Error registering authentication interceptor", e);
       }
     } else {
@@ -267,7 +267,7 @@ public class BulkQuery {
   private void setAuthHeaders(HttpRequest.Builder requestBuilder, TenantService tenantService, ApplicationContext context) throws Exception {
     if(tenantService.getConfig().getFhirQuery().getAuthClass() != null && !tenantService.getConfig().getFhirQuery().getAuthClass().isEmpty()){
       Class<?> authClass = Class.forName(tenantService.getConfig().getFhirQuery().getAuthClass());
-      var authorizer = (ICustomAuth) context.getBean(authClass);
+      var authorizer = (ICustomAuth) authClass.getConstructor().newInstance();
       authorizer.setTenantService(tenantService);
 
       String apiKey = authorizer.getApiKeyHeader();
