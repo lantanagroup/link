@@ -98,5 +98,6 @@ public class HapiFhirAuthenticationInterceptor {
     removeHeaders(request);
     addHeaders(request);
     context.setHttpResponse(request.execute());
+    response.close();
   }
 }
