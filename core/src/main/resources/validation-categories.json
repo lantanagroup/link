@@ -21,7 +21,7 @@
     "id": "Unknown_Code_System",
     "title": "Unknown Code System",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
     "ruleSets": [
       {
@@ -47,7 +47,7 @@
     "id": "Unresolved_Code_System",
     "title": "Unresolved Code System",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
     "ruleSets": [
       {
@@ -69,7 +69,7 @@
     "id": "Invalid_Code_in_required_ValueSet",
     "title": "Invalid Code in required ValueSet",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "The code is not part of the required ValueSet. This may cause issues with measure calculation.",
     "ruleSets": [
       {
@@ -187,7 +187,7 @@
     "id": "Invalid_code",
     "title": "Invalid code",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
     "ruleSets": [
       {
@@ -289,7 +289,7 @@
     "id": "Does_not_match_extensible_ValueSet",
     "title": "Does not match extensible ValueSet",
     "severity": "WARNING",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
     "ruleSets": [
       {
@@ -485,7 +485,7 @@
     "id": "No_codes_from_an_extensible_binding_ValueSet",
     "title": "No codes from an extensible binding ValueSet",
     "severity": "WARNING",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
