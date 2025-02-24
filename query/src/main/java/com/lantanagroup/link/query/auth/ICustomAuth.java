@@ -7,5 +7,9 @@ public interface ICustomAuth {
 
   String getApiKeyHeader() throws Exception;
 
+  String getClientSecretHeader() throws Exception;
+
+  String getClientIdHeader() throws Exception;
+
   void setTenantService(TenantService tenantService);
 }

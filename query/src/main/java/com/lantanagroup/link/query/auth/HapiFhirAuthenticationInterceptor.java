@@ -23,6 +23,8 @@ public class HapiFhirAuthenticationInterceptor {
   private final ICustomAuth authorizer;
   private volatile String authHeader;
   private volatile String apiKey;
+  private volatile String clientSecret;
+  private volatile String clientId;
 
   public HapiFhirAuthenticationInterceptor(TenantService tenantService, ApplicationContext context) throws ReflectiveOperationException {
     if (tenantService.getConfig().getFhirQuery() == null || StringUtils.isEmpty(tenantService.getConfig().getFhirQuery().getAuthClass())) {
@@ -47,17 +49,30 @@ public class HapiFhirAuthenticationInterceptor {
       logger.debug("Refreshing credentials");
       this.authHeader = authorizer.getAuthHeader();
       this.apiKey = authorizer.getApiKeyHeader();
+      this.clientSecret = authorizer.getClientSecretHeader();
+      this.clientId = authorizer.getClientIdHeader();
     } catch (Exception ex) {
       logger.error("Failed to refresh credentials", ex);
     }
   }
 
   private synchronized void refresh(IHttpRequest request) {
-    String requestedAuthHeader = getHeader(request, "Authorization");
-    String requestedApiKey = getHeader(request, "apikey");
-    if (!StringUtils.equals(requestedAuthHeader, authHeader) || !StringUtils.equals(requestedApiKey, apiKey)) {
-      // Another thread has already refreshed the credentials since we made this request
-      return;
+    if(this.authorizer instanceof CernerHeaderOnlyAuth) {
+      String requestedClientSecretHeader = getHeader(request, "Client_Secret");
+      String requestedClientIdHeader = getHeader(request, "client_id");
+      if(!StringUtils.equals(requestedClientSecretHeader, this.clientSecret) ||
+              !StringUtils.equals(requestedClientIdHeader, this.clientId)){
+        // Another thread has already refreshed the credentials since we made this request
+        return;
+      }
+    }
+    else {
+      String requestedAuthHeader = getHeader(request, "Authorization");
+      String requestedApiKey = getHeader(request, "apikey");
+      if (!StringUtils.equals(requestedAuthHeader, this.authHeader) || !StringUtils.equals(requestedApiKey, this.apiKey)) {
+        // Another thread has already refreshed the credentials since we made this request
+        return;
+      }
     }
     refresh();
   }
@@ -70,15 +85,29 @@ public class HapiFhirAuthenticationInterceptor {
   private void removeHeaders(IHttpRequest request) {
     request.removeHeaders("Authorization");
     request.removeHeaders("apikey");
+    request.removeHeaders("client_id");
+    request.removeHeaders("Client_Secret");
   }
 
   private void addHeaders(IHttpRequest request) {
+    /**if(this.authorizer instanceof CernerHeaderOnlyAuth){
+      request.addHeader("Client_Secret", this.clientSecret);
+      request.addHeader("client_id", this.clientId);
+    }
+    else {*/
     if (this.authHeader != null && !this.authHeader.isEmpty()) {
       request.addHeader("Authorization", this.authHeader);
     }
     if (this.apiKey != null && !this.apiKey.isEmpty()) {
       request.addHeader("apikey", this.apiKey);
     }
+    if(this.clientSecret != null && !this.clientSecret.isEmpty()){
+      request.addHeader("Client_Secret", this.clientSecret);
+    }
+    if(this.clientId != null && !this.clientId.isEmpty()){
+      request.addHeader("client_id", this.clientId);
+    }
+    //}
   }
 
   @Hook(Pointcut.CLIENT_REQUEST)

@@ -37,4 +37,13 @@ public class BasicAuth implements ICustomAuth {
     return null;
   }
 
+  @Override
+  public String getClientIdHeader() throws Exception {
+    return null;
+  }
+
+  @Override
+  public String getClientSecretHeader() throws Exception {
+    return null;
+  }
 }
