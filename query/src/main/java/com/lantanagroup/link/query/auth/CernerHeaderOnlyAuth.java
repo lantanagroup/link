@@ -40,6 +40,15 @@ public class CernerHeaderOnlyAuth implements ICustomAuth {
 
   @Override
   public String getClientIdHeader() throws Exception{
+    if (this.tenantService.getConfig().getFhirQuery() == null) {
+      logger.error("Tenant {} not configured to query FHIR", this.tenantService.getConfig().getId());
+      return null;
+    }
+
+    if (this.tenantService.getConfig().getFhirQuery().getCernerHeaderOnlyAuth() == null) {
+      logger.error("Tenant {} not configured for cerner header only authentication", this.tenantService.getConfig().getId());
+      return null;
+    }
     return this.tenantService.getConfig().getFhirQuery().getCernerHeaderOnlyAuth().getClientId();
   }
 }
