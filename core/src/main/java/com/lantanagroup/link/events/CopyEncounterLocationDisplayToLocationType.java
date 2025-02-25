@@ -40,8 +40,10 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
         String display = encounterLocation.getLocation().getDisplay();
         String[] pieces = display.split(", ");
         String code = "";
-        if(pieces.length >= 2){
+        if(pieces.length >= 3) {
           code = pieces[2];
+        } else {
+          logger.debug("Display string '{}' doesn't have a third component for code extraction", display);
         }
         if(!code.isEmpty()){
           List<Bundle.BundleEntryComponent> foundLocation = bundle.getEntry().stream().filter(e -> {
