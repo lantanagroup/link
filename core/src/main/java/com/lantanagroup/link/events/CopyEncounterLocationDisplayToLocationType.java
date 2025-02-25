@@ -36,8 +36,16 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
       }
       Encounter encounter = (Encounter) resource;
       for (Encounter.EncounterLocationComponent encounterLocation : encounter.getLocation()) {
+        if (encounterLocation.getLocation() == null) {
+          logger.debug("Encounter location reference is null for encounter {}", encounter.getId());
+          continue;
+        }
         String reference = encounterLocation.getLocation().getReference();
         String display = encounterLocation.getLocation().getDisplay();
+        if (reference == null || display == null) {
+          logger.debug("Encounter location reference or display is null for encounter {}", encounter.getId());
+          continue;
+        }
         String[] pieces = display.split(", ");
         String code = "";
         if(pieces.length >= 3) {
