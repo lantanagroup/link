@@ -23,8 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -93,7 +91,7 @@ public class PatientIdentifierController extends BaseController {
 
       for (int j = 0; j < list.getMeasureId().size(); j++) {
         PatientList patientList = this.convert(tenantService, sources, list.getMeasureId().get(j),
-                new URI(client.getServerBase()), list.getReportingPeriodMethod());
+                list.getReportingPeriodMethod());
         this.storePatientList(tenantService, patientList);
       }
     }
@@ -158,8 +156,8 @@ public class PatientIdentifierController extends BaseController {
     return list;
   }
 
-  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier, URI baseUrl,
-                              ReportingPeriodMethods reportingPeriodMethod) throws URISyntaxException {
+  private PatientList convert(TenantService tenantService, List<ListResource> sources, String identifier,
+                              ReportingPeriodMethods reportingPeriodMethod) {
     logger.info("Converting List resources to DB PatientLists");
     PatientList patientList = new PatientList();
 
@@ -176,7 +174,7 @@ public class PatientIdentifierController extends BaseController {
     for (ListResource source : sources) {
       logger.info("Converting List: {}", source.getIdElement().getIdPart());
       for (ListResource.ListEntryComponent sourceEntry : source.getEntry()) {
-        PatientId patientId = this.convertListItem(sourceEntry, baseUrl);
+        PatientId patientId = this.convertListItem(sourceEntry);
 
         if (patientId != null && !patientList.getPatients().contains(patientId)) {
           patientList.getPatients().add(patientId);
@@ -187,18 +185,14 @@ public class PatientIdentifierController extends BaseController {
     return patientList;
   }
 
-  private PatientId convertListItem(ListResource.ListEntryComponent listEntry, URI baseUrl) throws URISyntaxException {
+  private PatientId convertListItem(ListResource.ListEntryComponent listEntry) {
     if (listEntry.getItem().hasReference()) {
-      URI referenceUrl = new URI(listEntry.getItem().getReference());
-      String reference;
-
-      if (referenceUrl.isAbsolute() && baseUrl != null) {
-        reference = baseUrl.relativize(referenceUrl).toString();
-      } else {
-        reference = listEntry.getItem().getReference();
+      String id = listEntry.getItem().getReferenceElement().getIdPart();
+      if (StringUtils.isEmpty(id)) {
+        logger.warn("List entry has reference with no ID part: {}", listEntry.getItem().getReference());
+        return null;
       }
-
-      return PatientId.createFromReference(reference);
+      return PatientId.createFromReference(id);
     } else if (listEntry.getItem().hasIdentifier()) {
       PatientId patientId = new PatientId();
       patientId.setIdentifier(listEntry.getItem().getIdentifier().getSystem() + "|" + listEntry.getItem().getIdentifier().getValue());
@@ -349,7 +343,7 @@ public class PatientIdentifierController extends BaseController {
     patientList.setMeasureId(value);
 
     for (ListResource.ListEntryComponent sourceEntry : listResource.getEntry()) {
-      PatientId patientId = this.convertListItem(sourceEntry, null);
+      PatientId patientId = this.convertListItem(sourceEntry);
 
       if (patientId != null) {
         patientList.getPatients().add(patientId);
