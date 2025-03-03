@@ -90,11 +90,6 @@ public class HapiFhirAuthenticationInterceptor {
   }
 
   private void addHeaders(IHttpRequest request) {
-    /**if(this.authorizer instanceof CernerHeaderOnlyAuth){
-      request.addHeader("Client_Secret", this.clientSecret);
-      request.addHeader("client_id", this.clientId);
-    }
-    else {*/
     if (this.authHeader != null && !this.authHeader.isEmpty()) {
       request.addHeader("Authorization", this.authHeader);
     }
