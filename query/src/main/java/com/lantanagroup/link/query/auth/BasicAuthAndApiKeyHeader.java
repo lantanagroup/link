@@ -37,4 +37,14 @@ public class BasicAuthAndApiKeyHeader implements ICustomAuth {
     logger.debug("Adding API key to request");
     return this.tenantService.getConfig().getFhirQuery().getBasicAuthAndApiKey().getApikey();
   }
+
+  @Override
+  public String getClientIdHeader() throws Exception {
+    return null;
+  }
+
+  @Override
+  public String getClientSecretHeader() throws Exception {
+    return null;
+  }
 }

@@ -109,4 +109,14 @@ public class EpicAuth implements ICustomAuth {
   public String getApiKeyHeader() throws Exception {
     return null;
   }
+
+  @Override
+  public String getClientIdHeader() throws Exception {
+    return null;
+  }
+
+  @Override
+  public String getClientSecretHeader() throws Exception {
+    return null;
+  }
 }

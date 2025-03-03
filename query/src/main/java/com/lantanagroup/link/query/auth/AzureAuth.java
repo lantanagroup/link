@@ -64,4 +64,14 @@ public class AzureAuth implements ICustomAuth {
   public String getApiKeyHeader() {
     return null;
   }
+
+  @Override
+  public String getClientIdHeader() throws Exception {
+    return null;
+  }
+
+  @Override
+  public String getClientSecretHeader() throws Exception {
+    return null;
+  }
 }
