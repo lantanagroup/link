@@ -10,7 +10,9 @@ import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CopyEncounterLocationDisplayToLocationType implements IReportGenerationDataEvent {
@@ -28,7 +30,15 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
   }
 
   @Override
-  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
+  public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context,
+                      ReportContext.MeasureContext measureContext) {
+
+    Map<String, Location> locations = new HashMap<>();
+    for(Bundle.BundleEntryComponent entry : bundle.getEntry()){
+      Resource resource = entry.getResource();
+      if(resource instanceof Location) locations.put(resource.getIdPart(), (Location) resource);
+    }
+
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
       Resource resource = entry.getResource();
       if (!(resource instanceof Encounter)) {
@@ -54,14 +64,11 @@ public class CopyEncounterLocationDisplayToLocationType implements IReportGenera
           logger.debug("Display string '{}' doesn't have a third component for code extraction", display);
         }
         if(!code.isEmpty()){
-          List<Bundle.BundleEntryComponent> foundLocation = bundle.getEntry().stream().filter(e -> {
-            Resource r = e.getResource();
-            return r instanceof Location && r.getIdPart().equals(reference.substring(reference.indexOf("/") + 1));
-          }).collect(Collectors.toList());
+          String locationReference = encounterLocation.getLocation().getReference();
+          String locationID = locationReference.substring(locationReference.indexOf("/") + 1);
+          Location location = locations.getOrDefault(locationID, null);
 
-          if(!(foundLocation.isEmpty())) {
-            Location location = (Location) foundLocation.get(0).getResource();
-
+          if(location != null) {
             Coding coding = new Coding();
             coding.setCode(code);
             coding.setSystem(Constants.EncounterLocationDisplayCodeSystem);
