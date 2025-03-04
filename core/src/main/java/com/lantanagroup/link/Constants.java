@@ -32,6 +32,7 @@ public class Constants {
   public static final String OriginalResourceIdExtension = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/link-original-resource-id-extension";
   public static final String BundlingFullUrlFormat = "http://www.cdc.gov/nhsn/fhirportal/dqm/ig/%s";
   public static final String LocationAliasCodeSystem = "https://nhsnlink.org/location-alias";
+  public static final String EncounterLocationDisplayCodeSystem = "https://nhsnlink.org/encounter-location-display";
 
   //Metric taskName Constants
   public static final String TASK_SUBMIT = "submit";
