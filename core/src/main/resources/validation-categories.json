@@ -40,19 +40,19 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown code 'https?://fhir.cerner.com/*' for in-memory expansion of ValueSet"
+            "regex": "Unknown code 'https?://fhir\\.cerner\\.com/.*' for in-memory expansion of ValueSet"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown code 'https?://open.epic.com/FHIR/StructureDefinition/*' for in-memory expansion of ValueSet"
+            "regex": "Unknown code 'https?://open\\.epic\\.com/FHIR/StructureDefinition/.*' for in-memory expansion of ValueSet"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown code 'urn:oid:1.2.840.114350.*' for in-memory expansion of ValueSet"
+            "regex": "Unknown code 'urn:oid:1\\.2\\.840\\.114350\\..*' for in-memory expansion of ValueSet"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown code 'urn:oid:1.2.246.537.6.96*' for in-memory expansion of ValueSet"
+            "regex": "Unknown code 'urn:oid:1\\.2\\.246\\.537\\.6\\.96.*' for in-memory expansion of ValueSet"
           }
         ],
         "andOperator": false
@@ -241,27 +241,27 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://fhir-ehr.cerner.com/r4/StructureDefinition/*",
+            "regex": "Unknown extension https?://fhir-ehr\\.cerner\\.com/r4/StructureDefinition/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://electronichealth.se/fhir/StructureDefinition/*",
+            "regex": "Unknown extension https?://electronichealth\\.se/fhir/StructureDefinition/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open.epic.com/FHIR/StructureDefinition/extension*",
+            "regex": "Unknown extension https?://open\\.epic\\.com/FHIR/StructureDefinition/extension.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open.epic.com/fhir/extensions*",
+            "regex": "Unknown extension https?://open\\.epic\\.com/fhir/extensions.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Extension url 'https?://hl7.org/fhir/5.0/StructureDefinition/extension*' is not valid*",
+            "regex": "Extension url 'https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*' is not valid.*",
             "inverse": false
           }
         ],
@@ -548,7 +548,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "The Coding provided \\(*\\) is not in the value set '*' \\(*\\), and a code should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable).*'http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'",
+            "regex": "The Coding provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable).*'http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'",
             "inverse": false
           }
         ],
