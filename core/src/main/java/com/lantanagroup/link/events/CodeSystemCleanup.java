@@ -22,9 +22,9 @@ public class CodeSystemCleanup implements IReportGenerationDataEvent {
   private final HashMap<String, String> codeSystemMap = new HashMap<>();
 
   public CodeSystemCleanup() {
-    this.codeSystemMap.put("http://hl7.org/fhir/sid/icd-9-cm/diagnosis", "http://terminology.hl7.org/CodeSystem/icd9cm");
+    this.codeSystemMap.put("http://hl7.org/fhir/sid/icd-9-cm/diagnosis", "http://hl7.org/fhir/sid/icd-9-cm");
     this.codeSystemMap.put("http://hl7.org/fhir/v3/ParticipationType", "http://terminology.hl7.org/CodeSystem/v3-ParticipationType");
-    this.codeSystemMap.put("http://hl7.org/fhir/ValueSet/timing-abbreviation", "http://terminology.hl7.org/CodeSystem/timing-abbreviation");
+    this.codeSystemMap.put("http://hl7.org/fhir/ValueSet/timing-abbreviation", "http://terminology.hl7.org/CodeSystem/v3-GTSAbbreviation");
   }
 
   private int checkCoding(Coding coding) {
