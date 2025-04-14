@@ -5,14 +5,22 @@ import com.lantanagroup.link.auth.LinkCredentials;
 import com.lantanagroup.link.db.model.PatientList;
 import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.query.QueryPhase;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Measure;
 import org.hl7.fhir.r4.model.MeasureReport;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Getter
@@ -27,6 +35,9 @@ public class ReportContext {
   private volatile QueryPlan queryPlan;
   private volatile IGenericClient client;
   private volatile List<String> debugPatients = new ArrayList<>();
+
+  @Getter(AccessLevel.NONE)
+  private final ConcurrentMap<IIdType, IBaseResource> resources = new ConcurrentHashMap<>();
 
   public ReportContext() {
   }
@@ -52,6 +63,15 @@ public class ReportContext {
       default:
         throw new IllegalArgumentException(queryPhase.toString());
     }
+  }
+
+  public <T extends IBaseResource> T computeResourceIfAbsent(Class<T> resourceType, IIdType id, Supplier<T> supplier) {
+    IBaseResource resource = resources.computeIfAbsent(id.toUnqualifiedVersionless(), key -> supplier.get());
+    return resourceType.isInstance(resource) ? resourceType.cast(resource) : null;
+  }
+
+  public void putResourceIfAbsent(IBaseResource resource) {
+    resources.putIfAbsent(resource.getIdElement().toUnqualifiedVersionless(), resource);
   }
 
   @Getter
