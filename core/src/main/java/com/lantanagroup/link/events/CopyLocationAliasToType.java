@@ -8,13 +8,12 @@ import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IIdType;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CopyLocationAliasToType implements IReportGenerationDataEvent {
   private static final Logger logger = LoggerFactory.getLogger(CopyLocationAliasToType.class);
@@ -50,14 +49,13 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
 
   @Override
   public void execute(TenantService tenantService, Bundle bundle, ReportCriteria criteria, ReportContext context, ReportContext.MeasureContext measureContext) {
-    Map<String, Location> locationsById = new HashMap<>();
     for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
       Resource resource = entry.getResource();
       if (!(resource instanceof Location)) {
         continue;
       }
       Location location = (Location) resource;
-      locationsById.putIfAbsent(location.getIdPart(), location);
+      context.putResourceIfAbsent(location);
       if (anyAliasExistsInType(location)) {
         continue;
       }
@@ -72,21 +70,22 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
         if (!iterative || client == null) {
           break;
         }
-        String ancestorId = ancestor.getPartOf()
-                .getReferenceElement()
-                .getIdPart();
-        if (ancestorId == null) {
+        IIdType ancestorId = ancestor.getPartOf().getReferenceElement();
+        if (ancestorId == null || !ancestorId.hasIdPart()) {
           break;
         }
-        try {
-          ancestor = locationsById.computeIfAbsent(
-                  ancestorId,
-                  key -> client.read()
-                          .resource(Location.class)
-                          .withId(key)
-                          .execute());
-        } catch (Exception e) {
-          logger.error("Failed to retrieve ancestor: {}", ancestorId, e);
+        ancestor = context.computeResourceIfAbsent(Location.class, ancestorId, () -> {
+          try {
+            return client.read()
+                    .resource(Location.class)
+                    .withId(ancestorId)
+                    .execute();
+          } catch (Exception e) {
+            logger.error("Failed to retrieve ancestor: {}", ancestorId, e);
+            return null;
+          }
+        });
+        if (ancestor == null) {
           break;
         }
       }

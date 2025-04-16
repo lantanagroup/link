@@ -80,8 +80,6 @@ public class Scheduler {
       return;
     }
 
-    // TODO: Make sure this.context.getBean() doesn't return a singleton
-
     if (StringUtils.isNotEmpty(config.getDataRetentionCheckCron())) {
       DataRetentionCheckTask dataRetentionCheckTask = this.context.getBean(DataRetentionCheckTask.class);
       dataRetentionCheckTask.setTenantId(tenantId);
