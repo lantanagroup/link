@@ -34,7 +34,7 @@
     "d3-selection": "^1.1.0",
     "d3-shape": "^1.2.0",
     "d3-time-format": "^2.1.0",
-    "datatables.net": "^1.11.3",
+    "datatables.net": "^1.13.11",
     "datatables.net-bs5": "^1.11.3",
     "jquery": "^3.6.0",
     "js-yaml": "^4.1.0",
