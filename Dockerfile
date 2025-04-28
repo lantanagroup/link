@@ -1,4 +1,4 @@
-FROM maven:3.8.5-openjdk-17 AS build
+FROM maven:3-eclipse-temurin-21 AS build
 
 ARG build
 ARG version
@@ -13,7 +13,7 @@ COPY . .
 WORKDIR /tmp
 RUN mvn clean install -pl api -am '-Dmaven.test.skip=true'
 
-FROM tomcat:10.1-jre17-temurin-jammy
+FROM tomcat:10-jre21-temurin
 RUN useradd -U -d ${CATALINA_HOME} -s /bin/bash tomcat && chown -R tomcat:tomcat ${CATALINA_HOME}
 USER tomcat:tomcat
 COPY --from=build /tmp/api/target/link-api.war /usr/local/tomcat/webapps/ROOT.war
