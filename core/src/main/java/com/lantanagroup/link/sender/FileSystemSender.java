@@ -86,7 +86,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       path = Helper.expandEnvVars(this.config.getPath());
     }
 
-    String fileName = type + "-" + (new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date())) + suffix;
+    String fileName = type + suffix;
 
     return Paths.get(path, fileName);
   }
@@ -184,6 +184,11 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             this.config.getFormat(),
             StringUtils.isEmpty(this.config.getEncryptSecret()) ? "without" : "with");
 
+    String orgId = tenantService.getOrganizationID();
+    orgId = orgId != null && !orgId.isEmpty() ? orgId : "";
+    //Replacing colons (:) with its URL encoding equivalent to play nice with Windows file naming conventions
+    String outputPath = String.join("+", report.getMeasureIds()) + "_" +
+            (report.getPeriodStart() + "_" + report.getPeriodEnd()).replace(":" , "%3A");
 
     OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
             report.getId(),
@@ -191,10 +196,10 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             null);
 
     FhirBundler bundler = new FhirBundler(eventService, this.sharedService, tenantService);
-
+    String fileName = (!orgId.isEmpty() ? orgId + "_" : "") + outputPath;
     if (this.config.getIsBundle()) {
       Bundle submissionBundle = bundler.generateBundle(report);
-      this.saveToFile(submissionBundle, this.getFilePath("submission").toString());
+      this.saveToFile(submissionBundle, this.getFilePath("submission" + "_" + fileName).toString());
       this.saveToFile(outcome, this.getFilePath("validation").toString());
 
       // Save validation results as HTML
@@ -204,11 +209,10 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Submission submission = bundler.generateSubmission(report, this.config.getPretty());
-      String orgId = tenantService.getOrganizationID();
-      String path = orgId != null && !orgId.isEmpty() ?
-              this.getFilePath(orgId).toString() :
-              this.getFilePath("submission").toString();
+      Submission submission = bundler.generateSubmission(report, fileName, this.config.getPretty());
+      String path = this.getFilePath((!orgId.isEmpty() ? orgId : "submission") + "_" + outputPath).toString();
+      //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
+      FileUtils.deleteDirectory(new File(path));
       FileUtils.moveDirectory(submission.getRoot().toFile(), new File(path));
       logger.info("Saved submission to file system: {}", path);
     }

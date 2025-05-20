@@ -91,7 +91,7 @@ public class FhirBundler {
     return lib;
   }
 
-  public Submission generateSubmission(Report report, boolean pretty) throws IOException {
+  public Submission generateSubmission(Report report, String patientFilePath, boolean pretty) throws IOException {
     List<Bundle> measureDefinitions = report.getMeasureIds().stream()
             .map(sharedService::getMeasureDefinition)
             .filter(Objects::nonNull)
@@ -203,7 +203,7 @@ public class FhirBundler {
         }
       }
 
-      String bundleFilename = String.format(Submission.PATIENT, id);
+      String bundleFilename = patientFilePath + "_" + String.format(Submission.PATIENT, id);
       submission.write(bundleFilename, bundle);
     }
 
