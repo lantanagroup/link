@@ -3,6 +3,8 @@ package com.lantanagroup.link.sender;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -33,8 +35,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -45,6 +50,9 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   @Autowired
   @Setter
   private FileSystemSenderConfig config;
+
+  @Autowired
+  private ApiConfig apiConfig;
 
   private final SecureRandom random = new SecureRandom();
   @Autowired
@@ -186,9 +194,17 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     String orgId = tenantService.getOrganizationID();
     orgId = orgId != null && !orgId.isEmpty() ? orgId : "";
+    List<String> shortMeasureIDs = new ArrayList<>();
+    for(int x = 0; x < report.getMeasureIds().size(); x++){
+      String measureID = report.getMeasureIds().get(x);
+      List<MeasureDefConfig> matches = apiConfig.getMeasureDefinitions().stream()
+              .filter(def -> def.getId().equals(measureID)).collect(Collectors.toList());
+      if(!matches.isEmpty()) shortMeasureIDs.add(matches.get(0).getShortName());
+    }
     //Replacing colons (:) with its URL encoding equivalent to play nice with Windows file naming conventions
-    String outputPath = String.join("+", report.getMeasureIds()) + "_" +
-            (report.getPeriodStart() + "_" + report.getPeriodEnd()).replace(":" , "%3A");
+    String outputPath = String.join("+", shortMeasureIDs) + "_" +
+            report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
+            report.getPeriodEnd().substring(0, report.getPeriodStart().indexOf("T"));
 
     OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
             report.getId(),
