@@ -203,7 +203,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     }
     String outputPath = String.join("+", shortMeasureIDs) + "_" +
             report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
-            report.getPeriodEnd().substring(0, report.getPeriodStart().indexOf("T"));
+            report.getPeriodEnd().substring(0, report.getPeriodEnd().indexOf("T"));
 
     OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
             report.getId(),
