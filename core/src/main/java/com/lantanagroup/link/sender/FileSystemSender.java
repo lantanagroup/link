@@ -201,7 +201,6 @@ public class FileSystemSender extends GenericSender implements IReportSender {
               .filter(def -> def.getId().equals(measureID)).collect(Collectors.toList());
       if(!matches.isEmpty()) shortMeasureIDs.add(matches.get(0).getShortName());
     }
-    //Replacing colons (:) with its URL encoding equivalent to play nice with Windows file naming conventions
     String outputPath = String.join("+", shortMeasureIDs) + "_" +
             report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
             report.getPeriodEnd().substring(0, report.getPeriodStart().indexOf("T"));
