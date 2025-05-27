@@ -3,6 +3,8 @@ package com.lantanagroup.link.sender;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
+import com.lantanagroup.link.config.api.ApiConfig;
+import com.lantanagroup.link.config.api.MeasureDefConfig;
 import com.lantanagroup.link.config.sender.FileSystemSenderConfig;
 import com.lantanagroup.link.db.SharedService;
 import com.lantanagroup.link.db.TenantService;
@@ -33,8 +35,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
 
@@ -45,6 +50,9 @@ public class FileSystemSender extends GenericSender implements IReportSender {
   @Autowired
   @Setter
   private FileSystemSenderConfig config;
+
+  @Autowired
+  private ApiConfig apiConfig;
 
   private final SecureRandom random = new SecureRandom();
   @Autowired
@@ -86,7 +94,7 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       path = Helper.expandEnvVars(this.config.getPath());
     }
 
-    String fileName = type + "-" + (new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date())) + suffix;
+    String fileName = type + suffix;
 
     return Paths.get(path, fileName);
   }
@@ -184,6 +192,18 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             this.config.getFormat(),
             StringUtils.isEmpty(this.config.getEncryptSecret()) ? "without" : "with");
 
+    String orgId = tenantService.getOrganizationID();
+    orgId = orgId != null && !orgId.isEmpty() ? orgId : "";
+    List<String> measureIDs = new ArrayList<>();
+    for(int x = 0; x < report.getMeasureIds().size(); x++){
+      String measureID = report.getMeasureIds().get(x);
+      List<MeasureDefConfig> matches = apiConfig.getMeasureDefinitions().stream()
+              .filter(def -> def.getId().equals(measureID)).collect(Collectors.toList());
+      measureIDs.add(!matches.isEmpty() ? matches.get(0).getShortName() : measureID);
+    }
+    String outputPath = String.join("+", measureIDs) + "_" +
+            report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
+            report.getPeriodEnd().substring(0, report.getPeriodEnd().indexOf("T"));
 
     OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
             report.getId(),
@@ -191,10 +211,10 @@ public class FileSystemSender extends GenericSender implements IReportSender {
             null);
 
     FhirBundler bundler = new FhirBundler(eventService, this.sharedService, tenantService);
-
+    String fileName = (!orgId.isEmpty() ? orgId + "_" : "") + outputPath;
     if (this.config.getIsBundle()) {
       Bundle submissionBundle = bundler.generateBundle(report);
-      this.saveToFile(submissionBundle, this.getFilePath("submission").toString());
+      this.saveToFile(submissionBundle, this.getFilePath("submission" + "_" + fileName).toString());
       this.saveToFile(outcome, this.getFilePath("validation").toString());
 
       // Save validation results as HTML
@@ -204,11 +224,10 @@ public class FileSystemSender extends GenericSender implements IReportSender {
         this.saveToFile(html.getBytes(StandardCharsets.UTF_8), this.getFilePath("validation", ".html").toString());
       }
     } else {
-      Submission submission = bundler.generateSubmission(report, this.config.getPretty());
-      String orgId = tenantService.getOrganizationID();
-      String path = orgId != null && !orgId.isEmpty() ?
-              this.getFilePath(orgId).toString() :
-              this.getFilePath("submission").toString();
+      Submission submission = bundler.generateSubmission(report, fileName, this.config.getPretty());
+      String path = this.getFilePath((!orgId.isEmpty() ? orgId : "submission") + "_" + outputPath).toString();
+      //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
+      FileUtils.deleteDirectory(new File(path));
       FileUtils.moveDirectory(submission.getRoot().toFile(), new File(path));
       logger.info("Saved submission to file system: {}", path);
     }
