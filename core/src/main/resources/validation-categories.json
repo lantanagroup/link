@@ -607,6 +607,11 @@
             "field": "DETAILS_TEXT",
             "regex": "minimum required = \\d+, but only found \\d+ \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-8: 'Either Patient\\.name\\.given and/or Patient\\.name\\.family SHALL be present or a Data Absent Reason Extension SHALL be present\\.' Failed",
+            "inverse": false
           }
         ],
         "andOperator": false
