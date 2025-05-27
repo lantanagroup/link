@@ -263,6 +263,11 @@
             "field": "DETAILS_TEXT",
             "regex": "Extension url 'https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*' is not valid.*",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension https?://nictiz\\.nl/fhir/StructureDefinition/.*",
+            "inverse": false
           }
         ],
         "andOperator": false
