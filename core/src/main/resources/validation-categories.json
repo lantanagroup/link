@@ -590,8 +590,8 @@
     ]
   },
   {
-    "id": "Minimum_requirement_not_met_for_profile",
-    "title": "Minimum requirement not met for profile.",
+    "id": "Missing_required_element",
+    "title": "Missing required element",
     "severity": "ERROR",
     "acceptable": false,
     "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
