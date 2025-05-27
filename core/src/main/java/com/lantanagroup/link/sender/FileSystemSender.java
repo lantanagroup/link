@@ -194,14 +194,14 @@ public class FileSystemSender extends GenericSender implements IReportSender {
 
     String orgId = tenantService.getOrganizationID();
     orgId = orgId != null && !orgId.isEmpty() ? orgId : "";
-    List<String> shortMeasureIDs = new ArrayList<>();
+    List<String> measureIDs = new ArrayList<>();
     for(int x = 0; x < report.getMeasureIds().size(); x++){
       String measureID = report.getMeasureIds().get(x);
       List<MeasureDefConfig> matches = apiConfig.getMeasureDefinitions().stream()
               .filter(def -> def.getId().equals(measureID)).collect(Collectors.toList());
-      if(!matches.isEmpty()) shortMeasureIDs.add(matches.get(0).getShortName());
+      measureIDs.add(!matches.isEmpty() ? matches.get(0).getShortName() : measureID);
     }
-    String outputPath = String.join("+", shortMeasureIDs) + "_" +
+    String outputPath = String.join("+", measureIDs) + "_" +
             report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
             report.getPeriodEnd().substring(0, report.getPeriodEnd().indexOf("T"));
 
