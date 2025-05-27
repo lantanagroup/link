@@ -301,9 +301,14 @@
             "field": "DETAILS_TEXT",
             "regex": "^Unable to find a match for profile .* among choices:",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Profile reference '.*' has not been checked because it is unknown",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
