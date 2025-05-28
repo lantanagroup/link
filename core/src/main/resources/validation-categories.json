@@ -375,11 +375,11 @@
     ]
   },
   {
-    "id": "Identifier_type_code_not_provided_from_IdentifyType_VS",
-    "title": "Identifier.type code not provided from IdentifyType VS",
+    "id": "fhir_standard_recommendations_and_best_practices",
+    "title": "FHIR Standard Recommendations and Best Practices",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "This is only for business identifiers. Not important, unless a business identifier, such as MRN is required to be identified.",
+    "guidance": "Not required by NHSN. It is encouraged to follow FHIR standards and best practices for interoperability.",
     "ruleSets": [
       {
         "rules": [
