@@ -275,11 +275,11 @@
     ]
   },
   {
-    "id": "Does_not_match_a_slice",
-    "title": "Does not match a slice",
+    "id": "Additional_data_beyond_nhsn_specification",
+    "title": "Additional data beyond NHSN specification",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
+    "guidance": "No impact to normal operation. Recommend reviewing during onboarding and initial testing.",
     "ruleSets": [
       {
         "rules": [
