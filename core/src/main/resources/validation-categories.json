@@ -785,5 +785,24 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "no_medication_code",
+    "title": "No Medication Code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "For recorded medication, a valid rxnorm code is required.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
