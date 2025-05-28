@@ -713,5 +713,24 @@
         "andOperator": true
       }
     ]
+  },
+  {
+    "id": "data_quality_assurance",
+    "title": "Data Quality Assurance",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Review source data in EHR to identify data entry errors such as transposed dates.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
