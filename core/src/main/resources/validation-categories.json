@@ -727,6 +727,11 @@
             "field": "DETAILS_TEXT",
             "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The string value contains text that looks like embedded HTML tags\\. If this content is rendered to HTML without appropriate post-processing, it may be a security risk",
+            "inverse": false
           }
         ],
         "andOperator": false
