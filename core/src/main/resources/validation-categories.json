@@ -593,9 +593,14 @@
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set '.*' \\(.*\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule Condition-coding-from-common-codesystems: 'Condition: code must contains a SNOMED CT, ICD-10-CM, or ICD-9-CM coding' Failed",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
