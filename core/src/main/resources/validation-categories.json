@@ -828,5 +828,29 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "missing_medication_route",
+    "title": "Missing Medication Route",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A valid SNOMED code is required for route when sending MedicationRequest and MedicationAdministration data.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.dosageInstruction\\.route: minimum required = 1, but only found 0",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
