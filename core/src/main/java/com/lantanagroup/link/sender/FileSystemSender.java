@@ -1,5 +1,6 @@
 package com.lantanagroup.link.sender;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import ca.uhn.fhir.parser.IParser;
 import com.lantanagroup.link.*;
 import com.lantanagroup.link.auth.LinkCredentials;
@@ -17,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.OperationOutcome;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -35,10 +37,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Bytes.concat;
@@ -197,13 +196,22 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     List<String> measureIDs = new ArrayList<>();
     for(int x = 0; x < report.getMeasureIds().size(); x++){
       String measureID = report.getMeasureIds().get(x);
-      List<MeasureDefConfig> matches = apiConfig.getMeasureDefinitions().stream()
-              .filter(def -> def.getId().equals(measureID)).collect(Collectors.toList());
-      measureIDs.add(!matches.isEmpty() ? matches.get(0).getShortName() : measureID);
+      measureIDs.add(apiConfig.getMeasureDefinitions().stream()
+              .filter(def -> StringUtils.equals(def.getId(), measureID))
+              .map(MeasureDefConfig::getShortName)
+              .filter(Objects::nonNull)
+              .findFirst()
+              .orElse(measureID));
     }
-    String outputPath = String.join("+", measureIDs) + "_" +
-            report.getPeriodStart().substring(0, report.getPeriodStart().indexOf("T")) + "_" +
-            report.getPeriodEnd().substring(0, report.getPeriodEnd().indexOf("T"));
+    String date;
+    try {
+      DateTimeType dateTime = new DateTimeType(report.getPeriodStart());
+      dateTime.setPrecision(TemporalPrecisionEnum.DAY);
+      date = dateTime.asStringValue().replace("-", "");
+    } catch (Exception e){
+      date = report.getPeriodStart();
+    }
+    String outputPath = String.join("+", measureIDs) + "_" + date;
 
     OperationOutcome outcome = tenantService.getValidationResultsOperationOutcome(
             report.getId(),

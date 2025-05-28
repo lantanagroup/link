@@ -477,9 +477,17 @@ public class FhirBundler {
       logger.debug("Merging censuses");
       ListResource mergedCensus = patientLists.iterator().next().copy();
       mergedCensus.setId(UUID.randomUUID().toString());
+      mergedCensus.getIdentifier().clear();
       mergedCensus.getEntry().clear();
       this.setCensusProperties(mergedCensus);
       for (ListResource census : patientLists) {
+        for (Identifier identifier : census.getIdentifier()) {
+          boolean exists = mergedCensus.getIdentifier().stream()
+                  .anyMatch(existingIdentifier -> existingIdentifier.equalsShallow(identifier));
+          if (!exists) {
+            mergedCensus.addIdentifier(identifier);
+          }
+        }
         FhirHelper.mergePatientLists(mergedCensus, census);
       }
       return List.of(mergedCensus);

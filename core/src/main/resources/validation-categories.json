@@ -263,6 +263,11 @@
             "field": "DETAILS_TEXT",
             "regex": "Extension url 'https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*' is not valid.*",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension https?://nictiz\\.nl/fhir/StructureDefinition/.*",
+            "inverse": false
           }
         ],
         "andOperator": false
@@ -270,11 +275,11 @@
     ]
   },
   {
-    "id": "Does_not_match_a_slice",
-    "title": "Does not match a slice",
+    "id": "Additional_data_beyond_nhsn_specification",
+    "title": "Additional data beyond NHSN specification",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
+    "guidance": "No impact to normal operation. Recommend reviewing during onboarding and initial testing.",
     "ruleSets": [
       {
         "rules": [
@@ -301,9 +306,14 @@
             "field": "DETAILS_TEXT",
             "regex": "^Unable to find a match for profile .* among choices:",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Profile reference '.*' has not been checked because it is unknown",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -365,11 +375,11 @@
     ]
   },
   {
-    "id": "Identifier_type_code_not_provided_from_IdentifyType_VS",
-    "title": "Identifier.type code not provided from IdentifyType VS",
+    "id": "fhir_standard_recommendations_and_best_practices",
+    "title": "FHIR Standard Recommendations and Best Practices",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "This is only for business identifiers. Not important, unless a business identifier, such as MRN is required to be identified.",
+    "guidance": "Not required by NHSN. It is encouraged to follow FHIR standards and best practices for interoperability.",
     "ruleSets": [
       {
         "rules": [
@@ -399,8 +409,32 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\/.*\\*\\/\\.requester",
+            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\.ofType\\(MedicationRequest\\)\\.where\\(id = '.*'\\)\\.requester",
             "inverse": false
+          }
+        ],
+        "andOperator": true
+      }
+    ]
+  },
+  {
+    "id": "fhir_id_not_sent_for_reference",
+    "title": "FHIR ID not sent for Reference",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "All Reference elements requires a reference sent as ResourceType/id.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "A Reference without an actual reference or identifier should have a display",
+            "inverse": false
+          },
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\.ofType\\(MedicationRequest\\)\\.where\\(id = '.*'\\)\\.requester",
+            "inverse": true
           }
         ],
         "andOperator": true
@@ -559,9 +593,14 @@
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set '.*' \\(.*\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule Condition-coding-from-common-codesystems: '.*' Failed",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -590,8 +629,8 @@
     ]
   },
   {
-    "id": "Minimum_requirement_not_met_for_profile",
-    "title": "Minimum requirement not met for profile.",
+    "id": "Missing_required_element",
+    "title": "Missing required element",
     "severity": "ERROR",
     "acceptable": false,
     "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
@@ -600,7 +639,22 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/.*\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-2: '.*' Failed",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
           }
         ],
@@ -639,6 +693,159 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "date has a time, it must have a timezone.*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "no_expected_code_found_for_encounter_class",
+    "title": "Expected code not found for Encounter class",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html)",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Coding provided \\(.*\\) is not in the value set 'V3 Value SetActEncounterCode'",
+            "inverse": false
+          },
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\.ofType\\(Encounter\\)\\.where\\(id = '.*'\\)\\.class",
+            "inverse": false
+          }
+        ],
+        "andOperator": true
+      }
+    ]
+  },
+  {
+    "id": "data_quality_assurance",
+    "title": "Data Quality Assurance",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Review source data in EHR to identify data entry errors such as transposed dates.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The string value contains text that looks like embedded HTML tags\\. If this content is rendered to HTML without appropriate post-processing, it may be a security risk",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The markdown contains content that appears to be an embedded HTML tag starting at '.*'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_period_date_range",
+    "title": "Invalid Period Date Range",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "The end dateTime occurs before the start dateTime for specified Period. When a start and end dateTime is present, end must not be earlier than start.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule per-1: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_condition_code",
+    "title": "Invalid Condition Code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Use of proprietary code systems and codes may lead to misinterpretation issues. A SNOMED or ICD code is required for condition.code.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code '.*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/us/core/ValueSet/us-core-condition-code'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "no_medication_code",
+    "title": "No Medication Code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "For recorded medication, a valid rxnorm code is required.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_type",
+    "title": "Missing Coverage Type",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.class.type (when present), is required to exist. However, NHSN has deemed this missing concept acceptable for reportability to NHSN.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.class\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_medication_route",
+    "title": "Missing Medication Route",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A valid SNOMED code is required for route when sending MedicationRequest and MedicationAdministration data.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.dosageInstruction\\.route: minimum required = 1, but only found 0",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
             "inverse": false
           }
         ],
