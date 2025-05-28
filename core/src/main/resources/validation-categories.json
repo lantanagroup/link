@@ -634,7 +634,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http:\\/\\/www\\.cdc\\.gov\\/nhsn\\/fhirportal\\/dqm\\/ig\\/StructureDefinition\\/.+?\\)",
+            "regex": "minimum required = \\d+, but only found \\d+",
             "inverse": false
           },
           {
