@@ -761,5 +761,24 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "invalid_condition_code",
+    "title": "Invalid Condition Code",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Use of proprietary code systems and codes may lead to misinterpretation issues. A SNOMED or ICD code is required for condition.code.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code '.*' for in-memory expansion of ValueSet 'http://hl7\\.org/fhir/us/core/ValueSet/us-core-condition-code'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
