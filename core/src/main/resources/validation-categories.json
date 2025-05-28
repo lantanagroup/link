@@ -596,7 +596,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Rule Condition-coding-from-common-codesystems: 'Condition: code must contains a SNOMED CT, ICD-10-CM, or ICD-9-CM coding' Failed",
+            "regex": "Rule Condition-coding-from-common-codesystems: '.*' Failed",
             "inverse": false
           }
         ],
@@ -644,12 +644,12 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-2: 'If there is no component or hasMember element then either a value\\[x\\] or a data absent reason must be present' Failed",
+            "regex": "Rule us-core-2: '.*' Failed",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-8: 'Either Patient\\.name\\.given and/or Patient\\.name\\.family SHALL be present or a Data Absent Reason Extension SHALL be present\\.' Failed",
+            "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
           }
         ],
