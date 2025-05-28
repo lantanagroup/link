@@ -639,6 +639,11 @@
           },
           {
             "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-2: 'If there is no component or hasMember element then either a value\\[x\\] or a data absent reason must be present' Failed",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
             "regex": "Rule us-core-8: 'Either Patient\\.name\\.given and/or Patient\\.name\\.family SHALL be present or a Data Absent Reason Extension SHALL be present\\.' Failed",
             "inverse": false
           }
