@@ -639,7 +639,12 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+",
+            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/.*\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
             "inverse": false
           },
           {
@@ -798,6 +803,25 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_coverage_type",
+    "title": "Missing Coverage Type",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Coverage.class.type (when present), is required to exist. However, NHSN has deemed this missing concept acceptable for reportability to NHSN.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Coverage\\.class\\.type: minimum required = 1, but only found 0",
             "inverse": false
           }
         ],
