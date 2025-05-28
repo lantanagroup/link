@@ -742,5 +742,24 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "invalid_period_date_range",
+    "title": "Invalid Period Date Range",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "The end dateTime occurs before the start dateTime for specified Period. When a start and end dateTime is present, end must not be earlier than start.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule per-1: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
