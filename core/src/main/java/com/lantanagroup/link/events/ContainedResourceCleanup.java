@@ -1,11 +1,13 @@
 package com.lantanagroup.link.events;
 
+import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirScanner;
 import com.lantanagroup.link.IReportGenerationDataEvent;
 import com.lantanagroup.link.db.TenantService;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
 import org.hl7.fhir.r4.model.Bundle;
+import org.hl7.fhir.r4.model.DateTimeType;
 import org.hl7.fhir.r4.model.DomainResource;
 import org.hl7.fhir.r4.model.Resource;
 import org.slf4j.Logger;
@@ -32,6 +34,9 @@ public class ContainedResourceCleanup implements IReportGenerationDataEvent {
           DomainResource clone = (DomainResource) contained.copy();
           String newId = UUID.randomUUID().toString();
           clone.setId(newId);
+
+          //Adding in when this resource was "created" from the contained section
+          clone.getMeta().addExtension(Constants.ReceivedDateExtensionUrl, DateTimeType.now());
 
           data.addEntry()
                   .setResource(clone);
