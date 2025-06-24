@@ -644,6 +644,11 @@
           },
           {
             "field": "DETAILS_TEXT",
+            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://hl7\\.org/fhir/us/core/StructureDefinition/.*\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
             "regex": "Annotation\\.text: minimum required = 1, but only found 0",
             "inverse": false
           },
