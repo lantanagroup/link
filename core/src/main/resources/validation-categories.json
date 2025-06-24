@@ -768,6 +768,11 @@
             "field": "DETAILS_TEXT",
             "regex": "The markdown contains content that appears to be an embedded HTML tag starting at '.*'",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "This content includes the character \\[.\\] \\(hex value\\)\\. This character is illegal in the XML version of FHIR, and there is generally no valid use for such characters",
+            "inverse": false
           }
         ],
         "andOperator": false
