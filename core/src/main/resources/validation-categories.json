@@ -479,7 +479,7 @@
     "id": "No_measure_score_allowed_with_cohort",
     "title": "No measure score allowed with cohort",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "The MeasureReport violates a business rule regarding MeasureScore. This issue needs to be resolved in the source data, the validator, or explicitely deemed an invalid error.",
     "ruleSets": [
       {
