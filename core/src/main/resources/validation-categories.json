@@ -261,6 +261,11 @@
           },
           {
             "field": "DETAILS_TEXT",
+            "regex": "Unknown extension https?://hl7\\.org/fhir/us/core/StructureDefinition/.*",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
             "regex": "Extension url 'https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*' is not valid.*",
             "inverse": false
           },
