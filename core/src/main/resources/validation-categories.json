@@ -273,6 +273,11 @@
             "field": "DETAILS_TEXT",
             "regex": "Unknown extension https?://nictiz\\.nl/fhir/StructureDefinition/.*",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension http://terminology\\.hl7\\.org/CodeSystem/data-absent-reason",
+            "inverse": false
           }
         ],
         "andOperator": false
