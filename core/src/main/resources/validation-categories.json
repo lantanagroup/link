@@ -209,19 +209,15 @@
       {
         "rules": [
           {
-            "field": "SEVERITY",
-            "regex": "^error$"
-          },
-          {
-            "field": "CODE",
-            "regex": "^code-invalid$"
+            "field": "DETAILS_TEXT",
+            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+            "regex": "Unknown code '.*' for in-memory expansion of ValueSet '.*'"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
