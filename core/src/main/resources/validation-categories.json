@@ -241,27 +241,22 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://fhir-ehr\\.cerner\\.com/r4/StructureDefinition/.*",
+            "regex": "Unknown extension https?://fhir-ehr\\.cerner\\.com/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://electronichealth\\.se/fhir/StructureDefinition/.*",
+            "regex": "Unknown extension https?://electronichealth\\.se/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open\\.epic\\.com/FHIR/StructureDefinition/extension.*",
+            "regex": "Unknown extension https?://open\\.epic\\.com/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open\\.epic\\.com/fhir/extensions.*",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://hl7\\.org/fhir/us/core/StructureDefinition/.*",
+            "regex": "Unknown extension https?://hl7\\.org/fhir/us/core/.*",
             "inverse": false
           },
           {
@@ -271,7 +266,12 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://nictiz\\.nl/fhir/StructureDefinition/.*",
+            "regex": "Unknown extension https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension https?://nictiz\\.nl/.*",
             "inverse": false
           },
           {
