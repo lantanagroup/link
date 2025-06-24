@@ -745,6 +745,11 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of commonly/reasonably supported decimals",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
             "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
             "inverse": false
           },
