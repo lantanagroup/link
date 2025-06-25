@@ -704,8 +704,8 @@
     "id": "no_expected_code_found_for_encounter_class",
     "title": "Expected code not found for Encounter class",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html)",
+    "acceptable": true,
+    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptbale for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
     "ruleSets": [
       {
         "rules": [
