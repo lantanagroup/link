@@ -848,7 +848,7 @@
     "title": "Missing Medication Route",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "A valid SNOMED code is required for route when sending MedicationRequest and MedicationAdministration data.",
+    "guidance": "Medication route is required to be present and to contain at least a valid SNOMED code when sending MedicationRequest and MedicationAdministration data to NHSN.",
     "ruleSets": [
       {
         "rules": [
