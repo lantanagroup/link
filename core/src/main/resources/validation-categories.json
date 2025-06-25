@@ -725,19 +725,14 @@
     ]
   },
   {
-    "id": "data_quality_assurance",
-    "title": "Data Quality Assurance",
+    "id": "embedded_html",
+    "title": "Embedded HTML Found",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Review source data in EHR to identify data entry errors such as transposed dates.",
+    "acceptable": true,
+    "guidance": "The text contians content that appears to be an embedded HTML tag(s). If this content is rendered to HTML without appropriate post-processing, it may be a security risk. NHSN has deemed with issue acceptable for reporting into NHSN.",
     "ruleSets": [
       {
         "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
-            "inverse": false
-          },
           {
             "field": "DETAILS_TEXT",
             "regex": "The string value contains text that looks like embedded HTML tags\\. If this content is rendered to HTML without appropriate post-processing, it may be a security risk",
@@ -746,6 +741,25 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The markdown contains content that appears to be an embedded HTML tag starting at '.*'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "unreasonable_time_unit",
+    "title": "Unreasonable Unit of Time",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value was found to be outside the range of reasonable years - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
             "inverse": false
           }
         ],
