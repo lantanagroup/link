@@ -585,7 +585,7 @@
     "title": "No code provided",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "No code was provided, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "guidance": "No standard code was provided for a concept that impacts measure/metric calculation. This issue needs to be resolved for NHSN reporting.",
     "ruleSets": [
       {
         "rules": [
