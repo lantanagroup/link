@@ -379,7 +379,7 @@
     "title": "FHIR Standard Recommendations and Best Practices",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Not required by NHSN. It is encouraged to follow FHIR standards and best practices for interoperability.",
+    "guidance": "While it is encouraged to follow FHIR standards and best practices for interoperability, resolutions to these issues are not required for reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
