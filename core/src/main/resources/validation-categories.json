@@ -337,25 +337,6 @@
     ]
   },
   {
-    "id": "Does_not_match_extensible_ValueSet",
-    "title": "Does not match extensible ValueSet",
-    "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
-            "inverse": false
-          }
-        ],
-        "andOperator": true
-      }
-    ]
-  },
-  {
     "id": "Possible_matching_profile",
     "title": "Possible matching profile",
     "severity": "INFORMATION",
@@ -573,6 +554,11 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The Coding provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable).*'http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
           }
         ],
