@@ -631,7 +631,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://hl7\\.org/fhir/StructureDefinition/.*\\)",
+            "regex": "(?<!Coverage\\.class\\.type): minimum required = \\d+, but only found \\d+ \\(from http://hl7\\.org/fhir/StructureDefinition/.*\\)",
             "inverse": false
           },
           {
