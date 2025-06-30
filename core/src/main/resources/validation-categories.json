@@ -343,25 +343,6 @@
     ]
   },
   {
-    "id": "Does_not_match_extensible_ValueSet",
-    "title": "Does not match extensible ValueSet",
-    "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
-            "inverse": false
-          }
-        ],
-        "andOperator": true
-      }
-    ]
-  },
-  {
     "id": "Possible_matching_profile",
     "title": "Possible matching profile",
     "severity": "INFORMATION",
@@ -385,7 +366,7 @@
     "title": "FHIR Standard Recommendations and Best Practices",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Not required by NHSN. It is encouraged to follow FHIR standards and best practices for interoperability.",
+    "guidance": "While it is encouraged to follow FHIR standards and best practices for interoperability, resolutions to these issues are not required for reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -476,7 +457,7 @@
     "title": "No measure score allowed with cohort",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "The MeasureReport violates a business rule regarding MeasureScore. This issue needs to be resolved in the source data, the validator, or explicitely deemed an invalid error.",
+    "guidance": "The MeasureReport violates a business rule regarding MeasureScore. This issue does not impact metric calculation or NHSN's data pipeline, and therefore is acceptable for reporting data into NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -580,6 +561,11 @@
             "field": "DETAILS_TEXT",
             "regex": "The Coding provided \\(.*\\) is not in the value set '.*' \\(.*\\), and a code should come from this value set unless it has no suitable code (note that the validator cannot judge what is suitable).*'http://terminology.hl7.org/ValueSet/v3-ActEncounterCode'",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
+            "inverse": false
           }
         ],
         "andOperator": false
@@ -591,7 +577,7 @@
     "title": "No code provided",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "No code was provided, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "guidance": "No standard code was provided for a concept that impacts measure/metric calculation. This issue needs to be resolved for NHSN reporting.",
     "ruleSets": [
       {
         "rules": [
@@ -720,8 +706,8 @@
     "id": "no_expected_code_found_for_encounter_class",
     "title": "Expected code not found for Encounter class",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html)",
+    "acceptable": true,
+    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptbale for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
     "ruleSets": [
       {
         "rules": [
@@ -741,24 +727,14 @@
     ]
   },
   {
-    "id": "data_quality_assurance",
-    "title": "Data Quality Assurance",
+    "id": "embedded_html",
+    "title": "Embedded HTML Found",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Review source data in EHR to identify data entry errors such as transposed dates.",
+    "acceptable": true,
+    "guidance": "The text contians content that appears to be an embedded HTML tag(s). If this content is rendered to HTML without appropriate post-processing, it may be a security risk. NHSN has deemed with issue acceptable for reporting into NHSN.",
     "ruleSets": [
       {
         "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The value '.*' is outside the range of commonly/reasonably supported decimals",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
-            "inverse": false
-          },
           {
             "field": "DETAILS_TEXT",
             "regex": "The string value contains text that looks like embedded HTML tags\\. If this content is rendered to HTML without appropriate post-processing, it may be a security risk",
@@ -768,10 +744,62 @@
             "field": "DETAILS_TEXT",
             "regex": "The markdown contains content that appears to be an embedded HTML tag starting at '.*'",
             "inverse": false
-          },
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "illegal_character_in_xml",
+    "title": "Illegal Character in XML",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "The text contains characters that are illegal in FHIR XML - please check for data integrity.",
+    "ruleSets": [
+      {
+        "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "This content includes the character \\[.\\] \\(hex value\\)\\. This character is illegal in the XML version of FHIR, and there is generally no valid use for such characters",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "unreasonable_decimal",
+    "title": "Unreasonable Decimal",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value was found to be outside the range of reasonable decimals - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of commonly/reasonably supported decimals",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "unreasonable_time_unit",
+    "title": "Unreasonable Unit of Time",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value was found to be outside the range of reasonable years - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of reasonable years - check for data entry error",
             "inverse": false
           }
         ],
@@ -860,7 +888,7 @@
     "title": "Missing Medication Route",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "A valid SNOMED code is required for route when sending MedicationRequest and MedicationAdministration data.",
+    "guidance": "Medication route is required to be present and to contain at least a valid SNOMED code when sending MedicationRequest and MedicationAdministration data to NHSN.",
     "ruleSets": [
       {
         "rules": [
