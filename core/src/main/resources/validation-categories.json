@@ -368,9 +368,14 @@
             "field": "DETAILS_TEXT",
             "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/identifier-type\\|4\\.0\\.1\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/marital-status\\|4\\.0\\.1\\)",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
