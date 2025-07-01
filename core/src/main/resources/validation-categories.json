@@ -373,6 +373,16 @@
             "field": "DETAILS_TEXT",
             "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/marital-status\\|4\\.0\\.1\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/observation-interpretation\\|4\\.0\\.1\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/subscriber-relationship\\|4\\.0\\.1\\)",
+            "inverse": false
           }
         ],
         "andOperator": false
@@ -564,30 +574,6 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "No_code_provided",
-    "title": "No code provided",
-    "severity": "WARNING",
-    "acceptable": false,
-    "guidance": "No standard code was provided for a concept that impacts measure/metric calculation. This issue needs to be resolved for NHSN reporting.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "No code provided, and a code should be provided from the value set '.*' \\(.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule Condition-coding-from-common-codesystems: '.*' Failed",
             "inverse": false
           }
         ],
@@ -801,13 +787,32 @@
     "title": "No Medication Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "For recorded medication, a valid rxnorm code is required.",
+    "guidance": "For recorded mMdication, a valid rxnorm code is required.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "no_procedure_code",
+    "title": "No Procedure Code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Procedure Codes'",
             "inverse": false
           }
         ],
