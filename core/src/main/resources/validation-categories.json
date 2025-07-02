@@ -642,6 +642,16 @@
             "field": "DETAILS_TEXT",
             "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationRequest\\.dosageInstruction\\.route: minimum required = 1, but only found 0",
+            "inverse": true
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
+            "inverse": true
           }
         ],
         "andOperator": false
