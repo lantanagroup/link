@@ -4,7 +4,7 @@
     "title": "Incorrect display value for code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Code display values and not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
+    "guidance": "Code display values are not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
     "ruleSets": [
       {
         "rules": [
@@ -787,7 +787,7 @@
     "title": "No Medication Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "For recorded mMdication, a valid rxnorm code is required.",
+    "guidance": "For recorded Medication, a valid rxnorm code is required.",
     "ruleSets": [
       {
         "rules": [
