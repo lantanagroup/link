@@ -4,7 +4,7 @@
     "title": "Incorrect display value for code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Code display values and not usually used, except for human readability. \nAsk NHSN if they care)/validate\nAsk site/EHR about LOE to resolve",
+    "guidance": "Code display values are not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
     "ruleSets": [
       {
         "rules": [
@@ -22,7 +22,7 @@
     "title": "Unknown Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
+    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
     "ruleSets": [
       {
         "rules": [
@@ -64,7 +64,7 @@
     "title": "Unresolved Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
+    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
     "ruleSets": [
       {
         "rules": [
@@ -85,7 +85,7 @@
     "id": "Invalid_Code_in_required_ValueSet",
     "title": "Invalid Code in required ValueSet",
     "severity": "ERROR",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The code is not part of the required ValueSet. This may cause issues with measure calculation.",
     "ruleSets": [
       {
@@ -107,7 +107,7 @@
     "id": "Can_t_validate_code",
     "title": "Can't validate code",
     "severity": "WARNING",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.",
     "ruleSets": [
       {
@@ -203,7 +203,7 @@
     "id": "Invalid_code",
     "title": "Invalid code",
     "severity": "ERROR",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
     "ruleSets": [
       {
@@ -368,9 +368,24 @@
             "field": "DETAILS_TEXT",
             "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/identifier-type\\|4\\.0\\.1\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/marital-status\\|4\\.0\\.1\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/observation-interpretation\\|4\\.0\\.1\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/subscriber-relationship\\|4\\.0\\.1\\)",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -559,30 +574,6 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "No_code_provided",
-    "title": "No code provided",
-    "severity": "WARNING",
-    "acceptable": false,
-    "guidance": "No standard code was provided for a concept that impacts measure/metric calculation. This issue needs to be resolved for NHSN reporting.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "No code provided, and a code should be provided from the value set '.*' \\(.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule Condition-coding-from-common-codesystems: '.*' Failed",
             "inverse": false
           }
         ],
@@ -796,13 +787,32 @@
     "title": "No Medication Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "For recorded medication, a valid rxnorm code is required.",
+    "guidance": "For recorded Medication, a valid rxnorm code is required.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "no_procedure_code",
+    "title": "No Procedure Code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Procedure Codes'",
             "inverse": false
           }
         ],
