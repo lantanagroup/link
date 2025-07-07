@@ -453,7 +453,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
+            "regex": "resource.ofType\\(Patient\\)",
             "inverse": false
           }
         ],
@@ -496,7 +496,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
+            "regex": "resource.ofType\\(Patient\\)",
             "inverse": true
           }
         ],
