@@ -4,7 +4,7 @@
     "title": "Incorrect display value for code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Code display values and not usually used, except for human readability. \nAsk NHSN if they care)/validate\nAsk site/EHR about LOE to resolve",
+    "guidance": "Code display values are not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
     "ruleSets": [
       {
         "rules": [
@@ -22,7 +22,7 @@
     "title": "Unknown Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
+    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
     "ruleSets": [
       {
         "rules": [
@@ -64,7 +64,7 @@
     "title": "Unresolved Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Needs investigation. Needs further profiling. Some may be known CodeSystems, that should not be worried about. Importance may be contextual",
+    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
     "ruleSets": [
       {
         "rules": [
@@ -85,7 +85,7 @@
     "id": "Invalid_Code_in_required_ValueSet",
     "title": "Invalid Code in required ValueSet",
     "severity": "ERROR",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The code is not part of the required ValueSet. This may cause issues with measure calculation.",
     "ruleSets": [
       {
@@ -107,7 +107,7 @@
     "id": "Can_t_validate_code",
     "title": "Can't validate code",
     "severity": "WARNING",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.",
     "ruleSets": [
       {
@@ -203,7 +203,7 @@
     "id": "Invalid_code",
     "title": "Invalid code",
     "severity": "ERROR",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
     "ruleSets": [
       {
@@ -374,9 +374,24 @@
             "field": "DETAILS_TEXT",
             "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/identifier-type\\|4\\.0\\.1\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/marital-status\\|4\\.0\\.1\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/observation-interpretation\\|4\\.0\\.1\\)",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^No code provided, and a code should be provided from the value set '.*' \\(http:\\/\\/hl7\\.org\\/fhir\\/ValueSet\\/subscriber-relationship\\|4\\.0\\.1\\)",
+            "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -429,11 +444,11 @@
     ]
   },
   {
-    "id": "Identifier_value_starts_with_whitespace",
-    "title": "Identifier value starts with whitespace",
+    "id": "patient_resource_whitespace",
+    "title": "Patient Resource Whitespace",
     "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "This is a business identifier with whitespace at the front or back. Not important if business identifiers are not used. May want to have the whitespace trimmed.",
+    "acceptable": false,
+    "guidance": "Leading and/or trailing whitespaces were identified at the problematic locations. NHSN has deemed that leading/trailing whitespaces found within the Patient resource are unacceptable for reporting data to NHSN.  Please review the problematic Patient(s) record within your EHR and remove any leading/trailing whitespaces found within Patient chart (typically a face sheet) in the following fields: MRN, First/Last name, Home Address, Telephone, Email address. If no whitespace is found, hospital is advised to coordinate with its EHR vendor, as issue resolution may require EHR vendor FHIR data cleanup via API or database (i.e. not accessible via EHR user interface).",
     "ruleSets": [
       {
         "rules": [
@@ -444,7 +459,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
+            "regex": "resource.ofType\\(Patient\\)",
             "inverse": false
           }
         ],
@@ -472,11 +487,11 @@
     ]
   },
   {
-    "id": "Invalid_whitespace_non_identifier",
-    "title": "Invalid whitespace (non-identifier)",
+    "id": "non_patient_resource_whitespace",
+    "title": "Non-Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "This is a non-identifier string element with whitespace at the front or back. Not generally important. May want to have the whitespace trimmed.",
+    "guidance": "A leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -487,7 +502,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.*\\.identifier\\[[0-9]+\\]\\.value",
+            "regex": "resource.ofType\\(Patient\\)",
             "inverse": true
           }
         ],
@@ -573,30 +588,6 @@
     ]
   },
   {
-    "id": "No_code_provided",
-    "title": "No code provided",
-    "severity": "WARNING",
-    "acceptable": false,
-    "guidance": "No standard code was provided for a concept that impacts measure/metric calculation. This issue needs to be resolved for NHSN reporting.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "No code provided, and a code should be provided from the value set '.*' \\(.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule Condition-coding-from-common-codesystems: '.*' Failed",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
     "id": "Unable_to_validate_measure_Measure_not_found",
     "title": "Unable to validate measure (Measure not found)",
     "severity": "WARNING",
@@ -613,50 +604,6 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
-            "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "Missing_required_element",
-    "title": "Missing required element",
-    "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "(?<!Coverage\\.class\\.type): minimum required = \\d+, but only found \\d+ \\(from http://hl7\\.org/fhir/StructureDefinition/.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://hl7\\.org/fhir/us/core/StructureDefinition/.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-2: '.*' Failed",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
           }
         ],
@@ -850,13 +797,32 @@
     "title": "No Medication Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "For recorded medication, a valid rxnorm code is required.",
+    "guidance": "For recorded Medication, a valid rxnorm code is required.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "no_procedure_code",
+    "title": "No Procedure Code",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Procedure Codes'",
             "inverse": false
           }
         ],
@@ -900,6 +866,139 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_location_period",
+    "title": "Missing Location Period",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "NHSN requires Encounter location period to be present and overlapping the measure reporting period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.location\\.period: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_annotation_text",
+    "title": "Missing Annotation Text",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_specimen_type",
+    "title": "Missing Specimen Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_location_type",
+    "title": "Missing Location Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Location\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_device_type",
+    "title": "Missing Device Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Device\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "us_core_2",
+    "title": "Observations must have a results or reference component results (us-core-2).",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "US Core FHIR Implementation Guide requires that all Observations have one of the following: a single result (.value), component results, hasMember, or dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-2: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "us_core_8",
+    "title": "Missing Patient Name",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "US Core FHIR Implementation Guide requires that Patients contain a name",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
           }
         ],
