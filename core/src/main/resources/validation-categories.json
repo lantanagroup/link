@@ -438,7 +438,7 @@
     ]
   },
   {
-    "id": "patient_resource_whitspace",
+    "id": "patient_resource_whitespace",
     "title": "Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": false,
