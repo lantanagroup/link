@@ -423,11 +423,11 @@
     ]
   },
   {
-    "id": "Identifier_value_starts_with_whitespace",
-    "title": "Identifier value starts with whitespace",
+    "id": "patient_resource_whitspace",
+    "title": "Patient Resource Whitespace",
     "severity": "WARNING",
-    "acceptable": true,
-    "guidance": "This is a business identifier with whitespace at the front or back. Not important if business identifiers are not used. May want to have the whitespace trimmed.",
+    "acceptable": false,
+    "guidance": "Leading and/or trailing whitespaces were identified at the problematic locations. NHSN has deemed that leading/trailing whitespaces found within the Patient resource are unacceptable for reporting data to NHSN.  Please review the problematic Patient(s) record within your EHR and remove any leading/trailing whitespaces found within Patient chart (typically a face sheet) in the following fields: MRN, First/Last name, Home Address, Telephone, Email address. If no whitespace is found, hospital is advised to coordinate with its EHR vendor, as issue resolution may require EHR vendor FHIR data cleanup via API or database (i.e. not accessible via EHR user interface).",
     "ruleSets": [
       {
         "rules": [
@@ -466,11 +466,11 @@
     ]
   },
   {
-    "id": "Invalid_whitespace_non_identifier",
-    "title": "Invalid whitespace (non-identifier)",
+    "id": "non_patient_resource_whitespace",
+    "title": "Non-Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "This is a non-identifier string element with whitespace at the front or back. Not generally important. May want to have the whitespace trimmed.",
+    "guidance": "A leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -608,50 +608,6 @@
             "field": "DETAILS_TEXT",
             "regex": "The Measure '.*' could not be resolved, so no validation can be performed against the Measure",
             "inverse": false
-          }
-        ],
-        "andOperator": false
-      }
-    ]
-  },
-  {
-    "id": "Missing_required_element",
-    "title": "Missing required element",
-    "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "Needs investigation, cardinality is not being met based on profile. Reference and review profile to meet profile requirements.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "minimum required = \\d+, but only found \\d+ \\(from http://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/.*\\)",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-2: '.*' Failed",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "Rule us-core-8: '.*' Failed",
-            "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "MedicationRequest\\.dosageInstruction\\.route: minimum required = 1, but only found 0",
-            "inverse": true
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
-            "inverse": true
           }
         ],
         "andOperator": false
@@ -856,6 +812,139 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "MedicationAdministration\\.dosage\\.route: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_location_period",
+    "title": "Missing Location Period",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "NHSN requires Encounter location period to be present and overlapping the measure reporting period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.location\\.period: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_annotation_text",
+    "title": "Missing Annotation Text",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Annotation\\.text: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_specimen_type",
+    "title": "Missing Specimen Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Specimen\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_location_type",
+    "title": "Missing Location Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Location\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "Missing_device_type",
+    "title": "Missing Device Type",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Device\\.type: minimum required = 1, but only found 0",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "us_core_2",
+    "title": "Observations must have a results or reference component results (us-core-2).",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "US Core FHIR Implementation Guide requires that all Observations have one of the following: a single result (.value), component results, hasMember, or dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-2: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "us_core_8",
+    "title": "Missing Patient Name",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "US Core FHIR Implementation Guide requires that Patients contain a name",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule us-core-8: '.*' Failed",
             "inverse": false
           }
         ],
