@@ -209,19 +209,15 @@
       {
         "rules": [
           {
-            "field": "SEVERITY",
-            "regex": "^error$"
-          },
-          {
-            "field": "CODE",
-            "regex": "^code-invalid$"
+            "field": "DETAILS_TEXT",
+            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+            "regex": "Unknown code '.*' for in-memory expansion of ValueSet '.*'"
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -241,22 +237,22 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://fhir-ehr\\.cerner\\.com/r4/StructureDefinition/.*",
+            "regex": "Unknown extension https?://fhir-ehr\\.cerner\\.com/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://electronichealth\\.se/fhir/StructureDefinition/.*",
+            "regex": "Unknown extension https?://electronichealth\\.se/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open\\.epic\\.com/FHIR/StructureDefinition/extension.*",
+            "regex": "Unknown extension https?://open\\.epic\\.com/.*",
             "inverse": false
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://open\\.epic\\.com/fhir/extensions.*",
+            "regex": "Unknown extension https?://hl7\\.org/fhir/us/core/.*",
             "inverse": false
           },
           {
@@ -266,7 +262,17 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "Unknown extension https?://nictiz\\.nl/fhir/StructureDefinition/.*",
+            "regex": "Unknown extension https?://hl7\\.org/fhir/5\\.0/StructureDefinition/extension.*",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension https?://nictiz\\.nl/.*",
+            "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown extension http://terminology\\.hl7\\.org/CodeSystem/data-absent-reason",
             "inverse": false
           }
         ],
@@ -453,7 +459,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.ofType\\(Patient\\)",
+            "regex": "resource\\.ofType\\(Patient\\)",
             "inverse": false
           }
         ],
@@ -496,7 +502,7 @@
           },
           {
             "field": "EXPRESSION",
-            "regex": "resource.ofType\\(Patient\\)",
+            "regex": "resource\\.ofType\\(Patient\\)",
             "inverse": true
           }
         ],
@@ -684,6 +690,44 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "The markdown contains content that appears to be an embedded HTML tag starting at '.*'",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "illegal_character_in_xml",
+    "title": "Illegal Character in XML",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "The text contains characters that are illegal in FHIR XML - please check for data integrity.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "This content includes the characters? .+ \\(hex values?\\)\\.",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "unreasonable_decimal",
+    "title": "Unreasonable Decimal",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value was found to be outside the range of reasonable decimals - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The value '.*' is outside the range of commonly/reasonably supported decimals",
             "inverse": false
           }
         ],
