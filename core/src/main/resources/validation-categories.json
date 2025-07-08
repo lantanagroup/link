@@ -708,7 +708,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "This content includes the character \\[.\\] \\(hex value\\)\\. This character is illegal in the XML version of FHIR, and there is generally no valid use for such characters",
+            "regex": "This content includes the characters? .+ \\(hex values?\\)\\.",
             "inverse": false
           }
         ],
