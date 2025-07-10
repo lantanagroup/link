@@ -420,30 +420,6 @@
     ]
   },
   {
-    "id": "fhir_id_not_sent_for_reference",
-    "title": "FHIR ID not sent for Reference",
-    "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "All Reference elements requires a reference sent as ResourceType/id.",
-    "ruleSets": [
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "A Reference without an actual reference or identifier should have a display",
-            "inverse": false
-          },
-          {
-            "field": "EXPRESSION",
-            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\.ofType\\(MedicationRequest\\)\\.where\\(id = '.*'\\)\\.requester",
-            "inverse": true
-          }
-        ],
-        "andOperator": true
-      }
-    ]
-  },
-  {
     "id": "patient_resource_whitespace",
     "title": "Patient Resource Whitespace",
     "severity": "WARNING",
