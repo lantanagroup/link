@@ -234,10 +234,25 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     } else {
       Submission submission = bundler.generateSubmission(report, fileName, this.config.getPretty());
       String path = this.getFilePath((!orgId.isEmpty() ? orgId : "submission") + "_" + outputPath).toString();
-      //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
-      FileUtils.deleteDirectory(new File(path));
-      FileUtils.copyDirectory(submission.getRoot().toFile(), new File(path), false);
-      FileUtils.deleteDirectory(submission.getRoot().toFile());
+      try {
+        //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
+        FileUtils.deleteDirectory(new File(path));
+        FileUtils.copyDirectory(submission.getRoot().toFile(), new File(path), false);
+        FileUtils.deleteDirectory(submission.getRoot().toFile());
+      } catch (IOException e) {
+        // Clean up any partial output on failure
+        try {
+          FileUtils.deleteDirectory(new File(path));
+        } catch (IOException cleanup) {
+          logger.warn("Failed to clean up after submission transfer failure: {}", path, cleanup);
+        }
+        try {
+          FileUtils.deleteDirectory(submission.getRoot().toFile());
+        } catch (IOException cleanup) {
+          logger.warn("Failed to clean up after submission transfer failure: {}", path, cleanup);
+        }
+        throw new RuntimeException("Failed to transfer submission directory atomically", e);
+      }
       logger.info("Saved submission to file system: {}", path);
     }
   }
