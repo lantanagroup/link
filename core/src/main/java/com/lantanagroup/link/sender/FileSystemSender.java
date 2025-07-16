@@ -236,7 +236,8 @@ public class FileSystemSender extends GenericSender implements IReportSender {
       String path = this.getFilePath((!orgId.isEmpty() ? orgId : "submission") + "_" + outputPath).toString();
       //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
       FileUtils.deleteDirectory(new File(path));
-      FileUtils.moveDirectory(submission.getRoot().toFile(), new File(path));
+      FileUtils.copyDirectory(submission.getRoot().toFile(), new File(path), false);
+      FileUtils.deleteDirectory(submission.getRoot().toFile());
       logger.info("Saved submission to file system: {}", path);
     }
   }
