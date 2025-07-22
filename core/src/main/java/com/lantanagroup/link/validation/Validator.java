@@ -2,7 +2,6 @@ package com.lantanagroup.link.validation;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
-import ca.uhn.fhir.context.support.IValidationSupport;
 import ca.uhn.fhir.validation.*;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
@@ -422,17 +421,13 @@ public class Validator {
             .map(Bundle.BundleEntryComponent::getResource)
             .filter(Objects::nonNull)
             .forEachOrdered(measureDefinitionBasedValidationSupport::addResource);
-    UnknownCodeSystemWarningValidationSupport unknownCodeSystemWarningValidationSupport =
-            new UnknownCodeSystemWarningValidationSupport(fhirContext);
-    unknownCodeSystemWarningValidationSupport.setNonExistentCodeSystemSeverity(IValidationSupport.IssueSeverity.WARNING);
     ValidationSupportChain validationSupportChain = new ValidationSupportChain(
             new DefaultProfileValidationSupport(fhirContext),
             ClasspathBasedValidationSupport.getInstance(),
             measureDefinitionBasedValidationSupport,
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
-            new CommonCodeSystemsTerminologyService(fhirContext),
-            unknownCodeSystemWarningValidationSupport);
+            new CommonCodeSystemsTerminologyService(fhirContext));
     CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
     IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
     validator.registerValidatorModule(validatorModule);
