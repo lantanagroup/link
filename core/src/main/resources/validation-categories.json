@@ -22,7 +22,7 @@
     "title": "Unknown Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
+    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -64,7 +64,7 @@
     "title": "Unresolved Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Likely a locally defined code system. This is not problematic for NHSN reporting",
+    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -86,7 +86,7 @@
     "title": "Invalid Code in required ValueSet",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "The code is not part of the required ValueSet. This may cause issues with measure calculation.",
+    "guidance": "A required code was missing. This may cause issues with measure calculation.",
     "ruleSets": [
       {
         "rules": [
@@ -108,7 +108,7 @@
     "title": "Can't validate code",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.",
+    "guidance": "The terminology server should be reviewed.",
     "ruleSets": [
       {
         "rules": [
@@ -127,7 +127,7 @@
     "title": "Unresolved Epic Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is an Epic proprietary Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
+    "guidance": "This is an Epic-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -151,7 +151,7 @@
     "title": "Unresolved Medispan Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is an Medispan proprietary Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
+    "guidance": "This is a Medispan-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -170,7 +170,7 @@
     "title": "Unresolved and Unrecognized Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is an unrecognized Code System and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is handled under another logged issue)",
+    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -196,8 +196,7 @@
           }
         ],
         "andOperator": true
-      }
-    ]
+      }    ]
   },
   {
     "id": "Invalid_code",
@@ -347,7 +346,7 @@
     "title": "Possible matching profile",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
+    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating).",
     "ruleSets": [
       {
         "rules": [
@@ -770,7 +769,7 @@
   },
   {
     "id": "no_medication_code",
-    "title": "No Medication Code",
+    "title": "Missing RxNorm Medication Code",
     "severity": "ERROR",
     "acceptable": false,
     "guidance": "For recorded Medication, a valid rxnorm code is required.",
@@ -789,7 +788,7 @@
   },
   {
     "id": "no_procedure_code",
-    "title": "No Procedure Code",
+    "title": "Missing Standard Procedure Code",
     "severity": "ERROR",
     "acceptable": true,
     "guidance": "For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
@@ -873,7 +872,7 @@
     "title": "Missing Annotation Text",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "guidance": "Annotation.text element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -892,7 +891,7 @@
     "title": "Missing Specimen Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "guidance": "Specimen.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
     "ruleSets": [
       {
         "rules": [
@@ -911,7 +910,7 @@
     "title": "Missing Location Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "guidance": "Location.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
     "ruleSets": [
       {
         "rules": [
@@ -930,7 +929,7 @@
     "title": "Missing Device Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "This element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "guidance": "Device.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -949,7 +948,7 @@
     "title": "Observations must have a results or reference component results (us-core-2).",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "US Core FHIR Implementation Guide requires that all Observations have one of the following: a single result (.value), component results, hasMember, or dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
+    "guidance": "Observations must have one of the following: a single result (.value), component results, .hasMember, or .dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
     "ruleSets": [
       {
         "rules": [
@@ -968,7 +967,7 @@
     "title": "Missing Patient Name",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "US Core FHIR Implementation Guide requires that Patients contain a name",
+    "guidance": "Patient.name is required and was found to be missing",
     "ruleSets": [
       {
         "rules": [
