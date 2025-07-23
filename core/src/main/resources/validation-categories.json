@@ -967,7 +967,7 @@
     "title": "Missing Patient Name",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Patient.name is required and was found to be missing",
+    "guidance": "Patient.name is required and was found to be missing.",
     "ruleSets": [
       {
         "rules": [
