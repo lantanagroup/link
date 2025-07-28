@@ -407,7 +407,6 @@ public class Validator {
    *   <li>Snapshot-generating support</li>
    *   <li>In-memory terminology service</li>
    *   <li>Common code systems terminology service</li>
-   *   <li>Unknown code system warning support</li>
    * </ul>
    */
   private static FhirValidator initialize(List<Bundle> support) {
