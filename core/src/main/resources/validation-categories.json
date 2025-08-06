@@ -980,5 +980,43 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "encounter_identifier_system",
+    "title": "Missing Encounter Identifier System",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Encounter.identifier.system is required and was found to be missing.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.identifier\\.system: minimum required = 1, but only found 0 \\(from http:\/\/hl7\\.org\/fhir\/us\/core\/StructureDefinition\/us-core-encounter\\|\\d+\\.\\d+\\.\\d+\\)",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "duplicate_id_found",
+    "title": "Duplicate FHIR ID Found",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A FHIR resource must have a unique id. Update any duplicate resource and references with a unique FHIR id.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Duplicate id value .*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
