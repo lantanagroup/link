@@ -414,7 +414,7 @@
             "inverse": false
           }
         ],
-        "andOperator": true
+        "andOperator": false
       }
     ]
   },
@@ -556,6 +556,11 @@
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
+            "inverse": true
           }
         ],
         "andOperator": false
@@ -609,7 +614,7 @@
     "id": "Invalid_dateTime_format",
     "title": "Invalid dateTime format.",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
     "ruleSets": [
       {
@@ -1012,6 +1017,63 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Duplicate id value .*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_value_positive_integer",
+    "title": "Invalid Value for Positive Integer",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value of 0 or negative number is not valid. Please check for data to ensure minimum value requirement.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "value is less than permitted minimum value of .*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_numerator_denominator_ratio",
+    "title": "Missing Numerator or Denominator for Ratio",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Both a numerator and denominator must be present - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule rat-1 .* Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "non_loinc_code_glucose_point_of_testing",
+    "title": "Non-LOINC Code for Glucose Point of Testing",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
             "inverse": false
           }
         ],
