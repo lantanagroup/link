@@ -414,7 +414,7 @@
             "inverse": false
           }
         ],
-        "andOperator": false
+        "andOperator": true
       }
     ]
   },
@@ -556,14 +556,19 @@
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set '.*' .*, and a coding should come from this value set unless it has no suitable code \\(note that the validator cannot judge what is suitable\\)",
             "inverse": false
-          },
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
-            "inverse": true
           }
         ],
         "andOperator": false
+      },
+      {
+        "rules": [
+            {
+              "field": "DETAILS_TEXT",
+              "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
+              "inverse": true
+            }
+          ],
+        "andOperator": true
       }
     ]
   },
@@ -572,7 +577,7 @@
     "title": "Unable to validate measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "This appears to be an issue in the validation process and should be resolved as it may be hiding other issues.",
+    "guidance": "This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
     "ruleSets": [
       {
         "rules": [
@@ -595,7 +600,7 @@
     "id": "Unresolved_url",
     "title": "Unresolved URL",
     "severity": "WARNING",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The URL in the validation details is not resolvable. Link may not have the profiles/resources loaded that are represented by the canonical URL.",
     "ruleSets": [
       {
