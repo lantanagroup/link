@@ -1059,7 +1059,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "Rule rat-1 .* Failed",
+            "regex": "Rule rat-1: '.*' Failed",
             "inverse": false
           }
         ],
