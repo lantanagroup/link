@@ -559,6 +559,16 @@
           }
         ],
         "andOperator": false
+      },
+      {
+        "rules": [
+            {
+              "field": "DETAILS_TEXT",
+              "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
+              "inverse": true
+            }
+          ],
+        "andOperator": true
       }
     ]
   },
@@ -567,7 +577,7 @@
     "title": "Unable to validate measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "This appears to be an issue in the validation process and should be resolved as it may be hiding other issues.",
+    "guidance": "This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
     "ruleSets": [
       {
         "rules": [
@@ -590,7 +600,7 @@
     "id": "Unresolved_url",
     "title": "Unresolved URL",
     "severity": "WARNING",
-    "acceptable": true,
+    "acceptable": false,
     "guidance": "The URL in the validation details is not resolvable. Link may not have the profiles/resources loaded that are represented by the canonical URL.",
     "ruleSets": [
       {
@@ -609,7 +619,7 @@
     "id": "Invalid_dateTime_format",
     "title": "Invalid dateTime format.",
     "severity": "ERROR",
-    "acceptable": false,
+    "acceptable": true,
     "guidance": "A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
     "ruleSets": [
       {
@@ -974,6 +984,101 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Rule us-core-8: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "encounter_identifier_system",
+    "title": "Missing Encounter Identifier System",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Encounter.identifier.system is required and was found to be missing.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Encounter\\.identifier\\.system: minimum required = 1, but only found 0 \\(from http:\/\/hl7\\.org\/fhir\/us\/core\/StructureDefinition\/us-core-encounter\\|\\d+\\.\\d+\\.\\d+\\)",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "duplicate_id_found",
+    "title": "Duplicate FHIR ID Found",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "A FHIR resource must have a unique id. Update any duplicate resource and references with a unique FHIR id.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Duplicate id value .*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "invalid_value_positive_integer",
+    "title": "Invalid Value for Positive Integer",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "A value of 0 or negative number is not valid. Please check for data to ensure minimum value requirement.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "value is less than permitted minimum value of .*",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_numerator_denominator_ratio",
+    "title": "Missing Numerator or Denominator for Ratio",
+    "severity": "ERROR",
+    "acceptable": true,
+    "guidance": "Both a numerator and denominator must be present - please check for data accuracy.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Rule rat-1: '.*' Failed",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "non_loinc_code_glucose_point_of_testing",
+    "title": "Non-LOINC Code for Glucose Point of Testing",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
             "inverse": false
           }
         ],
