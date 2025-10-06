@@ -199,17 +199,32 @@
       }    ]
   },
   {
-    "id": "Invalid_code",
-    "title": "Invalid code",
+    "id": "unknown_local_code",
+    "title": "Unknown Local Code",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
+    "acceptable": true,
+    "guidance": "The code is not recognized to be part of the ValueSet.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Unknown code 'https?://open\\.epic\\.com/FHIR/StructureDefinition/.*' for in-memory expansion of ValueSet$",
+            "inverse": true
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code 'urn:oid:1\\.2\\.246\\.537\\.6\\.96.*' for in-memory expansion of ValueSet",
+            "inverse": true
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code 'urn:oid:1\\.2\\.840\\.114350\\..*' for in-memory expansion of ValueSet",
+            "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
@@ -639,7 +654,7 @@
     "title": "Expected code not found for Encounter class",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptbale for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
+    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptable for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
     "ruleSets": [
       {
         "rules": [
@@ -1079,6 +1094,25 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_gender",
+    "title": "Missing Patient Gender",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "Patient gender is required to be present and contain a valid HL7 Administrative Gender code.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Patient\\.gender\\: minimum required = 1, but only found 0 \\(from http\\://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient\\|[0-9.]+\\)$",
             "inverse": false
           }
         ],
