@@ -510,7 +510,7 @@
     "title": "Bundle Slice Requirements Not Met",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "This is likely a secondary issue. If the resource can't validate then it can't be counted as meeting the slicing requirements. Likely addressing the underlying issue will make this issue go away. ",
+    "guidance": "External: This is likely a secondary issue. If the resource can't validate then it can't be counted as meeting the slicing requirements. Likely addressing the underlying issue will make this issue go away.",
     "ruleSets": [
       {
         "rules": [
@@ -597,7 +597,7 @@
     "title": "Unable to Validate Measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
+    "guidance": "Internal: This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
     "ruleSets": [
       {
         "rules": [
@@ -1097,7 +1097,7 @@
     "title": "Non-LOINC Code for Glucose Point of Testing",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "guidance": "External: The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
         "rules": [
@@ -1116,7 +1116,7 @@
     "title": "Missing Patient Gender",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Patient gender is required to be present and contain a valid HL7 Administrative Gender code.",
+    "guidance": "External: Patient gender is required to be present and contain a valid HL7 Administrative Gender code.",
     "ruleSets": [
       {
         "rules": [
