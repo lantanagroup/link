@@ -486,7 +486,7 @@
     "title": "Non-Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "External: A leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
+    "guidance": "External: Leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
