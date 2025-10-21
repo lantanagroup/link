@@ -1141,7 +1141,7 @@
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Patient\\.link\\.other:\\ minimum required = 1, but only found 0 \\(from http\\://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient\\|[0-9.]+\\)$",
+            "regex": "^Patient\\.link\\.other: minimum required = 1, but only found 0 \\(from http\\://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient\\|[0-9.]+\\)$",
             "inverse": false
           }
         ],
