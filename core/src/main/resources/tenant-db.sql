@@ -116,7 +116,7 @@ IF NOT EXISTS (SELECT *
         (
             id               uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
             queryId          uniqueidentifier NULL REFERENCES dbo.query (id),
-            patientId        nvarchar(64)     NULL,
+            patientId        nvarchar(256)    NULL,
             resourceType     nvarchar(64)     NOT NULL,
             resourceId       nvarchar(256)    NOT NULL,
             originalResource nvarchar(max)    NOT NULL
@@ -138,9 +138,9 @@ IF NOT EXISTS (SELECT *
         CREATE TABLE dbo.patientData
         (
             id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
-            patientId    nvarchar(64)     NOT NULL,
+            patientId    nvarchar(256)    NOT NULL,
             resourceType nvarchar(64)     NOT NULL,
-            resourceId   nvarchar(64)     NOT NULL,
+            resourceId   nvarchar(256)    NOT NULL,
             resource     nvarchar(max)    NOT NULL,
             retrieved    datetime2        NOT NULL,
             UNIQUE (patientId, resourceType, resourceId)
@@ -170,9 +170,9 @@ IF NOT EXISTS (SELECT *
         (
             id           uniqueidentifier NOT NULL PRIMARY KEY DEFAULT NEWID(),
             reportId     nvarchar(128)    NOT NULL REFERENCES dbo.report (id),
-            patientId    nvarchar(64)     NOT NULL,
+            patientId    nvarchar(256)    NOT NULL,
             resourceType nvarchar(64)     NOT NULL,
-            resourceId   nvarchar(64)     NOT NULL,
+            resourceId   nvarchar(256)    NOT NULL,
             UNIQUE (reportId, patientId, resourceType, resourceId),
             INDEX ix_reportPatientData_reportId_patientId (reportId, patientId)
         );
@@ -190,7 +190,7 @@ IF NOT EXISTS (SELECT *
             id            nvarchar(128) NOT NULL PRIMARY KEY,
             reportId      nvarchar(128) NOT NULL REFERENCES dbo.report (id),
             measureId     nvarchar(64)  NOT NULL,
-            patientId     nvarchar(64)  NOT NULL,
+            patientId     nvarchar(256) NOT NULL,
             measureReport nvarchar(max) NOT NULL,
             UNIQUE (reportId, measureId, patientId)
         );
