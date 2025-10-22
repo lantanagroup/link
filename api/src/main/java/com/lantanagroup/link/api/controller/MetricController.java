@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -486,19 +487,25 @@ public class MetricController extends BaseController {
 
     var tenantService = TenantService.create(sharedService, tenantId);
 
-    LocalDateTime zdtStart = null, zdtEnd = null;
-    if(startDate != null && endDate != null)
+    LocalDateTime ldtStart = null, ldtEnd = null;
+    try {
+      if (startDate != null && endDate != null) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+        ldtStart = LocalDateTime.parse(startDate, formatter);
+        ldtEnd = LocalDateTime.parse(endDate, formatter);
+      }
+    }
+    catch(DateTimeParseException ex)
     {
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
-      zdtStart = LocalDateTime.parse(startDate, formatter);
-      zdtEnd = LocalDateTime.parse(endDate, formatter);
+      logger.error("Error parsing DateTime parameter: " + ex.getMessage());
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    var dataSize = tenantService.getPatientDataReportSize(patientId, resourceType, zdtStart, zdtEnd);
+    var dataSize = tenantService.getPatientDataReportSize(patientId, resourceType, ldtStart, ldtEnd);
 
     var summary = new DataSizeSummary();
-    summary.setStartDate(zdtStart);
-    summary.setEndDate(zdtEnd);
+    summary.setStartDate(ldtStart);
+    summary.setEndDate(ldtEnd);
     double sum = 0.0;
     var dataCountMap = summary.getCountDataType();
     var dataAverageMap = summary.getAverageDataSize();
