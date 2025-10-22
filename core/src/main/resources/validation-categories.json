@@ -1,10 +1,10 @@
 [
   {
-    "id": "Incorrect_display_value_for_code",
-    "title": "Incorrect display value for code",
+    "id": "incorrect_display_value_for_code",
+    "title": "Incorrect Display Value for Code",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Code display values are not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
+    "guidance": "External: Code display values are not usually used, except for human readability. Incorrect display values are acceptable for reporting to NHSN",
     "ruleSets": [
       {
         "rules": [
@@ -18,11 +18,11 @@
     ]
   },
   {
-    "id": "Unknown_Code_System",
+    "id": "unknown_code_system",
     "title": "Unknown Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
+    "guidance": "Internal: This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -53,6 +53,11 @@
           {
             "field": "DETAILS_TEXT",
             "regex": "Unknown code 'urn:oid:1\\.2\\.246\\.537\\.6\\.96.*' for in-memory expansion of ValueSet"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "The Coding provided \\(.*\\) is not in the value set 'V3 Value SetActEncounterCode'",
+            "inverse": false
           }
         ],
         "andOperator": false
@@ -60,11 +65,11 @@
     ]
   },
   {
-    "id": "Unresolved_Code_System",
+    "id": "unresolved_code_system",
     "title": "Unresolved Code System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
+    "guidance": "Internal: This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -82,11 +87,11 @@
     ]
   },
   {
-    "id": "Invalid_Code_in_required_ValueSet",
-    "title": "Invalid Code in required ValueSet",
+    "id": "invalid_code_in_required_valueset",
+    "title": "Invalid Code in Required ValueSet",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "A required code was missing. This may cause issues with measure calculation.",
+    "guidance": "External: The code is not part of the required ValueSet. This may cause issues with measure calculation.",
     "ruleSets": [
       {
         "rules": [
@@ -104,11 +109,11 @@
     ]
   },
   {
-    "id": "Can_t_validate_code",
-    "title": "Can't validate code",
+    "id": "unable_to_validate_code",
+    "title": "Unable to Validate Code",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "The terminology server should be reviewed.",
+    "guidance": "Internal: There is an issue with the way the CodeSystem is set up on the terminology server. The full code set for the system does not appear to be on the server. The terminology server should be updated.",
     "ruleSets": [
       {
         "rules": [
@@ -123,11 +128,11 @@
     ]
   },
   {
-    "id": "Unresolved_Epic_Code_System_URI",
+    "id": "unresolved_epic_code_system_uri",
     "title": "Unresolved Epic Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is an Epic-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
+    "guidance": "Internal: This is an Epic-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -147,11 +152,11 @@
     ]
   },
   {
-    "id": "Unresolved_Medispan_Code_System_URI",
+    "id": "unresolved_medispan_code_system_uri",
     "title": "Unresolved Medispan Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is a Medispan-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
+    "guidance": "Internal: This is a Medispan-defined code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -166,11 +171,11 @@
     ]
   },
   {
-    "id": "Unresolved_and_Unrecognized_Code_System_URI",
+    "id": "unresolved_and_unrecognized_code_system_uri",
     "title": "Unresolved and Unrecognized Code System URI",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
+    "guidance": "Internal: This is an unrecognized code system and is only a concern if there is not another coding that provides a standard recognized coding Code System (which is categorized as 'Missing Standard [X] Code')",
     "ruleSets": [
       {
         "rules": [
@@ -199,17 +204,32 @@
       }    ]
   },
   {
-    "id": "Invalid_code",
-    "title": "Invalid code",
+    "id": "unknown_local_code",
+    "title": "Unknown Local Code",
     "severity": "ERROR",
-    "acceptable": false,
-    "guidance": "The code is not recognized to be part of the ValueSet. This may cause issues with measure calculation",
+    "acceptable": true,
+    "guidance": "External: The code is not recognized to be part of the ValueSet.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "^Unknown Code '.*' in the system '.*'; The provided code .* is not in the value set '.*'"
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Unknown code 'https?://open\\.epic\\.com/FHIR/StructureDefinition/.*' for in-memory expansion of ValueSet",
+            "inverse": true
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code 'urn:oid:1\\.2\\.246\\.537\\.6\\.96.*' for in-memory expansion of ValueSet",
+            "inverse": true
+          },
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "Unknown code 'urn:oid:1\\.2\\.840\\.114350\\..*' for in-memory expansion of ValueSet",
+            "inverse": true
           },
           {
             "field": "DETAILS_TEXT",
@@ -221,11 +241,11 @@
     ]
   },
   {
-    "id": "Unknown_Extension",
+    "id": "unknown_extension",
     "title": "Unknown Extension",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "Systems are allowed to include extensions (additional data). Extensions that do not modify the meaning of the data (modifierExtensions) can be safely ignored. This is not a modifierExtension.",
+    "guidance": "Internal: Systems are allowed to include extensions (additional data). Extensions that do not modify the meaning of the data (modifierExtensions) can be safely ignored. This is not a modifierExtension.",
     "ruleSets": [
       {
         "rules": [
@@ -280,11 +300,11 @@
     ]
   },
   {
-    "id": "Additional_data_beyond_nhsn_specification",
-    "title": "Additional data beyond NHSN specification",
+    "id": "additional_data_beyond_nhsn_specification",
+    "title": "Additional Data Beyond NHSN Specification",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "No impact to normal operation. Recommend reviewing during onboarding and initial testing.",
+    "guidance": "External: No impact to normal operation. Recommend reviewing during onboarding and initial testing.",
     "ruleSets": [
       {
         "rules": [
@@ -299,11 +319,11 @@
     ]
   },
   {
-    "id": "Unable_to_match_profile",
-    "title": "Unable to match profile",
+    "id": "unable_to_match_profile",
+    "title": "Unable to Match Profile",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
+    "guidance": "Internal: This could indicate an underlying issue in the resource (the resource is not validating). FHIR SME may need to review.",
     "ruleSets": [
       {
         "rules": [
@@ -323,11 +343,11 @@
     ]
   },
   {
-    "id": "Does_not_match_preferred_ValueSet",
-    "title": "Does not match preferred ValueSet",
+    "id": "does_not_match_preferred_valueset",
+    "title": "Does Not Match Preferred ValueSet",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
+    "guidance": "External: This could be indicative of a problem if the data element is part of the measure and would not enable the resource to be included in the measure calculation appropriately.",
     "ruleSets": [
       {
         "rules": [
@@ -342,11 +362,11 @@
     ]
   },
   {
-    "id": "Possible_matching_profile",
-    "title": "Possible matching profile",
+    "id": "possible_matching_profile",
+    "title": "Possible Matching Profile",
     "severity": "INFORMATION",
     "acceptable": true,
-    "guidance": "This could indicate an underlying issue in the resource (the resource is not validating).",
+    "guidance": "Internal: This could indicate an underlying issue in the resource (the resource is not validating).",
     "ruleSets": [
       {
         "rules": [
@@ -365,7 +385,7 @@
     "title": "FHIR Standard Recommendations and Best Practices",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "While it is encouraged to follow FHIR standards and best practices for interoperability, resolutions to these issues are not required for reporting to NHSN.",
+    "guidance": "External: While it is encouraged to follow FHIR standards and best practices for interoperability, resolutions to these issues are not required for reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -395,11 +415,11 @@
     ]
   },
   {
-    "id": "MedicationRequest_requester_does_not_have_a_proper_reference",
-    "title": "MedicationRequest.requester does not have a proper reference",
+    "id": "medicationrequest_requester_does_not_have_a_proper_reference",
+    "title": "MedicationRequest.requester Does Not Have a Proper Reference",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "No identity or reference for requester (Provider). Safe to ignore when ordering provider is not needed.",
+    "guidance": "External: No identity or reference for requester (Provider). Safe to ignore when ordering provider is not needed.",
     "ruleSets": [
       {
         "rules": [
@@ -423,7 +443,7 @@
     "title": "Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "Leading and/or trailing whitespaces were identified at the problematic locations. NHSN has deemed that leading/trailing whitespaces found within the Patient resource are unacceptable for reporting data to NHSN.  Please review the problematic Patient(s) record within your EHR and remove any leading/trailing whitespaces found within Patient chart (typically a face sheet) in the following fields: MRN, First/Last name, Home Address, Telephone, Email address. If no whitespace is found, hospital is advised to coordinate with its EHR vendor, as issue resolution may require EHR vendor FHIR data cleanup via API or database (i.e. not accessible via EHR user interface).",
+    "guidance": "External: Leading and/or trailing whitespaces were identified at the problematic locations. NHSN has deemed that leading/trailing whitespaces found within the Patient resource are unacceptable for reporting data to NHSN.  Please review the problematic Patient(s) record within your EHR and remove any leading/trailing whitespaces found within Patient chart (typically a face sheet) in the following fields: MRN, First/Last name, Home Address, Telephone, Email address. If no whitespace is found, hospital is advised to coordinate with its EHR vendor, as issue resolution may require EHR vendor FHIR data cleanup via API or database (i.e. not accessible via EHR user interface).",
     "ruleSets": [
       {
         "rules": [
@@ -443,11 +463,11 @@
     ]
   },
   {
-    "id": "No_measure_score_allowed_with_cohort",
-    "title": "No measure score allowed with cohort",
+    "id": "no_measure_score_allowed_with_cohort",
+    "title": "No Measure Score Allowed with Cohort",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "The MeasureReport violates a business rule regarding MeasureScore. This issue does not impact metric calculation or NHSN's data pipeline, and therefore is acceptable for reporting data into NHSN.",
+    "guidance": "Internal: The MeasureReport violates a business rule regarding MeasureScore. This issue does not impact metric calculation or NHSN's data pipeline, and therefore is acceptable for reporting data into NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -466,7 +486,7 @@
     "title": "Non-Patient Resource Whitespace",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "A leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
+    "guidance": "External: Leading or trailing whitespaces were identified at the problematic locations. Whitespaces found in any non-Patient resource are acceptable for data reporting to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -486,11 +506,11 @@
     ]
   },
   {
-    "id": "Minimum_slice_occurrence_not_met",
-    "title": "Minimum slice occurrence not met",
+    "id": "bundle_slice_requirements_not_met",
+    "title": "Bundle Slice Requirements Not Met",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "This is likely a secondary issue. If the resource can't validate then it can't be counted as meeting the slicing requirements. Likely addressing the underlying issue will make this issue go away. ",
+    "guidance": "External: This is likely a secondary issue. If the resource can't validate then it can't be counted as meeting the slicing requirements. Likely addressing the underlying issue will make this issue go away.",
     "ruleSets": [
       {
         "rules": [
@@ -505,11 +525,11 @@
     ]
   },
   {
-    "id": "Link_Error_using_old_URL",
-    "title": "Link Error using old URL",
+    "id": "link_error_using_old_url",
+    "title": "Link Error Using Old URL",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "This is an issue with NHSNLink (using an old url) and should be reported in Jira.",
+    "guidance": "Internal: This is an issue with NHSNLink (using an old url) and should be reported in Jira.",
     "ruleSets": [
       {
         "rules": [
@@ -524,11 +544,11 @@
     ]
   },
   {
-    "id": "No_codes_from_an_extensible_binding_ValueSet",
-    "title": "No codes from an extensible binding ValueSet",
+    "id": "no_codes_from_an_extensible_binding_valueset",
+    "title": "No Codes From an Extensible Binding ValueSet",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "guidance": "External: The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
         "rules": [
@@ -573,11 +593,11 @@
     ]
   },
   {
-    "id": "Unable_to_validate_measure_Measure_not_found",
-    "title": "Unable to validate measure (Measure not found)",
+    "id": "unable_to_validate_measure_measure_not_found",
+    "title": "Unable to Validate Measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
+    "guidance": "Internal: This appears to be an issue in the validation process and should be resolved within NHSNLink as it may be hiding other issues.",
     "ruleSets": [
       {
         "rules": [
@@ -597,11 +617,11 @@
     ]
   },
   {
-    "id": "Unresolved_url",
+    "id": "unresolved_url",
     "title": "Unresolved URL",
     "severity": "WARNING",
     "acceptable": false,
-    "guidance": "The URL in the validation details is not resolvable. Link may not have the profiles/resources loaded that are represented by the canonical URL.",
+    "guidance": "Internal: The URL in the validation details is not resolvable. Link may not have the profiles/resources loaded that are represented by the canonical URL.",
     "ruleSets": [
       {
         "rules": [
@@ -616,11 +636,11 @@
     ]
   },
   {
-    "id": "Invalid_dateTime_format",
-    "title": "Invalid dateTime format.",
+    "id": "invalid_dateTime_format",
+    "title": "Invalid dateTime Format.",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
+    "guidance": "External: A date-time format must include the timezone offset for precision. Captured as +/-zzzz.",
     "ruleSets": [
       {
         "rules": [
@@ -636,10 +656,10 @@
   },
   {
     "id": "no_expected_code_found_for_encounter_class",
-    "title": "Expected code not found for Encounter class",
+    "title": "Expected Encounter Class Code Not Found",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptbale for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
+    "guidance": "External: Encounter class is expected to contain a code from here (https://terminology.hl7.org/5.0.0/ValueSet-v3-ActEncounterCode.html). However, a code outside of this ValueSet is acceptable for reporting into NHSN given a standard Encounter.type and/or Location code exist.",
     "ruleSets": [
       {
         "rules": [
@@ -663,7 +683,7 @@
     "title": "Embedded HTML Found",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "The text contians content that appears to be an embedded HTML tag(s). If this content is rendered to HTML without appropriate post-processing, it may be a security risk. NHSN has deemed with issue acceptable for reporting into NHSN.",
+    "guidance": "External: The text contains content that appears to be an embedded HTML tag(s). If this content is rendered to HTML without appropriate post-processing, it may be a security risk. NHSN has deemed with issue acceptable for reporting into NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -683,11 +703,11 @@
     ]
   },
   {
-    "id": "illegal_character_in_xml",
-    "title": "Illegal Character in XML",
+    "id": "illegal_character_in_coverage_beneficiary",
+    "title": "Illegal Character in Coverage Beneficiary",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "The text contains characters that are illegal in FHIR XML - please check for data integrity.",
+    "guidance": "External: The element contains non-text characters - please check for data integrity.",
     "ruleSets": [
       {
         "rules": [
@@ -695,9 +715,14 @@
             "field": "DETAILS_TEXT",
             "regex": "This content includes the characters? .+ \\(hex values?\\)\\.",
             "inverse": false
+          },
+          {
+            "field": "EXPRESSION",
+            "regex": "Bundle.entry\\[\\d+\\]\\.resource\\.ofType\\(Coverage\\)\\.where\\(id = '.*'\\)\\.beneficiary.display",
+            "inverse": false
           }
         ],
-        "andOperator": false
+        "andOperator": true
       }
     ]
   },
@@ -706,7 +731,7 @@
     "title": "Unreasonable Decimal",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "A value was found to be outside the range of reasonable decimals - please check for data accuracy.",
+    "guidance": "External: A value was found to be outside the range of reasonable decimals - please check for data accuracy.",
     "ruleSets": [
       {
         "rules": [
@@ -725,7 +750,7 @@
     "title": "Unreasonable Unit of Time",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "A value was found to be outside the range of reasonable years - please check for data accuracy.",
+    "guidance": "External: A value was found to be outside the range of reasonable years - please check for data accuracy.",
     "ruleSets": [
       {
         "rules": [
@@ -744,7 +769,7 @@
     "title": "Invalid Period Date Range",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "The end dateTime occurs before the start dateTime for specified Period. When a start and end dateTime is present, end must not be earlier than start.",
+    "guidance": "External: The end dateTime occurs before the start dateTime for specified Period. When a start and end dateTime is present, end must not be earlier than start.",
     "ruleSets": [
       {
         "rules": [
@@ -763,7 +788,7 @@
     "title": "Invalid Condition Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Use of proprietary code systems and codes may lead to misinterpretation issues. A SNOMED or ICD code is required for condition.code.",
+    "guidance": "External: Use of proprietary code systems and codes may lead to misinterpretation issues. A SNOMED or ICD code is required for condition.code.",
     "ruleSets": [
       {
         "rules": [
@@ -782,13 +807,13 @@
     "title": "Missing RxNorm Medication Code",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "For recorded Medication, a valid rxnorm code is required.",
+    "guidance": "External: For recorded Medication, a valid RxNorm code is required.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Medication Codes (RxNorm)'\\.",
             "inverse": false
           }
         ],
@@ -798,16 +823,16 @@
   },
   {
     "id": "no_procedure_code",
-    "title": "Missing Standard Procedure Code",
+    "title": "No Procedure Code",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
+    "guidance": "External: For recorded Procedures, a valid US Core Procedure code is required. Valid codes are defined by US Core Procedure Code ValueSet",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
-            "regex": "No code provided, and a code should be provided from the value set 'US Core Procedure Codes'",
+            "regex": "No code provided, and a code should be provided from the value set 'US Core Procedure Codes'\\.",
             "inverse": false
           }
         ],
@@ -820,7 +845,7 @@
     "title": "Missing Coverage Type",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "Coverage.class.type (when present), is required to exist. However, NHSN has deemed this missing concept acceptable for reportability to NHSN.",
+    "guidance": "External: Coverage.class.type (when present), is required to exist. However, NHSN has deemed this missing concept acceptable to report to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -839,7 +864,7 @@
     "title": "Missing Medication Route",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Medication route is required to be present and to contain at least a valid SNOMED code when sending MedicationRequest and MedicationAdministration data to NHSN.",
+    "guidance": "External: Medication route is required to be present and to contain at least a valid SNOMED code when sending MedicationRequest and MedicationAdministration data to NHSN.",
     "ruleSets": [
       {
         "rules": [
@@ -863,7 +888,7 @@
     "title": "Missing Location Period",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "NHSN requires Encounter location period to be present and overlapping the measure reporting period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "guidance": "External: NHSN requires Encounter location period to be present and overlapping the measure reporting period. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
     "ruleSets": [
       {
         "rules": [
@@ -878,11 +903,11 @@
     ]
   },
   {
-    "id": "Missing_annotation_text",
+    "id": "missing_annotation_text",
     "title": "Missing Annotation Text",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Annotation.text element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "guidance": "External: Annotation.text element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -897,11 +922,11 @@
     ]
   },
   {
-    "id": "Missing_specimen_type",
+    "id": "missing_specimen_type",
     "title": "Missing Specimen Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Specimen.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "guidance": "External: Specimen.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
     "ruleSets": [
       {
         "rules": [
@@ -916,11 +941,11 @@
     ]
   },
   {
-    "id": "Missing_location_type",
+    "id": "missing_location_type",
     "title": "Missing Location Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Location.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
+    "guidance": "External: Location.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket",
     "ruleSets": [
       {
         "rules": [
@@ -935,11 +960,11 @@
     ]
   },
   {
-    "id": "Missing_device_type",
+    "id": "missing_device_type",
     "title": "Missing Device Type",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Device.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
+    "guidance": "External: Device.type element was found to be missing, and it is required for reporting to NHSN. If you believe this is a data entry issue that can/should be rectified by a user in the EHR, please resolve and re-submit. For all other inquiries, please submit the issue in a NHSN ServiceNow ticket.",
     "ruleSets": [
       {
         "rules": [
@@ -958,7 +983,7 @@
     "title": "Observations must have a results or reference component results (us-core-2).",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Observations must have one of the following: a single result (.value), component results, .hasMember, or .dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
+    "guidance": "External: US Core FHIR Implementation Guide requires that all Observations have one of the following: a single result (.value), component results, hasMember, or dataAbsentReason. Observations were found that do not contain any of these elements, and NHSN has deemed these Observations unacceptable for reporting.",
     "ruleSets": [
       {
         "rules": [
@@ -977,7 +1002,7 @@
     "title": "Missing Patient Name",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "Patient.name is required and was found to be missing.",
+    "guidance": "External: US Core FHIR Implementation Guide requires that Patients contain a name.",
     "ruleSets": [
       {
         "rules": [
@@ -996,7 +1021,7 @@
     "title": "Missing Encounter Identifier System",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Encounter.identifier.system is required and was found to be missing.",
+    "guidance": "External: Encounter.identifier.system is required and was found to be missing.",
     "ruleSets": [
       {
         "rules": [
@@ -1015,7 +1040,7 @@
     "title": "Duplicate FHIR ID Found",
     "severity": "ERROR",
     "acceptable": false,
-    "guidance": "A FHIR resource must have a unique id. Update any duplicate resource and references with a unique FHIR id.",
+    "guidance": "External: A FHIR resource must have a unique id. Update any duplicate resource and references with a unique FHIR id.",
     "ruleSets": [
       {
         "rules": [
@@ -1034,7 +1059,7 @@
     "title": "Invalid Value for Positive Integer",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "A value of 0 or negative number is not valid. Please check for data to ensure minimum value requirement.",
+    "guidance": "External: A value of 0 or negative number is not valid. Please check for data to ensure minimum value requirement.",
     "ruleSets": [
       {
         "rules": [
@@ -1053,7 +1078,7 @@
     "title": "Missing Numerator or Denominator for Ratio",
     "severity": "ERROR",
     "acceptable": true,
-    "guidance": "Both a numerator and denominator must be present - please check for data accuracy.",
+    "guidance": "External: Both a numerator and denominator must be present - please check for data accuracy.",
     "ruleSets": [
       {
         "rules": [
@@ -1072,13 +1097,51 @@
     "title": "Non-LOINC Code for Glucose Point of Testing",
     "severity": "WARNING",
     "acceptable": true,
-    "guidance": "The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
+    "guidance": "External: The code provided is not part of the extensible ValueSet, which if it is a concept that is part of the measure, is a problem that needs to be resolved.",
     "ruleSets": [
       {
         "rules": [
           {
             "field": "DETAILS_TEXT",
             "regex": "^None of the codings provided are in the value set 'LOINC Codes' \\(http://hl7\\.org/fhir/ValueSet/observation-codes\\|[0-9.]+\\), and a coding should come from this value set unless it has no suitable code .*?\\(codes = [^)]*(GLUMT|270)[^)]*\\)$",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_patient_gender",
+    "title": "Missing Patient Gender",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "External: Patient gender is required to be present and contain a valid HL7 Administrative Gender code.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Patient\\.gender\\: minimum required = 1, but only found 0 \\(from http\\://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient\\|[0-9.]+\\)$",
+            "inverse": false
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
+    "id": "missing_reference_to_linked_patient_resource",
+    "title": "Missing Reference to Linked Patient Resource",
+    "severity": "ERROR",
+    "acceptable": false,
+    "guidance": "External: A resolvable FHIR id is required to be present to link all patient resources to the same patient.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Patient\\.link\\.other: minimum required = 1, but only found 0 \\(from http\\://www\\.cdc\\.gov/nhsn/fhirportal/dqm/ig/StructureDefinition/cross-measure-patient\\|[0-9.]+\\)$",
             "inverse": false
           }
         ],
