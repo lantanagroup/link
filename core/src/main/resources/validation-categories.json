@@ -593,7 +593,7 @@
     ]
   },
   {
-    "id": "unable_to_validate_measure_Measure_not_found",
+    "id": "unable_to_validate_measure_measure_not_found",
     "title": "Unable to Validate Measure (Measure not found)",
     "severity": "WARNING",
     "acceptable": false,
