@@ -218,7 +218,7 @@
           },
           {
             "field": "DETAILS_TEXT",
-            "regex": "^Unknown code 'https?://open\\.epic\\.com/FHIR/StructureDefinition/.*' for in-memory expansion of ValueSet$",
+            "regex": "^Unknown code 'https?://open\\.epic\\.com/FHIR/StructureDefinition/.*' for in-memory expansion of ValueSet",
             "inverse": true
           },
           {
