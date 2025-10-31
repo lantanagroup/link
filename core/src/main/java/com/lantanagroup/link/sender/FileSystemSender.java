@@ -33,10 +33,12 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -234,9 +236,20 @@ public class FileSystemSender extends GenericSender implements IReportSender {
     } else {
       Submission submission = bundler.generateSubmission(report, fileName, this.config.getPretty());
       String path = this.getFilePath((!orgId.isEmpty() ? orgId : "submission") + "_" + outputPath).toString();
-      //Ensuring that folder rewriting occurs here by manually deleting existing folder (does nothing if folder doesn't already exist)
-      FileUtils.deleteDirectory(new File(path));
-      FileUtils.moveDirectory(submission.getRoot().toFile(), new File(path));
+      if (Files.exists(Path.of(path))) {
+        path += "_" + Instant.now().getEpochSecond();
+      }
+      try {
+        FileUtils.copyDirectory(submission.getRoot().toFile(), new File(path), false);
+        FileUtils.deleteDirectory(submission.getRoot().toFile());
+      } catch (IOException e) {
+        try {
+          FileUtils.deleteDirectory(submission.getRoot().toFile());
+        } catch (IOException cleanup) {
+          logger.warn("Failed to clean up after submission transfer failure: {}", path, cleanup);
+        }
+        throw new RuntimeException("Failed to transfer submission directory atomically", e);
+      }
       logger.info("Saved submission to file system: {}", path);
     }
   }
