@@ -468,8 +468,11 @@ public class Validator {
 
       OperationOutcome.IssueType issueCode = getIssueCode(message.getMessageId());
 
-      if (issueCode == OperationOutcome.IssueType.NULL && message.getMessageId() != null) {
-        logger.warn("Unknown issue code {} for message {}", message.getMessageId(), message.getMessage());
+      if (issueCode == OperationOutcome.IssueType.NULL) {
+        if (message.getMessageId() != null) {
+          logger.warn("Unknown issue code {} for message {}", message.getMessageId(), message.getMessage());
+        }
+        issueCode = OperationOutcome.IssueType.INVALID;
       }
 
       outcome.addIssue()
