@@ -59,6 +59,16 @@ public class PatientListRepository {
             .orElse(null);
   }
 
+  public List<PatientList> findByMeasureIdsWithinPeriod(List<String> measureIds, String periodStart, String periodEnd) {
+    String sql = "SELECT * FROM dbo.patientList " +
+            "WHERE measureId IN (:measureIds) AND periodStart >= :periodStart AND periodEnd <= :periodEnd;";
+    Map<String, ?> parameters = Map.of(
+            "measureIds", measureIds,
+            "periodStart", periodStart,
+            "periodEnd", periodEnd);
+    return jdbc.query(sql, parameters, mapper);
+  }
+
   private int insert(PatientList model) {
     if (model.getId() == null) {
       model.setId(UUID.randomUUID());

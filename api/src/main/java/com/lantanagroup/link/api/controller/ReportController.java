@@ -17,6 +17,7 @@ import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.model.ReportSummary;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
@@ -49,6 +50,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +238,64 @@ public class ReportController extends BaseController {
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
+  }
+
+  @PostMapping("/$generateMultiple")
+  public List<ReportSummary> generateMultipleReports(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @PathVariable String tenantId,
+          @RequestBody GenerateRequest input)
+          throws Exception {
+
+    if (input.getBundleIds().isEmpty()) {
+      throw new IllegalStateException("At least one bundleId should be specified.");
+    }
+
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    List<PatientList> patientLists =
+            tenantService.findPatientListsWithinPeriod(input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd());
+
+    if (patientLists == null || patientLists.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+              "No census lists found entirely within the specified date range.");
+    }
+
+    // Collect distinct (periodStart, periodEnd) pairs, preserving order
+    List<String[]> periods = patientLists.stream()
+            .collect(Collectors.toMap(
+                    pl -> pl.getPeriodStart() + "|" + pl.getPeriodEnd(),
+                    pl -> new String[]{pl.getPeriodStart(), pl.getPeriodEnd()},
+                    (a, b) -> a,
+                    java.util.LinkedHashMap::new))
+            .values().stream()
+            .collect(Collectors.toList());
+
+    logger.info("Queuing {} report(s) to run for tenant {}:", periods.size(), tenantId);
+    for (String[] period : periods) {
+      logger.info("  - Period: {} to {}", period[0], period[1]);
+    }
+
+    List<ReportSummary> results = new ArrayList<>();
+    for (String[] period : periods) {
+      String periodStart = period[0];
+      String periodEnd = period[1];
+      Report report = generateResponse(tenantService, user, request, input.getPackageId(),
+              input.getBundleIds(), periodStart, periodEnd,
+              input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
+      results.add(new ReportSummary(report.getId(), report.getPeriodStart(), report.getPeriodEnd()));
+    }
+
+    logger.info("$generateMultiple request completed: tenantId={}, periodStart={}, periodEnd={}, bundleIds={}, packageId={}, regenerate={}, validate={}, skipQuery={}",
+            tenantId, input.getPeriodStart(), input.getPeriodEnd(), input.getBundleIds(),
+            input.getPackageId(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
+    logger.info("Completed {} report(s):", results.size());
+    for (ReportSummary summary : results) {
+      logger.info("  - id={}, periodStart={}, periodEnd={}", summary.getReportId(), summary.getPeriodStart(), summary.getPeriodEnd());
+    }
+
+    return results;
   }
 
   /**
