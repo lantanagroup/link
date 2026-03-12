@@ -691,7 +691,12 @@ public class ReportController extends BaseController {
 
     List<SendMultipleResult> results = new ArrayList<>();
 
-    List<String> reportIds = body.getReportIds() != null ? body.getReportIds() : Collections.emptyList();
+    List<String> reportIds = body.getReportIds() == null ? Collections.emptyList() :
+        body.getReportIds().stream()
+            .filter(id -> id != null && !id.isBlank())
+            .map(String::trim)
+            .distinct()
+            .collect(Collectors.toList());
 
     logger.info("Send multiple: submitting {} report(s): {}", reportIds.size(), String.join(", ", reportIds));
 
@@ -721,7 +726,7 @@ public class ReportController extends BaseController {
         results.add(SendMultipleResult.ok(reportId));
       } catch (Exception e) {
         logger.error("Send multiple: failed to send report {}: {}", reportId, e.getMessage(), e);
-        results.add(SendMultipleResult.fail(reportId, e.getMessage()));
+        results.add(SendMultipleResult.fail(reportId, "Failed to send report"));
       }
     }
 
