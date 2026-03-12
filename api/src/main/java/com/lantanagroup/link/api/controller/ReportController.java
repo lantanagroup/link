@@ -53,6 +53,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -255,6 +256,10 @@ public class ReportController extends BaseController {
     }
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
 
     List<PatientList> patientLists =
             tenantService.findPatientListsWithinPeriod(input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd());
@@ -686,9 +691,11 @@ public class ReportController extends BaseController {
 
     List<SendMultipleResult> results = new ArrayList<>();
 
-    logger.info("Send multiple: submitting {} report(s): {}", body.getReportIds().size(), String.join(", ", body.getReportIds()));
+    List<String> reportIds = body.getReportIds() != null ? body.getReportIds() : Collections.emptyList();
 
-    for (String reportId : body.getReportIds()) {
+    logger.info("Send multiple: submitting {} report(s): {}", reportIds.size(), String.join(", ", reportIds));
+
+    for (String reportId : reportIds) {
       Report report = tenantService.getReport(reportId);
 
       if (report == null) {
