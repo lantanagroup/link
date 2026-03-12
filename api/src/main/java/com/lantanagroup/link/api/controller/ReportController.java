@@ -13,6 +13,8 @@ import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.SendMultipleRequest;
+import com.lantanagroup.link.model.SendMultipleResult;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
@@ -653,6 +655,76 @@ public class ReportController extends BaseController {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Sends multiple reports to the recipients configured in <strong>api.sender</strong>.
+   * Each report is attempted independently; failures are captured in the result list rather than aborting the batch.
+   *
+   * @param body    a JSON object with a {@code reportIds} array
+   * @param request the current HTTP request
+   * @return a list of per-report send results indicating success or failure
+   */
+  @PostMapping("/$sendMultiple")
+  public List<SendMultipleResult> sendMultiple(
+          @AuthenticationPrincipal LinkCredentials user,
+          @PathVariable String tenantId,
+          @RequestBody SendMultipleRequest body,
+          HttpServletRequest request) throws Exception {
+
+    if (StringUtils.isEmpty(this.config.getSender()))
+      throw new IllegalStateException("Not configured for sending");
+
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Class<?> senderClazz = Class.forName(this.config.getSender());
+    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+
+    List<SendMultipleResult> results = new ArrayList<>();
+
+    logger.info("Send multiple: submitting {} report(s): {}", body.getReportIds().size(), String.join(", ", body.getReportIds()));
+
+    for (String reportId : body.getReportIds()) {
+      Report report = tenantService.getReport(reportId);
+
+      if (report == null) {
+        logger.warn("Send multiple: report not found: {}", reportId);
+        results.add(SendMultipleResult.fail(reportId, "Report not found"));
+        continue;
+      }
+
+      try {
+        //noinspection unused
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
+          sender.send(this.eventService, tenantService, report, request, user);
+        }
+        FhirHelper.incrementMajorVersion(report);
+        report.setStatus(ReportStatuses.Submitted);
+        report.setSubmittedTime(new Date());
+
+        stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
+        tenantService.saveReport(report);
+
+        this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+
+        results.add(SendMultipleResult.ok(reportId));
+      } catch (Exception e) {
+        logger.error("Send multiple: failed to send report {}: {}", reportId, e.getMessage(), e);
+        results.add(SendMultipleResult.fail(reportId, e.getMessage()));
+      }
+    }
+
+    List<String> succeeded = results.stream().filter(SendMultipleResult::isSuccess).map(SendMultipleResult::getReportId).collect(Collectors.toList());
+    List<String> failed = results.stream().filter(r -> !r.isSuccess()).map(SendMultipleResult::getReportId).collect(Collectors.toList());
+    logger.info("Send multiple complete: {} succeeded [{}], {} failed [{}]",
+            succeeded.size(), String.join(", ", succeeded),
+            failed.size(), String.join(", ", failed));
+
+    return results;
   }
 
   @GetMapping("/{reportId}/aggregate")
