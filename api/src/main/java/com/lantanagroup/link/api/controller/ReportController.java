@@ -13,10 +13,13 @@ import com.lantanagroup.link.db.model.*;
 import com.lantanagroup.link.db.model.tenant.FhirQuery;
 import com.lantanagroup.link.db.model.tenant.QueryPlan;
 import com.lantanagroup.link.db.model.tenant.Tenant;
+import com.lantanagroup.link.model.SendMultipleRequest;
+import com.lantanagroup.link.model.SendMultipleResult;
 import com.lantanagroup.link.model.GenerateRequest;
 import com.lantanagroup.link.model.PatientOfInterestModel;
 import com.lantanagroup.link.model.ReportContext;
 import com.lantanagroup.link.model.ReportCriteria;
+import com.lantanagroup.link.model.ReportSummary;
 import com.lantanagroup.link.nhsn.ReportingPlanService;
 import com.lantanagroup.link.query.QueryPhase;
 import com.lantanagroup.link.query.uscore.Query;
@@ -49,6 +52,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -236,6 +241,68 @@ public class ReportController extends BaseController {
 
     TenantService tenantService = TenantService.create(this.sharedService, tenantId);
     return generateResponse(tenantService, user, request, input.getPackageId(), input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd(), input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
+  }
+
+  @PostMapping("/$generateMultiple")
+  public List<ReportSummary> generateMultipleReports(
+          @AuthenticationPrincipal LinkCredentials user,
+          HttpServletRequest request,
+          @PathVariable String tenantId,
+          @RequestBody GenerateRequest input)
+          throws Exception {
+
+    if (input.getBundleIds().isEmpty()) {
+      throw new IllegalStateException("At least one bundleId should be specified.");
+    }
+
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    List<PatientList> patientLists =
+            tenantService.findPatientListsWithinPeriod(input.getBundleIds(), input.getPeriodStart(), input.getPeriodEnd());
+
+    if (patientLists == null || patientLists.isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+              "No census lists found entirely within the specified date range.");
+    }
+
+    // Collect distinct (periodStart, periodEnd) pairs, preserving order
+    List<String[]> periods = patientLists.stream()
+            .collect(Collectors.toMap(
+                    pl -> pl.getPeriodStart() + "|" + pl.getPeriodEnd(),
+                    pl -> new String[]{pl.getPeriodStart(), pl.getPeriodEnd()},
+                    (a, b) -> a,
+                    java.util.LinkedHashMap::new))
+            .values().stream()
+            .collect(Collectors.toList());
+
+    logger.info("Queuing {} report(s) to run for tenant {}:", periods.size(), tenantId);
+    for (String[] period : periods) {
+      logger.info("  - Period: {} to {}", period[0], period[1]);
+    }
+
+    List<ReportSummary> results = new ArrayList<>();
+    for (String[] period : periods) {
+      String periodStart = period[0];
+      String periodEnd = period[1];
+      Report report = generateResponse(tenantService, user, request, input.getPackageId(),
+              input.getBundleIds(), periodStart, periodEnd,
+              input.isRegenerate(), input.isValidate(), input.isSkipQuery(), input.getDebugPatients());
+      results.add(new ReportSummary(report.getId(), report.getPeriodStart(), report.getPeriodEnd()));
+    }
+
+    logger.info("$generateMultiple request completed: tenantId={}, periodStart={}, periodEnd={}, bundleIds={}, packageId={}, regenerate={}, validate={}, skipQuery={}",
+            tenantId, input.getPeriodStart(), input.getPeriodEnd(), input.getBundleIds(),
+            input.getPackageId(), input.isRegenerate(), input.isValidate(), input.isSkipQuery());
+    logger.info("Completed {} report(s):", results.size());
+    for (ReportSummary summary : results) {
+      logger.info("  - id={}, periodStart={}, periodEnd={}", summary.getReportId(), summary.getPeriodStart(), summary.getPeriodEnd());
+    }
+
+    return results;
   }
 
   /**
@@ -593,6 +660,83 @@ public class ReportController extends BaseController {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Sends multiple reports to the recipients configured in <strong>api.sender</strong>.
+   * Each report is attempted independently; failures are captured in the result list rather than aborting the batch.
+   *
+   * @param body    a JSON object with a {@code reportIds} array
+   * @param request the current HTTP request
+   * @return a list of per-report send results indicating success or failure
+   */
+  @PostMapping("/$sendMultiple")
+  public List<SendMultipleResult> sendMultiple(
+          @AuthenticationPrincipal LinkCredentials user,
+          @PathVariable String tenantId,
+          @RequestBody SendMultipleRequest body,
+          HttpServletRequest request) throws Exception {
+
+    if (StringUtils.isEmpty(this.config.getSender()))
+      throw new IllegalStateException("Not configured for sending");
+
+    TenantService tenantService = TenantService.create(this.sharedService, tenantId);
+
+    if (tenantService == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tenant not found");
+    }
+
+    Class<?> senderClazz = Class.forName(this.config.getSender());
+    IReportSender sender = (IReportSender) this.context.getBean(senderClazz);
+
+    List<SendMultipleResult> results = new ArrayList<>();
+
+    List<String> reportIds = body.getReportIds() == null ? Collections.emptyList() :
+        body.getReportIds().stream()
+            .filter(id -> id != null && !id.isBlank())
+            .map(String::trim)
+            .distinct()
+            .collect(Collectors.toList());
+
+    logger.info("Send multiple: submitting {} report(s): {}", reportIds.size(), String.join(", ", reportIds));
+
+    for (String reportId : reportIds) {
+      Report report = tenantService.getReport(reportId);
+
+      if (report == null) {
+        logger.warn("Send multiple: report not found: {}", reportId);
+        results.add(SendMultipleResult.fail(reportId, "Report not found"));
+        continue;
+      }
+
+      try {
+        //noinspection unused
+        try (Stopwatch stopwatch = this.stopwatchManager.start(Constants.TASK_SUBMIT, Constants.CATEGORY_SUBMISSION)) {
+          sender.send(this.eventService, tenantService, report, request, user);
+        }
+        FhirHelper.incrementMajorVersion(report);
+        report.setStatus(ReportStatuses.Submitted);
+        report.setSubmittedTime(new Date());
+
+        stopwatchManager.storeMetrics(tenantId, reportId, report.getVersion());
+        tenantService.saveReport(report);
+
+        this.sharedService.audit(user, request, tenantService, AuditTypes.Submit, String.format("Submitted report %s", reportId));
+
+        results.add(SendMultipleResult.ok(reportId));
+      } catch (Exception e) {
+        logger.error("Send multiple: failed to send report {}: {}", reportId, e.getMessage(), e);
+        results.add(SendMultipleResult.fail(reportId, "Failed to send report"));
+      }
+    }
+
+    List<String> succeeded = results.stream().filter(SendMultipleResult::isSuccess).map(SendMultipleResult::getReportId).collect(Collectors.toList());
+    List<String> failed = results.stream().filter(r -> !r.isSuccess()).map(SendMultipleResult::getReportId).collect(Collectors.toList());
+    logger.info("Send multiple complete: {} succeeded [{}], {} failed [{}]",
+            succeeded.size(), String.join(", ", succeeded),
+            failed.size(), String.join(", ", failed));
+
+    return results;
   }
 
   @GetMapping("/{reportId}/aggregate")
