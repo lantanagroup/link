@@ -9,6 +9,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,19 @@ public class PatientListRepository {
     return jdbc.query(sql, parameters, mapper).stream()
             .reduce(StreamUtils::toOnlyElement)
             .orElse(null);
+  }
+
+  public List<PatientList> findByMeasureIdsWithinPeriod(List<String> measureIds, String periodStart, String periodEnd) {
+    if (measureIds == null || measureIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    String sql = "SELECT * FROM dbo.patientList " +
+            "WHERE measureId IN (:measureIds) AND periodStart >= :periodStart AND periodEnd <= :periodEnd;";
+    Map<String, ?> parameters = Map.of(
+            "measureIds", measureIds,
+            "periodStart", periodStart,
+            "periodEnd", periodEnd);
+    return jdbc.query(sql, parameters, mapper);
   }
 
   private int insert(PatientList model) {

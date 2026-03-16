@@ -127,6 +127,10 @@ public class TenantService {
     return this.patientLists.findByMeasureIdAndReportingPeriod(measureId, periodStart, periodEnd);
   }
 
+  public List<PatientList> findPatientListsWithinPeriod(List<String> measureIds, String periodStart, String periodEnd) {
+    return this.patientLists.findByMeasureIdsWithinPeriod(measureIds, periodStart, periodEnd);
+  }
+
   public void savePatientList(PatientList patientList) {
     this.patientLists.save(patientList);
   }
