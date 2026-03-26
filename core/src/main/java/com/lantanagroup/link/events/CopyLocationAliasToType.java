@@ -63,7 +63,23 @@ public class CopyLocationAliasToType implements IReportGenerationDataEvent {
       IGenericClient client = context.getClient();
       while (true) {
         for (StringType alias : ancestor.getAlias()) {
-          if (!existsInType(location, alias)) {
+          if (tenantService.getConfig().getIsCommaSeparatedAlias()) {
+            String aliases = alias.getValueAsString();
+            if (aliases == null || aliases.isBlank()) {
+              continue;
+            }
+            for (String a : aliases.split(",")) {
+              String trimmed = a.trim();
+              if (trimmed.isBlank()) {
+                continue;
+              }
+              StringType singleAlias = new StringType(trimmed);
+              if (!existsInType(location, singleAlias)) {
+                copyToType(location, singleAlias);
+              }
+            }
+          }
+          else if (!existsInType(location, alias)) {
             copyToType(location, alias);
           }
         }
