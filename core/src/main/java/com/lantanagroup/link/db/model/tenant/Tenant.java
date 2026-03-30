@@ -46,6 +46,13 @@ public class Tenant {
   private Boolean isVeradigm = false;
 
   /**
+   * Parameter that indicates the site both uses aliases for Location.type information and has multiple aliases stored
+   * within a single alias separated by commas
+   * Defaulted to false.
+   */
+  private Boolean isCommaSeparatedAlias = false;
+
+  /**
    * The Time Zone string for the Tenant
    */
   private String timeZoneId;
