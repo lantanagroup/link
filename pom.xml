@@ -14,7 +14,7 @@
     <properties>
         <java.version>21</java.version>
         <cqf-fhir.version>3.0.0</cqf-fhir.version>
-        <hapi-fhir.version>7.0.0</hapi-fhir.version>
+        <hapi-fhir.version>8.6.8</hapi-fhir.version>
         <jackson.version>2.16.1</jackson.version>
         <spring-boot.version>3.2.0</spring-boot.version>
     </properties>
@@ -87,6 +87,10 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-converter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
