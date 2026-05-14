@@ -412,6 +412,8 @@ public class Validator {
   private static FhirValidator initialize(List<Bundle> support) {
     FhirContext fhirContext = FhirContextProvider.getFhirContext();
     FhirValidator validator = fhirContext.newValidator();
+    validator.setValidateAgainstStandardSchema(false);
+    validator.setValidateAgainstStandardSchematron(false);
 
     MeasureDefinitionBasedValidationSupport measureDefinitionBasedValidationSupport =
             new MeasureDefinitionBasedValidationSupport(fhirContext);
@@ -432,7 +434,7 @@ public class Validator {
     validator.registerValidatorModule(validatorModule);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
-    validator.setConcurrentBundleValidation(true);
+    validator.setConcurrentBundleValidation(false);
 
     return validator;
   }
@@ -446,9 +448,7 @@ public class Validator {
   }
 
   private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
-    ValidationOptions opts = new ValidationOptions();
-
-    ValidationResult result = validator.validateWithResult(resource, opts);
+    ValidationResult result = validator.validateWithResult(resource);
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
