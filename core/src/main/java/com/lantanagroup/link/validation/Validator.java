@@ -429,9 +429,10 @@ public class Validator {
             new SnapshotGeneratingValidationSupport(fhirContext),
             new InMemoryTerminologyServerValidationSupport(fhirContext),
             new CommonCodeSystemsTerminologyService(fhirContext));
-    CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
-    IValidatorModule validatorModule = new FhirInstanceValidator(cachingValidationSupport);
-    validator.registerValidatorModule(validatorModule);
+    // CachingValidationSupport cachingValidationSupport = new CachingValidationSupport(validationSupportChain);
+    FhirInstanceValidator fhirInstanceValidator = new FhirInstanceValidator(validationSupportChain);
+    fhirInstanceValidator.setAnyExtensionsAllowed(true);
+    validator.registerValidatorModule(fhirInstanceValidator);
 
     validator.setExecutorService(ForkJoinPool.commonPool());
     validator.setConcurrentBundleValidation(false);
@@ -442,13 +443,27 @@ public class Validator {
   public OperationOutcome validateRaw(IBaseResource resource) {
     FhirValidator validator = initialize(List.of());
     OperationOutcome outcome = new OperationOutcome();
-    ValidationResult result = validator.validateWithResult(resource);
+    ca.uhn.fhir.validation.ValidationOptions opts = new ca.uhn.fhir.validation.ValidationOptions();
+    try {
+      java.lang.reflect.Method setFhirVersion = opts.getClass().getMethod("setFhirVersion", ca.uhn.fhir.context.FhirVersionEnum.class);
+      setFhirVersion.invoke(opts, ca.uhn.fhir.context.FhirVersionEnum.R4);
+    } catch (Exception e) {
+      logger.debug("Could not set FHIR version R4 on ValidationOptions via reflection, it might be an older HAPI version or different JAR on classpath: {}", e.getMessage());
+    }
+    ValidationResult result = validator.validateWithResult(resource, opts);
     result.populateOperationOutcome(outcome);
     return outcome;
   }
 
   private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
-    ValidationResult result = validator.validateWithResult(resource);
+    ca.uhn.fhir.validation.ValidationOptions opts = new ca.uhn.fhir.validation.ValidationOptions();
+    try {
+      java.lang.reflect.Method setFhirVersion = opts.getClass().getMethod("setFhirVersion", ca.uhn.fhir.context.FhirVersionEnum.class);
+      setFhirVersion.invoke(opts, ca.uhn.fhir.context.FhirVersionEnum.R4);
+    } catch (Exception e) {
+      logger.debug("Could not set FHIR version R4 on ValidationOptions via reflection, it might be an older HAPI version or different JAR on classpath: {}", e.getMessage());
+    }
+    ValidationResult result = validator.validateWithResult(resource, opts);
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
