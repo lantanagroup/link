@@ -440,30 +440,20 @@ public class Validator {
     return validator;
   }
 
+  private static ValidationOptions newR4ValidationOptions() {
+    return new ValidationOptions();
+  }
+
   public OperationOutcome validateRaw(IBaseResource resource) {
     FhirValidator validator = initialize(List.of());
     OperationOutcome outcome = new OperationOutcome();
-    ca.uhn.fhir.validation.ValidationOptions opts = new ca.uhn.fhir.validation.ValidationOptions();
-    try {
-      java.lang.reflect.Method setFhirVersion = opts.getClass().getMethod("setFhirVersion", ca.uhn.fhir.context.FhirVersionEnum.class);
-      setFhirVersion.invoke(opts, ca.uhn.fhir.context.FhirVersionEnum.R4);
-    } catch (Exception e) {
-      logger.debug("Could not set FHIR version R4 on ValidationOptions via reflection, it might be an older HAPI version or different JAR on classpath: {}", e.getMessage());
-    }
-    ValidationResult result = validator.validateWithResult(resource, opts);
+    ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
     result.populateOperationOutcome(outcome);
     return outcome;
   }
 
   private void validateResource(FhirValidator validator, Resource resource, OperationOutcome outcome, OperationOutcome.IssueSeverity severity) {
-    ca.uhn.fhir.validation.ValidationOptions opts = new ca.uhn.fhir.validation.ValidationOptions();
-    try {
-      java.lang.reflect.Method setFhirVersion = opts.getClass().getMethod("setFhirVersion", ca.uhn.fhir.context.FhirVersionEnum.class);
-      setFhirVersion.invoke(opts, ca.uhn.fhir.context.FhirVersionEnum.R4);
-    } catch (Exception e) {
-      logger.debug("Could not set FHIR version R4 on ValidationOptions via reflection, it might be an older HAPI version or different JAR on classpath: {}", e.getMessage());
-    }
-    ValidationResult result = validator.validateWithResult(resource, opts);
+    ValidationResult result = validator.validateWithResult(resource, newR4ValidationOptions());
 
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());

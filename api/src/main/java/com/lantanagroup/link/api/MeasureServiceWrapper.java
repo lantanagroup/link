@@ -16,6 +16,7 @@ import org.opencds.cqf.fhir.utility.monad.Eithers;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
@@ -70,8 +71,8 @@ public class MeasureServiceWrapper {
     R4MeasureService measureService = new R4MeasureService(repository, options, new MeasurePeriodValidator());
     return measureService.evaluate(
             Eithers.forRight3(measureDef.getMeasure()),
-            parsePeriodDate(periodStart),
-            parsePeriodDate(periodEnd),
+            parsePeriodStart(periodStart),
+            parsePeriodEnd(periodEnd),
             null,
             subject,
             null,
@@ -84,12 +85,21 @@ public class MeasureServiceWrapper {
             null);
   }
 
-  private static ZonedDateTime parsePeriodDate(String dateStr) {
+  private static ZonedDateTime parsePeriodStart(String dateStr) {
     if (dateStr == null) return null;
     try {
       return ZonedDateTime.parse(dateStr);
     } catch (Exception e) {
       return LocalDate.parse(dateStr).atStartOfDay(ZoneOffset.UTC);
+    }
+  }
+
+  private static ZonedDateTime parsePeriodEnd(String dateStr) {
+    if (dateStr == null) return null;
+    try {
+      return ZonedDateTime.parse(dateStr);
+    } catch (Exception e) {
+      return LocalDate.parse(dateStr).atTime(LocalTime.MAX).atZone(ZoneOffset.UTC);
     }
   }
 }
