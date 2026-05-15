@@ -155,19 +155,5 @@
             <version>1.7.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>ch.qos.logback.db</groupId>
-            <artifactId>logback-classic-db</artifactId>
-            <version>1.2.11.1</version>
-            <exclusions>
-                <!-- logback-classic-db pulls in logback-core:test-jar:tests:1.2.11 at compile scope,
-                     conflicting with logback-core:jar:1.4.11 from logback-classic. Exclude it here;
-                     logback-core is provided via logback-classic's transitive path. -->
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
     </dependencies>
 </project>

@@ -11,7 +11,7 @@ import org.opencds.cqf.fhir.cql.engine.retrieve.RetrieveSettings;
 import org.opencds.cqf.fhir.cql.engine.terminology.TerminologySettings;
 import org.opencds.cqf.fhir.cr.measure.MeasureEvaluationOptions;
 import org.opencds.cqf.fhir.cr.measure.common.MeasurePeriodValidator;
-import org.opencds.cqf.fhir.cr.measure.r4.R4MeasureService;
+import org.opencds.cqf.fhir.cr.measure.r4.R4MultiMeasureService;
 import org.opencds.cqf.fhir.utility.monad.Eithers;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
@@ -68,7 +68,7 @@ public class MeasureServiceWrapper {
     for (IBaseResource resource : measureDef.getResources()) {
       repository.update(resource);
     }
-    R4MeasureService measureService = new R4MeasureService(repository, options, new MeasurePeriodValidator());
+    R4MultiMeasureService measureService = new R4MultiMeasureService(repository, options, null, new MeasurePeriodValidator());
     return measureService.evaluate(
             Eithers.forRight3(measureDef.getMeasure()),
             parsePeriodStart(periodStart),

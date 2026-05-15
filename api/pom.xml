@@ -137,11 +137,6 @@
             <groupId>org.opencds.cqf.fhir</groupId>
             <artifactId>cqf-fhir-cr</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.opencds.cqf.fhir</groupId>
-            <artifactId>cqf-fhir-jackson</artifactId>
-            <type>pom</type>
-        </dependency>
     </dependencies>
 
     <build>
