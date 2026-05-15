@@ -64,6 +64,33 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Convergence pins: highest version wins across all transitive paths -->
+            <dependency>
+                <groupId>org.checkerframework</groupId>
+                <artifactId>checker-qual</artifactId>
+                <version>3.42.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.26.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr-runtime</artifactId>
+                <version>3.5.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>10.0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-core</artifactId>
+                <version>1.41.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
