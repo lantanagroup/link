@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <cqf-fhir.version>3.0.0</cqf-fhir.version>
+        <cqf-fhir.version>3.28.1</cqf-fhir.version>
         <hapi-fhir.version>8.6.8</hapi-fhir.version>
         <jackson.version>2.16.1</jackson.version>
         <spring-boot.version>3.2.0</spring-boot.version>
@@ -91,7 +91,17 @@
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>org.hl7.fhir.r5</artifactId>
-            <version>6.1.2.2</version>
+            <version>6.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.utilities</artifactId>
+            <version>6.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.validation</artifactId>
+            <version>6.6.7</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
