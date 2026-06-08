@@ -570,10 +570,10 @@ public class FhirBundler {
 
     // Clean up the contained resources within the measure report
     individualMeasureReport.getContained().stream()
-            .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("#LCR-"))
+            .filter(c -> c.hasId() && c.getIdElement().getIdPart().startsWith("LCR-"))
             .forEach(c -> {
               // Remove the LCR- prefix added by CQL
-              c.setId(c.getIdElement().getIdPart().substring(5));
+              c.setId(c.getIdElement().getIdPart().substring(4));
 
               // Update references to the evaluated resource to point to the contained reference (for validation purposes)
               individualMeasureReport.getEvaluatedResource().stream()
