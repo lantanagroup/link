@@ -20,6 +20,5 @@ query/src/main/resources/query-*.yml
 .idea/libraries/
 .idea/dataSources/
 .idea/dataSources.xml
-.idea/db-forest-config.xml
 spring-shell.log
 .idea/.name

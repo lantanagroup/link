@@ -7,6 +7,7 @@ import ca.uhn.fhir.rest.client.api.ClientResponseContext;
 import ca.uhn.fhir.rest.client.api.IHttpRequest;
 import ca.uhn.fhir.rest.client.api.IHttpResponse;
 import com.lantanagroup.link.db.TenantService;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +79,7 @@ public class HapiFhirAuthenticationInterceptor {
 
   private String getHeader(IHttpRequest request, String name) {
     List<String> headers = request.getAllHeaders().get(name);
-    return (headers == null || headers.isEmpty()) ? null : headers.get(0);
+    return CollectionUtils.isEmpty(headers) ? null : headers.get(0);
   }
 
   private void removeHeaders(IHttpRequest request) {

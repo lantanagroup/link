@@ -1,6 +1,8 @@
 package com.lantanagroup.link.db;
 
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.db.DBAppender;
+import ch.qos.logback.core.db.DataSourceConnectionSource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -91,10 +93,18 @@ public class SharedService {
 
   private void initDatabaseLogging() {
     LoggerContext logCtx = (LoggerContext) LoggerFactory.getILoggerFactory();
-    LinkDbAppender appender = new LinkDbAppender(dataSource);
+
+    DataSourceConnectionSource source = new DataSourceConnectionSource();
+    source.setDataSource(dataSource);
+    source.setContext(logCtx);
+    source.start();
+
+    DBAppender appender = new DBAppender();
     appender.setContext(logCtx);
+    appender.setConnectionSource(source);
     appender.setName("link-db");
     appender.start();
+
     logCtx.getLogger("ROOT").addAppender(appender);
   }
 

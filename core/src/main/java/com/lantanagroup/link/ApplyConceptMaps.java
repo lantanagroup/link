@@ -3,7 +3,9 @@ package com.lantanagroup.link;
 import ca.uhn.fhir.context.support.DefaultProfileValidationSupport;
 import ca.uhn.fhir.util.BundleUtil;
 import com.lantanagroup.link.db.TenantService;
+import org.hl7.fhir.r4.hapi.ctx.HapiWorkerContext;
 import org.hl7.fhir.r4.model.*;
+import org.hl7.fhir.r4.utils.FHIRPathEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +74,7 @@ public class ApplyConceptMaps {
     List<Base> results = new ArrayList<>();
     // logger.debug(String.format("FindCodings for resource %s based on path %s", resource.getResourceType() + "/" + resource.getIdElement().getIdPart(), List.of(pathList)));
     pathList.stream().forEach(path -> {
-      results.addAll(FhirHelper.getFhirPathEngine().evaluate(resource, path, Base.class));
+      results.addAll(FhirHelper.getFhirPathEngine().evaluate(resource, path));
     });
     return results;
   }

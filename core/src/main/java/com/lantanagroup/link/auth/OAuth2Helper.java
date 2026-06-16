@@ -96,7 +96,7 @@ public class OAuth2Helper {
       ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
-        logger.info("Response: {}", idpResponse.getStatusCode().value());
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
         return response.get("access_token").asText();
@@ -178,7 +178,7 @@ public class OAuth2Helper {
       ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(config.getTokenUrl()), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
-        logger.info("Response: {}", idpResponse.getStatusCode().value());
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
         return response.get("access_token").asText();
@@ -223,7 +223,7 @@ public class OAuth2Helper {
       ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(tokenUrl), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
-        logger.info("Response: {}", idpResponse.getStatusCode().value());
+        logger.info("Response: {}", idpResponse.getStatusCodeValue());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
         return response.get("access_token").asText();
