@@ -1,24 +1,18 @@
 package com.lantanagroup.link.api;
 
-import ca.uhn.fhir.repository.IRepository;
 import com.lantanagroup.link.Constants;
 import com.lantanagroup.link.FhirContextProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
+import org.opencds.cqf.fhir.api.Repository;
 import org.opencds.cqf.fhir.cql.EvaluationSettings;
 import org.opencds.cqf.fhir.cql.engine.retrieve.RetrieveSettings;
 import org.opencds.cqf.fhir.cql.engine.terminology.TerminologySettings;
 import org.opencds.cqf.fhir.cr.measure.MeasureEvaluationOptions;
-import org.opencds.cqf.fhir.cr.measure.common.MeasurePeriodValidator;
-import org.opencds.cqf.fhir.cr.measure.r4.R4MultiMeasureService;
+import org.opencds.cqf.fhir.cr.measure.r4.R4MeasureService;
 import org.opencds.cqf.fhir.utility.monad.Eithers;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 
 public class MeasureServiceWrapper {
   private final MeasureDef measureDef;
@@ -64,42 +58,24 @@ public class MeasureServiceWrapper {
   }
 
   public MeasureReport evaluate(String periodStart, String periodEnd, String subject, Bundle additionalData) {
-    IRepository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
+    Repository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
     for (IBaseResource resource : measureDef.getResources()) {
       repository.update(resource);
     }
-    R4MultiMeasureService measureService = new R4MultiMeasureService(repository, options, null, new MeasurePeriodValidator());
+    R4MeasureService measureService = new R4MeasureService(repository, options);
     return measureService.evaluate(
             Eithers.forRight3(measureDef.getMeasure()),
-            parsePeriodStart(periodStart),
-            parsePeriodEnd(periodEnd),
+            periodStart,
+            periodEnd,
             null,
             subject,
             null,
             null,
-            null,
             terminologyEndpoint,
+            null,
             additionalData,
             null,
             null,
             null);
-  }
-
-  private static ZonedDateTime parsePeriodStart(String dateStr) {
-    if (dateStr == null) return null;
-    try {
-      return ZonedDateTime.parse(dateStr);
-    } catch (Exception e) {
-      return LocalDate.parse(dateStr).atStartOfDay(ZoneOffset.UTC);
-    }
-  }
-
-  private static ZonedDateTime parsePeriodEnd(String dateStr) {
-    if (dateStr == null) return null;
-    try {
-      return ZonedDateTime.parse(dateStr);
-    } catch (Exception e) {
-      return LocalDate.parse(dateStr).atTime(LocalTime.MAX).atZone(ZoneOffset.UTC);
-    }
   }
 }

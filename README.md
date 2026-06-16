@@ -4,6 +4,14 @@
 
 See [Deployment](https://github.com/lantanagroup/link/wiki/Deployment) in the WIKI.
 
+### Docker Development Testing
+
+To run the Link application in a Docker container, use the following command:
+
+```bash
+docker run -d --name link-api --mount type=bind,source="c:\...\application.yml",target=/application.yml,readonly -e SPRING_CONFIG_LOCATION=file:///application.yml link-api
+```
+
 ## Configuration
 
 See [Configuration](https://github.com/lantanagroup/link/wiki/Configuration) in the WIKI.
