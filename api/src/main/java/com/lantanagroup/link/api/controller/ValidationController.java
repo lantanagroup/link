@@ -58,6 +58,15 @@ public class ValidationController extends BaseController {
     Validator validator = new Validator();
     OperationOutcome outcome = validator.validate(bundle, severity);
 
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    categorizer.loadFromResources();
+    outcome.getIssue().removeIf(ooIssue -> {
+      ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
+      return categorizer.getCategories().stream()
+              .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+              .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
+    });
+
     Device found = bundle.getEntry().stream()
             .filter(e -> e.getResource() instanceof Device)
             .map(e -> (Device) e.getResource())
