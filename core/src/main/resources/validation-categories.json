@@ -771,16 +771,6 @@
           }
         ],
         "andOperator": false
-      },
-      {
-        "rules": [
-          {
-            "field": "DETAILS_TEXT",
-            "regex": "ip-measurereport-list",
-            "inverse": true
-          }
-        ],
-        "andOperator": false
       }
     ]
   },
@@ -1507,6 +1497,7 @@
     "title": "No Matching Profile for List Reference",
     "severity": "WARNING",
     "acceptable": true,
+    "suppress": true,
     "guidance": "Internal: The subjectResults reference cannot be validated against the ip-measurereport-list profile because the profile definition is not available in the validation context. This does not affect measure calculation or reporting.",
     "ruleSets": [
       {

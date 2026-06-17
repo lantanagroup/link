@@ -13,6 +13,7 @@ public class ValidationCategory {
   private ValidationCategorySeverities severity;
   private Boolean acceptable;
   private String guidance;
+  private Boolean suppress;
 
   public ValidationCategory(String title, ValidationCategorySeverities severity, Boolean acceptable, String guidance) {
     this.title = title;
