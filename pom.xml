@@ -133,23 +133,23 @@
             <artifactId>hapi-fhir-validation</artifactId>
         </dependency>
         <!--
-            Pinned to 6.6.7 because I18nConstants removed several validation message identifiers
-            in later versions. Do not bump without checking Validator.java switch cases.
+            Pinned to match the transitive version pulled in by hapi-fhir 8.10.0.
+            Do not bump without checking Validator.java switch cases for removed I18nConstants identifiers.
         -->
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>org.hl7.fhir.r5</artifactId>
-            <version>6.6.7</version>
+            <version>6.9.4.1</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>org.hl7.fhir.utilities</artifactId>
-            <version>6.6.7</version>
+            <version>6.9.4.1</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>org.hl7.fhir.validation</artifactId>
-            <version>6.6.7</version>
+            <version>6.9.4.1</version>
         </dependency>
         <dependency>
             <groupId>ca.uhn.hapi.fhir</groupId>

@@ -84,7 +84,6 @@ public class Validator {
       case I18nConstants.TERMINOLOGY_TX_BINDING_MISSING2:
       case I18nConstants.TERMINOLOGY_TX_BINDING_NOSERVER:
       case I18nConstants.TERMINOLOGY_TX_BINDING_NOSOURCE:
-      case I18nConstants.TERMINOLOGY_TX_BINDING_NOSOURCE2:
 //      case I18nConstants.TERMINOLOGY_TX_CODE_NOTVALID:
 //      case I18nConstants.TERMINOLOGY_TX_CODE_UNKNOWN:
       case I18nConstants.TERMINOLOGY_TX_CODE_VALUESET:
