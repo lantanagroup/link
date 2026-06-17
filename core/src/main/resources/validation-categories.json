@@ -771,6 +771,16 @@
           }
         ],
         "andOperator": false
+      },
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "ip-measurereport-list",
+            "inverse": true
+          }
+        ],
+        "andOperator": false
       }
     ]
   },
