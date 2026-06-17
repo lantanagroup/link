@@ -60,7 +60,7 @@ public class MeasureServiceWrapper {
     patient.setId(subject);
     Bundle additionalData = new Bundle();
     additionalData.addEntry().setResource(patient);
-    evaluate(null, null, subject, additionalData);
+    evaluate("2024-01-01", "2024-01-31", subject, additionalData);
   }
 
   public MeasureReport evaluate(String periodStart, String periodEnd, String subject, Bundle additionalData) {
