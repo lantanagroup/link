@@ -73,6 +73,7 @@ public class MeasureServiceWrapper {
 
   public MeasureReport evaluate(String periodStart, String periodEnd, String subject, Bundle additionalData) {
     IRepository repository = new InMemoryFhirRepository(FhirContextProvider.getFhirContext());
+    repository.update(measureDef.getMeasure());
     for (IBaseResource resource : measureDef.getResources()) {
       repository.update(resource);
     }
