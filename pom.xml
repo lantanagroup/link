@@ -7,16 +7,16 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.4.11</version>
         <relativePath/>
     </parent>
 
     <properties>
         <java.version>21</java.version>
-        <cqf-fhir.version>3.0.0</cqf-fhir.version>
-        <hapi-fhir.version>7.0.0</hapi-fhir.version>
-        <jackson.version>2.16.1</jackson.version>
-        <spring-boot.version>3.2.0</spring-boot.version>
+        <cqf-fhir.version>4.3.0</cqf-fhir.version>
+        <hapi-fhir.version>8.6.8</hapi-fhir.version>
+        <jackson.version>2.20.0</jackson.version>
+        <spring-boot.version>3.4.11</spring-boot.version>
     </properties>
 
     <groupId>com.lantanagroup.link</groupId>
@@ -64,6 +64,50 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Convergence pins: highest version wins across all transitive paths -->
+            <dependency>
+                <groupId>org.checkerframework</groupId>
+                <artifactId>checker-qual</artifactId>
+                <version>3.42.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.26.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr-runtime</artifactId>
+                <version>3.5.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>10.0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-core</artifactId>
+                <version>1.41.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-io-core-jvm</artifactId>
+                <version>0.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.codehaus.woodstox</groupId>
+                <artifactId>stax2-api</artifactId>
+                <version>4.2.2</version>
+            </dependency>
+            <!-- cqf-fhir 4.3.0 Kotlin artifacts require kotlin.uuid.Uuid (added in 2.0.0);
+                 pin stdlib to avoid a 1.9.x transitive dep winning at runtime. -->
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>2.1.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -88,6 +132,37 @@
             <groupId>ca.uhn.hapi.fhir</groupId>
             <artifactId>hapi-fhir-validation</artifactId>
         </dependency>
+        <!--
+            Pinned to 6.6.7 because I18nConstants removed several validation message identifiers
+            in later versions. Do not bump without checking Validator.java switch cases.
+        -->
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.r5</artifactId>
+            <version>6.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.utilities</artifactId>
+            <version>6.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.validation</artifactId>
+            <version>6.6.7</version>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-structures-r5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-validation-resources-r5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>hapi-fhir-converter</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -95,7 +170,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>12.4.2.jre11</version>
+            <version>12.8.2.jre11</version>
         </dependency>
         <dependency>
             <groupId>com.mchange</groupId>
@@ -136,7 +211,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <release>11</release>
+                    <release>21</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -145,6 +220,23 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-dependency-convergence</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <dependencyConvergence/>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.projectlombok</groupId>

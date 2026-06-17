@@ -94,7 +94,7 @@ public class ReportingPlanService {
       ResponseEntity<String> idpResponse = restTemplate.postForEntity(StringEscapeUtils.escapeHtml4(samsAuth.getTokenUrl()), tokenRequest, String.class);
 
       if (idpResponse.getStatusCode() == HttpStatus.OK) {
-        logger.info("Response: {}", idpResponse.getStatusCodeValue());
+        logger.info("Response: {}", idpResponse.getStatusCode().value());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode response = objectMapper.readTree(idpResponse.getBody());
         return response.get("access_token").asText();
