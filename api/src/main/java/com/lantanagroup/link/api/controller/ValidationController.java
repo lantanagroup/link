@@ -112,6 +112,16 @@ public class ValidationController extends BaseController {
   public String validateSummary(@RequestBody Bundle bundle, @RequestParam(defaultValue = "INFORMATION") OperationOutcome.IssueSeverity severity) {
     Validator validator = new Validator();
     OperationOutcome outcome = validator.validate(bundle, severity);
+
+    ValidationCategorizer categorizer = new ValidationCategorizer();
+    categorizer.loadFromResources();
+    outcome.getIssue().removeIf(ooIssue -> {
+      ValidationCategorizer.Issue issue = new ValidationCategorizer.Issue(ooIssue);
+      return categorizer.getCategories().stream()
+              .filter(c -> Boolean.TRUE.equals(c.getSuppress()))
+              .anyMatch(c -> categorizer.isMatch((RuleBasedValidationCategory) c, issue));
+    });
+
     return this.getValidationSummary(outcome);
   }
 
