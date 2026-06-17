@@ -1491,5 +1491,23 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "no_matching_profile_for_list_reference",
+    "title": "No Matching Profile for List Reference",
+    "severity": "WARNING",
+    "acceptable": true,
+    "guidance": "Internal: The subjectResults reference cannot be validated against the ip-measurereport-list profile because the profile definition is not available in the validation context. This does not affect measure calculation or reporting.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Unable to find a match for profile #\\d+ among choices: .*ip-measurereport-list.*$"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
