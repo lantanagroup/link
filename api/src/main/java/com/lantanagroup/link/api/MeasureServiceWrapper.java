@@ -11,8 +11,8 @@ import org.opencds.cqf.fhir.cql.engine.retrieve.RetrieveSettings;
 import org.opencds.cqf.fhir.cql.engine.terminology.TerminologySettings;
 import org.opencds.cqf.fhir.cr.measure.MeasureEvaluationOptions;
 import org.opencds.cqf.fhir.cr.measure.common.MeasurePeriodValidator;
+import org.opencds.cqf.fhir.cr.measure.common.MeasureReference;
 import org.opencds.cqf.fhir.cr.measure.r4.R4MultiMeasureService;
-import org.opencds.cqf.fhir.utility.monad.Eithers;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
 import java.time.LocalDate;
@@ -68,18 +68,21 @@ public class MeasureServiceWrapper {
     for (IBaseResource resource : measureDef.getResources()) {
       repository.update(resource);
     }
+    if (additionalData != null) {
+      for (Bundle.BundleEntryComponent entry : additionalData.getEntry()) {
+        if (entry.getResource() != null) {
+          repository.update(entry.getResource());
+        }
+      }
+    }
     R4MultiMeasureService measureService = new R4MultiMeasureService(repository, options, null, new MeasurePeriodValidator());
     return measureService.evaluate(
-            Eithers.forRight3(measureDef.getMeasure()),
+            new MeasureReference.ByCanonicalUrl(measureDef.getMeasure().getUrl()),
             parsePeriodStart(periodStart),
             parsePeriodEnd(periodEnd),
             null,
             subject,
             null,
-            null,
-            null,
-            terminologyEndpoint,
-            additionalData,
             null,
             null,
             null);
