@@ -17,9 +17,10 @@
         <hapi-fhir.version>8.10.0</hapi-fhir.version>
         <jackson.version>2.20.0</jackson.version>
         <spring-boot.version>3.4.11</spring-boot.version>
-        <!-- cqf-fhir 4.7.0 uses kotlin.time.Clock (added in Kotlin 2.0); override
-             spring-boot-starter-parent's kotlin.version so its BOM uses 2.1.0. -->
-        <kotlin.version>2.1.0</kotlin.version>
+        <!-- engine-jvm 4.8.0 (via cqf-fhir) was compiled against Kotlin 2.3.10 and
+             references kotlin.time.Clock which was added to stdlib in Kotlin 2.2+.
+             Pin kotlin.version so Spring Boot's BOM and our explicit pins all agree. -->
+        <kotlin.version>2.3.10</kotlin.version>
     </properties>
 
     <groupId>com.lantanagroup.link</groupId>
@@ -110,17 +111,17 @@
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib</artifactId>
-                <version>2.1.0</version>
+                <version>${kotlin.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-jdk7</artifactId>
-                <version>2.1.0</version>
+                <version>${kotlin.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-stdlib-jdk8</artifactId>
-                <version>2.1.0</version>
+                <version>${kotlin.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
