@@ -15,12 +15,16 @@ import org.opencds.cqf.fhir.cr.measure.common.MeasureReference;
 import org.opencds.cqf.fhir.cr.measure.r4.R4MultiMeasureService;
 import org.opencds.cqf.fhir.utility.repository.InMemoryFhirRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 public class MeasureServiceWrapper {
+  private static final Logger logger = LoggerFactory.getLogger(MeasureServiceWrapper.class);
   private final MeasureDef measureDef;
   private final Endpoint terminologyEndpoint;
   private final MeasureEvaluationOptions options;
@@ -55,12 +59,16 @@ public class MeasureServiceWrapper {
   }
 
   public void preCompile() {
-    String subject = "Patient/the-patient";
-    Patient patient = new Patient();
-    patient.setId(subject);
-    Bundle additionalData = new Bundle();
-    additionalData.addEntry().setResource(patient);
-    evaluate("2024-01-01", "2024-01-31", subject, additionalData);
+    try {
+      String subject = "Patient/the-patient";
+      Patient patient = new Patient();
+      patient.setId(subject);
+      Bundle additionalData = new Bundle();
+      additionalData.addEntry().setResource(patient);
+      evaluate("2024-01-01", "2024-01-31", subject, additionalData);
+    } catch (Exception e) {
+      logger.warn("CQL pre-compilation failed (non-fatal); first evaluation will compile on demand: {}", e.getMessage());
+    }
   }
 
   public MeasureReport evaluate(String periodStart, String periodEnd, String subject, Bundle additionalData) {
