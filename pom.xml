@@ -13,8 +13,8 @@
 
     <properties>
         <java.version>21</java.version>
-        <cqf-fhir.version>4.3.0</cqf-fhir.version>
-        <hapi-fhir.version>8.6.8</hapi-fhir.version>
+        <cqf-fhir.version>4.7.0</cqf-fhir.version>
+        <hapi-fhir.version>8.10.0</hapi-fhir.version>
         <jackson.version>2.20.0</jackson.version>
         <spring-boot.version>3.4.11</spring-boot.version>
     </properties>
