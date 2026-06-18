@@ -4466,5 +4466,24 @@
         "andOperator": false
       }
     ]
+  },
+  {
+    "id": "dom6_narrative_best_practice",
+    "title": "DOM-6 Narrative Best Practice",
+    "severity": "WARNING",
+    "acceptable": true,
+    "suppress": true,
+    "guidance": "Internal: FHIR constraint dom-6 requires DomainResource.text.div but HL7 marks this as a best-practice recommendation, not a hard requirement. NHSN reporting does not require narrative.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "dom-6"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
   }
 ]
