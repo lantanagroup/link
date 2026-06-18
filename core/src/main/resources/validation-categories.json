@@ -1490,6 +1490,25 @@
     ]
   },
   {
+    "id": "hapi_codesystem_null_pointer",
+    "title": "HAPI CodeSystem Null Pointer",
+    "severity": "WARNING",
+    "acceptable": true,
+    "suppress": true,
+    "guidance": "Internal: HAPI FHIR validator NPE when looking up a language code in a partially-populated CodeSystem. This is a HAPI bug, not a data issue.",
+    "ruleSets": [
+      {
+        "rules": [
+          {
+            "field": "DETAILS_TEXT",
+            "regex": "^Error Cannot invoke \"org\\.hl7\\.fhir\\.r5\\.model\\.CodeSystem\\.getConcept\\(\\)\" because \"this\\.codeSystem\" is null"
+          }
+        ],
+        "andOperator": false
+      }
+    ]
+  },
+  {
     "id": "no_matching_profile_for_list_reference",
     "title": "No Matching Profile for List Reference",
     "severity": "WARNING",
