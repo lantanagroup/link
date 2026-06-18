@@ -457,7 +457,20 @@ public class Validator {
     for (SingleValidationMessage message : result.getMessages()) {
       OperationOutcome.IssueSeverity messageSeverity = getIssueSeverity(message.getSeverity());
 
-if (I18nConstants.DETAILS_FOR__MATCHING_AGAINST_PROFILE_.equals(message.getMessageId())) {
+      // Skip the message depending on the severity filter/arg
+      if (severity != null) {
+        if (severity == OperationOutcome.IssueSeverity.ERROR) {
+          if (messageSeverity == OperationOutcome.IssueSeverity.INFORMATION || messageSeverity == OperationOutcome.IssueSeverity.WARNING) {
+            continue;
+          }
+        } else if (severity == OperationOutcome.IssueSeverity.WARNING) {
+          if (messageSeverity == OperationOutcome.IssueSeverity.INFORMATION) {
+            continue;
+          }
+        }
+      }
+
+      if (I18nConstants.DETAILS_FOR__MATCHING_AGAINST_PROFILE_.equals(message.getMessageId())) {
         continue;
       }
 
